@@ -1,5 +1,6 @@
 ### Dependencies
 - HDF5
+- gtest
 - boost
 - cmake
 - *optional*: python (2 or 3)
