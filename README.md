@@ -1,5 +1,5 @@
 ### Dependencies
-- h5md
+- HDF5
 - boost
 - cmake
 - *optional*: python (2 or 3)
@@ -41,7 +41,9 @@ ReaDDy2/
 |   |   |   |   (io specific testing)
 |   |
 |___|___adapter/
-|   |   |
+|___|___|___tests/
+|   |   |   |   (adapter specific testing)
+|   |   
 |___|___tests/
 |   |   |   (integration tests)
 |
