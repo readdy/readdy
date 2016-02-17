@@ -30,3 +30,6 @@
 # Output directory and build dirs
 build
 bin/*
+
+# osx resources
+.DS_Store
