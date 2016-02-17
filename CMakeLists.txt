@@ -21,6 +21,15 @@ SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PAT
 # should run tests
 SET(READDY_RUN_TESTS ON CACHE BOOL "Should run tests or not")
 
+# Compile in debug mode by default
+IF(NOT CMAKE_BUILD_TYPE)
+    MESSAGE(STATUS "Setting build type to 'DEBUG' as none was specified.")
+    SET(CMAKE_BUILD_TYPE DEBUG) 
+ELSE(NOT CMAKE_BUILD_TYPE)
+    MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
+
 # target names
 SET(SHARED_TARGET ${READDY_LIBRARY_NAME})
 SET(STATIC_TARGET ${READDY_LIBRARY_NAME}_static)
