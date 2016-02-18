@@ -33,3 +33,6 @@ bin/*
 
 # osx resources
 .DS_Store
+
+# intellij resources
+.idea
