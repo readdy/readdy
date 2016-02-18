@@ -26,7 +26,7 @@ void Simulation::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
 }
 
 #ifdef READDY_WITH_PYTHON
-#include <boost/python>
+#include <boost/python.hpp>
 
 BOOST_PYTHON_MODULE(simulation) {
         using namespace boost::python;
