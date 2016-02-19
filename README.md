@@ -58,4 +58,11 @@ ReaDDy2/
 |   |   (directory structure with libraries)
 
 ```
+### Building
+Build in-source by typing:
 
+	$ mkdir build
+	$ cd build
+	$ cmake .. -DBUILD_PY3:BOOL=ON
+	$ make
+To specify if building for python3, hand in the flag BUILD_PY3 as commandline argument.
