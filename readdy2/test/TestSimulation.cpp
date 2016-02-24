@@ -17,6 +17,7 @@ namespace {
     TEST_F(TestSimulation, Foo) {
 		simulation.setKBT(42);
         EXPECT_EQ(42, simulation.getKBT());
+        simulation.setPeriodicBoundary(false, false, false);
     }
 }
 
