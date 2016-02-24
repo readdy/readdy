@@ -1,18 +1,25 @@
 #-----------------------------------
 # ReaDDy2
 #-----------------------------------
-PROJECT(ReaDDy2)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2.0)
+
+PROJECT(ReaDDy2_Main C CXX)
 
 # for custom cmake modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
+
+IF("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    MESSAGE(SEND_ERROR "In-source builds are not allowed.")
+ENDIF()
+
+SET(CMAKE_VERBOSE_MAKEFILE ON)
+SET(CMAKE_COLOR_MAKEFILE ON)
 
 # we use c++11
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# name and version
-SET(READDY_LIBRARY_NAME "readdy2")
+# version
 SET(READDY_MAJOR_VERSION 0)
 SET(READDY_MINOR_VERSION 0)
 SET(READDY_PATCH_VERSION 1)
@@ -22,12 +29,12 @@ SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PAT
 SET(READDY_RUN_TESTS ON CACHE BOOL "Should run tests or not")
 
 # Compile in debug mode by default
-IF (NOT CMAKE_BUILD_TYPE)
+IF(NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "Setting build type to 'DEBUG' as none was specified.")
     SET(CMAKE_BUILD_TYPE DEBUG)
-ELSE (NOT CMAKE_BUILD_TYPE)
+ELSE(NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
-ENDIF (NOT CMAKE_BUILD_TYPE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
 # list of libraries for easier linking
 SET(READDY_LIBRARIES "")
@@ -82,21 +89,18 @@ IF (READDY_BUILD_PYTHON_WRAPPER)
     MESSAGE(STATUS "Python version: ${PYTHON_VERSION_STRING}")
     MESSAGE(STATUS "Boost python library: ${Boost_PYTHON_LIBRARIES}")
 
-    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
     LIST(APPEND READDY_LIBRARIES ${PYTHON_LIBRARIES})
-
-    ADD_SUBDIRECTORY(wrappers)
 ENDIF ()
-# library includes
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 # includes
-INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/include")
+SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
 
 # append libraries
 LIST(APPEND READDY_LIBRARIES ${Boost_LIBRARIES} ${Boost_PYTHON_LIBRARIES})
 
-# this is where the sources are
+# include directories from least dependent to most dependent
+# i.e.: A depends on B -> add subdirectory of B first
+ADD_SUBDIRECTORY(readdy2/main/io)
 ADD_SUBDIRECTORY(readdy2/main)
 
 #
@@ -121,10 +125,17 @@ IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_
             "-Dgtest_force_shared_crt:bool=ON"
             INSTALL_COMMAND ""
     )
-    ADD_DEPENDENCIES(${READDY_LIBRARY_NAME} googletest)
+    ADD_DEPENDENCIES(ReaDDy2 googletest)
     ENABLE_TESTING()
     INCLUDE_DIRECTORIES(${GOOGLETEST_INCLUDE})
     ADD_SUBDIRECTORY(readdy2/test)
 ELSE ()
     MESSAGE(STATUS "The submodule googletest was not initialized or READDY_RUN_TESTS was OFF, thus no testing.")
 ENDIF ()
+
+#
+# wrappers
+#
+IF(READDY_BUILD_PYTHON_WRAPPER)
+    ADD_SUBDIRECTORY(wrappers)
+ENDIF()

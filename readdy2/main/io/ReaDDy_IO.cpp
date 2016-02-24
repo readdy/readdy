@@ -3,8 +3,8 @@
 //
 
 #include <iostream>
-#include "ReaDDy_IO.h"
+#include <ReaDDy_IO.h>
 
-IO::IO() {
+ReaDDy::IO::IOUtils::IOUtils() {
     std::cout << "yeha" << std::endl;
 }

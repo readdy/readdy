@@ -5,17 +5,14 @@
 #ifndef READDY2_BLUB_H
 #define READDY2_BLUB_H
 
-
-class IO {
-protected:
-    int car;
-    int bus;
-public:
-    IO();
-
-
-
-};
+namespace ReaDDy {
+    namespace IO {
+        class IOUtils {
+        public:
+            IOUtils();
+        };
+    }
+}
 
 
 #endif //READDY2_BLUB_H

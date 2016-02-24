@@ -24,5 +24,5 @@ void Simulation::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
     periodic_boundary[0] = pb_x;
     periodic_boundary[1] = pb_y;
     periodic_boundary[2] = pb_z;
-    IO xyz;
+    IO::IOUtils xyz;
 }
