@@ -41,12 +41,13 @@ IF (READDY_BUILD_PYTHON_WRAPPER)
     # add READDY_WITH_PYTHON define
     ADD_DEFINITIONS(-DREADDY_WITH_PYTHON)
 
-    SET(BUILD_PY3 ON CACHE BOOL "True if should be built with python3, otherwise python2")
-    IF (BUILD_PY3)
-        SET(Python_ADDITIONAL_VERSIONS 3.5)
+    # import python
+    FIND_PACKAGE(PythonInterp REQUIRED)
+    FIND_PACKAGE(PythonLibs REQUIRED)
+
+    IF (${PYTHON_VERSION_STRING} GREATER 3.0)
         MESSAGE(STATUS "--------------------- Building with python 3 ---------------------")
     ELSE ()
-        SET(Python_ADDITIONAL_VERSIONS 2.7)
         MESSAGE(STATUS "--------------------- Building with python 2 ---------------------")
     ENDIF ()
 
@@ -62,11 +63,9 @@ IF (READDY_BUILD_PYTHON_WRAPPER)
             ENDIF ()
         ENDFOREACH ()
     ENDMACRO(boost_python_libraries)
-    # import python
-    FIND_PACKAGE(PythonInterp)
-    FIND_PACKAGE(PythonLibs)
+
     # look for boost python
-    IF (BUILD_PY3)
+    IF(${PYTHON_VERSION_STRING} GREATER 3.0)
         # find boost-python3 lib
         boost_python_libraries("python3;python-py35;python-py34;python")
     ELSE ()
@@ -85,14 +84,16 @@ IF (READDY_BUILD_PYTHON_WRAPPER)
 
     INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
     LIST(APPEND READDY_LIBRARIES ${PYTHON_LIBRARIES})
-    LIST(APPEND READDY_HEADERS ${PYTHON_INCLUDE_DIRS})
+
+    ADD_SUBDIRECTORY(wrappers)
 ENDIF ()
 # library includes
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-LIST(APPEND READDY_HEADERS ${Boost_INCLUDE_DIRS})
 # includes
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/include")
 LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
+
+# append libraries
 LIST(APPEND READDY_LIBRARIES ${Boost_LIBRARIES} ${Boost_PYTHON_LIBRARIES})
 
 # this is where the sources are

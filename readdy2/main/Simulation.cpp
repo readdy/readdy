@@ -2,6 +2,7 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <Simulation.h>
+#include "IO.h"
 
 using namespace ReaDDy;
 
@@ -23,16 +24,5 @@ void Simulation::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
     periodic_boundary[0] = pb_x;
     periodic_boundary[1] = pb_y;
     periodic_boundary[2] = pb_z;
+    Blub xyz;
 }
-
-#ifdef READDY_WITH_PYTHON
-#include <boost/python.hpp>
-
-BOOST_PYTHON_MODULE(simulation) {
-        using namespace boost::python;
-        class_<Simulation>("Simulation")
-            .def("getKBT", &Simulation::getKBT)
-            .def("setKBT", &Simulation::setKBT);
-}
-#endif
-
