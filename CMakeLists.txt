@@ -8,11 +8,11 @@ PROJECT(ReaDDy2_Main C CXX)
 # for custom cmake modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
-IF ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-    MESSAGE(SEND_ERROR "In-source builds are not allowed.")
-ENDIF ()
+## ensure out of tree build
+INCLUDE(MacroOutOfSourceBuild)
+MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out source build.")
 
-SET(CMAKE_VERBOSE_MAKEFILE ON)
+# SET(CMAKE_VERBOSE_MAKEFILE ON)
 SET(CMAKE_COLOR_MAKEFILE ON)
 
 # we use c++11
@@ -27,6 +27,7 @@ SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PAT
 
 # should run tests
 SET(READDY_RUN_TESTS ON CACHE BOOL "Should run tests or not")
+SET(READDY_RUN_TESTS_MEMORY_CHECK OFF CACHE BOOL "Determines if valgrind test targets should be added.")
 
 # Compile in debug mode by default
 IF (NOT CMAKE_BUILD_TYPE)
@@ -43,6 +44,10 @@ SET(READDY_BUILD_PYTHON_WRAPPER ON CACHE BOOL "Build Python wrappers")
 SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
 
+#
+# readdy2 core
+#
+
 # include directories from least dependent to most dependent
 # i.e.: A depends on B -> add subdirectory of B first
 ADD_SUBDIRECTORY(readdy2/main/io)
@@ -50,12 +55,12 @@ ADD_SUBDIRECTORY(readdy2/main/plugin)
 ADD_SUBDIRECTORY(readdy2/main)
 
 #
-# kernels
+# readdy2 kernels
 #
 ADD_SUBDIRECTORY(kernels)
 
 #
-# wrappers
+# readdy2 wrappers
 #
 IF (READDY_BUILD_PYTHON_WRAPPER)
     ADD_SUBDIRECTORY(wrappers)
@@ -87,6 +92,7 @@ IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_
     ENABLE_TESTING()
     INCLUDE_DIRECTORIES(${GOOGLETEST_INCLUDE})
     ADD_SUBDIRECTORY(readdy2/test)
+
 ELSE ()
     MESSAGE(STATUS "The submodule googletest was not initialized or READDY_RUN_TESTS was OFF, thus no testing.")
 ENDIF ()
