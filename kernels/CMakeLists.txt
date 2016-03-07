@@ -1,1 +1,7 @@
 ADD_SUBDIRECTORY(singlecpu)
+
+SET_TARGET_PROPERTIES(ReaDDy2_kernel_singlecpu
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/out/lib/plugins"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/out/lib/plugins"
+)
