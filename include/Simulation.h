@@ -7,7 +7,7 @@
 
 #include <array>
 
-namespace ReaDDy {
+namespace readdy {
     class Simulation {
     protected:
         double kBT;

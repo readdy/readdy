@@ -1,7 +1,7 @@
 #include <Simulation.h>
 #include "gtest/gtest.h"
 
-using namespace ReaDDy;
+using namespace readdy;
 
 namespace {
     class TestSimulation : public ::testing::Test {

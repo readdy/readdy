@@ -5,6 +5,6 @@
 #include <iostream>
 #include <ReaDDy_IO.h>
 
-ReaDDy::IO::IOUtils::IOUtils() {
+readdy::io::IOUtils::IOUtils() {
     std::cout << "yeha" << std::endl;
 }

@@ -5,8 +5,8 @@
 
 BOOST_PYTHON_MODULE(simulation) {
         using namespace boost::python;
-        class_<ReaDDy::Simulation>("Simulation")
-        .def("getKBT", &ReaDDy::Simulation::getKBT)
-        .def("setKBT", &ReaDDy::Simulation::setKBT);
+        class_<readdy::Simulation>("Simulation")
+        .def("getKBT", &readdy::Simulation::getKBT)
+        .def("setKBT", &readdy::Simulation::setKBT);
 }
 #endif

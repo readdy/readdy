@@ -5,8 +5,8 @@
 #ifndef READDY2_BLUB_H
 #define READDY2_BLUB_H
 
-namespace ReaDDy {
-    namespace IO {
+namespace readdy {
+    namespace io {
         class IOUtils {
         public:
             IOUtils();

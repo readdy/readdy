@@ -4,7 +4,7 @@
 #include <Simulation.h>
 #include "io/ReaDDy_IO.h"
 
-using namespace ReaDDy;
+using namespace readdy;
 
 double Simulation::getKBT() const {
     return this->kBT;
@@ -24,5 +24,5 @@ void Simulation::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
     periodic_boundary[0] = pb_x;
     periodic_boundary[1] = pb_y;
     periodic_boundary[2] = pb_z;
-    IO::IOUtils xyz;
+    io::IOUtils xyz;
 }
