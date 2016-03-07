@@ -5,11 +5,14 @@
 #ifndef READDY2_MAIN_PLUGIN_H
 #define READDY2_MAIN_PLUGIN_H
 
+#include <string>
+#include <memory>
+
 namespace readdy {
     namespace plugin {
         template<typename T>
         class PluginFactory {
-            virtual T *create() = 0;
+            virtual std::unique_ptr<T> create(std::string name) = 0;
         };
     }
 }

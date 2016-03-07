@@ -5,7 +5,6 @@
 #ifndef READDY2_MAIN_KERNEL_H
 #define READDY2_MAIN_KERNEL_H
 
-#include <string>
 #include "Plugin.h"
 
 namespace readdy {
@@ -15,7 +14,15 @@ namespace readdy {
         };
 
         class KernelFactory : PluginFactory<Kernel> {
-            Kernel* create(std::string name);
+        protected:
+            KernelFactory();
+        public:
+            static KernelFactory& getInstance();
+            std::unique_ptr<Kernel> create(std::string name);
+
+            // prevent that copies can be created
+            KernelFactory(KernelFactory const&) = delete;
+            void operator=(KernelFactory const&) = delete;
         };
 
     }
