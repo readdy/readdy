@@ -2,8 +2,8 @@
 // Created by Moritz Hoffmann on 19/02/16.
 //
 
-#ifndef READDY2_BLUB_H
-#define READDY2_BLUB_H
+#ifndef READDY2_IO_H
+#define READDY2_IO_H
 
 namespace readdy {
     namespace io {
@@ -15,4 +15,4 @@ namespace readdy {
 }
 
 
-#endif //READDY2_BLUB_H
+#endif //READDY2_IO_H

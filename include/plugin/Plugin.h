@@ -11,12 +11,6 @@ namespace readdy {
         class PluginFactory {
             virtual T *create() = 0;
         };
-
-        class Kernel {
-
-        };
-
-        typedef PluginFactory<Kernel> KernelFactory;
     }
 }
 

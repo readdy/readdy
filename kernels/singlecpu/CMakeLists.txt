@@ -1,0 +1,19 @@
+PROJECT(ReaDDy2_kernel_singlecpu CXX)
+
+# sources
+LIST(APPEND SINGLECPU_SOURCES SingleCPUKernel.cpp)
+
+# create library
+ADD_LIBRARY(${PROJECT_NAME} ${SINGLECPU_SOURCES})
+
+# includes
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${ReaDDy2_INCLUDE_DIRS})
+
+# Required on Unix OS family to be able to be linked into shared libraries.
+SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# link
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ReaDDy2)
+
+# use c++11
+set_property (TARGET ${PROJECT_NAME} PROPERTY COMPILE_FLAGS -std=c++11)
