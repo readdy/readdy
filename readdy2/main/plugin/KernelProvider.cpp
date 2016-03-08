@@ -8,18 +8,26 @@
 
 namespace fs = boost::filesystem;
 
-std::unique_ptr<readdy::plugin::Kernel> readdy::plugin::KernelProvider::get(std::string name) {
-    // TODO implement this
-    return nullptr;
-}
-
 readdy::plugin::KernelProvider &readdy::plugin::KernelProvider::getInstance() {
     static readdy::plugin::KernelProvider instance;
-    // TODO initialize kernels (load by directory)
+    // TODO initialize kernels (load by directory) -- use boost dll
     return instance;
 }
 
 readdy::plugin::KernelProvider::KernelProvider() {
     fs::path path = fs::current_path();
     std::cout << "current path is " << path << std::endl;
+}
+
+const std::string readdy::plugin::KernelProvider::getDefaultKernelDirectory() {
+    // TODO
+    return "";
+}
+
+void readdy::plugin::KernelProvider::loadKernelsFromDirectory(std::string directory) {
+    // TODO
+}
+
+const std::string readdy::plugin::Kernel::getName() {
+    return this->name;
 }

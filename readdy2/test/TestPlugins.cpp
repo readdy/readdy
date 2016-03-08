@@ -5,8 +5,26 @@
 #include <plugin/Kernel.h>
 #include "gtest/gtest.h"
 
+namespace plug = readdy::plugin;
+
 namespace {
-    TEST(Kernel, LoadingPlugins) {
-        readdy::plugin::KernelProvider::getInstance();
+    TEST(Kernel, LoadingNonexistingPlugin) {
+        plug::Kernel k("foo");
+        plug::KernelProvider::getInstance().add(k);
+        try{
+            plug::KernelProvider::getInstance().get("foo2");
+            FAIL() << "Expected NoSuchPluginException!";
+        } catch(plug::NoSuchPluginException const &ex) {
+            SUCCEED() << "NoSuchPluginException caught.";
+        } catch(...) {
+            FAIL() << "Expected NoSuchPluginException!";
+        }
+    }
+
+    TEST(Kernel, LoadingExistingPlugin) {
+        plug::Kernel k("bar");
+        plug::KernelProvider::getInstance().add(k);
+        auto kk_ptr = plug::KernelProvider::getInstance().get("bar");
+        EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());
     }
 }

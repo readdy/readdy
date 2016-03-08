@@ -41,8 +41,8 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 SET(READDY_BUILD_PYTHON_WRAPPER ON CACHE BOOL "Build Python wrappers")
 
 # output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)
 
 # includes
@@ -55,6 +55,7 @@ LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
 
 # include directories from least dependent to most dependent
 # i.e.: A depends on B -> add subdirectory of B first
+ADD_SUBDIRECTORY(readdy2/main/common)
 ADD_SUBDIRECTORY(readdy2/main/io)
 ADD_SUBDIRECTORY(readdy2/main/plugin)
 ADD_SUBDIRECTORY(readdy2/main)

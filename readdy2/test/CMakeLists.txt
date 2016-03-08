@@ -29,7 +29,7 @@ IF(READDY_RUN_TESTS_MEMORY_CHECK)
         FUNCTION(ADD_MEMCHECK_TEST name binary)
             SET(memcheck_command "valgrind ${VALGRIND_OPTIONS}")
             SEPARATE_ARGUMENTS(memcheck_command)
-            ADD_TEST(memcheck_${name} ${memcheck_command} ./${binary} ${ARGN})
+            ADD_TEST(memcheck_${name} ${memcheck_command} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${binary}" ${ARGN})
         ENDFUNCTION(ADD_MEMCHECK_TEST)
 
         # can be called by "ctest -V -R memcheck_readdy-tests"
