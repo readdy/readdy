@@ -53,6 +53,9 @@ LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
 # readdy2 core
 #
 
+# link dynamically against boost log
+ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+
 # include directories from least dependent to most dependent
 # i.e.: A depends on B -> add subdirectory of B first
 ADD_SUBDIRECTORY(readdy2/main/common)

@@ -31,3 +31,8 @@ void readdy::plugin::KernelProvider::loadKernelsFromDirectory(std::string direct
 const std::string readdy::plugin::Kernel::getName() {
     return this->name;
 }
+
+readdy::plugin::Kernel::Kernel(std::string name) {
+    this->name = name;
+    BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
+}

@@ -2,7 +2,6 @@
 # default directory stuff (-> getenv thingy),
 PROJECT(ReaDDy2_common CXX)
 
-SET(Boost_USE_STATIC_LIBS ON)
 FIND_PACKAGE(Boost COMPONENTS system filesystem log thread REQUIRED)
 
 LIST(APPEND READDY_COMMON_SOURCES Utils.cpp)

@@ -16,12 +16,7 @@ namespace readdy {
         protected:
             std::string name;
         public:
-            Kernel(std::string name) {
-                this->name = name;
-            }
-            ~Kernel() {
-                BOOST_LOG_TRIVIAL(trace) << "destroying kernel " << name;
-            }
+            Kernel(std::string name);
             const std::string getName() override;
         };
 
@@ -29,9 +24,6 @@ namespace readdy {
         protected:
             // cannot instantiate directly
             KernelProvider();
-            ~KernelProvider() {
-                BOOST_LOG_TRIVIAL(trace) << "destroying kernel provider";
-            }
         public:
             static KernelProvider & getInstance();
             void loadKernelsFromDirectory(std::string directory);
