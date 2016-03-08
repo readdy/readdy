@@ -4,7 +4,6 @@
 
 #include <boost/log/core/core.hpp>
 #include "gtest/gtest.h"
-#include <iostream>
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
