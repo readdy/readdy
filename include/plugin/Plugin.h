@@ -11,8 +11,8 @@
 namespace readdy {
     namespace plugin {
         template<typename T>
-        class PluginFactory {
-            virtual std::unique_ptr<T> create(std::string name) = 0;
+        class PluginProvider {
+            virtual std::unique_ptr<T> get(std::string name) = 0;
         };
     }
 }

@@ -1,6 +1,6 @@
 PROJECT(ReaDDy2_io CXX)
 
-FIND_PACKAGE(Boost COMPONENTS system thread REQUIRED)
+FIND_PACKAGE(Boost COMPONENTS system thread filesystem REQUIRED)
 
 # sources
 LIST(APPEND READDY_IO_SOURCES ReaDDy_IO.cpp)

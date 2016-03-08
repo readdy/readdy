@@ -13,16 +13,16 @@ namespace readdy {
             virtual std::string getName() = 0;
         };
 
-        class KernelFactory : PluginFactory<Kernel> {
+        class KernelProvider : PluginProvider<Kernel> {
         protected:
-            KernelFactory();
+            KernelProvider();
         public:
-            static KernelFactory& getInstance();
-            std::unique_ptr<Kernel> create(std::string name);
+            static KernelProvider & getInstance();
+            std::unique_ptr<Kernel> get(std::string name);
 
             // prevent that copies can be created
-            KernelFactory(KernelFactory const&) = delete;
-            void operator=(KernelFactory const&) = delete;
+            KernelProvider(KernelProvider const&) = delete;
+            void operator=(KernelProvider const&) = delete;
         };
 
     }
