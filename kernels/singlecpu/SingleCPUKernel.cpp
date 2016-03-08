@@ -3,7 +3,3 @@
 //
 
 #include "SingleCPUKernel.h"
-
-std::string readdy::kernel::SingleCPUKernel::getName() {
-    return "SingleCPU";
-}

@@ -9,8 +9,10 @@
 
 namespace readdy {
     namespace kernel {
-        class SingleCPUKernel : readdy::plugin::Kernel {
-            std::string getName();
+        class SingleCPUKernel : public readdy::plugin::Kernel {
+        public:
+            SingleCPUKernel() : Kernel("SingleCPU") { }
+
         };
     }
 }
