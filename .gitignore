@@ -1,3 +1,6 @@
+# ignore external libraries
+libraries/external
+
 # Compiled Object files
 *.slo
 *.lo

@@ -82,3 +82,5 @@ If you want to build ReaDDy2 without python-bindings to use it as a C++
 library only, set the READDY_BUILD_PYTHON_WRAPPER OFF variable
 
 	$ cmake .. -DREADDY_BUILD_PYTHON_WRAPPER:BOOL=OFF
+	
+Deciding if shared or static: Set CMake parameter BUILD_SHARED_LIBS.
