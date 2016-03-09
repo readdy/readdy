@@ -6,23 +6,25 @@
 #include <Kernel.h>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/dll.hpp>
 #include <Utils.h>
 
 namespace fs = boost::filesystem;
 namespace utl = readdy::utils;
+namespace plug = readdy::plugin;
 
-readdy::plugin::KernelProvider &readdy::plugin::KernelProvider::getInstance() {
-    static readdy::plugin::KernelProvider instance;
+plug::KernelProvider &plug::KernelProvider::getInstance() {
+    static plug::KernelProvider instance;
     // TODO initialize kernels (load by directory) -- use boost dll (?)
     return instance;
 }
 
-readdy::plugin::KernelProvider::KernelProvider() {
+plug::KernelProvider::KernelProvider() {
     fs::path path = fs::current_path();
     std::cout << "current path is " << path << std::endl;
 }
 
-const std::string readdy::plugin::KernelProvider::getDefaultKernelDirectory() {
+const std::string plug::KernelProvider::getDefaultKernelDirectory() {
     auto dir = getenv("READDY_PLUGIN_DIR");
     static std::string defaultDir;
     if(dir == NULL) {
@@ -42,12 +44,21 @@ const std::string readdy::plugin::KernelProvider::getDefaultKernelDirectory() {
     return defaultDir;
 }
 
-void readdy::plugin::KernelProvider::loadKernelsFromDirectory(std::string directory) {
+void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
     const fs::path p(directory);
+    typedef std::shared_ptr<plug::Kernel> (kernel_t)();
     if (fs::exists(p) && fs::is_directory(p)) {
         BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();
         for(auto &dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
             BOOST_LOG_TRIVIAL(debug) << "... loading " << dirEntry.path().string();
+            boost::function<kernel_t> factory;
+            factory = boost::dll::import_alias<kernel_t>(
+                    dirEntry.path(),
+                    "create_kernel",
+                    boost::dll::load_mode::append_decorations
+            );
+            auto kernel = factory();
+            plug::KernelProvider::getInstance().add(kernel);
         }
     } else {
         // TODO raise
@@ -55,11 +66,11 @@ void readdy::plugin::KernelProvider::loadKernelsFromDirectory(std::string direct
     }
 }
 
-const std::string readdy::plugin::Kernel::getName() {
+const std::string plug::Kernel::getName() {
     return this->name;
 }
 
-readdy::plugin::Kernel::Kernel(std::string name) {
+plug::Kernel::Kernel(std::string name) {
     this->name = name;
     BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
 }

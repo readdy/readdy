@@ -33,4 +33,8 @@ namespace {
         BOOST_LOG_TRIVIAL(debug) << "default directory is " << defaultDirectory;
         SUCCEED();
     }
+
+    TEST(KernelProvider, TestLoadPluginsFromDirectory) {
+        plug::KernelProvider::getInstance().loadKernelsFromDirectory("../lib/plugins");
+    }
 }
