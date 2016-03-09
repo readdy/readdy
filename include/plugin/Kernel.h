@@ -9,6 +9,8 @@
 #include <map>
 #include <iostream>
 #include <boost/log/trivial.hpp>
+#include <boost/filesystem.hpp>
+
 
 namespace readdy {
     namespace plugin {

@@ -27,4 +27,10 @@ namespace {
         auto kk_ptr = plug::KernelProvider::getInstance().get("bar");
         EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());
     }
+
+    TEST(KernelProvider, SanityCheckDefaultDirectory) {
+        std::string defaultDirectory = plug::KernelProvider::getInstance().getDefaultKernelDirectory();
+        BOOST_LOG_TRIVIAL(debug) << "default directory is " << defaultDirectory;
+        SUCCEED();
+    }
 }
