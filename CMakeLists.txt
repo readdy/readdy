@@ -53,12 +53,23 @@ LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
 # boost.dll
 INCLUDE(SetupBoostDLL)
 
+# extra compile and link flags
+SET(EXTRA_COMPILE_FLAGS "-std=c++11")
+SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
+IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    IF (NOT ANDROID)
+        SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -Wl,--no-as-needed -lrt")
+    ENDIF (NOT ANDROID)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+
 #
 # readdy2 core
 #
 
 # link dynamically against boost log
-ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+IF(BUILD_SHARED_LIBS)
+    ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+ENDIF(BUILD_SHARED_LIBS)
 
 # include directories from least dependent to most dependent
 # i.e.: A depends on B -> add subdirectory of B first
