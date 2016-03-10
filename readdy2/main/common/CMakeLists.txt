@@ -1,5 +1,4 @@
 # general utilities.
-# default directory stuff (-> getenv thingy),
 PROJECT(ReaDDy2_common CXX)
 
 IF(BUILD_SHARED_LIBS)
