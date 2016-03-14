@@ -60,22 +60,23 @@ void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
                     if(lib.is_loaded()) lib.unload();
                     continue;
                 }
-                typedef boost::shared_ptr<plug::Kernel> (kernel_t)();
+                typedef plug::Kernel* (kernel_t)();
                 boost::function<kernel_t> factory = boost::dll::import_alias<kernel_t>(lib, "createKernel");
-                auto boost_ptr = factory();
-                std::cout << "refcount == " << boost_ptr.use_count() << std::endl;
-                auto decorator = std::make_shared<plug::Kernel>(readdy::plugin::_internal::KernelPluginDecorator(boost_ptr.get()[0], std::move(lib)));
+                //auto boost_ptr = factory();
+                BOOST_LOG_TRIVIAL(debug) << "loaded.";
+                //std::cout << "refcount == " << boost_ptr.use_count() << std::endl;
+                auto decorator = std::shared_ptr<plug::Kernel>(new readdy::plugin::_internal::KernelPluginDecorator(factory(), std::move(lib)));
                 plug::KernelProvider::getInstance().add(std::move(decorator));
             } else {
                 BOOST_LOG_TRIVIAL(debug) << "... skipping " << dirEntry.path().string() << " since it was no shared library.";
             }
         }
-        std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
+        //std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
     } else {
         // TODO raise
         BOOST_LOG_TRIVIAL(debug) << "file [" << p.string() << "] did not exist or was a file.";
     }
-    std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
+    //std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
 }
 
 const std::string plug::Kernel::getName() const {
