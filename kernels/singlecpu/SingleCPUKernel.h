@@ -17,7 +17,7 @@ namespace readdy {
             public:
                 SingleCPUKernel();
                 ~SingleCPUKernel() {
-                    BOOST_LOG_TRIVIAL(debug) << "destroying simple cpu kernel";
+                    BOOST_LOG_TRIVIAL(debug) << "destroying kernel " << getName();
                 }
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();

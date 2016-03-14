@@ -7,16 +7,25 @@
 
 
 #include <readdy/plugin/Kernel.h>
+#include <boost/dll/shared_library.hpp>
 
 namespace readdy {
     namespace plugin {
-        class KernelPluginDecorator : public readdy::plugin::Kernel {
-        protected:
-            const readdy::plugin::Kernel reference;
+        namespace _internal {
+            class KernelPluginDecorator : public readdy::plugin::Kernel {
+            protected:
+                const readdy::plugin::Kernel reference;
+                const boost::dll::shared_library lib;
 
-        public:
-            KernelPluginDecorator(const readdy::plugin::Kernel &reference);
-        };
+            public:
+                KernelPluginDecorator(const readdy::plugin::Kernel &reference, boost::dll::shared_library &&lib);
+                ~KernelPluginDecorator() {
+                    BOOST_LOG_TRIVIAL(debug) << "destroying decorator of "<< getName();
+                }
+
+                virtual const std::string getName() const override;
+            };
+        }
     }
 }
 

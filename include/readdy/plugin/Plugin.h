@@ -27,7 +27,7 @@ namespace readdy {
             static_assert(std::is_base_of<Plugin, T>::value, "T must extend readdy::plugin::Plugin");
 
         protected:
-            std::map<std::string, std::shared_ptr<T>> plugins;
+            std::map<std::string, const std::shared_ptr<T>> plugins;
         public:
             virtual const std::shared_ptr<T> get(std::string name) {
                 auto it = plugins.find(name);
@@ -38,11 +38,12 @@ namespace readdy {
                 os << "Could not load plugin with name \"" << name << "\"";
                 throw NoSuchPluginException(os.str());
             }
-            virtual void add(std::shared_ptr<T> ptr) {
+            virtual void add(std::shared_ptr<T> &&ptr) {
                 plugins.emplace(ptr.get()->getName(), ptr);
             }
-            virtual void add(T &t) {
-                plugins.emplace(t.getName(), std::make_shared<T>(t));
+            virtual void add(T &&t) {
+                this->add(std::make_shared<T>(t));
+                //plugins.emplace(t.getName(), std::shared_ptr<T>(t));
             }
         };
     }

@@ -5,11 +5,11 @@
 #ifndef READDY2_MAIN_KERNEL_H
 #define READDY2_MAIN_KERNEL_H
 
-#include "Plugin.h"
 #include <map>
 #include <iostream>
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
+#include <readdy/plugin/Plugin.h>
 
 
 namespace readdy {
@@ -19,23 +19,33 @@ namespace readdy {
             const std::string name;
         public:
             Kernel(std::string name);
-            const std::string getName() const override;
+
+            virtual const std::string getName() const override;
         };
 
         class KernelProvider : public PluginProvider<Kernel> {
         protected:
             // cannot instantiate directly
             KernelProvider();
+
+            ~KernelProvider() {
+                std::cout << "destroying kernel provider" << std::endl;
+            }
+
             bool isSharedLibrary(const boost::filesystem::path &path);
+
         public:
-            static KernelProvider & getInstance();
+            static KernelProvider &getInstance();
+
             void loadKernelsFromDirectory(std::string directory);
+
             const std::string getDefaultKernelDirectory();
 
         private:
             // prevent that copies can be created
-            KernelProvider(KernelProvider const&) = delete;
-            void operator=(KernelProvider const&) = delete;
+            KernelProvider(KernelProvider const &) = delete;
+
+            void operator=(KernelProvider const &) = delete;
         };
 
     }

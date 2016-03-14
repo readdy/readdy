@@ -10,7 +10,7 @@ namespace plug = readdy::plugin;
 namespace {
     TEST(Kernel, LoadingNonexistingPlugin) {
         plug::Kernel k("foo");
-        plug::KernelProvider::getInstance().add(k);
+        plug::KernelProvider::getInstance().add(std::move(k));
         try{
             plug::KernelProvider::getInstance().get("foo2");
             FAIL() << "Expected NoSuchPluginException!";
@@ -23,7 +23,7 @@ namespace {
 
     TEST(Kernel, LoadingExistingPlugin) {
         plug::Kernel k("bar");
-        plug::KernelProvider::getInstance().add(k);
+        plug::KernelProvider::getInstance().add(std::move(k));
         auto kk_ptr = plug::KernelProvider::getInstance().get("bar");
         EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());
     }
@@ -36,6 +36,12 @@ namespace {
 
     TEST(KernelProvider, TestLoadPluginsFromDirectory) {
         plug::KernelProvider::getInstance().loadKernelsFromDirectory("../lib/plugins");
+        BOOST_LOG_TRIVIAL(debug) << "foo";
         std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
+    }
+
+    TEST(KernelProvider, TestFoo) {
+        auto name = plug::KernelProvider::getInstance().get("SingleCPU").get()->getName();
+        BOOST_LOG_TRIVIAL(debug) << "foo name: " << name;
     }
 }

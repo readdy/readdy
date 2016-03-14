@@ -4,9 +4,13 @@
 
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
 
-namespace plug = readdy::plugin;
+namespace plug = readdy::plugin::_internal;
 
-readdy::plugin::KernelPluginDecorator::KernelPluginDecorator(const readdy::plugin::Kernel &reference)
-        : reference(reference), readdy::plugin::Kernel(reference.getName()) {
+plug::KernelPluginDecorator::KernelPluginDecorator(const readdy::plugin::Kernel &reference, boost::dll::shared_library &&lib)
+        : reference(reference), lib(lib), readdy::plugin::Kernel(reference.getName()) {
     BOOST_LOG_TRIVIAL(debug) << "Wrapping kernel " << reference.getName() << " with kernel decorator.";
+}
+
+const std::string plug::KernelPluginDecorator::getName() const {
+    return reference.getName();
 }

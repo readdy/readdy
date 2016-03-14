@@ -8,6 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
 #include <readdy/common/Utils.h>
+#include <readdy/plugin/_internal/KernelPluginDecorator.h>
 
 namespace fs = boost::filesystem;
 namespace utl = readdy::utils;
@@ -52,17 +53,19 @@ void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
         for(auto dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
             if(isSharedLibrary(dirEntry.path())) {
                 BOOST_LOG_TRIVIAL(debug) << "... loading " << dirEntry.path().string();
-                boost::dll::shared_library lib (dirEntry.path(), boost::dll::load_mode::rtld_lazy | boost::dll::load_mode::rtld_global);
+                boost::dll::shared_library lib (dirEntry.path(),
+                                                boost::dll::load_mode::rtld_lazy | boost::dll::load_mode::rtld_global);
                 if(!lib.has("createKernel")) {
                     BOOST_LOG_TRIVIAL(debug) << "... skipping, since it had no createKernel symbol";
                     if(lib.is_loaded()) lib.unload();
                     continue;
                 }
                 typedef boost::shared_ptr<plug::Kernel> (kernel_t)();
-                boost::function<kernel_t> factory = boost::dll::import_alias<kernel_t>(boost::move(lib), "createKernel");
+                boost::function<kernel_t> factory = boost::dll::import_alias<kernel_t>(lib, "createKernel");
                 auto boost_ptr = factory();
-                auto std_ptr = utl::boost2std::make_shared_ptr(boost_ptr);
-                plug::KernelProvider::getInstance().add(std_ptr);
+                std::cout << "refcount == " << boost_ptr.use_count() << std::endl;
+                auto decorator = std::make_shared<plug::Kernel>(readdy::plugin::_internal::KernelPluginDecorator(boost_ptr.get()[0], std::move(lib)));
+                plug::KernelProvider::getInstance().add(std::move(decorator));
             } else {
                 BOOST_LOG_TRIVIAL(debug) << "... skipping " << dirEntry.path().string() << " since it was no shared library.";
             }
