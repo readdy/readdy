@@ -1,4 +1,4 @@
-#include <Simulation.h>
+#include <readdy/Simulation.h>
 #include "gtest/gtest.h"
 
 using namespace readdy;

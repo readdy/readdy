@@ -1,8 +1,8 @@
 //
 // Created by Moritz Hoffmann on 18/02/16.
 //
-#include <Simulation.h>
-#include "io/ReaDDy_IO.h"
+#include <readdy/Simulation.h>
+#include "readdy/io/ReaDDy_IO.h"
 
 using namespace readdy;
 

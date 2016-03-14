@@ -2,7 +2,7 @@
 // Created by clonker on 08.03.16.
 //
 
-#include <Utils.h>
+#include <readdy/common/Utils.h>
 
 std::string readdy::utils::getOS() {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)

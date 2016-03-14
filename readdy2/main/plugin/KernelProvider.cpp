@@ -3,11 +3,11 @@
 //
 
 #include <iostream>
-#include <Kernel.h>
+#include <readdy/plugin/Kernel.h>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
-#include <Utils.h>
+#include <readdy/common/Utils.h>
 
 namespace fs = boost::filesystem;
 namespace utl = readdy::utils;
