@@ -5,10 +5,11 @@ INCLUDE(ExternalProject)
 
 # sources
 LIST(APPEND READDY_PLUGIN_SOURCES
-        KernelProvider.cpp)
+        KernelProvider.cpp
+        KernelPluginDecorator.cpp)
 
 # expose includes
-SET(${PROJECT_NAME}_INCLUDE_DIRS "${ReaDDy2_common_INCLUDE_DIRS};${Boost.DLL_INCLUDE_DIRS};${READDY_GLOBAL_INCLUDE_DIR}/plugin" CACHE INTERNAL "${PROJECT_NAME}: Include directories" FORCE)
+SET(${PROJECT_NAME}_INCLUDE_DIRS "${ReaDDy2_common_INCLUDE_DIRS};${Boost.DLL_INCLUDE_DIRS};${READDY_GLOBAL_INCLUDE_DIR}/plugin;${READDY_GLOBAL_INCLUDE_DIR}/plugin/_internal" CACHE INTERNAL "${PROJECT_NAME}: Include directories" FORCE)
 
 # library
 ADD_LIBRARY(${PROJECT_NAME} ${READDY_PLUGIN_SOURCES} "${${PROJECT_NAME}_INCLUDE_DIRS}")
@@ -25,6 +26,3 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
 
 # link
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${CMAKE_DL_LIBS} ReaDDy2_common)
-
-# use c++11
-set_property (TARGET ${PROJECT_NAME} PROPERTY COMPILE_FLAGS -std=c++11)

@@ -29,6 +29,12 @@ SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PAT
 SET(READDY_RUN_TESTS ON CACHE BOOL "Should run tests or not")
 SET(READDY_RUN_TESTS_MEMORY_CHECK OFF CACHE BOOL "Determines if valgrind test targets should be added.")
 
+# build as shared lib or as static lib
+SET(READDY_BUILD_SHARED ON CACHE BOOL "Determines if only shared libraries should be build")
+IF(READDY_BUILD_SHARED)
+    SET(BUILD_SHARED_LIBS ON)
+ENDIF(READDY_BUILD_SHARED)
+
 # Compile in debug mode by default
 IF (NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "Setting build type to 'DEBUG' as none was specified.")
@@ -47,8 +53,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)
 
 # includes
 SET(READDY_GLOBAL_DIR "${PROJECT_SOURCE_DIR}")
-SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
-LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
+SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include/readdy")
+LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include/readdy")
 
 # boost.dll
 INCLUDE(SetupBoostDLL)
