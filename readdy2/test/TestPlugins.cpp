@@ -36,5 +36,6 @@ namespace {
 
     TEST(KernelProvider, TestLoadPluginsFromDirectory) {
         plug::KernelProvider::getInstance().loadKernelsFromDirectory("../lib/plugins");
+        std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
     }
 }

@@ -5,7 +5,7 @@
 #ifndef READDY2_MAIN_SINGLECPUKERNEL_H
 #define READDY2_MAIN_SINGLECPUKERNEL_H
 
-#include <Kernel.h>
+#include <readdy/plugin/Kernel.h>
 #include <boost/dll.hpp>
 
 #define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
@@ -16,7 +16,9 @@ namespace readdy {
             class SingleCPUKernel : public readdy::plugin::Kernel {
             public:
                 SingleCPUKernel();
-
+                ~SingleCPUKernel() {
+                    BOOST_LOG_TRIVIAL(debug) << "destroying simple cpu kernel";
+                }
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();
             };
@@ -24,7 +26,7 @@ namespace readdy {
             // export factory method as "create_kernel"
             BOOST_DLL_ALIAS(
                     readdy::kernel::singlecpu::SingleCPUKernel::create,
-                    create_kernel
+                    createKernel
             );
         }
     }

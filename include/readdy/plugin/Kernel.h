@@ -16,16 +16,17 @@ namespace readdy {
     namespace plugin {
         class Kernel : public Plugin {
         protected:
-            std::string name;
+            const std::string name;
         public:
             Kernel(std::string name);
-            const std::string getName() override;
+            const std::string getName() const override;
         };
 
         class KernelProvider : public PluginProvider<Kernel> {
         protected:
             // cannot instantiate directly
             KernelProvider();
+            bool isSharedLibrary(const boost::filesystem::path &path);
         public:
             static KernelProvider & getInstance();
             void loadKernelsFromDirectory(std::string directory);

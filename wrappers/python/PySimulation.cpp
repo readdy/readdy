@@ -1,4 +1,4 @@
-#include <Simulation.h>
+#include <readdy/Simulation.h>
 
 #ifdef READDY_WITH_PYTHON
 #include <boost/python.hpp>

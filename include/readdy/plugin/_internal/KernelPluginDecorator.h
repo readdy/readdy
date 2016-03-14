@@ -6,11 +6,19 @@
 #define READDY2_MAIN_KERNELPLUGINDECORATOR_H
 
 
-#include <Kernel.h>
+#include <readdy/plugin/Kernel.h>
 
-class KernelPluginDecorator : public readdy::plugin::Kernel {
+namespace readdy {
+    namespace plugin {
+        class KernelPluginDecorator : public readdy::plugin::Kernel {
+        protected:
+            const readdy::plugin::Kernel reference;
 
-};
+        public:
+            KernelPluginDecorator(const readdy::plugin::Kernel &reference);
+        };
+    }
+}
 
 
 #endif //READDY2_MAIN_KERNELPLUGINDECORATOR_H

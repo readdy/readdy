@@ -46,32 +46,51 @@ const std::string plug::KernelProvider::getDefaultKernelDirectory() {
 
 void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
     const fs::path p(directory);
-    typedef std::shared_ptr<plug::Kernel> (kernel_t)();
     if (fs::exists(p) && fs::is_directory(p)) {
         BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();
         BOOST_LOG_TRIVIAL(debug) << "current path: " << fs::current_path().string();
         for(auto dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
-            BOOST_LOG_TRIVIAL(debug) << "... loading " << dirEntry.path().string();
-            boost::function<kernel_t> factory;
-            factory = boost::dll::import_alias<kernel_t>(
-                    dirEntry.path(),
-                    "create_kernel",
-                    boost::dll::load_mode::rtld_lazy | boost::dll::load_mode::rtld_global
-            );
-            auto kernel = factory();
-            plug::KernelProvider::getInstance().add(kernel);
+            if(isSharedLibrary(dirEntry.path())) {
+                BOOST_LOG_TRIVIAL(debug) << "... loading " << dirEntry.path().string();
+                boost::dll::shared_library lib (dirEntry.path(), boost::dll::load_mode::rtld_lazy | boost::dll::load_mode::rtld_global);
+                if(!lib.has("createKernel")) {
+                    BOOST_LOG_TRIVIAL(debug) << "... skipping, since it had no createKernel symbol";
+                    if(lib.is_loaded()) lib.unload();
+                    continue;
+                }
+                typedef boost::shared_ptr<plug::Kernel> (kernel_t)();
+                boost::function<kernel_t> factory = boost::dll::import_alias<kernel_t>(boost::move(lib), "createKernel");
+                auto boost_ptr = factory();
+                auto std_ptr = utl::boost2std::make_shared_ptr(boost_ptr);
+                plug::KernelProvider::getInstance().add(std_ptr);
+            } else {
+                BOOST_LOG_TRIVIAL(debug) << "... skipping " << dirEntry.path().string() << " since it was no shared library.";
+            }
         }
+        std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
     } else {
         // TODO raise
-        BOOST_LOG_TRIVIAL(error) << "file [" << p.string() << "] did not exist or was a file.";
+        BOOST_LOG_TRIVIAL(debug) << "file [" << p.string() << "] did not exist or was a file.";
     }
+    std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
 }
 
-const std::string plug::Kernel::getName() {
+const std::string plug::Kernel::getName() const {
     return this->name;
 }
 
-plug::Kernel::Kernel(std::string name) {
-    this->name = name;
+plug::Kernel::Kernel(const std::string name) : name(name){
     BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
+}
+
+bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) {
+    const std::string s = path.string();
+    return (s.find(".dll") != std::string::npos || s.find(".so") != std::string::npos || s.find(".dylib") != std::string::npos)
+           && s.find(".lib") == std::string::npos
+           && s.find(".exp") == std::string::npos
+           && s.find(".pdb") == std::string::npos
+           && s.find(".manifest") == std::string::npos
+           && s.find(".rsp") == std::string::npos
+           && s.find(".obj") == std::string::npos
+           && s.find(".a") == std::string::npos;
 }
