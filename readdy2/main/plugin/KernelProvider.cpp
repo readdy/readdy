@@ -51,21 +51,7 @@ void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
         BOOST_LOG_TRIVIAL(debug) << "current path: " << fs::current_path().string();
         for (auto dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
             if (isSharedLibrary(dirEntry.path())) {
-                BOOST_LOG_TRIVIAL(debug) << "... loading " << dirEntry.path().string();
-                boost::dll::shared_library lib(dirEntry.path(),
-                                               boost::dll::load_mode::rtld_lazy | boost::dll::load_mode::rtld_global);
-                if (!lib.has("createKernel")) {
-                    BOOST_LOG_TRIVIAL(debug) << "... skipping, since it had no createKernel symbol";
-                    if (lib.is_loaded()) lib.unload();
-                    continue;
-                }
-                typedef plug::Kernel *(kernel_t)();
-                boost::function<kernel_t> factory = boost::dll::import_alias<kernel_t>(lib, "createKernel");
-                //auto boost_ptr = factory();
-                BOOST_LOG_TRIVIAL(debug) << "loaded.";
-                readdy::plugin::_internal::KernelPluginDecorator decorator(dirEntry.path());
-                BOOST_LOG_TRIVIAL(debug) << "adding " << decorator.getName();
-                plug::KernelProvider::getInstance().addAs<readdy::plugin::_internal::KernelPluginDecorator>(std::move(decorator));
+                add(dirEntry.path());
             } else {
                 BOOST_LOG_TRIVIAL(debug) << "... skipping " << dirEntry.path().string() << " since it was no shared library.";
             }
@@ -99,4 +85,9 @@ bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::pa
 
 void readdy::plugin::KernelProvider::add(readdy::plugin::Kernel &k) {
     addAs<plug::Kernel>(std::move(k));
+}
+
+void readdy::plugin::KernelProvider::add(const boost::filesystem::path &sharedLib) {
+    readdy::plugin::_internal::KernelPluginDecorator decorator(sharedLib);
+    plug::KernelProvider::getInstance().addAs<readdy::plugin::_internal::KernelPluginDecorator>(std::move(decorator));
 }

@@ -19,6 +19,7 @@ namespace readdy {
 
             public:
                 KernelPluginDecorator(const boost::filesystem::path sharedLib);
+                KernelPluginDecorator(KernelPluginDecorator &&other);
                 ~KernelPluginDecorator() {
                     BOOST_LOG_TRIVIAL(debug) << "destroying decorator of "<< getName();
                     //lib.unload();

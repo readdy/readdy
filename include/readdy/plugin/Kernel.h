@@ -46,6 +46,7 @@ namespace readdy {
                 PluginProvider::add(name, std::move(shared));
             }
 
+            void add(const boost::filesystem::path &sharedLib);
             void add(Kernel &k);
 
             const std::string getDefaultKernelDirectory();

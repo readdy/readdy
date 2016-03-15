@@ -39,3 +39,8 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const bo
 }
 
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) { }
+
+readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(readdy::plugin::_internal::KernelPluginDecorator &&other)
+        : readdy::plugin::Kernel(other.getName()), lib(std::move(other.lib)), reference(std::move(other.reference)) {
+    BOOST_LOG_TRIVIAL(debug) << "<----- moved!";
+}
