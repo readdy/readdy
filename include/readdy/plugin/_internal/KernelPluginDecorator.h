@@ -14,19 +14,23 @@ namespace readdy {
         namespace _internal {
             class KernelPluginDecorator : public readdy::plugin::Kernel {
             protected:
-                readdy::plugin::Kernel reference;
+                std::unique_ptr<readdy::plugin::Kernel> reference;
                 boost::dll::shared_library lib;
 
             public:
-                KernelPluginDecorator(readdy::plugin::Kernel &&reference, boost::dll::shared_library &&lib);
+                KernelPluginDecorator(const boost::filesystem::path sharedLib);
                 ~KernelPluginDecorator() {
                     BOOST_LOG_TRIVIAL(debug) << "destroying decorator of "<< getName();
                     // TODO: weird.
-                    reference.~Kernel();
                     lib.unload();
                 }
 
                 virtual const std::string getName() const override;
+            };
+
+            class InvalidPluginException : public std::runtime_error {
+            public:
+                InvalidPluginException(const std::string &__arg);
             };
         }
     }

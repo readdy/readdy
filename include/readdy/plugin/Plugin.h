@@ -38,12 +38,14 @@ namespace readdy {
                 os << "Could not load plugin with name \"" << name << "\"";
                 throw NoSuchPluginException(os.str());
             }
+
             virtual void add(std::shared_ptr<T> &&ptr) {
+                std::cout << "before ("<< ptr.get()->getName() << "): " << ptr.use_count() << " .... ";
                 plugins.emplace(ptr.get()->getName(), ptr);
+                std::cout << "after: " << ptr.use_count() << std::endl;
             }
             virtual void add(T &&t) {
-                this->add(std::make_shared<T>(t));
-                //plugins.emplace(t.getName(), std::shared_ptr<T>(t));
+                PluginProvider::add(std::make_shared<T>(t));
             }
         };
     }
