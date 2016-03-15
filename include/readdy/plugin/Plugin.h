@@ -39,13 +39,14 @@ namespace readdy {
                 throw NoSuchPluginException(os.str());
             }
 
-            virtual void add(std::shared_ptr<T> &&ptr) {
+            virtual void add(const std::string name, std::shared_ptr<T>&& ptr) {
                 std::cout << "before ("<< ptr.get()->getName() << "): " << ptr.use_count() << " .... ";
-                plugins.emplace(ptr.get()->getName(), ptr);
+                plugins.emplace(name, ptr);
                 std::cout << "after: " << ptr.use_count() << std::endl;
             }
-            virtual void add(T &&t) {
-                PluginProvider::add(std::make_shared<T>(t));
+
+            virtual void add(const std::string name, T&& t) {
+                PluginProvider::add(name, std::make_shared<T>(t));
             }
         };
     }

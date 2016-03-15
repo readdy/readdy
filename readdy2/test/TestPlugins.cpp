@@ -10,7 +10,7 @@ namespace plug = readdy::plugin;
 namespace {
     TEST(Kernel, LoadingNonexistingPlugin) {
         plug::Kernel k("foo");
-        plug::KernelProvider::getInstance().add(std::move(k));
+        plug::KernelProvider::getInstance().add(k);
         try{
             plug::KernelProvider::getInstance().get("foo2");
             FAIL() << "Expected NoSuchPluginException!";
@@ -23,7 +23,7 @@ namespace {
 
     TEST(Kernel, LoadingExistingPlugin) {
         plug::Kernel k("bar");
-        plug::KernelProvider::getInstance().add(std::move(k));
+        plug::KernelProvider::getInstance().add(k);
         auto kk_ptr = plug::KernelProvider::getInstance().get("bar");
         EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());
     }

@@ -16,7 +16,6 @@ namespace plug = readdy::plugin;
 
 plug::KernelProvider &plug::KernelProvider::getInstance() {
     static plug::KernelProvider instance;
-    // TODO initialize kernels (load by directory) -- use boost dll (?)
     return instance;
 }
 
@@ -28,10 +27,10 @@ plug::KernelProvider::KernelProvider() {
 const std::string plug::KernelProvider::getDefaultKernelDirectory() {
     auto dir = getenv("READDY_PLUGIN_DIR");
     static std::string defaultDir;
-    if(dir == NULL) {
-        if(utl::isWindows()) {
+    if (dir == NULL) {
+        if (utl::isWindows()) {
             dir = getenv("PROGRAMFILES");
-            if(dir == NULL) {
+            if (dir == NULL) {
                 defaultDir = "C:\\\\Program Files\\ReaDDy2\\lib\\plugins";
             } else {
                 defaultDir = std::string(dir).append("\\ReaDDy2\\lib\\plugins");
@@ -50,23 +49,23 @@ void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
     if (fs::exists(p) && fs::is_directory(p)) {
         BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();
         BOOST_LOG_TRIVIAL(debug) << "current path: " << fs::current_path().string();
-        for(auto dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
-            if(isSharedLibrary(dirEntry.path())) {
+        for (auto dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
+            if (isSharedLibrary(dirEntry.path())) {
                 BOOST_LOG_TRIVIAL(debug) << "... loading " << dirEntry.path().string();
-                boost::dll::shared_library lib (dirEntry.path(),
-                                                boost::dll::load_mode::rtld_lazy | boost::dll::load_mode::rtld_global);
-                if(!lib.has("createKernel")) {
+                boost::dll::shared_library lib(dirEntry.path(),
+                                               boost::dll::load_mode::rtld_lazy | boost::dll::load_mode::rtld_global);
+                if (!lib.has("createKernel")) {
                     BOOST_LOG_TRIVIAL(debug) << "... skipping, since it had no createKernel symbol";
-                    if(lib.is_loaded()) lib.unload();
+                    if (lib.is_loaded()) lib.unload();
                     continue;
                 }
-                typedef plug::Kernel* (kernel_t)();
+                typedef plug::Kernel *(kernel_t)();
                 boost::function<kernel_t> factory = boost::dll::import_alias<kernel_t>(lib, "createKernel");
                 //auto boost_ptr = factory();
                 BOOST_LOG_TRIVIAL(debug) << "loaded.";
-                readdy::plugin::_internal::KernelPluginDecorator decorator (dirEntry.path());
+                readdy::plugin::_internal::KernelPluginDecorator decorator(dirEntry.path());
                 BOOST_LOG_TRIVIAL(debug) << "adding " << decorator.getName();
-                plug::KernelProvider::getInstance().add(std::move(decorator));
+                plug::KernelProvider::getInstance().addAs<readdy::plugin::_internal::KernelPluginDecorator>(std::move(decorator));
             } else {
                 BOOST_LOG_TRIVIAL(debug) << "... skipping " << dirEntry.path().string() << " since it was no shared library.";
             }
@@ -75,13 +74,14 @@ void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
         // TODO raise
         BOOST_LOG_TRIVIAL(debug) << "file [" << p.string() << "] did not exist or was a file.";
     }
+    BOOST_LOG_TRIVIAL(debug) << "end of loadKernelsFromDirectory";
 }
 
 const std::string plug::Kernel::getName() const {
     return this->name;
 }
 
-plug::Kernel::Kernel(const std::string name) : name(name){
+plug::Kernel::Kernel(const std::string name) : name(name) {
     BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
 }
 
@@ -95,4 +95,8 @@ bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::pa
            && s.find(".rsp") == std::string::npos
            && s.find(".obj") == std::string::npos
            && s.find(".a") == std::string::npos;
+}
+
+void readdy::plugin::KernelProvider::add(readdy::plugin::Kernel &k) {
+    addAs<plug::Kernel>(std::move(k));
 }

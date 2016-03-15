@@ -20,13 +20,16 @@ const std::string plug::KernelPluginDecorator::getName() const {
 readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const boost::filesystem::path sharedLib)
         : readdy::plugin::Kernel::Kernel(sharedLib.string()) {
     BOOST_LOG_TRIVIAL(debug) << "... loading kernel " << sharedLib.string();
+    // load the library
     lib = dll::shared_library(sharedLib, dll::load_mode::rtld_lazy | dll::load_mode::rtld_global);
+    // check if library has required symbol
     if (!lib.has("createKernel")) {
         BOOST_LOG_TRIVIAL(error) << "... skipping, since it had no createKernel symbol";
         if (lib.is_loaded()) lib.unload();
         std::string errMsg = std::string("library ").append(sharedLib.string()).append(" had no createKernel symbol.");
         throw plug::InvalidPluginException(errMsg);
     }
+    // load the kernel
     {
         typedef readdy::plugin::Kernel *(kernel_t)();
         boost::function<kernel_t> factory = dll::import_alias<kernel_t>(lib, "createKernel");

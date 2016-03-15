@@ -39,6 +39,15 @@ namespace readdy {
 
             void loadKernelsFromDirectory(std::string directory);
 
+            template<class D>
+            void addAs(D &&kernel) {
+                const std::string name = kernel.getName();
+                std::shared_ptr<Kernel> shared = std::make_shared<Kernel>(std::move(kernel));
+                PluginProvider::add(name, std::move(shared));
+            }
+
+            void add(Kernel &k);
+
             const std::string getDefaultKernelDirectory();
 
         private:

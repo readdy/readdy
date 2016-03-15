@@ -21,8 +21,7 @@ namespace readdy {
                 KernelPluginDecorator(const boost::filesystem::path sharedLib);
                 ~KernelPluginDecorator() {
                     BOOST_LOG_TRIVIAL(debug) << "destroying decorator of "<< getName();
-                    // TODO: weird.
-                    lib.unload();
+                    //lib.unload();
                 }
 
                 virtual const std::string getName() const override;
