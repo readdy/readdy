@@ -5,11 +5,11 @@
 #include "SingleCPUKernel.h"
 
 namespace kern = readdy::kernel::singlecpu;
-kern::SingleCPUKernel::SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"){
+kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"){
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated!";
 }
 
-kern::SingleCPUKernel* kern::SingleCPUKernel::create() {
-    //auto kernel = kern::SingleCPUKernel();
-    return new kern::SingleCPUKernel();
+std::shared_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
+    auto kernel = std::make_shared<kern::SingleCPUKernel>(kern::SingleCPUKernel());
+    return kernel;
 }

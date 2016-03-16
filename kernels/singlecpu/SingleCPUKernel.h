@@ -20,7 +20,7 @@ namespace readdy {
                     BOOST_LOG_TRIVIAL(debug) << "destroying kernel " << getName();
                 }
                 // factory method
-                static SingleCPUKernel* create();
+                static std::shared_ptr<SingleCPUKernel> create();
             };
 
             // export factory method as "create_kernel"

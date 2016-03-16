@@ -18,9 +18,9 @@ namespace readdy {
         protected:
             const std::string name;
         public:
-            Kernel(std::string name);
+            Kernel(const std::string name);
 
-            virtual const std::string getName() const override;
+            virtual const std::string& getName() const override;
         };
 
         class KernelProvider : public PluginProvider<Kernel> {
@@ -54,7 +54,6 @@ namespace readdy {
         private:
             // prevent that copies can be created
             KernelProvider(KernelProvider const &) = delete;
-
             void operator=(KernelProvider const &) = delete;
         };
 

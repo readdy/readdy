@@ -63,7 +63,7 @@ void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
     BOOST_LOG_TRIVIAL(debug) << "end of loadKernelsFromDirectory";
 }
 
-const std::string plug::Kernel::getName() const {
+const std::string &plug::Kernel::getName() const {
     return this->name;
 }
 
@@ -88,6 +88,7 @@ void readdy::plugin::KernelProvider::add(readdy::plugin::Kernel &k) {
 }
 
 void readdy::plugin::KernelProvider::add(const boost::filesystem::path &sharedLib) {
-    readdy::plugin::_internal::KernelPluginDecorator decorator(sharedLib);
-    plug::KernelProvider::getInstance().addAs<readdy::plugin::_internal::KernelPluginDecorator>(std::move(decorator));
+    using namespace readdy::plugin::_internal;
+    auto shared = std::make_shared<KernelPluginDecorator>(KernelPluginDecorator(sharedLib));
+    plugins.emplace(std::make_pair(shared.get()->getName(), std::move(shared)));
 }

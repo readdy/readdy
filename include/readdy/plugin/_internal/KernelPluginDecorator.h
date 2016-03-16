@@ -14,18 +14,17 @@ namespace readdy {
         namespace _internal {
             class KernelPluginDecorator : public readdy::plugin::Kernel {
             protected:
-                std::unique_ptr<readdy::plugin::Kernel> reference;
+                std::shared_ptr<readdy::plugin::Kernel> reference;
                 boost::dll::shared_library lib;
 
             public:
                 KernelPluginDecorator(const boost::filesystem::path sharedLib);
-                KernelPluginDecorator(KernelPluginDecorator &&other);
                 ~KernelPluginDecorator() {
                     BOOST_LOG_TRIVIAL(debug) << "destroying decorator of "<< getName();
-                    //lib.unload();
+                    BOOST_LOG_TRIVIAL(debug) << "use count: " << reference.use_count();
                 }
 
-                virtual const std::string getName() const override;
+                virtual const std::string &getName() const override;
             };
 
             class InvalidPluginException : public std::runtime_error {
