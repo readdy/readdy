@@ -17,7 +17,7 @@ namespace readdy {
             public:
                 SingleCPUKernel();
                 ~SingleCPUKernel() {
-                    BOOST_LOG_TRIVIAL(debug) << "destroying kernel " << getName();
+                    BOOST_LOG_TRIVIAL(debug) << "destroying plugin kernel " << getName();
                 }
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();

@@ -19,7 +19,9 @@ namespace readdy {
         };
 
         class Plugin {
+        public:
             virtual const std::string& getName() const = 0;
+            virtual ~Plugin() {};
         };
 
         template<typename T>

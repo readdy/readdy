@@ -19,6 +19,7 @@ namespace readdy {
             const std::string name;
         public:
             Kernel(const std::string name);
+            virtual ~Kernel();
 
             virtual const std::string& getName() const override;
         };

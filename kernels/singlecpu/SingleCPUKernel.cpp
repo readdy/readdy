@@ -10,6 +10,5 @@ kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"){
 }
 
 std::shared_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
-    auto kernel = std::make_shared<kern::SingleCPUKernel>(kern::SingleCPUKernel());
-    return kernel;
+    return std::make_shared<kern::SingleCPUKernel>(kern::SingleCPUKernel());
 }

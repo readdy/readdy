@@ -71,6 +71,11 @@ plug::Kernel::Kernel(const std::string name) : name(name) {
     BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
 }
 
+readdy::plugin::Kernel::~Kernel() {
+    BOOST_LOG_TRIVIAL(trace) << "destructing kernel \"" << name << "\"";
+}
+
+
 bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) {
     const std::string s = path.string();
     return (s.find(".dll") != std::string::npos || s.find(".so") != std::string::npos || s.find(".dylib") != std::string::npos)
