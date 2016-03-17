@@ -1,18 +1,10 @@
 PROJECT(ReaDDy2_plugin)
 
-# requires boost dll
-INCLUDE(ExternalProject)
-
 # sources
-LIST(APPEND READDY_PLUGIN_SOURCES
-        KernelProvider.cpp
-        KernelPluginDecorator.cpp)
-
-# expose includes
-SET(${PROJECT_NAME}_INCLUDE_DIRS "${ReaDDy2_common_INCLUDE_DIRS};${Boost.DLL_INCLUDE_DIRS}" CACHE INTERNAL "${PROJECT_NAME}: Include directories" FORCE)
+INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources_plugin.cmake")
 
 # library
-ADD_LIBRARY(${PROJECT_NAME} ${READDY_PLUGIN_SOURCES} "${${PROJECT_NAME}_INCLUDE_DIRS}")
+ADD_LIBRARY(${PROJECT_NAME} ${READDY_PLUGIN_SOURCES} "${PLUGIN_INCLUDE_DIRS}")
 
 # includes
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${${PROJECT_NAME}_INCLUDE_DIRS})

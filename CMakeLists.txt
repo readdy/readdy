@@ -29,11 +29,10 @@ SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PAT
 SET(READDY_RUN_TESTS ON CACHE BOOL "Should run tests or not")
 SET(READDY_RUN_TESTS_MEMORY_CHECK OFF CACHE BOOL "Determines if valgrind test targets should be added.")
 
-# build as shared lib or as static lib
-SET(READDY_BUILD_SHARED ON CACHE BOOL "Determines if only shared libraries should be build")
-IF(READDY_BUILD_SHARED)
-    SET(BUILD_SHARED_LIBS ON)
-ENDIF(READDY_BUILD_SHARED)
+# build as shared lib
+SET(BUILD_SHARED_LIBS ON)
+# build single libraries or as a single shared library holding the whole thing
+SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared library or shared libraries with respect to the components should be built")
 
 # Compile in debug mode by default
 IF (NOT CMAKE_BUILD_TYPE)
@@ -68,21 +67,37 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     ENDIF (NOT ANDROID)
 ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
+# link dynamically against boost log
+ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+
+# main project name
+SET(READDY_PROJECT_NAME "ReaDDy2")
+
 #
 # readdy2 core
 #
+IF(READDY_BUILD_SHARED_COMBINED)
+    INCLUDE(cmake/sources_common.cmake)
+    INCLUDE(cmake/sources_io.cmake)
+    INCLUDE(cmake/sources_plugin.cmake)
+    INCLUDE(cmake/sources_readdy.cmake)
+    # create library
+    ADD_LIBRARY(${READDY_PROJECT_NAME} ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
+    TARGET_INCLUDE_DIRECTORIES(${READDY_PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS})
+    SET_TARGET_PROPERTIES(${READDY_PROJECT_NAME} PROPERTIES
+            LINK_FLAGS "${EXTRA_LINK_FLAGS}"
+            COMPILE_FLAGS "${EXTRA_COMPILEFLAGS}"
+    )
+    TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS})
+ELSE(READDY_BUILD_SHARED_COMBINED)
+    # include directories from least dependent to most dependent
+    # i.e.: A depends on B -> add subdirectory of B first
+    ADD_SUBDIRECTORY(readdy2/main/common)
+    ADD_SUBDIRECTORY(readdy2/main/io)
+    ADD_SUBDIRECTORY(readdy2/main/plugin)
+    ADD_SUBDIRECTORY(readdy2/main)
+ENDIF(READDY_BUILD_SHARED_COMBINED)
 
-# link dynamically against boost log
-IF(BUILD_SHARED_LIBS)
-    ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
-ENDIF(BUILD_SHARED_LIBS)
-
-# include directories from least dependent to most dependent
-# i.e.: A depends on B -> add subdirectory of B first
-ADD_SUBDIRECTORY(readdy2/main/common)
-ADD_SUBDIRECTORY(readdy2/main/io)
-ADD_SUBDIRECTORY(readdy2/main/plugin)
-ADD_SUBDIRECTORY(readdy2/main)
 
 #
 # readdy2 kernels
