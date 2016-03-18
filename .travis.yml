@@ -39,4 +39,4 @@ install:
 script:
 - echo "CXX=${CXX}"
 - echo "CC=${CC}"
-- conda build -q tools/conda-recipe
+- CXX=${CXX} CC=${CC} conda build -q tools/conda-recipe
