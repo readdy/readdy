@@ -10,17 +10,20 @@ addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise
     packages:
-    - gcc-5
+    - clang-3.7
     - g++-5
-    - clang
+    - gcc-5
 
 env:
   global:
     - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
   matrix:
-    - python=2.7 CONDA_PY=27
-    - python=3.5 CONDY_PY=35
+    - python=2.7
+      CONDA_PY=27
+    - python=3.5
+      CONDY_PY=35
 
 before_install:
 - tools/ci/travis/setup_travis.sh
@@ -28,6 +31,10 @@ before_install:
 - conda config --set always_yes true
 - conda config --add channels omnia
 - conda install -q conda-build
+
+install:
+- if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
+- if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
 
 script:
 - conda build -q tools/conda-recipe
