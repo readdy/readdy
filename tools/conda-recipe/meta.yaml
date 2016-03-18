@@ -4,6 +4,11 @@ package:
 source:
   path: ../..
 
+build:
+  script_env:
+    - CXX
+    - CC
+
 requirements:
   build:
     - boost >=1.58
