@@ -1,0 +1,22 @@
+language: c
+os:
+ - linux
+ - osx
+
+sudo: false
+
+env:
+  global:
+    - PATH=$HOME/miniconda/bin:$PATH
+  matrix:
+    - python=2.7 CONDA_PY=27
+    - python=3.5 CONDY_PY=35
+
+before_install:
+- tools/ci/travis/install_miniconda.sh
+- conda config --set always_yes true
+- conda config --add channels omnia
+- conda install -q $common_py_deps
+
+script:
+- conda build -q tools/conda-recipe

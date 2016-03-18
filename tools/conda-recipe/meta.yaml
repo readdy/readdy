@@ -1,15 +1,16 @@
 package:
   name: readdy2
-  version: !!str_dev
+  version: 0.1
 source:
   path: ../..
 
 requirements:
   build:
-    - boost >= 1.58
+    - boost >=1.58
   run:
-    - boost >= 1.58
+    - boost >=1.58
 
 test:
   requires:
-    - boost >= 1.58
+    - python
+    - boost >=1.58

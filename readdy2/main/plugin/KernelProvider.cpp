@@ -36,7 +36,7 @@ const std::string plug::KernelProvider::getDefaultKernelDirectory() {
                 defaultDir = std::string(dir).append("\\ReaDDy2\\lib\\plugins");
             }
         } else {
-            defaultDir = "/usr/local/readdy2/lib/plugins";
+            defaultDir = "/usr/local/readdy/lib/plugins";
         }
     } else {
         defaultDir = std::string(dir);
