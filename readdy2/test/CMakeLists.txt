@@ -11,9 +11,6 @@ INCLUDE_DIRECTORIES(BEFORE ${ReaDDy2_INCLUDE_DIRS})
 
 TARGET_LINK_LIBRARIES(runUnitTests ReaDDy2 ${gtest})
 
-ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
-
-
 #
 # memory tests
 #

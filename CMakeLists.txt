@@ -137,7 +137,7 @@ IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_
     ENABLE_TESTING()
     INCLUDE_DIRECTORIES(${GOOGLETEST_INCLUDE})
     ADD_SUBDIRECTORY(readdy2/test)
-
+    ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
 ELSE ()
     MESSAGE(STATUS "The submodule googletest was not initialized or READDY_RUN_TESTS was OFF, thus no testing.")
 ENDIF ()
