@@ -1,3 +1,8 @@
+### Status
+| Travis |
+----------
+|[![Build Status](https://travis-ci.org/clonker/ReaDDy2.png?branch=master)](https://travis-ci.org/clonker/ReaDDy2)|
+
 ### Dependencies
 - HDF5
 - boost

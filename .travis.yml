@@ -16,6 +16,7 @@ before_install:
 - tools/ci/travis/install_miniconda.sh
 - conda config --set always_yes true
 - conda config --add channels omnia
+- conda install -qy conda-build
 
 script:
 - conda build -q tools/conda-recipe
