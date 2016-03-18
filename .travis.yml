@@ -1,9 +1,19 @@
-language: c
+sudo: false
+language: cpp
+compiler:
+  - gcc
+  - clang
 os:
  - linux
  - osx
-
-sudo: false
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-5
+    - g++-5
+    - clang
 
 env:
   global:
