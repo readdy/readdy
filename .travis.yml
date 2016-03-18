@@ -37,4 +37,6 @@ install:
 - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
 
 script:
+- echo "CXX=${CXX}"
+- echo "CC=${CC}"
 - conda build -q tools/conda-recipe
