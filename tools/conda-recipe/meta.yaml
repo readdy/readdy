@@ -11,13 +11,13 @@ build:
 
 requirements:
   build:
-    - boost =1.58
+    - boost 1.58
     - icu
   run:
-    - boost =1.58
+    - boost 1.58
     - icu
 
 test:
   requires:
     - python
-    - boost =1.58
+    - boost 1.58
