@@ -43,6 +43,9 @@ ELSE (NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
+# OSX deployment target
+SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.9)
+
 # decide if api wrappers are being generated
 SET(READDY_BUILD_PYTHON_WRAPPER ON CACHE BOOL "Build Python wrappers")
 

@@ -5,12 +5,12 @@
 #include <readdy/common/Utils.h>
 
 std::string readdy::utils::getOS() {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if BOOST_OS_WINDOWS
 #ifdef _WIN64
     return "win64";
 #endif
     return "win32";
-#elif defined(__APPLE__) && defined(TARGET_OS_MAC)
+#elif BOOST_OS_MACOS
     return "osx";
 #else
     return "unix";
@@ -18,7 +18,7 @@ std::string readdy::utils::getOS() {
 }
 
 bool readdy::utils::isWindows() {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if BOOST_OS_WINDOWS
     return true;
 #endif
     return false;

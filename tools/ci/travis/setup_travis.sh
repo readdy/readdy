@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-
+set -evx
+env | sort
 cd $HOME
 if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
   CMAKE_URL="http://www.cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz"
