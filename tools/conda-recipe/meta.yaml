@@ -4,10 +4,6 @@ package:
 source:
   path: ../..
 
-channels:
-  - defaults
-  - menpo
-
 build:
   script_env:
     - CXX
