@@ -84,9 +84,6 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -Wl,--no-as-needed -lrt")
     ENDIF (NOT ANDROID)
 ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
-IF(APPLE)
-    SET(CMAKE_CXX_FLAGS "-stdlib=libstdc++ -std=c++11")
-ENDIF(APPLE)
 
 # link dynamically against boost log
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
