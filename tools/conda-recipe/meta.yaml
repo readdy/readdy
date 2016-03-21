@@ -2,7 +2,7 @@ package:
   name: readdy2
   version: 0.1
 source:
-  path: ../..
+  path: ../.. [win and unix]
 
 build:
   script_env:
@@ -12,11 +12,11 @@ build:
 
 requirements:
   build:
-    - boost 1.59.0
+    - boost 1.59.0 # [not osx]
     - cmake >=3.2.0
   run:
-    - boost 1.59.0
+    - boost 1.59.0 # [not osx]
 
 test:
   requires:
-    - boost 1.59.0
+    - boost 1.59.0 # [not osx]

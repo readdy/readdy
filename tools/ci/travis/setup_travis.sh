@@ -15,5 +15,6 @@ else
   if [ "$CXX" = "g++" ]; then
       # brew unlink gcc
       brew install gcc
+      brew install boost --c++11
   fi
 fi
