@@ -13,7 +13,7 @@ build:
 requirements:
   build:
     - boost 1.59.0
-    - cmake >= 3.2.0
+    - cmake >=3.2.0
   run:
     - boost 1.59.0
 
