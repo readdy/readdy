@@ -35,8 +35,8 @@ namespace {
     }
 
     TEST(KernelProvider, TestLoadPluginsFromDirectory) {
-        plug::KernelProvider::getInstance().loadKernelsFromDirectory("out/lib/plugins");
-        BOOST_LOG_TRIVIAL(debug) << "foo";
+        plug::KernelProvider::getInstance().loadKernelsFromDirectory("lib/readdy_plugins");
+        BOOST_LOG_TRIVIAL(debug) << "current path: " << boost::filesystem::current_path().string();
         std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
     }
 

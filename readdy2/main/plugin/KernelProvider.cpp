@@ -31,12 +31,12 @@ const std::string plug::KernelProvider::getDefaultKernelDirectory() {
         if (utl::isWindows()) {
             dir = getenv("PROGRAMFILES");
             if (dir == NULL) {
-                defaultDir = "C:\\\\Program Files\\ReaDDy2\\lib\\plugins";
+                defaultDir = "C:\\\\Program Files\\ReaDDy2\\lib\\readdy_plugins";
             } else {
-                defaultDir = std::string(dir).append("\\ReaDDy2\\lib\\plugins");
+                defaultDir = std::string(dir).append("\\ReaDDy2\\lib\\readdy_plugins");
             }
         } else {
-            defaultDir = "/usr/local/readdy/lib/plugins";
+            defaultDir = "/usr/local/readdy/lib/readdy_plugins";
         }
     } else {
         defaultDir = std::string(dir);
