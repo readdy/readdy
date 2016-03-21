@@ -13,7 +13,7 @@ else
   # brew unlink cmake
   # brew install cmake
   if [ "$CXX" = "g++" ]; then
-      brew unlink gcc
+      # brew unlink gcc
       brew install gcc
   fi
 fi
