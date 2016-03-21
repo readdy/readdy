@@ -44,7 +44,7 @@ const std::string plug::KernelProvider::getDefaultKernelDirectory() {
     return defaultDir;
 }
 
-void plug::KernelProvider::loadKernelsFromDirectory(std::string directory) {
+void plug::KernelProvider::loadKernelsFromDirectory(const std::string& directory) {
     const fs::path p(directory);
     if (fs::exists(p) && fs::is_directory(p)) {
         BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();

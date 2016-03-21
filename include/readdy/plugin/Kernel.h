@@ -38,7 +38,7 @@ namespace readdy {
         public:
             static KernelProvider &getInstance();
 
-            void loadKernelsFromDirectory(std::string directory);
+            void loadKernelsFromDirectory(const std::string& directory);
 
             template<class D>
             void addAs(D &&kernel) {

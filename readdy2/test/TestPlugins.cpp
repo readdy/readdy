@@ -3,6 +3,7 @@
 //
 
 #include <readdy/plugin/Kernel.h>
+#include <boost/algorithm/string/predicate.hpp>
 #include "gtest/gtest.h"
 
 namespace plug = readdy::plugin;
@@ -35,7 +36,17 @@ namespace {
     }
 
     TEST(KernelProvider, TestLoadPluginsFromDirectory) {
-        plug::KernelProvider::getInstance().loadKernelsFromDirectory("lib/readdy_plugins");
+        // if we're in conda
+        const char* env = std::getenv("CONDA_DEFAULT_ENV");
+        std::string pluginDir = "lib/readdy_plugins";
+        if(env) {
+            auto _env = std::string(env);
+            if(!boost::algorithm::ends_with(env, "/")) {
+                _env = _env.append("/");
+            }
+            pluginDir = _env.append(pluginDir);
+        }
+        plug::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
         BOOST_LOG_TRIVIAL(debug) << "current path: " << boost::filesystem::current_path().string();
         std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
     }
