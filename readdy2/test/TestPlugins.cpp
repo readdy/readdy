@@ -37,7 +37,7 @@ namespace {
 
     TEST(KernelProvider, TestLoadPluginsFromDirectory) {
         // if we're in conda
-        const char* env = std::getenv("CONDA_DEFAULT_ENV");
+        const char* env = std::getenv("PREFIX");
         std::string pluginDir = "lib/readdy_plugins";
         if(env) {
             auto _env = std::string(env);
