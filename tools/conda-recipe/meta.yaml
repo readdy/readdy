@@ -13,9 +13,13 @@ build:
 requirements:
   build:
     - boost 1.59.0
+    - icu [unix]
+    - cmake >= 3.2.0
   run:
     - boost 1.59.0
+    - icu [unix]
 
 test:
   requires:
     - boost 1.59.0
+    - icu [unix]
