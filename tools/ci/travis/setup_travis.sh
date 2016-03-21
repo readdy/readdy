@@ -10,5 +10,6 @@ if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
 else
   brew update >/dev/null
   brew unlink cmake
+  brew unlink gcc
   brew install cmake gcc
 fi
