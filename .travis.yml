@@ -31,10 +31,11 @@ before_install:
 - conda config --set always_yes true
 - conda config --add channels omnia
 - conda install -q conda-build
+- export READDY_INSTALL_UNIT_TEST_EXECUTABLE=1
 
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
-- if [ "$CXX" = "clang++" ]; then export CXX="/usr/bin/clang++-3.7" CC="/usr/bin/clang-3.7"; fi
+- if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
 
 script:
 - conda build -q tools/conda-recipe

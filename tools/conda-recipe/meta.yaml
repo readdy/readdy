@@ -8,6 +8,7 @@ build:
   script_env:
     - CXX
     - CC
+    - READDY_INSTALL_UNIT_TEST_EXECUTABLE
 
 requirements:
   build:
