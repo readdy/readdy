@@ -12,6 +12,8 @@ else
   brew update >/dev/null
   # brew unlink cmake
   # brew install cmake
-  brew unlink gcc
-  brew install gcc
+  if [ "$CXX" = "g++" ]; then
+      brew unlink gcc
+      brew install gcc
+  fi
 fi
