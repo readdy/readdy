@@ -12,10 +12,10 @@ build:
 
 requirements:
   build:
-    - boost ==1.58
+    - boost
   run:
-    - boost ==1.58
+    - boost
 
 test:
   requires:
-    - boost ==1.58
+    - boost
