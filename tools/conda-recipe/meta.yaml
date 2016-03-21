@@ -18,5 +18,4 @@ requirements:
 
 test:
   requires:
-    - python
     - boost ==1.58
