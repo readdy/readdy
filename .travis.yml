@@ -6,6 +6,7 @@ compiler:
 os:
  - linux
  - osx
+osx_image: xcode7
 addons:
   apt:
     sources:
