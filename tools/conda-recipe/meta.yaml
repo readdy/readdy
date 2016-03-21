@@ -2,7 +2,7 @@ package:
   name: readdy2
   version: 0.1
 source:
-  path: ../.. [win and unix]
+  path: ../..
 
 build:
   script_env:
