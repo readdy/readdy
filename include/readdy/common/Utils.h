@@ -9,9 +9,7 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <ostream>
 #include <iostream>
-#ifdef BOOST_OS_MACOS
 #include <memory>
-#endif
 
 namespace readdy {
     namespace utils {
