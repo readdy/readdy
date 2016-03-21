@@ -12,10 +12,10 @@ build:
 
 requirements:
   build:
-    - boost
+    - boost 1.59.0
   run:
-    - boost
+    - boost 1.59.0
 
 test:
   requires:
-    - boost
+    - boost 1.59.0
