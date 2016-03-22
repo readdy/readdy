@@ -31,7 +31,6 @@ before_install:
 - tools/ci/travis/install_miniconda.sh
 - conda config --set always_yes true
 - conda config --add channels omnia
-- if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then conda config --add channels salilab; fi
 - conda install -q conda-build
 - export READDY_INSTALL_UNIT_TEST_EXECUTABLE=1
 
