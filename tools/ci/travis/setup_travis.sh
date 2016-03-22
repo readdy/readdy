@@ -16,5 +16,6 @@ else
       # brew unlink gcc
       brew install gcc
       brew install boost --c++11
+      brew install boost-python --c++11
   fi
 fi
