@@ -13,9 +13,11 @@ else
   # brew unlink cmake
   # brew install cmake
   if [ "$CXX" = "g++" ]; then
-      # brew unlink gcc
-      brew install gcc
-      brew install boost --c++11
-      brew install boost-python --c++11
+      brew unlink gcc || true
+      brew install gcc || true
+      brew unlink boost || true
+      brew install boost --c++11 || true
+      brew unlink boost-python || true
+      brew install boost-python --c++11 || true
   fi
 fi
