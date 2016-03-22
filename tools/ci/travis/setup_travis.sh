@@ -9,15 +9,13 @@ if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
   #for file in _cmake/*.tar.gz; do tar -xzf "${file}" --strip=1 -C _cmake && rm "${file}"; done
   echo "skip this since cmake gets provided by conda"
 else
-  brew update >/dev/null
+  echo "skip this"
+  #brew update >/dev/null
   # brew unlink cmake
   # brew install cmake
-  if [ "$CXX" = "g++" ]; then
-      brew unlink gcc || true
-      brew install gcc || true
-      brew unlink boost || true
-      brew install boost --c++11 || true
-      brew unlink boost-python || true
-      brew install boost-python --c++11 || true
-  fi
+  #if [ "$CXX" = "g++" ]; then
+  #    brew install gcc || true
+  #    brew install boost --c++11 || true
+  #    brew install boost-python --c++11 || true
+  #fi
 fi
