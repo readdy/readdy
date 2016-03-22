@@ -78,15 +78,23 @@ INCLUDE(SetupBoostDLL)
 
 # extra compile and link flags
 SET(EXTRA_COMPILE_FLAGS "-std=c++11")
+SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
 IF(APPLE)
     SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -stdlib=libstdc++")
+    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -stdlib=libstdc++")
+    ENDIF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 ENDIF(APPLE)
-SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     IF (NOT ANDROID)
         SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -Wl,--no-as-needed -lrt")
     ENDIF (NOT ANDROID)
 ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+
+MESSAGE(STATUS "---------------------------------------------")
+MESSAGE(STATUS "Extra compile flags: ${EXTRA_COMPILE_FLAGS}")
+MESSAGE(STATUS "Extra link flags: ${EXTRA_LINK_FLAGS}")
+MESSAGE(STATUS "---------------------------------------------")
 
 # link dynamically against boost log
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
