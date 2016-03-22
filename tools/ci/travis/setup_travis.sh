@@ -13,9 +13,10 @@ else
   #brew update >/dev/null
   # brew unlink cmake
   # brew install cmake
-  #if [ "$CXX" = "g++" ]; then
-  #    brew install gcc || true
+  if [ "$CXX" = "g++" ]; then
+    brew unlink gcc || true
+    brew install gcc || true
   #    brew install boost --c++11 || true
   #    brew install boost-python --c++11 || true
-  #fi
+  fi
 fi
