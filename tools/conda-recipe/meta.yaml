@@ -12,11 +12,14 @@ build:
 
 requirements:
   build:
-    - boost 1.59.0
+    - boost 1.59.0 # [not osx]
+    - boost-mac # [osx]
     - cmake >=3.2.0
   run:
-    - boost 1.59.0
+    - boost 1.59.0 # [not osx]
+    - boost-mac # [osx]
 
 test:
   requires:
-    - boost 1.59.0
+    - boost 1.59.0 # [not osx]
+    - boost-mac # [osx]
