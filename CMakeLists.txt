@@ -180,6 +180,31 @@ IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_
     INCLUDE_DIRECTORIES(${GOOGLETEST_INCLUDE})
     ADD_SUBDIRECTORY(readdy2/test)
     ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
+
 ELSE ()
     MESSAGE(STATUS "The submodule googletest was not initialized or READDY_RUN_TESTS was OFF, thus no testing.")
+    # if tests are disabled, so are the corresponding memory checks
+    SET(READDY_RUN_TESTS_MEMORY_CHECK OFF)
 ENDIF ()
+
+#
+# memory checks for the tests
+#
+IF(READDY_RUN_TESTS_MEMORY_CHECK)
+    FIND_PACKAGE(Valgrind QUIET)
+    IF (NOT VALGRIND_FOUND)
+        MESSAGE(STATUS "Valgrind not found, therefore no memory checks.")
+    ELSE (NOT VALGRIND_FOUND)
+        MESSAGE(STATUS "Valgrind found, memory checks enabled.")
+        SET(VALGRIND_OPTIONS --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=30 --leak-check=summary --leak-resolution=high)
+
+        FUNCTION(ADD_MEMCHECK_TEST name binary)
+            SET(memcheck_command "valgrind ${VALGRIND_OPTIONS}")
+            SEPARATE_ARGUMENTS(memcheck_command)
+            ADD_TEST(NAME memcheck_${name} COMMAND ${memcheck_command} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${binary}" ${ARGN})
+        ENDFUNCTION(ADD_MEMCHECK_TEST)
+
+        # can be called by "ctest -V -R memcheck_readdy-tests"
+        ADD_MEMCHECK_TEST(readdy-tests runUnitTests)
+    ENDIF (NOT VALGRIND_FOUND)
+ENDIF()
