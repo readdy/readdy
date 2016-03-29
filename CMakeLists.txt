@@ -105,6 +105,7 @@ SET(READDY_PROJECT_NAME "ReaDDy2")
 #
 # readdy2 core
 #
+# ADD_SUBDIRECTORY(libraries/boost)
 IF(READDY_BUILD_SHARED_COMBINED)
     INCLUDE(cmake/sources_common.cmake)
     INCLUDE(cmake/sources_io.cmake)
