@@ -57,3 +57,15 @@ IF(NOT b2Path)
     ENDIF(NOT Result EQUAL "0")
 ENDIF(NOT b2Path)
 
+FIND_PROGRAM(python_cmd python)
+MESSAGE(STATUS "PYTHONCMD=${python_cmd}")
+EXECUTE_PROCESS(COMMAND "${python_cmd} get_python_include.py"
+        WORKING_DIRECTORY "${READDY_GLOBAL_DIR}/tools/build_boost"
+        RESULT_VARIABLE Result
+        OUTPUT_VARIABLE Output)
+
+MESSAGE(STATUS "RESULT: ${Result}")
+MESSAGE(STATUS "OUTPUT: ${Output}")
+
+SET(ENV{PYTHON_INCLUDE_DIR} "${Result}")
+MESSAGE(STATUS "-------------- PYTHON INCLUDE DIR=$ENV{PYTHON_INCLUDE_DIR}")

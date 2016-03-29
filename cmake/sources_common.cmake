@@ -12,6 +12,8 @@ ELSE(${BUILD_SHARED_LIBS})
 ENDIF(${BUILD_SHARED_LIBS})
 FIND_PACKAGE(Boost 1.57 COMPONENTS system filesystem log thread REQUIRED)
 
+INCLUDE(${READDY_GLOBAL_DIR}/cmake/Modules/SetupBoost.cmake)
+
 # include dirs
 SET(COMMON_INCLUDE_DIRS "${READDY_GLOBAL_INCLUDE_DIR};${Boost_INCLUDE_DIRS}" CACHE INTERNAL "Common include dirs" FORCE)
 
