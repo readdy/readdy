@@ -1,6 +1,21 @@
 SET(Boost_VERSION "1_59_0")
 SET(Boost_SHA1 "5123209db194d66d69a9cfa5af8ff473d5941d97")
 
+#[[
+BZIP2_FOUND - system has BZip2
+BZIP2_INCLUDE_DIR - the BZip2 include directory
+BZIP2_LIBRARIES - Link these to use BZip2
+BZIP2_NEED_PREFIX - this is set if the functions are prefixed with BZ2_
+BZIP2_VERSION_STRING - the version of BZip2 found (since CMake 2.8.8)
+]]
+FIND_PACKAGE(BZip2 REQUIRED)
+#[[
+ZLIB_INCLUDE_DIRS   - where to find zlib.h, etc.
+ZLIB_LIBRARIES      - List of libraries when using zlib.
+ZLIB_FOUND          - True if zlib found.
+]]
+FIND_PACKAGE(ZLIB REQUIRED)
+
 # download into libraries/external/boost (so it gets ignored by git)
 SET(BOOST_DOWNLOAD_OUT "${READDY_GLOBAL_DIR}/libraries/external/boost/boost_${Boost_VERSION}.tar.gz")
 IF(NOT EXISTS "${BOOST_DOWNLOAD_OUT}")
@@ -42,6 +57,3 @@ IF(NOT b2Path)
     ENDIF(NOT Result EQUAL "0")
 ENDIF(NOT b2Path)
 
-INCLUDE(ExternalProject)
-
-# todo requires bzip2, zlib (find package)
