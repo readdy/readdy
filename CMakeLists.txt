@@ -80,9 +80,9 @@ INCLUDE(SetupBoostDLL)
 SET(EXTRA_COMPILE_FLAGS "-std=c++11")
 SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
 IF(APPLE)
-    SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -stdlib=libstdc++")
+    SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}") # -stdlib=libstdc++
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -stdlib=libstdc++")
+        SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -v") #-stdlib=libstdc++ -lc++
     ENDIF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 ENDIF(APPLE)
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -115,7 +115,7 @@ IF(READDY_BUILD_SHARED_COMBINED)
     TARGET_INCLUDE_DIRECTORIES(${READDY_PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS})
     SET_TARGET_PROPERTIES(${READDY_PROJECT_NAME} PROPERTIES
             LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-            COMPILE_FLAGS "${EXTRA_COMPILEFLAGS}"
+            COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
     )
     TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS})
 ELSE(READDY_BUILD_SHARED_COMBINED)
@@ -180,6 +180,31 @@ IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_
     INCLUDE_DIRECTORIES(${GOOGLETEST_INCLUDE})
     ADD_SUBDIRECTORY(readdy2/test)
     ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
+
 ELSE ()
     MESSAGE(STATUS "The submodule googletest was not initialized or READDY_RUN_TESTS was OFF, thus no testing.")
+    # if tests are disabled, so are the corresponding memory checks
+    SET(READDY_RUN_TESTS_MEMORY_CHECK OFF)
 ENDIF ()
+
+#
+# memory checks for the tests
+#
+IF(READDY_RUN_TESTS_MEMORY_CHECK)
+    FIND_PACKAGE(Valgrind QUIET)
+    IF (NOT VALGRIND_FOUND)
+        MESSAGE(STATUS "Valgrind not found, therefore no memory checks.")
+    ELSE (NOT VALGRIND_FOUND)
+        MESSAGE(STATUS "Valgrind found, memory checks enabled.")
+        SET(VALGRIND_OPTIONS --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=30 --leak-check=summary --leak-resolution=high)
+
+        FUNCTION(ADD_MEMCHECK_TEST name binary)
+            SET(memcheck_command "valgrind ${VALGRIND_OPTIONS}")
+            SEPARATE_ARGUMENTS(memcheck_command)
+            ADD_TEST(NAME memcheck_${name} COMMAND ${memcheck_command} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${binary}" ${ARGN})
+        ENDFUNCTION(ADD_MEMCHECK_TEST)
+
+        # can be called by "ctest -V -R memcheck_readdy-tests"
+        ADD_MEMCHECK_TEST(readdy-tests runUnitTests)
+    ENDIF (NOT VALGRIND_FOUND)
+ENDIF()
