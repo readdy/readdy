@@ -6,6 +6,6 @@ CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
 
 mkdir build
 cd build
-cmake .. $CMAKE_FLAGS
-make -j$CPU_COUNT
-make -j$CPU_COUNT install
+cmake .. ${CMAKE_FLAGS}
+make -j${CPU_COUNT}
+make -j${CPU_COUNT} install

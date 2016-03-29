@@ -1,0 +1,15 @@
+import os ;
+local pythonVersion = [ os.environ PY_VER ] ;
+local pythonInclude = [ os.environ PYTHON_INCLUDE_DIR ] ;
+local libPath = [ os.environ LIBRARY_PATH ] ;
+local pythonBin = [ os.environ PYTHON ] ;
+
+# ---------------------
+# Python configuration.
+# ---------------------
+using python
+    : $(pythonVersion)                                 # Version
+    : $(pythonBin)                                     # Python Path
+    : $(pythonInclude)                                 # include path
+    : $(libPath)                                       # lib path(s)
+    ;
