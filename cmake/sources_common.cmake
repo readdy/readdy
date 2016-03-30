@@ -11,7 +11,7 @@ ELSE(${BUILD_SHARED_LIBS})
     set(Boost_USE_STATIC_RUNTIME ON)
 ENDIF(${BUILD_SHARED_LIBS})
 FIND_PACKAGE(Boost 1.57 COMPONENTS system filesystem log thread REQUIRED)
-
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 INCLUDE(${READDY_GLOBAL_DIR}/cmake/Modules/SetupBoost.cmake)
 
 # include dirs
