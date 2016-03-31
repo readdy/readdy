@@ -27,6 +27,7 @@ env:
       CONDY_PY=35
 
 cache:
+  apt: true
   directories:
     - $HOME/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
 
