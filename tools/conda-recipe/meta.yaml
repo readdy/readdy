@@ -15,9 +15,11 @@ requirements:
   build:
     - cmake >=3.2.0
     - curl
-#  run:
-#    - boost 1.59.0
+    - python
 
-#test:
-#  requires:
-#    - boost 1.59.0
+  run:
+    - python
+
+test:
+  requires:
+    - python

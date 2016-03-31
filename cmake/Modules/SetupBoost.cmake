@@ -90,9 +90,9 @@ IF (NOT b2Path)
 ENDIF (NOT b2Path)
 
 IF (READDY_BUILD_PYTHON_WRAPPER)
-    FIND_PACKAGE(PythonInterp REQUIRED)
+    # FIND_PACKAGE(PythonInterp REQUIRED)
     EXECUTE_PROCESS(
-            COMMAND "${PYTHON_EXECUTABLE}" "${READDY_GLOBAL_DIR}/libraries/boost/python_include_dir.py"
+            COMMAND python "${READDY_GLOBAL_DIR}/libraries/boost/python_include_dir.py"
             RESULT_VARIABLE Result
             OUTPUT_VARIABLE Output
             OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -182,7 +182,7 @@ MESSAGE("Boost includedir: ${BOOST_INCLUDEDIR}")
 MESSAGE("Boost librarydir: ${BOOST_LIBRARYDIR}")
 MESSAGE("Boost no system paths: ${Boost_NO_SYSTEM_PATHS}")
 
-SET(Boost_INCLUDE_DIRS "${BOOST_UNZIP_OUT}/include/boost")
+SET(Boost_INCLUDE_DIRS "${BOOST_UNZIP_OUT}/include")
 
 INSTALL(DIRECTORY "${BOOST_UNZIP_OUT}/stage/lib/" COMPONENT Development DESTINATION "lib/")
-INSTALL(DIRECTORY ${BOOST_UNZIP_OUT}/include/boost COMPONENT Development DESTINATION include)
+INSTALL(DIRECTORY ${BOOST_UNZIP_OUT}/include/boost/boost COMPONENT Development DESTINATION include)
