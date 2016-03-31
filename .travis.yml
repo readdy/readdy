@@ -26,6 +26,10 @@ env:
     - python=3.5
       CONDY_PY=35
 
+cache:
+  directories:
+    - $home/.readdy_cache/boost_dl
+
 before_install:
 - tools/ci/travis/setup_travis.sh
 - tools/ci/travis/install_miniconda.sh
@@ -33,6 +37,7 @@ before_install:
 - conda config --add channels omnia
 - conda install -q conda-build
 - export READDY_INSTALL_UNIT_TEST_EXECUTABLE=1
+- export BOOST_DOWNLOAD_CACHE_DIR=$HOME/.readdy_cache/boost_dl
 
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi

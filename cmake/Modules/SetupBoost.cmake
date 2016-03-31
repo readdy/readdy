@@ -46,15 +46,6 @@ IF (NOT EXISTS "${BOOST_DOWNLOAD_OUT}")
     IF(NOT Result EQUAL "0")
         MESSAGE(FATAL_ERROR "Download failed: ${Output}")
     ENDIF(NOT Result EQUAL "0")
-    #[[FILE(
-            DOWNLOAD
-            ${BOOST_DOWNLOAD_OUT}
-            STATUS BOOST_DOWNLOAD_STATUS
-            LOG BOOST_DL_LOG
-            SHOW_PROGRESS
-            EXPECTED_HASH SHA1=${Boost_SHA1}
-    )
-    MESSAGE(STATUS "Boost DL Log:\n${BOOST_DL_LOG}")]]
 ENDIF (NOT EXISTS "${BOOST_DOWNLOAD_OUT}")
 # unzip
 SET(BOOST_UNZIP_OUT "${BOOST_DOWNLOAD_CACHE_DIR}/boost_${Boost_VERSION}")
@@ -113,6 +104,7 @@ LIST(APPEND B2ARGS
         "link=shared"
         "threading=multi"
         "runtime-link=shared"
+        "include=$ENV{PYTHON_INCLUDE_DIR}"
         "dll-path=${BOOST_UNZIP_OUT}/stage/lib"
         "--build-dir=Build"
         "-sBZIP2_LIBPATH=${BZIP2_LIBRARY_DIR}"
