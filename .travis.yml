@@ -3,6 +3,9 @@ language: cpp
 compiler:
   - gcc
   - clang
+os:
+ - linux
+ - osx
 osx_image: xcode7
 addons:
   apt:
@@ -17,10 +20,8 @@ addons:
 env:
   global:
     - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
+    - MACOSX_DEPLOYMENT_TARGET=10.7
   matrix:
-    - os: linux
-    - os: osx
-      env: MACOSX_DEPLOYMENT_TARGET=10.7
     - python=2.7
       CONDA_PY=27
     - python=3.5
