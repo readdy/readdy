@@ -19,7 +19,7 @@ addons:
 
 env:
   global:
-    - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
+    - $HOME/miniconda/bin:$PATH
   matrix:
     - python=2.7
       CONDA_PY=27
@@ -28,7 +28,7 @@ env:
 
 cache:
   directories:
-    - $home/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
+    - $HOME/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
 
 before_install:
 - tools/ci/travis/setup_travis.sh
@@ -37,7 +37,7 @@ before_install:
 - conda config --add channels omnia
 - conda install -q conda-build
 - export READDY_INSTALL_UNIT_TEST_EXECUTABLE=1
-- export BOOST_DOWNLOAD_CACHE_DIR=$home/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
+- export BOOST_DOWNLOAD_CACHE_DIR=$HOME/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
 
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
