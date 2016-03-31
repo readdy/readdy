@@ -28,7 +28,7 @@ env:
 
 cache:
   directories:
-    - $home/.readdy_cache/boost_dl
+    - $home/.readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
 
 before_install:
 - tools/ci/travis/setup_travis.sh
