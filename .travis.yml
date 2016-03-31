@@ -45,4 +45,4 @@ install:
 - if [[ "${TRAVIS_OS_NAME}" == "linux" ]] && [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
 
 script:
-- conda build -q tools/conda-recipe
+- conda build -q tools/conda-recipe | grep -v "\-\- Installing:" | grep -v "\-\- Up\-to\-date:"
