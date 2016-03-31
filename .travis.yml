@@ -37,7 +37,7 @@ before_install:
 - conda config --add channels omnia
 - conda install -q conda-build
 - export READDY_INSTALL_UNIT_TEST_EXECUTABLE=1
-- export BOOST_DOWNLOAD_CACHE_DIR=$HOME/.readdy_cache/boost_dl
+- export BOOST_DOWNLOAD_CACHE_DIR=$home/.readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
 
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
