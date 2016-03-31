@@ -1,5 +1,10 @@
 SET(Boost_VERSION "1_59_0")
-SET(Boost_SHA1 "5123209db194d66d69a9cfa5af8ff473d5941d97")
+#SET(Boost_SHA1 "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+IF(DEFINED ENV{BOOST_DOWNLOAD_CACHE_DIR})
+    SET(BOOST_DOWNLOAD_CACHE_DIR "$ENV{BOOST_DOWNLOAD_CACHE_DIR}")
+ELSE()
+    SET(BOOST_DOWNLOAD_CACHE_DIR "${CMAKE_BINARY_DIR}/download/external/boost")
+ENDIF()
 
 #[[
 BZIP2_FOUND - system has BZip2
@@ -22,20 +27,40 @@ LIST(GET ZLIB_LIBRARIES 0 ZLIBLIB)
 GET_FILENAME_COMPONENT(ZLIB_LIBRARY_DIR ${ZLIBLIB} PATH)
 MESSAGE(STATUS "ZLIB library dir: ${ZLIB_LIBRARY_DIR}")
 
-# download into libraries/external/boost (so it gets ignored by git)
-SET(BOOST_DOWNLOAD_OUT "${READDY_GLOBAL_DIR}/libraries/external/boost/boost_${Boost_VERSION}.tar.gz")
+# download into BOOST_DOWNLOAD_CACHE_DIR
+IF(NOT EXISTS "${BOOST_DOWNLOAD_CACHE_DIR}/")
+    FILE(MAKE_DIRECTORY ${BOOST_DOWNLOAD_CACHE_DIR})
+ENDIF()
+SET(BOOST_DOWNLOAD_OUT "${BOOST_DOWNLOAD_CACHE_DIR}/boost_${Boost_VERSION}.tar.gz")
 IF (NOT EXISTS "${BOOST_DOWNLOAD_OUT}")
-    FILE(DOWNLOAD http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_${Boost_VERSION}.tar.gz/download
+    FIND_PROGRAM(CURL curl)
+    IF(NOT CURL)
+        MESSAGE(FATAL_ERROR "Could not locate curl!")
+    ENDIF(NOT CURL)
+    MESSAGE(STATUS "Saving boost to ${BOOST_DOWNLOAD_OUT}")
+    EXECUTE_PROCESS(
+            COMMAND ${CURL} "-kL" "http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_${Boost_VERSION}.tar.gz/download" "-o" "${BOOST_DOWNLOAD_OUT}"
+            RESULT_VARIABLE Result
+            OUTPUT_VARIABLE Output
+    )
+    IF(NOT Result EQUAL "0")
+        MESSAGE(FATAL_ERROR "Download failed: ${Output}")
+    ENDIF(NOT Result EQUAL "0")
+    #[[FILE(
+            DOWNLOAD
             ${BOOST_DOWNLOAD_OUT}
             STATUS BOOST_DOWNLOAD_STATUS
+            LOG BOOST_DL_LOG
             SHOW_PROGRESS
-            EXPECTED_HASH SHA1=${Boost_SHA1})
+            EXPECTED_HASH SHA1=${Boost_SHA1}
+    )
+    MESSAGE(STATUS "Boost DL Log:\n${BOOST_DL_LOG}")]]
 ENDIF (NOT EXISTS "${BOOST_DOWNLOAD_OUT}")
 # unzip
-SET(BOOST_UNZIP_OUT "${READDY_GLOBAL_DIR}/libraries/external/boost/boost_${Boost_VERSION}")
+SET(BOOST_UNZIP_OUT "${BOOST_DOWNLOAD_CACHE_DIR}/boost_${Boost_VERSION}")
 IF (NOT EXISTS "${BOOST_UNZIP_OUT}/")
     EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E tar xzf "${BOOST_DOWNLOAD_OUT}"
-            WORKING_DIRECTORY "${READDY_GLOBAL_DIR}/libraries/external/boost")
+            WORKING_DIRECTORY "${BOOST_DOWNLOAD_CACHE_DIR}")
 ENDIF (NOT EXISTS "${BOOST_UNZIP_OUT}/")
 
 # boostrap
@@ -44,11 +69,11 @@ FIND_PROGRAM(b2Path NAMES bjam b2 PATHS ${BOOST_UNZIP_OUT} NO_DEFAULT_PATH)
 IF (NOT b2Path)
     IF (MSVC)
         FIND_PROGRAM(b2Bootstrap NAMES bootstrap.bat PATHS ${BOOST_UNZIP_OUT} NO_DEFAULT_PATH)
-    ELSE (MSVC)
+    ELSE ()
         FIND_PROGRAM(b2Bootstrap NAMES bootstrap.sh PATHS ${BOOST_UNZIP_OUT} NO_DEFAULT_PATH)
-    ENDIF (MSVC)
+    ENDIF ()
     MESSAGE(STATUS "Building b2 (bjam) with ${b2Bootstrap}")
-    LIST(APPEND BOOTSTRAP_ARGS "--prefix=${CMAKE_CURRENT_BINARY_DIR}/out/boost")
+    LIST(APPEND BOOTSTRAP_ARGS "--prefix=${CMAKE_BINARY_DIR}/out/boost")
     IF (NOT MSVC)
         IF (CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
             LIST(APPEND BOOTSTRAP_ARGS "--with-toolset=clang")
@@ -70,10 +95,17 @@ ENDIF (NOT b2Path)
 
 IF (READDY_BUILD_PYTHON_WRAPPER)
     FIND_PACKAGE(PythonInterp REQUIRED)
-    FIND_PACKAGE(PythonLibs REQUIRED)
-
+    EXECUTE_PROCESS(
+            COMMAND "${PYTHON_EXECUTABLE}" "${READDY_GLOBAL_DIR}/libraries/boost/python_include_dir.py"
+            RESULT_VARIABLE Result
+            OUTPUT_VARIABLE Output
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF (NOT Result EQUAL "0")
+        MESSAGE(FATAL_ERROR "Failed running python_include_dir script:\n${Output}")
+    ENDIF (NOT Result EQUAL "0")
     # set python include dir as environment variable
-    SET(ENV{PYTHON_INCLUDE_DIR} "${PYTHON_INCLUDE_DIR}")
+    SET(ENV{PYTHON_INCLUDE_DIR} "${Output}")
     MESSAGE(STATUS "Found python include dir \"$ENV{PYTHON_INCLUDE_DIR}\"")
 ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 
@@ -81,6 +113,7 @@ LIST(APPEND B2ARGS
         "link=shared"
         "threading=multi"
         "runtime-link=shared"
+        "dll-path=${BOOST_UNZIP_OUT}/stage/lib"
         "--build-dir=Build"
         "-sBZIP2_LIBPATH=${BZIP2_LIBRARY_DIR}"
         "-sBZIP2_INCLUDE=${BZIP2_INCLUDE_DIR}"
@@ -154,5 +187,5 @@ MESSAGE("Boost no system paths: ${Boost_NO_SYSTEM_PATHS}")
 
 SET(Boost_INCLUDE_DIRS "${BOOST_UNZIP_OUT}/boost")
 
-INSTALL(DIRECTORY "${BOOST_UNZIP_OUT}/stage/lib/" COMPONENT Development DESTINATION lib/readdy_boost/)
+INSTALL(DIRECTORY "${BOOST_UNZIP_OUT}/stage/lib/" COMPONENT Development DESTINATION "lib/")
 INSTALL(DIRECTORY ${BOOST_UNZIP_OUT}/boost COMPONENT Development DESTINATION include)
