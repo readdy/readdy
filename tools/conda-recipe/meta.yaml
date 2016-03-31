@@ -10,6 +10,7 @@ build:
     - CC
     - READDY_INSTALL_UNIT_TEST_EXECUTABLE
     - BOOST_DOWNLOAD_CACHE_DIR
+    - TRAVIS
 
 requirements:
   build:

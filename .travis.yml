@@ -3,9 +3,6 @@ language: cpp
 compiler:
   - gcc
   - clang
-os:
- - linux
- - osx
 osx_image: xcode7
 addons:
   apt:
@@ -21,10 +18,16 @@ env:
   global:
     - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
   matrix:
+    - os: linux
+    - os: osx
+      env: MACOSX_DEPLOYMENT_TARGET=10.7
     - python=2.7
       CONDA_PY=27
     - python=3.5
       CONDY_PY=35
+
+before_cache:
+  - rm -rf $HOME/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
 
 cache:
   apt: true
@@ -45,4 +48,4 @@ install:
 - if [[ "${TRAVIS_OS_NAME}" == "linux" ]] && [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
 
 script:
-- conda build -q tools/conda-recipe # | grep -v "\-\- Installing:" | grep -v "\-\- Up\-to\-date:"
+- conda build -q tools/conda-recipe

@@ -13,4 +13,4 @@ mkdir build
 cd build
 cmake .. ${CMAKE_FLAGS}
 make -j${CPU_COUNT}
-make -j${CPU_COUNT} install
+make -j${CPU_COUNT} install &> /dev/null
