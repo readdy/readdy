@@ -182,7 +182,7 @@ MESSAGE("Boost includedir: ${BOOST_INCLUDEDIR}")
 MESSAGE("Boost librarydir: ${BOOST_LIBRARYDIR}")
 MESSAGE("Boost no system paths: ${Boost_NO_SYSTEM_PATHS}")
 
-SET(Boost_INCLUDE_DIRS "${BOOST_UNZIP_OUT}/include")
+SET(Boost_INCLUDE_DIRS "${BOOST_UNZIP_OUT}/include/boost")
 
 INSTALL(DIRECTORY "${BOOST_UNZIP_OUT}/stage/lib/" COMPONENT Development DESTINATION "lib/")
 INSTALL(DIRECTORY ${BOOST_UNZIP_OUT}/include/boost/boost COMPONENT Development DESTINATION include)
