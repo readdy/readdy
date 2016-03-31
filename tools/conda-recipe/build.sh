@@ -3,6 +3,7 @@
 CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=$PREFIX -DBUILD_TESTING=OFF"
 CMAKE_FLAGS+=" -DREADDY_BUILD_SHARED_COMBINED:BOOL=ON"
 CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
+CMAKE_FLAGS+=" -DPYTHON_LIBRARY:PATH=$PREFIX/lib"
 
 # cant reliably determine cpu count in a docker container,
 # therefore fix this value.
