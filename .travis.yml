@@ -27,9 +27,6 @@ env:
     - python=3.5
       CONDY_PY=35
 
-before_cache:
-  - rm -rf $HOME/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
-
 cache:
   apt: true
   directories:
