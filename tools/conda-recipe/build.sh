@@ -18,7 +18,7 @@ if [ `uname` == Linux ]; then
     if [ $PY3K -eq 1 ]; then
         CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}m.so"
     else
-        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}m.so"
+        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}.so"
     fi
 fi
 
