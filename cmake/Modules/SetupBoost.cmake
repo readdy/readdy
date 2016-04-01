@@ -59,6 +59,32 @@ IF(NOT EXISTS "${BOOST_UNZIP_OUT}/include/")
 ENDIF()
 FILE(COPY "${BOOST_UNZIP_OUT}/boost" DESTINATION "${BOOST_UNZIP_OUT}/include/boost")
 
+IF (READDY_BUILD_PYTHON_WRAPPER)
+    EXECUTE_PROCESS(
+            COMMAND python "${READDY_GLOBAL_DIR}/libraries/boost/python_include_dir.py"
+            RESULT_VARIABLE Result
+            OUTPUT_VARIABLE Output
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF (NOT Result EQUAL "0")
+        MESSAGE(FATAL_ERROR "Failed running python_include_dir script:\n${Output}")
+    ENDIF (NOT Result EQUAL "0")
+    # set python include dir as environment variable
+    SET(ENV{PYTHON_INCLUDE_DIR} "${Output}")
+    MESSAGE(STATUS "Found python include dir \"$ENV{PYTHON_INCLUDE_DIR}\"")
+    EXECUTE_PROCESS(
+            COMMAND which python
+            RESULT_VARIABLE Result
+            OUTPUT_VARIABLE Output
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF (NOT Result EQUAL "0")
+        MESSAGE(FATAL_ERROR "Failed to determine the python executable's location!")
+    ENDIF(NOT Result EQUAL "0")
+    MESSAGE(STATUS "Found python executable ${Output}")
+    LIST(APPEND BOOTSTRAP_ARGS "--with-python=${Output}")
+ENDIF (READDY_BUILD_PYTHON_WRAPPER)
+
 # boostrap
 UNSET(b2Path CACHE)
 FIND_PROGRAM(b2Path NAMES bjam b2 PATHS ${BOOST_UNZIP_OUT} NO_DEFAULT_PATH)
@@ -92,22 +118,6 @@ IF (NOT b2Path)
     ENDIF (NOT Result EQUAL "0")
     FIND_PROGRAM(b2Path NAMES bjam b2 PATHS ${BOOST_UNZIP_OUT} NO_DEFAULT_PATH)
 ENDIF (NOT b2Path)
-
-IF (READDY_BUILD_PYTHON_WRAPPER)
-    # FIND_PACKAGE(PythonInterp REQUIRED)
-    EXECUTE_PROCESS(
-            COMMAND python "${READDY_GLOBAL_DIR}/libraries/boost/python_include_dir.py"
-            RESULT_VARIABLE Result
-            OUTPUT_VARIABLE Output
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    IF (NOT Result EQUAL "0")
-        MESSAGE(FATAL_ERROR "Failed running python_include_dir script:\n${Output}")
-    ENDIF (NOT Result EQUAL "0")
-    # set python include dir as environment variable
-    SET(ENV{PYTHON_INCLUDE_DIR} "${Output}")
-    MESSAGE(STATUS "Found python include dir \"$ENV{PYTHON_INCLUDE_DIR}\"")
-ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 
 LIST(APPEND B2ARGS
         "link=shared"

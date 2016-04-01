@@ -7,20 +7,22 @@ CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
 export PYTHON_INCLUDE_DIR=`python -c "from __future__ import print_function; import distutils.sysconfig; print(distutils.sysconfig.get_python_inc(True))"`
 
 # attempt to feed the right python library to FindPythonLibs
+lib_path=""
 if [ `uname` == Darwin ]; then
     if [ $PY3K -eq 1 ]; then
-        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}m.dylib"
+        lib_path="=$PREFIX/lib/libpython${PY_VER}m.dylib"
     else
-        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}.dylib"
+        lib_path="$PREFIX/lib/libpython${PY_VER}.dylib"
     fi
 fi
 if [ `uname` == Linux ]; then
     if [ $PY3K -eq 1 ]; then
-        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}m.so"
+        lib_path="$PREFIX/lib/libpython${PY_VER}m.so"
     else
-        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}.so"
+        lib_path="$PREFIX/lib/libpython${PY_VER}.so"
     fi
 fi
+CMAKE_FLAGS+="-DPYTHON_LIBRARY:FILEPATH="+${lib_path}
 
 # cant reliably determine cpu count in a docker container,
 # therefore fix this value.

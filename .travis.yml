@@ -26,6 +26,9 @@ env:
       CONDA_PY=27
     - python=3.5
       CONDY_PY=35
+  exclude:
+    - os: osx
+      compiler: gcc
 
 cache:
   apt: true
