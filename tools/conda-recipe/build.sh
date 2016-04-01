@@ -9,19 +9,17 @@ export PYTHON_INCLUDE_DIR=`python -c "from __future__ import print_function; imp
 # attempt to feed the right python library to FindPythonLibs
 if [ `uname` == Darwin ]; then
     if [ $PY3K -eq 1 ]; then
-        cd $LIBRARY_PATH
-        ln -s libpython${PY_VER}m.dylib libpython${PY_VER}.dylib
-        cd -
+        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}m.dylib"
+    else
+        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}.dylib"
     fi
-    CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}.dylib"
 fi
 if [ `uname` == Linux ]; then
     if [ $PY3K -eq 1 ]; then
-        cd $LIBRARY_PATH
-        ln -s libpython${PY_VER}m.so libpython${PY_VER}.so
-        cd -
+        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}m.so"
+    else
+        CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}m.so"
     fi
-    CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=$PREFIX/lib/libpython${PY_VER}.so"
 fi
 
 # cant reliably determine cpu count in a docker container,
