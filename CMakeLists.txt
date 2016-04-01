@@ -4,7 +4,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2.0)
 
 PROJECT(ReaDDy2_Main C CXX)
-SET (CMAKE_CXX_STANDARD 11)
 
 # for custom cmake modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
@@ -85,7 +84,7 @@ SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
 IF(APPLE)
     SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -stdlib=libc++")
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -v -stdlib=libc++ -lc++")
+        SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -v -stdlib=libc++ -lc++abi")
     ENDIF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 ENDIF(APPLE)
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -162,25 +161,36 @@ ENDIF ()
 IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_RUN_TESTS)
     MESSAGE(STATUS "The submodule googletest was initialized, thus enable testing")
 
-    INCLUDE(ExternalProject)
+    #INCLUDE(ExternalProject)
 
     SET(GOOGLETEST_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
     SET(GOOGLETEST_INCLUDE ${GOOGLETEST_ROOT}/googletest/include)
     SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
     SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
-
-    ExternalProject_Add(
-            googletest
-            DOWNLOAD_COMMAND ""
-            SOURCE_DIR ${GOOGLETEST_ROOT}
-            BINARY_DIR ${GOOGLETEST_BINARY_DIR}
-            CMAKE_CACHE_ARGS "-DBUILD_GTEST:bool=ON" "-DBUILD_GMOCK:bool=OFF"
-            "-Dgtest_force_shared_crt:bool=ON"
-            INSTALL_COMMAND ""
+    #LIST(APPEND GTEST_FLAGS "-DBUILD_GTEST:bool=ON" "-DBUILD_GMOCK:bool=OFF" "-Dgtest_force_shared_crt:bool=ON" "-DBUILD_SHARED_LIBS:bool=ON")
+    #LIST(APPEND GTEST_FLAGS "-DCMAKE_CXX_FLAGS=\"${EXTRA_COMPILE_FLAGS}\"")
+    #LIST(APPEND GTEST_FLAGS "-DCMAKE_EXE_LINKER_FLAGS=\"${EXTRA_LINK_FLAGS}\"")
+    ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
+    SET(BUILD_GTEST ON)
+    SET(BUILD_GMOCK OFF)
+    SET(gtest_force_shared_crt ON)
+    SET(BUILD_SHARED_LIBS ON)
+    SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
+            LINK_FLAGS "${EXTRA_LINK_FLAGS}"
+            COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
     )
-    ADD_DEPENDENCIES(ReaDDy2 googletest)
+
+    #ExternalProject_Add(
+    #        googletest
+    #        DOWNLOAD_COMMAND ""
+    #        SOURCE_DIR ${GOOGLETEST_ROOT}
+    #        BINARY_DIR ${GOOGLETEST_BINARY_DIR}
+    #        CMAKE_CACHE_ARGS ${GTEST_FLAGS}
+    #        INSTALL_COMMAND ""
+    #)
+    # ADD_DEPENDENCIES(ReaDDy2 gtest)
     ENABLE_TESTING()
-    INCLUDE_DIRECTORIES(${GOOGLETEST_INCLUDE})
+    INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
     ADD_SUBDIRECTORY(readdy2/test)
     ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
 
