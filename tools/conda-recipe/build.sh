@@ -3,7 +3,23 @@
 CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=$PREFIX -DBUILD_TESTING=OFF"
 CMAKE_FLAGS+=" -DREADDY_BUILD_SHARED_COMBINED:BOOL=ON"
 CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
-CMAKE_FLAGS+=" -DPYTHON_LIBRARY:PATH=$PREFIX/lib"
+
+if [ `uname` == Darwin ]; then
+    if [ $PY3K -eq 1 ]; then
+        cd $LIBRARY_PATH
+        ln -s libpython${PY_VER}m.dylib libpython${PY_VER}.dylib
+        cd -
+    fi
+    CMAKE_FLAGS+=" -DPYTHON_LIBRARY:PATH=$PREFIX/lib/libpython${PY_VER}.dylib"
+fi
+if [ `uname` == Linux ]; then
+    if [ $PY3K -eq 1 ]; then
+        cd $LIBRARY_PATH
+        ln -s libpython${PY_VER}m.so libpython${PY_VER}.so
+        cd -
+    fi
+    CMAKE_FLAGS+=" -DPYTHON_LIBRARY:PATH=$PREFIX/lib/libpython${PY_VER}.so"
+fi
 
 # cant reliably determine cpu count in a docker container,
 # therefore fix this value.
