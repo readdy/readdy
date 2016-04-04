@@ -5,9 +5,9 @@
 #include <Python.h>
 #include <boost/python.hpp>
 
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-#pragma message "content of PYTHON_HEX: " STR(PY_VERSION_HEX)
+#if PY_VERSION_HEX >= 0x03000000
+#warning "definitely using python 3 !!! !! ! !"
+#endif
 
 BOOST_PYTHON_MODULE(simulation) {
         using namespace boost::python;
