@@ -119,7 +119,7 @@ IF(READDY_BUILD_SHARED_COMBINED)
             LINK_FLAGS "${EXTRA_LINK_FLAGS}"
             COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
     )
-    TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS})
+    TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${READDY_DEPENDENT_LIBRARIES})
 ELSE(READDY_BUILD_SHARED_COMBINED)
     # include directories from least dependent to most dependent
     # i.e.: A depends on B -> add subdirectory of B first

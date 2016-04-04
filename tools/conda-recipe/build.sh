@@ -4,6 +4,7 @@ CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=$PREFIX"
 CMAKE_FLAGS+=" -DREADDY_BUILD_SHARED_COMBINED:BOOL=ON"
 CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
 
+export HDF5_ROOT=${PREFIX}
 export PYTHON_INCLUDE_DIR=`python -c "from __future__ import print_function; import distutils.sysconfig; print(distutils.sysconfig.get_python_inc(True))"`
 
 # attempt to feed the right python library to FindPythonLibs

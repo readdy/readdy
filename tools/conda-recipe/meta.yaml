@@ -17,10 +17,13 @@ requirements:
     - cmake >=3.2.0
     - curl
     - python
+    - hdf5
 
   run:
     - python
+    - hdf5
 
 test:
   requires:
     - python
+    - hdf5
