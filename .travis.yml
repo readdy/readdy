@@ -6,6 +6,7 @@ compiler:
 os:
  - linux
  - osx
+
 osx_image: xcode7
 addons:
   apt:
@@ -22,15 +23,23 @@ env:
     - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
     - MACOSX_DEPLOYMENT_TARGET=10.7
   matrix:
-    - python=2.7
-      CONDA_PY=27
-    - python=3.5
-      CONDY_PY=35
-    exclude:
-      - os: osx
-        compiler: gcc
-      - os: linux
-        compiler: clang
+    include:
+      - os=linux
+        python=2.7
+        CONDA_PY=27
+        compiler=gcc
+      - os=linux
+        python=3.5
+        CONDY_PY=35
+        compiler=gcc
+      - os=osx
+        python=2.7
+        CONDA_PY=27
+        compiler=clang
+      - os=osx
+        python=3.5
+        CONDY_PY=35
+        compiler=clang
 
 cache:
   apt: true
