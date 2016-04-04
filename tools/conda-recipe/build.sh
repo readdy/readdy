@@ -22,7 +22,7 @@ if [ `uname` == Linux ]; then
         lib_path="$PREFIX/lib/libpython${PY_VER}.so"
     fi
 fi
-CMAKE_FLAGS+="-DPYTHON_LIBRARY:FILEPATH="+${lib_path}
+CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=${lib_path}"
 
 # cant reliably determine cpu count in a docker container,
 # therefore fix this value.
@@ -30,6 +30,7 @@ if [ "$TRAVIS" == "true" ]; then CPU_COUNT=2; fi
 
 mkdir build
 cd build
+echo "calling cmake with flags ${CMAKE_FLAGS}"
 cmake .. ${CMAKE_FLAGS}
 make -j${CPU_COUNT}
 make -j${CPU_COUNT} install &> /dev/null
