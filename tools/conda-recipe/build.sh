@@ -34,5 +34,5 @@ mkdir build
 cd build
 echo "calling cmake with flags ${CMAKE_FLAGS}"
 cmake .. ${CMAKE_FLAGS}
-make VERBOSE=1
+make VERBOSE=1 #-j${CPU_COUNT}
 make -j${CPU_COUNT} install &> /dev/null
