@@ -1,7 +1,7 @@
 ### Status
-| Travis |
-----------
-|[![Build Status](https://travis-ci.org/clonker/ReaDDy2.png?branch=master)](https://travis-ci.org/clonker/ReaDDy2)|
+| Travis | Appveyor |
+---------------------
+|[![Build Status](https://travis-ci.org/clonker/ReaDDy2.png?branch=master)](https://travis-ci.org/clonker/ReaDDy2) | [![Build status](https://ci.appveyor.com/api/projects/status/ve6rhy2fs2fnyjqi?svg=true)](https://ci.appveyor.com/project/clonker/readdy2)  |
 
 ### Dependencies
 - HDF5

@@ -10,10 +10,11 @@ export PYTHON_INCLUDE_DIR=`python -c "from __future__ import print_function; imp
 lib_path=""
 if [ `uname` == Darwin ]; then
     if [ $PY3K -eq 1 ]; then
-        lib_path="$PREFIX/lib/libpython${PY_VER}m.dylib"
-    else
-        lib_path="$PREFIX/lib/libpython${PY_VER}.dylib"
+        cd ${PREFIX}/lib
+        ln -s libpython${PY_VER}m.dylib libpython${PY_VER}.dylib
+        cd -
     fi
+    lib_path="$PREFIX/lib/libpython${PY_VER}.dylib"
 fi
 if [ `uname` == Linux ]; then
     if [ $PY3K -eq 1 ]; then

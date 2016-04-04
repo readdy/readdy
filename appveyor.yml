@@ -25,3 +25,4 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%;"
 
   - conda config --set always_yes true
+  - conda config --add channels omnia
