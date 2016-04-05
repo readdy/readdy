@@ -7,7 +7,7 @@ CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
 export HDF5_ROOT=${PREFIX}
 export PYTHON_INCLUDE_DIR=`python -c "from __future__ import print_function; import distutils.sysconfig; print(distutils.sysconfig.get_python_inc(True))"`
 
-# attempt to feed the right python library to FindPythonLibs
+# attempt to feed the right python library to FindPythonLibs (weird Find module of cmake)
 lib_path=""
 if [ `uname` == Darwin ]; then
     if [ $PY3K -eq 1 ]; then
