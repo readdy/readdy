@@ -39,7 +39,7 @@ IF (NOT EXISTS "${BOOST_DOWNLOAD_OUT}")
     ENDIF(NOT CURL)
     MESSAGE(STATUS "Saving boost to ${BOOST_DOWNLOAD_OUT}")
     EXECUTE_PROCESS(
-            COMMAND ${CURL} "-kL" "http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_${Boost_VERSION}.tar.gz/download" "-o" "${BOOST_DOWNLOAD_OUT}"
+            COMMAND ${CURL} "-ksL" "http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_${Boost_VERSION}.tar.gz/download" "-o" "${BOOST_DOWNLOAD_OUT}"
             RESULT_VARIABLE Result
             OUTPUT_VARIABLE Output
     )
