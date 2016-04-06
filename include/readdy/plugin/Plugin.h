@@ -42,9 +42,7 @@ namespace readdy {
             }
 
             virtual void add(const std::string name, std::shared_ptr<T>&& ptr) {
-                std::cout << "before ("<< ptr.get()->getName() << "): " << ptr.use_count() << " .... ";
                 plugins.emplace(std::make_pair(name, std::move(ptr)));
-                std::cout << "after: " << ptr.use_count() << std::endl;
             }
 
             virtual void add(const std::string name, T&& t) {

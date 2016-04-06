@@ -19,9 +19,9 @@ plug::KernelProvider &plug::KernelProvider::getInstance() {
     return instance;
 }
 
-plug::KernelProvider::KernelProvider() {
+plug::KernelProvider::KernelProvider(){
     fs::path path = fs::current_path();
-    std::cout << "current path is " << path << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "current path is " << path;
 }
 
 const std::string plug::KernelProvider::getDefaultKernelDirectory() {
@@ -48,6 +48,7 @@ void plug::KernelProvider::loadKernelsFromDirectory(const std::string& directory
     const fs::path p(directory);
     if (fs::exists(p) && fs::is_directory(p)) {
         BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();
+        //BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();
         BOOST_LOG_TRIVIAL(debug) << "current path: " << fs::current_path().string();
         for (auto dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
             if (isSharedLibrary(dirEntry.path())) {
