@@ -48,7 +48,6 @@ namespace {
         }
         plug::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
         BOOST_LOG_TRIVIAL(debug) << "current path: " << boost::filesystem::current_path().string();
-        std::cout << "refcount == " << plug::KernelProvider::getInstance().get("SingleCPU").use_count() << std::endl;
     }
 
     TEST(KernelProvider, TestFoo) {

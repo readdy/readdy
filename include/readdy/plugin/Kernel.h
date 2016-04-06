@@ -10,6 +10,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 #include <readdy/plugin/Plugin.h>
+#include <boost/log/sources/logger.hpp>
 
 
 namespace readdy {
@@ -19,9 +20,10 @@ namespace readdy {
             const std::string name;
         public:
             Kernel(const std::string name);
+
             virtual ~Kernel();
 
-            virtual const std::string& getName() const override;
+            virtual const std::string &getName() const override;
         };
 
         class KernelProvider : public PluginProvider<Kernel> {
@@ -30,7 +32,7 @@ namespace readdy {
             KernelProvider();
 
             ~KernelProvider() {
-                std::cout << "destroying kernel provider" << std::endl;
+                BOOST_LOG_TRIVIAL(debug) << "destroying kernel provider";
             }
 
             bool isSharedLibrary(const boost::filesystem::path &path);
@@ -38,7 +40,7 @@ namespace readdy {
         public:
             static KernelProvider &getInstance();
 
-            void loadKernelsFromDirectory(const std::string& directory);
+            void loadKernelsFromDirectory(const std::string &directory);
 
             template<class D>
             void addAs(D &&kernel) {
@@ -48,6 +50,7 @@ namespace readdy {
             }
 
             void add(const boost::filesystem::path &sharedLib);
+
             void add(Kernel &k);
 
             const std::string getDefaultKernelDirectory();
@@ -55,7 +58,9 @@ namespace readdy {
         private:
             // prevent that copies can be created
             KernelProvider(KernelProvider const &) = delete;
+
             void operator=(KernelProvider const &) = delete;
+
         };
 
     }

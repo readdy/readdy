@@ -2,7 +2,7 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/Simulation.h>
-#include "readdy/io/ReaDDy_IO.h"
+#include <readdy/io/IOUtils.h>
 
 using namespace readdy;
 
