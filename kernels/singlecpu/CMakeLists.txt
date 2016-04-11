@@ -1,12 +1,7 @@
 PROJECT(ReaDDy2_kernel_singlecpu CXX)
 
-# sources
-LIST(APPEND SINGLECPU_SOURCES SingleCPUKernel.cpp)
-LIST(APPEND SINGLECPU_SOURCES SingleCPUProgramFactory.cpp)
-
-# (private) headers
-LIST(APPEND SINGLECPU_HEADERS SingleCPUKernel.h)
-LIST(APPEND SINGLECPU_HEADERS SingleCPUProgramFactory.h)
+# sources and headers
+INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/kernels/singlecpu.cmake")
 
 # create library
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${SINGLECPU_SOURCES} ${SINGLECPU_HEADERS} ${ReaDDy2_INCLUDE_DIRS})

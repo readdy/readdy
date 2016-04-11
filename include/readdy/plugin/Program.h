@@ -5,6 +5,10 @@
 #ifndef READDY2_MAIN_PROGRAM_H
 #define READDY2_MAIN_PROGRAM_H
 
+#ifdef BOOST_OS_MACOS
+#include <string>
+#endif
+
 #include <memory>
 
 namespace readdy {
