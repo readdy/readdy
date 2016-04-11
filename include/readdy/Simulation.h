@@ -12,8 +12,12 @@ namespace readdy {
     public:
         Simulation();
         ~Simulation();
+        // move
         Simulation(Simulation &&rhs);
         Simulation& operator=(Simulation &&rhs);
+        // copy
+        Simulation(const Simulation &rhs);
+        Simulation& operator=(const Simulation &rhs);
 
         double getKBT() const;
         void setKBT(double kBT);

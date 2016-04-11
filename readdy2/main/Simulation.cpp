@@ -38,6 +38,13 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
     return std::array<bool, 3>((*pimpl).periodic_boundary);
 }
 
+Simulation::Simulation(const Simulation &rhs) : pimpl(boost::make_unique<Simulation::Impl>(*rhs.pimpl)){}
+
+Simulation &Simulation::operator=(const Simulation &rhs) {
+    *pimpl = *rhs.pimpl;
+    return *this;
+}
+
 
 Simulation& Simulation::operator=(Simulation &&rhs) = default;
 Simulation::Simulation(Simulation &&rhs) = default;
