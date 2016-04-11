@@ -1,7 +1,7 @@
 PROJECT(ReaDDy2_io CXX)
 
 # sources
-INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources_io.cmake")
+INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_io.cmake")
 
 # library
 ADD_LIBRARY(${PROJECT_NAME} ${READDY_IO_SOURCES} "${READDY_GLOBAL_INCLUDE_DIR}/readdy/io" "${HDF5_INCLUDE_DIRS}")

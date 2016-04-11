@@ -1,7 +1,7 @@
 PROJECT(ReaDDy2_plugin)
 
 # sources
-INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources_plugin.cmake")
+INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_plugin.cmake")
 
 # library
 ADD_LIBRARY(${PROJECT_NAME} ${READDY_PLUGIN_SOURCES} "${PLUGIN_INCLUDE_DIRS}")

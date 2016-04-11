@@ -1,7 +1,7 @@
 # general utilities.
 PROJECT(ReaDDy2_common CXX)
 
-INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources_common.cmake")
+INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_common.cmake")
 
 ADD_LIBRARY(${PROJECT_NAME} ${READDY_COMMON_SOURCES} "${READDY_GLOBAL_INCLUDE_DIR}/readdy/common")
 

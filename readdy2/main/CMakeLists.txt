@@ -1,7 +1,7 @@
 PROJECT(${READDY_PROJECT_NAME} C CXX)
 
 # sources
-INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources_readdy.cmake")
+INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_readdy.cmake")
 
 # create library
 ADD_LIBRARY(${PROJECT_NAME} ${READDY_MAIN_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})

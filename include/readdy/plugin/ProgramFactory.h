@@ -12,10 +12,7 @@ namespace readdy {
     namespace plugin {
         template<class T>
         class ProgramFactory {
-            /*static_assert(std::is_base_of<ProgramFactory, T>::value,
-                          "The given template parameter did not refer to a class that has ProgramFactory as its base.");*/
-
-            static Program *createProgram(const std::string name) {
+            static std::shared_ptr<Program> createProgram(const std::string name) {
                 return T::createProgram(name);
             }
         };

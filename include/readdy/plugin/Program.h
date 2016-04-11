@@ -14,6 +14,7 @@ namespace readdy {
             Program(const std::string name);
 
             const std::string getName() const;
+            virtual void execute() = 0;
 
         private:
             struct Impl;

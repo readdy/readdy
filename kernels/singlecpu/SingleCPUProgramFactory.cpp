@@ -4,7 +4,7 @@
 
 #include "SingleCPUProgramFactory.h"
 
-readdy::plugin::Program *readdy::kernel::singlecpu::SingleCPUProgramFactory::createProgram(const std::string name) {
+std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUProgramFactory::createProgram(const std::string name) {
     return nullptr;
 }
 
