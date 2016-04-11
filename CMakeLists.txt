@@ -108,10 +108,10 @@ SET(READDY_PROJECT_NAME "ReaDDy2")
 # readdy2 core
 #
 IF(READDY_BUILD_SHARED_COMBINED)
-    INCLUDE(cmake/sources_common.cmake)
-    INCLUDE(cmake/sources_io.cmake)
-    INCLUDE(cmake/sources_plugin.cmake)
-    INCLUDE(cmake/sources_readdy.cmake)
+    INCLUDE(cmake/sources/sources_common.cmake)
+    INCLUDE(cmake/sources/sources_io.cmake)
+    INCLUDE(cmake/sources/sources_plugin.cmake)
+    INCLUDE(cmake/sources/sources_readdy.cmake)
     # create library
     ADD_LIBRARY(${READDY_PROJECT_NAME} ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
     TARGET_INCLUDE_DIRECTORIES(${READDY_PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS})
