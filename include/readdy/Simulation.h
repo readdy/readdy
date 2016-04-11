@@ -5,21 +5,28 @@
 #ifndef READDY2_SIMULATION_H
 #define READDY2_SIMULATION_H
 
-#include <array>
+#include <memory>
 
 namespace readdy {
     class Simulation {
-    protected:
-        double kBT;
-        std::array<double, 3> box_size;
-        std::array<bool, 3> periodic_boundary;
     public:
-        double getKBT() const;
+        Simulation();
+        ~Simulation();
+        Simulation(Simulation &&rhs);
+        Simulation& operator=(Simulation &&rhs);
 
+        double getKBT() const;
         void setKBT(double kBT);
+        std::array<double, 3> getBoxSize() const;
         void setBoxSize(double dx, double dy, double dz);
+        std::array<bool, 3> getPeriodicBoundary() const;
         void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
+
+    private:
+        struct Impl;
+        std::unique_ptr<readdy::Simulation::Impl> pimpl;
     };
+
 }
 
 #endif //READDY2_SIMULATION_H

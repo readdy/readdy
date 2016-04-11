@@ -12,13 +12,16 @@ namespace readdy {
         class Program {
         public:
             Program(const std::string name);
+            virtual ~Program();
+            Program(Program&& rhs);
+            Program& operator=(Program&& rhs);
 
             const std::string getName() const;
             virtual void execute() = 0;
 
         private:
             struct Impl;
-            const std::unique_ptr<Impl> impl_ptr;
+            std::unique_ptr<Impl> impl_ptr;
         };
     }
 }

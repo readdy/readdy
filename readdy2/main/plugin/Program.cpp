@@ -19,3 +19,9 @@ const std::string readdy::plugin::Program::getName() const {
     return (*impl_ptr).name;
 }
 
+readdy::plugin::Program::Program(readdy::plugin::Program &&rhs) = default;
+readdy::plugin::Program &readdy::plugin::Program::operator=(readdy::plugin::Program &&rhs) = default;
+readdy::plugin::Program::~Program() = default;
+
+
+

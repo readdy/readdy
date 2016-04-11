@@ -2,27 +2,46 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/Simulation.h>
-#include <readdy/io/IOUtils.h>
+#include <boost/make_unique.hpp>
 
 using namespace readdy;
 
+struct Simulation::Impl {
+    double kBT = 0;
+    std::array<double, 3> box_size {};
+    std::array<bool, 3> periodic_boundary {};
+};
+
 double Simulation::getKBT() const {
-    return this->kBT;
+    return (*pimpl).kBT;
 }
 
 void Simulation::setKBT(double kBT) {
-    this->kBT = kBT;
+    (*pimpl).kBT = kBT;
 }
 
 void Simulation::setBoxSize(double dx, double dy, double dz) {
-    box_size[0] = dx;
-    box_size[1] = dy;
-    box_size[2] = dz;
+    (*pimpl).box_size = {dx, dy, dz};
 }
 
 void Simulation::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
-    periodic_boundary[0] = pb_x;
-    periodic_boundary[1] = pb_y;
-    periodic_boundary[2] = pb_z;
-    io::IOUtils xyz;
+    (*pimpl).periodic_boundary = {pb_x, pb_y, pb_z};
 }
+
+Simulation::Simulation() : pimpl(boost::make_unique<Simulation::Impl>()) {}
+
+std::array<double, 3> Simulation::getBoxSize() const {
+    return std::array<double, 3>((*pimpl).box_size);
+}
+
+std::array<bool, 3> Simulation::getPeriodicBoundary() const {
+    return std::array<bool, 3>((*pimpl).periodic_boundary);
+}
+
+
+Simulation& Simulation::operator=(Simulation &&rhs) = default;
+Simulation::Simulation(Simulation &&rhs) = default;
+Simulation::~Simulation() = default;
+
+
+
