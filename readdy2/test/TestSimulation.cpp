@@ -1,6 +1,11 @@
 #include <readdy/Simulation.h>
 #include "gtest/gtest.h"
 
+#include <boost/predef.h>
+#ifdef BOOST_OS_MACOS
+#include <array>
+#endif
+
 using namespace readdy;
 
 namespace {

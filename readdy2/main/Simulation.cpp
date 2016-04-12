@@ -4,6 +4,11 @@
 #include <readdy/Simulation.h>
 #include <boost/make_unique.hpp>
 
+#include <boost/predef.h>
+#ifdef BOOST_OS_MACOS
+#include <array>
+#endif
+
 using namespace readdy;
 
 struct Simulation::Impl {

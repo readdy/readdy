@@ -5,11 +5,12 @@
 #ifndef READDY2_MAIN_PROGRAM_H
 #define READDY2_MAIN_PROGRAM_H
 
+#include <memory>
+
+#include <boost/predef.h>
 #ifdef BOOST_OS_MACOS
 #include <string>
 #endif
-
-#include <memory>
 
 namespace readdy {
     namespace plugin {

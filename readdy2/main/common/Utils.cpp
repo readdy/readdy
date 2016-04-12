@@ -2,6 +2,7 @@
 // Created by clonker on 08.03.16.
 //
 
+#include <boost/predef.h>
 #include <readdy/common/Utils.h>
 
 std::string readdy::utils::getOS() {
