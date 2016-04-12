@@ -54,4 +54,10 @@ namespace {
         auto name = plug::KernelProvider::getInstance().get("SingleCPU").get()->getName();
         BOOST_LOG_TRIVIAL(debug) << "foo name: " << name;
     }
+
+    TEST(KernelProvider, TestTestProgram) {
+        auto single_cpu_kernel = plug::KernelProvider::getInstance().get("SingleCPU");
+        auto test_program = (*single_cpu_kernel).createProgram("TestProgram");
+        //test_program.get()->execute();
+    }
 }

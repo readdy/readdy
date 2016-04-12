@@ -17,6 +17,7 @@ namespace readdy {
         class Program {
         public:
             virtual void execute() = 0;
+            virtual ~Program() = default;
         };
     }
 }

@@ -13,8 +13,9 @@ namespace readdy {
 
         public:
             TestProgram() : Program() { }
+            virtual ~TestProgram() = default;
 
-            static const std::string getName() {
+            static std::string getName() {
                 return "TestProgram";
             };
         };

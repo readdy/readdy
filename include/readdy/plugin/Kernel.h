@@ -11,19 +11,20 @@
 #include <boost/filesystem.hpp>
 #include <readdy/plugin/Plugin.h>
 #include <boost/log/sources/logger.hpp>
+#include "Program.h"
 
 
 namespace readdy {
     namespace plugin {
         class Kernel : public Plugin {
         protected:
-            const std::string name;
+            std::string name;
         public:
             Kernel(const std::string name);
 
             virtual ~Kernel();
-
             virtual const std::string &getName() const override;
+            virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) const;
         };
 
         class KernelProvider : public PluginProvider<Kernel> {

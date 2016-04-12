@@ -14,6 +14,7 @@ namespace readdy {
                 class SingleCPUTestProgram : public readdy::plugin::TestProgram {
                 public:
                     SingleCPUTestProgram();
+                    ~SingleCPUTestProgram();
                     void execute();
                 };
             }

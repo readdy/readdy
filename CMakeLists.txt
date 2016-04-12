@@ -44,7 +44,7 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 
 # OSX deployment target
 IF(APPLE)
-    SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+    SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.9)
 ENDIF(APPLE)
 
 # decide if api wrappers are being generated

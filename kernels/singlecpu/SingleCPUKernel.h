@@ -16,11 +16,20 @@ namespace readdy {
             class SingleCPUKernel : public readdy::plugin::Kernel {
             public:
                 SingleCPUKernel();
-                ~SingleCPUKernel() {
-                    BOOST_LOG_TRIVIAL(debug) << "destroying plugin kernel " << getName();
-                }
+                ~SingleCPUKernel();
+                // move
+                SingleCPUKernel(SingleCPUKernel &&rhs);
+                SingleCPUKernel& operator=(SingleCPUKernel &&rhs);
+                // copy
+                SingleCPUKernel(const SingleCPUKernel &rhs);
+                SingleCPUKernel& operator=(SingleCPUKernel &rhs);
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();
+
+                virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) const override;
+            private:
+                struct Impl;
+                std::unique_ptr<Impl> pimpl;
             };
 
             // export factory method as "create_kernel"
