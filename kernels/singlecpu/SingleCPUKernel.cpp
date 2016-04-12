@@ -39,7 +39,7 @@ kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel &r
     return *this;
 }
 
-std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(std::string name) const {
+std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(std::string name) {
     auto it = (*pimpl).factories.find(name);
     if(it != (*pimpl).factories.end()) {
         return (*it->second).createProgram(name);

@@ -12,7 +12,7 @@ namespace readdy {
         namespace singlecpu {
             class SingleCPUProgramFactory : readdy::plugin::ProgramFactory<SingleCPUProgramFactory> {
             public:
-                std::shared_ptr<readdy::plugin::Program> createProgram(const std::string name);
+                static std::shared_ptr<readdy::plugin::Program> createProgram(const std::string name);
             };
         }
     }

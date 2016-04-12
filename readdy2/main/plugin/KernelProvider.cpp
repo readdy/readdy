@@ -76,7 +76,7 @@ readdy::plugin::Kernel::~Kernel() {
     BOOST_LOG_TRIVIAL(trace) << "destructing kernel \"" << name << "\"";
 }
 
-std::shared_ptr<readdy::plugin::Program> readdy::plugin::Kernel::createProgram(std::string name) const {
+std::shared_ptr<readdy::plugin::Program> readdy::plugin::Kernel::createProgram(std::string name) {
     return nullptr;
 }
 

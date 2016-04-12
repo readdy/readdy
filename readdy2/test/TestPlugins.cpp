@@ -5,6 +5,7 @@
 #include <readdy/plugin/Kernel.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include "gtest/gtest.h"
+#include <typeinfo>
 
 namespace plug = readdy::plugin;
 
@@ -57,7 +58,7 @@ namespace {
 
     TEST(KernelProvider, TestTestProgram) {
         auto single_cpu_kernel = plug::KernelProvider::getInstance().get("SingleCPU");
-        auto test_program = (*single_cpu_kernel).createProgram("TestProgram");
-        //test_program.get()->execute();
+        auto test_program = single_cpu_kernel.get()->createProgram("TestProgram");
+        test_program.get()->execute();
     }
 }

@@ -24,7 +24,7 @@ namespace readdy {
 
             virtual ~Kernel();
             virtual const std::string &getName() const override;
-            virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) const;
+            virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name);
         };
 
         class KernelProvider : public PluginProvider<Kernel> {

@@ -25,6 +25,11 @@ namespace readdy {
                     reference.reset();
                 }
 
+                virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override {
+                    return (*reference).createProgram(name);
+                }
+
+
                 virtual const std::string &getName() const override;
             };
 
