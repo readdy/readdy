@@ -12,8 +12,11 @@ namespace readdy {
         class TestProgram : public Program {
 
         public:
-            TestProgram() : Program("TestProgram") { }
-            virtual void execute() = 0;
+            TestProgram() : Program() { }
+
+            static const std::string getName() {
+                return "TestProgram";
+            };
         };
     }
 }

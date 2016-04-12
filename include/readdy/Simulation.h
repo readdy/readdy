@@ -7,6 +7,11 @@
 
 #include <memory>
 
+#include <boost/predef.h>
+#ifdef BOOST_OS_MACOS
+#include <array>
+#endif
+
 namespace readdy {
     class Simulation {
     public:
