@@ -209,4 +209,27 @@ IF(READDY_RUN_TESTS_MEMORY_CHECK)
         # can be called by "ctest -V -R memcheck_readdy-tests"
         ADD_MEMCHECK_TEST(readdy-tests runUnitTests)
     ENDIF (NOT VALGRIND_FOUND)
-ENDIF()
+ENDIF(READDY_RUN_TESTS_MEMORY_CHECK)
+
+#
+# doxygen
+#
+SET(READDY_GENERATE_DOCUMENTATION OFF CACHE BOOL "Should generate target for documentation or not")
+IF(READDY_GENERATE_DOCUMENTATION)
+    FIND_PACKAGE (Doxygen REQUIRED)
+    FIND_PROGRAM (DOXYFILE_MAKE make)
+    MARK_AS_ADVANCED (DOXYFILE_MAKE)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    ADD_CUSTOM_TARGET(doc
+            ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Generating API documentation with Doxygen" VERBATIM)
+    IF(MAKEINDEX_COMPILER AND DOXYFILE_MAKE)
+        ADD_CUSTOM_COMMAND(
+                TARGET doc
+                POST_BUILD
+                COMMAND "${DOXYFILE_MAKE}"
+                COMMENT	"Running Doxygen in ${CMAKE_CURRENT_BINARY_DIR}/docs..."
+                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/docs")
+    ENDIF()
+ENDIF(READDY_GENERATE_DOCUMENTATION)

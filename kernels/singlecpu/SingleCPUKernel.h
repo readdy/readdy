@@ -29,7 +29,7 @@ namespace readdy {
                 virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override;
             private:
                 struct Impl;
-                std::unique_ptr<Impl> pimpl;
+                std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;
             };
 
             // export factory method as "create_kernel"

@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 namespace kern = readdy::kernel::singlecpu;
-struct kern::SingleCPUKernel::Impl {
+struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
     std::unordered_map<std::string, std::shared_ptr<kern::SingleCPUProgramFactory>> factories;
 };
 kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"), pimpl(boost::make_unique<kern::SingleCPUKernel::Impl>()){
