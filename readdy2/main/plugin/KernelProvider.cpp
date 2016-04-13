@@ -80,6 +80,10 @@ std::shared_ptr<readdy::plugin::Program> readdy::plugin::Kernel::createProgram(s
     return nullptr;
 }
 
+std::vector<std::string> readdy::plugin::Kernel::getAvailablePrograms() {
+    return std::vector<std::string>();
+}
+
 
 bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) {
     const std::string s = path.string();

@@ -29,6 +29,10 @@ namespace readdy {
                     return (*reference).createProgram(name);
                 }
 
+                virtual std::vector<std::string> getAvailablePrograms() override {
+                    return (*reference).getAvailablePrograms();
+                }
+
 
                 virtual const std::string &getName() const override;
             };
