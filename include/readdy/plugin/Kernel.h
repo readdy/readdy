@@ -41,16 +41,19 @@ namespace readdy {
              * Constructs a kernel with a given name.
              */
             Kernel(const std::string name);
+
             /**
              * The kernel destructor.
              */
             virtual ~Kernel();
+
             /**
              * This method returns the name of the kernel.
              *
              * @return The name
              */
             virtual const std::string &getName() const override;
+
             /**
              * Create a program that can be executed on this kernel.
              * If the requested program is not available on the kernel, a nullptr is returned.
@@ -60,6 +63,7 @@ namespace readdy {
              * @return The program if it was available, otherwise nullptr
              */
             virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name);
+
             /**
              * Returns a vector containing all available program names for this specific kernel instance.
              *
@@ -68,6 +72,7 @@ namespace readdy {
              */
             virtual std::vector<std::string> getAvailablePrograms();
         };
+
         /**
          * The KernelProvider is a singleton which can be accessed by getInstance()
          * and provides Kernels that can be added directly or loaded from directories.
@@ -81,12 +86,14 @@ namespace readdy {
              * The constructor of KernelProvider. As it is a singleton, it is protected.
              */
             KernelProvider();
+
             /**
              * The destructor of KernelProvider.
              */
             ~KernelProvider() {
                 BOOST_LOG_TRIVIAL(debug) << "destroying kernel provider";
             }
+
             /**
              * A protected method that determines if a boost::filesystem::path points to a shared library.
              *
