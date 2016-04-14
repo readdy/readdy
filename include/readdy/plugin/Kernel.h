@@ -120,22 +120,12 @@ namespace readdy {
             /**
              * @todo write documentation
              */
-            template<class D>
-            void addAs(D &&kernel) {
-                const std::string name = kernel.getName();
-                std::shared_ptr<Kernel> shared = std::make_shared<Kernel>(std::move(kernel));
-                PluginProvider::add(name, std::move(shared));
-            }
+            void add(const Kernel &&kernel);
 
             /**
              * @todo write documentation
              */
             void add(const boost::filesystem::path &sharedLib);
-
-            /**
-             * @todo write documentation
-             */
-            void add(Kernel &k);
 
             /**
              * @todo write documentation

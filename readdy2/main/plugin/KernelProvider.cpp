@@ -97,12 +97,16 @@ bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::pa
            && s.find(".a") == std::string::npos;
 }
 
-void readdy::plugin::KernelProvider::add(readdy::plugin::Kernel &k) {
-    addAs<plug::Kernel>(std::move(k));
-}
-
 void readdy::plugin::KernelProvider::add(const boost::filesystem::path &sharedLib) {
     using namespace readdy::plugin::_internal;
     auto shared = std::make_shared<KernelPluginDecorator>(KernelPluginDecorator(sharedLib));
     plugins.emplace(std::make_pair(shared.get()->getName(), std::move(shared)));
 }
+
+void readdy::plugin::KernelProvider::add(const Kernel &&kernel) {
+    const std::string name = kernel.getName();
+    std::shared_ptr<Kernel> shared = std::make_shared<Kernel>(std::move(kernel));
+    PluginProvider::add(name, std::move(shared));
+}
+
+
