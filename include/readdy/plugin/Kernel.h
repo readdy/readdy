@@ -118,17 +118,33 @@ namespace readdy {
             void loadKernelsFromDirectory(const std::string &directory);
 
             /**
-             * @todo write documentation
+             * Method that allows to move a kernel into the KernelProvider and thus make it available.
+             *
+             * @param kernel the kernel that should be moved
              */
             void add(const Kernel &&kernel);
 
             /**
-             * @todo write documentation
+             * Method that allows to add a kernel to the KernelProvider by providing a path to a shared lib (containing an implementation of a kernel).
+             *
+             * @param sharedLib the path to the shared lib
              */
             void add(const boost::filesystem::path &sharedLib);
 
             /**
-             * @todo write documentation
+             * Method that gives the default kernel directory, i.e., where the kernel implementations are usually to be found.
+             * First it is checked, if the environment variable 'READDY_PLUGIN_DIR' is set. In that case, the default kernel directory is the contents
+             * of that environment variable.
+             * Otherwise, the default kernel directory on unix systems is
+             * \code{.unparsed}
+             * /usr/local/readdy/lib/readdy_plugins
+             * \endcode
+             * and the default kernel directory on windows systems is
+             * \code{.unparsed}
+             * C:\\Program Files\ReaDDy2\lib\readdy_plugins
+             * \endcode
+             *
+             * @return the default kernel directory.
              */
             const std::string getDefaultKernelDirectory();
 
