@@ -111,6 +111,7 @@ SET(READDY_PROJECT_NAME "ReaDDy2")
 #
 IF(READDY_BUILD_SHARED_COMBINED)
     INCLUDE(cmake/sources/sources_common.cmake)
+    INCLUDE(cmake/sources/sources_model.cmake)
     INCLUDE(cmake/sources/sources_io.cmake)
     INCLUDE(cmake/sources/sources_plugin.cmake)
     INCLUDE(cmake/sources/sources_readdy.cmake)
@@ -126,6 +127,7 @@ ELSE(READDY_BUILD_SHARED_COMBINED)
     # include directories from least dependent to most dependent
     # i.e.: A depends on B -> add subdirectory of B first
     ADD_SUBDIRECTORY(readdy2/main/common)
+    ADD_SUBDIRECTORY(readdy2/main/model)
     ADD_SUBDIRECTORY(readdy2/main/io)
     ADD_SUBDIRECTORY(readdy2/main/plugin)
     ADD_SUBDIRECTORY(readdy2/main)
