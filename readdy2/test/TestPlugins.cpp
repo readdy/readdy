@@ -5,7 +5,6 @@
 #include <readdy/plugin/Kernel.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include "gtest/gtest.h"
-#include <typeinfo>
 
 namespace plug = readdy::plugin;
 
@@ -13,12 +12,12 @@ namespace {
     TEST(Kernel, LoadingNonexistingPlugin) {
         plug::Kernel k("foo");
         plug::KernelProvider::getInstance().add(std::move(k));
-        try{
+        try {
             plug::KernelProvider::getInstance().get("foo2");
             FAIL() << "Expected NoSuchPluginException!";
-        } catch(plug::NoSuchPluginException const &ex) {
+        } catch (plug::NoSuchPluginException const &ex) {
             SUCCEED() << "NoSuchPluginException caught.";
-        } catch(...) {
+        } catch (...) {
             FAIL() << "Expected NoSuchPluginException!";
         }
     }
@@ -38,11 +37,11 @@ namespace {
 
     TEST(KernelProvider, TestLoadPluginsFromDirectory) {
         // if we're in conda
-        const char* env = std::getenv("PREFIX");
+        const char *env = std::getenv("PREFIX");
         std::string pluginDir = "lib/readdy_plugins";
-        if(env) {
+        if (env) {
             auto _env = std::string(env);
-            if(!boost::algorithm::ends_with(env, "/")) {
+            if (!boost::algorithm::ends_with(env, "/")) {
                 _env = _env.append("/");
             }
             pluginDir = _env.append(pluginDir);
