@@ -1,10 +1,11 @@
 /**
- * << detailed description >>
+ * todo
  *
  * @file KernelContext.h
  * @brief Container class for time independent information of the simulation.
  * @author clonker
  * @date 18.04.16
+ * @todo write docs
  */
 
 #ifndef READDY2_MAIN_KERNELCONTEXT_H
