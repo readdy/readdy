@@ -84,6 +84,11 @@ std::vector<std::string> readdy::plugin::Kernel::getAvailablePrograms() {
     return std::vector<std::string>();
 }
 
+std::shared_ptr<readdy::model::KernelStateModel> readdy::plugin::Kernel::getKernelStateModel() {
+    // todo
+    throw std::runtime_error("todo");
+}
+
 
 bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) {
     const std::string s = path.string();

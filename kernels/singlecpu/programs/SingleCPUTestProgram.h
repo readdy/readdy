@@ -15,7 +15,8 @@ namespace readdy {
                 public:
                     SingleCPUTestProgram();
                     ~SingleCPUTestProgram();
-                    void execute();
+
+                    virtual void execute() override;
                 };
             }
         }

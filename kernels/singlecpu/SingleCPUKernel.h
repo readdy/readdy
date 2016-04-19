@@ -27,7 +27,7 @@ namespace readdy {
                 static std::shared_ptr<SingleCPUKernel> create();
 
                 virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override;
-
+                virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel() override;
                 virtual std::vector<std::string> getAvailablePrograms() override;
 
             private:

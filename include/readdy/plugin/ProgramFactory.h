@@ -10,11 +10,8 @@
 
 namespace readdy {
     namespace plugin {
-        template<class FactorySpecialization>
         class ProgramFactory {
-            static std::shared_ptr<Program> createProgram(const std::string name) {
-                return FactorySpecialization::createProgram(name);
-            }
+            virtual std::shared_ptr<Program> createProgram(const std::string name) = 0;
         };
     }
 }

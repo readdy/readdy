@@ -13,12 +13,13 @@
 #ifndef READDY2_MAIN_KERNEL_H
 #define READDY2_MAIN_KERNEL_H
 
-#include <map>
+#include <map> 
 #include <iostream>
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 #include <readdy/plugin/Plugin.h>
 #include <boost/log/sources/logger.hpp>
+#include <readdy/model/KernelStateModel.h>
 #include "Program.h"
 
 
@@ -71,6 +72,11 @@ namespace readdy {
              * @return The program names.
              */
             virtual std::vector<std::string> getAvailablePrograms();
+
+            /**
+             * @todo implement this properly
+             */
+            virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel();
         };
 
         /**
@@ -152,6 +158,7 @@ namespace readdy {
             // prevent that copies can be created
             KernelProvider(KernelProvider const &) = delete;
 
+            // prevent that copies can be created
             void operator=(KernelProvider const &) = delete;
 
         };

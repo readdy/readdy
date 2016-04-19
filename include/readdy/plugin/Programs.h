@@ -19,6 +19,17 @@ namespace readdy {
                 return "TestProgram";
             };
         };
+
+        class AddParticleProgram : public Program {
+
+        public:
+            AddParticleProgram() : Program() {}
+            virtual ~AddParticleProgram() = default;
+
+            static std::string getName() {
+                return "AddParticle";
+            }
+        };
     }
 }
 

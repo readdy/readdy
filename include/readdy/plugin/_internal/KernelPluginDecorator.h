@@ -19,20 +19,13 @@ namespace readdy {
 
             public:
                 KernelPluginDecorator(const boost::filesystem::path sharedLib);
-                virtual ~KernelPluginDecorator() {
-                    BOOST_LOG_TRIVIAL(debug) << "destroying decorator of "<< getName();
-                    BOOST_LOG_TRIVIAL(debug) << "use count: " << reference.use_count();
-                    reference.reset();
-                }
+                virtual ~KernelPluginDecorator();
 
-                virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override {
-                    return (*reference).createProgram(name);
-                }
+                virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override;
 
-                virtual std::vector<std::string> getAvailablePrograms() override {
-                    return (*reference).getAvailablePrograms();
-                }
+                virtual std::vector<std::string> getAvailablePrograms() override;
 
+                virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel() override;
 
                 virtual const std::string &getName() const override;
             };

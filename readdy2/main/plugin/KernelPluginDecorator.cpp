@@ -34,4 +34,23 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const bo
     }
 }
 
+std::shared_ptr<readdy::model::KernelStateModel> readdy::plugin::_internal::KernelPluginDecorator::getKernelStateModel() {
+    return (*reference).getKernelStateModel();
+}
+
+std::shared_ptr<readdy::plugin::Program> readdy::plugin::_internal::KernelPluginDecorator::createProgram(std::string name) {
+    return (*reference).createProgram(name);
+}
+
+std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAvailablePrograms() {
+    return (*reference).getAvailablePrograms();
+}
+
+readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
+    BOOST_LOG_TRIVIAL(debug) << "destroying decorator of " << getName();
+    BOOST_LOG_TRIVIAL(debug) << "use count: " << reference.use_count();
+    reference.reset();
+}
+
+
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) { }

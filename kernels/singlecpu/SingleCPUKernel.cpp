@@ -5,18 +5,23 @@
 #include "SingleCPUKernel.h"
 #include "SingleCPUProgramFactory.h"
 #include "programs/SingleCPUTestProgram.h"
+#include "programs/SingleCPUAddParticleProgram.h"
+#include "SingleCPUKernelStateModel.h"
 #include <boost/make_unique.hpp>
 #include <unordered_map>
 
 namespace kern = readdy::kernel::singlecpu;
 struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
-    std::unordered_map<std::string, std::shared_ptr<kern::SingleCPUProgramFactory>> programFactories;
+    std::unordered_map<std::string, std::shared_ptr<kern::SingleCPUProgramFactory>> programFactories {};
+    std::shared_ptr<kern::SingleCPUKernelStateModel> model = std::make_shared<kern::SingleCPUKernelStateModel>();
 };
 kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"), pimpl(boost::make_unique<kern::SingleCPUKernel::Impl>()){
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
     using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
-    factory_ptr_type factory_ptr = std::make_shared<kern::SingleCPUProgramFactory>();
-    (*pimpl).programFactories.emplace(std::make_pair<std::string, factory_ptr_type>(kern::programs::SingleCPUTestProgram::getName(), std::move(factory_ptr)));
+
+    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(*this);
+    (*pimpl).programFactories.emplace(kern::programs::SingleCPUTestProgram::getName(), ptr);
+    (*pimpl).programFactories.emplace(kern::programs::SingleCPUAddParticleProgram::getName(), ptr);
     BOOST_LOG_TRIVIAL(debug) << "...done";
 }
 
@@ -53,6 +58,10 @@ std::vector<std::string> readdy::kernel::singlecpu::SingleCPUKernel::getAvailabl
         keys.push_back(entry.first);
     }
     return keys;
+}
+
+std::shared_ptr<readdy::model::KernelStateModel> readdy::kernel::singlecpu::SingleCPUKernel::getKernelStateModel() {
+    return (*pimpl).model;
 };
 /**
  * Move operations default
