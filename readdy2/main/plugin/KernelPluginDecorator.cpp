@@ -52,5 +52,9 @@ readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
     reference.reset();
 }
 
+std::shared_ptr<readdy::model::KernelContext> readdy::plugin::_internal::KernelPluginDecorator::getKernelContext() {
+    return (*reference).getKernelContext();
+}
+
 
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) { }

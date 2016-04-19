@@ -17,7 +17,7 @@ std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUPro
     return nullptr;
 }
 
-readdy::kernel::singlecpu::SingleCPUProgramFactory::SingleCPUProgramFactory(const SingleCPUKernel &kernel) : kernel(kernel) {
+readdy::kernel::singlecpu::SingleCPUProgramFactory::SingleCPUProgramFactory(SingleCPUKernel &kernel) : kernel(kernel) {
 }
 
 

@@ -89,6 +89,10 @@ std::shared_ptr<readdy::model::KernelStateModel> readdy::plugin::Kernel::getKern
     throw std::runtime_error("todo");
 }
 
+std::shared_ptr<readdy::model::KernelContext> readdy::plugin::Kernel::getKernelContext() {
+    throw std::runtime_error("todo");
+}
+
 
 bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) {
     const std::string s = path.string();

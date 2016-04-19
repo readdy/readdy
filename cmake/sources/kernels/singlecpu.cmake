@@ -15,3 +15,5 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUTestProgram.cpp"
 LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/programs/SingleCPUTestProgram.h")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUAddParticleProgram.cpp")
 LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/programs/SingleCPUAddParticleProgram.h")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUDiffuseProgram.cpp")
+LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/programs/SingleCPUDiffuseProgram.h")

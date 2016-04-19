@@ -13,11 +13,11 @@ namespace readdy {
         namespace singlecpu {
             class SingleCPUProgramFactory : public readdy::plugin::ProgramFactory {
             public:
-                SingleCPUProgramFactory(const SingleCPUKernel &kernel);
+                SingleCPUProgramFactory(SingleCPUKernel &kernel);
                 virtual std::shared_ptr<readdy::plugin::Program> createProgram(const std::string name) override;
 
             private:
-                const SingleCPUKernel kernel;
+                SingleCPUKernel kernel;
             };
         }
     }

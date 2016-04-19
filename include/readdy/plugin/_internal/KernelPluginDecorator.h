@@ -27,6 +27,9 @@ namespace readdy {
 
                 virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel() override;
 
+                virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext() override;
+
+
                 virtual const std::string &getName() const override;
             };
 

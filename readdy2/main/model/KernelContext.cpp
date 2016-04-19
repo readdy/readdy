@@ -10,6 +10,8 @@
 
 #include <readdy/model/KernelContext.h>
 #include <boost/make_unique.hpp>
+#include <unordered_map>
+#include <boost/log/trivial.hpp>
 
 using namespace readdy::model;
 
@@ -17,6 +19,8 @@ struct readdy::model::KernelContext::Impl {
     double kBT = 0;
     std::array<double, 3> box_size{};
     std::array<bool, 3> periodic_boundary{};
+    std::unordered_map<std::string, double> diffusionConstants{};
+    double timeStep;
 };
 
 
@@ -51,6 +55,25 @@ KernelContext::KernelContext(const KernelContext &rhs) : pimpl(boost::make_uniqu
 KernelContext &KernelContext::operator=(const KernelContext &rhs) {
     *pimpl = *rhs.pimpl;
     return *this;
+}
+
+double KernelContext::getDiffusionConstant(std::string particleType) const {
+    return pimpl->diffusionConstants[particleType];
+}
+
+void KernelContext::setDiffusionConstant(std::string particleType, double D) {
+    if(pimpl->diffusionConstants.find(particleType) != pimpl->diffusionConstants.end()) {
+        BOOST_LOG_TRIVIAL(warning) << "diffusion constant for particle type " << particleType << " was already set to " << (pimpl->diffusionConstants[particleType]) << " and is now overwritten.";
+    }
+    pimpl->diffusionConstants[particleType] = D;
+}
+
+double KernelContext::getTimeStep() const {
+    return pimpl->timeStep;
+}
+
+void KernelContext::setTimeStep(double dt) {
+    pimpl->timeStep = dt;
 }
 
 

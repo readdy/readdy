@@ -21,6 +21,10 @@ namespace readdy {
             public:
                 virtual void updateModel(bool forces, bool distances) override;
 
+                virtual void addParticle(const model::Particle &p) override;
+                virtual void addParticles(const std::vector<model::Particle> &p) override;
+
+                std::vector<readdy::model::Particle> getParticles() const;
 
                 SingleCPUKernelStateModel();
                 ~SingleCPUKernelStateModel();

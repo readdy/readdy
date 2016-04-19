@@ -10,6 +10,9 @@
 #ifndef READDY2_MAIN_KERNELSTATEMODEL_H
 #define READDY2_MAIN_KERNELSTATEMODEL_H
 
+#include <vector>
+#include "Particle.h"
+
 namespace readdy {
     namespace model {
         class KernelStateModel {
@@ -17,6 +20,8 @@ namespace readdy {
             virtual ~KernelStateModel();
 
             virtual void updateModel(bool forces, bool distances) = 0;
+            virtual void addParticle(const Particle &p) = 0;
+            virtual void addParticles(const std::vector<Particle> &p) = 0;
         };
     }
 }

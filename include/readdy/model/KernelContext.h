@@ -30,6 +30,12 @@ namespace readdy {
 
             void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
+            double getDiffusionConstant(std::string particleType) const;
+            void setDiffusionConstant(std::string particleType, double D);
+
+            double getTimeStep() const;
+            void setTimeStep(double dt);
+
             // ctor and dtor
             KernelContext();
 

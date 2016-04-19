@@ -20,6 +20,7 @@
 #include <readdy/plugin/Plugin.h>
 #include <boost/log/sources/logger.hpp>
 #include <readdy/model/KernelStateModel.h>
+#include <readdy/model/KernelContext.h>
 #include "Program.h"
 
 
@@ -77,6 +78,11 @@ namespace readdy {
              * @todo implement this properly
              */
             virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel();
+
+            /**
+             * @todo implement & document this properly
+             */
+            virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext();
         };
 
         /**

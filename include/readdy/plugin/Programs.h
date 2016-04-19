@@ -30,6 +30,16 @@ namespace readdy {
                 return "AddParticle";
             }
         };
+
+        class DiffuseProgram : public Program {
+        public:
+            DiffuseProgram() : Program() {}
+            virtual ~DiffuseProgram() = default;
+
+            static std::string getName() {
+                return "Diffuse";
+            }
+        };
     }
 }
 

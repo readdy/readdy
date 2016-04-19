@@ -5,6 +5,7 @@
 #ifndef READDY2_MAIN_SINGLECPUKERNEL_H
 #define READDY2_MAIN_SINGLECPUKERNEL_H
 
+#include <readdy/common/RandomProvider.h>
 #include <readdy/plugin/Kernel.h>
 #include <boost/dll.hpp>
 
@@ -29,6 +30,10 @@ namespace readdy {
                 virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override;
                 virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel() override;
                 virtual std::vector<std::string> getAvailablePrograms() override;
+
+                virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext() override;
+
+                std::shared_ptr<readdy::utils::RandomProvider> getRandomProvider() const;
 
             private:
                 struct Impl;

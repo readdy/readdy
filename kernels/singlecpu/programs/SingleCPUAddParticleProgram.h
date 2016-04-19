@@ -21,7 +21,7 @@ namespace readdy {
             namespace programs {
                 class SingleCPUAddParticleProgram : public readdy::plugin::AddParticleProgram {
                 public:
-                    SingleCPUAddParticleProgram(const SingleCPUKernel &kernel);
+                    SingleCPUAddParticleProgram(SingleCPUKernel &kernel);
 
                     virtual ~SingleCPUAddParticleProgram() override;
 
@@ -41,7 +41,7 @@ namespace readdy {
 
                 private:
                     std::vector<readdy::model::Particle> particles;
-                    const SingleCPUKernel kernel;
+                    SingleCPUKernel kernel;
                 };
             }
         }
