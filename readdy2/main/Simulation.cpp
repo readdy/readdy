@@ -76,8 +76,11 @@ void Simulation::run(const size_t steps, const double timeStep) {
             }
         }
         kernel->getKernelContext()->setTimeStep(timeStep);
-        for (int t = 0; t < steps; ++t) {
-
+        {
+            auto diffuseProgram = kernel->createProgram("Diffuse");
+            for (auto t = 0; t < steps; ++t) {
+                diffuseProgram->execute();
+            }
         }
     } else {
         BOOST_LOG_TRIVIAL(error) << "no kernel was selected!";

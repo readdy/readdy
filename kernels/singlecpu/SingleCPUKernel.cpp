@@ -6,7 +6,7 @@
 #include "SingleCPUProgramFactory.h"
 #include "programs/SingleCPUTestProgram.h"
 #include "programs/SingleCPUAddParticleProgram.h"
-#include "SingleCPUKernelStateModel.h"
+#include "programs/SingleCPUDiffuseProgram.h"
 #include <boost/make_unique.hpp>
 #include <unordered_map>
 
@@ -21,9 +21,10 @@ kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"),
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
     using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
 
-    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(pimpl->context, pimpl->model);
+    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(pimpl->context, pimpl->model, pimpl->rand);
     (*pimpl).programFactories.emplace(kern::programs::SingleCPUTestProgram::getName(), ptr);
     (*pimpl).programFactories.emplace(kern::programs::SingleCPUAddParticleProgram::getName(), ptr);
+    (*pimpl).programFactories.emplace(kern::programs::SingleCPUDiffuseProgram::getName(), ptr);
     BOOST_LOG_TRIVIAL(debug) << "...done";
 }
 

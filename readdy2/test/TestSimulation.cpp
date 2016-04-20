@@ -52,6 +52,11 @@ namespace {
     }
 
     TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
+        simulation.setBoxSize(1,1,1);
+        size_t n_particles = 100;
+        for(auto _ = 0; _ < n_particles; ++_) {
+            simulation.addParticle(0,0,0, "type");
+        }
         simulation.run(1000, .2);
     }
 }

@@ -12,6 +12,7 @@
 
 #include <readdy/plugin/Programs.h>
 #include "../SingleCPUKernel.h"
+#include "../SingleCPUKernelStateModel.h"
 
 namespace readdy {
     namespace kernel {
@@ -20,14 +21,16 @@ namespace readdy {
                 class SingleCPUDiffuseProgram : public readdy::plugin::DiffuseProgram{
 
                 public:
-                    SingleCPUDiffuseProgram(std::shared_ptr<SingleCPUKernel> &kernel);
+                    SingleCPUDiffuseProgram(std::shared_ptr<readdy::model::KernelContext> context, std::shared_ptr<SingleCPUKernelStateModel> model, std::shared_ptr<readdy::utils::RandomProvider> randomProvider);
 
                     virtual ~SingleCPUDiffuseProgram() override = default;
 
                     virtual void execute() override;
 
                 private:
-                    std::shared_ptr<SingleCPUKernel> kernel;
+                    std::shared_ptr<readdy::model::KernelContext> context;
+                    std::shared_ptr<SingleCPUKernelStateModel> model;
+                    std::shared_ptr<readdy::utils::RandomProvider> randomProvider;
                 };
             }
         }
