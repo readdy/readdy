@@ -38,14 +38,6 @@ std::shared_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
  * Destructor: default
  */
 readdy::kernel::singlecpu::SingleCPUKernel::~SingleCPUKernel() = default;
-/**
- * Copy operations
- */
-/*kern::SingleCPUKernel::SingleCPUKernel(const kern::SingleCPUKernel &rhs) : readdy::plugin::Kernel(rhs), pimpl(boost::make_unique<kern::SingleCPUKernel::Impl>()) {};
-kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel &rhs) {
-    *pimpl = *rhs.pimpl;
-    return *this;
-}*/
 
 std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(std::string name) {
     auto it = (*pimpl).programFactories.find(name);
