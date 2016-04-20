@@ -67,6 +67,14 @@ namespace readdy {
             virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name);
 
             /**
+             * @todo document this
+             */
+            template<class T>
+            std::shared_ptr<T> createProgramAs(std::string name) {
+                return std::dynamic_pointer_cast<T>(createProgram(name));
+            }
+
+            /**
              * Returns a vector containing all available program names for this specific kernel instance.
              *
              * @see createProgram(name)

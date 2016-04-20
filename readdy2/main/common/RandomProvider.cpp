@@ -1,5 +1,6 @@
 #include <readdy/common/RandomProvider.h>
 #include <boost/random.hpp>
+#include <boost/make_unique.hpp>
 
 /**
  * << detailed description >>
@@ -8,13 +9,22 @@
  * @brief << brief description >>
  * @author clonker
  * @date 19.04.16
- * @todo use pimpl idiom instead of static (mpi)
  */
-
+struct readdy::utils::RandomProvider::Impl {
+    std::shared_ptr<boost::random::ranlux3> gen = std::make_shared<boost::random::ranlux3>();
+};
 
 double readdy::utils::RandomProvider::getNormal(double mean, double variance) {
-    static boost::random::ranlux3 gen;
-    boost::random::normal_distribution<> n (mean, variance);
-    return n(gen);
+    boost::random::normal_distribution<> n(mean, variance);
+    return n(*pimpl->gen);
 }
 
+readdy::utils::RandomProvider::RandomProvider() : pimpl(boost::make_unique<Impl>()) {
+
+}
+
+readdy::utils::RandomProvider &readdy::utils::RandomProvider::operator=(RandomProvider &&rhs) = default;
+
+readdy::utils::RandomProvider::RandomProvider(RandomProvider &&rhs) = default;
+
+readdy::utils::RandomProvider::~RandomProvider() = default;
