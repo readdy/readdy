@@ -1,10 +1,11 @@
 #include <readdy/Simulation.h>
 #include "gtest/gtest.h"
 
-#include <boost/predef.h>
-#ifdef BOOST_OS_MACOS
+#if BOOST_OS_MACOS
 #include <array>
 #endif
+#include <boost/algorithm/string.hpp>
+#include <readdy/plugin/Kernel.h>
 
 using namespace readdy;
 
@@ -13,10 +14,20 @@ namespace {
     protected:
         Simulation simulation;
 
-        virtual void SetUp() { }
-
-        virtual void TearDown() { }
-
+        TestSimulation() {
+            // if we're in conda
+            const char *env = std::getenv("PREFIX");
+            std::string pluginDir = "lib/readdy_plugins";
+            if (env) {
+                auto _env = std::string(env);
+                if (!boost::algorithm::ends_with(env, "/")) {
+                    _env = _env.append("/");
+                }
+                pluginDir = _env.append(pluginDir);
+            }
+            readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
+            simulation.setKernel("SingleCPU");
+        }
     };
 
     TEST_F(TestSimulation, TestKBT) {
@@ -38,5 +49,9 @@ namespace {
         EXPECT_EQ(box_size[0], 10);
         EXPECT_EQ(box_size[1], 11);
         EXPECT_EQ(box_size[2], 12);
+    }
+
+    TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
+        simulation.run(1000, .2);
     }
 }

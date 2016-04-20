@@ -8,7 +8,7 @@
 #include <memory>
 
 #include <boost/predef.h>
-#ifdef BOOST_OS_MACOS
+#if BOOST_OS_MACOS
 #include <string>
 #endif
 

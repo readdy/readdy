@@ -14,6 +14,7 @@
 #include <readdy/model/Particle.h>
 #include <vector>
 #include "../SingleCPUKernel.h"
+#include "../SingleCPUKernelStateModel.h"
 
 namespace readdy {
     namespace kernel {
@@ -21,7 +22,7 @@ namespace readdy {
             namespace programs {
                 class SingleCPUAddParticleProgram : public readdy::plugin::AddParticleProgram {
                 public:
-                    SingleCPUAddParticleProgram(SingleCPUKernel &kernel);
+                    SingleCPUAddParticleProgram(std::shared_ptr<SingleCPUKernelStateModel> model);
 
                     virtual ~SingleCPUAddParticleProgram() override;
 
@@ -41,7 +42,7 @@ namespace readdy {
 
                 private:
                     std::vector<readdy::model::Particle> particles;
-                    SingleCPUKernel kernel;
+                    std::shared_ptr<SingleCPUKernelStateModel> model;
                 };
             }
         }

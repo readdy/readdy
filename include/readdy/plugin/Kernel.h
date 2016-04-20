@@ -158,7 +158,7 @@ namespace readdy {
              *
              * @return the default kernel directory.
              */
-            const std::string getDefaultKernelDirectory();
+            static const std::string getDefaultKernelDirectory();
 
         private:
             // prevent that copies can be created

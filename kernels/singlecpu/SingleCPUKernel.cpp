@@ -21,7 +21,7 @@ kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"),
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
     using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
 
-    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(*this);
+    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(pimpl->context, pimpl->model);
     (*pimpl).programFactories.emplace(kern::programs::SingleCPUTestProgram::getName(), ptr);
     (*pimpl).programFactories.emplace(kern::programs::SingleCPUAddParticleProgram::getName(), ptr);
     BOOST_LOG_TRIVIAL(debug) << "...done";
@@ -40,11 +40,11 @@ readdy::kernel::singlecpu::SingleCPUKernel::~SingleCPUKernel() = default;
 /**
  * Copy operations
  */
-kern::SingleCPUKernel::SingleCPUKernel(const kern::SingleCPUKernel &rhs) : readdy::plugin::Kernel(rhs), pimpl(boost::make_unique<kern::SingleCPUKernel::Impl>()) {};
+/*kern::SingleCPUKernel::SingleCPUKernel(const kern::SingleCPUKernel &rhs) : readdy::plugin::Kernel(rhs), pimpl(boost::make_unique<kern::SingleCPUKernel::Impl>()) {};
 kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel &rhs) {
     *pimpl = *rhs.pimpl;
     return *this;
-}
+}*/
 
 std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(std::string name) {
     auto it = (*pimpl).programFactories.find(name);
@@ -72,7 +72,8 @@ std::shared_ptr<readdy::utils::RandomProvider> readdy::kernel::singlecpu::Single
 
 std::shared_ptr<readdy::model::KernelContext> readdy::kernel::singlecpu::SingleCPUKernel::getKernelContext() {
     return pimpl->context;
-};
+}
+
 /**
  * Move operations default
  */

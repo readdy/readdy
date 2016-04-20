@@ -10,14 +10,14 @@
 #include "SingleCPUDiffuseProgram.h"
 #include "../SingleCPUKernelStateModel.h"
 
-readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(readdy::kernel::singlecpu::SingleCPUKernel &kernel) : DiffuseProgram(){
+readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(std::shared_ptr<SingleCPUKernel> &kernel) : DiffuseProgram(){
     SingleCPUDiffuseProgram::kernel = kernel;
 }
 
 void readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::execute() {
-    auto rand = kernel.getRandomProvider();
-    auto kernelModel = dynamic_cast<readdy::kernel::singlecpu::SingleCPUKernelStateModel*>(kernel.getKernelStateModel().get());
-    auto ctx = kernel.getKernelContext();
+    auto rand = kernel->getRandomProvider();
+    auto kernelModel = dynamic_cast<readdy::kernel::singlecpu::SingleCPUKernelStateModel*>(kernel->getKernelStateModel().get());
+    auto ctx = kernel->getKernelContext();
     auto dt = ctx->getTimeStep();
     for (auto &&particle :kernelModel->getParticles()) {
         const double D = ctx->getDiffusionConstant(particle.type);

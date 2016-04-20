@@ -7,17 +7,19 @@
 
 #include <readdy/plugin/ProgramFactory.h>
 #include "SingleCPUKernel.h"
+#include "SingleCPUKernelStateModel.h"
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
             class SingleCPUProgramFactory : public readdy::plugin::ProgramFactory {
             public:
-                SingleCPUProgramFactory(SingleCPUKernel &kernel);
+                SingleCPUProgramFactory(std::shared_ptr<readdy::model::KernelContext> context, std::shared_ptr<SingleCPUKernelStateModel> model);
                 virtual std::shared_ptr<readdy::plugin::Program> createProgram(const std::string name) override;
 
             private:
-                SingleCPUKernel kernel;
+                std::shared_ptr<readdy::model::KernelContext> context;
+                std::shared_ptr<SingleCPUKernelStateModel> model;
             };
         }
     }

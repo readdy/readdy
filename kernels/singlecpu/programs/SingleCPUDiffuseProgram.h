@@ -20,14 +20,14 @@ namespace readdy {
                 class SingleCPUDiffuseProgram : public readdy::plugin::DiffuseProgram{
 
                 public:
-                    SingleCPUDiffuseProgram(SingleCPUKernel &kernel);
+                    SingleCPUDiffuseProgram(std::shared_ptr<SingleCPUKernel> &kernel);
 
                     virtual ~SingleCPUDiffuseProgram() override = default;
 
                     virtual void execute() override;
 
                 private:
-                    SingleCPUKernel kernel;
+                    std::shared_ptr<SingleCPUKernel> kernel;
                 };
             }
         }

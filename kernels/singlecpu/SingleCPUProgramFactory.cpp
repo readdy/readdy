@@ -12,13 +12,14 @@ std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUPro
         return std::make_shared<prog::SingleCPUTestProgram>();
     }
     if(name == prog::SingleCPUAddParticleProgram::getName()) {
-        return std::make_shared<prog::SingleCPUAddParticleProgram>(kernel);
+        return std::make_shared<prog::SingleCPUAddParticleProgram>(model);
     }
     return nullptr;
 }
 
-readdy::kernel::singlecpu::SingleCPUProgramFactory::SingleCPUProgramFactory(SingleCPUKernel &kernel) : kernel(kernel) {
+readdy::kernel::singlecpu::SingleCPUProgramFactory::SingleCPUProgramFactory(std::shared_ptr<readdy::model::KernelContext> context, std::shared_ptr<SingleCPUKernelStateModel> model) {
+    this->context = context;
+    this->model = model;
 }
-
 
 

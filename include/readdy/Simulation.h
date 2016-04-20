@@ -8,7 +8,7 @@
 #include <memory>
 
 #include <boost/predef.h>
-#ifdef BOOST_OS_MACOS
+#if BOOST_OS_MACOS
 #include <array>
 #endif
 
@@ -31,9 +31,19 @@ namespace readdy {
         std::array<bool, 3> getPeriodicBoundary() const;
         void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
+        void setKernel(const std::string kernel);
+        bool isKernelSet() const;
+        std::string getSelectedKernelType() const;
+        virtual void run(const size_t steps, const double timeStep);
+
     private:
         struct Impl;
         std::unique_ptr<readdy::Simulation::Impl> pimpl;
+    };
+
+    class NoKernelSelectedException : public std::runtime_error {
+    public:
+        NoKernelSelectedException(const std::string &__arg);
     };
 
 }
