@@ -55,11 +55,13 @@ namespace {
     TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
         simulation.setBoxSize(1, 1, 1);
         size_t n_particles = 100;
-        simulation.registerParticleType("type", 1);
+        double diffusionConstant = 1;
+        simulation.registerParticleType("type", diffusionConstant);
         for (auto _ = 0; _ < n_particles; ++_) {
             simulation.addParticle(0, 0, 0, "type");
         }
-        simulation.run(1000, 1);
+        double timestep = 1;
+        simulation.run(1000, timestep);
         auto positions = simulation.getParticlePositions();
         double msd = 0;
         for(auto &&pos : positions) {

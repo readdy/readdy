@@ -8,7 +8,10 @@
  */
 
 #include "SingleCPUDiffuseProgram.h"
-#include "../SingleCPUKernelStateModel.h"
+#include <boost/predef.h>
+#if BOOST_OS_MACOS
+#include <math.h>
+#endif
 
 void readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::execute() {
     auto dt = context->getTimeStep();
