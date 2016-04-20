@@ -17,7 +17,7 @@ void readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::execute() {
     auto dt = context->getTimeStep();
     for (auto &&particle : *model->getParticles()) {
         const double D = context->getDiffusionConstant(particle.type);
-        const double prefactor = sqrt(2. * D * dt);
+        const double prefactor = std::sqrt(2. * D * dt);
         particle.pos[0] += prefactor * randomProvider->getNormal();
         particle.pos[1] += prefactor * randomProvider->getNormal();
         particle.pos[2] += prefactor * randomProvider->getNormal();
