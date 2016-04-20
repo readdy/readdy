@@ -4,6 +4,7 @@
 #if BOOST_OS_MACOS
 #include <array>
 #endif
+
 #include <boost/algorithm/string.hpp>
 #include <readdy/plugin/Kernel.h>
 
@@ -31,7 +32,7 @@ namespace {
     };
 
     TEST_F(TestSimulation, TestKBT) {
-		simulation.setKBT(42);
+        simulation.setKBT(42);
         EXPECT_EQ(42, simulation.getKBT());
     }
 
@@ -52,11 +53,19 @@ namespace {
     }
 
     TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
-        simulation.setBoxSize(1,1,1);
+        simulation.setBoxSize(1, 1, 1);
         size_t n_particles = 100;
-        for(auto _ = 0; _ < n_particles; ++_) {
-            simulation.addParticle(0,0,0, "type");
+        simulation.registerParticleType("type", 1);
+        for (auto _ = 0; _ < n_particles; ++_) {
+            simulation.addParticle(0, 0, 0, "type");
         }
-        simulation.run(1000, .2);
+        simulation.run(1000, 1);
+        auto positions = simulation.getParticlePositions();
+        double msd = 0;
+        for(auto &&pos : positions) {
+            msd += pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2];
+        }
+        msd /= positions.size();
+        BOOST_LOG_TRIVIAL(debug) << "mean squared displacement: " << msd;
     }
 }

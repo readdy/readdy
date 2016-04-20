@@ -120,6 +120,18 @@ void Simulation::addParticle(double x, double y, double z, std::string type) {
     }
 }
 
+void Simulation::registerParticleType(const std::string name, const double diffusionCoefficient) {
+    if(isKernelSet()) {
+        pimpl->kernel->getKernelContext()->setDiffusionConstant(name, diffusionCoefficient);
+    } else {
+        throw NoKernelSelectedException("no kernel was selected");
+    }
+}
+
+std::vector<std::array<double, 3>> Simulation::getParticlePositions() {
+    return pimpl->kernel->getKernelStateModel()->getParticlePositions();
+}
+
 
 Simulation &Simulation::operator=(Simulation &&rhs) = default;
 

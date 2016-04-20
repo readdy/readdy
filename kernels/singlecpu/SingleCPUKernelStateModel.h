@@ -24,16 +24,17 @@ namespace readdy {
                 virtual void addParticle(const model::Particle &p) override;
                 virtual void addParticles(const std::vector<model::Particle> &p) override;
 
-                std::vector<readdy::model::Particle> getParticles() const;
+                virtual std::vector<std::array<double, 3>> getParticlePositions() override;
+
+
+                std::shared_ptr<std::vector<readdy::model::Particle>> getParticles() const;
 
                 SingleCPUKernelStateModel();
                 ~SingleCPUKernelStateModel();
                 // move
                 SingleCPUKernelStateModel(SingleCPUKernelStateModel &&rhs);
                 SingleCPUKernelStateModel& operator=(SingleCPUKernelStateModel &&rhs);
-                // copy
-                SingleCPUKernelStateModel(const SingleCPUKernelStateModel &rhs);
-                SingleCPUKernelStateModel& operator=(const SingleCPUKernelStateModel &rhs);
+
             private:
                 struct Impl;
                 std::unique_ptr<Impl> pimpl;

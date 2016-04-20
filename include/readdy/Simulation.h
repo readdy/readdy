@@ -8,6 +8,8 @@
 #include <memory>
 
 #include <boost/predef.h>
+#include <vector>
+
 #if BOOST_OS_MACOS
 #include <array>
 #endif
@@ -37,15 +39,14 @@ namespace readdy {
         void setBoxSize(double dx, double dy, double dz);
         std::array<bool, 3> getPeriodicBoundary() const;
         void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
-        std::string getKernel() const;
-        void setKernel(const std::string name);
-        void run(const unsigned long steps, const double timestep);
-        //void registerParticleType(const std::string name, const double diffusionCoefficient);
+
+        void registerParticleType(const std::string name, const double diffusionCoefficient);
         //void registerPotential(const Potential& potential);
         //void registerReaction(const Reaction& reaction);
         //void registerReactionByDescriptor(const std::string descriptor);
 
         void addParticle(double x, double y, double z, std::string type);
+        std::vector<std::array<double, 3>> getParticlePositions();
         void setKernel(const std::string kernel);
         bool isKernelSet() const;
         std::string getSelectedKernelType() const;

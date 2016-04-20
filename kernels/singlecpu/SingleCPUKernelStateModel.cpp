@@ -16,7 +16,7 @@
 namespace k = readdy::kernel::singlecpu;
 
 struct k::SingleCPUKernelStateModel::Impl {
-    std::vector<readdy::model::Particle> particles;
+    std::shared_ptr<std::vector<readdy::model::Particle>> particles = std::make_shared<std::vector<readdy::model::Particle>>();
 };
 
 void k::SingleCPUKernelStateModel::updateModel(bool forces, bool distances) {
@@ -26,24 +26,25 @@ void k::SingleCPUKernelStateModel::updateModel(bool forces, bool distances) {
 
 k::SingleCPUKernelStateModel::SingleCPUKernelStateModel() : pimpl(boost::make_unique<k::SingleCPUKernelStateModel::Impl>()) { }
 
-k::SingleCPUKernelStateModel::SingleCPUKernelStateModel(const k::SingleCPUKernelStateModel &rhs) : pimpl(boost::make_unique<k::SingleCPUKernelStateModel::Impl>(*rhs.pimpl)) { }
-
-k::SingleCPUKernelStateModel &k::SingleCPUKernelStateModel::operator=(const k::SingleCPUKernelStateModel &rhs) {
-    *pimpl = *rhs.pimpl;
-    return *this;
-}
-
 void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticle(const model::Particle &p) {
-    (*pimpl).particles.push_back(p);
+    (*pimpl).particles->push_back(p);
 }
 
 void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticles(const std::vector<model::Particle> &p) {
-    pimpl->particles.reserve(pimpl->particles.size() + p.size());
-    pimpl->particles.insert(pimpl->particles.end(), p.begin(), p.end());
+    pimpl->particles->reserve(pimpl->particles->size() + p.size());
+    pimpl->particles->insert(pimpl->particles->end(), p.begin(), p.end());
 }
 
-std::vector<readdy::model::Particle> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticles() const {
+std::shared_ptr<std::vector<readdy::model::Particle>> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticles() const {
     return pimpl->particles;
+}
+
+std::vector<std::array<double, 3>> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() {
+    std::vector<std::array<double, 3>> result;
+    for(auto i = 0; i < pimpl->particles->size(); ++i) {
+        result.push_back((*(pimpl->particles))[i].pos);
+    }
+    return result;
 }
 
 

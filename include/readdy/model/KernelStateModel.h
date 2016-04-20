@@ -22,6 +22,7 @@ namespace readdy {
             virtual void updateModel(bool forces, bool distances) = 0;
             virtual void addParticle(const Particle &p) = 0;
             virtual void addParticles(const std::vector<Particle> &p) = 0;
+            virtual std::vector<std::array<double, 3>> getParticlePositions() = 0;
         };
     }
 }
