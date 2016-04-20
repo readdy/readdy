@@ -31,6 +31,7 @@ namespace readdy {
         std::array<bool, 3> getPeriodicBoundary() const;
         void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
+        void addParticle(double x, double y, double z, std::string type);
         void setKernel(const std::string kernel);
         bool isKernelSet() const;
         std::string getSelectedKernelType() const;

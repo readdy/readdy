@@ -12,14 +12,14 @@ struct Simulation::Impl {
 };
 
 double Simulation::getKBT() const {
-    if(isKernelSet()) {
+    if (isKernelSet()) {
         return pimpl->kernel->getKernelContext()->getKBT();
     }
     throw NoKernelSelectedException("No Kernel was set");
 }
 
 void Simulation::setKBT(double kBT) {
-    if(isKernelSet()) {
+    if (isKernelSet()) {
         pimpl->kernel->getKernelContext()->setKBT(kBT);
     } else {
         throw NoKernelSelectedException("No Kernel was set");
@@ -27,7 +27,7 @@ void Simulation::setKBT(double kBT) {
 }
 
 void Simulation::setBoxSize(double dx, double dy, double dz) {
-    if(isKernelSet()) {
+    if (isKernelSet()) {
         pimpl->kernel->getKernelContext()->setBoxSize(dx, dy, dz);
     } else {
         throw NoKernelSelectedException("no kernel was set");
@@ -35,30 +35,30 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
 }
 
 void Simulation::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
-    if(isKernelSet()) {
+    if (isKernelSet()) {
         pimpl->kernel->getKernelContext()->setPeriodicBoundary(pb_x, pb_y, pb_z);
     } else {
         throw NoKernelSelectedException("no kernel was set");
     }
 }
 
-Simulation::Simulation() : pimpl(boost::make_unique<Simulation::Impl>()) {}
+Simulation::Simulation() : pimpl(boost::make_unique<Simulation::Impl>()) { }
 
 std::array<double, 3> Simulation::getBoxSize() const {
-    if(isKernelSet()) {
+    if (isKernelSet()) {
         return pimpl->kernel->getKernelContext()->getBoxSize();
     }
     throw NoKernelSelectedException("No Kernel was set");
 }
 
 std::array<bool, 3> Simulation::getPeriodicBoundary() const {
-    if(isKernelSet()) {
+    if (isKernelSet()) {
         return pimpl->kernel->getKernelContext()->getPeriodicBoundary();
     }
     throw NoKernelSelectedException("No Kernel was set");
 }
 
-Simulation::Simulation(const Simulation &rhs) : pimpl(boost::make_unique<Simulation::Impl>(*rhs.pimpl)){}
+Simulation::Simulation(const Simulation &rhs) : pimpl(boost::make_unique<Simulation::Impl>(*rhs.pimpl)) { }
 
 Simulation &Simulation::operator=(const Simulation &rhs) {
     *pimpl = *rhs.pimpl;
@@ -66,9 +66,8 @@ Simulation &Simulation::operator=(const Simulation &rhs) {
 }
 
 
-
 void Simulation::run(const size_t steps, const double timeStep) {
-    if(pimpl->kernel) {
+    if (pimpl->kernel) {
         auto kernel = pimpl->kernel;
         {
             BOOST_LOG_TRIVIAL(debug) << "available programs: ";
@@ -87,8 +86,8 @@ void Simulation::run(const size_t steps, const double timeStep) {
 }
 
 void Simulation::setKernel(const std::string kernel) {
-    if(pimpl->kernel) {
-        BOOST_LOG_TRIVIAL(debug) << "replacing kernel \""<< pimpl->kernel->getName() << "\" with \"" << kernel << "\"";
+    if (pimpl->kernel) {
+        BOOST_LOG_TRIVIAL(debug) << "replacing kernel \"" << pimpl->kernel->getName() << "\" with \"" << kernel << "\"";
     }
     pimpl->kernel = readdy::plugin::KernelProvider::getInstance().get(kernel);
 }
@@ -98,17 +97,33 @@ bool Simulation::isKernelSet() const {
 }
 
 std::string Simulation::getSelectedKernelType() const {
-    if(isKernelSet()) {
+    if (isKernelSet()) {
         return pimpl->kernel->getName();
     }
     throw NoKernelSelectedException("You must select a kernel by setKernel befor asking for its type");
 }
 
+void Simulation::addParticle(double x, double y, double z, std::string type) {
+    if (isKernelSet()) {
+        auto s = getBoxSize();
+        if (0 <= x && x <= s[0] && 0 <= y && y <= s[1] && 0 <= z && z <= s[2]) {
+            readdy::model::Particle p{x, y, z, type};
+            pimpl->kernel->getKernelStateModel()->addParticle(p);
+        } else {
+            BOOST_LOG_TRIVIAL(error) << "particle position was not in bounds of the simulation box!";
+        }
+    } else {
+        throw NoKernelSelectedException("no kernel was set!");
+    }
+}
 
-Simulation& Simulation::operator=(Simulation &&rhs) = default;
+
+Simulation &Simulation::operator=(Simulation &&rhs) = default;
+
 Simulation::Simulation(Simulation &&rhs) = default;
+
 Simulation::~Simulation() = default;
 
 
-NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};
+NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };
 

@@ -22,6 +22,7 @@ namespace readdy {
             std::string type;
 
             Particle();
+            Particle(double x, double y, double z, std::string type);
             virtual ~Particle();
 
             bool operator==(const Particle& rhs);
