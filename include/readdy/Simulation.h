@@ -9,6 +9,7 @@
 
 #include <boost/predef.h>
 #include <vector>
+#include <readdy/model/Vec3.h>
 
 #if BOOST_OS_MACOS
 #include <array>
@@ -57,7 +58,7 @@ namespace readdy {
 
         void addParticle(double x, double y, double z, std::string type);
 
-        std::vector<std::array<double, 3>> getParticlePositions();
+        std::vector<readdy::model::Vec3> getParticlePositions();
 
         void setKernel(const std::string kernel);
 

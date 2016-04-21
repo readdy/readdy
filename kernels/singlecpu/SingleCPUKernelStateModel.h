@@ -13,10 +13,21 @@
 
 #include <readdy/model/KernelStateModel.h>
 #include <memory>
+#include <readdy/model/Vec3.h>
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
+
+            struct ParticleData {
+                std::shared_ptr<std::vector<boost::uuids::uuid>> ids;
+                std::shared_ptr<std::vector<readdy::model::Vec3>> positions;
+                std::unique_ptr<std::vector<uint>> type;
+
+                ParticleData();
+                void addParticles(const std::vector<model::Particle> particles);
+            };
+
             class SingleCPUKernelStateModel : public readdy::model::KernelStateModel {
             public:
                 virtual void updateModel(bool forces, bool distances) override;
@@ -24,16 +35,16 @@ namespace readdy {
                 virtual void addParticle(const model::Particle &p) override;
                 virtual void addParticles(const std::vector<model::Particle> &p) override;
 
-                virtual std::vector<std::array<double, 3>> getParticlePositions() override;
+                virtual std::vector<readdy::model::Vec3> getParticlePositions() override;
 
-
-                std::shared_ptr<std::vector<readdy::model::Particle>> getParticles() const;
 
                 SingleCPUKernelStateModel();
                 ~SingleCPUKernelStateModel();
                 // move
                 SingleCPUKernelStateModel(SingleCPUKernelStateModel &&rhs);
                 SingleCPUKernelStateModel& operator=(SingleCPUKernelStateModel &&rhs);
+
+                std::shared_ptr<ParticleData> particleData;
 
             private:
                 struct Impl;

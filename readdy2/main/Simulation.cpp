@@ -110,7 +110,7 @@ void Simulation::addParticle(double x, double y, double z, std::string type) {
     if (isKernelSet()) {
         auto s = getBoxSize();
         if (0 <= x && x <= s[0] && 0 <= y && y <= s[1] && 0 <= z && z <= s[2]) {
-            readdy::model::Particle p{x, y, z, type};
+            readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext()->getParticleTypeID(type)};
             pimpl->kernel->getKernelStateModel()->addParticle(p);
         } else {
             BOOST_LOG_TRIVIAL(error) << "particle position was not in bounds of the simulation box!";
@@ -128,7 +128,7 @@ void Simulation::registerParticleType(const std::string name, const double diffu
     }
 }
 
-std::vector<std::array<double, 3>> Simulation::getParticlePositions() {
+std::vector<readdy::model::Vec3> Simulation::getParticlePositions() {
     return pimpl->kernel->getKernelStateModel()->getParticlePositions();
 }
 

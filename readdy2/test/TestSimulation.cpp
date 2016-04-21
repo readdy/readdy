@@ -61,11 +61,11 @@ namespace {
             simulation.addParticle(0, 0, 0, "type");
         }
         double timestep = 1;
-        simulation.run(1000, timestep);
+        simulation.run(100, timestep);
         auto positions = simulation.getParticlePositions();
         double msd = 0;
         for(auto &&pos : positions) {
-            msd += pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2];
+            msd += pos*pos;
         }
         msd /= positions.size();
         BOOST_LOG_TRIVIAL(debug) << "mean squared displacement: " << msd;

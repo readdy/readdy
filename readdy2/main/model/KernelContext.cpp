@@ -16,10 +16,12 @@
 using namespace readdy::model;
 
 struct readdy::model::KernelContext::Impl {
+    uint typeCounter;
+    std::unordered_map<std::string, uint> typeMapping;
     double kBT = 0;
     std::array<double, 3> box_size{};
     std::array<bool, 3> periodic_boundary{};
-    std::unordered_map<std::string, double> diffusionConstants{};
+    std::unordered_map<uint, double> diffusionConstants{};
     double timeStep;
 };
 
@@ -58,14 +60,23 @@ KernelContext &KernelContext::operator=(const KernelContext &rhs) {
 }
 
 double KernelContext::getDiffusionConstant(std::string particleType) const {
-    return pimpl->diffusionConstants[particleType];
+    return pimpl->diffusionConstants[pimpl->typeMapping[particleType]];
 }
 
 void KernelContext::setDiffusionConstant(std::string particleType, double D) {
-    if(pimpl->diffusionConstants.find(particleType) != pimpl->diffusionConstants.end()) {
-        BOOST_LOG_TRIVIAL(warning) << "diffusion constant for particle type " << particleType << " was already set to " << (pimpl->diffusionConstants[particleType]) << " and is now overwritten.";
+    bool hasType = false;
+    if(pimpl->typeMapping.find(particleType) != pimpl->typeMapping.end()) {
+        BOOST_LOG_TRIVIAL(warning) << "diffusion constant for particle type " << particleType << " was already set to " << (getDiffusionConstant(particleType)) << " and is now overwritten.";
+        hasType = true;
     }
-    pimpl->diffusionConstants[particleType] = D;
+    uint t_id;
+    if(hasType) {
+        t_id = pimpl->typeMapping[particleType];
+    } else {
+        t_id = ++(pimpl->typeCounter);
+        pimpl->typeMapping.emplace(particleType, t_id);
+    }
+    pimpl->diffusionConstants[t_id] = D;
 }
 
 double KernelContext::getTimeStep() const {
@@ -74,6 +85,14 @@ double KernelContext::getTimeStep() const {
 
 void KernelContext::setTimeStep(double dt) {
     pimpl->timeStep = dt;
+}
+
+uint KernelContext::getParticleTypeID(const std::string name) const {
+    return pimpl->typeMapping[name];
+}
+
+double KernelContext::getDiffusionConstant(uint particleType) const {
+    return pimpl->diffusionConstants[particleType];
 }
 
 

@@ -27,10 +27,11 @@ namespace readdy {
             void setBoxSize(double dx, double dy, double dz);
 
             std::array<bool, 3> getPeriodicBoundary() const;
-
+            uint getParticleTypeID(const std::string name) const;
             void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
             double getDiffusionConstant(std::string particleType) const;
+            double getDiffusionConstant(uint particleType) const;
             void setDiffusionConstant(std::string particleType, double D);
 
             double getTimeStep() const;

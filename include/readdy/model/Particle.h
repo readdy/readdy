@@ -13,22 +13,22 @@
 #include <array>
 #include <string>
 #include <boost/uuid/uuid.hpp>
+#include "Vec3.h"
 
 namespace readdy {
     namespace model {
         class Particle {
         public:
-            std::array<double, 3> pos;
-            std::string type;
+            Vec3 pos;
+            uint type;
 
             Particle();
-            Particle(double x, double y, double z, std::string type);
+            Particle(double x, double y, double z, uint type);
             virtual ~Particle();
 
             bool operator==(const Particle& rhs);
             bool operator!=(const Particle& rhs);
 
-        private:
             boost::uuids::uuid id;
         };
     }
