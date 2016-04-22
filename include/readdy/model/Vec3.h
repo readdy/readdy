@@ -16,10 +16,14 @@ namespace readdy {
     namespace model {
         class Vec3 {
         public:
+            Vec3();
             Vec3(double x, double y, double z);
             Vec3& operator+=(const Vec3& rhs);
             Vec3& operator*=(const double a);
-            double operator[](const size_t i) const;
+            double operator[](const uint i) const;
+            bool operator==(const Vec3& rhs);
+            bool operator!=(const Vec3& rhs);
+
         private:
             std::array<double, 3> data;
         };

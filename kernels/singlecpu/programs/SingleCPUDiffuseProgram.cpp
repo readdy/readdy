@@ -18,7 +18,7 @@ void readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::execute() {
     auto dt = context->getTimeStep();
     auto pd = model->particleData;
     auto pos = pd->positions;
-    for (size_t p = 0; p < pos->size(); p++) {
+    for (auto p = 0; p < pos->size(); p++) {
         const double D = context->getDiffusionConstant((*pd->type)[p]);
         const double prefactor = sqrt(2. * D * dt);
 

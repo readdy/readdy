@@ -1,4 +1,5 @@
 #include <readdy/model/Vec3.h>
+#include <assert.h>
 
 /**
  * << detailed description >>
@@ -31,9 +32,26 @@ readdy::model::Vec3::Vec3(double x, double y, double z) {
     data[2] = z;
 }
 
-double readdy::model::Vec3::operator[](const size_t i) const{
+double readdy::model::Vec3::operator[](const uint i) const{
+    assert(0 <= i && i < 3);
     return data[i];
 }
+
+readdy::model::Vec3::Vec3()  : Vec3(0, 0, 0){
+
+}
+
+bool readdy::model::Vec3::operator==(const Vec3 &rhs) {
+    return data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2];
+}
+
+bool readdy::model::Vec3::operator!=(const Vec3 &rhs) {
+    return !(data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2]);
+}
+
+
+
+
 
 
 

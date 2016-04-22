@@ -66,7 +66,7 @@ namespace readdy {
 
         std::string getSelectedKernelType() const;
 
-        virtual void run(const size_t steps, const double timeStep);
+        virtual void run(const unsigned long int steps, const double timeStep);
 
     private:
         struct Impl;

@@ -66,7 +66,7 @@ Simulation &Simulation::operator=(const Simulation &rhs) {
 }
 
 
-void Simulation::run(const size_t steps, const double timeStep) {
+void Simulation::run(const unsigned long int steps, const double timeStep) {
     if (pimpl->kernel) {
         auto kernel = pimpl->kernel;
         {

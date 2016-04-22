@@ -54,7 +54,7 @@ namespace {
 
     TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
         simulation.setBoxSize(1, 1, 1);
-        size_t n_particles = 100;
+        uint n_particles = 100;
         double diffusionConstant = 1;
         simulation.registerParticleType("type", diffusionConstant);
         for (auto _ = 0; _ < n_particles; ++_) {
@@ -64,8 +64,8 @@ namespace {
         simulation.run(100, timestep);
         auto positions = simulation.getParticlePositions();
         double msd = 0;
-        for(auto &&pos : positions) {
-            msd += pos*pos;
+        for(auto&& position : positions) {
+            msd += position*position;
         }
         msd /= positions.size();
         BOOST_LOG_TRIVIAL(debug) << "mean squared displacement: " << msd;
