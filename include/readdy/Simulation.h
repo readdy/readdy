@@ -10,6 +10,7 @@
 #include <boost/predef.h>
 #include <vector>
 #include <readdy/model/Vec3.h>
+#include <readdy/model/KernelStateModel.h>
 
 #if BOOST_OS_MACOS
 #include <array>
@@ -66,7 +67,7 @@ namespace readdy {
 
         std::string getSelectedKernelType() const;
 
-        virtual void run(const unsigned long int steps, const double timeStep);
+        virtual void run(const readdy::model::KernelStateModel::time_step_type steps, const double timeStep);
 
     private:
         struct Impl;

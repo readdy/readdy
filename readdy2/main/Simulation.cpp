@@ -66,7 +66,7 @@ Simulation &Simulation::operator=(const Simulation &rhs) {
 }
 
 
-void Simulation::run(const unsigned long int steps, const double timeStep) {
+void Simulation::run(const readdy::model::KernelStateModel::time_step_type steps, const double timeStep) {
     if (pimpl->kernel) {
         auto kernel = pimpl->kernel;
         {

@@ -20,7 +20,7 @@ struct k::SingleCPUKernelStateModel::Impl {
 
 };
 
-void k::SingleCPUKernelStateModel::updateModel(bool forces, bool distances) {
+void k::SingleCPUKernelStateModel::updateModel(time_step_type t, bool forces, bool distances) {
     // todo
 }
 
