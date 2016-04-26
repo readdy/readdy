@@ -11,6 +11,7 @@
 #include <vector>
 #include <readdy/model/Vec3.h>
 #include <readdy/model/KernelStateModel.h>
+#include <functional>
 
 #if BOOST_OS_MACOS
 #include <array>
