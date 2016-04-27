@@ -19,8 +19,7 @@
 #include <boost/filesystem.hpp>
 #include <readdy/plugin/Plugin.h>
 #include <boost/log/sources/logger.hpp>
-#include <readdy/model/KernelStateModel.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Observables.h>
 #include "Program.h"
 
 

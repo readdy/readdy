@@ -68,7 +68,7 @@ namespace readdy {
 
         std::string getSelectedKernelType() const;
 
-        virtual void run(const readdy::model::KernelStateModel::time_step_type steps, const double timeStep);
+        virtual void run(const readdy::model::time_step_type steps, const double timeStep);
 
     private:
         struct Impl;

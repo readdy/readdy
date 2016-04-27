@@ -17,11 +17,12 @@
 namespace k = readdy::kernel::singlecpu;
 
 struct k::SingleCPUKernelStateModel::Impl {
-
+    readdy::model::time_step_type t;
 };
 
-void k::SingleCPUKernelStateModel::updateModel(time_step_type t, bool forces, bool distances) {
-    // todo
+void k::SingleCPUKernelStateModel::updateModel(model::time_step_type t, bool forces, bool distances) {
+    pimpl->t = t;
+    //TODO
 }
 
 
@@ -39,6 +40,10 @@ void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticles(const st
 
 std::vector<readdy::model::Vec3> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() {
     return {*particleData->positions};
+}
+
+readdy::model::time_step_type readdy::kernel::singlecpu::SingleCPUKernelStateModel::getCurrentTimeStep() {
+    return pimpl->t;
 }
 
 

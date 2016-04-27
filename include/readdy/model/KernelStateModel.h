@@ -11,6 +11,7 @@
 #define READDY2_MAIN_KERNELSTATEMODEL_H
 
 #include <vector>
+#include <readdy/common/Types.h>
 #include "Particle.h"
 #include "Vec3.h"
 
@@ -18,8 +19,6 @@ namespace readdy {
     namespace model {
         class KernelStateModel {
         public:
-            typedef unsigned long int time_step_type;
-
             virtual ~KernelStateModel();
 
             virtual void updateModel(time_step_type t, bool forces, bool distances) = 0;
@@ -28,6 +27,7 @@ namespace readdy {
 
             virtual void addParticles(const std::vector<Particle> &p) = 0;
 
+            virtual time_step_type getCurrentTimeStep() = 0;
             virtual std::vector<Vec3> getParticlePositions() = 0;
         };
     }

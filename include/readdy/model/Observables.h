@@ -10,27 +10,22 @@
 #ifndef READDY2_MAIN_OBSERVABLES_H
 #define READDY2_MAIN_OBSERVABLES_H
 
-#include "Observable.h"
-#include "Vec3.h"
+#include <readdy/model/Observable.h>
+#include <readdy/model/Vec3.h>
 #include <vector>
 
 namespace readdy {
     namespace model {
-        class ParticlePositionObservable : public Observable<std::vector<Vec3>()> {
-        private:
-            boost::signals2::connection connection;
-
-            ParticlePositionObservable(int stride) : Observable(stride) {
-                connection = signal.connect(std::bind(&readdy::model::ParticlePositionObservable::evaluate, this));
+        class ParticlePositionObservable : public Observable {
+        public:
+            ParticlePositionObservable(unsigned int stride, signal_t &signal) : Observable(stride, signal) {
             }
 
             virtual ~ParticlePositionObservable() {
-                connection.disconnect();
             }
 
-        public:
-            virtual std::vector<Vec3> evaluate() override;
-
+        protected:
+            virtual void _evaluate(const std::shared_ptr<KernelContext> &context, const std::shared_ptr<KernelStateModel> &model) override;
         };
     }
 }

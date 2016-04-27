@@ -9,8 +9,8 @@
 
 #include <readdy/model/Observables.h>
 
-
-std::vector<readdy::model::Vec3> readdy::model::ParticlePositionObservable::evaluate() {
-    return std::vector<Vec3>();
+void readdy::model::ParticlePositionObservable::_evaluate(const std::shared_ptr<KernelContext> &context, const std::shared_ptr<KernelStateModel> &model) {
+    model->getParticlePositions();
+    // TODO
 }
 

@@ -11,25 +11,35 @@
 #define READDY2_MAIN_OBSERVABLE_H
 
 #include <boost/signals2/signal.hpp>
-#include <functional>
+#include "KernelContext.h"
+#include "KernelStateModel.h"
 
 namespace readdy {
     namespace model {
-        template<typename RetT, typename... ArgsT>
-        class Observable<RetT(ArgsT...)> {
+
+        class Observable {
+        public:
+            typedef boost::signals2::signal<void(const std::shared_ptr<KernelContext>, const std::shared_ptr<KernelStateModel>)> signal_t;
+
+            Observable(unsigned int stride, signal_t &signal) : stride(stride) {
+                connection = signal.connect(std::bind(&readdy::model::Observable::evaluate, this, std::placeholders::_1, std::placeholders::_2));
+            };
+
+            virtual ~Observable() {
+                connection.disconnect();
+            };
+
+            void evaluate(const std::shared_ptr<KernelContext> &context, const std::shared_ptr<KernelStateModel> &model) {
+                if(model->getCurrentTimeStep() % stride == 0) {
+                    _evaluate(context, model);
+                }
+            };
 
         protected:
-            boost::signals2::signal<std::function<RetT(ArgsT...)>> signal;
-            int stride;
-        public:
-            Observable(int stride) : stride(stride) {};
-            virtual ~Observable() {};
-
-            inline boost::signals2::connection connect(const signal::slot_type &observer) {
-                return signal.connect(observer);
-            }
-
-
+            unsigned int stride;
+            virtual void _evaluate(const std::shared_ptr<KernelContext> &context, const std::shared_ptr<KernelStateModel> &model) = 0;
+        private:
+            boost::signals2::connection connection;
         };
     }
 }
