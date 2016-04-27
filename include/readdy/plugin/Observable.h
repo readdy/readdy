@@ -26,15 +26,10 @@ namespace readdy {
             virtual ~Observable() {
             };
 
-            void evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) {
-                if(model->getCurrentTimeStep() % stride == 0) {
-                    _evaluate(context, model);
-                }
-            };
+            virtual void evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) = 0;
 
         protected:
             unsigned int stride;
-            virtual void _evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) = 0;
         };
     }
 }

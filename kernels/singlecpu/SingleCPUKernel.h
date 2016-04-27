@@ -20,7 +20,7 @@ namespace readdy {
                 ~SingleCPUKernel();
                 // move
                 SingleCPUKernel(SingleCPUKernel &&rhs);
-                SingleCPUKernel& operator=(SingleCPUKernel &&rhs);
+                SingleCPUKernel& operator=(SingleCPUKernel rhs);
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();
 

@@ -57,6 +57,9 @@ namespace readdy {
              */
             virtual ~Kernel();
 
+            Kernel(const Kernel &rhs) = delete;
+            Kernel& operator=(const Kernel &rhs) = delete;
+
             /**
              * This method returns the name of the kernel.
              *
@@ -92,13 +95,15 @@ namespace readdy {
             /**
              * Registers an observable to the kernel signal.
              */
-            boost::signals2::connection registerObservable(const Observable &observable);
+            boost::signals2::connection registerObservable(const std::shared_ptr<Observable> &observable);
             /**
              * Registers an observable to the kernel signal.
              */
             boost::signals2::connection registerObservable(const ObservableType &observable, unsigned int stride);
             /**
-             * @todo document this
+             * Creates a specified program and returns a pointer to it in the templated type.
+             *
+             * @return a pointer to the created program.
              */
             template<class T>
             std::shared_ptr<T> createProgramAs(std::string name) {
@@ -173,7 +178,7 @@ namespace readdy {
              *
              * @param kernel the kernel that should be moved
              */
-            void add(const Kernel &&kernel);
+            void add(const std::shared_ptr<Kernel> &&kernel);
 
             /**
              * Method that allows to add a kernel to the KernelProvider by providing a path to a shared lib (containing an implementation of a kernel).

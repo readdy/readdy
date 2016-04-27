@@ -10,7 +10,7 @@ namespace plug = readdy::plugin;
 
 namespace {
     TEST(Kernel, LoadingNonexistingPlugin) {
-        plug::Kernel k("foo");
+        auto k = std::make_shared<plug::Kernel>("foo");
         plug::KernelProvider::getInstance().add(std::move(k));
         try {
             plug::KernelProvider::getInstance().get("foo2");
@@ -23,7 +23,7 @@ namespace {
     }
 
     TEST(Kernel, LoadingExistingPlugin) {
-        plug::Kernel k("bar");
+        auto k = std::make_shared<plug::Kernel>("bar");
         plug::KernelProvider::getInstance().add(std::move(k));
         auto kk_ptr = plug::KernelProvider::getInstance().get("bar");
         EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());

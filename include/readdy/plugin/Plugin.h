@@ -8,8 +8,8 @@
 #include <string>
 #include <memory>
 #include <type_traits>
-#include <map>
 #include <sstream>
+#include <unordered_map>
 
 namespace readdy {
     namespace plugin {
@@ -29,7 +29,7 @@ namespace readdy {
             static_assert(std::is_base_of<Plugin, T>::value, "T must extend readdy::plugin::Plugin");
 
         protected:
-            std::map<std::string, const std::shared_ptr<T>> plugins;
+            std::unordered_map<std::string, const std::shared_ptr<T>> plugins;
         public:
             virtual const std::shared_ptr<T> get(std::string name) {
                 auto it = plugins.find(name);
@@ -41,12 +41,8 @@ namespace readdy {
                 throw NoSuchPluginException(os.str());
             }
 
-            virtual void add(const std::string name, std::shared_ptr<T>&& ptr) {
+            virtual void add(const std::string name, const std::shared_ptr<T>&& ptr) {
                 plugins.emplace(std::make_pair(name, std::move(ptr)));
-            }
-
-            virtual void add(const std::string name, T&& t) {
-                PluginProvider::add(name, std::move(std::make_shared<T>(std::move(t))));
             }
         };
     }

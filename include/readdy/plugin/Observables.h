@@ -24,8 +24,8 @@ namespace readdy {
             virtual ~ParticlePositionObservable() {
             }
 
+            virtual void evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) override;
         protected:
-            virtual void _evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) override;
         };
     }
 }

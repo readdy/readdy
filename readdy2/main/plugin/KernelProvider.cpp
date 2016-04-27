@@ -96,10 +96,26 @@ std::shared_ptr<readdy::model::KernelContext> readdy::plugin::Kernel::getKernelC
     throw std::runtime_error("todo");
 }
 
-boost::signals2::connection readdy::plugin::Kernel::registerObservable(const Observable &observable) {
-    auto connection = signal.connect(observable);
+boost::signals2::connection readdy::plugin::Kernel::registerObservable(const std::shared_ptr<Observable> &observable) {
+    // todo
+    // todo replace copy of object by ptr
+    boost::signals2::connection connection = signal.connect(std::bind(&Observable::evaluate, observable.get(), std::placeholders::_1, std::placeholders::_2));
     boost::signals2::shared_connection_block block {connection, false};
     return connection;
+}
+
+boost::signals2::connection readdy::plugin::Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
+    // todo
+    return signal.connect(observable);
+}
+
+std::vector<std::string> readdy::plugin::Kernel::getAvailableObservables() {
+    return std::vector<std::string>();
+}
+
+std::shared_ptr<readdy::plugin::Observable> readdy::plugin::Kernel::createObservable(std::string name) {
+    // todo
+    throw std::runtime_error("todo");
 }
 
 
@@ -117,14 +133,13 @@ bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::pa
 
 void readdy::plugin::KernelProvider::add(const boost::filesystem::path &sharedLib) {
     using namespace readdy::plugin::_internal;
-    auto shared = std::make_shared<KernelPluginDecorator>(KernelPluginDecorator(sharedLib));
+    auto shared = std::make_shared<KernelPluginDecorator>(sharedLib);
     plugins.emplace(std::make_pair(shared.get()->getName(), std::move(shared)));
 }
 
-void readdy::plugin::KernelProvider::add(const Kernel &&kernel) {
-    const std::string name = kernel.getName();
-    std::shared_ptr<Kernel> shared = std::make_shared<Kernel>(std::move(kernel));
-    PluginProvider::add(name, std::move(shared));
+void readdy::plugin::KernelProvider::add(const std::shared_ptr<Kernel> &&kernel) {
+    const std::string name = kernel->getName();
+    PluginProvider::add(name, std::move(kernel));
 }
 
 
