@@ -10,22 +10,22 @@
 #ifndef READDY2_MAIN_OBSERVABLES_H
 #define READDY2_MAIN_OBSERVABLES_H
 
-#include <readdy/model/Observable.h>
+#include <readdy/plugin/Observable.h>
 #include <readdy/model/Vec3.h>
 #include <vector>
 
 namespace readdy {
-    namespace model {
+    namespace plugin {
         class ParticlePositionObservable : public Observable {
         public:
-            ParticlePositionObservable(unsigned int stride, signal_t &signal) : Observable(stride, signal) {
+            ParticlePositionObservable(unsigned int stride) : Observable(stride) {
             }
 
             virtual ~ParticlePositionObservable() {
             }
 
         protected:
-            virtual void _evaluate(const std::shared_ptr<KernelContext> &context, const std::shared_ptr<KernelStateModel> &model) override;
+            virtual void _evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) override;
         };
     }
 }

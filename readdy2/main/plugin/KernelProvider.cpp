@@ -9,6 +9,8 @@
 #include <boost/dll.hpp>
 #include <readdy/common/Utils.h>
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
+#include <boost/signals2/shared_connection_block.hpp>
+
 
 namespace fs = boost::filesystem;
 namespace utl = readdy::utils;
@@ -90,7 +92,14 @@ std::shared_ptr<readdy::model::KernelStateModel> readdy::plugin::Kernel::getKern
 }
 
 std::shared_ptr<readdy::model::KernelContext> readdy::plugin::Kernel::getKernelContext() {
+    // todo
     throw std::runtime_error("todo");
+}
+
+boost::signals2::connection readdy::plugin::Kernel::registerObservable(const Observable &observable) {
+    auto connection = signal.connect(observable);
+    boost::signals2::shared_connection_block block {connection, false};
+    return connection;
 }
 
 

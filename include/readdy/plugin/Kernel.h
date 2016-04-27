@@ -19,8 +19,12 @@
 #include <boost/filesystem.hpp>
 #include <readdy/plugin/Plugin.h>
 #include <boost/log/sources/logger.hpp>
-#include <readdy/model/Observables.h>
-#include "Program.h"
+#include <readdy/plugin/Observables.h>
+#include <readdy/plugin/Program.h>
+#include <readdy/model/KernelStateModel.h>
+#include <readdy/model/KernelContext.h>
+#include <boost/signals2/signal.hpp>
+#include "Observable.h"
 
 
 namespace readdy {
@@ -32,11 +36,16 @@ namespace readdy {
          * Each Kernel has a #name by which it can be accessed in the KernelProvider.
          */
         class Kernel : public Plugin {
+        typedef boost::signals2::signal<void(const std::shared_ptr<readdy::model::KernelContext>, const std::shared_ptr<readdy::model::KernelStateModel>)> signal_t;
         protected:
             /**
              * The name of the kernel.
              */
             std::string name;
+            /**
+             * todo
+             */
+            signal_t signal;
         public:
             /**
              * Constructs a kernel with a given name.
@@ -55,6 +64,8 @@ namespace readdy {
              */
             virtual const std::string &getName() const override;
 
+            typedef signal_t::slot_type ObservableType;
+
             /**
              * Create a program that can be executed on this kernel.
              * If the requested program is not available on the kernel, a nullptr is returned.
@@ -64,6 +75,10 @@ namespace readdy {
              * @return The program if it was available, otherwise nullptr
              */
             virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name);
+
+            boost::signals2::connection registerObservable(const Observable &observable);
+
+            boost::signals2::connection registerObservable(const ObservableType &observable, unsigned int stride);
 
             /**
              * @todo document this

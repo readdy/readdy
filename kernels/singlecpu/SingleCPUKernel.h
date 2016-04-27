@@ -31,7 +31,6 @@ namespace readdy {
                 virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext() override;
 
                 std::shared_ptr<readdy::utils::RandomProvider> getRandomProvider() const;
-
             private:
                 // -> no copy ops
                 struct Impl;

@@ -4,7 +4,6 @@
 
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
 #include <boost/dll.hpp>
-#include <boost/function.hpp>
 
 namespace plug = readdy::plugin::_internal;
 namespace dll = boost::dll;
@@ -55,6 +54,5 @@ readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
 std::shared_ptr<readdy::model::KernelContext> readdy::plugin::_internal::KernelPluginDecorator::getKernelContext() {
     return (*reference).getKernelContext();
 }
-
 
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) { }

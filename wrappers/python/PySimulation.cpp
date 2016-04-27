@@ -8,6 +8,7 @@
 BOOST_PYTHON_MODULE (simulation) {
     namespace py = boost::python;
     using sim = readdy::Simulation;
+    PyEval_InitThreads();
     py::class_<sim>("Simulation")
             .def("getKBT", &sim::getKBT)
             .def("setKBT", &sim::setKBT)
