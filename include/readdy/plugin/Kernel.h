@@ -76,10 +76,27 @@ namespace readdy {
              */
             virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name);
 
+            /**
+             * Get a vector of the registered predefined observable names, which can be created by createObservable(name).
+             *
+             * @return the vector of available observable names
+             */
+            virtual std::vector<std::string> getAvailableObservables();
+            /**
+             * Creates an observable that is already available as part of the kernel implementation. The list of observables can be obtained by getAvailableObservables().
+             *
+             * @return a shared pointer to the created observable
+             */
+            virtual std::shared_ptr<Observable> createObservable(std::string name);
+
+            /**
+             * Registers an observable to the kernel signal.
+             */
             boost::signals2::connection registerObservable(const Observable &observable);
-
+            /**
+             * Registers an observable to the kernel signal.
+             */
             boost::signals2::connection registerObservable(const ObservableType &observable, unsigned int stride);
-
             /**
              * @todo document this
              */
