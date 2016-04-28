@@ -20,10 +20,10 @@ namespace readdy {
         class Particle {
         public:
             Vec3 pos;
-            uint type;
+            unsigned int type;
 
             Particle();
-            Particle(double x, double y, double z, uint type);
+            Particle(double x, double y, double z, unsigned int type);
             virtual ~Particle();
 
             bool operator==(const Particle& rhs);

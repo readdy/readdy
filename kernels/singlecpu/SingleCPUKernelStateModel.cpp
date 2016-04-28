@@ -57,7 +57,7 @@ k::SingleCPUKernelStateModel::~SingleCPUKernelStateModel() = default;
 readdy::kernel::singlecpu::ParticleData::ParticleData() {
     ids = std::make_shared<std::vector<boost::uuids::uuid>>();
     positions = std::make_shared<std::vector<readdy::model::Vec3>>();
-    type = boost::make_unique<std::vector<uint>>();
+    type = boost::make_unique<std::vector<unsigned int>>();
 }
 
 void readdy::kernel::singlecpu::ParticleData::addParticles(const std::vector<model::Particle> particles) {

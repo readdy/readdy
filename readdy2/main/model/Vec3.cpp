@@ -32,7 +32,7 @@ readdy::model::Vec3::Vec3(double x, double y, double z) {
     data[2] = z;
 }
 
-double readdy::model::Vec3::operator[](const uint i) const{
+double readdy::model::Vec3::operator[](const unsigned int i) const{
     assert(0 <= i && i < 3);
     return data[i];
 }

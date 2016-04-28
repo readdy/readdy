@@ -22,7 +22,7 @@ namespace readdy {
             struct ParticleData {
                 std::shared_ptr<std::vector<boost::uuids::uuid>> ids;
                 std::shared_ptr<std::vector<readdy::model::Vec3>> positions;
-                std::unique_ptr<std::vector<uint>> type;
+                std::unique_ptr<std::vector<unsigned int>> type;
 
                 ParticleData();
                 void addParticles(const std::vector<model::Particle> particles);

@@ -20,7 +20,7 @@ namespace readdy {
             Vec3(double x, double y, double z);
             Vec3& operator+=(const Vec3& rhs);
             Vec3& operator*=(const double a);
-            double operator[](const uint i) const;
+            double operator[](const unsigned int i) const;
             bool operator==(const Vec3& rhs);
             bool operator!=(const Vec3& rhs);
 
