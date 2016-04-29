@@ -23,6 +23,12 @@ namespace readdy {
             Observable(unsigned int stride) : stride(stride) {
             };
 
+            void setStride(const unsigned int stride) {
+                Observable::stride = stride;
+            }
+
+            Observable() : Observable(1) {};
+
             virtual ~Observable() {
             };
 

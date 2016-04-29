@@ -97,27 +97,33 @@ std::shared_ptr<readdy::model::KernelContext> readdy::plugin::Kernel::getKernelC
     throw std::runtime_error("todo");
 }
 
-boost::signals2::connection readdy::plugin::Kernel::registerObservable(const std::shared_ptr<Observable> &observable) {
+boost::signals2::connection readdy::plugin::Kernel::registerObservable(Observable * const observable) {
     // todo
     // todo replace copy of object by ptr
-    boost::signals2::connection connection = signal->connect(std::bind(&Observable::evaluate, observable.get(), std::placeholders::_1, std::placeholders::_2));
+    boost::signals2::connection connection = signal->connect(std::bind(&Observable::evaluate, observable, std::placeholders::_1, std::placeholders::_2));
     boost::signals2::shared_connection_block block {connection, false};
     return connection;
 }
 
 boost::signals2::connection readdy::plugin::Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
-    // todo
+    // todo wrap into observable class, set stride
     return signal->connect(observable);
 }
 
 std::vector<std::string> readdy::plugin::Kernel::getAvailableObservables() {
-    return std::vector<std::string>();
+    return observableFactory->getRegisteredObservableNames();
 }
 
-std::shared_ptr<readdy::plugin::Observable> readdy::plugin::Kernel::createObservable(std::string name) {
-    // todo
-    throw std::runtime_error("todo");
+std::unique_ptr<readdy::plugin::Observable> readdy::plugin::Kernel::createObservable(const std::string &name) {
+    return observableFactory->create(name);
 }
+
+std::tuple<std::unique_ptr<readdy::plugin::Observable>, boost::signals2::connection> readdy::plugin::Kernel::createAndRegisterObservable(const std::string &name, unsigned int stride) {
+    auto obs = createObservable(name);
+    auto connection = registerObservable(obs.get());
+    return std::make_tuple(std::move(obs), connection);
+}
+
 
 readdy::plugin::Kernel &readdy::plugin::Kernel::operator=(readdy::plugin::Kernel && rhs) = default;
 readdy::plugin::Kernel::Kernel(readdy::plugin::Kernel && rhs) = default;

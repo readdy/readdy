@@ -21,6 +21,8 @@ namespace readdy {
             ParticlePositionObservable(unsigned int stride) : Observable(stride) {
             }
 
+            ParticlePositionObservable() : ParticlePositionObservable(1) {};
+
             virtual ~ParticlePositionObservable() {
             }
 

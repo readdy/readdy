@@ -24,6 +24,7 @@
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <boost/signals2/signal.hpp>
+#include <readdy/plugin/_internal/ObservableFactory.h>
 #include "Observable.h"
 
 
@@ -46,6 +47,10 @@ namespace readdy {
              * todo
              */
             std::unique_ptr<signal_t> signal;
+            /**
+             * todo
+             */
+            std::unique_ptr<_internal::ObservableFactory> observableFactory;
         public:
             /**
              * Constructs a kernel with a given name.
@@ -92,12 +97,14 @@ namespace readdy {
              *
              * @return a shared pointer to the created observable
              */
-            virtual std::shared_ptr<Observable> createObservable(std::string name);
+            virtual std::unique_ptr<Observable> createObservable(const std::string &name);
+
+            std::tuple<std::unique_ptr<Observable>, boost::signals2::connection> createAndRegisterObservable(const std::string &name, unsigned int stride);
 
             /**
              * Registers an observable to the kernel signal.
              */
-            boost::signals2::connection registerObservable(const std::shared_ptr<Observable> &observable);
+            boost::signals2::connection registerObservable(Observable * const observable);
             /**
              * Registers an observable to the kernel signal.
              */
@@ -176,7 +183,7 @@ namespace readdy {
             void loadKernelsFromDirectory(const std::string &directory);
 
             /**
-             * Method that allows to move a kernel into the KernelProvider and thus make it available.
+             * Sinking method that allows to move a kernel into the KernelProvider and thus make it available.
              *
              * @param kernel the kernel that should be moved
              */
