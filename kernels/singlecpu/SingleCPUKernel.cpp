@@ -70,13 +70,15 @@ std::shared_ptr<readdy::model::KernelContext> readdy::kernel::singlecpu::SingleC
 /**
  * Move operations default
  */
-kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel rhs) {
+/*kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel rhs) {
     pimpl = std::move(rhs.pimpl);
     return *this;
 }
 kern::SingleCPUKernel::SingleCPUKernel(kern::SingleCPUKernel&& rhs) : Kernel(rhs.name) {
     pimpl = std::move(rhs.pimpl);
-};
+};*/
 
+kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel&& rhs) = default;
+kern::SingleCPUKernel::SingleCPUKernel(kern::SingleCPUKernel&& rhs) = default;
 
 

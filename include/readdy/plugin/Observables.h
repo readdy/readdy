@@ -25,7 +25,6 @@ namespace readdy {
             }
 
             virtual void evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) override;
-        protected:
         };
     }
 }

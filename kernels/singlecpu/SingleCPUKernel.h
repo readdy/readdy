@@ -20,7 +20,7 @@ namespace readdy {
                 ~SingleCPUKernel();
                 // move
                 SingleCPUKernel(SingleCPUKernel &&rhs);
-                SingleCPUKernel& operator=(SingleCPUKernel rhs);
+                SingleCPUKernel& operator=(SingleCPUKernel&& rhs);
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();
 
@@ -32,7 +32,6 @@ namespace readdy {
 
                 std::shared_ptr<readdy::utils::RandomProvider> getRandomProvider() const;
             private:
-                // -> no copy ops
                 struct Impl;
                 std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;
             };

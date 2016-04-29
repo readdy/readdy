@@ -1,7 +1,7 @@
 SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy2/main/common")
 
-# boost
-find_package(Threads REQUIRED)
+# boost (threads required)
+FIND_PACKAGE(Threads REQUIRED)
 INCLUDE(${READDY_GLOBAL_DIR}/cmake/Modules/SetupBoost.cmake)
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREADED ON)

@@ -45,7 +45,7 @@ namespace readdy {
             /**
              * todo
              */
-            signal_t signal;
+            std::unique_ptr<signal_t> signal;
         public:
             /**
              * Constructs a kernel with a given name.
@@ -59,6 +59,8 @@ namespace readdy {
 
             Kernel(const Kernel &rhs) = delete;
             Kernel& operator=(const Kernel &rhs) = delete;
+            Kernel(Kernel &&rhs);
+            Kernel& operator=(Kernel&& rhs);
 
             /**
              * This method returns the name of the kernel.

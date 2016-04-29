@@ -10,6 +10,7 @@
 #include <readdy/common/Utils.h>
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
 #include <boost/signals2/shared_connection_block.hpp>
+#include <boost/make_unique.hpp>
 
 
 namespace fs = boost::filesystem;
@@ -70,7 +71,7 @@ const std::string &plug::Kernel::getName() const {
     return this->name;
 }
 
-plug::Kernel::Kernel(const std::string name) : name(name) {
+plug::Kernel::Kernel(const std::string name) : name(name), signal(boost::make_unique<signal_t>()) {
     BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
 }
 
@@ -99,14 +100,14 @@ std::shared_ptr<readdy::model::KernelContext> readdy::plugin::Kernel::getKernelC
 boost::signals2::connection readdy::plugin::Kernel::registerObservable(const std::shared_ptr<Observable> &observable) {
     // todo
     // todo replace copy of object by ptr
-    boost::signals2::connection connection = signal.connect(std::bind(&Observable::evaluate, observable.get(), std::placeholders::_1, std::placeholders::_2));
+    boost::signals2::connection connection = signal->connect(std::bind(&Observable::evaluate, observable.get(), std::placeholders::_1, std::placeholders::_2));
     boost::signals2::shared_connection_block block {connection, false};
     return connection;
 }
 
 boost::signals2::connection readdy::plugin::Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
     // todo
-    return signal.connect(observable);
+    return signal->connect(observable);
 }
 
 std::vector<std::string> readdy::plugin::Kernel::getAvailableObservables() {
@@ -118,6 +119,8 @@ std::shared_ptr<readdy::plugin::Observable> readdy::plugin::Kernel::createObserv
     throw std::runtime_error("todo");
 }
 
+readdy::plugin::Kernel &readdy::plugin::Kernel::operator=(readdy::plugin::Kernel && rhs) = default;
+readdy::plugin::Kernel::Kernel(readdy::plugin::Kernel && rhs) = default;
 
 bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) {
     const std::string s = path.string();
@@ -137,7 +140,7 @@ void readdy::plugin::KernelProvider::add(const boost::filesystem::path &sharedLi
     plugins.emplace(std::make_pair(shared.get()->getName(), std::move(shared)));
 }
 
-void readdy::plugin::KernelProvider::add(const std::shared_ptr<Kernel> &&kernel) {
+void readdy::plugin::KernelProvider::add(const std::shared_ptr<readdy::plugin::Kernel> &&kernel) {
     const std::string name = kernel->getName();
     PluginProvider::add(name, std::move(kernel));
 }
