@@ -13,6 +13,7 @@
 #include <boost/signals2/signal.hpp>
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/KernelStateModel.h>
+#include "Kernel.h"
 
 namespace readdy {
     namespace plugin {
@@ -20,22 +21,21 @@ namespace readdy {
         class Observable {
         public:
 
-            Observable(unsigned int stride) : stride(stride) {
+            Observable(Kernel *const kernel, unsigned int stride = 1) : stride(stride), kernel(kernel) {
             };
 
             void setStride(const unsigned int stride) {
                 Observable::stride = stride;
             }
 
-            Observable() : Observable(1) {};
-
             virtual ~Observable() {
             };
 
-            virtual void evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) = 0;
+            virtual void evaluate() = 0;
 
         protected:
             unsigned int stride;
+            Kernel *const kernel;
         };
     }
 }

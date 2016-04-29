@@ -18,15 +18,13 @@ namespace readdy {
     namespace plugin {
         class ParticlePositionObservable : public Observable {
         public:
-            ParticlePositionObservable(unsigned int stride) : Observable(stride) {
-            }
 
-            ParticlePositionObservable() : ParticlePositionObservable(1) {};
+            ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) { }
 
             virtual ~ParticlePositionObservable() {
             }
 
-            virtual void evaluate(const std::shared_ptr<readdy::model::KernelContext> &context, const std::shared_ptr<readdy::model::KernelStateModel> &model) override;
+            virtual void evaluate() override;
         };
     }
 }

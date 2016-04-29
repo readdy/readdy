@@ -19,17 +19,19 @@
 #include <boost/filesystem.hpp>
 #include <readdy/plugin/Plugin.h>
 #include <boost/log/sources/logger.hpp>
-#include <readdy/plugin/Observables.h>
 #include <readdy/plugin/Program.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <boost/signals2/signal.hpp>
-#include <readdy/plugin/_internal/ObservableFactory.h>
-#include "Observable.h"
+#include <boost/signals2/shared_connection_block.hpp>
 
 
 namespace readdy {
     namespace plugin {
+        /**
+         * Forward class declaration of Observable
+         */
+        class Observable;
         /**
          * Base class of kernels.
          * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
@@ -37,20 +39,10 @@ namespace readdy {
          * Each Kernel has a #name by which it can be accessed in the KernelProvider.
          */
         class Kernel : public Plugin {
-        typedef boost::signals2::signal<void(const std::shared_ptr<readdy::model::KernelContext>, const std::shared_ptr<readdy::model::KernelStateModel>)> signal_t;
+        typedef boost::signals2::signal<void()> signal_t;
         protected:
-            /**
-             * The name of the kernel.
-             */
-            std::string name;
-            /**
-             * todo
-             */
-            std::unique_ptr<signal_t> signal;
-            /**
-             * todo
-             */
-            std::unique_ptr<_internal::ObservableFactory> observableFactory;
+            struct Impl;
+            std::unique_ptr<Impl> pimpl;
         public:
             /**
              * Constructs a kernel with a given name.

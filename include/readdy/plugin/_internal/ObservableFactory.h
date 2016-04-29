@@ -18,15 +18,20 @@
 
 namespace readdy {
     namespace plugin {
+        class Kernel;
         namespace _internal {
             class ObservableFactory {
             public:
-                ObservableFactory();
-                void registerObservable(const std::string &name, const std::function<Observable*()> create);
+                ObservableFactory(Kernel *const kernel);
+
+                void registerObservable(const std::string &name, const std::function<Observable *()> create);
+
                 std::unique_ptr<Observable> create(const std::string &name);
+
                 std::vector<std::string> getRegisteredObservableNames() const;
+
             private:
-                std::unordered_map<std::string, std::function<Observable*()>> factory;
+                std::unordered_map<std::string, std::function<Observable *()>> factory;
             };
         }
     }
