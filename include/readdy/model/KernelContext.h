@@ -26,17 +26,17 @@ namespace readdy {
 
             void setKBT(double kBT);
 
-            std::array<double, 3> getBoxSize() const;
+            std::array<double, 3>& getBoxSize() const;
 
             void setBoxSize(double dx, double dy, double dz);
 
-            std::array<bool, 3> getPeriodicBoundary() const;
-            unsigned int getParticleTypeID(const std::string name) const;
+            std::array<bool, 3>& getPeriodicBoundary() const;
+            unsigned int getParticleTypeID(const std::string& name) const;
             void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
-            double getDiffusionConstant(std::string particleType) const;
-            double getDiffusionConstant(unsigned int particleType) const;
-            void setDiffusionConstant(std::string particleType, double D);
+            double getDiffusionConstant(const std::string& particleType) const;
+            double getDiffusionConstant(const unsigned int particleType) const;
+            void setDiffusionConstant(const std::string& particleType, double D);
 
             double getTimeStep() const;
             void setTimeStep(double dt);

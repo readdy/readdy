@@ -79,11 +79,11 @@ readdy::plugin::Kernel::~Kernel() {
     BOOST_LOG_TRIVIAL(trace) << "destructing kernel \"" << name << "\"";
 }
 
-std::unique_ptr<readdy::plugin::Program> readdy::plugin::Kernel::createProgram(std::string name) {
+std::unique_ptr<readdy::plugin::Program> readdy::plugin::Kernel::createProgram(const std::string& name) const {
     throw std::runtime_error("todo, treat this properly (or better: make kernel abstract)");
 }
 
-std::vector<std::string> readdy::plugin::Kernel::getAvailablePrograms() {
+std::vector<std::string> readdy::plugin::Kernel::getAvailablePrograms() const {
     return std::vector<std::string>();
 }
 
@@ -92,7 +92,7 @@ readdy::model::KernelStateModel& readdy::plugin::Kernel::getKernelStateModel() c
     throw std::runtime_error("todo, treat this properly (or better: make kernel abstract)");
 }
 
-std::shared_ptr<readdy::model::KernelContext> readdy::plugin::Kernel::getKernelContext() {
+readdy::model::KernelContext& readdy::plugin::Kernel::getKernelContext() const {
     // todo
     throw std::runtime_error("todo");
 }
@@ -128,7 +128,7 @@ std::tuple<std::unique_ptr<readdy::plugin::Observable>, boost::signals2::connect
 readdy::plugin::Kernel &readdy::plugin::Kernel::operator=(readdy::plugin::Kernel && rhs) = default;
 readdy::plugin::Kernel::Kernel(readdy::plugin::Kernel && rhs) = default;
 
-bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) {
+bool readdy::plugin::KernelProvider::isSharedLibrary(const boost::filesystem::path &path) const {
     const std::string s = path.string();
     return (s.find(".dll") != std::string::npos || s.find(".so") != std::string::npos || s.find(".dylib") != std::string::npos)
            && s.find(".lib") == std::string::npos

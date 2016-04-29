@@ -11,7 +11,7 @@
 namespace readdy {
     namespace plugin {
         class ProgramFactory {
-            virtual std::unique_ptr<Program> createProgram(const std::string name) = 0;
+            virtual std::unique_ptr<Program> createProgram(const std::string& name) const = 0;
         };
     }
 }

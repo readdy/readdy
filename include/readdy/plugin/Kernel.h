@@ -84,7 +84,7 @@ namespace readdy {
              * @see getAvailablePrograms()
              * @return The program if it was available, otherwise nullptr
              */
-            virtual std::unique_ptr<readdy::plugin::Program> createProgram(std::string name);
+            virtual std::unique_ptr<readdy::plugin::Program> createProgram(const std::string& name) const;
 
             /**
              * Get a vector of the registered predefined observable names, which can be created by createObservable(name).
@@ -125,7 +125,7 @@ namespace readdy {
              * @see createProgram(name)
              * @return The program names.
              */
-            virtual std::vector<std::string> getAvailablePrograms();
+            virtual std::vector<std::string> getAvailablePrograms() const;
 
             /**
              * @todo implement this properly
@@ -135,7 +135,7 @@ namespace readdy {
             /**
              * @todo implement & document this properly
              */
-            virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext();
+            virtual readdy::model::KernelContext& getKernelContext() const;
         };
 
         /**
@@ -165,7 +165,7 @@ namespace readdy {
              * @param path the path
              * @return True if the path points to a shared library, otherwise false.
              */
-            bool isSharedLibrary(const boost::filesystem::path &path);
+            bool isSharedLibrary(const boost::filesystem::path &path) const;
 
         public:
             /**

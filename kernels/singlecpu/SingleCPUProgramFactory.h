@@ -17,7 +17,7 @@ namespace readdy {
             public:
                 SingleCPUProgramFactory(SingleCPUKernel *kernel);
 
-                virtual std::unique_ptr<readdy::plugin::Program> createProgram(const std::string name) override;
+                virtual std::unique_ptr<readdy::plugin::Program> createProgram(const std::string& name) const override;
 
             private:
                 SingleCPUKernel *kernel;

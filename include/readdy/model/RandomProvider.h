@@ -11,9 +11,10 @@
 #define READDY2_MAIN_RANDOMPROVIDER_H
 
 #include <memory>
+#include "Vec3.h"
 
 namespace readdy {
-    namespace utils {
+    namespace model {
         class RandomProvider {
         public:
             RandomProvider();
@@ -21,6 +22,7 @@ namespace readdy {
             RandomProvider(RandomProvider&& rhs);
             RandomProvider& operator=(RandomProvider&& rhs);
             virtual double getNormal(double mean = 0.0, double variance = 1.0);
+            virtual Vec3 getNormal3 (double mean = 0.0, double variance = 1.0);
         private:
             struct Impl;
             std::unique_ptr<Impl> pimpl;

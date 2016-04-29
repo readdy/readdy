@@ -67,9 +67,9 @@ readdy::kernel::singlecpu::ParticleData::ParticleData() {
 
 void readdy::kernel::singlecpu::ParticleData::addParticles(const std::vector<model::Particle> particles) {
     for(auto&& p : particles) {
-        ids->push_back(p.id);
-        positions->push_back(p.pos);
-        type->push_back(p.type);
+        ids->push_back(p.getId());
+        positions->push_back(p.getPos());
+        type->push_back(p.getType());
     }
 }
 

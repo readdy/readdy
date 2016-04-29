@@ -37,7 +37,7 @@ namespace {
     }
 
     TEST_F(TestSimulation, TestPeriodicBdry) {
-        simulation.setPeriodicBoundary(true, false, true);
+        simulation.setPeriodicBoundary({true, false, true});
         auto boundary = simulation.getPeriodicBoundary();
         EXPECT_TRUE(boundary[0]);
         EXPECT_FALSE(boundary[1]);

@@ -44,12 +44,12 @@ void KernelContext::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
 
 KernelContext::KernelContext() : pimpl(std::make_unique<KernelContext::Impl>()) { }
 
-std::array<double, 3> KernelContext::getBoxSize() const {
-    return std::array<double, 3>((*pimpl).box_size);
+std::array<double, 3>& KernelContext::getBoxSize() const {
+    return pimpl->box_size;
 }
 
-std::array<bool, 3> KernelContext::getPeriodicBoundary() const {
-    return std::array<bool, 3>((*pimpl).periodic_boundary);
+std::array<bool, 3>& KernelContext::getPeriodicBoundary() const {
+    return pimpl->periodic_boundary;
 }
 
 KernelContext::KernelContext(const KernelContext &rhs) : pimpl(std::make_unique<KernelContext::Impl>(*rhs.pimpl)) { }
@@ -59,11 +59,11 @@ KernelContext &KernelContext::operator=(const KernelContext &rhs) {
     return *this;
 }
 
-double KernelContext::getDiffusionConstant(std::string particleType) const {
+double KernelContext::getDiffusionConstant(const std::string& particleType) const {
     return pimpl->diffusionConstants[pimpl->typeMapping[particleType]];
 }
 
-void KernelContext::setDiffusionConstant(std::string particleType, double D) {
+void KernelContext::setDiffusionConstant(const std::string& particleType, double D) {
     bool hasType = false;
     if(pimpl->typeMapping.find(particleType) != pimpl->typeMapping.end()) {
         BOOST_LOG_TRIVIAL(warning) << "diffusion constant for particle type " << particleType << " was already set to " << (getDiffusionConstant(particleType)) << " and is now overwritten.";
@@ -87,7 +87,7 @@ void KernelContext::setTimeStep(double dt) {
     pimpl->timeStep = dt;
 }
 
-uint KernelContext::getParticleTypeID(const std::string name) const {
+unsigned int KernelContext::getParticleTypeID(const std::string& name) const {
     return pimpl->typeMapping[name];
 }
 

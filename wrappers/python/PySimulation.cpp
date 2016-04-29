@@ -9,13 +9,10 @@ BOOST_PYTHON_MODULE (simulation) {
     namespace py = boost::python;
     using sim = readdy::Simulation;
     PyEval_InitThreads();
-    py::class_<sim>("Simulation")
-            .def("getKBT", &sim::getKBT)
-            .def("setKBT", &sim::setKBT)
-            .def("setPeriodicBoundary", &sim::setPeriodicBoundary)
-            .def("getPeriodicBoundary", &sim::getPeriodicBoundary)
-            .def("setBoxSize", &sim::setBoxSize)
-            .def("getBoxSize", &sim::getBoxSize);
+    py::class_<sim, boost::noncopyable>("Simulation")
+            .add_property("kbt", &sim::getKBT, &sim::setKBT)
+            .add_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
+            .add_property("box_size", &sim::getBoxSize, &sim::setBoxSize);
 }
 
 #endif

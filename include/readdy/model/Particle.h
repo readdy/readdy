@@ -19,16 +19,29 @@ namespace readdy {
     namespace model {
         class Particle {
         public:
-            Vec3 pos;
-            unsigned int type;
+            const Vec3 &getPos() const;
+
+            void setPos(const Vec3 &pos);
+
+            unsigned int getType() const;
+
+            void setType(const unsigned int type);
+
+            const boost::uuids::uuid &getId() const;
 
             Particle();
+
             Particle(double x, double y, double z, unsigned int type);
+
             virtual ~Particle();
 
-            bool operator==(const Particle& rhs);
-            bool operator!=(const Particle& rhs);
+            bool operator==(const Particle &rhs);
 
+            bool operator!=(const Particle &rhs);
+
+        private:
+            Vec3 pos;
+            unsigned int type;
             boost::uuids::uuid id;
         };
     }

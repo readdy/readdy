@@ -31,7 +31,7 @@ namespace readdy {
         protected:
             std::unordered_map<std::string, const std::shared_ptr<T>> plugins;
         public:
-            virtual const std::shared_ptr<T> get(std::string name) {
+            virtual const std::shared_ptr<T> get(std::string name) const {
                 auto it = plugins.find(name);
                 if(it != plugins.end()) {
                     return it->second;

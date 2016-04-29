@@ -5,7 +5,7 @@
 #ifndef READDY2_MAIN_SINGLECPUKERNEL_H
 #define READDY2_MAIN_SINGLECPUKERNEL_H
 
-#include <readdy/common/RandomProvider.h>
+#include <readdy/model/RandomProvider.h>
 #include <readdy/plugin/Kernel.h>
 #include <boost/dll.hpp>
 #include "SingleCPUKernelStateModel.h"
@@ -25,14 +25,15 @@ namespace readdy {
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();
 
-                virtual std::unique_ptr<readdy::plugin::Program> createProgram(std::string name) override;
+                virtual std::unique_ptr<readdy::plugin::Program> createProgram(const std::string& name) const override;
                 virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
                 readdy::kernel::singlecpu::SingleCPUKernelStateModel& getKernelStateModelSingleCPU() const;
-                virtual std::vector<std::string> getAvailablePrograms() override;
 
-                virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext() override;
+                virtual std::vector<std::string> getAvailablePrograms() const override;
 
-                std::shared_ptr<readdy::utils::RandomProvider> getRandomProvider() const;
+                virtual readdy::model::KernelContext& getKernelContext() const override;
+
+                readdy::model::RandomProvider& getRandomProvider() const;
             private:
                 struct Impl;
                 std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;

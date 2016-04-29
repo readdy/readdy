@@ -51,22 +51,22 @@ namespace readdy {
 
         std::array<bool, 3> getPeriodicBoundary() const;
 
-        void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
+        void setPeriodicBoundary(std::array<bool, 3> periodic);
 
         void registerParticleType(const std::string name, const double diffusionCoefficient);
         //void registerPotential(const Potential& potential);
         //void registerReaction(const Reaction& reaction);
         //void registerReactionByDescriptor(const std::string descriptor);
 
-        void addParticle(double x, double y, double z, std::string type);
+        void addParticle(double x, double y, double z, const std::string& type);
 
-        std::vector<readdy::model::Vec3> getParticlePositions();
+        const std::vector<readdy::model::Vec3> getParticlePositions() const;
 
-        void setKernel(const std::string kernel);
+        void setKernel(const std::string& kernel);
 
-        bool isKernelSet() const;
+        bool isKernelSelected() const;
 
-        std::string getSelectedKernelType() const;
+        const std::string& getSelectedKernelType() const;
 
         virtual void run(const readdy::model::time_step_type steps, const double timeStep);
 
