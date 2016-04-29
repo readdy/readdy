@@ -9,7 +9,7 @@
  */
 
 #include <readdy/model/KernelContext.h>
-#include <boost/make_unique.hpp>
+#include <readdy/common/make_unique.h>
 #include <unordered_map>
 #include <boost/log/trivial.hpp>
 
@@ -42,7 +42,7 @@ void KernelContext::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
     (*pimpl).periodic_boundary = {pb_x, pb_y, pb_z};
 }
 
-KernelContext::KernelContext() : pimpl(boost::make_unique<KernelContext::Impl>()) { }
+KernelContext::KernelContext() : pimpl(std::make_unique<KernelContext::Impl>()) { }
 
 std::array<double, 3> KernelContext::getBoxSize() const {
     return std::array<double, 3>((*pimpl).box_size);
@@ -52,7 +52,7 @@ std::array<bool, 3> KernelContext::getPeriodicBoundary() const {
     return std::array<bool, 3>((*pimpl).periodic_boundary);
 }
 
-KernelContext::KernelContext(const KernelContext &rhs) : pimpl(boost::make_unique<KernelContext::Impl>(*rhs.pimpl)) { }
+KernelContext::KernelContext(const KernelContext &rhs) : pimpl(std::make_unique<KernelContext::Impl>(*rhs.pimpl)) { }
 
 KernelContext &KernelContext::operator=(const KernelContext &rhs) {
     *pimpl = *rhs.pimpl;

@@ -8,11 +8,11 @@
  * @todo
  */
 
-#include <boost/make_unique.hpp>
 #include <readdy/model/Particle.h>
 #include <vector>
 #include <algorithm>
 #include "SingleCPUKernelStateModel.h"
+#include <readdy/common/make_unique.h>
 
 namespace k = readdy::kernel::singlecpu;
 
@@ -26,7 +26,7 @@ void k::SingleCPUKernelStateModel::updateModel(model::time_step_type t, bool for
 }
 
 
-k::SingleCPUKernelStateModel::SingleCPUKernelStateModel() : pimpl(boost::make_unique<k::SingleCPUKernelStateModel::Impl>()) {
+k::SingleCPUKernelStateModel::SingleCPUKernelStateModel() : pimpl(std::make_unique<k::SingleCPUKernelStateModel::Impl>()) {
     particleData = std::make_shared<ParticleData>();
 }
 
@@ -57,7 +57,7 @@ k::SingleCPUKernelStateModel::~SingleCPUKernelStateModel() = default;
 readdy::kernel::singlecpu::ParticleData::ParticleData() {
     ids = std::make_shared<std::vector<boost::uuids::uuid>>();
     positions = std::make_shared<std::vector<readdy::model::Vec3>>();
-    type = boost::make_unique<std::vector<unsigned int>>();
+    type = std::make_unique<std::vector<unsigned int>>();
 }
 
 void readdy::kernel::singlecpu::ParticleData::addParticles(const std::vector<model::Particle> particles) {

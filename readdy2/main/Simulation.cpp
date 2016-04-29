@@ -2,7 +2,7 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/Simulation.h>
-#include <boost/make_unique.hpp>
+#include <readdy/common/make_unique.h>
 #include <readdy/plugin/Kernel.h>
 
 using namespace readdy;
@@ -42,7 +42,7 @@ void Simulation::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
     }
 }
 
-Simulation::Simulation() : pimpl(boost::make_unique<Simulation::Impl>()) { }
+Simulation::Simulation() : pimpl(std::make_unique<Simulation::Impl>()) { }
 
 std::array<double, 3> Simulation::getBoxSize() const {
     if (isKernelSet()) {
@@ -58,7 +58,7 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
     throw NoKernelSelectedException("No Kernel was set");
 }
 
-Simulation::Simulation(const Simulation &rhs) : pimpl(boost::make_unique<Simulation::Impl>(*rhs.pimpl)) { }
+Simulation::Simulation(const Simulation &rhs) : pimpl(std::make_unique<Simulation::Impl>(*rhs.pimpl)) { }
 
 Simulation &Simulation::operator=(const Simulation &rhs) {
     *pimpl = *rhs.pimpl;

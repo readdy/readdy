@@ -7,8 +7,7 @@
 #include "programs/SingleCPUTestProgram.h"
 #include "programs/SingleCPUAddParticleProgram.h"
 #include "programs/SingleCPUDiffuseProgram.h"
-#include <boost/make_unique.hpp>
-#include <unordered_map>
+#include <readdy/common/make_unique.h>
 
 namespace kern = readdy::kernel::singlecpu;
 struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
@@ -17,7 +16,7 @@ struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
     std::shared_ptr<readdy::model::KernelContext> context = std::make_shared<readdy::model::KernelContext>();
     std::shared_ptr<readdy::utils::RandomProvider> rand = std::make_shared<readdy::utils::RandomProvider>();
 };
-kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"), pimpl(boost::make_unique<kern::SingleCPUKernel::Impl>()){
+kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"), pimpl(std::make_unique<kern::SingleCPUKernel::Impl>()){
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
     using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
 

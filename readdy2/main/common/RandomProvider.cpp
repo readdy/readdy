@@ -1,6 +1,6 @@
 #include <readdy/common/RandomProvider.h>
 #include <boost/random.hpp>
-#include <boost/make_unique.hpp>
+#include <readdy/common/make_unique.h>
 
 /**
  * << detailed description >>
@@ -19,7 +19,7 @@ double readdy::utils::RandomProvider::getNormal(double mean, double variance) {
     return n(*pimpl->gen);
 }
 
-readdy::utils::RandomProvider::RandomProvider() : pimpl(boost::make_unique<Impl>()) {
+readdy::utils::RandomProvider::RandomProvider() : pimpl(std::make_unique<Impl>()) {
 
 }
 

@@ -10,7 +10,7 @@
 #include <readdy/common/Utils.h>
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
 #include <boost/signals2/shared_connection_block.hpp>
-#include <boost/make_unique.hpp>
+#include <readdy/common/make_unique.h>
 
 
 namespace fs = boost::filesystem;
@@ -71,7 +71,7 @@ const std::string &plug::Kernel::getName() const {
     return this->name;
 }
 
-plug::Kernel::Kernel(const std::string name) : name(name), signal(boost::make_unique<signal_t>()) {
+plug::Kernel::Kernel(const std::string name) : name(name), signal(std::make_unique<signal_t>()) {
     BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
 }
 
