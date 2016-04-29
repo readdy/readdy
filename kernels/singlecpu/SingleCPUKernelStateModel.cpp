@@ -18,6 +18,7 @@ namespace k = readdy::kernel::singlecpu;
 
 struct k::SingleCPUKernelStateModel::Impl {
     readdy::model::time_step_type t;
+    std::unique_ptr<ParticleData> particleData;
 };
 
 void k::SingleCPUKernelStateModel::updateModel(model::time_step_type t, bool forces, bool distances) {
@@ -27,23 +28,27 @@ void k::SingleCPUKernelStateModel::updateModel(model::time_step_type t, bool for
 
 
 k::SingleCPUKernelStateModel::SingleCPUKernelStateModel() : pimpl(std::make_unique<k::SingleCPUKernelStateModel::Impl>()) {
-    particleData = std::make_shared<ParticleData>();
+    pimpl->particleData = std::make_unique<ParticleData>();
 }
 
 void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticle(const model::Particle &p) {
-    particleData->addParticles({p});
+    pimpl->particleData->addParticles({p});
 }
 
 void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticles(const std::vector<model::Particle> &p) {
-    particleData->addParticles(p);
+    pimpl->particleData->addParticles(p);
 }
 
-std::vector<readdy::model::Vec3> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() {
-    return {*particleData->positions};
+const std::vector<readdy::model::Vec3> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() const {
+    return {*pimpl->particleData->positions};
 }
 
-readdy::model::time_step_type readdy::kernel::singlecpu::SingleCPUKernelStateModel::getCurrentTimeStep() {
+const readdy::model::time_step_type readdy::kernel::singlecpu::SingleCPUKernelStateModel::getCurrentTimeStep() const {
     return pimpl->t;
+}
+
+k::ParticleData* readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticleData() const {
+    return pimpl->particleData.get();
 }
 
 

@@ -33,11 +33,11 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const bo
     }
 }
 
-std::shared_ptr<readdy::model::KernelStateModel> readdy::plugin::_internal::KernelPluginDecorator::getKernelStateModel() {
+readdy::model::KernelStateModel& readdy::plugin::_internal::KernelPluginDecorator::getKernelStateModel() const {
     return (*reference).getKernelStateModel();
 }
 
-std::shared_ptr<readdy::plugin::Program> readdy::plugin::_internal::KernelPluginDecorator::createProgram(std::string name) {
+std::unique_ptr<readdy::plugin::Program> readdy::plugin::_internal::KernelPluginDecorator::createProgram(std::string name) {
     return (*reference).createProgram(name);
 }
 

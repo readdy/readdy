@@ -9,14 +9,18 @@
 
 #include "SingleCPUDiffuseProgram.h"
 #include <boost/predef.h>
+#include <cmath>
+#include <readdy/model/Vec3.h>
 
 #if BOOST_OS_MACOS
 #include <math.h>
 #endif
 
 void readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::execute() {
+    auto context = kernel->getKernelContext();
+    auto randomProvider = kernel->getRandomProvider();
     auto dt = context->getTimeStep();
-    auto pd = model->particleData;
+    auto pd = kernel->getKernelStateModelSingleCPU().getParticleData();
     auto pos = pd->positions;
     for (auto p = 0; p < pos->size(); p++) {
         const double D = context->getDiffusionConstant((*pd->type)[p]);
@@ -29,12 +33,6 @@ void readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::execute() {
     }
 }
 
-readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(std::shared_ptr<readdy::model::KernelContext> context, std::shared_ptr<SingleCPUKernelStateModel> model,
-                                                                                      std::shared_ptr<readdy::utils::RandomProvider> randomProvider) : DiffuseProgram() {
-    this->context = context;
-    this->model = model;
-    this->randomProvider = randomProvider;
-}
-
+readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};
 
 

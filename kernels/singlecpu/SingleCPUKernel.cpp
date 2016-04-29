@@ -12,7 +12,7 @@
 namespace kern = readdy::kernel::singlecpu;
 struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
     std::unordered_map<std::string, std::shared_ptr<kern::SingleCPUProgramFactory>> programFactories {};
-    std::shared_ptr<kern::SingleCPUKernelStateModel> model = std::make_shared<kern::SingleCPUKernelStateModel>();
+    std::unique_ptr<kern::SingleCPUKernelStateModel> model = std::make_unique<kern::SingleCPUKernelStateModel>();
     std::shared_ptr<readdy::model::KernelContext> context = std::make_shared<readdy::model::KernelContext>();
     std::shared_ptr<readdy::utils::RandomProvider> rand = std::make_shared<readdy::utils::RandomProvider>();
 };
@@ -20,7 +20,7 @@ kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"),
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
     using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
 
-    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(pimpl->context, pimpl->model, pimpl->rand);
+    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(this);
     (*pimpl).programFactories.emplace(kern::programs::SingleCPUTestProgram::getName(), ptr);
     (*pimpl).programFactories.emplace(kern::programs::SingleCPUAddParticleProgram::getName(), ptr);
     (*pimpl).programFactories.emplace(kern::programs::SingleCPUDiffuseProgram::getName(), ptr);
@@ -38,7 +38,7 @@ std::shared_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
  */
 readdy::kernel::singlecpu::SingleCPUKernel::~SingleCPUKernel() = default;
 
-std::shared_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(std::string name) {
+std::unique_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(std::string name) {
     auto it = (*pimpl).programFactories.find(name);
     if(it != (*pimpl).programFactories.end()) {
         return (*it->second).createProgram(name);
@@ -54,8 +54,8 @@ std::vector<std::string> readdy::kernel::singlecpu::SingleCPUKernel::getAvailabl
     return keys;
 }
 
-std::shared_ptr<readdy::model::KernelStateModel> readdy::kernel::singlecpu::SingleCPUKernel::getKernelStateModel() {
-    return (*pimpl).model;
+readdy::model::KernelStateModel& readdy::kernel::singlecpu::SingleCPUKernel::getKernelStateModel() const {
+    return *pimpl->model;
 }
 
 std::shared_ptr<readdy::utils::RandomProvider> readdy::kernel::singlecpu::SingleCPUKernel::getRandomProvider() const {
@@ -65,6 +65,12 @@ std::shared_ptr<readdy::utils::RandomProvider> readdy::kernel::singlecpu::Single
 std::shared_ptr<readdy::model::KernelContext> readdy::kernel::singlecpu::SingleCPUKernel::getKernelContext() {
     return pimpl->context;
 }
+
+readdy::kernel::singlecpu::SingleCPUKernelStateModel &readdy::kernel::singlecpu::SingleCPUKernel::getKernelStateModelSingleCPU() const {
+    return *pimpl->model;
+}
+
+
 
 /**
  * Move operations default

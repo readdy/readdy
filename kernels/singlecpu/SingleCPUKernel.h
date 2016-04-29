@@ -8,6 +8,7 @@
 #include <readdy/common/RandomProvider.h>
 #include <readdy/plugin/Kernel.h>
 #include <boost/dll.hpp>
+#include "SingleCPUKernelStateModel.h"
 
 #define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
 
@@ -24,8 +25,9 @@ namespace readdy {
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();
 
-                virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override;
-                virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel() override;
+                virtual std::unique_ptr<readdy::plugin::Program> createProgram(std::string name) override;
+                virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
+                readdy::kernel::singlecpu::SingleCPUKernelStateModel& getKernelStateModelSingleCPU() const;
                 virtual std::vector<std::string> getAvailablePrograms() override;
 
                 virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext() override;

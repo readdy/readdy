@@ -30,14 +30,14 @@ namespace readdy {
 
             class SingleCPUKernelStateModel : public readdy::model::KernelStateModel {
             public:
-                virtual model::time_step_type getCurrentTimeStep() override;
+                virtual const model::time_step_type getCurrentTimeStep() const override;
 
                 virtual void updateModel(readdy::model::time_step_type t, bool forces, bool distances) override;
 
                 virtual void addParticle(const model::Particle &p) override;
                 virtual void addParticles(const std::vector<model::Particle> &p) override;
 
-                virtual std::vector<readdy::model::Vec3> getParticlePositions() override;
+                virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
 
                 SingleCPUKernelStateModel();
@@ -46,7 +46,7 @@ namespace readdy {
                 SingleCPUKernelStateModel(SingleCPUKernelStateModel &&rhs);
                 SingleCPUKernelStateModel& operator=(SingleCPUKernelStateModel &&rhs);
 
-                std::shared_ptr<ParticleData> particleData;
+                ParticleData* getParticleData() const;
 
             private:
                 struct Impl;

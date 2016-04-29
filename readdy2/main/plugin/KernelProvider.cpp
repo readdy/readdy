@@ -71,7 +71,7 @@ const std::string &plug::Kernel::getName() const {
     return this->name;
 }
 
-plug::Kernel::Kernel(const std::string name) : name(name), signal(std::make_unique<signal_t>()) {
+plug::Kernel::Kernel(const std::string &name) : name(name), signal(std::make_unique<signal_t>()) {
     BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
 }
 
@@ -79,17 +79,17 @@ readdy::plugin::Kernel::~Kernel() {
     BOOST_LOG_TRIVIAL(trace) << "destructing kernel \"" << name << "\"";
 }
 
-std::shared_ptr<readdy::plugin::Program> readdy::plugin::Kernel::createProgram(std::string name) {
-    return nullptr;
+std::unique_ptr<readdy::plugin::Program> readdy::plugin::Kernel::createProgram(std::string name) {
+    throw std::runtime_error("todo, treat this properly (or better: make kernel abstract)");
 }
 
 std::vector<std::string> readdy::plugin::Kernel::getAvailablePrograms() {
     return std::vector<std::string>();
 }
 
-std::shared_ptr<readdy::model::KernelStateModel> readdy::plugin::Kernel::getKernelStateModel() {
+readdy::model::KernelStateModel& readdy::plugin::Kernel::getKernelStateModel() const {
     // todo
-    throw std::runtime_error("todo");
+    throw std::runtime_error("todo, treat this properly (or better: make kernel abstract)");
 }
 
 std::shared_ptr<readdy::model::KernelContext> readdy::plugin::Kernel::getKernelContext() {

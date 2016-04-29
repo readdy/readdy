@@ -21,14 +21,16 @@ namespace readdy {
         public:
             virtual ~KernelStateModel();
 
+            // const accessor methods
+            virtual const time_step_type getCurrentTimeStep() const = 0;
+            virtual const std::vector<Vec3> getParticlePositions() const = 0;
+
+            // non-const update methods, to be called within kernel
             virtual void updateModel(time_step_type t, bool forces, bool distances) = 0;
 
             virtual void addParticle(const Particle &p) = 0;
 
             virtual void addParticles(const std::vector<Particle> &p) = 0;
-
-            virtual time_step_type getCurrentTimeStep() = 0;
-            virtual std::vector<Vec3> getParticlePositions() = 0;
         };
     }
 }

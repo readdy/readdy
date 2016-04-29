@@ -55,7 +55,7 @@ namespace readdy {
             /**
              * Constructs a kernel with a given name.
              */
-            Kernel(const std::string name);
+            Kernel(const std::string &name);
 
             /**
              * The kernel destructor.
@@ -84,7 +84,7 @@ namespace readdy {
              * @see getAvailablePrograms()
              * @return The program if it was available, otherwise nullptr
              */
-            virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name);
+            virtual std::unique_ptr<readdy::plugin::Program> createProgram(std::string name);
 
             /**
              * Get a vector of the registered predefined observable names, which can be created by createObservable(name).
@@ -115,7 +115,7 @@ namespace readdy {
              * @return a pointer to the created program.
              */
             template<class T>
-            std::shared_ptr<T> createProgramAs(std::string name) {
+            std::unique_ptr<T> createProgramAs(std::string name) {
                 return std::dynamic_pointer_cast<T>(createProgram(name));
             }
 
@@ -130,7 +130,7 @@ namespace readdy {
             /**
              * @todo implement this properly
              */
-            virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel();
+            virtual readdy::model::KernelStateModel& getKernelStateModel() const;
 
             /**
              * @todo implement & document this properly

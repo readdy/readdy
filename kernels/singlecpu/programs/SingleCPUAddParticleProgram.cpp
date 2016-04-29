@@ -12,11 +12,10 @@
 namespace k = readdy::kernel::singlecpu::programs;
 
 void k::SingleCPUAddParticleProgram::execute() {
-    model->addParticles(particles);
+    kernel->getKernelStateModel().addParticles(particles);
 }
 
-readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram::SingleCPUAddParticleProgram(std::shared_ptr<SingleCPUKernelStateModel> model) {
-    this->model = model;
+readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram::SingleCPUAddParticleProgram(SingleCPUKernel* kernel) : kernel(kernel){
 }
 
 

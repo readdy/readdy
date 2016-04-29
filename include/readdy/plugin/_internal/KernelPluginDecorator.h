@@ -21,11 +21,11 @@ namespace readdy {
                 KernelPluginDecorator(const boost::filesystem::path sharedLib);
                 virtual ~KernelPluginDecorator();
 
-                virtual std::shared_ptr<readdy::plugin::Program> createProgram(std::string name) override;
+                virtual std::unique_ptr<readdy::plugin::Program> createProgram(std::string name) override;
 
                 virtual std::vector<std::string> getAvailablePrograms() override;
 
-                virtual std::shared_ptr<readdy::model::KernelStateModel> getKernelStateModel() override;
+                virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
 
                 virtual std::shared_ptr<readdy::model::KernelContext> getKernelContext() override;
 
