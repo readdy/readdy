@@ -14,10 +14,10 @@
 
 #include <string>
 #include <unordered_map>
-#include <readdy/plugin/Observable.h>
+#include <readdy/model/Observable.h>
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         class Kernel;
         namespace _internal {
             class ObservableFactory {

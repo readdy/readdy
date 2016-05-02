@@ -13,7 +13,7 @@ const std::string &plug::KernelPluginDecorator::getName() const {
 }
 
 readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const boost::filesystem::path sharedLib)
-        : readdy::plugin::Kernel::Kernel(sharedLib.string()) {
+        : readdy::model::Kernel::Kernel(sharedLib.string()) {
     BOOST_LOG_TRIVIAL(debug) << "... loading kernel " << sharedLib.string();
     // load the library
     lib = dll::shared_library(sharedLib, dll::load_mode::rtld_lazy | dll::load_mode::rtld_global);
@@ -26,7 +26,7 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const bo
     }
     // load the kernel
     {
-        typedef std::shared_ptr<readdy::plugin::Kernel> (kernel_t)();
+        typedef std::shared_ptr<readdy::model::Kernel> (kernel_t)();
         boost::function<kernel_t> factory = dll::import_alias<kernel_t>(lib, "createKernel");
         reference = factory();
         BOOST_LOG_TRIVIAL(debug) << "loaded.";
@@ -37,7 +37,7 @@ readdy::model::KernelStateModel& readdy::plugin::_internal::KernelPluginDecorato
     return (*reference).getKernelStateModel();
 }
 
-std::unique_ptr<readdy::plugin::Program> readdy::plugin::_internal::KernelPluginDecorator::createProgram(const std::string& name) const {
+std::unique_ptr<readdy::model::Program> readdy::plugin::_internal::KernelPluginDecorator::createProgram(const std::string& name) const {
     return (*reference).createProgram(name);
 }
 

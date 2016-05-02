@@ -10,13 +10,19 @@
 #ifndef READDY2_MAIN_PLUGINPROVIDER_H
 #define READDY2_MAIN_PLUGINPROVIDER_H
 
-#include "Plugin.h"
+#include <readdy/model/Plugin.h>
 
 namespace readdy {
     namespace plugin {
+
+        class NoSuchPluginException : public std::runtime_error {
+        public:
+            NoSuchPluginException(const std::string &__arg) : runtime_error(__arg) { }
+        };
+
         template<typename T>
         class PluginProvider {
-            static_assert(std::is_base_of<Plugin, T>::value, "T must extend readdy::plugin::Plugin");
+            static_assert(std::is_base_of<readdy::model::Plugin, T>::value, "T must extend readdy::plugin::Plugin");
 
         protected:
             std::unordered_map<std::string, const std::shared_ptr<T>> plugins;

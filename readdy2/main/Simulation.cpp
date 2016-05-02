@@ -3,13 +3,13 @@
 //
 #include <readdy/Simulation.h>
 #include <readdy/common/make_unique.h>
-#include <readdy/plugin/Kernel.h>
+#include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 
 using namespace readdy;
 
 struct Simulation::Impl {
-    std::shared_ptr<readdy::plugin::Kernel> kernel = nullptr;
+    std::shared_ptr<readdy::model::Kernel> kernel = nullptr;
 };
 
 double Simulation::getKBT() const {

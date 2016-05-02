@@ -10,7 +10,7 @@
 #ifndef READDY2_MAIN_KERNELPROVIDER_H
 #define READDY2_MAIN_KERNELPROVIDER_H
 
-#include "Kernel.h"
+#include <readdy/model/Kernel.h>
 #include "PluginProvider.h"
 
 namespace readdy {
@@ -22,7 +22,7 @@ namespace readdy {
          * specified directory will be scanned for shared libraries with the required
          * symbols, i.e., with an implementation of the Kernel class.
          */
-        class KernelProvider : public PluginProvider<Kernel> {
+        class KernelProvider : public PluginProvider<readdy::model::Kernel> {
         protected:
             /**
              * The constructor of KernelProvider. As it is a singleton, it is protected.
@@ -64,7 +64,7 @@ namespace readdy {
              *
              * @param kernel the kernel that should be moved
              */
-            void add(const std::shared_ptr<Kernel> &&kernel);
+            void add(const std::shared_ptr<readdy::model::Kernel> &&kernel);
 
             /**
              * Method that allows to add a kernel to the KernelProvider by providing a path to a shared lib (containing an implementation of a kernel).

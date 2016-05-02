@@ -6,10 +6,10 @@
 #define READDY2_MAIN_PROGRAMFACTORY_H
 
 #include <type_traits>
-#include <readdy/plugin/Program.h>
+#include <readdy/model/Program.h>
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         class ProgramFactory {
             virtual std::unique_ptr<Program> createProgram(const std::string& name) const = 0;
         };

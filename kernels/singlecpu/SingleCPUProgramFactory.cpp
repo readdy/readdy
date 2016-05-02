@@ -8,7 +8,7 @@
 #include "programs/SingleCPUAddParticleProgram.h"
 #include "programs/SingleCPUDiffuseProgram.h"
 
-std::unique_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUProgramFactory::createProgram(const std::string& name) const {
+std::unique_ptr<readdy::model::Program> readdy::kernel::singlecpu::SingleCPUProgramFactory::createProgram(const std::string& name) const {
     namespace prog = readdy::kernel::singlecpu::programs;
     if(name == prog::SingleCPUTestProgram::getName()) {
         return std::make_unique<prog::SingleCPUTestProgram>();

@@ -8,7 +8,6 @@
  */
 
 #include "SingleCPUDiffuseProgram.h"
-#include <boost/predef.h>
 
 #if BOOST_OS_MACOS
 #include <math.h>

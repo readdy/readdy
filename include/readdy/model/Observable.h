@@ -16,7 +16,7 @@
 #include "Kernel.h"
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
 
         class Observable {
         public:

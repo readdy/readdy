@@ -6,22 +6,22 @@
 #define READDY2_MAIN_KERNELPLUGINDECORATOR_H
 
 
-#include <readdy/plugin/Kernel.h>
+#include <readdy/model/Kernel.h>
 #include <boost/dll/shared_library.hpp>
 
 namespace readdy {
     namespace plugin {
         namespace _internal {
-            class KernelPluginDecorator : public readdy::plugin::Kernel {
+            class KernelPluginDecorator : public readdy::model::Kernel {
             protected:
-                std::shared_ptr<readdy::plugin::Kernel> reference;
+                std::shared_ptr<readdy::model::Kernel> reference;
                 boost::dll::shared_library lib;
 
             public:
                 KernelPluginDecorator(const boost::filesystem::path sharedLib);
                 virtual ~KernelPluginDecorator();
 
-                virtual std::unique_ptr<readdy::plugin::Program> createProgram(const std::string& name) const override;
+                virtual std::unique_ptr<readdy::model::Program> createProgram(const std::string& name) const override;
 
                 virtual std::vector<std::string> getAvailablePrograms() const override;
 

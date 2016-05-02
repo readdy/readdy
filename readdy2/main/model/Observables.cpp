@@ -7,9 +7,9 @@
  * @date 26.04.16
  */
 
-#include <readdy/plugin/Observables.h>
+#include <readdy/model/Observables.h>
 
-void readdy::plugin::ParticlePositionObservable::evaluate() {
+void readdy::model::ParticlePositionObservable::evaluate() {
     kernel->getKernelStateModel();
 }
 

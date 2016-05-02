@@ -6,7 +6,7 @@
 #define READDY2_MAIN_SINGLECPUKERNEL_H
 
 #include <readdy/model/RandomProvider.h>
-#include <readdy/plugin/Kernel.h>
+#include <readdy/model/Kernel.h>
 #include <boost/dll.hpp>
 #include "SingleCPUKernelStateModel.h"
 
@@ -15,7 +15,7 @@
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
-            class SingleCPUKernel : public readdy::plugin::Kernel{
+            class SingleCPUKernel : public readdy::model::Kernel{
             public:
                 SingleCPUKernel();
                 ~SingleCPUKernel();
@@ -25,7 +25,7 @@ namespace readdy {
                 // factory method
                 static std::shared_ptr<SingleCPUKernel> create();
 
-                virtual std::unique_ptr<readdy::plugin::Program> createProgram(const std::string& name) const override;
+                virtual std::unique_ptr<readdy::model::Program> createProgram(const std::string& name) const override;
                 virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
                 readdy::kernel::singlecpu::SingleCPUKernelStateModel& getKernelStateModelSingleCPU() const;
 

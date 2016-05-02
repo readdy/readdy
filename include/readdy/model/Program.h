@@ -13,7 +13,7 @@
 #endif
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         class Program {
         public:
             virtual void execute() = 0;

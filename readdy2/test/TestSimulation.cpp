@@ -6,7 +6,7 @@
 #endif
 
 #include <boost/algorithm/string.hpp>
-#include <readdy/plugin/Kernel.h>
+#include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 
 using namespace readdy;

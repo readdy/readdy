@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include <readdy/common/Utils.h>
 #include <readdy/common/make_unique.h>
-#include <readdy/plugin/Kernel.h>
+#include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
 
@@ -85,7 +85,7 @@ namespace readdy {
             plugins.emplace(std::make_pair(shared.get()->getName(), std::move(shared)));
         }
 
-        void KernelProvider::add(const std::shared_ptr<Kernel> &&kernel) {
+        void KernelProvider::add(const std::shared_ptr<readdy::model::Kernel> &&kernel) {
             const std::string name = kernel->getName();
             PluginProvider::add(name, std::move(kernel));
         }

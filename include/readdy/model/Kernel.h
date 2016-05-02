@@ -17,9 +17,9 @@
 #include <iostream>
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
-#include <readdy/plugin/Plugin.h>
+#include <readdy/model/Plugin.h>
 #include <boost/log/sources/logger.hpp>
-#include <readdy/plugin/Program.h>
+#include <readdy/model/Program.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <boost/signals2/signal.hpp>
@@ -27,7 +27,7 @@
 
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         /**
          * Forward class declaration of Observable
          */
@@ -76,7 +76,7 @@ namespace readdy {
              * @see getAvailablePrograms()
              * @return The program if it was available, otherwise nullptr
              */
-            virtual std::unique_ptr<readdy::plugin::Program> createProgram(const std::string& name) const;
+            virtual std::unique_ptr<Program> createProgram(const std::string& name) const;
 
             /**
              * Get a vector of the registered predefined observable names, which can be created by createObservable(name).

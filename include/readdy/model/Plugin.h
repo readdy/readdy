@@ -12,12 +12,7 @@
 #include <unordered_map>
 
 namespace readdy {
-    namespace plugin {
-        class NoSuchPluginException : public std::runtime_error {
-        public:
-            NoSuchPluginException(const std::string &__arg) : runtime_error(__arg) { }
-        };
-
+    namespace model {
         class Plugin {
         public:
             virtual const std::string& getName() const = 0;

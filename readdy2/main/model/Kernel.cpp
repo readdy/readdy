@@ -7,12 +7,12 @@
  * @date 02.05.16
  */
 
-#include <readdy/plugin/Kernel.h>
 #include <readdy/common/make_unique.h>
-#include <readdy/plugin/_internal/ObservableFactory.h>
+#include <readdy/model/Kernel.h>
+#include <readdy/model/_internal/ObservableFactory.h>
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         struct Kernel::Impl {
             /**
              * The name of the kernel.

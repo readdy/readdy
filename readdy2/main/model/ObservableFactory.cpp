@@ -1,8 +1,8 @@
-#include <readdy/plugin/_internal/ObservableFactory.h>
-#include <readdy/plugin/Observables.h>
+#include <readdy/model/_internal/ObservableFactory.h>
+#include <readdy/model/Observables.h>
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         namespace _internal {
             ObservableFactory::ObservableFactory(Kernel *const kernel) {
                 factory["ParticlePosition"] = [kernel] { return new ParticlePositionObservable(kernel); };
@@ -12,8 +12,8 @@ namespace readdy {
                 factory[name] = create;
             }
 
-            std::unique_ptr<readdy::plugin::Observable> ObservableFactory::create(const std::string &name) {
-                return std::unique_ptr<readdy::plugin::Observable>(factory[name]());
+            std::unique_ptr<Observable> ObservableFactory::create(const std::string &name) {
+                return std::unique_ptr<Observable>(factory[name]());
             }
 
             std::vector<std::string> ObservableFactory::getRegisteredObservableNames() const {

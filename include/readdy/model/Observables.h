@@ -10,12 +10,12 @@
 #ifndef READDY2_MAIN_OBSERVABLES_H
 #define READDY2_MAIN_OBSERVABLES_H
 
-#include <readdy/plugin/Observable.h>
+#include <readdy/model/Observable.h>
 #include <readdy/model/Vec3.h>
 #include <vector>
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         class ParticlePositionObservable : public Observable {
         public:
 

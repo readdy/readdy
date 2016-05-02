@@ -16,7 +16,7 @@ struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
     std::shared_ptr<readdy::model::KernelContext> context = std::make_shared<readdy::model::KernelContext>();
     std::shared_ptr<readdy::model::RandomProvider> rand = std::make_shared<readdy::model::RandomProvider>();
 };
-kern::SingleCPUKernel:: SingleCPUKernel() : readdy::plugin::Kernel("SingleCPU"), pimpl(std::make_unique<kern::SingleCPUKernel::Impl>()){
+kern::SingleCPUKernel:: SingleCPUKernel() : readdy::model::Kernel("SingleCPU"), pimpl(std::make_unique<kern::SingleCPUKernel::Impl>()){
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
     using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
 
@@ -38,7 +38,7 @@ std::shared_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
  */
 readdy::kernel::singlecpu::SingleCPUKernel::~SingleCPUKernel() = default;
 
-std::unique_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(const std::string& name) const {
+std::unique_ptr<readdy::model::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(const std::string& name) const {
     const auto&& it = (*pimpl).programFactories.find(name);
     if(it != (*pimpl).programFactories.end()) {
         return (*it->second).createProgram(name);

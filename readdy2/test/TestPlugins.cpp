@@ -2,7 +2,7 @@
 // Created by clonker on 07.03.16.
 //
 
-#include <readdy/plugin/Kernel.h>
+#include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include "gtest/gtest.h"
@@ -11,7 +11,7 @@ namespace plug = readdy::plugin;
 
 namespace {
     TEST(Kernel, LoadingNonexistingPlugin) {
-        auto k = std::make_shared<plug::Kernel>("foo");
+        auto k = std::make_shared<readdy::model::Kernel>("foo");
         plug::KernelProvider::getInstance().add(std::move(k));
         try {
             plug::KernelProvider::getInstance().get("foo2");
@@ -24,7 +24,7 @@ namespace {
     }
 
     TEST(Kernel, LoadingExistingPlugin) {
-        auto k = std::make_shared<plug::Kernel>("bar");
+        auto k = std::make_shared<readdy::model::Kernel>("bar");
         plug::KernelProvider::getInstance().add(std::move(k));
         auto kk_ptr = plug::KernelProvider::getInstance().get("bar");
         EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());

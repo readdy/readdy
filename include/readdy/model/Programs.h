@@ -5,10 +5,10 @@
 #ifndef READDY2_MAIN_PROGRAMS_H_H
 #define READDY2_MAIN_PROGRAMS_H_H
 
-#include <readdy/plugin/Program.h>
+#include <readdy/model/Program.h>
 
 namespace readdy {
-    namespace plugin {
+    namespace model {
         class TestProgram : public Program {
 
         public:

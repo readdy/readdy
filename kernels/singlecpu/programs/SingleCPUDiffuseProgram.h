@@ -10,7 +10,7 @@
 #ifndef READDY2_MAIN_SINGLECPUDIFFUSEPROGRAM_H
 #define READDY2_MAIN_SINGLECPUDIFFUSEPROGRAM_H
 
-#include <readdy/plugin/Programs.h>
+#include <readdy/model/Programs.h>
 #include "../SingleCPUKernel.h"
 
 namespace readdy {
@@ -18,7 +18,7 @@ namespace readdy {
         namespace singlecpu {
 
             namespace programs {
-                class SingleCPUDiffuseProgram : public readdy::plugin::DiffuseProgram{
+                class SingleCPUDiffuseProgram : public readdy::model::DiffuseProgram{
 
                 public:
                     SingleCPUDiffuseProgram(SingleCPUKernel *kernel);
