@@ -47,7 +47,7 @@ namespace readdy {
         }
 
         const std::string KernelProvider::getDefaultKernelDirectory() {
-            auto dir = getenv("READDY_PLUGIN_DIR");
+            auto&& dir = getenv("READDY_PLUGIN_DIR");
             static std::string defaultDir;
             if (dir == NULL) {
                 if (utl::isWindows()) {
@@ -71,7 +71,7 @@ namespace readdy {
             if (fs::exists(p) && fs::is_directory(p)) {
                 BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();
                 BOOST_LOG_TRIVIAL(debug) << "current path: " << fs::current_path().string();
-                for (auto dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
+                for (auto&& dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
                     if (isSharedLibrary(dirEntry.path())) {
                         add(dirEntry.path());
                     } else {
@@ -138,8 +138,9 @@ namespace readdy {
         }
 
         std::tuple<std::unique_ptr<Observable>, boost::signals2::connection> Kernel::createAndRegisterObservable(const std::string &name, unsigned int stride) {
-            auto obs = createObservable(name);
-            auto connection = registerObservable(obs.get());
+            // todo
+            auto&& obs = createObservable(name);
+            auto&& connection = registerObservable(obs.get());
             return std::make_tuple(std::move(obs), connection);
         }
 
@@ -161,7 +162,7 @@ namespace readdy {
 
         void KernelProvider::add(const boost::filesystem::path &sharedLib) {
             using namespace _internal;
-            auto shared = std::make_shared<KernelPluginDecorator>(sharedLib);
+            const auto&& shared = std::make_shared<KernelPluginDecorator>(sharedLib);
             plugins.emplace(std::make_pair(shared.get()->getName(), std::move(shared)));
         }
 

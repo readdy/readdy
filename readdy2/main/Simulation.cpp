@@ -68,7 +68,7 @@ Simulation &Simulation::operator=(const Simulation &rhs) {
 
 void Simulation::run(const readdy::model::time_step_type steps, const double timeStep) {
     if (pimpl->kernel) {
-        auto kernel = pimpl->kernel;
+        const auto& kernel = pimpl->kernel;
         {
             BOOST_LOG_TRIVIAL(debug) << "available programs: ";
             for (auto &&p : pimpl->kernel->getAvailablePrograms()) {
@@ -77,8 +77,8 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
         }
         kernel->getKernelContext().setTimeStep(timeStep);
         {
-            auto diffuseProgram = kernel->createProgram("Diffuse");
-            for (auto t = 0; t < steps; ++t) {
+            auto&& diffuseProgram = kernel->createProgram("Diffuse");
+            for (auto&& t = 0; t < steps; ++t) {
                 diffuseProgram->execute();
             }
         }
@@ -108,7 +108,7 @@ const std::string& Simulation::getSelectedKernelType() const {
 
 void Simulation::addParticle(double x, double y, double z, const std::string& type) {
     if (isKernelSelected()) {
-        auto s = getBoxSize();
+        const auto&& s = getBoxSize();
         if (0 <= x && x <= s[0] && 0 <= y && y <= s[1] && 0 <= z && z <= s[2]) {
             readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
             pimpl->kernel->getKernelStateModel().addParticle(p);

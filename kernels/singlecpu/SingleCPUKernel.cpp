@@ -39,7 +39,7 @@ std::shared_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
 readdy::kernel::singlecpu::SingleCPUKernel::~SingleCPUKernel() = default;
 
 std::unique_ptr<readdy::plugin::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(const std::string& name) const {
-    auto it = (*pimpl).programFactories.find(name);
+    const auto&& it = (*pimpl).programFactories.find(name);
     if(it != (*pimpl).programFactories.end()) {
         return (*it->second).createProgram(name);
     }

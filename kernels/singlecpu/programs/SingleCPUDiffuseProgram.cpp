@@ -15,10 +15,10 @@
 #endif
 
 void readdy::kernel::singlecpu::programs::SingleCPUDiffuseProgram::execute() {
-    auto context = kernel->getKernelContext();
-    auto dt = context.getTimeStep();
-    auto pd = kernel->getKernelStateModelSingleCPU().getParticleData();
-    auto pos = pd->positions;
+    const auto& context = kernel->getKernelContext();
+    const auto&& dt = context.getTimeStep();
+    const auto&& pd = kernel->getKernelStateModelSingleCPU().getParticleData();
+    const auto& pos = pd->positions;
     for (auto p = 0; p < pos->size(); p++) {
         const double D = context.getDiffusionConstant((*pd->type)[p]);
         const double prefactor = sqrt(2. * D * dt);
