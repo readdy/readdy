@@ -70,19 +70,6 @@ readdy::kernel::singlecpu::SingleCPUKernelStateModel &readdy::kernel::singlecpu:
     return *pimpl->model;
 }
 
-
-
-/**
- * Move operations default
- */
-/*kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel rhs) {
-    pimpl = std::move(rhs.pimpl);
-    return *this;
-}
-kern::SingleCPUKernel::SingleCPUKernel(kern::SingleCPUKernel&& rhs) : Kernel(rhs.name) {
-    pimpl = std::move(rhs.pimpl);
-};*/
-
 kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel&& rhs) = default;
 kern::SingleCPUKernel::SingleCPUKernel(kern::SingleCPUKernel&& rhs) = default;
 

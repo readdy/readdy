@@ -4,6 +4,7 @@
 #include <readdy/Simulation.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/plugin/Kernel.h>
+#include <readdy/plugin/KernelProvider.h>
 
 using namespace readdy;
 

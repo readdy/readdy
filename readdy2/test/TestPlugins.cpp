@@ -3,6 +3,7 @@
 //
 
 #include <readdy/plugin/Kernel.h>
+#include <readdy/plugin/KernelProvider.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include "gtest/gtest.h"
 
