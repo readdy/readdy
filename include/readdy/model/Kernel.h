@@ -97,6 +97,7 @@ namespace readdy {
              * Registers an observable to the kernel signal.
              */
             boost::signals2::connection registerObservable(Observable * const observable);
+            void evaluateObservablesAutomatically(bool evaluate);
             /**
              * Registers an observable to the kernel signal.
              */

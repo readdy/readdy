@@ -12,13 +12,16 @@
 
 #include <vector>
 #include <readdy/common/Types.h>
+#include <boost/signals2/signal.hpp>
 #include "Particle.h"
 #include "Vec3.h"
 
 namespace readdy {
     namespace model {
         class KernelStateModel {
+        typedef boost::signals2::signal<void()> signal_t;
         public:
+            KernelStateModel();
             virtual ~KernelStateModel();
 
             // const accessor methods
@@ -30,6 +33,16 @@ namespace readdy {
             virtual void addParticle(const Particle &p) = 0;
 
             virtual void addParticles(const std::vector<Particle> &p) = 0;
+
+            boost::signals2::connection addListener(const signal_t::slot_type& l);
+
+            KernelStateModel(KernelStateModel&& rhs);
+            KernelStateModel& operator=(KernelStateModel&& rhs);
+
+        protected:
+            std::unique_ptr<signal_t> signal;
+
+            void fireTimeStepChanged();
         };
     }
 }

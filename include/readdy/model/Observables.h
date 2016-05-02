@@ -16,15 +16,16 @@
 
 namespace readdy {
     namespace model {
-        class ParticlePositionObservable : public Observable {
+        class ParticlePositionObservable : public ObservableWithResult<std::vector<Vec3>> {
         public:
 
-            ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) { }
+            ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : ObservableWithResult(kernel, stride) { }
 
             virtual ~ParticlePositionObservable() {
             }
 
-            virtual void evaluate() override;
+            virtual void evaluate(readdy::model::time_step_type t) override;
+
         };
     }
 }

@@ -11,6 +11,7 @@
 #define READDY2_MAIN_OBSERVABLE_H
 
 #include <boost/signals2/signal.hpp>
+#include <readdy/common/make_unique.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/KernelStateModel.h>
 #include "Kernel.h"
@@ -28,14 +29,33 @@ namespace readdy {
                 Observable::stride = stride;
             }
 
+            unsigned int getStride() const {
+                return stride;
+            }
+
             virtual ~Observable() {
             };
 
-            virtual void evaluate() = 0;
+            virtual void evaluate(readdy::model::time_step_type t) = 0;
 
         protected:
             unsigned int stride;
             Kernel *const kernel;
+            readdy::model::time_step_type t_current;
+        };
+
+        template<typename Result>
+        class ObservableWithResult : public Observable {
+        public:
+            ObservableWithResult(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {
+                result = std::make_unique<Result>();
+            }
+
+            Result* getResult() {
+                return result.get();
+            }
+        protected:
+            std::unique_ptr<Result> result;
         };
     }
 }

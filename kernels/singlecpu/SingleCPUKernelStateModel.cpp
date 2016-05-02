@@ -17,13 +17,17 @@
 namespace k = readdy::kernel::singlecpu;
 
 struct k::SingleCPUKernelStateModel::Impl {
-    readdy::model::time_step_type t;
+    readdy::model::time_step_type t = 0;
     std::unique_ptr<ParticleData> particleData;
 };
 
 void k::SingleCPUKernelStateModel::updateModel(model::time_step_type t, bool forces, bool distances) {
+    const auto timeStepChanged = t != pimpl->t;
     pimpl->t = t;
-    //TODO
+    //TODO update
+    if(timeStepChanged) {
+        fireTimeStepChanged();
+    }
 }
 
 

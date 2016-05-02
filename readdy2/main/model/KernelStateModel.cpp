@@ -1,4 +1,5 @@
 #include <readdy/model/KernelStateModel.h>
+#include <readdy/common/make_unique.h>
 
 /**
  * << detailed description >>
@@ -10,4 +11,28 @@
  * @todo make proper reference to KernelStateModel.h?
  */
 
-readdy::model::KernelStateModel::~KernelStateModel() = default;
+namespace readdy {
+    namespace model {
+        KernelStateModel::~KernelStateModel() = default;
+
+        boost::signals2::connection KernelStateModel::addListener(const signal_t::slot_type &l) {
+            return signal->connect(l);
+        }
+
+        void KernelStateModel::fireTimeStepChanged() {
+            (*signal)();
+        }
+
+        KernelStateModel::KernelStateModel() {
+            signal = std::make_unique<signal_t>();
+        }
+
+
+        KernelStateModel &KernelStateModel::operator=(KernelStateModel &&rhs) = default;
+
+        KernelStateModel::KernelStateModel(KernelStateModel &&rhs) = default;
+
+
+    }
+}
+
