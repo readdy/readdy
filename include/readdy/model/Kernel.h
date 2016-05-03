@@ -88,10 +88,20 @@ namespace readdy {
             virtual std::unique_ptr<ObservableBase> createObservable(const std::string &name);
 
             template<typename T>
-            inline std::unique_ptr<T> createObservable() {
+            std::unique_ptr<T> createObservable() {
                 return getObservableFactory().create<T>();
             }
 
+            // todo test this
+            template<typename T>
+            std::tuple<std::unique_ptr<T>, boost::signals2::connection> createAndRegisterObservable(unsigned int stride) {
+                auto&& obs = createObservable<T>();
+                obs->setStride(stride);
+                auto&& connection = registerObservable(obs.get());
+                return std::make_tuple(std::move(obs), connection);
+            };
+
+            // todo test this
             std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::connection> createAndRegisterObservable(const std::string &name, unsigned int stride);
 
             /**

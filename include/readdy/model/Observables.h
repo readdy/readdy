@@ -17,6 +17,12 @@
 
 namespace readdy {
     namespace model {
+
+        template<typename Res_t, typename... Observables>
+        class CombinerObservable : public Observable<Res_t> {
+            CombinerObservable(Kernel *const kernel, unsigned int stride = 1) : readdy::model::Observable<Res_t>::Observable(kernel, stride) { }
+        };
+
         class ParticlePositionObservable : public Observable<std::vector<Vec3>> {
         public:
             DefineObservableName(ParticlePositionObservable)

@@ -114,8 +114,8 @@ namespace readdy {
         }
 
         std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::connection> Kernel::createAndRegisterObservable(const std::string &name, unsigned int stride) {
-            // todo
             auto&& obs = createObservable(name);
+            obs->setStride(stride);
             auto&& connection = registerObservable(obs.get());
             return std::make_tuple(std::move(obs), connection);
         }
