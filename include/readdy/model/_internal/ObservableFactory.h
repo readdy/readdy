@@ -15,22 +15,31 @@
 #include <string>
 #include <unordered_map>
 #include <readdy/model/Observable.h>
+#include <readdy/common/Utils.h>
 
 namespace readdy {
     namespace model {
         class Kernel;
         namespace _internal {
+            class NoSuchObservableException : public std::runtime_error {
+            public:
+                NoSuchObservableException(const std::string &__arg);
+            };
+
             class ObservableFactory {
             public:
                 ObservableFactory(Kernel *const kernel);
 
-                void registerObservable(const std::string &name, const std::function<Observable *()> create);
+                void registerObservable(const std::string &name, const std::function<readdy::model::Observable *()> create);
 
                 std::unique_ptr<Observable> create(const std::string &name);
 
                 template<typename T>
-                std::unique_ptr<T> createAs(const std::string &name) {
-                    return std::unique_ptr<T>(factory[name]());
+                inline std::unique_ptr<T> create() {
+                    if (readdy::utils::collections::hasKey(factory, T::name())) {
+                        return std::unique_ptr<T>(dynamic_cast<T *>(factory[T::name()]()));
+                    }
+                    throw NoSuchObservableException("The requested observable \"" + T::name() + "\" was not registered in the observable factory.");
                 }
 
                 std::vector<std::string> getRegisteredObservableNames() const;

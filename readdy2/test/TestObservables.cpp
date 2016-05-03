@@ -11,6 +11,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Observables.h>
 #include <readdy/Simulation.h>
+#include <readdy/model/_internal/ObservableFactory.h>
 #include "gtest/gtest.h"
 
 namespace m = readdy::model;
@@ -36,6 +37,11 @@ namespace {
         }
     };
 
+    TEST_F(TestObservables, Foo) {
+        readdy::model::_internal::ObservableFactory obsf(kernel.get());
+        auto x = obsf.create<m::ParticlePositionObservable>();
+    }
+
     TEST_F(TestObservables, TestParticlePositions) {
         const unsigned int n_particles = 100;
         const double diffusionConstant = 1;
@@ -45,9 +51,7 @@ namespace {
         const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
         const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0,0,0, particleTypeId));
         kernel->getKernelStateModel().addParticles(particles);
-        auto&& obs = kernel->createObservable("ParticlePosition");
-        auto pp_obs = dynamic_cast<readdy::model::ParticlePositionObservable*>(obs.get());
-
+        auto&& obs = kernel->createObservable<m::ParticlePositionObservable>();
         obs->setStride(3);
         kernel->registerObservable(obs.get());
 
@@ -56,7 +60,9 @@ namespace {
             diffuseProgram->execute();
             kernel->getKernelStateModel().updateModel(t, false, false);
         }
-        const auto&& result = pp_obs->getResult();
+
+        const auto&& result = obs->getResult();
+
         int j = 0;
         for(auto&& p : *result) {
             BOOST_LOG_TRIVIAL(debug) << "foo " << ++j << " / " << result->size() << " (" << particles.size() << ")";

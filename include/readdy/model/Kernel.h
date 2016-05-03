@@ -22,16 +22,12 @@
 #include <readdy/model/Program.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
+#include <readdy/model/_internal/ObservableFactory.h>
 #include <boost/signals2/signal.hpp>
 #include <boost/signals2/shared_connection_block.hpp>
 
-
 namespace readdy {
     namespace model {
-        /**
-         * Forward class declaration of Observable
-         */
-        class Observable;
         /**
          * Base class of kernels.
          * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
@@ -82,6 +78,8 @@ namespace readdy {
              * @return the vector of available observable names
              */
             virtual std::vector<std::string> getAvailableObservables();
+
+
             /**
              * Creates an observable that is already available as part of the kernel implementation. The list of observables can be obtained by getAvailableObservables().
              *
@@ -89,12 +87,18 @@ namespace readdy {
              */
             virtual std::unique_ptr<Observable> createObservable(const std::string &name);
 
+            template<typename T>
+            inline std::unique_ptr<T> createObservable() {
+                return getObservableFactory().create<T>();
+            }
+
             std::tuple<std::unique_ptr<Observable>, boost::signals2::connection> createAndRegisterObservable(const std::string &name, unsigned int stride);
 
             /**
              * Registers an observable to the kernel signal.
              */
             boost::signals2::connection registerObservable(Observable * const observable);
+            //todo
             void evaluateObservablesAutomatically(bool evaluate);
             /**
              * Registers an observable to the kernel signal.
@@ -131,6 +135,7 @@ namespace readdy {
             struct Impl;
             std::unique_ptr<Impl> pimpl;
 
+            _internal::ObservableFactory& getObservableFactory() const;
         };
 
 

@@ -13,11 +13,13 @@
 #include <readdy/model/Observable.h>
 #include <readdy/model/Vec3.h>
 #include <vector>
+#include <readdy/common/Types.h>
 
 namespace readdy {
     namespace model {
         class ParticlePositionObservable : public ObservableWithResult<std::vector<Vec3>> {
         public:
+            DefineObservableName(ParticlePositionObservable)
 
             ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : ObservableWithResult(kernel, stride) { }
 
@@ -25,7 +27,6 @@ namespace readdy {
             }
 
             virtual void evaluate(readdy::model::time_step_type t) override;
-
         };
     }
 }

@@ -12,17 +12,22 @@
 
 #include <boost/signals2/signal.hpp>
 #include <readdy/common/make_unique.h>
-#include <readdy/model/KernelContext.h>
-#include <readdy/model/KernelStateModel.h>
-#include "Kernel.h"
+#include <readdy/common/Types.h>
+
+#define DefineObservableName( observableName ) \
+static std::string name()  \
+{ \
+     return #observableName; \
+}
 
 namespace readdy {
     namespace model {
 
+        class Kernel;
         class Observable {
         public:
 
-            Observable(Kernel *const kernel, unsigned int stride = 1) : stride(stride), kernel(kernel) {
+            Observable(readdy::model::Kernel *const kernel, unsigned int stride = 1) : stride(stride), kernel(kernel) {
             };
 
             void setStride(const unsigned int stride) {
@@ -45,7 +50,7 @@ namespace readdy {
 
         protected:
             unsigned int stride;
-            Kernel *const kernel;
+            readdy::model::Kernel *const kernel;
             readdy::model::time_step_type t_current;
         };
 

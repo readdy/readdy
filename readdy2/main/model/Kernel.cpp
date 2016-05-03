@@ -121,6 +121,11 @@ namespace readdy {
             return std::make_tuple(std::move(obs), connection);
         }
 
+        _internal::ObservableFactory &Kernel::getObservableFactory() const {
+            return *pimpl->observableFactory;
+        }
+
+
         Kernel &Kernel::operator=(Kernel && rhs) = default;
         Kernel::Kernel(Kernel && rhs) = default;
     }
