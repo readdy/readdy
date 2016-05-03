@@ -8,13 +8,13 @@ namespace readdy {
                 factory[ParticlePositionObservable::name()] = [kernel] { return new ParticlePositionObservable(kernel); };
             }
 
-            void ObservableFactory::registerObservable(const std::string &name, const std::function<Observable *()> create) {
+            void ObservableFactory::registerObservable(const std::string &name, const std::function<ObservableBase *()> create) {
                 factory[name] = create;
             }
 
-            std::unique_ptr<Observable> ObservableFactory::create(const std::string &name) {
+            std::unique_ptr<ObservableBase> ObservableFactory::create(const std::string &name) {
                 if (readdy::utils::collections::hasKey(factory, name)) {
-                    return std::unique_ptr<Observable>(factory[name]());
+                    return std::unique_ptr<ObservableBase>(factory[name]());
                 }
                 throw NoSuchObservableException("The requested observable \"" + name + "\" was not registered in the observable factory.");
             }

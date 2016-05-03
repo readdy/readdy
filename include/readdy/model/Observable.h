@@ -24,27 +24,22 @@ namespace readdy {
     namespace model {
 
         class Kernel;
-        class Observable {
+        class ObservableBase {
         public:
 
-            Observable(readdy::model::Kernel *const kernel, unsigned int stride = 1) : stride(stride), kernel(kernel) {
+            ObservableBase(readdy::model::Kernel *const kernel, unsigned int stride = 1) : stride(stride), kernel(kernel) {
             };
 
             void setStride(const unsigned int stride) {
-                Observable::stride = stride;
+                ObservableBase::stride = stride;
             }
 
             unsigned int getStride() const {
                 return stride;
             }
 
-            virtual ~Observable() {
+            virtual ~ObservableBase() {
             };
-
-            template<typename T>
-            T getAs() {
-                return dynamic_cast<T>(*this);
-            }
 
             virtual void evaluate(readdy::model::time_step_type t) = 0;
 
@@ -55,9 +50,9 @@ namespace readdy {
         };
 
         template<typename Result>
-        class ObservableWithResult : public Observable {
+        class Observable : public ObservableBase {
         public:
-            ObservableWithResult(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {
+            Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride) {
                 result = std::make_unique<Result>();
             }
 

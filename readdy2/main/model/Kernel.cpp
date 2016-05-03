@@ -30,7 +30,7 @@ namespace readdy {
             /**
              * todo
              */
-            std::unordered_map<Observable*, boost::signals2::shared_connection_block> observableBlocks {};
+            std::unordered_map<ObservableBase*, boost::signals2::shared_connection_block> observableBlocks {};
             /**
              * todo
              */
@@ -85,12 +85,12 @@ namespace readdy {
             throw std::runtime_error("todo");
         }
 
-        boost::signals2::connection Kernel::registerObservable(Observable * const observable) {
+        boost::signals2::connection Kernel::registerObservable(ObservableBase * const observable) {
             if(!pimpl->hasModelTimeStepListener.exchange(true)) {
 
                 pimpl->modelTimeStepListenerConnection = getKernelStateModel().addListener(pimpl->modelTimeStepListener);
             }
-            boost::signals2::connection connection = pimpl->signal.get()->connect(std::bind(&Observable::evaluate, observable, std::placeholders::_1));
+            boost::signals2::connection connection = pimpl->signal.get()->connect(std::bind(&ObservableBase::evaluate, observable, std::placeholders::_1));
             boost::signals2::shared_connection_block block {connection, false};
             pimpl->observableBlocks[observable] = block;
             return connection;
@@ -109,12 +109,11 @@ namespace readdy {
             return pimpl->observableFactory->getRegisteredObservableNames();
         }
 
-        // todo: provide a templated version of this?
-        std::unique_ptr<Observable> Kernel::createObservable(const std::string &name) {
+        std::unique_ptr<ObservableBase> Kernel::createObservable(const std::string &name) {
             return pimpl->observableFactory->create(name);
         }
 
-        std::tuple<std::unique_ptr<Observable>, boost::signals2::connection> Kernel::createAndRegisterObservable(const std::string &name, unsigned int stride) {
+        std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::connection> Kernel::createAndRegisterObservable(const std::string &name, unsigned int stride) {
             // todo
             auto&& obs = createObservable(name);
             auto&& connection = registerObservable(obs.get());

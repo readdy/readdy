@@ -17,11 +17,11 @@
 
 namespace readdy {
     namespace model {
-        class ParticlePositionObservable : public ObservableWithResult<std::vector<Vec3>> {
+        class ParticlePositionObservable : public Observable<std::vector<Vec3>> {
         public:
             DefineObservableName(ParticlePositionObservable)
 
-            ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : ObservableWithResult(kernel, stride) { }
+            ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) { }
 
             virtual ~ParticlePositionObservable() {
             }

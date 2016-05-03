@@ -85,19 +85,19 @@ namespace readdy {
              *
              * @return a shared pointer to the created observable
              */
-            virtual std::unique_ptr<Observable> createObservable(const std::string &name);
+            virtual std::unique_ptr<ObservableBase> createObservable(const std::string &name);
 
             template<typename T>
             inline std::unique_ptr<T> createObservable() {
                 return getObservableFactory().create<T>();
             }
 
-            std::tuple<std::unique_ptr<Observable>, boost::signals2::connection> createAndRegisterObservable(const std::string &name, unsigned int stride);
+            std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::connection> createAndRegisterObservable(const std::string &name, unsigned int stride);
 
             /**
              * Registers an observable to the kernel signal.
              */
-            boost::signals2::connection registerObservable(Observable * const observable);
+            boost::signals2::connection registerObservable(ObservableBase * const observable);
             //todo
             void evaluateObservablesAutomatically(bool evaluate);
             /**

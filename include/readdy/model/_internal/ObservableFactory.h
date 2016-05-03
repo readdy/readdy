@@ -30,9 +30,9 @@ namespace readdy {
             public:
                 ObservableFactory(Kernel *const kernel);
 
-                void registerObservable(const std::string &name, const std::function<readdy::model::Observable *()> create);
+                void registerObservable(const std::string &name, const std::function<readdy::model::ObservableBase *()> create);
 
-                std::unique_ptr<Observable> create(const std::string &name);
+                std::unique_ptr<ObservableBase> create(const std::string &name);
 
                 template<typename T>
                 inline std::unique_ptr<T> create() {
@@ -45,7 +45,7 @@ namespace readdy {
                 std::vector<std::string> getRegisteredObservableNames() const;
 
             private:
-                std::unordered_map<std::string, std::function<Observable *()>> factory;
+                std::unordered_map<std::string, std::function<ObservableBase *()>> factory;
             };
         }
     }
