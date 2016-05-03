@@ -24,7 +24,6 @@ namespace readdy {
                 return result;
             }
 
-
         }
     }
 }

@@ -45,8 +45,9 @@ namespace {
         const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
         const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0,0,0, particleTypeId));
         kernel->getKernelStateModel().addParticles(particles);
-
         auto&& obs = kernel->createObservable("ParticlePosition");
+        auto pp_obs = dynamic_cast<readdy::model::ParticlePositionObservable*>(obs.get());
+
         obs->setStride(3);
         kernel->registerObservable(obs.get());
 
@@ -55,7 +56,11 @@ namespace {
             diffuseProgram->execute();
             kernel->getKernelStateModel().updateModel(t, false, false);
         }
-
+        const auto&& result = pp_obs->getResult();
+        int j = 0;
+        for(auto&& p : *result) {
+            BOOST_LOG_TRIVIAL(debug) << "foo " << ++j << " / " << result->size() << " (" << particles.size() << ")";
+        }
     }
 }
 

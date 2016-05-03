@@ -56,7 +56,7 @@ namespace readdy {
                         e.second.unblock();
                     }
                 }
-                (*pimpl->signal)();
+                (*pimpl->signal)(t);
                 return;
             };
         }
@@ -90,7 +90,7 @@ namespace readdy {
 
                 pimpl->modelTimeStepListenerConnection = getKernelStateModel().addListener(pimpl->modelTimeStepListener);
             }
-            boost::signals2::connection connection = pimpl->signal.get()->connect(std::bind(&Observable::evaluate, observable));
+            boost::signals2::connection connection = pimpl->signal.get()->connect(std::bind(&Observable::evaluate, observable, std::placeholders::_1));
             boost::signals2::shared_connection_block block {connection, false};
             pimpl->observableBlocks[observable] = block;
             return connection;
@@ -109,6 +109,7 @@ namespace readdy {
             return pimpl->observableFactory->getRegisteredObservableNames();
         }
 
+        // todo: provide a templated version of this?
         std::unique_ptr<Observable> Kernel::createObservable(const std::string &name) {
             return pimpl->observableFactory->create(name);
         }

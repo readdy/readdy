@@ -39,10 +39,8 @@ namespace readdy {
          * Each Kernel has a #name by which it can be accessed in the KernelProvider.
          */
         class Kernel : public Plugin {
-        typedef boost::signals2::signal<void()> signal_t;
-        protected:
-            struct Impl;
-            std::unique_ptr<Impl> pimpl;
+        typedef boost::signals2::signal<void(readdy::model::time_step_type)> signal_t;
+
         public:
             /**
              * Constructs a kernel with a given name.
@@ -129,6 +127,10 @@ namespace readdy {
              * @todo implement & document this properly
              */
             virtual readdy::model::KernelContext& getKernelContext() const;
+        protected:
+            struct Impl;
+            std::unique_ptr<Impl> pimpl;
+
         };
 
 

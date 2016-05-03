@@ -28,6 +28,11 @@ namespace readdy {
 
                 std::unique_ptr<Observable> create(const std::string &name);
 
+                template<typename T>
+                std::unique_ptr<T> createAs(const std::string &name) {
+                    return std::unique_ptr<T>(factory[name]());
+                }
+
                 std::vector<std::string> getRegisteredObservableNames() const;
 
             private:

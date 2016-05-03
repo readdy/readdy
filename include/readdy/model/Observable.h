@@ -36,6 +36,11 @@ namespace readdy {
             virtual ~Observable() {
             };
 
+            template<typename T>
+            T getAs() {
+                return dynamic_cast<T>(*this);
+            }
+
             virtual void evaluate(readdy::model::time_step_type t) = 0;
 
         protected:
