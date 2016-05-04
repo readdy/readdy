@@ -4,7 +4,7 @@
 namespace readdy {
     namespace model {
         namespace _internal {
-            ObservableFactory::ObservableFactory(Kernel *const kernel) {
+            ObservableFactory::ObservableFactory(Kernel *const kernel) : kernel(kernel) {
                 factory[ParticlePositionObservable::name()] = [kernel] { return new ParticlePositionObservable(kernel); };
             }
 

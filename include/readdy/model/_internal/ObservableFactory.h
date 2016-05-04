@@ -34,6 +34,11 @@ namespace readdy {
 
                 std::unique_ptr<ObservableBase> create(const std::string &name);
 
+                template<typename T, typename Obs1, typename Obs2>
+                inline std::unique_ptr<T> create(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) {
+                    return std::make_unique<T>(kernel, obs1, obs2, stride);
+                };
+
                 template<typename T>
                 inline std::unique_ptr<T> create() {
                     if (readdy::utils::collections::hasKey(factory, T::name())) {
@@ -46,6 +51,7 @@ namespace readdy {
 
             private:
                 std::unordered_map<std::string, std::function<ObservableBase *()>> factory;
+                Kernel *const kernel;
             };
         }
     }

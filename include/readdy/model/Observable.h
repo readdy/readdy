@@ -38,10 +38,20 @@ namespace readdy {
                 return stride;
             }
 
+            const readdy::model::time_step_type& getCurrentTimeStep() const {
+                return t_current;
+            }
+
             virtual ~ObservableBase() {
             };
 
-            virtual void evaluate(readdy::model::time_step_type t) = 0;
+            virtual void callback(readdy::model::time_step_type t) {
+                if(t_current == t) return;
+                t_current = t;
+                evaluate();
+            };
+
+            virtual void evaluate() = 0;
 
         protected:
             unsigned int stride;
@@ -61,6 +71,29 @@ namespace readdy {
             }
         protected:
             std::unique_ptr<Result> result;
+        };
+
+        template<typename Res_t, typename Obs1_t, typename Obs2_t>
+        class CombinerObservable : public Observable<Res_t> {
+            static_assert(std::is_base_of<readdy::model::ObservableBase, Obs1_t>::value, "Type of Observable 1 was not a subtype of ObservableBase");
+            static_assert(std::is_base_of<readdy::model::ObservableBase, Obs2_t>::value, "Type of Observable 2 was not a subtype of ObservableBase");
+        public:
+            typedef Obs1_t Observable1_type;
+            typedef Obs2_t Observable2_type;
+            CombinerObservable(Kernel *const kernel, Obs1_t * obs1, Obs2_t * obs2, unsigned int stride = 1) : readdy::model::Observable<Res_t>::Observable(kernel, stride) {
+                CombinerObservable::obs1 = obs1;
+                CombinerObservable::obs2 = obs2;
+            }
+
+            virtual void callback(readdy::model::time_step_type t) override {
+                if(obs1->getCurrentTimeStep() != ObservableBase::t_current) obs1->callback(ObservableBase::t_current);
+                if(obs2->getCurrentTimeStep() != ObservableBase::t_current) obs2->callback(ObservableBase::t_current);
+                ObservableBase::callback(t);
+            }
+
+        protected:
+            Obs1_t * obs1;
+            Obs2_t * obs2;
         };
     }
 }

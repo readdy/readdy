@@ -11,13 +11,12 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Observables.h>
 #include <readdy/Simulation.h>
-#include <readdy/model/_internal/ObservableFactory.h>
 #include "gtest/gtest.h"
 
 namespace m = readdy::model;
 
 namespace {
-    class TestObservables : public ::testing::Test {
+    class  TestObservables : public ::testing::Test {
     protected:
         std::shared_ptr<m::Kernel> kernel;
 
@@ -53,7 +52,7 @@ namespace {
         kernel->getKernelStateModel().addParticles(particles);
         auto&& obs = kernel->createObservable<m::ParticlePositionObservable>();
         obs->setStride(3);
-        kernel->registerObservable(obs.get());
+        auto &&connection = kernel->registerObservable(obs.get());
 
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
@@ -67,6 +66,26 @@ namespace {
         for(auto&& p : *result) {
             BOOST_LOG_TRIVIAL(debug) << "foo " << ++j << " / " << result->size() << " (" << particles.size() << ")";
         }
+        connection.disconnect();
+    }
+
+    TEST_F(TestObservables, TestCombinerObservable) {
+        auto&& o1 = kernel->createObservable<m::ParticlePositionObservable>();
+        auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>();
+        auto&& o3 = kernel->createObservable<m::TestCombinerObservable>(o1.get(), o2.get());
+        auto&& connection = kernel->registerObservable(o3.get());
+        auto&& diffuseProgram = kernel->createProgram("Diffuse");
+        for(readdy::model::time_step_type t = 0; t < 100; t++) {
+            diffuseProgram->execute();
+            kernel->getKernelStateModel().updateModel(t, false, false);
+        }
+
+        const auto&& result = o3->getResult();
+        for(auto&& p : *result) {
+            // foo
+        }
+
+        connection.disconnect();
     }
 }
 

@@ -18,11 +18,6 @@
 namespace readdy {
     namespace model {
 
-        template<typename Res_t, typename... Observables>
-        class CombinerObservable : public Observable<Res_t> {
-            CombinerObservable(Kernel *const kernel, unsigned int stride = 1) : readdy::model::Observable<Res_t>::Observable(kernel, stride) { }
-        };
-
         class ParticlePositionObservable : public Observable<std::vector<Vec3>> {
         public:
             DefineObservableName(ParticlePositionObservable)
@@ -32,7 +27,20 @@ namespace readdy {
             virtual ~ParticlePositionObservable() {
             }
 
-            virtual void evaluate(readdy::model::time_step_type t) override;
+            virtual void evaluate() override;
+        };
+
+        class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {
+        public:
+            DefineObservableName(TestCombinerObservable)
+
+            TestCombinerObservable(Kernel *const kernel, ParticlePositionObservable * obs1, ParticlePositionObservable * obs2, unsigned int stride)
+                    : CombinerObservable(kernel, obs1, obs2, stride) {
+            }
+
+            virtual void evaluate() override;
+
+
         };
     }
 }

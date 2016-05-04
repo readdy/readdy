@@ -12,13 +12,29 @@
 
 namespace readdy {
     namespace model {
-        void ParticlePositionObservable::evaluate(time_step_type t) {
-            if(t == t_current) return;
-            t_current = t;
+        void ParticlePositionObservable::evaluate() {
             std::vector<Vec3> result = kernel->getKernelStateModel().getParticlePositions();
             *ParticlePositionObservable::result = result;
         }
-        
+
     }
+}
+
+
+void readdy::model::TestCombinerObservable::evaluate() {
+    std::vector<double> result;
+    const auto &&r1 = obs1->getResult();
+    const auto &&r2 = obs2->getResult();
+
+    auto b1 = r1->begin();
+    auto b2 = r2->begin();
+
+    for (; b1 != (*r1).end();) {
+        result.push_back((*b1) * (*b2));
+        ++b1;
+        ++b2;
+    }
+
+    *TestCombinerObservable::result = result;
 }
 

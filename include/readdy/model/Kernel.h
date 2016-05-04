@@ -35,7 +35,7 @@ namespace readdy {
          * Each Kernel has a #name by which it can be accessed in the KernelProvider.
          */
         class Kernel : public Plugin {
-        typedef boost::signals2::signal<void(readdy::model::time_step_type)> signal_t;
+            typedef boost::signals2::signal<void(readdy::model::time_step_type)> signal_t;
 
         public:
             /**
@@ -49,9 +49,12 @@ namespace readdy {
             virtual ~Kernel();
 
             Kernel(const Kernel &rhs) = delete;
-            Kernel& operator=(const Kernel &rhs) = delete;
+
+            Kernel &operator=(const Kernel &rhs) = delete;
+
             Kernel(Kernel &&rhs);
-            Kernel& operator=(Kernel&& rhs);
+
+            Kernel &operator=(Kernel &&rhs);
 
             /**
              * This method returns the name of the kernel.
@@ -70,7 +73,7 @@ namespace readdy {
              * @see getAvailablePrograms()
              * @return The program if it was available, otherwise nullptr
              */
-            virtual std::unique_ptr<Program> createProgram(const std::string& name) const;
+            virtual std::unique_ptr<Program> createProgram(const std::string &name) const;
 
             /**
              * Get a vector of the registered predefined observable names, which can be created by createObservable(name).
@@ -92,12 +95,17 @@ namespace readdy {
                 return getObservableFactory().create<T>();
             }
 
+            template<typename T, typename Obs1, typename Obs2>
+            std::unique_ptr<T> createObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) {
+                return getObservableFactory().create<T>(obs1, obs2, stride);
+            };
+
             // todo test this
             template<typename T>
             std::tuple<std::unique_ptr<T>, boost::signals2::connection> createAndRegisterObservable(unsigned int stride) {
-                auto&& obs = createObservable<T>();
+                auto &&obs = createObservable<T>();
                 obs->setStride(stride);
-                auto&& connection = registerObservable(obs.get());
+                auto &&connection = registerObservable(obs.get());
                 return std::make_tuple(std::move(obs), connection);
             };
 
@@ -107,13 +115,16 @@ namespace readdy {
             /**
              * Registers an observable to the kernel signal.
              */
-            boost::signals2::connection registerObservable(ObservableBase * const observable);
+            boost::signals2::connection registerObservable(ObservableBase *const observable);
+
             //todo
             void evaluateObservablesAutomatically(bool evaluate);
+
             /**
              * Registers an observable to the kernel signal.
              */
             boost::signals2::connection registerObservable(const ObservableType &observable, unsigned int stride);
+
             /**
              * Creates a specified program and returns a pointer to it in the templated type.
              *
@@ -135,19 +146,19 @@ namespace readdy {
             /**
              * @todo implement this properly
              */
-            virtual readdy::model::KernelStateModel& getKernelStateModel() const;
+            virtual readdy::model::KernelStateModel &getKernelStateModel() const;
 
             /**
              * @todo implement & document this properly
              */
-            virtual readdy::model::KernelContext& getKernelContext() const;
+            virtual readdy::model::KernelContext &getKernelContext() const;
+
         protected:
             struct Impl;
             std::unique_ptr<Impl> pimpl;
 
-            _internal::ObservableFactory& getObservableFactory() const;
+            _internal::ObservableFactory &getObservableFactory() const;
         };
-
 
 
     }
