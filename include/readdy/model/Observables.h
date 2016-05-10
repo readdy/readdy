@@ -18,9 +18,10 @@
 namespace readdy {
     namespace model {
 
+
         class ParticlePositionObservable : public Observable<std::vector<Vec3>> {
         public:
-            DefineObservableName(ParticlePositionObservable)
+
 
             ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) { }
 
@@ -29,10 +30,10 @@ namespace readdy {
 
             virtual void evaluate() override;
         };
+        template<> struct ObservableName<ParticlePositionObservable> { static constexpr const char* value = "ParticlePositionObservable"; };
 
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {
         public:
-            DefineObservableName(TestCombinerObservable)
 
             TestCombinerObservable(Kernel *const kernel, ParticlePositionObservable * obs1, ParticlePositionObservable * obs2, unsigned int stride)
                     : CombinerObservable(kernel, obs1, obs2, stride) {

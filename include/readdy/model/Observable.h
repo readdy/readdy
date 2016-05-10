@@ -14,14 +14,10 @@
 #include <readdy/common/make_unique.h>
 #include <readdy/common/Types.h>
 
-#define DefineObservableName( observableName ) \
-static std::string name()  \
-{ \
-     return #observableName; \
-}
-
 namespace readdy {
     namespace model {
+        template<typename T>
+        struct ObservableName;
 
         class Kernel;
         class ObservableBase {

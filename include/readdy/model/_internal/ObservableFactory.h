@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <readdy/model/Observable.h>
 #include <readdy/common/Utils.h>
+#include <readdy/model/Observables.h>
 
 namespace readdy {
     namespace model {
@@ -41,10 +42,11 @@ namespace readdy {
 
                 template<typename T>
                 inline std::unique_ptr<T> create() {
-                    if (readdy::utils::collections::hasKey(factory, T::name())) {
-                        return std::unique_ptr<T>(dynamic_cast<T *>(factory[T::name()]()));
+                    const auto name = ObservableName<T>::value;
+                    if (readdy::utils::collections::hasKey(factory, name)) {
+                        return std::unique_ptr<T>(dynamic_cast<T *>(factory[name]()));
                     }
-                    throw NoSuchObservableException("The requested observable \"" + T::name() + "\" was not registered in the observable factory.");
+                    throw NoSuchObservableException("The requested observable \"" + std::string(name) + "\" was not registered in the observable factory.");
                 }
 
                 std::vector<std::string> getRegisteredObservableNames() const;
