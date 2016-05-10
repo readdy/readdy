@@ -17,7 +17,7 @@
 namespace readdy {
     namespace model {
         template<typename T>
-        struct ObservableName;
+        struct ObservableName { };
 
         class Kernel;
         class ObservableBase {

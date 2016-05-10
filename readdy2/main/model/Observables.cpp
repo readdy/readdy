@@ -12,6 +12,7 @@
 
 namespace readdy {
     namespace model {
+        const std::string ObservableName<ParticlePositionObservable>::value = "ParticlePositionObservable";
         void ParticlePositionObservable::evaluate() {
             std::vector<Vec3> result = kernel->getKernelStateModel().getParticlePositions();
             *ParticlePositionObservable::result = result;

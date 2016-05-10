@@ -30,7 +30,7 @@ namespace readdy {
 
             virtual void evaluate() override;
         };
-        template<> struct ObservableName<ParticlePositionObservable> { static constexpr const char* value = "ParticlePositionObservable"; };
+        template<> struct ObservableName<ParticlePositionObservable> { static const std::string value; };
 
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {
         public:
