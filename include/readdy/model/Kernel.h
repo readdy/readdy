@@ -124,7 +124,7 @@ namespace readdy {
             /**
              * Registers an observable to the kernel signal.
              */
-            std::tuple<boost::signals2::connection, ObservableWrapper> registerObservable(const ObservableType &observable, unsigned int stride);
+            std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::connection> registerObservable(const ObservableType &observable, unsigned int stride);
 
             /**
              * Creates a specified program and returns a pointer to it in the templated type.

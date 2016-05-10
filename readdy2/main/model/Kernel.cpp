@@ -91,9 +91,10 @@ namespace readdy {
             pimpl->evaluateObservablesAutomatically = evaluate;
         }
 
-        std::tuple<boost::signals2::connection, readdy::model::ObservableWrapper> Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
-            ObservableWrapper wrap {this, observable, stride};
-            return std::make_tuple(pimpl->signal->connect(wrap), wrap);
+        std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, boost::signals2::connection> Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
+            auto&& wrap = std::make_unique<ObservableWrapper>(this, observable, stride);
+            auto&& connection = registerObservable(wrap.get());
+            return std::make_tuple(std::move(wrap), connection);
         }
 
         std::vector<std::string> Kernel::getAvailableObservables() {
