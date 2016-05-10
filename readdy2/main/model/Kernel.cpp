@@ -9,7 +9,6 @@
 
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/model/_internal/ObservableFactory.h>
 #include <atomic>
 
 namespace readdy {
@@ -30,13 +29,15 @@ namespace readdy {
             /**
              * todo
              */
-            std::unordered_map<ObservableBase*, boost::signals2::shared_connection_block> observableBlocks {};
+            std::unordered_map<ObservableBase *, boost::signals2::shared_connection_block> observableBlocks{};
             /**
              * todo
              */
-            std::atomic<bool> hasModelTimeStepListener {false};
+            std::atomic<bool> hasModelTimeStepListener{false};
             std::function<void()> modelTimeStepListener = nullptr;
             boost::signals2::connection modelTimeStepListenerConnection;
+
+            bool evaluateObservablesAutomatically = true;
         };
 
         const std::string &Kernel::getName() const {
@@ -48,61 +49,51 @@ namespace readdy {
             pimpl->name = name;
             pimpl->observableFactory = std::make_unique<_internal::ObservableFactory>(this);
             pimpl->modelTimeStepListener = [this] {
-                const auto t = getKernelStateModel().getCurrentTimeStep();
-                for(auto&& e : pimpl->observableBlocks) {
-                    if(t % e.first->getStride() != 0) {
-                        e.second.block();
-                    } else {
-                        e.second.unblock();
-                    }
+                if (pimpl->evaluateObservablesAutomatically) {
+                    evaluateObservables();
                 }
-                (*pimpl->signal)(t);
-                return;
             };
         }
 
         Kernel::~Kernel() {
-            if(pimpl->hasModelTimeStepListener)  {
+            if (pimpl->hasModelTimeStepListener) {
                 pimpl->modelTimeStepListenerConnection.disconnect();
             }
         }
 
-        std::unique_ptr<Program> Kernel::createProgram(const std::string& name) const {
-            throw std::runtime_error("todo, treat this properly (or better: make kernel abstract)");
+        std::unique_ptr<Program> Kernel::createProgram(const std::string &name) const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
         std::vector<std::string> Kernel::getAvailablePrograms() const {
             return std::vector<std::string>();
         }
 
-        readdy::model::KernelStateModel& Kernel::getKernelStateModel() const {
-            // todo
-            throw std::runtime_error("todo, treat this properly (or better: make kernel abstract)");
+        readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
-        readdy::model::KernelContext& Kernel::getKernelContext() const {
-            // todo
-            throw std::runtime_error("todo");
+        readdy::model::KernelContext &Kernel::getKernelContext() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
-        boost::signals2::connection Kernel::registerObservable(ObservableBase * const observable) {
-            if(!pimpl->hasModelTimeStepListener.exchange(true)) {
-
+        boost::signals2::connection Kernel::registerObservable(ObservableBase *const observable) {
+            if (!pimpl->hasModelTimeStepListener.exchange(true)) {
                 pimpl->modelTimeStepListenerConnection = getKernelStateModel().addListener(pimpl->modelTimeStepListener);
             }
             boost::signals2::connection connection = pimpl->signal.get()->connect(std::bind(&ObservableBase::callback, observable, std::placeholders::_1));
-            boost::signals2::shared_connection_block block {connection, false};
+            boost::signals2::shared_connection_block block{connection, false};
             pimpl->observableBlocks[observable] = block;
             return connection;
         }
 
         void Kernel::evaluateObservablesAutomatically(bool evaluate) {
-
+            pimpl->evaluateObservablesAutomatically = evaluate;
         }
 
-        boost::signals2::connection Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
-            // todo wrap into observable class, set stride
-            return pimpl->signal->connect(observable);
+        std::tuple<boost::signals2::connection, readdy::model::ObservableWrapper> Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
+            ObservableWrapper wrap {this, observable, stride};
+            return std::make_tuple(pimpl->signal->connect(wrap), wrap);
         }
 
         std::vector<std::string> Kernel::getAvailableObservables() {
@@ -114,9 +105,9 @@ namespace readdy {
         }
 
         std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::connection> Kernel::createAndRegisterObservable(const std::string &name, unsigned int stride) {
-            auto&& obs = createObservable(name);
+            auto &&obs = createObservable(name);
             obs->setStride(stride);
-            auto&& connection = registerObservable(obs.get());
+            auto &&connection = registerObservable(obs.get());
             return std::make_tuple(std::move(obs), connection);
         }
 
@@ -124,8 +115,31 @@ namespace readdy {
             return *pimpl->observableFactory;
         }
 
+        void Kernel::evaluateObservables() {
+            const auto t = getKernelStateModel().getCurrentTimeStep();
+            for (auto &&e : pimpl->observableBlocks) {
+                if (t % e.first->getStride() != 0) {
+                    e.second.block();
+                } else {
+                    e.second.unblock();
+                }
+            }
+            (*pimpl->signal)(t);
+        }
 
-        Kernel &Kernel::operator=(Kernel && rhs) = default;
-        Kernel::Kernel(Kernel && rhs) = default;
+        void Kernel::evaluateAllObservables() {
+            for (auto &&e : pimpl->observableBlocks) {
+                e.second.unblock();
+            }
+            (*pimpl->signal)(getKernelStateModel().getCurrentTimeStep());
+        }
+
+
+        Kernel &Kernel::operator=(Kernel &&rhs) = default;
+
+        Kernel::Kernel(Kernel &&rhs) = default;
     }
 }
+
+
+

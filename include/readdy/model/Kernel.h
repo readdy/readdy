@@ -25,6 +25,7 @@
 #include <readdy/model/_internal/ObservableFactory.h>
 #include <boost/signals2/signal.hpp>
 #include <boost/signals2/shared_connection_block.hpp>
+#include <readdy/model/_internal/ObservableWrapper.h>
 
 namespace readdy {
     namespace model {
@@ -35,8 +36,6 @@ namespace readdy {
          * Each Kernel has a #name by which it can be accessed in the KernelProvider.
          */
         class Kernel : public Plugin {
-            typedef boost::signals2::signal<void(readdy::model::time_step_type)> signal_t;
-
         public:
             /**
              * Constructs a kernel with a given name.
@@ -62,8 +61,6 @@ namespace readdy {
              * @return The name
              */
             virtual const std::string &getName() const override;
-
-            typedef signal_t::slot_type ObservableType;
 
             /**
              * Create a program that can be executed on this kernel.
@@ -120,10 +117,14 @@ namespace readdy {
             //todo
             void evaluateObservablesAutomatically(bool evaluate);
 
+            void evaluateObservables();
+
+            void evaluateAllObservables();
+
             /**
              * Registers an observable to the kernel signal.
              */
-            boost::signals2::connection registerObservable(const ObservableType &observable, unsigned int stride);
+            std::tuple<boost::signals2::connection, ObservableWrapper> registerObservable(const ObservableType &observable, unsigned int stride);
 
             /**
              * Creates a specified program and returns a pointer to it in the templated type.
