@@ -1,17 +1,54 @@
-#-----------------------------------
-# ReaDDy2
-#-----------------------------------
+#####################################
+#                                   #
+# ReaDDy2                           #
+#                                   #
+#####################################
+PROJECT(ReaDDy2_Main C CXX)
+
+#####################################
+#                                   #
+# User configurable cache variables #
+#                                   #
+#####################################
+
+# test configuration
+SET(READDY_CREATE_TEST_TARGET ON CACHE BOOL "Determines if the test target should be added.")
+SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF CACHE BOOL "Determines if valgrind test targets should be added. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
+SET(READDY_INSTALL_UNIT_TEST_EXECUTABLE OFF CACHE BOOL "Determines if the unit test executable should be installed. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
+
+# build single libraries or as a single shared library holding the whole thing
+SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared library or shared libraries with respect to the components should be built")
+
+# decide if api wrappers are being generated
+SET(READDY_BUILD_PYTHON_WRAPPER ON CACHE BOOL "Build Python wrappers")
+
+# documentation target (make doc)
+SET(READDY_GENERATE_DOCUMENTATION_TARGET OFF CACHE BOOL "Should generate target for documentation or not")
+
+# log configuration variables of interest
+SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of relevant cmake variables is logged at configuration time.")
+
+# boost download cache dir
+SET(BOOST_DOWNLOAD_CACHE_DIR "${CMAKE_BINARY_DIR}/download/external/boost" CACHE PATH "Path to the directory into which the boost libraries are downloaded and installed.")
+
+#####################################
+#                                   #
+# Basic setup of the project        #
+#                                   #
+#####################################
+
+# minimum cmake version
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2.0)
 
-PROJECT(ReaDDy2_Main C CXX)
-# for custom cmake modules
+# extend cmake module path to include readdy custom modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
-## ensure out of tree build
+# ensure that the build directory is not the source directory
 INCLUDE(MacroOutOfSourceBuild)
 MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out source build.")
 
-# SET(CMAKE_VERBOSE_MAKEFILE ON)
+# makefile settings
+SET(CMAKE_VERBOSE_MAKEFILE OFF)
 SET(CMAKE_COLOR_MAKEFILE ON)
 
 # we use c++11
@@ -24,14 +61,8 @@ SET(READDY_MINOR_VERSION 0)
 SET(READDY_PATCH_VERSION 1)
 SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PATCH_VERSION}")
 
-# should run tests
-SET(READDY_RUN_TESTS ON CACHE BOOL "Should run tests or not")
-SET(READDY_RUN_TESTS_MEMORY_CHECK OFF CACHE BOOL "Determines if valgrind test targets should be added.")
-
-# build as shared lib
+# always build readdy2 as shared lib
 SET(BUILD_SHARED_LIBS ON)
-# build single libraries or as a single shared library holding the whole thing
-SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared library or shared libraries with respect to the components should be built")
 
 # Compile in debug mode by default
 IF (NOT CMAKE_BUILD_TYPE)
@@ -40,14 +71,6 @@ IF (NOT CMAKE_BUILD_TYPE)
 ELSE (NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "Using specified '${CMAKE_BUILD_TYPE}' build type.")
 ENDIF (NOT CMAKE_BUILD_TYPE)
-
-# OSX deployment target
-#IF(APPLE)
-#	SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.11)
-#ENDIF(APPLE)
-
-# decide if api wrappers are being generated
-SET(READDY_BUILD_PYTHON_WRAPPER ON CACHE BOOL "Build Python wrappers")
 
 # output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -73,10 +96,10 @@ SET(READDY_GLOBAL_DIR "${PROJECT_SOURCE_DIR}")
 SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
 
-# boost
-INCLUDE(${READDY_GLOBAL_DIR}/cmake/Modules/SetupBoost.cmake)
+# download and install boost into cache dir
+INCLUDE(SetupBoost)
 
-# boost.dll
+# setup boost.dll
 INCLUDE(SetupBoostDLL)
 
 # extra compile and link flags
@@ -94,20 +117,22 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     ENDIF (NOT ANDROID)
 ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
-MESSAGE(STATUS "---------------------------------------------")
-MESSAGE(STATUS "Extra compile flags: ${EXTRA_COMPILE_FLAGS}")
-MESSAGE(STATUS "Extra link flags: ${EXTRA_LINK_FLAGS}")
-MESSAGE(STATUS "---------------------------------------------")
-
 # link dynamically against boost log
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 
 # main project name
 SET(READDY_PROJECT_NAME "ReaDDy2")
 
-#
-# readdy2 core
-#
+IF (READDY_LOG_CMAKE_CONFIGURATION)
+    INCLUDE(LogConfiguration)
+ENDIF (READDY_LOG_CMAKE_CONFIGURATION)
+
+#####################################
+#                                   #
+# readdy2 core                      #
+#                                   #
+#####################################
+
 IF(READDY_BUILD_SHARED_COMBINED)
     INCLUDE(cmake/sources/sources_common.cmake)
     INCLUDE(cmake/sources/sources_model.cmake)
@@ -132,15 +157,20 @@ ELSE(READDY_BUILD_SHARED_COMBINED)
     ADD_SUBDIRECTORY(readdy2/main)
 ENDIF(READDY_BUILD_SHARED_COMBINED)
 
-
-#
-# readdy2 kernels
-#
+#####################################
+#                                   #
+# readdy2 kernels                   #
+#                                   #
+#####################################
 ADD_SUBDIRECTORY(kernels)
 
-#
-# installation (for subprojects handled in their respective build files)
-#
+#####################################
+#                                   #
+# installation (for subprojects     #
+# handled in their respective       #
+# build files)                      #
+#                                   #
+#####################################
 IF(READDY_BUILD_SHARED_COMBINED)
     INSTALL(TARGETS ${READDY_PROJECT_NAME}
             RUNTIME DESTINATION bin
@@ -150,18 +180,21 @@ IF(READDY_BUILD_SHARED_COMBINED)
 ENDIF(READDY_BUILD_SHARED_COMBINED)
 INSTALL(DIRECTORY include/ DESTINATION include)
 
-
-#
-# readdy2 wrappers
-#
+#####################################
+#                                   #
+# readdy2 wrappers                  #
+#                                   #
+#####################################
 IF (READDY_BUILD_PYTHON_WRAPPER)
     ADD_SUBDIRECTORY(wrappers)
-ENDIF ()
+ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 
-#
-# tests
-#
-IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_RUN_TESTS)
+#####################################
+#                                   #
+# tests                             #
+#                                   #
+#####################################
+IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_CREATE_TEST_TARGET)
     MESSAGE(STATUS "The submodule googletest was initialized, thus enable testing")
 
     SET(GOOGLETEST_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
@@ -185,38 +218,43 @@ IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_
     ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
 
 ELSE ()
-    MESSAGE(STATUS "The submodule googletest was not initialized or READDY_RUN_TESTS was OFF, thus no testing.")
+    MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
     # if tests are disabled, so are the corresponding memory checks
-    SET(READDY_RUN_TESTS_MEMORY_CHECK OFF)
+    SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF)
 ENDIF ()
 
-#
-# memory checks for the tests
-#
-IF(READDY_RUN_TESTS_MEMORY_CHECK)
-    FIND_PACKAGE(Valgrind QUIET)
-    IF (NOT VALGRIND_FOUND)
-        MESSAGE(STATUS "Valgrind not found, therefore no memory checks.")
-    ELSE (NOT VALGRIND_FOUND)
-        MESSAGE(STATUS "Valgrind found, memory checks enabled.")
-        SET(VALGRIND_OPTIONS --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=30 --leak-check=summary --leak-resolution=high)
+#####################################
+#                                   #
+# memory checks for the tests       #
+#                                   #
+#####################################
+IF(READDY_CREATE_TEST_TARGET)
+    IF(READDY_CREATE_MEMORY_CHECK_TEST_TARGET)
+        FIND_PACKAGE(Valgrind QUIET)
+        IF (NOT VALGRIND_FOUND)
+            MESSAGE(STATUS "Valgrind not found, therefore no memory checks.")
+        ELSE (NOT VALGRIND_FOUND)
+            MESSAGE(STATUS "Valgrind found, memory checks enabled.")
+            SET(VALGRIND_OPTIONS --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=30 --leak-check=summary --leak-resolution=high)
 
-        FUNCTION(ADD_MEMCHECK_TEST name binary)
-            SET(memcheck_command "valgrind ${VALGRIND_OPTIONS}")
-            SEPARATE_ARGUMENTS(memcheck_command)
-            ADD_TEST(NAME memcheck_${name} COMMAND ${memcheck_command} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${binary}" ${ARGN})
-        ENDFUNCTION(ADD_MEMCHECK_TEST)
+            FUNCTION(ADD_MEMCHECK_TEST name binary)
+                SET(memcheck_command "valgrind ${VALGRIND_OPTIONS}")
+                SEPARATE_ARGUMENTS(memcheck_command)
+                ADD_TEST(NAME memcheck_${name} COMMAND ${memcheck_command} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${binary}" ${ARGN})
+            ENDFUNCTION(ADD_MEMCHECK_TEST)
 
-        # can be called by "ctest -V -R memcheck_readdy-tests"
-        ADD_MEMCHECK_TEST(readdy-tests runUnitTests)
-    ENDIF (NOT VALGRIND_FOUND)
-ENDIF(READDY_RUN_TESTS_MEMORY_CHECK)
+            # can be called by "ctest -V -R memcheck_readdy-tests"
+            ADD_MEMCHECK_TEST(readdy-tests runUnitTests)
+        ENDIF (NOT VALGRIND_FOUND)
+    ENDIF(READDY_CREATE_MEMORY_CHECK_TEST_TARGET)
+ENDIF(READDY_CREATE_TEST_TARGET)
 
-#
-# doxygen
-#
-SET(READDY_GENERATE_DOCUMENTATION OFF CACHE BOOL "Should generate target for documentation or not")
-IF(READDY_GENERATE_DOCUMENTATION)
+#####################################
+#                                   #
+# documentation (doxygen)           #
+#                                   #
+#####################################
+IF(READDY_GENERATE_DOCUMENTATION_TARGET)
     FIND_PACKAGE (Doxygen REQUIRED)
     FIND_PROGRAM (DOXYFILE_MAKE make)
     MARK_AS_ADVANCED (DOXYFILE_MAKE)
@@ -233,4 +271,4 @@ IF(READDY_GENERATE_DOCUMENTATION)
                 COMMENT	"Running Doxygen in ${CMAKE_CURRENT_BINARY_DIR}/docs..."
                 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/docs")
     ENDIF()
-ENDIF(READDY_GENERATE_DOCUMENTATION)
+ENDIF(READDY_GENERATE_DOCUMENTATION_TARGET)

@@ -8,7 +8,6 @@ build:
   script_env:
     - CXX
     - CC
-    - READDY_INSTALL_UNIT_TEST_EXECUTABLE
     - BOOST_DOWNLOAD_CACHE_DIR
     - TRAVIS
 
@@ -17,13 +16,22 @@ requirements:
     - cmake >=3.2.0
     - curl
     - python
-    - hdf5
+    - hdf5 ==1.8.15.1 # [osx]
+    - hdf5 >=1.8.15.1 # [not osx]
+    - bzip2
+    - numpy
 
   run:
     - python
-    - hdf5
+    - numpy
+    - hdf5 ==1.8.15.1 # [osx]
+    - hdf5 >=1.8.15.1 # [not osx]
 
 test:
   requires:
     - python
-    - hdf5
+    - numpy
+    - ipython
+    - nose
+    - hdf5 ==1.8.15.1 # [osx]
+    - hdf5 >=1.8.15.1 # [not osx]

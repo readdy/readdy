@@ -119,7 +119,7 @@ namespace readdy {
         void Kernel::evaluateObservables() {
             const auto t = getKernelStateModel().getCurrentTimeStep();
             for (auto &&e : pimpl->observableBlocks) {
-                if (t % e.first->getStride() != 0) {
+                if (e.first->getStride() > 0 && t % e.first->getStride() != 0) {
                     e.second.block();
                 } else {
                     e.second.unblock();

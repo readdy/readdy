@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# make TARGET overrideable with env
+# make TARGET, can be overridden with env
 : ${TARGET:=$HOME/miniconda}
 
 function install_miniconda {
@@ -17,3 +17,6 @@ function install_miniconda {
 
 install_miniconda
 export PATH=$TARGET/bin:$PATH
+
+conda config --set always_yes true
+conda install -q conda-build
