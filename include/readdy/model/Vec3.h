@@ -31,6 +31,14 @@ namespace readdy {
         inline double operator*(const Vec3 &lhs, const Vec3 &rhs) {
             return lhs[0]*rhs[0] + lhs[1]*rhs[1] + lhs[2]*rhs[2];
         }
+
+        inline Vec3 operator*(const Vec3 &lhs, const double &rhs) {
+            return Vec3(rhs*lhs[0], rhs*lhs[1], rhs*lhs[2]);
+        }
+
+        inline Vec3 operator*(const double &rhs, const Vec3 &lhs) {
+            return lhs * rhs;
+        }
     }
 }
 
