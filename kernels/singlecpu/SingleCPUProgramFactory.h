@@ -2,8 +2,8 @@
 // Created by clonker on 08.04.16.
 //
 
-#ifndef READDY2_MAIN_SINGLECPUPROGRAMFACTORY_H
-#define READDY2_MAIN_SINGLECPUPROGRAMFACTORY_H
+#ifndef READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
+#define READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 
 #include <readdy/model/ProgramFactory.h>
 #include "SingleCPUKernel.h"
@@ -27,4 +27,4 @@ namespace readdy {
 }
 
 
-#endif //READDY2_MAIN_SINGLECPUPROGRAMFACTORY_H
+#endif //READDY_MAIN_SINGLECPUPROGRAMFACTORY_H

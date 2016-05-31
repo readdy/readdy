@@ -1,7 +1,7 @@
 ### Status
-| Travis | Appveyor |
+| Travis | <span style="color:gray;">Appveyor</span> |
 | --- | --- |
-|[![Build Status](https://travis-ci.org/clonker/ReaDDy2.png?branch=master)](https://travis-ci.org/clonker/ReaDDy2) | [![Build status](https://ci.appveyor.com/api/projects/status/ve6rhy2fs2fnyjqi?svg=true)](https://ci.appveyor.com/project/clonker/readdy2) |
+|[![Build Status](https://travis-ci.org/readdy/readdy.svg?branch=master)](https://travis-ci.org/readdy/readdy) |  |
 
 ### Dependencies
 - HDF5
@@ -11,7 +11,7 @@
 
 ### Project structure
 ```
-ReaDDy2/
+readdy/
 |   README.md
 |   ...
 |
@@ -38,8 +38,8 @@ ReaDDy2/
 |___include/
 |   |   *.h (public c++ api)
 |
-|___readdy2/
-|   |   (readdy2 source code + private headers)
+|___readdy/
+|   |   (readdy source code + private headers)
 |   |
 |___|___io/
 |___|___|___tests/
@@ -48,7 +48,7 @@ ReaDDy2/
 |___|___adapter/
 |___|___|___tests/
 |   |   |   |   (adapter specific testing)
-|   |   
+|   |
 |___|___tests/
 |   |   |   (integration tests)
 |
@@ -70,7 +70,7 @@ Build in-source by typing:
 	$ cd build
 	$ cmake .. 
 	$ make
-This builds ReaDDy2 with python-bindings. If you have multiple python distributions
+This builds readdy with python-bindings. If you have multiple python distributions
 you might run into problems. In this case you have to specify the
 environment variables of the desired python distribution as well. For
 example, on Ubuntu 14.04 with python2, installed via apt-get, the 
@@ -83,7 +83,7 @@ configuration could look as follows
 The environment variables PYTHON_EXECUTABLE, PYTHON_LIBRARY and 
 PYTHON_INCLUDE have to be changed according to your python distribution.
 
-If you want to build ReaDDy2 without python-bindings to use it as a C++ 
+If you want to build readdy without python-bindings to use it as a C++ 
 library only, set the READDY_BUILD_PYTHON_WRAPPER OFF variable
 
 	$ cmake .. -DREADDY_BUILD_PYTHON_WRAPPER:BOOL=OFF

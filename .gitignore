@@ -34,6 +34,9 @@ libraries/external
 build
 bin/*
 
+# python build temporaries
+*.egg-info
+
 # osx resources
 .DS_Store
 

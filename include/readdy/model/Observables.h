@@ -7,8 +7,8 @@
  * @date 26.04.16
  */
 
-#ifndef READDY2_MAIN_OBSERVABLES_H
-#define READDY2_MAIN_OBSERVABLES_H
+#ifndef READDY_MAIN_OBSERVABLES_H
+#define READDY_MAIN_OBSERVABLES_H
 
 #include <readdy/model/Observable.h>
 #include <readdy/model/Vec3.h>
@@ -46,4 +46,4 @@ namespace readdy {
     }
 }
 
-#endif //READDY2_MAIN_OBSERVABLES_H
+#endif //READDY_MAIN_OBSERVABLES_H

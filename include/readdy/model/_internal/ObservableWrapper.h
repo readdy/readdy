@@ -7,8 +7,8 @@
  * @date 10.05.16
  */
 
-#ifndef READDY2_MAIN_OBSERVABLEWRAPPER_H
-#define READDY2_MAIN_OBSERVABLEWRAPPER_H
+#ifndef READDY_MAIN_OBSERVABLEWRAPPER_H
+#define READDY_MAIN_OBSERVABLEWRAPPER_H
 #include <readdy/model/Observable.h>
 
 namespace readdy {
@@ -27,4 +27,4 @@ namespace readdy {
 
     }
 }
-#endif //READDY2_MAIN_OBSERVABLEWRAPPER_H
+#endif //READDY_MAIN_OBSERVABLEWRAPPER_H

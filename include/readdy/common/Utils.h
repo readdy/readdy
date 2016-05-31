@@ -2,8 +2,8 @@
 // Created by clonker on 08.03.16.
 //
 
-#ifndef READDY2_MAIN_UTILS_H
-#define READDY2_MAIN_UTILS_H
+#ifndef READDY_MAIN_UTILS_H
+#define READDY_MAIN_UTILS_H
 
 #include <string>
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -38,4 +38,4 @@ namespace readdy {
     }
 }
 
-#endif //READDY2_MAIN_UTILS_H
+#endif //READDY_MAIN_UTILS_H

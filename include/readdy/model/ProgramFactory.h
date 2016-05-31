@@ -2,8 +2,8 @@
 // Created by clonker on 08.04.16.
 //
 
-#ifndef READDY2_MAIN_PROGRAMFACTORY_H
-#define READDY2_MAIN_PROGRAMFACTORY_H
+#ifndef READDY_MAIN_PROGRAMFACTORY_H
+#define READDY_MAIN_PROGRAMFACTORY_H
 
 #include <type_traits>
 #include <readdy/model/Program.h>
@@ -16,4 +16,4 @@ namespace readdy {
     }
 }
 
-#endif //READDY2_MAIN_PROGRAMFACTORY_H
+#endif //READDY_MAIN_PROGRAMFACTORY_H

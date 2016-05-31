@@ -2,8 +2,8 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 
-#ifndef READDY2_SIMULATION_H
-#define READDY2_SIMULATION_H
+#ifndef READDY_SIMULATION_H
+#define READDY_SIMULATION_H
 
 #include <memory>
 
@@ -19,7 +19,7 @@
 
 namespace readdy {
     /**
-     * Simulation is the focus of the high-level C++ API of ReaDDy2.
+     * Simulation is the focus of the high-level C++ API of ReaDDy.
      * This is where the system is set up and run for a certain number of
      * timesteps.
      * Things like temperature, boxsize, reactions and potentials belong to the
@@ -82,4 +82,4 @@ namespace readdy {
 
 }
 
-#endif //READDY2_SIMULATION_H
+#endif //READDY_SIMULATION_H

@@ -7,8 +7,8 @@
  * @date 27.04.16
  */
 
-#ifndef READDY2_MAIN_TYPES_H
-#define READDY2_MAIN_TYPES_H
+#ifndef READDY_MAIN_TYPES_H
+#define READDY_MAIN_TYPES_H
 
 #include <boost/signals2/signal.hpp>
 
@@ -20,4 +20,4 @@ namespace readdy {
         typedef signal_t::slot_type ObservableType;
     }
 }
-#endif //READDY2_MAIN_TYPES_H
+#endif //READDY_MAIN_TYPES_H

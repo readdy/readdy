@@ -7,8 +7,8 @@
  * @date 29.04.16
  */
 
-#ifndef READDY2_MAIN_MAKE_UNIQUE_H_H
-#define READDY2_MAIN_MAKE_UNIQUE_H_H
+#ifndef READDY_MAIN_MAKE_UNIQUE_H_H
+#define READDY_MAIN_MAKE_UNIQUE_H_H
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -45,4 +45,4 @@ namespace std {
             make_unique(Args&&...) = delete;
 }
 
-#endif //READDY2_MAIN_MAKE_UNIQUE_H_H
+#endif //READDY_MAIN_MAKE_UNIQUE_H_H

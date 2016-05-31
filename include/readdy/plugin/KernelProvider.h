@@ -7,8 +7,8 @@
  * @date 02.05.16
  */
 
-#ifndef READDY2_MAIN_KERNELPROVIDER_H
-#define READDY2_MAIN_KERNELPROVIDER_H
+#ifndef READDY_MAIN_KERNELPROVIDER_H
+#define READDY_MAIN_KERNELPROVIDER_H
 
 #include <readdy/model/Kernel.h>
 #include "PluginProvider.h"
@@ -83,7 +83,7 @@ namespace readdy {
              * \endcode
              * and the default kernel directory on windows systems is
              * \code{.unparsed}
-             * C:\\Program Files\ReaDDy2\lib\readdy_plugins
+             * C:\\Program Files\ReaDDy\lib\readdy_plugins
              * \endcode
              *
              * @return the default kernel directory.
@@ -100,4 +100,4 @@ namespace readdy {
         };
     }
 }
-#endif //READDY2_MAIN_KERNELPROVIDER_H
+#endif //READDY_MAIN_KERNELPROVIDER_H

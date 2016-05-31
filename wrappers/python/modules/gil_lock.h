@@ -7,8 +7,8 @@
  * @date 27.04.16
  */
 
-#ifndef READDY2_MAIN_GIL_LOCK_H
-#define READDY2_MAIN_GIL_LOCK_H
+#ifndef READDY_MAIN_GIL_LOCK_H
+#define READDY_MAIN_GIL_LOCK_H
 
 namespace readdy {
     namespace py {
@@ -23,4 +23,4 @@ namespace readdy {
 }
 
 
-#endif //READDY2_MAIN_GIL_LOCK_H
+#endif //READDY_MAIN_GIL_LOCK_H
