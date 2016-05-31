@@ -1,5 +1,6 @@
 #include <readdy/model/_internal/ObservableFactory.h>
 #include <readdy/model/Observables.h>
+// todo: can be removed?
 
 namespace readdy {
     namespace model {

@@ -82,7 +82,7 @@ namespace {
 
         const auto&& result = o3->getResult();
         for(auto&& p : *result) {
-            // foo
+            // todo
         }
 
         connection.disconnect();

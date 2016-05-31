@@ -121,6 +121,8 @@ namespace readdy {
 
             void evaluateAllObservables();
 
+            void unregisterObservable(ObservableBase *const observable);
+
             /**
              * Registers an observable to the kernel signal.
              */

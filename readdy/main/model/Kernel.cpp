@@ -135,6 +135,10 @@ namespace readdy {
             (*pimpl->signal)(getKernelStateModel().getCurrentTimeStep());
         }
 
+        void Kernel::unregisterObservable(ObservableBase *const observable) {
+            pimpl->observableBlocks.erase(observable);
+        }
+
 
         Kernel &Kernel::operator=(Kernel &&rhs) = default;
 

@@ -1,21 +1,21 @@
 /**
  * << detailed description >>
  *
- * @file gil_lock.h
+ * @file interpreter_lock.h
  * @brief << brief description >>
  * @author clonker
  * @date 27.04.16
  */
 
-#ifndef READDY_MAIN_GIL_LOCK_H
-#define READDY_MAIN_GIL_LOCK_H
+#ifndef READDY_MAIN_INTERPRETER_LOCK_H
+#define READDY_MAIN_INTERPRETER_LOCK_H
 
 namespace readdy {
     namespace py {
-        class gil_lock {
+        class interpreter_lock {
         public:
-            gil_lock();
-            ~gil_lock();
+            interpreter_lock();
+            ~interpreter_lock();
         private:
             PyGILState_STATE gilState;
         };
@@ -23,4 +23,4 @@ namespace readdy {
 }
 
 
-#endif //READDY_MAIN_GIL_LOCK_H
+#endif //READDY_MAIN_INTERPRETER_LOCK_H

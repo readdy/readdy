@@ -1,18 +1,18 @@
 /**
  * << detailed description >>
  *
- * @file gil_lock.cpp
+ * @file interpreter_lock.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 27.04.16
  */
 
-#include "gil_lock.h"
+#include "interpreter_lock.h"
 
-readdy::py::gil_lock() {
+readdy::py::interpreter_lock() {
     gilState = PyGILState_Ensure();
 }
 
-readdy::py::~gil_lock() {
+readdy::py::~interpreter_lock() {
     PyGILState_Release(gilState);
 }

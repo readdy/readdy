@@ -17,6 +17,7 @@
 namespace readdy {
     namespace model {
         namespace potentials {
+
             class Potential {
                 const unsigned int id;
                 const std::string name;
@@ -42,6 +43,11 @@ namespace readdy {
                     return order;
                 }
             };
+
+            namespace _internal {
+                template<typename T>
+                struct PotentialName { };
+            }
         }
     }
 }
