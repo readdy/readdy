@@ -1,4 +1,4 @@
-SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy2/main/plugin")
+SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy/main/plugin")
 
 # includes
 SET(PLUGIN_INCLUDE_DIRS "${MODEL_INCLUDE_DIRS};${Boost.DLL_INCLUDE_DIRS}" CACHE INTERNAL "Plugin include dirs")

@@ -1,4 +1,4 @@
-SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy2/main/model")
+SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy/main/model")
 
 SET(MODEL_INCLUDE_DIRS "${COMMON_INCLUDE_DIRS}" CACHE INTERNAL "Model include dirs")
 

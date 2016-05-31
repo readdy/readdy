@@ -1,6 +1,6 @@
 ADD_SUBDIRECTORY(singlecpu)
 
-SET_TARGET_PROPERTIES(ReaDDy2_kernel_singlecpu
+SET_TARGET_PROPERTIES(ReaDDy_kernel_singlecpu
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/readdy_plugins"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/readdy_plugins"

@@ -7,8 +7,8 @@
  * @date 02.05.16
  */
 
-#ifndef READDY2_MAIN_PLUGINPROVIDER_H
-#define READDY2_MAIN_PLUGINPROVIDER_H
+#ifndef READDY_MAIN_PLUGINPROVIDER_H
+#define READDY_MAIN_PLUGINPROVIDER_H
 
 #include <readdy/model/Plugin.h>
 
@@ -43,4 +43,4 @@ namespace readdy {
         };
     }
 }
-#endif //READDY2_MAIN_PLUGINPROVIDER_H
+#endif //READDY_MAIN_PLUGINPROVIDER_H

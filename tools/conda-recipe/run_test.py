@@ -14,7 +14,7 @@ if command_result != 0:
 print("***"*15 + " running python tests " + "***"*15)
 
 src_dir = os.getenv('SRC_DIR')
-test_pkg = 'readdy2'
+test_pkg = 'readdy'
 nose_run = "nosetests {test_pkg} -vv" \
            " --with-doctest --doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS" \
     .format(test_pkg=test_pkg).split(' ')

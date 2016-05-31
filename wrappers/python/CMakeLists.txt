@@ -42,7 +42,7 @@ MESSAGE(STATUS "Python version: ${PYTHON_VERSION_STRING}")
 MESSAGE(STATUS "Boost python library: ${Boost_PYTHON_LIBRARIES}")
 
 # set output directory variable for modules
-SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/readdy2/_internal")
+SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/readdy/_internal")
 
 # add modules
 ADD_SUBDIRECTORY(modules)

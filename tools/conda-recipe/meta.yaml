@@ -1,5 +1,5 @@
 package:
-  name: readdy2
+  name: readdy
   version: 0.1
 source:
   path: ../..

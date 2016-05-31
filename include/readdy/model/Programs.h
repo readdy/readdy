@@ -2,8 +2,8 @@
 // Created by clonker on 11.04.16.
 //
 
-#ifndef READDY2_MAIN_PROGRAMS_H_H
-#define READDY2_MAIN_PROGRAMS_H_H
+#ifndef READDY_MAIN_PROGRAMS_H_H
+#define READDY_MAIN_PROGRAMS_H_H
 
 #include <readdy/model/Program.h>
 
@@ -43,4 +43,4 @@ namespace readdy {
     }
 }
 
-#endif //READDY2_MAIN_PROGRAMS_H_H
+#endif //READDY_MAIN_PROGRAMS_H_H

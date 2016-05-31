@@ -7,8 +7,8 @@
  * @date 18/04/16
  */
 
-#ifndef READDY2_MAIN_KERNELSTATEMODEL_H
-#define READDY2_MAIN_KERNELSTATEMODEL_H
+#ifndef READDY_MAIN_KERNELSTATEMODEL_H
+#define READDY_MAIN_KERNELSTATEMODEL_H
 
 #include <vector>
 #include <readdy/common/Types.h>
@@ -46,4 +46,4 @@ namespace readdy {
         };
     }
 }
-#endif //READDY2_MAIN_KERNELSTATEMODEL_H
+#endif //READDY_MAIN_KERNELSTATEMODEL_H

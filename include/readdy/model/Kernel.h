@@ -10,8 +10,8 @@
  * @date 07.03.16
  */
 
-#ifndef READDY2_MAIN_KERNEL_H
-#define READDY2_MAIN_KERNEL_H
+#ifndef READDY_MAIN_KERNEL_H
+#define READDY_MAIN_KERNEL_H
 
 #include <map> 
 #include <iostream>
@@ -165,4 +165,4 @@ namespace readdy {
     }
 }
 
-#endif //READDY2_MAIN_KERNEL_H
+#endif //READDY_MAIN_KERNEL_H

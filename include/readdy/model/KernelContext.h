@@ -8,8 +8,8 @@
  * @todo write docs, is kbt really time indep (or should be treated as such)?
  */
 
-#ifndef READDY2_MAIN_KERNELCONTEXT_H
-#define READDY2_MAIN_KERNELCONTEXT_H
+#ifndef READDY_MAIN_KERNELCONTEXT_H
+#define READDY_MAIN_KERNELCONTEXT_H
 
 #include <array>
 #include <memory>
@@ -63,4 +63,4 @@ namespace readdy {
 
     }
 }
-#endif //READDY2_MAIN_KERNELCONTEXT_H
+#endif //READDY_MAIN_KERNELCONTEXT_H

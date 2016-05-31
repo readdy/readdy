@@ -30,7 +30,7 @@ class ReaDDyBuild(build):
 
         target_files = []
 
-        for curr_dir, curr_subdirs, curr_files in os.walk(os.path.join(file_dir, "readdy2")):
+        for curr_dir, curr_subdirs, curr_files in os.walk(os.path.join(file_dir, "readdy")):
             print("\twalking: %s" % curr_dir)
             for f in curr_files:
                 if self.is_dynlib(f):
@@ -39,7 +39,7 @@ class ReaDDyBuild(build):
         print("\tdynlibs: %s" % target_files)
 
         # copy resulting tool to library build folder
-        internal_build = os.path.join(self.build_lib, "readdy2", "_internal")
+        internal_build = os.path.join(self.build_lib, "readdy", "_internal")
         self.mkpath(internal_build)
 
         if not self.dry_run:
@@ -53,17 +53,17 @@ class ReaDDyInstall(install):
         install.run(self)
 
         # install libs
-        internal_build = os.path.join(self.build_lib, "readdy2", "_internal")
-        internal_target = os.path.join(self.install_lib, "readdy2", "_internal")
+        internal_build = os.path.join(self.build_lib, "readdy", "_internal")
+        internal_target = os.path.join(self.install_lib, "readdy", "_internal")
         print("\t setup.py: installing from %s to %s" % (internal_build, internal_target))
         self.copy_tree(internal_build, internal_target)
 
 
 metadata = dict(
-    name='ReaDDy2',
+    name='ReaDDy',
     version='@READDY_VERSION@',
     package_dir={'': '@CMAKE_CURRENT_SOURCE_DIR@'},
-    package_data={'readdy2._internal': ["*"]},
+    package_data={'readdy._internal': ["*"]},
     packages=find_packages(where='@CMAKE_CURRENT_SOURCE_DIR@'),
     cmdclass={'build': ReaDDyBuild, 'install': ReaDDyInstall}
 )

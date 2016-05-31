@@ -1,4 +1,4 @@
-SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy2/main/common")
+SET(SOURCES_DIR "${READDY_GLOBAL_DIR}/readdy/main/common")
 
 FIND_PACKAGE(Threads REQUIRED)
 SET(Boost_USE_STATIC_LIBS OFF)

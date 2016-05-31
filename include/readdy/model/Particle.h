@@ -7,8 +7,8 @@
  * @date 19.04.16
  */
 
-#ifndef READDY2_MAIN_PARTICLE_H
-#define READDY2_MAIN_PARTICLE_H
+#ifndef READDY_MAIN_PARTICLE_H
+#define READDY_MAIN_PARTICLE_H
 
 #include <array>
 #include <string>
@@ -46,4 +46,4 @@ namespace readdy {
         };
     }
 }
-#endif //READDY2_MAIN_PARTICLE_H
+#endif //READDY_MAIN_PARTICLE_H

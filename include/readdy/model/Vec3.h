@@ -7,8 +7,8 @@
  * @date 21.04.16
  */
 
-#ifndef READDY2_MAIN_VEC3_H
-#define READDY2_MAIN_VEC3_H
+#ifndef READDY_MAIN_VEC3_H
+#define READDY_MAIN_VEC3_H
 
 #include <array>
 
@@ -34,4 +34,4 @@ namespace readdy {
     }
 }
 
-#endif //READDY2_MAIN_VEC3_H
+#endif //READDY_MAIN_VEC3_H

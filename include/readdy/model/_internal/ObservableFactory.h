@@ -9,8 +9,8 @@
  * @date 29.04.16
  */
 
-#ifndef READDY2_MAIN_OBSERVABLEFACTORY_H
-#define READDY2_MAIN_OBSERVABLEFACTORY_H
+#ifndef READDY_MAIN_OBSERVABLEFACTORY_H
+#define READDY_MAIN_OBSERVABLEFACTORY_H
 
 #include <string>
 #include <unordered_map>
@@ -58,4 +58,4 @@ namespace readdy {
         }
     }
 }
-#endif //READDY2_MAIN_OBSERVABLEFACTORY_H
+#endif //READDY_MAIN_OBSERVABLEFACTORY_H

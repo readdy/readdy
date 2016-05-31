@@ -1,9 +1,9 @@
 #####################################
 #                                   #
-# ReaDDy2                           #
+# ReaDDy                           #
 #                                   #
 #####################################
-PROJECT(ReaDDy2_Main C CXX)
+PROJECT(ReaDDy_Main C CXX)
 
 #####################################
 #                                   #
@@ -61,7 +61,7 @@ SET(READDY_MINOR_VERSION 0)
 SET(READDY_PATCH_VERSION 1)
 SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PATCH_VERSION}")
 
-# always build readdy2 as shared lib
+# always build readdy as shared lib
 SET(BUILD_SHARED_LIBS ON)
 
 # Compile in debug mode by default
@@ -80,11 +80,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # where to install
 IF(WIN32)
     IF(NOT READDY_INSTALL_PREFIX)
-        SET(READDY_INSTALL_PREFIX "$ENV{ProgramFiles}/readdy2")
+        SET(READDY_INSTALL_PREFIX "$ENV{ProgramFiles}/readdy")
     ENDIF(NOT READDY_INSTALL_PREFIX)
 ELSE(WIN32)
     IF(NOT READDY_INSTALL_PREFIX)
-        SET(READDY_INSTALL_PREFIX "/usr/local/readdy2")
+        SET(READDY_INSTALL_PREFIX "/usr/local/readdy")
     ENDIF(NOT READDY_INSTALL_PREFIX)
 ENDIF(WIN32)
 IF(${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT})
@@ -121,7 +121,7 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 
 # main project name
-SET(READDY_PROJECT_NAME "ReaDDy2")
+SET(READDY_PROJECT_NAME "ReaDDy")
 
 IF (READDY_LOG_CMAKE_CONFIGURATION)
     INCLUDE(LogConfiguration)
@@ -129,7 +129,7 @@ ENDIF (READDY_LOG_CMAKE_CONFIGURATION)
 
 #####################################
 #                                   #
-# readdy2 core                      #
+# readdy core                       #
 #                                   #
 #####################################
 
@@ -150,16 +150,16 @@ IF(READDY_BUILD_SHARED_COMBINED)
 ELSE(READDY_BUILD_SHARED_COMBINED)
     # include directories from least dependent to most dependent
     # i.e.: A depends on B -> add subdirectory of B first
-    ADD_SUBDIRECTORY(readdy2/main/common)
-    ADD_SUBDIRECTORY(readdy2/main/model)
-    ADD_SUBDIRECTORY(readdy2/main/io)
-    ADD_SUBDIRECTORY(readdy2/main/plugin)
-    ADD_SUBDIRECTORY(readdy2/main)
+    ADD_SUBDIRECTORY(readdy/main/common)
+    ADD_SUBDIRECTORY(readdy/main/model)
+    ADD_SUBDIRECTORY(readdy/main/io)
+    ADD_SUBDIRECTORY(readdy/main/plugin)
+    ADD_SUBDIRECTORY(readdy/main)
 ENDIF(READDY_BUILD_SHARED_COMBINED)
 
 #####################################
 #                                   #
-# readdy2 kernels                   #
+# readdy kernels                    #
 #                                   #
 #####################################
 ADD_SUBDIRECTORY(kernels)
@@ -182,7 +182,7 @@ INSTALL(DIRECTORY include/ DESTINATION include)
 
 #####################################
 #                                   #
-# readdy2 wrappers                  #
+# readdy wrappers                   #
 #                                   #
 #####################################
 IF (READDY_BUILD_PYTHON_WRAPPER)
@@ -214,7 +214,7 @@ IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_
 
     ENABLE_TESTING()
     INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-    ADD_SUBDIRECTORY(readdy2/test)
+    ADD_SUBDIRECTORY(readdy/test)
     ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
 
 ELSE ()

@@ -2,8 +2,8 @@
 // Created by clonker on 07.03.16.
 //
 
-#ifndef READDY2_MAIN_SINGLECPUKERNEL_H
-#define READDY2_MAIN_SINGLECPUKERNEL_H
+#ifndef READDY_MAIN_SINGLECPUKERNEL_H
+#define READDY_MAIN_SINGLECPUKERNEL_H
 
 #include <readdy/model/RandomProvider.h>
 #include <readdy/model/Kernel.h>
@@ -48,4 +48,4 @@ namespace readdy {
     }
 }
 
-#endif //READDY2_MAIN_SINGLECPUKERNEL_H
+#endif //READDY_MAIN_SINGLECPUKERNEL_H

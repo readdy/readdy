@@ -7,8 +7,8 @@
  * @date 22.04.16
  */
 
-#ifndef READDY2_MAIN_OBSERVABLE_H
-#define READDY2_MAIN_OBSERVABLE_H
+#ifndef READDY_MAIN_OBSERVABLE_H
+#define READDY_MAIN_OBSERVABLE_H
 
 #include <boost/signals2/signal.hpp>
 #include <readdy/common/make_unique.h>
@@ -93,4 +93,4 @@ namespace readdy {
         };
     }
 }
-#endif //READDY2_MAIN_OBSERVABLE_H
+#endif //READDY_MAIN_OBSERVABLE_H
