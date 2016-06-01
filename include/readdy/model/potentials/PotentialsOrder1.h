@@ -15,11 +15,17 @@
 namespace readdy {
     namespace model {
         namespace potentials {
-            class P1Cube : public PotentialOrder1 {
 
+            template<typename PotentialType>
+            const std::string& getPotentialName() {
+                return _internal::PotentialName<PotentialType>::value;
+            }
+
+            class P1Cube : public PotentialOrder1 {
             public:
-                P1Cube(const unsigned int id, const std::string &name) : PotentialOrder1(id, name) { }
+                P1Cube(const unsigned int id);
             };
+
             namespace _internal {
                 template<> struct PotentialName<P1Cube> { static const std::string value; };
             }

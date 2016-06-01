@@ -14,7 +14,7 @@ namespace readdy {
     namespace model {
 
         ObservableBase::~ObservableBase() {
-            kernel->unregisterObservable(this);
+            kernel->deregisterObservable(this);
         }
 
         const std::string ObservableName<ParticlePositionObservable>::value = "ParticlePositionObservable";

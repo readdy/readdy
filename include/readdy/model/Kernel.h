@@ -26,6 +26,7 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/signals2/shared_connection_block.hpp>
 #include <readdy/model/_internal/ObservableWrapper.h>
+#include <readdy/model/potentials/PotentialFactory.h>
 
 namespace readdy {
     namespace model {
@@ -121,7 +122,7 @@ namespace readdy {
 
             void evaluateAllObservables();
 
-            void unregisterObservable(ObservableBase *const observable);
+            void deregisterObservable(ObservableBase *const observable);
 
             /**
              * Registers an observable to the kernel signal.
@@ -161,6 +162,7 @@ namespace readdy {
             std::unique_ptr<Impl> pimpl;
 
             _internal::ObservableFactory &getObservableFactory() const;
+            const potentials::PotentialFactory& getPotentialFactory() const;
         };
 
 
