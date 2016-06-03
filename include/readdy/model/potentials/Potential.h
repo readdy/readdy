@@ -19,16 +19,11 @@ namespace readdy {
         namespace potentials {
 
             class Potential {
-                const unsigned int id;
                 const std::string name;
                 const int order;
 
             public:
-                Potential(const unsigned int id, const std::string &name, const int order) : id(id), name(name), order(order) {
-                }
-
-                const unsigned int getId() const {
-                    return id;
+                Potential(const std::string &name, const int order) : name(name), order(order) {
                 }
 
                 const std::string &getName() const {

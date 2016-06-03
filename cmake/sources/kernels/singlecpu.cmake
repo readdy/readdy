@@ -17,3 +17,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUAddParticleProgr
 LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/programs/SingleCPUAddParticleProgram.h")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUDiffuseProgram.cpp")
 LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/programs/SingleCPUDiffuseProgram.h")
+
+# --- potentials ---
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/PotentialsOrder1.cpp")
+LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/potentials/PotentialsOrder1.h")

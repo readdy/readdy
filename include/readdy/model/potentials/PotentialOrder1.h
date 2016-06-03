@@ -18,7 +18,7 @@ namespace readdy {
             class PotentialOrder1 : public Potential {
 
             public:
-                PotentialOrder1(const unsigned int id, const std::string &name) : Potential(id, name, 1) { }
+                PotentialOrder1(const std::string &name) : Potential(name, 1) { }
             };
         }
     }
