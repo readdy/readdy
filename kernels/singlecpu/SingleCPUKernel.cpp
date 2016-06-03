@@ -10,13 +10,16 @@
 #include <readdy/common/make_unique.h>
 
 namespace kern = readdy::kernel::singlecpu;
+
+const std::string kern::SingleCPUKernel::name = "SingleCPU";
+
 struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
     std::unordered_map<std::string, std::shared_ptr<kern::SingleCPUProgramFactory>> programFactories {};
     std::unique_ptr<kern::SingleCPUKernelStateModel> model = std::make_unique<kern::SingleCPUKernelStateModel>();
     std::shared_ptr<readdy::model::KernelContext> context = std::make_shared<readdy::model::KernelContext>();
     std::shared_ptr<readdy::model::RandomProvider> rand = std::make_shared<readdy::model::RandomProvider>();
 };
-kern::SingleCPUKernel:: SingleCPUKernel() : readdy::model::Kernel("SingleCPU"), pimpl(std::make_unique<kern::SingleCPUKernel::Impl>()){
+kern::SingleCPUKernel:: SingleCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<kern::SingleCPUKernel::Impl>()){
     BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
     using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
 
@@ -30,8 +33,8 @@ kern::SingleCPUKernel:: SingleCPUKernel() : readdy::model::Kernel("SingleCPU"), 
 /**
  * factory method
  */
-std::shared_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
-    return std::make_shared<kern::SingleCPUKernel>();
+std::unique_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
+    return std::make_unique<kern::SingleCPUKernel>();
 }
 /**
  * Destructor: default

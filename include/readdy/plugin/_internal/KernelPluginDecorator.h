@@ -14,7 +14,7 @@ namespace readdy {
         namespace _internal {
             class KernelPluginDecorator : public readdy::model::Kernel {
             protected:
-                std::shared_ptr<readdy::model::Kernel> reference;
+                std::unique_ptr<readdy::model::Kernel> reference;
                 boost::dll::shared_library lib;
 
             public:
@@ -36,6 +36,8 @@ namespace readdy {
             public:
                 InvalidPluginException(const std::string &__arg);
             };
+
+            const std::string loadKernelName(const boost::filesystem::path& sharedLib);
         }
     }
 }

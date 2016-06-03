@@ -9,7 +9,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/model/Observables.h>
 #include <readdy/Simulation.h>
 #include "gtest/gtest.h"
 
@@ -18,7 +17,7 @@ namespace m = readdy::model;
 namespace {
     class  TestObservables : public ::testing::Test {
     protected:
-        std::shared_ptr<m::Kernel> kernel;
+        std::unique_ptr<m::Kernel> kernel;
 
         TestObservables() {
             // if we're in conda
@@ -32,7 +31,7 @@ namespace {
                 pluginDir = _env.append(pluginDir);
             }
             readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-            kernel = readdy::plugin::KernelProvider::getInstance().get("SingleCPU");
+            kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         }
     };
 

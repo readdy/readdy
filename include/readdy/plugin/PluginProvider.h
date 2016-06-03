@@ -25,20 +25,20 @@ namespace readdy {
             static_assert(std::is_base_of<readdy::model::Plugin, T>::value, "T must extend readdy::plugin::Plugin");
 
         protected:
-            std::unordered_map<std::string, const std::shared_ptr<T>> plugins;
+            std::unordered_map<std::string, std::function<T *()>> factory;
         public:
-            virtual const std::shared_ptr<T> get(std::string name) const {
-                auto it = plugins.find(name);
-                if(it != plugins.end()) {
-                    return it->second;
+            virtual std::unique_ptr<T> create(const std::string& name) const {
+                auto it = factory.find(name);
+                if(it != factory.end()) {
+                    return std::unique_ptr<T>(it->second());
                 }
                 std::ostringstream os;
                 os << "Could not load plugin with name \"" << name << "\"";
                 throw NoSuchPluginException(os.str());
             }
 
-            virtual void add(const std::string name, const std::shared_ptr<T>&& ptr) {
-                plugins.emplace(std::make_pair(name, std::move(ptr)));
+            virtual void add(const std::string name, const std::function<T *()> creator) {
+                factory.emplace(std::make_pair(name, creator));
             }
         };
     }

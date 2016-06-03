@@ -80,14 +80,14 @@ namespace readdy {
         }
 
         void KernelProvider::add(const boost::filesystem::path &sharedLib) {
+            // todo rework this such that the shared lib has a getName entry point and we dont have to create the kernel beforehand
             using namespace _internal;
-            const auto &&shared = std::make_shared<KernelPluginDecorator>(sharedLib);
-            plugins.emplace(std::make_pair(shared.get()->getName(), std::move(shared)));
+            const auto name = loadKernelName(sharedLib);
+            factory.emplace(std::make_pair(name, [sharedLib] {return new KernelPluginDecorator(sharedLib);}));
         }
 
-        void KernelProvider::add(const std::shared_ptr<readdy::model::Kernel> &&kernel) {
-            const std::string name = kernel->getName();
-            PluginProvider::add(name, std::move(kernel));
+        void KernelProvider::add(const std::string name, const std::function<readdy::model::Kernel*()> creator) {
+            PluginProvider::add(name, creator);
         }
     }
 }

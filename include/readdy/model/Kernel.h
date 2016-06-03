@@ -161,7 +161,7 @@ namespace readdy {
             struct Impl;
             std::unique_ptr<Impl> pimpl;
 
-            _internal::ObservableFactory &getObservableFactory() const;
+            const _internal::ObservableFactory &getObservableFactory() const;
             const potentials::PotentialFactory& getPotentialFactory() const;
         };
 

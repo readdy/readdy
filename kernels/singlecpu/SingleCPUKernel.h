@@ -17,13 +17,16 @@ namespace readdy {
         namespace singlecpu {
             class SingleCPUKernel : public readdy::model::Kernel{
             public:
+
+                static const std::string name;
+
                 SingleCPUKernel();
                 ~SingleCPUKernel();
                 // move
                 SingleCPUKernel(SingleCPUKernel &&rhs);
                 SingleCPUKernel& operator=(SingleCPUKernel&& rhs);
                 // factory method
-                static std::shared_ptr<SingleCPUKernel> create();
+                static std::unique_ptr<SingleCPUKernel> create();
 
                 virtual std::unique_ptr<readdy::model::Program> createProgram(const std::string& name) const override;
                 virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
@@ -39,6 +42,10 @@ namespace readdy {
                 std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;
             };
 
+            BOOST_DLL_ALIAS(
+                    readdy::kernel::singlecpu::SingleCPUKernel::name,
+                    name
+            );
             // export factory method as "create_kernel"
             BOOST_DLL_ALIAS(
                     readdy::kernel::singlecpu::SingleCPUKernel::create,

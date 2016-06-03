@@ -26,7 +26,7 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const bo
     }
     // load the kernel
     {
-        typedef std::shared_ptr<readdy::model::Kernel> (kernel_t)();
+        typedef std::unique_ptr<readdy::model::Kernel> (kernel_t)();
         boost::function<kernel_t> factory = dll::import_alias<kernel_t>(lib, "createKernel");
         reference = factory();
         BOOST_LOG_TRIVIAL(debug) << "loaded.";
@@ -46,8 +46,6 @@ std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAv
 }
 
 readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
-    BOOST_LOG_TRIVIAL(debug) << "destroying decorator of " << getName();
-    BOOST_LOG_TRIVIAL(debug) << "use count: " << reference.use_count();
     reference.reset();
 }
 
@@ -56,3 +54,15 @@ readdy::model::KernelContext& readdy::plugin::_internal::KernelPluginDecorator::
 }
 
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) { }
+
+const std::string readdy::plugin::_internal::loadKernelName(const boost::filesystem::path& sharedLib) {
+    auto lib = dll::shared_library(sharedLib, dll::load_mode::rtld_lazy | dll::load_mode::rtld_global);
+    if(!lib.has("name")) {
+        if (lib.is_loaded()) lib.unload();
+        std::string errMsg = std::string("library ").append(sharedLib.string()).append(" had no name() symbol.");
+        throw plug::InvalidPluginException(errMsg);
+    } else {
+        boost::shared_ptr<std::string> name = dll::import_alias<std::string>(lib, "name");
+        return *name;
+    }
+}

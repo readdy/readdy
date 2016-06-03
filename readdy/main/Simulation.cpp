@@ -9,7 +9,7 @@
 using namespace readdy;
 
 struct Simulation::Impl {
-    std::shared_ptr<readdy::model::Kernel> kernel = nullptr;
+    std::unique_ptr<readdy::model::Kernel> kernel;
 };
 
 double Simulation::getKBT() const {
@@ -59,26 +59,17 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
     throw NoKernelSelectedException("No Kernel was set");
 }
 
-Simulation::Simulation(const Simulation &rhs) : pimpl(std::make_unique<Simulation::Impl>(*rhs.pimpl)) { }
-
-Simulation &Simulation::operator=(const Simulation &rhs) {
-    *pimpl = *rhs.pimpl;
-    return *this;
-}
-
-
 void Simulation::run(const readdy::model::time_step_type steps, const double timeStep) {
     if (pimpl->kernel) {
-        const auto& kernel = pimpl->kernel;
         {
             BOOST_LOG_TRIVIAL(debug) << "available programs: ";
             for (auto &&p : pimpl->kernel->getAvailablePrograms()) {
                 BOOST_LOG_TRIVIAL(debug) << "\t" << p;
             }
         }
-        kernel->getKernelContext().setTimeStep(timeStep);
+        pimpl->kernel->getKernelContext().setTimeStep(timeStep);
         {
-            auto&& diffuseProgram = kernel->createProgram("Diffuse");
+            auto&& diffuseProgram = pimpl->kernel->createProgram("Diffuse");
             for (auto&& t = 0; t < steps; ++t) {
                 diffuseProgram->execute();
             }
@@ -93,7 +84,7 @@ void Simulation::setKernel(const std::string& kernel) {
     if (pimpl->kernel) {
         BOOST_LOG_TRIVIAL(debug) << "replacing kernel \"" << pimpl->kernel->getName() << "\" with \"" << kernel << "\"";
     }
-    pimpl->kernel = readdy::plugin::KernelProvider::getInstance().get(kernel);
+    pimpl->kernel = readdy::plugin::KernelProvider::getInstance().create(kernel);
 }
 
 bool Simulation::isKernelSelected() const {

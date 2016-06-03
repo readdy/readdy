@@ -11,10 +11,9 @@ namespace plug = readdy::plugin;
 
 namespace {
     TEST(Kernel, LoadingNonexistingPlugin) {
-        auto k = std::make_shared<readdy::model::Kernel>("foo");
-        plug::KernelProvider::getInstance().add(std::move(k));
+        plug::KernelProvider::getInstance().add("foo", [] {return new readdy::model::Kernel("foo");});
         try {
-            plug::KernelProvider::getInstance().get("foo2");
+            plug::KernelProvider::getInstance().create("foo2");
             FAIL() << "Expected NoSuchPluginException!";
         } catch (plug::NoSuchPluginException const &ex) {
             SUCCEED() << "NoSuchPluginException caught.";
@@ -24,9 +23,8 @@ namespace {
     }
 
     TEST(Kernel, LoadingExistingPlugin) {
-        auto k = std::make_shared<readdy::model::Kernel>("bar");
-        plug::KernelProvider::getInstance().add(std::move(k));
-        auto kk_ptr = plug::KernelProvider::getInstance().get("bar");
+        plug::KernelProvider::getInstance().add("bar", [] {return new readdy::model::Kernel("bar");});
+        auto kk_ptr = plug::KernelProvider::getInstance().create("bar");
         EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());
     }
 
@@ -52,12 +50,13 @@ namespace {
     }
 
     TEST(KernelProvider, TestFoo) {
-        auto name = plug::KernelProvider::getInstance().get("SingleCPU").get()->getName();
+        auto k = plug::KernelProvider::getInstance().create("SingleCPU");
+        auto name = k.get()->getName();
         BOOST_LOG_TRIVIAL(debug) << "foo name: " << name;
     }
 
     TEST(KernelProvider, TestTestProgram) {
-        auto single_cpu_kernel = plug::KernelProvider::getInstance().get("SingleCPU");
+        auto single_cpu_kernel = plug::KernelProvider::getInstance().create("SingleCPU");
         auto test_program = single_cpu_kernel.get()->createProgram("TestProgram");
         test_program.get()->execute();
     }

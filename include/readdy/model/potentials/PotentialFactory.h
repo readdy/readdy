@@ -13,11 +13,12 @@
 #include <unordered_map>
 #include <functional>
 
-#include <readdy/model/Kernel.h>
 #include <readdy/model/potentials/Potential.h>
 
 namespace readdy {
     namespace model {
+
+        class Kernel;
         namespace potentials {
             class PotentialFactory {
             public:

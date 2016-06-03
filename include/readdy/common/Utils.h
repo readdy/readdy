@@ -31,7 +31,7 @@ namespace readdy {
 
         namespace collections {
             template<typename MapType, typename KeyType = std::string>
-            inline bool hasKey(const MapType &map, const KeyType& key) {
+            inline bool hasKey(const MapType &map, const KeyType &key) {
                 return map.find(key) != map.end();
             }
         }
