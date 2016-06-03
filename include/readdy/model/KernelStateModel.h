@@ -34,6 +34,8 @@ namespace readdy {
 
             virtual void addParticles(const std::vector<Particle> &p) = 0;
 
+            virtual void removeParticle(const Particle &p) = 0;
+
             boost::signals2::connection addListener(const signal_t::slot_type& l);
 
             KernelStateModel(KernelStateModel&& rhs);

@@ -7,8 +7,7 @@ def is_readdy_installed():
     Determines if readdy is installed via checking if the lib/readdy_plugins directory is present.
     :return: True if installed, otherwise False.
     """
-    dir = get_environment_root_dir()
-    return os.path.exists(os.path.join(dir, "lib", "readdy_plugins"))
+    return os.path.exists(os.path.join(get_environment_root_dir(), "lib", "readdy_plugins"))
 
 def get_readdy_plugin_dir():
     assert is_readdy_installed(), "readdy needs to be installed"

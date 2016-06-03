@@ -20,9 +20,11 @@ namespace readdy {
         namespace singlecpu {
 
             struct ParticleData {
-                std::shared_ptr<std::vector<boost::uuids::uuid>> ids;
-                std::shared_ptr<std::vector<readdy::model::Vec3>> positions;
+                std::unique_ptr<std::vector<boost::uuids::uuid>> ids;
+                std::unique_ptr<std::vector<readdy::model::Vec3>> positions;
+                std::unique_ptr<std::vector<readdy::model::Vec3>> forces;
                 std::unique_ptr<std::vector<unsigned int>> type;
+                std::unique_ptr<std::vector<unsigned int>> deactivatedParticles;
 
                 ParticleData();
                 void addParticles(const std::vector<model::Particle> particles);
@@ -36,6 +38,9 @@ namespace readdy {
 
                 virtual void addParticle(const model::Particle &p) override;
                 virtual void addParticles(const std::vector<model::Particle> &p) override;
+
+                virtual void removeParticle(const model::Particle &p) override;
+
 
                 virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 

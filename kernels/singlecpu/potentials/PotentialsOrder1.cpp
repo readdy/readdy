@@ -17,6 +17,10 @@ namespace readdy {
                 P1Cube::P1Cube() : PotentialOrder1(getPotentialName<P1Cube>()) {
 
                 }
+
+                void P1Cube::evaluate() {
+
+                }
             }
         }
     }

@@ -26,6 +26,8 @@ namespace readdy {
                 class P1Cube : public readdy::model::potentials::PotentialOrder1 {
                 public:
                     P1Cube();
+
+                    virtual void evaluate() override;
                 };
 
             }

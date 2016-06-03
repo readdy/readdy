@@ -13,8 +13,24 @@
 #include <algorithm>
 #include "SingleCPUKernelStateModel.h"
 #include <readdy/common/make_unique.h>
+#include <boost/log/trivial.hpp>
 
 namespace k = readdy::kernel::singlecpu;
+
+/*
+namespace {
+    struct particle_compare : public std::unary_function<readdy::model::Particle, bool> {
+
+        explicit particle_compare(const readdy::model::Particle &p) : p(p) { }
+
+        bool operator()(const readdy::model::Particle &rhs) {
+            return rhs.getId() == p.getId();
+        }
+
+        readdy::model::Particle p;
+    };
+}
+ */
 
 struct k::SingleCPUKernelStateModel::Impl {
     readdy::model::time_step_type t = 0;
@@ -55,6 +71,18 @@ k::ParticleData* readdy::kernel::singlecpu::SingleCPUKernelStateModel::getPartic
     return pimpl->particleData.get();
 }
 
+void readdy::kernel::singlecpu::SingleCPUKernelStateModel::removeParticle(const model::Particle &p) {
+    auto &&beginIt = pimpl->particleData->ids->begin();
+    auto &&endIt = pimpl->particleData->ids->end();
+    auto &&it = std::find(beginIt, endIt, p.getId());
+    if(it != endIt) {
+        const auto idx = it - beginIt;
+        pimpl->particleData->deactivatedParticles->push_back(idx);
+    } else {
+        BOOST_LOG_TRIVIAL(warning) << "Could not find and thus remove particle";
+    }
+}
+
 
 k::SingleCPUKernelStateModel &k::SingleCPUKernelStateModel::operator=(k::SingleCPUKernelStateModel &&rhs) = default;
 
@@ -64,9 +92,11 @@ k::SingleCPUKernelStateModel::~SingleCPUKernelStateModel() = default;
 
 
 readdy::kernel::singlecpu::ParticleData::ParticleData() {
-    ids = std::make_shared<std::vector<boost::uuids::uuid>>();
-    positions = std::make_shared<std::vector<readdy::model::Vec3>>();
+    ids = std::make_unique<std::vector<boost::uuids::uuid>>();
+    positions = std::make_unique<std::vector<readdy::model::Vec3>>();
     type = std::make_unique<std::vector<unsigned int>>();
+    forces = std::make_unique<std::vector<readdy::model::Vec3>>();
+    deactivatedParticles = std::make_unique<std::vector<unsigned int>>();
 }
 
 void readdy::kernel::singlecpu::ParticleData::addParticles(const std::vector<model::Particle> particles) {
@@ -74,6 +104,7 @@ void readdy::kernel::singlecpu::ParticleData::addParticles(const std::vector<mod
         ids->push_back(p.getId());
         positions->push_back(p.getPos());
         type->push_back(p.getType());
+        forces->push_back({0, 0, 0});
     }
 }
 
