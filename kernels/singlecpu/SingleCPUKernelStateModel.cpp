@@ -15,29 +15,14 @@
 #include <readdy/common/make_unique.h>
 #include <boost/log/trivial.hpp>
 
-namespace k = readdy::kernel::singlecpu;
+namespace kern = readdy::kernel::singlecpu;
 
-/*
-namespace {
-    struct particle_compare : public std::unary_function<readdy::model::Particle, bool> {
-
-        explicit particle_compare(const readdy::model::Particle &p) : p(p) { }
-
-        bool operator()(const readdy::model::Particle &rhs) {
-            return rhs.getId() == p.getId();
-        }
-
-        readdy::model::Particle p;
-    };
-}
- */
-
-struct k::SingleCPUKernelStateModel::Impl {
+struct kern::SingleCPUKernelStateModel::Impl {
     readdy::model::time_step_type t = 0;
-    std::unique_ptr<ParticleData> particleData;
+    std::unique_ptr<model::SingleCPUParticleData> particleData;
 };
 
-void k::SingleCPUKernelStateModel::updateModel(model::time_step_type t, bool forces, bool distances) {
+void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces, bool distances) {
     const auto timeStepChanged = t != pimpl->t;
     pimpl->t = t;
     //TODO update
@@ -47,66 +32,41 @@ void k::SingleCPUKernelStateModel::updateModel(model::time_step_type t, bool for
 }
 
 
-k::SingleCPUKernelStateModel::SingleCPUKernelStateModel() : pimpl(std::make_unique<k::SingleCPUKernelStateModel::Impl>()) {
-    pimpl->particleData = std::make_unique<ParticleData>();
+kern::SingleCPUKernelStateModel::SingleCPUKernelStateModel() : pimpl(std::make_unique<kern::SingleCPUKernelStateModel::Impl>()) {
+    pimpl->particleData = std::make_unique<model::SingleCPUParticleData>(10);
 }
 
-void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticle(const model::Particle &p) {
+void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticle(const readdy::model::Particle &p) {
     pimpl->particleData->addParticles({p});
 }
 
-void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticles(const std::vector<model::Particle> &p) {
+void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticles(const std::vector<readdy::model::Particle> &p) {
     pimpl->particleData->addParticles(p);
 }
 
 const std::vector<readdy::model::Vec3> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() const {
-    return {*pimpl->particleData->positions};
+    std::vector<readdy::model::Vec3> target {pimpl->particleData->size()};
+    std::copy(pimpl->particleData->begin_positions(), pimpl->particleData->end_positions(), std::back_inserter(target));
+    return target;
 }
 
 const readdy::model::time_step_type readdy::kernel::singlecpu::SingleCPUKernelStateModel::getCurrentTimeStep() const {
     return pimpl->t;
 }
 
-k::ParticleData* readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticleData() const {
+kern::model::SingleCPUParticleData* readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticleData() const {
     return pimpl->particleData.get();
 }
 
-void readdy::kernel::singlecpu::SingleCPUKernelStateModel::removeParticle(const model::Particle &p) {
-    auto &&beginIt = pimpl->particleData->ids->begin();
-    auto &&endIt = pimpl->particleData->ids->end();
-    auto &&it = std::find(beginIt, endIt, p.getId());
-    if(it != endIt) {
-        const auto idx = it - beginIt;
-        pimpl->particleData->deactivatedParticles->push_back(idx);
-    } else {
-        BOOST_LOG_TRIVIAL(warning) << "Could not find and thus remove particle";
-    }
+void readdy::kernel::singlecpu::SingleCPUKernelStateModel::removeParticle(const readdy::model::Particle &p) {
+    pimpl->particleData->removeParticle(p);
 }
 
 
-k::SingleCPUKernelStateModel &k::SingleCPUKernelStateModel::operator=(k::SingleCPUKernelStateModel &&rhs) = default;
+kern::SingleCPUKernelStateModel &kern::SingleCPUKernelStateModel::operator=(kern::SingleCPUKernelStateModel &&rhs) = default;
 
-k::SingleCPUKernelStateModel::SingleCPUKernelStateModel(k::SingleCPUKernelStateModel &&rhs) = default;
+kern::SingleCPUKernelStateModel::SingleCPUKernelStateModel(kern::SingleCPUKernelStateModel &&rhs) = default;
 
-k::SingleCPUKernelStateModel::~SingleCPUKernelStateModel() = default;
-
-
-readdy::kernel::singlecpu::ParticleData::ParticleData() {
-    ids = std::make_unique<std::vector<boost::uuids::uuid>>();
-    positions = std::make_unique<std::vector<readdy::model::Vec3>>();
-    type = std::make_unique<std::vector<unsigned int>>();
-    forces = std::make_unique<std::vector<readdy::model::Vec3>>();
-    deactivatedParticles = std::make_unique<std::vector<unsigned int>>();
-}
-
-void readdy::kernel::singlecpu::ParticleData::addParticles(const std::vector<model::Particle> particles) {
-    for(auto&& p : particles) {
-        ids->push_back(p.getId());
-        positions->push_back(p.getPos());
-        type->push_back(p.getType());
-        forces->push_back({0, 0, 0});
-    }
-}
-
+kern::SingleCPUKernelStateModel::~SingleCPUKernelStateModel() = default;
 
 

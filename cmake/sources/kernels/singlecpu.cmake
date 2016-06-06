@@ -25,4 +25,5 @@ LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/potentials/PotentialsOrder1.h")
 # --- model ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SingleCPUParticleData.cpp")
 LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/model/SingleCPUParticleData.h")
+LIST(APPEND SINGLECPU_HEADERS "${SOURCES_DIR}/model/impl/SingleCPUParticleDataImpl.h")
 

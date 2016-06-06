@@ -20,11 +20,14 @@ namespace readdy {
                     const auto& context = kernel->getKernelContext();
                     const auto&& dt = context.getTimeStep();
                     const auto&& pd = kernel->getKernelStateModelSingleCPU().getParticleData();
-                    const auto& pos = pd->positions;
-                    for (auto p = 0; p < pos->size(); p++) {
-                        const double D = context.getDiffusionConstant((*pd->type)[p]);
+                    auto it_pos = pd->begin_positions();
+                    auto it_types = pd->begin_types();
+                    for (; it_pos != pd->end_positions() ; ) {
+                        const double D = context.getDiffusionConstant(*it_types);
                         auto displacement = sqrt(2. * D * dt) * (kernel->getRandomProvider().getNormal3());
-                        (*pos)[p] += displacement;
+                        *it_pos += displacement;
+                        it_pos = std::next(it_pos);
+                        it_types = std::next(it_types);
                     }
                 }
                 SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};

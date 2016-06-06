@@ -9,9 +9,9 @@
 
 #include "SingleCPUAddParticleProgram.h"
 
-namespace k = readdy::kernel::singlecpu::programs;
+namespace kern = readdy::kernel::singlecpu::programs;
 
-void k::SingleCPUAddParticleProgram::execute() {
+void kern::SingleCPUAddParticleProgram::execute() {
     kernel->getKernelStateModel().addParticles(particles);
 }
 
@@ -19,7 +19,7 @@ readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram::SingleCPUAddPa
 }
 
 
-k::SingleCPUAddParticleProgram::~SingleCPUAddParticleProgram() = default;
+kern::SingleCPUAddParticleProgram::~SingleCPUAddParticleProgram() = default;
 
 
 

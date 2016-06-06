@@ -33,11 +33,14 @@ namespace readdy {
 
             Particle(double x, double y, double z, unsigned int type);
 
+            Particle(Vec3 pos, unsigned int type, boost::uuids::uuid id);
+
             virtual ~Particle();
 
             bool operator==(const Particle &rhs);
 
             bool operator!=(const Particle &rhs);
+
 
         private:
             Vec3 pos;
