@@ -128,7 +128,6 @@ namespace readdy {
                 SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) = default;
 
                 SingleCPUParticleData::~SingleCPUParticleData() {
-                    std::cout << "yuck" << std::endl;
                 }
 
                 std::vector<size_t> *SingleCPUParticleData::getDeactivatedParticles() const {

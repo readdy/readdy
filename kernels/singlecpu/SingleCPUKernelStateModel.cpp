@@ -45,7 +45,8 @@ void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticles(const st
 }
 
 const std::vector<readdy::model::Vec3> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() const {
-    std::vector<readdy::model::Vec3> target {pimpl->particleData->size()};
+    std::vector<readdy::model::Vec3> target {};
+    target.reserve(pimpl->particleData->size());
     std::copy(pimpl->particleData->begin_positions(), pimpl->particleData->end_positions(), std::back_inserter(target));
     return target;
 }

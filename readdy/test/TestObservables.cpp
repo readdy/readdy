@@ -60,11 +60,15 @@ namespace {
         }
 
         const auto&& result = obs->getResult();
-
+        const auto&& positions = kernel->getKernelStateModel().getParticlePositions();
+        auto it_pos = positions.begin();
         int j = 0;
-        for(auto&& p : *result) {
-            BOOST_LOG_TRIVIAL(debug) << "foo " << ++j << " / " << result->size() << " (" << particles.size() << ")";
+        for(auto it = result->begin(); it != result->end(); it = std::next(it)) {
+            EXPECT_TRUE(*it == *it_pos);
+            it_pos++;
+            ++j;
         }
+        EXPECT_TRUE(j == 100);
         connection.disconnect();
     }
 
