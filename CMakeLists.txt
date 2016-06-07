@@ -129,6 +129,41 @@ ENDIF (READDY_LOG_CMAKE_CONFIGURATION)
 
 #####################################
 #                                   #
+# setup testing                     #
+#                                   #
+#####################################
+
+IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_CREATE_TEST_TARGET)
+
+    SET(GOOGLETEST_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
+    SET(GOOGLETEST_INCLUDE ${GOOGLETEST_ROOT}/googletest/include)
+    SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
+    SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
+
+    ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
+    SET(BUILD_GTEST ON)
+    SET(BUILD_GMOCK OFF)
+    SET(gtest_force_shared_crt ON)
+    SET(BUILD_SHARED_LIBS ON)
+    SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
+            LINK_FLAGS "${EXTRA_LINK_FLAGS}"
+            COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
+            )
+
+    ENABLE_TESTING()
+
+ELSE()
+    MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
+    # disable testing if there was no submodule
+    SET(READDY_CREATE_TEST_TARGET OFF)
+    # if tests are disabled, so are the corresponding memory checks
+    SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF)
+    # no installation of test executable
+    SET(READDY_INSTALL_UNIT_TEST_EXECUTABLE OFF)
+ENDIF()
+
+#####################################
+#                                   #
 # readdy core                       #
 #                                   #
 #####################################
@@ -194,33 +229,12 @@ ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 # tests                             #
 #                                   #
 #####################################
-IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_CREATE_TEST_TARGET)
-    MESSAGE(STATUS "The submodule googletest was initialized, thus enable testing")
+IF (READDY_CREATE_TEST_TARGET)
 
-    SET(GOOGLETEST_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
-    SET(GOOGLETEST_INCLUDE ${GOOGLETEST_ROOT}/googletest/include)
-    SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
-    SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
-
-    ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
-    SET(BUILD_GTEST ON)
-    SET(BUILD_GMOCK OFF)
-    SET(gtest_force_shared_crt ON)
-    SET(BUILD_SHARED_LIBS ON)
-    SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
-            LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-            COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-    )
-
-    ENABLE_TESTING()
     INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
     ADD_SUBDIRECTORY(readdy/test)
     ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
 
-ELSE ()
-    MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
-    # if tests are disabled, so are the corresponding memory checks
-    SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF)
 ENDIF ()
 
 #####################################

@@ -146,6 +146,7 @@ namespace readdy {
 
                     bool empty();
 
+                    void addParticle(const readdy::model::Particle &particle);
                     void addParticles(const std::vector<readdy::model::Particle> &particles);
 
                     void removeParticle(const readdy::model::Particle &particle);

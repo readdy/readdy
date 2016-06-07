@@ -8,7 +8,7 @@
 #include <readdy/model/RandomProvider.h>
 #include <readdy/model/Kernel.h>
 #include <boost/dll.hpp>
-#include "SingleCPUKernelStateModel.h"
+#include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
 #define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
 

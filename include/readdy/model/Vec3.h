@@ -24,6 +24,7 @@ namespace readdy {
             bool operator==(const Vec3& rhs);
             bool operator!=(const Vec3& rhs);
 
+            friend std::ostream& operator<< (std::ostream&, const Vec3&);
         private:
             std::array<double, 3> data;
         };

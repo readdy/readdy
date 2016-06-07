@@ -7,7 +7,7 @@
  * @date 19.04.16
  */
 
-#include "SingleCPUAddParticleProgram.h"
+#include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 
 namespace kern = readdy::kernel::singlecpu::programs;
 

@@ -3,10 +3,10 @@
 //
 
 #include <readdy/common/make_unique.h>
-#include "SingleCPUProgramFactory.h"
-#include "programs/SingleCPUTestProgram.h"
-#include "programs/SingleCPUAddParticleProgram.h"
-#include "programs/SingleCPUDiffuseProgram.h"
+#include <readdy/kernel/singlecpu/SingleCPUProgramFactory.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
 
 std::unique_ptr<readdy::model::Program> readdy::kernel::singlecpu::SingleCPUProgramFactory::createProgram(const std::string& name) const {
     namespace prog = readdy::kernel::singlecpu::programs;

@@ -11,7 +11,7 @@
 #include <readdy/model/Particle.h>
 #include <vector>
 #include <algorithm>
-#include "SingleCPUKernelStateModel.h"
+#include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 #include <readdy/common/make_unique.h>
 #include <boost/log/trivial.hpp>
 

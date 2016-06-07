@@ -13,7 +13,7 @@
 #include <readdy/model/Programs.h>
 #include <readdy/model/Particle.h>
 #include <vector>
-#include "../SingleCPUKernel.h"
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
     namespace kernel {

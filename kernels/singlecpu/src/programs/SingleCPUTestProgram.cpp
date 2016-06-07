@@ -3,7 +3,7 @@
 //
 
 #include <boost/log/trivial.hpp>
-#include "SingleCPUTestProgram.h"
+#include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
 
 namespace sctp = readdy::kernel::singlecpu::programs;
 

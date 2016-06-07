@@ -2,12 +2,11 @@
 // Created by clonker on 07.03.16.
 //
 
-#include "SingleCPUKernel.h"
-#include "SingleCPUProgramFactory.h"
-#include "programs/SingleCPUTestProgram.h"
-#include "programs/SingleCPUAddParticleProgram.h"
-#include "programs/SingleCPUDiffuseProgram.h"
-#include <readdy/common/make_unique.h>
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
+#include <readdy/kernel/singlecpu/SingleCPUProgramFactory.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
 
 namespace kern = readdy::kernel::singlecpu;
 

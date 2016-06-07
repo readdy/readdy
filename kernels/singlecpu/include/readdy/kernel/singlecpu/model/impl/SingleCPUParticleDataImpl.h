@@ -140,7 +140,7 @@ namespace readdy {
                 SingleCPUParticleData::skipping_iterator<T, A> SingleCPUParticleData::skipping_iterator<T, A>::operator+(size_t offset) const {
                     auto copy = *this;
                     for (auto &&i = 0; i < offset; i++) {
-                        copy.it++;
+                        ++copy;
                     }
                     return copy;
                 }

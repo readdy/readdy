@@ -14,7 +14,7 @@
 #include <readdy/model/KernelStateModel.h>
 #include <memory>
 #include <readdy/model/Vec3.h>
-#include "model/SingleCPUParticleData.h"
+#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
 
 namespace readdy {
     namespace kernel {

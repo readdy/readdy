@@ -10,7 +10,7 @@
 #include <readdy/common/make_unique.h>
 #include <numeric>
 #include <boost/log/trivial.hpp>
-#include "SingleCPUParticleData.h"
+#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
 
 namespace readdy {
     namespace kernel {
@@ -47,6 +47,10 @@ namespace readdy {
                 bool SingleCPUParticleData::empty() {
                     return size() == 0;
                 }
+
+                void SingleCPUParticleData::addParticle(const readdy::model::Particle &particle) {
+                    addParticles({particle});
+                };
 
                 void SingleCPUParticleData::addParticles(const std::vector<readdy::model::Particle> &particles) {
                     auto added = particles.cbegin();
@@ -196,7 +200,8 @@ namespace readdy {
 
                 SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::cend_types() const {
                     return SingleCPUParticleData::const_skipping_iterator<unsigned int>(this, type->size(), type->cend());
-                };
+                }
+
 
             }
         }

@@ -7,7 +7,7 @@
  * @date 19.04.16
  */
 
-#include "SingleCPUDiffuseProgram.h"
+#include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
 
 #if BOOST_OS_MACOS
 #include <math.h>
@@ -26,8 +26,8 @@ namespace readdy {
                         const double D = context.getDiffusionConstant(*it_types);
                         auto displacement = sqrt(2. * D * dt) * (kernel->getRandomProvider().getNormal3());
                         *it_pos += displacement;
-                        it_pos = std::next(it_pos);
-                        it_types = std::next(it_types);
+                        ++it_pos;
+                        ++it_types;
                     }
                 }
                 SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};

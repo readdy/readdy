@@ -11,7 +11,7 @@
 #define READDY_MAIN_SINGLECPUDIFFUSEPROGRAM_H
 
 #include <readdy/model/Programs.h>
-#include "../SingleCPUKernel.h"
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
     namespace kernel {

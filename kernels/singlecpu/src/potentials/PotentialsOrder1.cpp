@@ -7,7 +7,7 @@
  * @date 03.06.16
  */
 
-#include "PotentialsOrder1.h"
+#include <readdy/kernel/singlecpu/potentials/PotentialsOrder1.h>
 
 namespace readdy {
 
