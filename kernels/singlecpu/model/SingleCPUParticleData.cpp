@@ -132,8 +132,71 @@ namespace readdy {
 
                 std::vector<size_t> *SingleCPUParticleData::getDeactivatedParticles() const {
                     return deactivatedParticles.get();
-                };
+                }
 
+                SingleCPUParticleData::const_skipping_iterator <boost::uuids::uuid> SingleCPUParticleData::begin_ids() const {
+                    return cbegin_ids();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::cbegin_ids() const {
+                    return SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid>(this, 0, ids->cbegin());
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::end_ids() const {
+                    return cend_ids();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::cend_ids() const {
+                    return SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid>(this, ids->size(), ids->cend());
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::begin_positions() const {
+                    return cbegin_positions();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cbegin_positions() const {
+                    return SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3>(this, 0, positions->cbegin());
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::end_positions() const {
+                    return cend_positions();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cend_positions() const {
+                    return SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3>(this, positions->size(), positions->cend());
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::begin_forces() const {
+                    return cbegin_forces();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cbegin_forces() const {
+                    return const_skipping_iterator<readdy::model::Vec3>(this, 0, forces->cbegin());
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::end_forces() const {
+                    return cend_forces();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cend_forces() const {
+                    return const_skipping_iterator<readdy::model::Vec3>(this, forces->size(), forces->cend());
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::begin_types() const {
+                    return cbegin_types();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::cbegin_types() const {
+                    return SingleCPUParticleData::const_skipping_iterator<unsigned int>(this, 0, type->cbegin());
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::end_types() const {
+                    return cend_types();
+                }
+
+                SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::cend_types() const {
+                    return SingleCPUParticleData::const_skipping_iterator<unsigned int>(this, type->size(), type->cend());
+                };
 
             }
         }

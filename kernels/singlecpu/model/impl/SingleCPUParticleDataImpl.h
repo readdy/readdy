@@ -18,6 +18,66 @@ namespace readdy {
         namespace singlecpu {
             namespace model {
                 template<class T, class A>
+                SingleCPUParticleData::const_skipping_iterator<T, A>::const_skipping_iterator(SingleCPUParticleData const * data, size_t pos, typename std::vector<T>::const_iterator it)
+                        : it(it), data(data), pos(pos) {
+                    skip();
+                }
+
+                template<class T, class A>
+                SingleCPUParticleData::const_skipping_iterator<T, A>::const_skipping_iterator(const const_skipping_iterator<T, A> & rhs) {
+                    it = rhs.it;
+                    data = rhs.data;
+                    pos = rhs.pos;
+                }
+
+                template<class T, class A>
+                SingleCPUParticleData::const_skipping_iterator<T, A>::~const_skipping_iterator() {
+                }
+
+                template<class T, class A>
+                SingleCPUParticleData::const_skipping_iterator<T,A> &SingleCPUParticleData::const_skipping_iterator<T,A>::operator=(const const_skipping_iterator<T,A> &rhs) {
+                    it = rhs.it;
+                    return *this;
+                }
+
+                template<class T, class A>
+                bool SingleCPUParticleData::const_skipping_iterator<T,A>::operator==(const const_skipping_iterator<T,A> &rhs) {
+                    return it == rhs.it;
+                }
+
+                template<class T, class A>
+                SingleCPUParticleData::const_skipping_iterator<T,A> &SingleCPUParticleData::const_skipping_iterator<T,A>::operator++() {
+                    pos++;
+                    it++;
+                    skip();
+                    return *this;
+                }
+
+                template<class T, class A>
+                bool SingleCPUParticleData::const_skipping_iterator<T,A>::operator!=(const const_skipping_iterator<T,A> &rhs) {
+                    return it != rhs.it;
+                }
+
+                template<class T, class A>
+                typename SingleCPUParticleData::const_skipping_iterator<T,A>::const_reference SingleCPUParticleData::const_skipping_iterator<T,A>::operator*() const {
+                    return *it;
+                }
+
+                template<class T, class A>
+                typename SingleCPUParticleData::const_skipping_iterator<T,A>::const_pointer SingleCPUParticleData::const_skipping_iterator<T,A>::operator->() const {
+                    return &(*it);
+                }
+
+                template<class T, class A>
+                void SingleCPUParticleData::const_skipping_iterator<T,A>::skip() {
+                    while (std::find(data->deactivatedParticles->begin(), data->deactivatedParticles->end(), pos) != data->deactivatedParticles->end()) {
+                        pos++;
+                        it++;
+                    }
+                }
+
+
+                template<class T, class A>
                 SingleCPUParticleData::skipping_iterator<T, A>::skipping_iterator(SingleCPUParticleData const *data, size_t pos, typename std::vector<T>::iterator it)
                         : it(it), data(data), pos(pos) {
                     skip();
