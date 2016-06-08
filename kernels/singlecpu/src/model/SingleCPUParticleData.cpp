@@ -24,8 +24,11 @@ namespace readdy {
                     positions = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
                     forces = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
                     type = std::make_unique<std::vector<unsigned int>>(capacity);
-                    deactivatedParticles = std::make_unique<std::vector<size_t>>(capacity);
-                    std::iota(deactivatedParticles->begin(), deactivatedParticles->end(), 0);
+                    deactivatedParticles = std::make_unique<boost::container::flat_set<size_t>>();
+                    auto&& hint = deactivatedParticles->begin();
+                    for(size_t i = 0; i < capacity; i++) {
+                        hint = deactivatedParticles->insert(hint, i);
+                    }
                 }
 
                 void SingleCPUParticleData::swap(SingleCPUParticleData &rhs) {
@@ -56,14 +59,15 @@ namespace readdy {
                     auto added = particles.cbegin();
                     while (added != particles.cend()) {
                         if (deactivatedParticles->size() > 0) {
-                            const auto idx = (*deactivatedParticles)[0];
+                            const auto begin = deactivatedParticles->begin();
+                            const auto idx = *begin;
 
                             (*ids)[idx] = added->getId();
                             (*positions)[idx] = added->getPos();
                             (*forces)[idx] = {0, 0, 0};
                             (*type)[idx] = added->getType();
 
-                            deactivatedParticles->erase(deactivatedParticles->begin());
+                            deactivatedParticles->erase(begin);
                         } else {
                             ids->push_back(added->getId());
                             positions->push_back(added->getPos());
@@ -76,7 +80,7 @@ namespace readdy {
 
                 void SingleCPUParticleData::removeParticle(const size_t index) {
                     const auto pos = (begin_ids() + index).getInternalPosition();
-                    deactivatedParticles->push_back(pos);
+                    deactivatedParticles->insert(pos);
                 }
 
                 void SingleCPUParticleData::removeParticle(const readdy::model::Particle &particle) {
@@ -84,42 +88,42 @@ namespace readdy {
                     auto &&endIt = end_ids();
                     auto &&it = std::find(beginIt, endIt, particle.getId());
                     if (it != endIt) {
-                        deactivatedParticles->push_back(it.getInternalPosition());
+                        deactivatedParticles->insert(it.getInternalPosition());
                     } else {
                         BOOST_LOG_TRIVIAL(warning) << "Could not find and thus remove particle";
                     }
                 }
 
                 SingleCPUParticleData::skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::begin_ids() {
-                    return SingleCPUParticleData::skipping_iterator<boost::uuids::uuid>(this, 0, ids->begin());
+                    return SingleCPUParticleData::skipping_iterator<boost::uuids::uuid>(this, ids->begin(), ids->begin());
                 }
 
                 SingleCPUParticleData::skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::end_ids() {
-                    return SingleCPUParticleData::skipping_iterator<boost::uuids::uuid>(this, ids->size(), ids->end());
+                    return SingleCPUParticleData::skipping_iterator<boost::uuids::uuid>(this, ids->begin(), ids->end());
                 }
 
                 SingleCPUParticleData::skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::begin_positions() {
-                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, 0, positions->begin());
+                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, positions->begin(), positions->begin());
                 }
 
                 SingleCPUParticleData::skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::end_positions() {
-                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, positions->size(), positions->end());
+                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, positions->begin(), positions->end());
                 }
 
                 SingleCPUParticleData::skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::begin_forces() {
-                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, 0, forces->begin());
+                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, forces->begin(), forces->begin());
                 }
 
                 SingleCPUParticleData::skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::end_forces() {
-                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, forces->size(), forces->end());
+                    return SingleCPUParticleData::skipping_iterator<readdy::model::Vec3>(this, forces->begin(), forces->end());
                 }
 
                 SingleCPUParticleData::skipping_iterator<unsigned int> SingleCPUParticleData::begin_types() {
-                    return SingleCPUParticleData::skipping_iterator<unsigned int>(this, 0, type->begin());
+                    return SingleCPUParticleData::skipping_iterator<unsigned int>(this, type->begin(), type->begin());
                 }
 
                 SingleCPUParticleData::skipping_iterator<unsigned int> SingleCPUParticleData::end_types() {
-                    return SingleCPUParticleData::skipping_iterator<unsigned int>(this, type->size(), type->end());
+                    return SingleCPUParticleData::skipping_iterator<unsigned int>(this, type->begin(), type->end());
                 }
 
                 readdy::model::Particle SingleCPUParticleData::operator[](const size_t index) {
@@ -134,7 +138,7 @@ namespace readdy {
                 SingleCPUParticleData::~SingleCPUParticleData() {
                 }
 
-                std::vector<size_t> *SingleCPUParticleData::getDeactivatedParticles() const {
+                boost::container::flat_set<size_t> *SingleCPUParticleData::getDeactivatedParticles() const {
                     return deactivatedParticles.get();
                 }
 
@@ -143,7 +147,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::cbegin_ids() const {
-                    return SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid>(this, 0, ids->cbegin());
+                    return SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid>(this, ids->cbegin(), ids->cbegin());
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::end_ids() const {
@@ -151,7 +155,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid> SingleCPUParticleData::cend_ids() const {
-                    return SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid>(this, ids->size(), ids->cend());
+                    return SingleCPUParticleData::const_skipping_iterator<boost::uuids::uuid>(this, ids->cbegin(), ids->cend());
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::begin_positions() const {
@@ -159,7 +163,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cbegin_positions() const {
-                    return SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3>(this, 0, positions->cbegin());
+                    return SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3>(this, positions->cbegin(), positions->cbegin());
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::end_positions() const {
@@ -167,7 +171,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cend_positions() const {
-                    return SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3>(this, positions->size(), positions->cend());
+                    return SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3>(this, positions->cbegin(), positions->cend());
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::begin_forces() const {
@@ -175,7 +179,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cbegin_forces() const {
-                    return const_skipping_iterator<readdy::model::Vec3>(this, 0, forces->cbegin());
+                    return const_skipping_iterator<readdy::model::Vec3>(this, forces->cbegin(), forces->cbegin());
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::end_forces() const {
@@ -183,7 +187,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<readdy::model::Vec3> SingleCPUParticleData::cend_forces() const {
-                    return const_skipping_iterator<readdy::model::Vec3>(this, forces->size(), forces->cend());
+                    return const_skipping_iterator<readdy::model::Vec3>(this, forces->cbegin(), forces->cend());
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::begin_types() const {
@@ -191,7 +195,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::cbegin_types() const {
-                    return SingleCPUParticleData::const_skipping_iterator<unsigned int>(this, 0, type->cbegin());
+                    return SingleCPUParticleData::const_skipping_iterator<unsigned int>(this, type->cbegin(), type->cbegin());
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::end_types() const {
@@ -199,7 +203,7 @@ namespace readdy {
                 }
 
                 SingleCPUParticleData::const_skipping_iterator<unsigned int> SingleCPUParticleData::cend_types() const {
-                    return SingleCPUParticleData::const_skipping_iterator<unsigned int>(this, type->size(), type->cend());
+                    return SingleCPUParticleData::const_skipping_iterator<unsigned int>(this, type->cbegin(), type->cend());
                 }
 
 

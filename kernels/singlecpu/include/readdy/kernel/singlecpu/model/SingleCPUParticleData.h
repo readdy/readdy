@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 #include <readdy/model/Particle.h>
+#include <set>
+#include <boost/container/flat_set.hpp>
 
 namespace readdy {
     namespace kernel {
@@ -29,36 +31,47 @@ namespace readdy {
                         typedef typename A::value_type value_type;
                         typedef typename A::reference reference;
                         typedef typename A::pointer pointer;
-                        typedef std::forward_iterator_tag iterator_category;
+                        typedef std::random_access_iterator_tag iterator_category;
 
-                        skipping_iterator(SingleCPUParticleData const *data, size_t pos, typename std::vector<T>::iterator it);
-
-                        skipping_iterator(const skipping_iterator &it);
-
+                        skipping_iterator(SingleCPUParticleData const *, typename std::vector<T>::iterator, typename std::vector<T>::iterator);
+                        skipping_iterator(const skipping_iterator &);
                         ~skipping_iterator();
 
-                        skipping_iterator &operator=(const skipping_iterator &rhs);
+                        skipping_iterator &operator=(const skipping_iterator &);
 
-                        bool operator==(const skipping_iterator &rhs);
-
-                        bool operator!=(const skipping_iterator &rhs);
+                        bool operator==(const skipping_iterator &);
+                        bool operator!=(const skipping_iterator &);
+                        bool operator<(const skipping_iterator&) const;
+                        bool operator>(const skipping_iterator&) const;
+                        bool operator<=(const skipping_iterator&) const;
+                        bool operator>=(const skipping_iterator&) const;
 
                         skipping_iterator &operator++();
-
                         skipping_iterator operator+(size_t) const;
+                        skipping_iterator operator++(int);
+                        skipping_iterator& operator--();
+                        skipping_iterator operator--(int);
+                        skipping_iterator& operator+=(size_t);
+                        skipping_iterator& operator-=(size_t);
+                        skipping_iterator operator-(size_t) const;
+                        difference_type operator-(skipping_iterator) const;
+
+                        template<class Tf, class Af>
+                        friend skipping_iterator<Tf,Af> operator+(size_t, const skipping_iterator<Tf,Af>&);
 
                         reference operator*() const;
-
                         pointer operator->() const;
+                        reference operator[](size_t) const;
 
                         size_t getInternalPosition() const;
 
                     protected:
                         void skip();
+                        void skip_reverse();
 
                         SingleCPUParticleData const *data;
                         typename std::vector<T>::iterator it;
-                        size_t pos;
+                        typename std::vector<T>::iterator begin;
                     };
 
                     template<class T, class A = std::allocator<T>>
@@ -70,7 +83,7 @@ namespace readdy {
                         typedef typename A::pointer const_pointer;
                         typedef std::forward_iterator_tag iterator_category;
 
-                        const_skipping_iterator(SingleCPUParticleData const *, size_t, typename std::vector<T>::const_iterator);
+                        const_skipping_iterator(SingleCPUParticleData const *, typename std::vector<T>::const_iterator, typename std::vector<T>::const_iterator);
                         const_skipping_iterator(const const_skipping_iterator &);
                         ~const_skipping_iterator();
 
@@ -90,7 +103,7 @@ namespace readdy {
 
                         SingleCPUParticleData const *data;
                         typename std::vector<T>::const_iterator it;
-                        size_t pos;
+                        typename std::vector<T>::const_iterator begin;
                     };
 
                     // ctor / dtor
@@ -155,16 +168,16 @@ namespace readdy {
 
                     readdy::model::Particle operator[](const size_t index);
 
-                    std::vector<size_t> * getDeactivatedParticles() const;
+                    boost::container::flat_set<size_t> * getDeactivatedParticles() const;
 
                 protected:
                     std::unique_ptr<std::vector<boost::uuids::uuid>> ids;
                     std::unique_ptr<std::vector<readdy::model::Vec3>> positions;
                     std::unique_ptr<std::vector<readdy::model::Vec3>> forces;
                     std::unique_ptr<std::vector<unsigned int>> type;
-                    std::unique_ptr<std::vector<size_t>> deactivatedParticles;
+                    std::unique_ptr<boost::container::flat_set<size_t>> deactivatedParticles;
+                    //size_t deactivated_index;
                 };
-
 
             }
         }
