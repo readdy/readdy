@@ -55,12 +55,13 @@ TEST(ParticleData, additionOfParticles) {
 }
 
 TEST(ParticleData, removalOfParticles) {
+    unsigned int n_particles = 15;
     auto data = std::make_unique<SingleCPUParticleData>(5);
     EXPECT_TRUE(data->getNDeactivated()== 5);
-    for (auto &&i = 0; i < 100; i++) {
+    for (auto &&i = 0; i < n_particles; i++) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
     }
-    EXPECT_TRUE(data->size() == 100);
+    EXPECT_TRUE(data->size() == n_particles);
     EXPECT_TRUE(data->getNDeactivated() == 0);
     int i = 0;
     for (auto &&it = data->begin_positions(); it != data->end_positions(); ++it) {
@@ -69,19 +70,19 @@ TEST(ParticleData, removalOfParticles) {
     }
 
     data->removeParticle(2);
-    EXPECT_TRUE(data->size() == 99);
+    EXPECT_TRUE(data->size() == n_particles-1);
     EXPECT_TRUE(data->getNDeactivated() == 1);
     //EXPECT_TRUE(*data->getDeactivatedParticles()->begin() == 2);
     // we expect an offset by 1 for every particle that comes after the 3rd
     EXPECT_TRUE(*(data->begin_positions() + 10) == readdy::model::Vec3(10, 10, 10));
     EXPECT_TRUE(*(data->begin_positions() + 1) == readdy::model::Vec3(1, 1, 1));
-    EXPECT_TRUE(*(data->begin_positions() + 2) == readdy::model::Vec3(99, 99, 99));
+    EXPECT_TRUE(*(data->begin_positions() + 2) == readdy::model::Vec3(n_particles-1, n_particles-1, n_particles-1));
 
     // take up the space again
     data->addParticle({.5, .5, .5, 1});
-    EXPECT_TRUE(data->size() == 100);
+    EXPECT_TRUE(data->size() == n_particles);
     EXPECT_TRUE(data->getNDeactivated() == 0);
-    EXPECT_TRUE(*(data->end_positions()) == readdy::model::Vec3(.5, .5, .5));
+    EXPECT_TRUE(*(data->end_positions() - 1) == readdy::model::Vec3(.5, .5, .5));
 }
 
 TEST(ParticleData, empty) {
