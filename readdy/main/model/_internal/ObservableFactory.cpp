@@ -6,7 +6,7 @@ namespace readdy {
     namespace model {
         namespace _internal {
             ObservableFactory::ObservableFactory(Kernel *const kernel) : kernel(kernel) {
-                factory[ObservableName<ParticlePositionObservable>::value] = [kernel] { return new ParticlePositionObservable(kernel); };
+                factory[ObservableName<ParticlePositionObservable>::value] = [kernel] (void) { return new ParticlePositionObservable(kernel); };
             }
 
             void ObservableFactory::registerObservable(const std::string &name, const std::function<ObservableBase *()> create) {
