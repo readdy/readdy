@@ -20,7 +20,7 @@ TEST(ParticleData, initialization) {
     auto data = std::make_unique<SingleCPUParticleData>(10);
 
     for (size_t i = 0; i < 10; i++) {
-        EXPECT_TRUE(data->isDeactivated(i));
+        EXPECT_TRUE(data->isMarkedForDeactivation(i));
     }
 }
 
@@ -88,6 +88,36 @@ TEST(ParticleData, removalOfParticles) {
     EXPECT_EQ(data->size(), n_particles-2);
     EXPECT_EQ(data->getNDeactivated(), 2);
     EXPECT_EQ(*(data->end_positions() - 1), readdy::model::Vec3(.5, .5, .5));
+}
+
+TEST(ParticleData, markingForRemoval) {
+    unsigned int n_particles = 100;
+    auto&& data = std::make_unique<SingleCPUParticleData>(n_particles);
+    EXPECT_EQ(0, data->size());
+    for (auto &&i = 0; i < n_particles; i++) {
+        data->addParticle({(double) i, (double) i, (double) i, 5});
+    }
+    EXPECT_EQ(n_particles, data->size());
+    int n_deactivated = 0;
+    for(size_t i = 0; i < 50; i++) {
+        if(i%3==0) {
+            n_deactivated++;
+            data->markForDeactivation(i);
+        }
+    }
+
+    for(size_t i = 0; i < 50; i++) {
+        if(i%3==0) {
+            EXPECT_TRUE(data->isMarkedForDeactivation(i));
+        }
+    }
+
+    EXPECT_EQ(n_particles-n_deactivated, data->size());
+    EXPECT_EQ(n_particles, data->getDeactivatedIndex());
+
+    data->deactivateMarked();
+
+    EXPECT_EQ(n_particles-n_deactivated, data->size());
 }
 
 TEST(ParticleData, empty) {

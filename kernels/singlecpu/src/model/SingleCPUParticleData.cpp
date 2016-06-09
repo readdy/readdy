@@ -24,6 +24,7 @@ namespace readdy {
                     positions = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
                     forces = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
                     type = std::make_unique<std::vector<unsigned int>>(capacity);
+                    markedForDeactivation = std::make_unique<std::set<size_t>>();
                     deactivated = std::make_unique<std::vector<bool>>(capacity);
                     std::fill(deactivated->begin(), deactivated->end(), true);
                     n_deactivated = capacity;
@@ -38,10 +39,11 @@ namespace readdy {
                     std::swap(deactivated, rhs.deactivated);
                     std::swap(deactivated_index, rhs.deactivated_index);
                     std::swap(n_deactivated, rhs.n_deactivated);
+                    std::swap(markedForDeactivation, rhs.markedForDeactivation);
                 }
 
                 size_t SingleCPUParticleData::size() {
-                    return deactivated_index;
+                    return deactivated_index - markedForDeactivation->size();
                 }
 
                 size_t SingleCPUParticleData::max_size() {
@@ -214,7 +216,7 @@ namespace readdy {
                     return type->cbegin()+deactivated_index;
                 }
 
-                bool SingleCPUParticleData::isDeactivated(int index) {
+                bool SingleCPUParticleData::isMarkedForDeactivation(int index) {
                     return (*deactivated)[index];
                 }
 
@@ -224,6 +226,18 @@ namespace readdy {
 
                 size_t SingleCPUParticleData::getNDeactivated() const {
                     return n_deactivated;
+                }
+
+                void SingleCPUParticleData::markForDeactivation(size_t index) {
+                    (*deactivated)[index] = true;
+                    markedForDeactivation->emplace(index);
+                }
+
+                void SingleCPUParticleData::deactivateMarked() {
+                    for(auto&& idx : *markedForDeactivation) {
+                        removeParticle(idx);
+                    }
+                    markedForDeactivation->clear();
                 }
 
 

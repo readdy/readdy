@@ -13,6 +13,7 @@
 #include <memory>
 #include <vector>
 #include <readdy/model/Particle.h>
+#include <set>
 
 namespace readdy {
     namespace kernel {
@@ -84,9 +85,12 @@ namespace readdy {
 
                     readdy::model::Particle operator[](const size_t index);
 
-                    bool isDeactivated(int index);
+                    bool isMarkedForDeactivation(int index);
                     size_t getDeactivatedIndex() const;
                     size_t getNDeactivated() const;
+
+                    void markForDeactivation(size_t index);
+                    void deactivateMarked();
 
                 protected:
                     std::unique_ptr<std::vector<boost::uuids::uuid>> ids;
@@ -94,6 +98,7 @@ namespace readdy {
                     std::unique_ptr<std::vector<readdy::model::Vec3>> forces;
                     std::unique_ptr<std::vector<unsigned int>> type;
                     std::unique_ptr<std::vector<bool>> deactivated;
+                    std::unique_ptr<std::set<size_t>> markedForDeactivation;
                     size_t deactivated_index;
                     size_t n_deactivated;
                 };
