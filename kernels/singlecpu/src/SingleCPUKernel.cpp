@@ -7,72 +7,98 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
+#include <readdy/kernel/singlecpu/potentials/SingleCPUPotentialFactory.h>
 
-namespace kern = readdy::kernel::singlecpu;
 
-const std::string kern::SingleCPUKernel::name = "SingleCPU";
+namespace readdy {
+    namespace kernel {
+        namespace singlecpu {
+            const std::string SingleCPUKernel::name = "SingleCPU";
+            struct SingleCPUKernel::Impl {
+                std::unordered_map<std::string, std::shared_ptr<SingleCPUProgramFactory>> programFactories{};
+                std::unique_ptr<SingleCPUKernelStateModel> model = std::make_unique<SingleCPUKernelStateModel>();
+                std::unique_ptr<readdy::model::KernelContext> context = std::make_unique<readdy::model::KernelContext>();
+                std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
+                std::unique_ptr<potentials::SingleCPUPotentialFactory> potentials;
+            };
 
-struct readdy::kernel::singlecpu::SingleCPUKernel::Impl {
-    std::unordered_map<std::string, std::shared_ptr<kern::SingleCPUProgramFactory>> programFactories {};
-    std::unique_ptr<kern::SingleCPUKernelStateModel> model = std::make_unique<kern::SingleCPUKernelStateModel>();
-    std::shared_ptr<readdy::model::KernelContext> context = std::make_shared<readdy::model::KernelContext>();
-    std::shared_ptr<readdy::model::RandomProvider> rand = std::make_shared<readdy::model::RandomProvider>();
-};
-kern::SingleCPUKernel:: SingleCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<kern::SingleCPUKernel::Impl>()){
-    BOOST_LOG_TRIVIAL(debug) << "Single CPU Kernel instantiated, registering program factories...";
-    using factory_ptr_type = std::shared_ptr<kern::SingleCPUProgramFactory>;
+            SingleCPUKernel::SingleCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<SingleCPUKernel::Impl>()) {
+                using factory_ptr_type = std::shared_ptr<SingleCPUProgramFactory>;
 
-    factory_ptr_type ptr = std::make_shared<kern::SingleCPUProgramFactory>(this);
-    (*pimpl).programFactories.emplace(kern::programs::SingleCPUTestProgram::getName(), ptr);
-    (*pimpl).programFactories.emplace(kern::programs::SingleCPUAddParticleProgram::getName(), ptr);
-    (*pimpl).programFactories.emplace(kern::programs::SingleCPUDiffuseProgram::getName(), ptr);
-    BOOST_LOG_TRIVIAL(debug) << "...done";
-}
+                factory_ptr_type ptr = std::make_shared<SingleCPUProgramFactory>(this);
+                (*pimpl).programFactories.emplace(programs::SingleCPUTestProgram::getName(), ptr);
+                (*pimpl).programFactories.emplace(programs::SingleCPUAddParticleProgram::getName(), ptr);
+                (*pimpl).programFactories.emplace(programs::SingleCPUDiffuseProgram::getName(), ptr);
 
-/**
- * factory method
- */
-std::unique_ptr<kern::SingleCPUKernel> kern::SingleCPUKernel::create() {
-    return std::make_unique<kern::SingleCPUKernel>();
-}
-/**
- * Destructor: default
- */
-readdy::kernel::singlecpu::SingleCPUKernel::~SingleCPUKernel() = default;
 
-std::unique_ptr<readdy::model::Program> readdy::kernel::singlecpu::SingleCPUKernel::createProgram(const std::string& name) const {
-    const auto&& it = (*pimpl).programFactories.find(name);
-    if(it != (*pimpl).programFactories.end()) {
-        return (*it->second).createProgram(name);
+                (*pimpl).potentials = std::make_unique<potentials::SingleCPUPotentialFactory>(this);
+            }
+
+            /**
+             * factory method
+             */
+            std::unique_ptr<SingleCPUKernel> SingleCPUKernel::create() {
+                return std::make_unique<SingleCPUKernel>();
+            }
+
+            /**
+             * Destructor: default
+             */
+            SingleCPUKernel::~SingleCPUKernel() = default;
+
+            std::unique_ptr<readdy::model::Program> SingleCPUKernel::createProgram(const std::string &name) const {
+                const auto &&it = (*pimpl).programFactories.find(name);
+                if (it != (*pimpl).programFactories.end()) {
+                    return (*it->second).createProgram(name);
+                }
+                return nullptr;
+            }
+
+            std::vector<std::string> SingleCPUKernel::getAvailablePrograms() const {
+                std::vector<std::string> keys;
+                for (auto &&entry : (*pimpl).programFactories) {
+                    keys.push_back(entry.first);
+                }
+                return keys;
+            }
+
+            readdy::model::KernelStateModel &SingleCPUKernel::getKernelStateModel() const {
+                return *pimpl->model;
+            }
+
+            readdy::model::RandomProvider &SingleCPUKernel::getRandomProvider() const {
+                return *pimpl->rand;
+            }
+
+            readdy::model::KernelContext &SingleCPUKernel::getKernelContext() const {
+                return *pimpl->context;
+            }
+
+            SingleCPUKernelStateModel &SingleCPUKernel::getKernelStateModelSingleCPU() const {
+                return *pimpl->model;
+            }
+
+            std::vector<std::string> SingleCPUKernel::getAvailablePotentials() const {
+                return pimpl->potentials->getAvailablePotentials();
+            }
+
+            std::unique_ptr<readdy::model::potentials::Potential> SingleCPUKernel::createPotential(std::string &name) const {
+                return pimpl->potentials->createPotential(name);
+            }
+
+            readdy::model::potentials::PotentialFactory &SingleCPUKernel::getPotentialFactory() const {
+                return *pimpl->potentials;
+            }
+
+
+            SingleCPUKernel &SingleCPUKernel::operator=(SingleCPUKernel &&rhs) = default;
+
+            SingleCPUKernel::SingleCPUKernel(SingleCPUKernel &&rhs) = default;
+
+        }
     }
-    return nullptr;
 }
 
-std::vector<std::string> readdy::kernel::singlecpu::SingleCPUKernel::getAvailablePrograms() const {
-    std::vector<std::string> keys;
-    for(auto&& entry : (*pimpl).programFactories) {
-        keys.push_back(entry.first);
-    }
-    return keys;
-}
 
-readdy::model::KernelStateModel& readdy::kernel::singlecpu::SingleCPUKernel::getKernelStateModel() const {
-    return *pimpl->model;
-}
-
-readdy::model::RandomProvider& readdy::kernel::singlecpu::SingleCPUKernel::getRandomProvider() const {
-    return *pimpl->rand;
-}
-
-readdy::model::KernelContext& readdy::kernel::singlecpu::SingleCPUKernel::getKernelContext() const {
-    return *pimpl->context;
-}
-
-readdy::kernel::singlecpu::SingleCPUKernelStateModel &readdy::kernel::singlecpu::SingleCPUKernel::getKernelStateModelSingleCPU() const {
-    return *pimpl->model;
-}
-
-kern::SingleCPUKernel &kern::SingleCPUKernel::operator=(kern::SingleCPUKernel&& rhs) = default;
-kern::SingleCPUKernel::SingleCPUKernel(kern::SingleCPUKernel&& rhs) = default;
 
 

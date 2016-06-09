@@ -30,6 +30,15 @@ namespace readdy {
                 virtual readdy::model::KernelContext& getKernelContext() const override;
 
                 virtual const std::string &getName() const override;
+
+                virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
+
+                virtual std::vector<std::string> getAvailablePotentials() const override;
+
+            protected:
+                virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
+
+
             };
 
             class InvalidPluginException : public std::runtime_error {

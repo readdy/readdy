@@ -37,6 +37,13 @@ namespace readdy {
                 virtual readdy::model::KernelContext& getKernelContext() const override;
 
                 readdy::model::RandomProvider& getRandomProvider() const;
+
+                virtual std::vector<std::string> getAvailablePotentials() const override;
+
+                virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
+
+                virtual readdy::model::potentials::PotentialFactory& getPotentialFactory() const override;
+
             private:
                 struct Impl;
                 std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;

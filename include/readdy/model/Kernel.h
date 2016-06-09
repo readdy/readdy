@@ -157,12 +157,23 @@ namespace readdy {
              */
             virtual readdy::model::KernelContext &getKernelContext() const;
 
+            virtual std::vector<std::string> getAvailablePotentials() const;
+
+            virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const;
+
+            template<typename T>
+            std::unique_ptr<T> createPotentialAs(std::string& name) const{
+                return getPotentialFactory().createPotentialAs<T>(name);
+            }
+
+            virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const;
+
         protected:
             struct Impl;
             std::unique_ptr<Impl> pimpl;
 
             const _internal::ObservableFactory &getObservableFactory() const;
-            const potentials::PotentialFactory& getPotentialFactory() const;
+
         };
 
 

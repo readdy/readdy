@@ -26,7 +26,6 @@ namespace readdy {
              * todo
              */
             std::unique_ptr<_internal::ObservableFactory> observableFactory;
-            std::unique_ptr<potentials::PotentialFactory> potentialFactory;
             /**
              * todo
              */
@@ -49,7 +48,6 @@ namespace readdy {
             BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
             pimpl->name = name;
             pimpl->observableFactory = std::make_unique<_internal::ObservableFactory>(this);
-            pimpl->potentialFactory = std::make_unique<potentials::PotentialFactory>(this);
             pimpl->modelTimeStepListener = [this] {
                 if (pimpl->evaluateObservablesAutomatically) {
                     evaluateObservables();
@@ -141,8 +139,16 @@ namespace readdy {
             pimpl->observableBlocks.erase(observable);
         }
 
-        const potentials::PotentialFactory &Kernel::getPotentialFactory() const {
-            return *pimpl->potentialFactory;
+        std::vector<std::string> Kernel::getAvailablePotentials() const {
+            return std::vector<std::string>();
+        }
+
+        std::unique_ptr<readdy::model::potentials::Potential> Kernel::createPotential(std::string &name) const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
+        }
+
+        potentials::PotentialFactory &Kernel::getPotentialFactory() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
 

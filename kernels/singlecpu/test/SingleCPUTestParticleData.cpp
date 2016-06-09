@@ -57,7 +57,7 @@ TEST(ParticleData, additionOfParticles) {
 TEST(ParticleData, removalOfParticles) {
     unsigned int n_particles = 15;
     auto data = std::make_unique<SingleCPUParticleData>(5);
-    EXPECT_TRUE(data->getNDeactivated()== 5);
+    EXPECT_TRUE(data->getNDeactivated() == 5);
     for (auto &&i = 0; i < n_particles; i++) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
     }
@@ -75,49 +75,49 @@ TEST(ParticleData, removalOfParticles) {
     data->removeParticle(2);
     // 2nd particle -> n_particles-3rd
     data->removeParticle(5);
-    EXPECT_EQ(data->size(), n_particles-3);
+    EXPECT_EQ(data->size(), n_particles - 3);
     EXPECT_EQ(data->getNDeactivated(), 3);
 
     EXPECT_EQ(*(data->begin_positions() + 10), readdy::model::Vec3(10, 10, 10));
     EXPECT_EQ(*(data->begin_positions() + 1), readdy::model::Vec3(1, 1, 1));
-    EXPECT_EQ(*(data->begin_positions() + 2), readdy::model::Vec3(n_particles-2, n_particles-2, n_particles-2));
-    EXPECT_EQ(*(data->begin_positions() + 5), readdy::model::Vec3(n_particles-3, n_particles-3, n_particles-3));
+    EXPECT_EQ(*(data->begin_positions() + 2), readdy::model::Vec3(n_particles - 2, n_particles - 2, n_particles - 2));
+    EXPECT_EQ(*(data->begin_positions() + 5), readdy::model::Vec3(n_particles - 3, n_particles - 3, n_particles - 3));
 
     // take up the space again
     data->addParticle({.5, .5, .5, 1});
-    EXPECT_EQ(data->size(), n_particles-2);
+    EXPECT_EQ(data->size(), n_particles - 2);
     EXPECT_EQ(data->getNDeactivated(), 2);
     EXPECT_EQ(*(data->end_positions() - 1), readdy::model::Vec3(.5, .5, .5));
 }
 
 TEST(ParticleData, markingForRemoval) {
     unsigned int n_particles = 100;
-    auto&& data = std::make_unique<SingleCPUParticleData>(n_particles);
+    auto &&data = std::make_unique<SingleCPUParticleData>(n_particles);
     EXPECT_EQ(0, data->size());
     for (auto &&i = 0; i < n_particles; i++) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
     }
     EXPECT_EQ(n_particles, data->size());
     int n_deactivated = 0;
-    for(size_t i = 0; i < 50; i++) {
-        if(i%3==0) {
+    for (size_t i = 0; i < 50; i++) {
+        if (i % 3 == 0) {
             n_deactivated++;
             data->markForDeactivation(i);
         }
     }
 
-    for(size_t i = 0; i < 50; i++) {
-        if(i%3==0) {
+    for (size_t i = 0; i < 50; i++) {
+        if (i % 3 == 0) {
             EXPECT_TRUE(data->isMarkedForDeactivation(i));
         }
     }
 
-    EXPECT_EQ(n_particles-n_deactivated, data->size());
+    EXPECT_EQ(n_particles - n_deactivated, data->size());
     EXPECT_EQ(n_particles, data->getDeactivatedIndex());
 
     data->deactivateMarked();
 
-    EXPECT_EQ(n_particles-n_deactivated, data->size());
+    EXPECT_EQ(n_particles - n_deactivated, data->size());
 }
 
 TEST(ParticleData, empty) {

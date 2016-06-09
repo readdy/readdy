@@ -14,6 +14,9 @@
 #include <array>
 #include <memory>
 #include <boost/predef.h>
+#include <readdy/model/potentials/Potential.h>
+#include <vector>
+
 #if BOOST_OS_MAC
 #include <string>
 #endif
@@ -38,8 +41,15 @@ namespace readdy {
             double getDiffusionConstant(const unsigned int particleType) const;
             void setDiffusionConstant(const std::string& particleType, double D);
 
+            double getParticleRadius(const std::string& type) const;
+            double getParticleRadius(const unsigned int& type) const;
+            void setParticleRadius(const std::string& type, const double r);
+
             double getTimeStep() const;
             void setTimeStep(double dt);
+
+            void registerPotentialForTypes(potentials::Potential* potential, std::string type1, std::string type2);
+            std::vector<potentials::Potential*> getPotentialsForTypes(std::string type1, std::string type2);
 
             // ctor and dtor
             KernelContext();
@@ -59,6 +69,7 @@ namespace readdy {
         private:
             struct Impl;
             std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
+            unsigned int getOrCreateTypeId(const std::string &name);
         };
 
     }

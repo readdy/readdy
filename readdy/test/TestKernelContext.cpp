@@ -10,10 +10,22 @@
 
 #include <readdy/model/KernelContext.h>
 #include "gtest/gtest.h"
+#include <readdy/common/Utils.h>
+#include <boost/log/trivial.hpp>
 
 namespace m = readdy::model;
 
 namespace {
+    struct TestPotential : public m::potentials::Potential {
+        TestPotential() : Potential("test potential", 5000) { }
+
+        virtual void evaluate() override {
+            BOOST_LOG_TRIVIAL(debug) << "evaluating test potential.";
+        }
+
+
+    };
+
     TEST(KernelContext, SetGetKBT) {
         m::KernelContext ctx;
         ctx.setKBT(42);
@@ -37,4 +49,14 @@ namespace {
         EXPECT_EQ(box_size[1], 11);
         EXPECT_EQ(box_size[2], 12);
     }
+
+    TEST(KernelContext, PotentialMap) {
+        m::KernelContext ctx;
+        auto p1 = TestPotential();
+        ctx.registerPotentialForTypes(&p1, "a", "b");
+        ctx.registerPotentialForTypes(&p1, "b", "a");
+        auto&& vector = ctx.getPotentialsForTypes("b", "a");
+        EXPECT_EQ(vector.size(), 2);
+    }
+
 }

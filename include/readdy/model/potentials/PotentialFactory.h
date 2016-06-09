@@ -22,11 +22,25 @@ namespace readdy {
         namespace potentials {
             class PotentialFactory {
             public:
-                PotentialFactory(Kernel *const kernel);
+                std::vector<std::string> getAvailablePotentials() const {
+                    std::vector<std::string> names {factory.size()};
+                    for(auto&& e : factory) {
+                        names.push_back(e.first);
+                    }
+                    return names;
+                }
+
+                template<typename T>
+                std::unique_ptr<T> createPotentialAs(std::string name) const {
+                    return std::unique_ptr<T>(dynamic_cast<T*>(factory.find(name)->second()));
+                }
+
+                std::unique_ptr<Potential> createPotential(std::string name) const {
+                    return createPotentialAs<Potential>(name);
+                }
 
             protected:
                 std::unordered_map<std::string, std::function<Potential *()>> factory;
-                Kernel *const kernel;
             };
 
         }

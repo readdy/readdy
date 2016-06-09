@@ -19,8 +19,6 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/Observables.cpp")
 # internal sources
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/_internal/ObservableFactory.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/_internal/ObservableWrapper.cpp")
-# potentials
-LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/potentials/PotentialFactory.cpp")
 
 # all sources
 LIST(APPEND READDY_ALL_SOURCES ${READDY_MODEL_SOURCES})
