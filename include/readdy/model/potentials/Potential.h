@@ -34,12 +34,17 @@ namespace readdy {
                     return order;
                 }
 
-                virtual void evaluate() = 0;
             };
 
             namespace _internal {
                 template<typename T>
-                struct PotentialName { };
+                struct PotentialName { static const std::string value; };
+
+                template<typename PotentialType>
+                const std::string& getPotentialName() {
+                    return readdy::model::potentials::_internal::PotentialName<PotentialType>::value;
+                }
+
             }
         }
     }

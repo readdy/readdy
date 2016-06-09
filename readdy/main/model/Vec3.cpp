@@ -49,7 +49,13 @@ namespace readdy {
         bool Vec3::operator!=(const Vec3 &rhs) {
             return !(data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2]);
         }
+        Vec3 operator+(const Vec3& lhs, const Vec3& rhs) {
+            return {lhs[0]+rhs[0], lhs[1]+rhs[1], lhs[2]+rhs[2]};
+        }
 
+        Vec3 operator-(const Vec3& lhs, const Vec3& rhs) {
+            return lhs + (-1*rhs);
+        }
 
         std::ostream& operator<< (std::ostream& os, const Vec3& vec) {
             os << "Vec3("<< vec[0] << ", "<< vec[1] << ", " << vec[2] << ")";

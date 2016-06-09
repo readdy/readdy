@@ -18,16 +18,10 @@ namespace readdy {
         namespace singlecpu {
             namespace potentials {
 
-                template<typename PotentialType>
-                const std::string& getPotentialName() {
-                    return readdy::model::potentials::_internal::PotentialName<PotentialType>::value;
-                }
-
                 class P1Cube : public readdy::model::potentials::PotentialOrder1 {
                 public:
                     P1Cube();
 
-                    virtual void evaluate() override;
                 };
 
             }

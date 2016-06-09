@@ -9,13 +9,14 @@
 
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/kernel/singlecpu/potentials/SingleCPUPotentialFactory.h>
+#include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace potentials {
                 SingleCPUPotentialFactory::SingleCPUPotentialFactory(SingleCPUKernel *const kernel) : readdy::model::potentials::PotentialFactory(), kernel(kernel) {
-                    // todo add potentials
+                    factory[readdy::model::potentials::_internal::getPotentialName<HarmonicRepulsion>()] = [kernel] {return new HarmonicRepulsion(kernel);};
                 }
 
             }

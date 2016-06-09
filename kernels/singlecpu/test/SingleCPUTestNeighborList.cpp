@@ -9,7 +9,6 @@
 
 #include <gtest/gtest.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <boost/log/trivial.hpp>
 
 using namespace readdy::kernel::singlecpu::model;
 

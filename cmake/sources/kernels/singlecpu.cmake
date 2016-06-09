@@ -14,6 +14,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUDiffuseProgram.c
 # --- potentials ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/SingleCPUPotentialFactory.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/PotentialsOrder1.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/PotentialsOrder2.cpp")
 
 # --- model ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SingleCPUParticleData.cpp")
