@@ -42,15 +42,15 @@ namespace readdy {
                     std::swap(markedForDeactivation, rhs.markedForDeactivation);
                 }
 
-                size_t SingleCPUParticleData::size() {
+                size_t SingleCPUParticleData::size() const {
                     return deactivated_index - markedForDeactivation->size();
                 }
 
-                size_t SingleCPUParticleData::max_size() {
+                size_t SingleCPUParticleData::max_size() const {
                     return ids->max_size();
                 }
 
-                bool SingleCPUParticleData::empty() {
+                bool SingleCPUParticleData::empty() const {
                     return size() == 0;
                 }
 

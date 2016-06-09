@@ -32,6 +32,10 @@ namespace readdy {
                 virtual void removeParticle(const readdy::model::Particle &p) override;
                 virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
+                virtual double getEnergy() const override;
+
+                void increaseEnergy(double increase);
+
 
                 SingleCPUKernelStateModel();
                 ~SingleCPUKernelStateModel();

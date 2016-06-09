@@ -70,11 +70,11 @@ namespace readdy {
 
                     void swap(SingleCPUParticleData &rhs);
 
-                    size_t size();
+                    size_t size() const;
 
-                    size_t max_size();
+                    size_t max_size() const;
 
-                    bool empty();
+                    bool empty() const;
 
                     void addParticle(const readdy::model::Particle &particle);
                     void addParticles(const std::vector<readdy::model::Particle> &particles);

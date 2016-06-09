@@ -19,6 +19,7 @@ namespace kern = readdy::kernel::singlecpu;
 
 struct kern::SingleCPUKernelStateModel::Impl {
     readdy::model::time_step_type t = 0;
+    double currentEnergy = 0;
     std::unique_ptr<model::SingleCPUParticleData> particleData;
 };
 
@@ -28,6 +29,7 @@ void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type 
     //TODO update
     if(timeStepChanged) {
         fireTimeStepChanged();
+        pimpl->currentEnergy = 0;
     }
 }
 
@@ -61,6 +63,14 @@ kern::model::SingleCPUParticleData* readdy::kernel::singlecpu::SingleCPUKernelSt
 
 void readdy::kernel::singlecpu::SingleCPUKernelStateModel::removeParticle(const readdy::model::Particle &p) {
     pimpl->particleData->removeParticle(p);
+}
+
+double readdy::kernel::singlecpu::SingleCPUKernelStateModel::getEnergy() const {
+    return pimpl->currentEnergy;
+}
+
+void readdy::kernel::singlecpu::SingleCPUKernelStateModel::increaseEnergy(double increase) {
+    pimpl->currentEnergy += increase;
 }
 
 
