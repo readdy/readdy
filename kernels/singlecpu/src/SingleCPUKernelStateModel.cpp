@@ -14,6 +14,8 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 #include <readdy/common/make_unique.h>
 #include <boost/log/trivial.hpp>
+#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
+#include <readdy/model/potentials/PotentialOrder2.h>
 
 namespace kern = readdy::kernel::singlecpu;
 
@@ -21,21 +23,50 @@ struct kern::SingleCPUKernelStateModel::Impl {
     readdy::model::time_step_type t = 0;
     double currentEnergy = 0;
     std::unique_ptr<model::SingleCPUParticleData> particleData;
+    std::unique_ptr<model::SingleCPUNeighborList> neighborList;
+    readdy::model::KernelContext const* context;
 };
 
 void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces, bool distances) {
     const auto timeStepChanged = t != pimpl->t;
     pimpl->t = t;
-    //TODO update
     if(timeStepChanged) {
         fireTimeStepChanged();
         pimpl->currentEnergy = 0;
+        pimpl->neighborList->create(*pimpl->particleData);
+    }
+
+    if(forces) {
+        const readdy::model::Vec3 zeroVector = {0,0,0};
+        std::fill(pimpl->particleData->begin_forces(), pimpl->particleData->end_forces(), zeroVector);
+        for(auto&& it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
+            auto i = it->idx1;
+            auto j = it->idx2;
+            auto type_i = *(pimpl->particleData->begin_types() + i);
+            auto type_j = *(pimpl->particleData->begin_types() + j);
+            const auto& pos_i = *(pimpl->particleData->begin_positions() + i);
+            const auto& pos_j = *(pimpl->particleData->begin_positions() + j);
+            const auto&& potentials = pimpl->context->getPotentialsForTypes(type_i, type_j);
+            for(const auto& potential : potentials) {
+                if(potential->getOrder() == 2) {
+                    static_cast<readdy::model::potentials::PotentialOrder2 *>(potential)
+                            ->calculateForceAndEnergy(
+                                    *(pimpl->particleData->begin_forces()+i)
+                                    , pimpl->currentEnergy, pos_i, pos_j
+                            );
+                } else {
+                    // TODO
+                }
+            }
+        }
     }
 }
 
 
-kern::SingleCPUKernelStateModel::SingleCPUKernelStateModel() : pimpl(std::make_unique<kern::SingleCPUKernelStateModel::Impl>()) {
+kern::SingleCPUKernelStateModel::SingleCPUKernelStateModel(readdy::model::KernelContext const* context) : pimpl(std::make_unique<kern::SingleCPUKernelStateModel::Impl>()) {
     pimpl->particleData = std::make_unique<model::SingleCPUParticleData>(10);
+    pimpl->neighborList = std::make_unique<model::NaiveSingleCPUNeighborList>();
+    pimpl->context = context;
 }
 
 void readdy::kernel::singlecpu::SingleCPUKernelStateModel::addParticle(const readdy::model::Particle &p) {

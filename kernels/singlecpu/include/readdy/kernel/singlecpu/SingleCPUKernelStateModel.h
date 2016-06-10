@@ -15,6 +15,7 @@
 #include <memory>
 #include <readdy/model/Vec3.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
+#include <readdy/model/KernelContext.h>
 
 namespace readdy {
     namespace kernel {
@@ -37,7 +38,7 @@ namespace readdy {
                 void increaseEnergy(double increase);
 
 
-                SingleCPUKernelStateModel();
+                SingleCPUKernelStateModel(readdy::model::KernelContext const* context);
                 ~SingleCPUKernelStateModel();
                 // move
                 SingleCPUKernelStateModel(SingleCPUKernelStateModel &&rhs);

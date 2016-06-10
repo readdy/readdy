@@ -16,8 +16,8 @@ namespace readdy {
             const std::string SingleCPUKernel::name = "SingleCPU";
             struct SingleCPUKernel::Impl {
                 std::unordered_map<std::string, std::shared_ptr<SingleCPUProgramFactory>> programFactories{};
-                std::unique_ptr<SingleCPUKernelStateModel> model = std::make_unique<SingleCPUKernelStateModel>();
                 std::unique_ptr<readdy::model::KernelContext> context = std::make_unique<readdy::model::KernelContext>();
+                std::unique_ptr<SingleCPUKernelStateModel> model = std::make_unique<SingleCPUKernelStateModel>(context.get());
                 std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
                 std::unique_ptr<potentials::SingleCPUPotentialFactory> potentials;
             };

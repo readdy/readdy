@@ -18,12 +18,6 @@ namespace m = readdy::model;
 namespace {
     struct TestPotential : public m::potentials::Potential {
         TestPotential() : Potential("test potential", 5000) { }
-
-        virtual void evaluate() override {
-            BOOST_LOG_TRIVIAL(debug) << "evaluating test potential.";
-        }
-
-
     };
 
     TEST(KernelContext, SetGetKBT) {
@@ -53,8 +47,8 @@ namespace {
     TEST(KernelContext, PotentialMap) {
         m::KernelContext ctx;
         auto p1 = TestPotential();
-        ctx.registerPotentialForTypes(&p1, "a", "b");
-        ctx.registerPotentialForTypes(&p1, "b", "a");
+        ctx.registerPotentialForTypes(p1, "a", "b");
+        ctx.registerPotentialForTypes(p1, "b", "a");
         auto&& vector = ctx.getPotentialsForTypes("b", "a");
         EXPECT_EQ(vector.size(), 2);
     }

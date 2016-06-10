@@ -16,14 +16,10 @@ namespace readdy {
             namespace potentials {
                 HarmonicRepulsion::HarmonicRepulsion(const SingleCPUKernel *const kernel)
                         : readdy::model::potentials::HarmonicRepulsion<SingleCPUKernel>(readdy::model::potentials::_internal::PotentialName<HarmonicRepulsion>::value, kernel) {
-
                 }
 
-                double HarmonicRepulsion::calculateEnergy(const size_t &i, const size_t &j) {
-                    const auto &&data = kernel->getKernelStateModelSingleCPU().getParticleData();
-                    readdy::model::Vec3 positionI = *(data->begin_positions() + i);
-                    readdy::model::Vec3 positionJ = *(data->begin_positions() + j);
-                    double distance = (positionJ - positionI)*(positionJ - positionI);
+                double HarmonicRepulsion::calculateEnergy(const vec_t &x_i, const vec_t &x_j) {
+                    auto distance = (x_j - x_i)*(x_j - x_i);
                     if(distance < getSumOfParticleRadiiSquared()) {
                         distance = std::sqrt(distance);
                         distance -= getSumOfParticleRadii();
@@ -34,36 +30,24 @@ namespace readdy {
                     }
                 }
 
-                void HarmonicRepulsion::calculateForce(readdy::model::Vec3 &force, const size_t &i, const size_t &j) {
-                    const auto &&data = kernel->getKernelStateModelSingleCPU().getParticleData();
-                    readdy::model::Vec3 positionI = *(data->begin_positions() + i);
-                    readdy::model::Vec3 positionJ = *(data->begin_positions() + j);
-                    readdy::model::Vec3 r_ij = positionJ - positionI;
-                    double distance = r_ij * r_ij;
+                void HarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) {
+                    const auto&& r_ij = x_j - x_i;
+                    auto distance = r_ij * r_ij;
                     if (distance < getSumOfParticleRadiiSquared()) {
                         distance = std::sqrt(distance);
-                        force = (2*getForceConstant() * (distance - getSumOfParticleRadii()))/distance * r_ij;
-                    } else {
-                        force *= 0;
+                        force += (2*getForceConstant() * (distance - getSumOfParticleRadii()))/distance * r_ij;
                     }
                 }
 
-                void HarmonicRepulsion::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const size_t &i, const size_t &j) {
-                    const auto &&data = kernel->getKernelStateModelSingleCPU().getParticleData();
-                    readdy::model::Vec3 positionI = *(data->begin_positions() + i);
-                    readdy::model::Vec3 positionJ = *(data->begin_positions() + j);
-                    readdy::model::Vec3 r_ij = positionJ - positionI;
-                    double distance = r_ij * r_ij;
+                void HarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) {
+                    const auto&& r_ij = x_j - x_i;
+                    auto distance = r_ij * r_ij;
                     if (distance < getSumOfParticleRadiiSquared()) {
                         distance = std::sqrt(distance);
-                        energy = getForceConstant() * std::pow(distance - getSumOfParticleRadii(), 2);
-                        force = (2*getForceConstant() * (distance - getSumOfParticleRadii()))/distance * r_ij;
-                    } else {
-                        energy = 0;
-                        force *= 0;
+                        energy += getForceConstant() * std::pow(distance - getSumOfParticleRadii(), 2);
+                        force += (2*getForceConstant() * (distance - getSumOfParticleRadii()))/distance * r_ij;
                     }
                 }
-
             }
         }
     }

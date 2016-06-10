@@ -93,18 +93,6 @@ namespace readdy {
             return pimpl->diffusionConstants[particleType];
         }
 
-        void KernelContext::registerPotentialForTypes(potentials::Potential *potential, std::string type1, std::string type2) {
-            // wlog: type1 <= type2
-            auto type1Id = getOrCreateTypeId(type1);
-            auto type2Id = getOrCreateTypeId(type2);
-            _internal::ParticleTypePair pp {type1Id, type2Id};
-            if(pimpl->potentialRegistry.find(pp) == pimpl->potentialRegistry.end()) {
-                pimpl->potentialRegistry.emplace(pp, std::vector<potentials::Potential*>());
-            }
-            pimpl->potentialRegistry[pp].push_back(potential);
-
-        }
-
         double KernelContext::getParticleRadius(const std::string &type) const {
             return getParticleRadius(pimpl->typeMapping[type]);
         }
@@ -128,9 +116,24 @@ namespace readdy {
             return t_id;
         }
 
-        std::vector<potentials::Potential *> KernelContext::getPotentialsForTypes(std::string type1, std::string type2) {
+        void KernelContext::registerPotentialForTypes(potentials::Potential &potential, const std::string &type1, const std::string &type2) {
+            // wlog: type1 <= type2
+            auto type1Id = pimpl->typeMapping[type1];
+            auto type2Id = pimpl->typeMapping[type2];
+            _internal::ParticleTypePair pp {type1Id, type2Id};
+            if(pimpl->potentialRegistry.find(pp) == pimpl->potentialRegistry.end()) {
+                pimpl->potentialRegistry.emplace(pp, std::vector<potentials::Potential*>());
+            }
+            pimpl->potentialRegistry[pp].push_back(&potential);
+        }
+
+        std::vector<potentials::Potential *> KernelContext::getPotentialsForTypes(const std::string &type1, const std::string &type2) const {
             _internal::ParticleTypePair pp {pimpl->typeMapping[type1], pimpl->typeMapping[type2]};
             return pimpl->potentialRegistry[pp];
+        }
+
+        std::vector<potentials::Potential *> KernelContext::getPotentialsForTypes(const unsigned int type1, const unsigned int type2) const {
+            return pimpl->potentialRegistry[{type1, type2}];
         }
 
 

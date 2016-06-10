@@ -13,21 +13,21 @@
 #include <readdy/model/potentials/PotentialsOrder2.h>
 
 namespace readdy {
+
     namespace kernel {
         namespace singlecpu {
             class SingleCPUKernel;
 
             namespace potentials {
                 class HarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion<SingleCPUKernel>{
+                    using vec_t = readdy::model::Vec3;
 
                 public:
                     HarmonicRepulsion(const SingleCPUKernel * const);
 
-                    virtual double calculateEnergy(const size_t &i, const size_t &j) override;
-                    virtual void calculateForce(readdy::model::Vec3 &force, const size_t &i, const size_t &j) override;
-                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const size_t &i, const size_t &j) override;
-
-
+                    virtual double calculateEnergy(const vec_t& x_i, const vec_t& x_j) override;
+                    virtual void calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) override;
+                    virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) override;
                 };
 
             }
