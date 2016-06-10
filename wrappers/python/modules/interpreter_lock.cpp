@@ -9,10 +9,10 @@
 
 #include "interpreter_lock.h"
 
-readdy::py::interpreter_lock() {
+readdy::py::interpreter_lock::interpreter_lock() {
     gilState = PyGILState_Ensure();
 }
 
-readdy::py::~interpreter_lock() {
+readdy::py::interpreter_lock::~interpreter_lock() {
     PyGILState_Release(gilState);
 }

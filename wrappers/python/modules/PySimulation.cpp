@@ -9,6 +9,7 @@ BOOST_PYTHON_MODULE (simulation) {
     namespace py = boost::python;
     using sim = readdy::Simulation;
     using kp = readdy::plugin::KernelProvider;
+    using vec = readdy::model::Vec3;
     PyEval_InitThreads();
     py::class_<sim, boost::noncopyable>("Simulation")
             .add_property("kbt", &sim::getKBT, &sim::setKBT)
@@ -19,6 +20,15 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("get", &kp::getInstance, py::return_value_policy<py::reference_existing_object>())
             .staticmethod("get")
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
+    py::class_<vec>("Vec", py::init<double, double, double>())
+            .def(py::self + py::self)
+            .def(py::self - py::self)
+            .def(double() * py::self)
+            .def(py::self += py::self)
+            .def(py::self *= double())
+            .def(py::self == py::self)
+            .def(py::self != py::self)
+            .def("__getitem__", &vec::operator[]);
 }
 
 #endif

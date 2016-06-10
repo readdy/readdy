@@ -37,8 +37,10 @@ void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type 
     }
 
     if(forces) {
+        // zero out forces
         const readdy::model::Vec3 zeroVector = {0,0,0};
         std::fill(pimpl->particleData->begin_forces(), pimpl->particleData->end_forces(), zeroVector);
+        // update forces and energy
         for(auto&& it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
             auto i = it->idx1;
             auto j = it->idx2;

@@ -10,6 +10,9 @@
 #ifndef READDY_MAIN_INTERPRETER_LOCK_H
 #define READDY_MAIN_INTERPRETER_LOCK_H
 
+#include <Python.h>
+#include <pystate.h>
+
 namespace readdy {
     namespace py {
         class interpreter_lock {
