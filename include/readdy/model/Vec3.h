@@ -18,6 +18,7 @@ namespace readdy {
         public:
             Vec3();
             Vec3(double x, double y, double z);
+            Vec3(const std::array<double, 3> &xyz);
             Vec3& operator+=(const Vec3& rhs);
             Vec3& operator*=(const double a);
             double operator[](const unsigned int i) const;

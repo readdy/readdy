@@ -12,6 +12,8 @@
 #include <readdy/model/Vec3.h>
 #include <readdy/model/KernelStateModel.h>
 #include <functional>
+#include <readdy/model/potentials/Potential.h>
+#include <readdy/model/potentials/PotentialOrder2.h>
 
 #if BOOST_OS_MACOS
 #include <array>
@@ -40,16 +42,17 @@ namespace readdy {
 
         void setKBT(double kBT);
 
-        std::array<double, 3> getBoxSize() const;
+        readdy::model::Vec3 getBoxSize() const;
 
         void setBoxSize(double dx, double dy, double dz);
+        void setBoxSize(const readdy::model::Vec3& boxSize);
 
         std::array<bool, 3> getPeriodicBoundary() const;
 
         void setPeriodicBoundary(std::array<bool, 3> periodic);
 
-        void registerParticleType(const std::string name, const double diffusionCoefficient);
-        //void registerPotential(const Potential& potential);
+        void registerParticleType(const std::string &name, const double diffusionCoefficient);
+        void registerPotential(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2);
         //void registerReaction(const Reaction& reaction);
         //void registerReactionByDescriptor(const std::string descriptor);
 
@@ -68,6 +71,8 @@ namespace readdy {
     private:
         struct Impl;
         std::unique_ptr<readdy::Simulation::Impl> pimpl;
+
+        void ensureKernelSelected() const;
     };
 
     class NoKernelSelectedException : public std::runtime_error {

@@ -27,6 +27,10 @@ namespace readdy {
             return *this;
         }
 
+        Vec3::Vec3(const std::array<double, 3> &xyz) {
+            data = std::array<double, 3>(xyz);
+        }
+
         Vec3::Vec3(double x, double y, double z) {
             data[0] = x;
             data[1] = y;

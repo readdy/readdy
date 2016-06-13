@@ -6,17 +6,43 @@
 #include <readdy/plugin/KernelProvider.h>
 #include "PotentialWrapper.h"
 
+namespace py = boost::python;
+using sim = readdy::Simulation;
+using kp = readdy::plugin::KernelProvider;
+using vec = readdy::model::Vec3;
+using pot2 = readdy::py::PotentialOrder2Wrapper;
+
+boost::python::list getPeriodicBoundarySimulationWrapper(const sim &simulation) {
+    auto p = simulation.getPeriodicBoundary();
+    py::list result;
+    result.append<bool>(p[0]);
+    result.append<bool>(p[1]);
+    result.append<bool>(p[2]);
+    return result;
+}
+
+void setPeriodicBoundarySimulationWrapper(sim &self, py::list list) {
+    self.setPeriodicBoundary({py::extract<bool>(list[0]), py::extract<bool>(list[1]), py::extract<bool>(list[2])});
+}
+
+// thin wrappers
+void setBoxSize(sim &self, const vec& size) { /* explicitely choose void(vec) signature */ self.setBoxSize(size); }
+std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.getSelectedKernelType(); }
+void addParticle(sim& self, const std::string& type, const vec& pos) { self.addParticle(pos[0], pos[1], pos[2], type); }
+
+// module
 BOOST_PYTHON_MODULE (simulation) {
-    namespace py = boost::python;
-    using sim = readdy::Simulation;
-    using kp = readdy::plugin::KernelProvider;
-    using vec = readdy::model::Vec3;
-    using pot2 = readdy::py::PotentialOrder2Wrapper;
+
     PyEval_InitThreads();
     py::class_<sim, boost::noncopyable>("Simulation")
             .add_property("kbt", &sim::getKBT, &sim::setKBT)
-            .add_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
-            .add_property("box_size", &sim::getBoxSize, &sim::setBoxSize)
+            .add_property("periodic_boundary", &getPeriodicBoundarySimulationWrapper, &setPeriodicBoundarySimulationWrapper)
+            .add_property("box_size", &sim::getBoxSize, &setBoxSize)
+            .def("registerParticleType", &sim::registerParticleType)
+            .def("addParticle", &addParticle)
+            .def("isKernelSelected", &sim::isKernelSelected)
+            .def("getSelectedKernelType", &getSelectedKernelType)
+            .def("registerPotential", &sim::registerPotential)
             .def("setKernel", &sim::setKernel);
     py::class_<kp, boost::noncopyable>("KernelProvider", py::no_init)
             .def("get", &kp::getInstance, py::return_value_policy<py::reference_existing_object>())
