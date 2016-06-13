@@ -25,9 +25,19 @@ struct kern::SingleCPUKernelStateModel::Impl {
     std::unique_ptr<model::SingleCPUParticleData> particleData;
     std::unique_ptr<model::SingleCPUNeighborList> neighborList;
     readdy::model::KernelContext const* context;
+    bool firstCall = true;
 };
 
 void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces, bool distances) {
+    if(pimpl->firstCall) {
+       /* for(auto typePair : pimpl->context->getAllRegisteredPotentialTypes()) {
+            for(auto&& potential : pimpl->context->getPotentialsForTypes(std::get<0>(typePair), std::get<1>(typePair))) {
+                if(potential->getOrder() == 2) {
+                    // todo discuss this: how and when to configure r²
+                }
+            }
+        }*/
+    }
     const auto timeStepChanged = t != pimpl->t;
     pimpl->t = t;
     if(timeStepChanged) {
@@ -62,6 +72,8 @@ void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type 
             }
         }
     }
+
+    pimpl->firstCall = false;
 }
 
 

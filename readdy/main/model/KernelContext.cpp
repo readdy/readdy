@@ -136,6 +136,14 @@ namespace readdy {
             return pimpl->potentialRegistry[{type1, type2}];
         }
 
+        std::unordered_set<std::tuple<unsigned int, unsigned int>> KernelContext::getAllRegisteredPotentialTypes() const {
+            std::unordered_set<std::tuple<unsigned int, unsigned int>> result {};
+            for(auto it = pimpl->potentialRegistry.begin(); it != pimpl->potentialRegistry.end(); ++it) {
+                result.insert(std::make_tuple(it->first.t1, it->first.t2));
+            }
+            return result;
+        }
+
 
         KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 

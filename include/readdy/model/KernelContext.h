@@ -16,6 +16,7 @@
 #include <boost/predef.h>
 #include <readdy/model/potentials/Potential.h>
 #include <vector>
+#include <unordered_set>
 
 #if BOOST_OS_MAC
 #include <string>
@@ -51,6 +52,7 @@ namespace readdy {
             void registerPotentialForTypes(potentials::Potential& potential, const std::string& type1, const std::string& type2);
             std::vector<potentials::Potential*> getPotentialsForTypes(const std::string& type1, const std::string& type2) const;
             std::vector<potentials::Potential*> getPotentialsForTypes(const unsigned int type1, const unsigned int type2) const;
+            std::unordered_set<std::tuple<unsigned int, unsigned int>> getAllRegisteredPotentialTypes() const ;
 
             // ctor and dtor
             KernelContext();
