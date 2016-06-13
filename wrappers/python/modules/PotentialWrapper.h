@@ -22,7 +22,9 @@ namespace readdy {
             PotentialOrder2Wrapper(const std::string &name, boost::python::object o1, boost::python::object o2);
 
             virtual double calculateEnergy(const model::Vec3 &x_i, const model::Vec3 &x_j) override;
+
             virtual void calculateForce(model::Vec3 &force, const model::Vec3 &x_i, const model::Vec3 &x_j) override;
+
             virtual void calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_i, const model::Vec3 &x_j) override;
 
         protected:

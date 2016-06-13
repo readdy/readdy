@@ -10,6 +10,7 @@ using namespace readdy;
 
 struct Simulation::Impl {
     std::unique_ptr<readdy::model::Kernel> kernel;
+    std::vector<std::unique_ptr<readdy::model::potentials::Potential>> createdPotentials {};
 };
 
 double Simulation::getKBT() const {
@@ -102,7 +103,15 @@ const std::vector<readdy::model::Vec3> Simulation::getParticlePositions() const 
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
 
-void Simulation::registerPotential(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2) {
+void Simulation::registerPotentialOrder2(std::string potential, const std::string &type1, const std::string &type2) {
+    ensureKernelSelected();
+    // ensure sufficient lifetime
+    pimpl->createdPotentials.push_back(pimpl->kernel->createPotential(potential));
+    // add to context
+    pimpl->kernel->getKernelContext().registerPotentialForTypes(**(pimpl->createdPotentials.end()-1), type1, type2);
+}
+
+void Simulation::registerPotentialOrder2(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().registerPotentialForTypes(potential, type1, type2);
 }

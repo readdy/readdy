@@ -25,7 +25,8 @@ namespace readdy {
                   calcForceFun(new boost::python::object(o2), [](boost::python::object *o) {
                       interpreter_lock lock;
                       delete o;
-                  }) { };
+                  })
+                  { };
 
         double PotentialOrder2Wrapper::calculateEnergy(const model::Vec3 &x_i, const model::Vec3 &x_j) {
             interpreter_lock lock;

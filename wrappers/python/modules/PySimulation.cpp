@@ -29,6 +29,8 @@ void setPeriodicBoundarySimulationWrapper(sim &self, py::list list) {
 void setBoxSize(sim &self, const vec& size) { /* explicitely choose void(vec) signature */ self.setBoxSize(size); }
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.getSelectedKernelType(); }
 void addParticle(sim& self, const std::string& type, const vec& pos) { self.addParticle(pos[0], pos[1], pos[2], type); }
+void registerPotentialOrder2(sim& self, pot2& potential, std::string type1, std::string type2) { self.registerPotentialOrder2(potential, type1, type2); }
+void registerPotentialOrder2_name(sim& self, std::string potentialType, std::string type1, std::string type2) { self.registerPotentialOrder2(potentialType, type1, type2); }
 
 // module
 BOOST_PYTHON_MODULE (simulation) {
@@ -42,8 +44,10 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("addParticle", &addParticle)
             .def("isKernelSelected", &sim::isKernelSelected)
             .def("getSelectedKernelType", &getSelectedKernelType)
-            .def("registerPotential", &sim::registerPotential)
-            .def("setKernel", &sim::setKernel);
+            .def("registerPotentialOrder2", &registerPotentialOrder2)
+            .def("registerPotentialOrder2", &registerPotentialOrder2_name)
+            .def("setKernel", &sim::setKernel)
+            .def("run", &sim::run);
     py::class_<kp, boost::noncopyable>("KernelProvider", py::no_init)
             .def("get", &kp::getInstance, py::return_value_policy<py::reference_existing_object>())
             .staticmethod("get")

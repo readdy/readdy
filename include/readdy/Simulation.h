@@ -52,7 +52,8 @@ namespace readdy {
         void setPeriodicBoundary(std::array<bool, 3> periodic);
 
         void registerParticleType(const std::string &name, const double diffusionCoefficient);
-        void registerPotential(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2);
+        void registerPotentialOrder2(std::string name, const std::string &type1, const std::string &type2);
+        void registerPotentialOrder2(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2);
         //void registerReaction(const Reaction& reaction);
         //void registerReactionByDescriptor(const std::string descriptor);
 

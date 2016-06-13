@@ -1,7 +1,6 @@
 import unittest
 
 from readdy._internal.simulation import Vec
-from readdy._internal.simulation import Pot2
 
 
 class TestVectorClass(unittest.TestCase):
@@ -11,11 +10,6 @@ class TestVectorClass(unittest.TestCase):
 
     def calcForce(self, v1, v2):
         return Vec(0, 0, 0)
-
-    def test_test(self):
-        pot = Pot2("mypot", self.calcEnergy, self.calcForce)
-
-        pot.calc_energy(Vec(5, 5, 5), Vec(3, 3, 3))
 
     def test_sanity(self):
         v = Vec(3, 3, 3)
