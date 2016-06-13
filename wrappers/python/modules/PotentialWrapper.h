@@ -10,7 +10,7 @@
 #ifndef READDY_MAIN_POTENTIALWRAPPER_H
 #define READDY_MAIN_POTENTIALWRAPPER_H
 
-#include <boost/function.hpp>
+#include <functional>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <boost/python/object.hpp>
 
@@ -19,16 +19,15 @@ namespace readdy {
         class PotentialOrder2Wrapper : public readdy::model::potentials::PotentialOrder2 {
 
         public:
-            PotentialOrder2Wrapper(const std::string &name, boost::function<double(model::Vec3, model::Vec3)> calculateEnergy, boost::function<model::Vec3(model::Vec3, model::Vec3)> calculateForce)
-                    : PotentialOrder2(name), calcEnergyFun(calculateEnergy), calcForceFun(calculateForce) { }
+            PotentialOrder2Wrapper(const std::string &name, boost::python::object o1, boost::python::object o2);
 
             virtual double calculateEnergy(const model::Vec3 &x_i, const model::Vec3 &x_j) override;
             virtual void calculateForce(model::Vec3 &force, const model::Vec3 &x_i, const model::Vec3 &x_j) override;
             virtual void calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_i, const model::Vec3 &x_j) override;
 
         protected:
-            boost::function<double(model::Vec3, model::Vec3)> calcEnergyFun;
-            boost::function<model::Vec3(model::Vec3, model::Vec3)> calcForceFun;
+            std::shared_ptr<boost::python::object> calcEnergyFun;
+            std::shared_ptr<boost::python::object> calcForceFun;
         };
     }
 }
