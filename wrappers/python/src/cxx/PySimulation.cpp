@@ -4,13 +4,15 @@
 #include <boost/python.hpp>
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
-#include "PotentialWrapper.h"
+#include "PyPotential.h"
 
 namespace py = boost::python;
 using sim = readdy::Simulation;
 using kp = readdy::plugin::KernelProvider;
 using vec = readdy::model::Vec3;
 using pot2 = readdy::py::PotentialOrder2Wrapper;
+using model = readdy::model::KernelStateModel;
+using ctx = readdy::model::KernelContext;
 
 boost::python::list getPeriodicBoundarySimulationWrapper(const sim &simulation) {
     auto p = simulation.getPeriodicBoundary();
@@ -63,6 +65,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def(py::self * py::self)
             .def(py::self_ns::str(py::self))
             .def("__getitem__", &vec::operator[]);
+
     py::class_<pot2>("Pot2", py::init<std::string, boost::python::object, boost::python::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);

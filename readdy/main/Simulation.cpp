@@ -11,6 +11,7 @@ using namespace readdy;
 struct Simulation::Impl {
     std::unique_ptr<readdy::model::Kernel> kernel;
     std::vector<std::unique_ptr<readdy::model::potentials::Potential>> createdPotentials {};
+    std::vector<std::unique_ptr<readdy::model::ObservableBase>> createdObservables {};
 };
 
 double Simulation::getKBT() const {
@@ -108,12 +109,12 @@ void Simulation::registerPotentialOrder2(std::string potential, const std::strin
     // ensure sufficient lifetime
     pimpl->createdPotentials.push_back(pimpl->kernel->createPotential(potential));
     // add to context
-    pimpl->kernel->getKernelContext().registerPotentialForTypes(**(pimpl->createdPotentials.end()-1), type1, type2);
+    pimpl->kernel->getKernelContext().registerOrder2Potential(**(pimpl->createdPotentials.end() - 1), type1, type2);
 }
 
 void Simulation::registerPotentialOrder2(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().registerPotentialForTypes(potential, type1, type2);
+    pimpl->kernel->getKernelContext().registerOrder2Potential(potential, type1, type2);
 }
 
 void Simulation::ensureKernelSelected() const {
@@ -125,6 +126,17 @@ void Simulation::ensureKernelSelected() const {
 void Simulation::setBoxSize(double dx, double dy, double dz) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
+}
+
+void Simulation::registerObservable(const std::string &name, unsigned int stride) {
+    ensureKernelSelected();
+    pimpl->createdObservables.push_back(pimpl->kernel->createObservable(name));
+    (**(pimpl->createdObservables.end()-1)).setStride(stride);
+    pimpl->kernel->registerObservable((*(pimpl->createdObservables.end()-1)).get());
+}
+
+void Simulation::registerObservable(readdy::model::ObservableBase &observable) {
+    ensureKernelSelected();
 }
 
 

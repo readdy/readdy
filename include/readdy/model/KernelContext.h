@@ -49,10 +49,12 @@ namespace readdy {
             double getTimeStep() const;
             void setTimeStep(double dt);
 
-            void registerPotentialForTypes(potentials::Potential& potential, const std::string& type1, const std::string& type2);
-            std::vector<potentials::Potential*> getPotentialsForTypes(const std::string& type1, const std::string& type2) const;
-            std::vector<potentials::Potential*> getPotentialsForTypes(const unsigned int type1, const unsigned int type2) const;
-            std::unordered_set<std::tuple<unsigned int, unsigned int>> getAllRegisteredPotentialTypes() const ;
+            void registerOrder2Potential(potentials::Potential &potential, const std::string &type1, const std::string &type2);
+            std::vector<potentials::Potential*> getOrder2Potentials(const std::string &type1, const std::string &type2) const;
+            std::vector<potentials::Potential*> getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+            std::unordered_set<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
+
+            void configure();
 
             // ctor and dtor
             KernelContext();

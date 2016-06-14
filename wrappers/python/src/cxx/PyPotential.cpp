@@ -7,7 +7,7 @@
  * @date 10.06.16
  */
 
-#include "PotentialWrapper.h"
+#include "PyPotential.h"
 #include "interpreter_lock.h"
 #include <readdy/model/Vec3.h>
 #include <iostream>

@@ -59,18 +59,22 @@ class ReaDDyInstall(install):
         self.copy_tree(internal_build, internal_target)
 
 
+def get_package_dir():
+    return os.path.join('@CMAKE_CURRENT_SOURCE_DIR@', "src", "python")
+
+
 metadata = dict(
     name='ReaDDy',
     version='@READDY_VERSION@',
-    package_dir={'': '@CMAKE_CURRENT_SOURCE_DIR@'},
+    package_dir={'': get_package_dir()},
     package_data={'readdy._internal': ["*"]},
-    packages=find_packages(where='@CMAKE_CURRENT_SOURCE_DIR@'),
+    packages=find_packages(where=get_package_dir()),
     cmdclass={'build': ReaDDyBuild, 'install': ReaDDyInstall}
 )
 
 if __name__ == '__main__':
     print("%s python setup start %s" % (print_sep, print_sep))
     print("calling setup with metadata:")
-    pprint(metadata, indent=2, depth=2, width=2)
+    pprint(metadata, indent=2, width=2)
     setup(**metadata)
     print("%s python setup end %s" % (print_sep, print_sep))

@@ -30,8 +30,8 @@ struct kern::SingleCPUKernelStateModel::Impl {
 
 void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces, bool distances) {
     if(pimpl->firstCall) {
-       /* for(auto typePair : pimpl->context->getAllRegisteredPotentialTypes()) {
-            for(auto&& potential : pimpl->context->getPotentialsForTypes(std::get<0>(typePair), std::get<1>(typePair))) {
+       /* for(auto typePair : pimpl->context->getAllOrder2RegisteredPotentialTypes()) {
+            for(auto&& potential : pimpl->context->getOrder2Potentials(std::get<0>(typePair), std::get<1>(typePair))) {
                 if(potential->getOrder() == 2) {
                     // todo discuss this: how and when to configure r²
                 }
@@ -58,7 +58,7 @@ void kern::SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type 
             auto type_j = *(pimpl->particleData->begin_types() + j);
             const auto& pos_i = *(pimpl->particleData->begin_positions() + i);
             const auto& pos_j = *(pimpl->particleData->begin_positions() + j);
-            const auto&& potentials = pimpl->context->getPotentialsForTypes(type_i, type_j);
+            const auto&& potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
             for(const auto& potential : potentials) {
                 if(potential->getOrder() == 2) {
                     static_cast<readdy::model::potentials::PotentialOrder2 *>(potential)

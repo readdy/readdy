@@ -47,9 +47,9 @@ namespace {
     TEST(KernelContext, PotentialMap) {
         m::KernelContext ctx;
         auto p1 = TestPotential();
-        ctx.registerPotentialForTypes(p1, "a", "b");
-        ctx.registerPotentialForTypes(p1, "b", "a");
-        auto&& vector = ctx.getPotentialsForTypes("b", "a");
+        ctx.registerOrder2Potential(p1, "a", "b");
+        ctx.registerOrder2Potential(p1, "b", "a");
+        auto&& vector = ctx.getOrder2Potentials("b", "a");
         EXPECT_EQ(vector.size(), 2);
     }
 

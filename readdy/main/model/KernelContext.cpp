@@ -116,7 +116,7 @@ namespace readdy {
             return t_id;
         }
 
-        void KernelContext::registerPotentialForTypes(potentials::Potential &potential, const std::string &type1, const std::string &type2) {
+        void KernelContext::registerOrder2Potential(potentials::Potential &potential, const std::string &type1, const std::string &type2) {
             // wlog: type1 <= type2
             auto type1Id = pimpl->typeMapping[type1];
             auto type2Id = pimpl->typeMapping[type2];
@@ -127,21 +127,25 @@ namespace readdy {
             pimpl->potentialRegistry[pp].push_back(&potential);
         }
 
-        std::vector<potentials::Potential *> KernelContext::getPotentialsForTypes(const std::string &type1, const std::string &type2) const {
+        std::vector<potentials::Potential *> KernelContext::getOrder2Potentials(const std::string &type1, const std::string &type2) const {
             _internal::ParticleTypePair pp {pimpl->typeMapping[type1], pimpl->typeMapping[type2]};
             return pimpl->potentialRegistry[pp];
         }
 
-        std::vector<potentials::Potential *> KernelContext::getPotentialsForTypes(const unsigned int type1, const unsigned int type2) const {
+        std::vector<potentials::Potential *> KernelContext::getOrder2Potentials(const unsigned int type1, const unsigned int type2) const {
             return pimpl->potentialRegistry[{type1, type2}];
         }
 
-        std::unordered_set<std::tuple<unsigned int, unsigned int>> KernelContext::getAllRegisteredPotentialTypes() const {
+        std::unordered_set<std::tuple<unsigned int, unsigned int>> KernelContext::getAllOrder2RegisteredPotentialTypes() const {
             std::unordered_set<std::tuple<unsigned int, unsigned int>> result {};
             for(auto it = pimpl->potentialRegistry.begin(); it != pimpl->potentialRegistry.end(); ++it) {
                 result.insert(std::make_tuple(it->first.t1, it->first.t2));
             }
             return result;
+        }
+
+        void KernelContext::configure() {
+            // TODO implement this: Configure observables (computable params)
         }
 
 

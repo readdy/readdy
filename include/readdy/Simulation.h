@@ -14,6 +14,7 @@
 #include <functional>
 #include <readdy/model/potentials/Potential.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
+#include <readdy/model/Observable.h>
 
 #if BOOST_OS_MACOS
 #include <array>
@@ -51,6 +52,8 @@ namespace readdy {
 
         void setPeriodicBoundary(std::array<bool, 3> periodic);
 
+        void registerObservable(const std::string &name, unsigned int stride);
+        void registerObservable(readdy::model::ObservableBase& observable);
         void registerParticleType(const std::string &name, const double diffusionCoefficient);
         void registerPotentialOrder2(std::string name, const std::string &type1, const std::string &type2);
         void registerPotentialOrder2(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2);

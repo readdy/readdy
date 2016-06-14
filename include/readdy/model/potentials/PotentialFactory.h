@@ -31,7 +31,7 @@ namespace readdy {
                 }
 
                 template<typename T>
-                std::unique_ptr<T> createPotentialAs(std::string name) const {
+                std::unique_ptr<T> createPotentialAs(const std::string &name) const {
                     return std::unique_ptr<T>(dynamic_cast<T*>(factory.find(name)->second()));
                 }
 

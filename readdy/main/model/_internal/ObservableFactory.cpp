@@ -13,9 +13,9 @@ namespace readdy {
                 factory[name] = create;
             }
 
-            std::unique_ptr<ObservableBase> ObservableFactory::create(const std::string &name) {
+            std::unique_ptr<ObservableBase> ObservableFactory::create(const std::string &name) const {
                 if (readdy::utils::collections::hasKey(factory, name)) {
-                    return std::unique_ptr<ObservableBase>(factory[name]());
+                    return std::unique_ptr<ObservableBase>(factory.find(name)->second());
                 }
                 throw NoSuchObservableException("The requested observable \"" + name + "\" was not registered in the observable factory.");
             }
