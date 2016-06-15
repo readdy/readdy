@@ -97,6 +97,28 @@ namespace readdy {
                     --deactivated_index;
                 }
 
+                void SingleCPUParticleData::markForDeactivation(size_t index) {
+                    (*deactivated)[index] = true;
+                    markedForDeactivation->emplace(index);
+                }
+
+                void SingleCPUParticleData::deactivateMarked() {
+                    auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
+                    for(auto&& idx : *markedForDeactivation) {
+                        while(*deactivatedIt && deactivatedIt != deactivated->begin()) {
+                            --deactivated_index;
+                            --deactivatedIt;
+                        }
+                        if(idx < deactivated_index) {
+                            removeParticle(idx);
+                            --deactivatedIt;
+                        } else {
+                            break;
+                        }
+                    }
+                    markedForDeactivation->clear();
+                }
+
                 void SingleCPUParticleData::removeParticle(const readdy::model::Particle &particle) {
                     auto &&beginIt = begin_ids();
                     auto &&endIt = end_ids();
@@ -228,17 +250,7 @@ namespace readdy {
                     return n_deactivated;
                 }
 
-                void SingleCPUParticleData::markForDeactivation(size_t index) {
-                    (*deactivated)[index] = true;
-                    markedForDeactivation->emplace(index);
-                }
 
-                void SingleCPUParticleData::deactivateMarked() {
-                    for(auto&& idx : *markedForDeactivation) {
-                        removeParticle(idx);
-                    }
-                    markedForDeactivation->clear();
-                }
 
 
             }

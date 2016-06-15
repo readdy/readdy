@@ -120,6 +120,46 @@ TEST(ParticleData, markingForRemoval) {
     EXPECT_EQ(n_particles - n_deactivated, data->size());
 }
 
+TEST(ParticleData, markingForRemoval2) {
+    unsigned int n_particles = 11;
+    auto &&data = std::make_unique<SingleCPUParticleData>(15);
+    for (auto &&i = 0; i < n_particles; i++) {
+        data->addParticle({(double) i, (double) i, (double) i, 5});
+    }
+    std::vector<boost::uuids::uuid> deactivatedIds = {
+            *(data->begin_ids()+10),
+            *(data->begin_ids()+7),
+            *(data->begin_ids()+8),
+            *(data->begin_ids()+0),
+            *(data->begin_ids()+4)
+    };
+    data->markForDeactivation(10);
+    data->markForDeactivation(7);
+    data->markForDeactivation(8);
+    data->markForDeactivation(0);
+    data->markForDeactivation(4);
+    data->deactivateMarked();
+    EXPECT_EQ(data->size(), 6);
+
+    bool noDeactivatedIds = true;
+    for(auto it = deactivatedIds.begin(); it != deactivatedIds.end(); ++it) {
+        noDeactivatedIds &= std::find(data->begin_ids(), data->end_ids(), *it) == data->end_ids();
+    }
+    EXPECT_TRUE(noDeactivatedIds);
+
+    data->markForDeactivation(4);
+    data->markForDeactivation(2);
+    data->markForDeactivation(0);
+    data->markForDeactivation(3);
+    data->markForDeactivation(1);
+    data->deactivateMarked();
+    EXPECT_EQ(data->size(), 1);
+
+    data->markForDeactivation(0);
+    data->deactivateMarked();
+    EXPECT_EQ(data->size(), 0);
+}
+
 TEST(ParticleData, empty) {
     auto data = std::make_unique<SingleCPUParticleData>(3);
     EXPECT_TRUE(data->empty());
