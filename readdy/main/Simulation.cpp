@@ -187,6 +187,7 @@ struct delete_potentialO2 : public std::unary_function<const std::unique_ptr<rea
 void Simulation::deregisterPotential(const boost::uuids::uuid &uuid) {
     std::remove_if(pimpl->createdPotentialsOrder1.begin(), pimpl->createdPotentialsOrder1.end(), delete_potentialO1(uuid));
     std::remove_if(pimpl->createdPotentialsOrder2.begin(), pimpl->createdPotentialsOrder2.end(), delete_potentialO2(uuid));
+    pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };
 
 

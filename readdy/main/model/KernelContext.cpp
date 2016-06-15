@@ -21,6 +21,20 @@ namespace readdy {
             std::size_t operator()(const readdy::model::_internal::ParticleTypePair &k) const {
                 return hash_value(k);
             }
+
+            std::size_t operator()(const std::tuple<unsigned int, unsigned int> &k) const {
+                std::size_t seed = 0;
+                const auto& t1 = std::get<0>(k);
+                const auto& t2 = std::get<1>(k);
+                if(t1 <= t2) {
+                    boost::hash_combine(seed, t1);
+                    boost::hash_combine(seed, t2);
+                } else {
+                    boost::hash_combine(seed, t2);
+                    boost::hash_combine(seed, t1);
+                }
+                return seed;
+            }
         };
 
         struct readdy::model::KernelContext::Impl {
@@ -138,8 +152,8 @@ namespace readdy {
             return pimpl->potentialO2Registry[{type1, type2}];
         }
 
-        std::unordered_set<std::tuple<unsigned int, unsigned int>> KernelContext::getAllOrder2RegisteredPotentialTypes() const {
-            std::unordered_set<std::tuple<unsigned int, unsigned int>> result {};
+        std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> KernelContext::getAllOrder2RegisteredPotentialTypes() const {
+            std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> result {};
             for(auto it = pimpl->potentialO2Registry.begin(); it != pimpl->potentialO2Registry.end(); ++it) {
                 result.insert(std::make_tuple(it->first.t1, it->first.t2));
             }

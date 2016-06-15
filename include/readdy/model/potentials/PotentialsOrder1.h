@@ -24,10 +24,6 @@ namespace readdy {
                         PotentialOrder1(getPotentialName<CubePotential<KernelType>>()),
                         kernel(kernel)
                 { }
-                ~CubePotential() {
-                    readdy::model::KernelContext ctx = kernel->getKernelContext();
-                    ctx.deregisterPotential(getId());
-                }
 
                 virtual void configureForType(const unsigned int &type) override {
                     readdy::model::KernelContext ctx = kernel->getKernelContext();

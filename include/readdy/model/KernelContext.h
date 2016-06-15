@@ -25,6 +25,7 @@
 
 namespace readdy {
     namespace model {
+        class ParticleTypePairHasher;
         class KernelContext {
         public:
             double getKBT() const;
@@ -60,7 +61,7 @@ namespace readdy {
             void registerOrder2Potential(potentials::PotentialOrder2 &potential, const std::string &type1, const std::string &type2);
             std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const std::string &type1, const std::string &type2) const;
             std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
-            std::unordered_set<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
+            std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> getAllOrder2RegisteredPotentialTypes() const;
 
             // ctor and dtor
             KernelContext();
