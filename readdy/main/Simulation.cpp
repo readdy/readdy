@@ -10,8 +10,10 @@ using namespace readdy;
 
 struct Simulation::Impl {
     std::unique_ptr<readdy::model::Kernel> kernel;
-    std::vector<std::unique_ptr<readdy::model::potentials::Potential>> createdPotentials {};
+    std::vector<std::unique_ptr<readdy::model::potentials::PotentialOrder1>> createdPotentialsOrder1 {};
+    std::vector<std::unique_ptr<readdy::model::potentials::PotentialOrder2>> createdPotentialsOrder2 {};
     std::vector<std::unique_ptr<readdy::model::ObservableBase>> createdObservables {};
+    std::vector<boost::signals2::connection> observableConnections {};
 };
 
 double Simulation::getKBT() const {
@@ -104,15 +106,16 @@ const std::vector<readdy::model::Vec3> Simulation::getParticlePositions() const 
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
 
-void Simulation::registerPotentialOrder2(std::string potential, const std::string &type1, const std::string &type2) {
+const boost::uuids::uuid& Simulation::registerPotentialOrder2(std::string potential, const std::string &type1, const std::string &type2) {
     ensureKernelSelected();
     // ensure sufficient lifetime
-    pimpl->createdPotentials.push_back(pimpl->kernel->createPotential(potential));
+    pimpl->createdPotentialsOrder2.push_back(pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder2>(potential));
     // add to context
-    pimpl->kernel->getKernelContext().registerOrder2Potential(**(pimpl->createdPotentials.end() - 1), type1, type2);
+    pimpl->kernel->getKernelContext().registerOrder2Potential(**(pimpl->createdPotentialsOrder2.end() - 1), type1, type2);
+    return pimpl->createdPotentialsOrder2.back()->getId();
 }
 
-void Simulation::registerPotentialOrder2(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2) {
+void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 &potential, const std::string &type1, const std::string &type2) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().registerOrder2Potential(potential, type1, type2);
 }
@@ -132,11 +135,14 @@ void Simulation::registerObservable(const std::string &name, unsigned int stride
     ensureKernelSelected();
     pimpl->createdObservables.push_back(pimpl->kernel->createObservable(name));
     (**(pimpl->createdObservables.end()-1)).setStride(stride);
-    pimpl->kernel->registerObservable((*(pimpl->createdObservables.end()-1)).get());
+    auto&& connection = pimpl->kernel->registerObservable((*(pimpl->createdObservables.end()-1)).get());
+    pimpl->observableConnections.push_back(connection);
 }
 
 void Simulation::registerObservable(readdy::model::ObservableBase &observable) {
     ensureKernelSelected();
+    auto&& connection = pimpl->kernel->registerObservable(&observable);
+    pimpl->observableConnections.push_back(connection);
 }
 
 
@@ -144,7 +150,44 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 
 Simulation::Simulation(Simulation &&rhs) = default;
 
-Simulation::~Simulation() = default;
+Simulation::~Simulation() {
+    for(auto&& connection : pimpl->observableConnections) {
+        connection.disconnect();
+    }
+}
+
+const boost::uuids::uuid& Simulation::registerPotentialOrder1(std::string name, const std::string &type) {
+    ensureKernelSelected();
+    pimpl->createdPotentialsOrder1.push_back(pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder1>(name));
+    pimpl->kernel->getKernelContext().registerOrder1Potential(*pimpl->createdPotentialsOrder1.back(), type);
+    return pimpl->createdPotentialsOrder1.back()->getId();
+}
+
+void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 &potential, const std::string &type) {
+    pimpl->kernel->getKernelContext().registerOrder1Potential(potential, type);
+}
+
+struct delete_potentialO1 : public std::unary_function<const std::unique_ptr<readdy::model::potentials::PotentialOrder1>, bool> {
+    boost::uuids::uuid id;
+    delete_potentialO1(const boost::uuids::uuid &id) : id(id) { }
+    bool operator()(const std::unique_ptr<readdy::model::potentials::PotentialOrder1> &potential) {
+        return id == potential->getId();
+    }
+};
+
+struct delete_potentialO2 : public std::unary_function<const std::unique_ptr<readdy::model::potentials::PotentialOrder2>, bool> {
+    boost::uuids::uuid id;
+    delete_potentialO2(const boost::uuids::uuid &id) : id(id) { }
+    bool operator()(const std::unique_ptr<readdy::model::potentials::PotentialOrder2> &potential) {
+        return id == potential->getId();
+    }
+};
+
+
+void Simulation::deregisterPotential(const boost::uuids::uuid &uuid) {
+    std::remove_if(pimpl->createdPotentialsOrder1.begin(), pimpl->createdPotentialsOrder1.end(), delete_potentialO1(uuid));
+    std::remove_if(pimpl->createdPotentialsOrder2.begin(), pimpl->createdPotentialsOrder2.end(), delete_potentialO2(uuid));
+};
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

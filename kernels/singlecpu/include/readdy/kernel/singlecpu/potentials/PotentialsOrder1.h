@@ -12,15 +12,25 @@
 
 #include <string>
 #include <readdy/model/potentials/PotentialOrder1.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
+
+            class SingleCPUKernel;
             namespace potentials {
 
-                class P1Cube : public readdy::model::potentials::PotentialOrder1 {
+                class CubePotential : public readdy::model::potentials::CubePotential<SingleCPUKernel> {
                 public:
-                    P1Cube();
+                    CubePotential(const SingleCPUKernel *const Kernel);
+
+                    virtual double calculateEnergy(const readdy::model::Vec3 &position) override;
+
+                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) override;
+
+                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) override;
+
 
                 };
 
@@ -28,14 +38,6 @@ namespace readdy {
         }
     }
 
-    namespace model {
-        namespace potentials {
-            namespace _internal {
-                namespace pot = readdy::kernel::singlecpu::potentials;
-                template<> struct PotentialName<pot::P1Cube> { static const std::string value; };
-            }
-        }
-    }
 }
 
 #endif //READDY_MAIN_P1CUBE_H

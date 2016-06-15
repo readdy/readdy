@@ -23,22 +23,13 @@ namespace readdy {
                     using vec_t = readdy::model::Vec3;
 
                 public:
-                    HarmonicRepulsion(const SingleCPUKernel * const);
+                    HarmonicRepulsion(const SingleCPUKernel *const kernel);
 
                     virtual double calculateEnergy(const vec_t& x_i, const vec_t& x_j) override;
                     virtual void calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) override;
                     virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) override;
                 };
 
-            }
-        }
-    }
-
-    namespace model {
-        namespace potentials {
-            namespace _internal {
-                namespace pot = readdy::kernel::singlecpu::potentials;
-                template<> struct PotentialName<pot::HarmonicRepulsion> { static const std::string value; };
             }
         }
     }

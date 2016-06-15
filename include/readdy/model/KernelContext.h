@@ -14,9 +14,10 @@
 #include <array>
 #include <memory>
 #include <boost/predef.h>
-#include <readdy/model/potentials/Potential.h>
 #include <vector>
 #include <unordered_set>
+#include <readdy/model/potentials/PotentialOrder1.h>
+#include <readdy/model/potentials/PotentialOrder2.h>
 
 #if BOOST_OS_MAC
 #include <string>
@@ -49,12 +50,17 @@ namespace readdy {
             double getTimeStep() const;
             void setTimeStep(double dt);
 
-            void registerOrder2Potential(potentials::Potential &potential, const std::string &type1, const std::string &type2);
-            std::vector<potentials::Potential*> getOrder2Potentials(const std::string &type1, const std::string &type2) const;
-            std::vector<potentials::Potential*> getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
-            std::unordered_set<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
+            void deregisterPotential(const boost::uuids::uuid &potential);
 
-            void configure();
+            void registerOrder1Potential(potentials::PotentialOrder1 &potential, const std::string &type);
+            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const std::string& type) const;
+            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const unsigned int type) const;
+            std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
+
+            void registerOrder2Potential(potentials::PotentialOrder2 &potential, const std::string &type1, const std::string &type2);
+            std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const std::string &type1, const std::string &type2) const;
+            std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+            std::unordered_set<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 
             // ctor and dtor
             KernelContext();

@@ -20,8 +20,6 @@ namespace readdy {
 
         public:
             PyObservable(readdy::model::Kernel *const kernel, unsigned int stride, const boost::python::object &observableFun);
-            PyObservable(const PyObservable&);
-            PyObservable& operator=(const PyObservable&);
             virtual void evaluate() override;
 
         private:

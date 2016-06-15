@@ -13,6 +13,7 @@ using vec = readdy::model::Vec3;
 using pot2 = readdy::py::PotentialOrder2Wrapper;
 using model = readdy::model::KernelStateModel;
 using ctx = readdy::model::KernelContext;
+using kern = readdy::model::Kernel;
 
 boost::python::list getPeriodicBoundarySimulationWrapper(const sim &simulation) {
     auto p = simulation.getPeriodicBoundary();
@@ -28,11 +29,13 @@ void setPeriodicBoundarySimulationWrapper(sim &self, py::list list) {
 }
 
 // thin wrappers
-void setBoxSize(sim &self, const vec& size) { /* explicitely choose void(vec) signature */ self.setBoxSize(size); }
+void setBoxSize(sim &self, const vec& size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.getSelectedKernelType(); }
 void addParticle(sim& self, const std::string& type, const vec& pos) { self.addParticle(pos[0], pos[1], pos[2], type); }
 void registerPotentialOrder2(sim& self, pot2& potential, std::string type1, std::string type2) { self.registerPotentialOrder2(potential, type1, type2); }
 void registerPotentialOrder2_name(sim& self, std::string potentialType, std::string type1, std::string type2) { self.registerPotentialOrder2(potentialType, type1, type2); }
+py::list getKernelAvailableObservables(kern& self) { return py::list{self.getAvailableObservables()}; };
+double pyVec3Bracket(vec& self, const unsigned int i) {return self[i];}
 
 // module
 BOOST_PYTHON_MODULE (simulation) {
@@ -50,10 +53,12 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("registerPotentialOrder2", &registerPotentialOrder2_name)
             .def("setKernel", &sim::setKernel)
             .def("run", &sim::run);
+
     py::class_<kp, boost::noncopyable>("KernelProvider", py::no_init)
             .def("get", &kp::getInstance, py::return_value_policy<py::reference_existing_object>())
             .staticmethod("get")
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
+
     py::class_<vec>("Vec", py::init<double, double, double>())
             .def(py::self + py::self)
             .def(py::self - py::self)
@@ -64,11 +69,15 @@ BOOST_PYTHON_MODULE (simulation) {
             .def(py::self != py::self)
             .def(py::self * py::self)
             .def(py::self_ns::str(py::self))
-            .def("__getitem__", &vec::operator[]);
+            .def("__getitem__", &pyVec3Bracket);
 
     py::class_<pot2>("Pot2", py::init<std::string, boost::python::object, boost::python::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);
+
+    py::class_<kern, boost::noncopyable>("Kernel", py::no_init)
+            .def("getName", &kern::getName, py::return_value_policy<py::reference_existing_object>())
+            .def("getAvailableObservables", &getKernelAvailableObservables);
 }
 
 #endif

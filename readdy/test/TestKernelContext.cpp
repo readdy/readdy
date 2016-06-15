@@ -16,8 +16,13 @@
 namespace m = readdy::model;
 
 namespace {
-    struct TestPotential : public m::potentials::Potential {
-        TestPotential() : Potential("test potential", 5000) { }
+    struct NOOPPotential : public m::potentials::PotentialOrder2 {
+        NOOPPotential() : PotentialOrder2("no op") { }
+
+        virtual double calculateEnergy(const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {return 0;}
+        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
+        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
+
     };
 
     TEST(KernelContext, SetGetKBT) {
@@ -46,7 +51,7 @@ namespace {
 
     TEST(KernelContext, PotentialMap) {
         m::KernelContext ctx;
-        auto p1 = TestPotential();
+        auto p1 = NOOPPotential();
         ctx.registerOrder2Potential(p1, "a", "b");
         ctx.registerOrder2Potential(p1, "b", "a");
         auto&& vector = ctx.getOrder2Potentials("b", "a");

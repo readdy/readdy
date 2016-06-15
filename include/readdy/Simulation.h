@@ -15,6 +15,7 @@
 #include <readdy/model/potentials/Potential.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/Observable.h>
+#include <readdy/model/potentials/PotentialOrder1.h>
 
 #if BOOST_OS_MACOS
 #include <array>
@@ -55,8 +56,14 @@ namespace readdy {
         void registerObservable(const std::string &name, unsigned int stride);
         void registerObservable(readdy::model::ObservableBase& observable);
         void registerParticleType(const std::string &name, const double diffusionCoefficient);
-        void registerPotentialOrder2(std::string name, const std::string &type1, const std::string &type2);
-        void registerPotentialOrder2(readdy::model::potentials::Potential &potential, const std::string &type1, const std::string &type2);
+
+        void deregisterPotential(const boost::uuids::uuid& uuid);
+
+        const boost::uuids::uuid& registerPotentialOrder1(std::string name, const std::string &type);
+        void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 &potential, const std::string &type);
+        const boost::uuids::uuid& registerPotentialOrder2(std::string name, const std::string &type1, const std::string &type2);
+        void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 &potential, const std::string &type1, const std::string &type2);
+
         //void registerReaction(const Reaction& reaction);
         //void registerReactionByDescriptor(const std::string descriptor);
 

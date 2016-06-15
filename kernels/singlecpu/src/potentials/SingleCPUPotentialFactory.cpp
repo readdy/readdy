@@ -16,7 +16,8 @@ namespace readdy {
         namespace singlecpu {
             namespace potentials {
                 SingleCPUPotentialFactory::SingleCPUPotentialFactory(SingleCPUKernel *const kernel) : readdy::model::potentials::PotentialFactory(), kernel(kernel) {
-                    factory[readdy::model::potentials::_internal::getPotentialName<HarmonicRepulsion>()] = [kernel] {return new HarmonicRepulsion(kernel);};
+                    namespace p = readdy::model::potentials;
+                    factory[p::getPotentialName<p::HarmonicRepulsion<SingleCPUKernel>>()] = [kernel] {return new HarmonicRepulsion(kernel);};
                 }
 
             }

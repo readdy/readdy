@@ -42,6 +42,11 @@ namespace readdy {
             return data[i];
         }
 
+        double& Vec3::operator[](const unsigned int i) {
+            assert(0 <= i && i < 3);
+            return data[i];
+        }
+
         Vec3::Vec3()  : Vec3(0, 0, 0){
 
         }

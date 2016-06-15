@@ -19,9 +19,11 @@ namespace readdy {
 
             public:
                 PotentialOrder1(const std::string &name) : Potential(name, 1) { }
-                virtual double calculateEnergy(size_t& i) = 0;
-                virtual void calculateForce(Vec3 &force, size_t& i) = 0;
-                virtual void calculateForceAndEnergy(Vec3 &force, double &energy, size_t& i) = 0;
+                virtual double calculateEnergy(const Vec3& position) = 0;
+                virtual void calculateForce(Vec3 &force, const Vec3& position) = 0;
+                virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3& position) = 0;
+
+                virtual void configureForType(const unsigned int &type) {};
             };
         }
     }

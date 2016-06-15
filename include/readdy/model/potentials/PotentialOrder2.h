@@ -22,7 +22,7 @@ namespace readdy {
                 virtual double calculateEnergy(const Vec3& x_i, const Vec3& x_j) = 0;
                 virtual void calculateForce(Vec3 &force, const Vec3& x_i, const Vec3& x_j) = 0;
                 virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3& x_i, const Vec3& x_j) = 0;
-
+                virtual void configureForTypes(unsigned int type1, unsigned int type2) {};
             };
         }
     }
