@@ -22,8 +22,6 @@ env:
   global:
     - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
     - MACOSX_DEPLOYMENT_TARGET=10.7
-    - LLVM_VERSION=3.7.0
-    - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
   matrix:
     - python=2.7
       CONDA_PY=27
@@ -46,10 +44,6 @@ cache:
     - $HOME/readdy_cache/boost_dl_job_4
 
 before_install:
-- wget http://llvm.org/releases/$LLVM_VERSION/clang+llvm-$LLVM_VERSION-x86_64-linux-gnu-ubuntu-14.04.tar.xz -O $LLVM_ARCHIVE_PATH
-- mkdir $HOME/clang+llvm
-- tar xf $LLVM_ARCHIVE_PATH -C $HOME/clang+llvm --strip-components 1
-- export PATH=$HOME/clang+llvm/bin:$PATH
 - tools/ci/travis/setup_travis.sh
 - tools/ci/travis/install_miniconda.sh
 - export BOOST_DOWNLOAD_CACHE_DIR=$HOME/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
