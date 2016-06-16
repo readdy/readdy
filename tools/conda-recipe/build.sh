@@ -54,7 +54,7 @@ CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=${lib_path}"
 #########################################################
 #                                                       #
 # environment variables                                 #
-#   - HDF5_ROOT: is set to prefix (the find module      #
+#   - HDF5_DIR: is set to prefix (the find module       #
 #     seems not to respect the prefix path of cmake)    #
 #   - PYTHON_INCLUDE_DIR: is set w.r.t. whatever python #
 #     interpreter was found first in PATH               #
@@ -63,7 +63,6 @@ CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=${lib_path}"
 #########################################################
 
 export HDF5_DIR=${PREFIX}
-# export HDF5_ROOT=${PREFIX}
 export PYTHON_INCLUDE_DIR=`python -c "from __future__ import print_function; import distutils.sysconfig; print(distutils.sysconfig.get_python_inc(True))"`
 if [ `uname` == Darwin ]; then
     export MACOSX_DEPLOYMENT_TARGET=10.9
