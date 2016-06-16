@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#
+# Invokes doxypypy on the argument of this script
+# and converts python comments to doxygen comments.
+# Assumes that doxypypy is installed.
+#
+
+doxypypy -a -c $1

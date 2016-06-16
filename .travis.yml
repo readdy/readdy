@@ -2,11 +2,12 @@ dist: trusty
 sudo: required
 language: cpp
 compiler:
-  - gcc
-  - clang
+- gcc
+- clang
+
 os:
- - linux
- - osx
+- linux
+- osx
 
 osx_image: beta-xcode6.1
 
@@ -20,20 +21,20 @@ addons:
 
 env:
   global:
-    - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
-    - MACOSX_DEPLOYMENT_TARGET=10.7
+  - PATH=$HOME/_cmake/bin:$HOME/miniconda/bin:$PATH
+  - MACOSX_DEPLOYMENT_TARGET=10.7
+  - secure: xGI6QxgkdBYC2wVQziEOaYrADG4eYm6l6aQThQmd3PbZB7g5zSvcltNzPj7DbjvWSYqd5D8zpVtvVkV3FulB3dNEVEgJSI8gRQ7nEDXw6qAz55zcAKSWNjJFIVnhbMuF62rVKnecAueLtqAtfoy3ySJyvvC3g9apTZc6b7AnHd75QsuE0KMeyZ0EoD4F7xACtRoI+DqLyj5aoPwJECxGH32nr0MDoyxbWcklvFQ0Sb6x7ele4J1ewsbSsT810xdrSUBhoOyZCLXFoNh41CWULJ9wcUD9rGqnQ6XWxKYhfFruUbF0xwPduSA7lr2NnYjE0Yo3Sk5oTCRRWFpQVS0P4uP5WmxrIVtwiWyb6+I9eF84hR0DxsVdBev7/uHeRNtSmXCGZ/I14w+Ig/52y4jdWPPJLLwds2/xnKoz8LVDhR47I9JAA0DBVcYQSDfCMGOLagnlf+n/KzcRHdnCueUKONZ0uHIFwFkSiJEOOUbK4mFlwXuft8+xaFqRsMwSAPto/tNWUDoCz1RnokPltdkTHM94XZYig8j75Nu5GLBkF+E+zqLWbSxSEwbgV6pBjWe1UjKt9SgMfye2tqGvaAQw00SUQMkHE/g6rpphMQ3ZjA+fExvqvkTxHhqG1Q3lqppCv4D8DOuEXX1/1xrS1oGRI6K/FrQfuks0xID7MO+Oxz0=
+
   matrix:
-    - python=2.7
-      CONDA_PY=27
-    - python=3.5
-      CONDY_PY=35
+  - python=2.7 CONDA_PY=27
+  - python=3.5 CONDY_PY=35
 
 matrix:
   exclude:
-    - os: linux
-      compiler: clang
-    - os: osx
-      compiler: gcc
+  - os: linux
+    compiler: clang
+  - os: osx
+    compiler: gcc
 
 cache:
   apt: true
@@ -54,6 +55,9 @@ install:
 
 script:
 - conda build -q tools/conda-recipe
+
+after_success:
+- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_JOB_NUMBER == "1" && bash tools/ci/travis/make_docs.sh
 
 notifications:
   email: false
