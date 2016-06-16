@@ -14,7 +14,7 @@ namespace readdy {
         namespace _internal {
             class KernelPluginDecorator : public readdy::model::Kernel {
             protected:
-                std::shared_ptr<readdy::model::Kernel> reference;
+                std::unique_ptr<readdy::model::Kernel> reference;
                 boost::dll::shared_library lib;
 
             public:
@@ -30,12 +30,23 @@ namespace readdy {
                 virtual readdy::model::KernelContext& getKernelContext() const override;
 
                 virtual const std::string &getName() const override;
+
+                virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
+
+                virtual std::vector<std::string> getAvailablePotentials() const override;
+
+            protected:
+                virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
+
+
             };
 
             class InvalidPluginException : public std::runtime_error {
             public:
                 InvalidPluginException(const std::string &__arg);
             };
+
+            const std::string loadKernelName(const boost::filesystem::path& sharedLib);
         }
     }
 }

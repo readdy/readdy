@@ -10,10 +10,21 @@
 
 #include <readdy/model/KernelContext.h>
 #include "gtest/gtest.h"
+#include <readdy/common/Utils.h>
+#include <boost/log/trivial.hpp>
 
 namespace m = readdy::model;
 
 namespace {
+    struct NOOPPotential : public m::potentials::PotentialOrder2 {
+        NOOPPotential() : PotentialOrder2("no op") { }
+
+        virtual double calculateEnergy(const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {return 0;}
+        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
+        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
+
+    };
+
     TEST(KernelContext, SetGetKBT) {
         m::KernelContext ctx;
         ctx.setKBT(42);
@@ -37,4 +48,14 @@ namespace {
         EXPECT_EQ(box_size[1], 11);
         EXPECT_EQ(box_size[2], 12);
     }
+
+    TEST(KernelContext, PotentialMap) {
+        m::KernelContext ctx;
+        auto p1 = NOOPPotential();
+        ctx.registerOrder2Potential(p1, "a", "b");
+        ctx.registerOrder2Potential(p1, "b", "a");
+        auto&& vector = ctx.getOrder2Potentials("b", "a");
+        EXPECT_EQ(vector.size(), 2);
+    }
+
 }

@@ -9,7 +9,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/model/Observables.h>
 #include <readdy/Simulation.h>
 #include "gtest/gtest.h"
 
@@ -18,7 +17,7 @@ namespace m = readdy::model;
 namespace {
     class  TestObservables : public ::testing::Test {
     protected:
-        std::shared_ptr<m::Kernel> kernel;
+        std::unique_ptr<m::Kernel> kernel;
 
         TestObservables() {
             // if we're in conda
@@ -32,7 +31,7 @@ namespace {
                 pluginDir = _env.append(pluginDir);
             }
             readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-            kernel = readdy::plugin::KernelProvider::getInstance().get("SingleCPU");
+            kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         }
     };
 
@@ -61,11 +60,15 @@ namespace {
         }
 
         const auto&& result = obs->getResult();
-
+        const auto&& positions = kernel->getKernelStateModel().getParticlePositions();
+        auto it_pos = positions.begin();
         int j = 0;
-        for(auto&& p : *result) {
-            BOOST_LOG_TRIVIAL(debug) << "foo " << ++j << " / " << result->size() << " (" << particles.size() << ")";
+        for(auto it = result->begin(); it != result->end(); it = std::next(it)) {
+            EXPECT_TRUE(*it == *it_pos);
+            it_pos++;
+            ++j;
         }
+        EXPECT_TRUE(j == 100);
         connection.disconnect();
     }
 
@@ -82,7 +85,7 @@ namespace {
 
         const auto&& result = o3->getResult();
         for(auto&& p : *result) {
-            // foo
+            // todo
         }
 
         connection.disconnect();

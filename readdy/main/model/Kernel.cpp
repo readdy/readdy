@@ -112,7 +112,7 @@ namespace readdy {
             return std::make_tuple(std::move(obs), connection);
         }
 
-        _internal::ObservableFactory &Kernel::getObservableFactory() const {
+        const _internal::ObservableFactory &Kernel::getObservableFactory() const {
             return *pimpl->observableFactory;
         }
 
@@ -133,6 +133,22 @@ namespace readdy {
                 e.second.unblock();
             }
             (*pimpl->signal)(getKernelStateModel().getCurrentTimeStep());
+        }
+
+        void Kernel::deregisterObservable(ObservableBase *const observable) {
+            pimpl->observableBlocks.erase(observable);
+        }
+
+        std::vector<std::string> Kernel::getAvailablePotentials() const {
+            return std::vector<std::string>();
+        }
+
+        std::unique_ptr<readdy::model::potentials::Potential> Kernel::createPotential(std::string &name) const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
+        }
+
+        potentials::PotentialFactory &Kernel::getPotentialFactory() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
 

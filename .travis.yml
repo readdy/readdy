@@ -1,4 +1,5 @@
-sudo: false
+dist: trusty
+sudo: required
 language: cpp
 compiler:
   - gcc
@@ -8,13 +9,12 @@ os:
  - osx
 
 osx_image: beta-xcode6.1
+
 addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
-    - llvm-toolchain-precise-3.7
     packages:
-    - clang-3.7
     - g++-5
     - gcc-5
 

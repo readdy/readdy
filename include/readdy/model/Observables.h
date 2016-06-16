@@ -14,6 +14,7 @@
 #include <readdy/model/Vec3.h>
 #include <vector>
 #include <readdy/common/Types.h>
+#include <iostream>
 
 namespace readdy {
     namespace model {

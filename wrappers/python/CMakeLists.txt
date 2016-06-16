@@ -42,15 +42,19 @@ MESSAGE(STATUS "Python version: ${PYTHON_VERSION_STRING}")
 MESSAGE(STATUS "Boost python library: ${Boost_PYTHON_LIBRARIES}")
 
 # set output directory variable for modules
-SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/readdy/_internal")
+IF(READDY_DEBUG_PYTHON_MODULES)
+    SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/python/readdy/_internal")
+ELSE()
+    SET(PYTHON_CPP_MODULES_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/readdy/_internal")
+ENDIF()
 
 # add modules
-ADD_SUBDIRECTORY(modules)
+ADD_SUBDIRECTORY(src/cxx)
 
 # install via setup.py
 FIND_PROGRAM(PYTHON "python")
 if (PYTHON)
-    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")
+    set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/src/python/setup.py")
     set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
     set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp")
 

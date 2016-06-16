@@ -10,6 +10,8 @@
 #include <ostream>
 #include <iostream>
 #include <memory>
+#include <tuple>
+#include <boost/functional/hash.hpp>
 
 namespace readdy {
     namespace utils {
@@ -31,10 +33,11 @@ namespace readdy {
 
         namespace collections {
             template<typename MapType, typename KeyType = std::string>
-            inline bool hasKey(const MapType &map, const KeyType& key) {
+            inline bool hasKey(const MapType &map, const KeyType &key) {
                 return map.find(key) != map.end();
             }
         }
+
     }
 }
 

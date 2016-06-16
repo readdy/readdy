@@ -38,8 +38,7 @@ namespace readdy {
                 return t_current;
             }
 
-            virtual ~ObservableBase() {
-            };
+            virtual ~ObservableBase();
 
             virtual void callback(readdy::model::time_step_type t) {
                 if(t_current == t) return;
@@ -52,7 +51,7 @@ namespace readdy {
         protected:
             unsigned int stride;
             readdy::model::Kernel *const kernel;
-            readdy::model::time_step_type t_current;
+            readdy::model::time_step_type t_current = 0;
         };
 
         template<typename Result>
@@ -76,10 +75,9 @@ namespace readdy {
         public:
             typedef Obs1_t Observable1_type;
             typedef Obs2_t Observable2_type;
-            CombinerObservable(Kernel *const kernel, Obs1_t * obs1, Obs2_t * obs2, unsigned int stride = 1) : readdy::model::Observable<Res_t>::Observable(kernel, stride) {
-                CombinerObservable::obs1 = obs1;
-                CombinerObservable::obs2 = obs2;
-            }
+            CombinerObservable(Kernel *const kernel, Obs1_t * obs1, Obs2_t * obs2, unsigned int stride = 1)
+                    : readdy::model::Observable<Res_t>::Observable(kernel, stride)
+                    , obs1(obs1), obs2(obs2){ }
 
             virtual void callback(readdy::model::time_step_type t) override {
                 if(obs1->getCurrentTimeStep() != ObservableBase::t_current) obs1->callback(ObservableBase::t_current);

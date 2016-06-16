@@ -63,8 +63,9 @@ namespace readdy {
              * Sinking method that allows to move a kernel into the KernelProvider and thus make it available.
              *
              * @param kernel the kernel that should be moved
+             * @todo update docs
              */
-            void add(const std::shared_ptr<readdy::model::Kernel> &&kernel);
+            void add(const std::string name, const std::function<readdy::model::Kernel*()> creator);
 
             /**
              * Method that allows to add a kernel to the KernelProvider by providing a path to a shared lib (containing an implementation of a kernel).

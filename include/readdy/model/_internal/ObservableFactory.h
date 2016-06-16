@@ -33,18 +33,18 @@ namespace readdy {
 
                 void registerObservable(const std::string &name, const std::function<readdy::model::ObservableBase *()> create);
 
-                std::unique_ptr<ObservableBase> create(const std::string &name);
+                std::unique_ptr<ObservableBase> create(const std::string &name) const;
 
                 template<typename T, typename Obs1, typename Obs2>
-                inline std::unique_ptr<T> create(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) {
+                inline std::unique_ptr<T> create(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
                     return std::make_unique<T>(kernel, obs1, obs2, stride);
                 };
 
                 template<typename T>
-                inline std::unique_ptr<T> create() {
-                    const auto name = ObservableName<T>::value;
+                inline std::unique_ptr<T> create() const {
+                    const auto& name = ObservableName<T>::value;
                     if (readdy::utils::collections::hasKey(factory, name)) {
-                        return std::unique_ptr<T>(dynamic_cast<T *>(factory[name]()));
+                        return std::unique_ptr<T>(dynamic_cast<T *>(factory.find(name)->second()));
                     }
                     throw NoSuchObservableException("The requested observable \"" + std::string(name) + "\" was not registered in the observable factory.");
                 }

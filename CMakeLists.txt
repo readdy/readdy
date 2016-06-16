@@ -21,6 +21,8 @@ SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared
 
 # decide if api wrappers are being generated
 SET(READDY_BUILD_PYTHON_WRAPPER ON CACHE BOOL "Build Python wrappers")
+SET(READDY_DEBUG_PYTHON_MODULES OFF CACHE BOOL "If this flag is set to ON, the compiled python modules get installed directly into the source tree.")
+SET(READDY_DEBUG_CONDA_ROOT_DIR "" CACHE PATH "This only does something, if READDY_DEBUG_PYTHON_MODULES is set to ON. Then, it compiles the readdy libraries into the @conda@/lib directory.")
 
 # documentation target (make doc)
 SET(READDY_GENERATE_DOCUMENTATION_TARGET OFF CACHE BOOL "Should generate target for documentation or not")
@@ -73,9 +75,17 @@ ELSE (NOT CMAKE_BUILD_TYPE)
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
 # output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+IF(READDY_DEBUG_PYTHON_MODULES)
+    SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/lib)
+    SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/lib)
+    SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/bin)
+    SET(READDY_PLUGIN_OUTPUT_DIRECTORY ${READDY_DEBUG_CONDA_ROOT_DIR}/lib/readdy_plugins)
+ELSE()
+    SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+    SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+    SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    SET(READDY_PLUGIN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/readdy_plugins)
+ENDIF()
 
 # where to install
 IF(WIN32)
@@ -126,6 +136,41 @@ SET(READDY_PROJECT_NAME "ReaDDy")
 IF (READDY_LOG_CMAKE_CONFIGURATION)
     INCLUDE(LogConfiguration)
 ENDIF (READDY_LOG_CMAKE_CONFIGURATION)
+
+#####################################
+#                                   #
+# setup testing                     #
+#                                   #
+#####################################
+
+IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_CREATE_TEST_TARGET)
+
+    SET(GOOGLETEST_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
+    SET(GOOGLETEST_INCLUDE ${GOOGLETEST_ROOT}/googletest/include)
+    SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
+    SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
+
+    ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
+    SET(BUILD_GTEST ON)
+    SET(BUILD_GMOCK OFF)
+    SET(gtest_force_shared_crt ON)
+    SET(BUILD_SHARED_LIBS ON)
+    SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
+            LINK_FLAGS "${EXTRA_LINK_FLAGS}"
+            COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
+            )
+
+    ENABLE_TESTING()
+
+ELSE()
+    MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
+    # disable testing if there was no submodule
+    SET(READDY_CREATE_TEST_TARGET OFF)
+    # if tests are disabled, so are the corresponding memory checks
+    SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF)
+    # no installation of test executable
+    SET(READDY_INSTALL_UNIT_TEST_EXECUTABLE OFF)
+ENDIF()
 
 #####################################
 #                                   #
@@ -194,33 +239,12 @@ ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 # tests                             #
 #                                   #
 #####################################
-IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_CREATE_TEST_TARGET)
-    MESSAGE(STATUS "The submodule googletest was initialized, thus enable testing")
+IF (READDY_CREATE_TEST_TARGET)
 
-    SET(GOOGLETEST_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
-    SET(GOOGLETEST_INCLUDE ${GOOGLETEST_ROOT}/googletest/include)
-    SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
-    SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
-
-    ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
-    SET(BUILD_GTEST ON)
-    SET(BUILD_GMOCK OFF)
-    SET(gtest_force_shared_crt ON)
-    SET(BUILD_SHARED_LIBS ON)
-    SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
-            LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-            COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-    )
-
-    ENABLE_TESTING()
     INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
     ADD_SUBDIRECTORY(readdy/test)
     ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
 
-ELSE ()
-    MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
-    # if tests are disabled, so are the corresponding memory checks
-    SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF)
 ENDIF ()
 
 #####################################

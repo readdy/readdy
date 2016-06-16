@@ -14,12 +14,18 @@
 #include <array>
 #include <memory>
 #include <boost/predef.h>
+#include <vector>
+#include <unordered_set>
+#include <readdy/model/potentials/PotentialOrder1.h>
+#include <readdy/model/potentials/PotentialOrder2.h>
+
 #if BOOST_OS_MAC
 #include <string>
 #endif
 
 namespace readdy {
     namespace model {
+        class ParticleTypePairHasher;
         class KernelContext {
         public:
             double getKBT() const;
@@ -38,8 +44,24 @@ namespace readdy {
             double getDiffusionConstant(const unsigned int particleType) const;
             void setDiffusionConstant(const std::string& particleType, double D);
 
+            double getParticleRadius(const std::string& type) const;
+            double getParticleRadius(const unsigned int& type) const;
+            void setParticleRadius(const std::string& type, const double r);
+
             double getTimeStep() const;
             void setTimeStep(double dt);
+
+            void deregisterPotential(const boost::uuids::uuid &potential);
+
+            void registerOrder1Potential(potentials::PotentialOrder1 &potential, const std::string &type);
+            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const std::string& type) const;
+            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const unsigned int type) const;
+            std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
+
+            void registerOrder2Potential(potentials::PotentialOrder2 &potential, const std::string &type1, const std::string &type2);
+            std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const std::string &type1, const std::string &type2) const;
+            std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+            std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> getAllOrder2RegisteredPotentialTypes() const;
 
             // ctor and dtor
             KernelContext();
@@ -59,6 +81,7 @@ namespace readdy {
         private:
             struct Impl;
             std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
+            unsigned int getOrCreateTypeId(const std::string &name);
         };
 
     }
