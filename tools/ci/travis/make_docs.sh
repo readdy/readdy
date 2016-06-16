@@ -20,8 +20,8 @@ function set_this_up {
     yes | pip install doxypypy
 }
 function make_doc {
+    mkdir $HOME/_readdy_docs || true
     cd $HOME/_readdy_docs
-    mkdir $HOME/_readdy_docs
     # cant reliably determine cpu count in a docker container,
     # therefore fix this value.
     if [ "$TRAVIS" == "true" ]; then CPU_COUNT=2; fi
