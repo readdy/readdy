@@ -18,6 +18,7 @@ addons:
     packages:
     - g++-5
     - gcc-5
+    - doxygen
 
 env:
   global:
