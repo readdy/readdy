@@ -19,6 +19,7 @@ addons:
     - g++-5
     - gcc-5
     - doxygen
+    - graphviz
 
 env:
   global:
