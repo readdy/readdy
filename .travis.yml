@@ -58,7 +58,7 @@ script:
 - conda build -q tools/conda-recipe
 
 after_success:
-- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_JOB_NUMBER == "1" && bash tools/ci/travis/make_docs.sh
+- tools/ci/travis/make_docs.sh
 
 notifications:
   email: false
