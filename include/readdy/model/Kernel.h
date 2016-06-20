@@ -19,7 +19,7 @@
 #include <boost/filesystem.hpp>
 #include <readdy/model/Plugin.h>
 #include <boost/log/sources/logger.hpp>
-#include <readdy/model/Program.h>
+#include <readdy/model/programs/Program.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/_internal/ObservableFactory.h>
@@ -27,6 +27,7 @@
 #include <boost/signals2/shared_connection_block.hpp>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/potentials/PotentialFactory.h>
+#include <readdy/model/programs/ProgramFactory.h>
 
 namespace readdy {
     namespace model {
@@ -71,12 +72,14 @@ namespace readdy {
              * @see getAvailablePrograms()
              * @return The program if it was available, otherwise nullptr
              */
-            virtual std::unique_ptr<Program> createProgram(const std::string &name) const;
+            virtual std::unique_ptr<programs::Program> createProgram(const std::string &name) const {
+                return getProgramFactory().createProgram(name);
+            };
 
 
             template<typename ProgramType>
-            std::unique_ptr<Program> createProgram() const {
-                return createProgram(getProgramName<ProgramType>());
+            std::unique_ptr<ProgramType> createProgram() const {
+                return getProgramFactory().createProgramAs<ProgramType>(programs::getProgramName<ProgramType>());
             }
 
             /**
@@ -135,15 +138,7 @@ namespace readdy {
              */
             std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::connection> registerObservable(const ObservableType &observable, unsigned int stride);
 
-            /**
-             * Creates a specified program and returns a pointer to it in the templated type.
-             *
-             * @return a pointer to the created program.
-             */
-            template<class T>
-            std::unique_ptr<T> createProgramAs(std::string name) {
-                return std::dynamic_pointer_cast<T>(createProgram(name));
-            }
+            virtual readdy::model::programs::ProgramFactory &getProgramFactory() const;
 
             /**
              * Returns a vector containing all available program names for this specific kernel instance.
@@ -151,7 +146,9 @@ namespace readdy {
              * @see createProgram(name)
              * @return The program names.
              */
-            virtual std::vector<std::string> getAvailablePrograms() const;
+            std::vector<std::string> getAvailablePrograms() const {
+                return getProgramFactory().getAvailablePrograms();
+            }
 
             /**
              * @todo implement this properly

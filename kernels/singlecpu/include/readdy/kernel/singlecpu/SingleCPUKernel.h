@@ -28,15 +28,14 @@ namespace readdy {
                 // factory method
                 static std::unique_ptr<SingleCPUKernel> create();
 
-                virtual std::unique_ptr<readdy::model::Program> createProgram(const std::string& name) const override;
                 virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
                 readdy::kernel::singlecpu::SingleCPUKernelStateModel& getKernelStateModelSingleCPU() const;
-
-                virtual std::vector<std::string> getAvailablePrograms() const override;
 
                 virtual readdy::model::KernelContext& getKernelContext() const override;
 
                 readdy::model::RandomProvider& getRandomProvider() const;
+
+                virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
                 virtual std::vector<std::string> getAvailablePotentials() const override;
 

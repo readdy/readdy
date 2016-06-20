@@ -10,7 +10,7 @@
 #ifndef READDY_MAIN_SINGLECPUADDPARTICLEPROGRAM_H
 #define READDY_MAIN_SINGLECPUADDPARTICLEPROGRAM_H
 
-#include <readdy/model/Programs.h>
+#include <readdy/model/programs/Programs.h>
 #include <readdy/model/Particle.h>
 #include <vector>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
@@ -19,7 +19,7 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace programs {
-                class SingleCPUAddParticleProgram : public readdy::model::AddParticleProgram {
+                class SingleCPUAddParticleProgram : public readdy::model::programs::AddParticleProgram {
                 public:
                     SingleCPUAddParticleProgram(SingleCPUKernel* kernel);
 

@@ -37,14 +37,6 @@ readdy::model::KernelStateModel& readdy::plugin::_internal::KernelPluginDecorato
     return (*reference).getKernelStateModel();
 }
 
-std::unique_ptr<readdy::model::Program> readdy::plugin::_internal::KernelPluginDecorator::createProgram(const std::string& name) const {
-    return (*reference).createProgram(name);
-}
-
-std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAvailablePrograms() const {
-    return (*reference).getAvailablePrograms();
-}
-
 readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
     reference.reset();
 }
@@ -63,6 +55,10 @@ std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAv
 
 readdy::model::potentials::PotentialFactory &readdy::plugin::_internal::KernelPluginDecorator::getPotentialFactory() const {
     return reference->getPotentialFactory();
+}
+
+readdy::model::programs::ProgramFactory &readdy::plugin::_internal::KernelPluginDecorator::getProgramFactory() const {
+    return reference->getProgramFactory();
 }
 
 

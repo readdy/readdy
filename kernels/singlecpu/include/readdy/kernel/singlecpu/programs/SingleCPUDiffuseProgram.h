@@ -10,7 +10,7 @@
 #ifndef READDY_MAIN_SINGLECPUDIFFUSEPROGRAM_H
 #define READDY_MAIN_SINGLECPUDIFFUSEPROGRAM_H
 
-#include <readdy/model/Programs.h>
+#include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
@@ -18,11 +18,10 @@ namespace readdy {
         namespace singlecpu {
 
             namespace programs {
-                class SingleCPUDiffuseProgram : public readdy::model::DiffuseProgram{
+                class SingleCPUDiffuseProgram : public readdy::model::programs::DiffuseProgram{
 
                 public:
                     SingleCPUDiffuseProgram(SingleCPUKernel *kernel);
-
                     virtual ~SingleCPUDiffuseProgram() override = default;
 
                     virtual void execute() override;

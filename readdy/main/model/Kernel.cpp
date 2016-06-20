@@ -61,14 +61,6 @@ namespace readdy {
             }
         }
 
-        std::unique_ptr<Program> Kernel::createProgram(const std::string &name) const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
-        std::vector<std::string> Kernel::getAvailablePrograms() const {
-            return std::vector<std::string>();
-        }
-
         readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
             throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
@@ -148,6 +140,10 @@ namespace readdy {
         }
 
         potentials::PotentialFactory &Kernel::getPotentialFactory() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
+        }
+
+        readdy::model::programs::ProgramFactory &Kernel::getProgramFactory() const {
             throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
