@@ -18,11 +18,11 @@ namespace readdy {
             class Fusion : public Reaction {
 
             public:
-                Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &radius) :
-                        Reaction(name, rate), from1(from1), from2(from2), to(to), radius(radius) { }
+                Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance) :
+                        Reaction(name, rate), from1(from1), from2(from2), to(to), eductDistance(eductDistance) { }
 
-                const double getRadius() const {
-                    return radius;
+                const double getEductDistance() const {
+                    return eductDistance;
                 }
 
                 unsigned int getFrom1() const {
@@ -39,7 +39,7 @@ namespace readdy {
 
             protected:
                 const unsigned int from1, from2, to;
-                const double radius;
+                const double eductDistance;
             };
         }
     }

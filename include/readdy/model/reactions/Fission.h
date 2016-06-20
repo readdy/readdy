@@ -18,8 +18,8 @@ namespace readdy {
             class Fission : public Reaction {
 
             public:
-                Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double &rate) :
-                        Reaction(name, rate), from(from), to1(to1), to2(to2)
+                Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate) :
+                        Reaction(name, rate), from(from), to1(to1), to2(to2), productDistance(productDistance)
                 { }
 
                 unsigned int getFrom() const {
@@ -34,8 +34,13 @@ namespace readdy {
                     return to2;
                 }
 
+                const double getProductDistance() const {
+                    return productDistance;
+                }
+
             protected:
                 const unsigned int from, to1, to2;
+                const double productDistance;
             };
         }
     }

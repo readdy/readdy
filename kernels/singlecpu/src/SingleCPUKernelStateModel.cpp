@@ -28,7 +28,7 @@ namespace readdy {
                 readdy::model::KernelContext const *context;
             };
 
-            void SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces, bool distances) {
+            void SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces) {
                 const auto timeStepChanged = t != pimpl->t;
                 pimpl->t = t;
                 if (timeStepChanged) {

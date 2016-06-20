@@ -18,8 +18,8 @@ namespace readdy {
             class Enzymatic : public Reaction {
 
             public:
-                Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double &rate, const double &radius) :
-                        Reaction(name, rate), catalyst(catalyst), from(from), to(to), radius(radius) { }
+                Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double &rate, const double &eductDistance) :
+                        Reaction(name, rate), catalyst(catalyst), from(from), to(to), eductDistance(eductDistance) { }
 
 
                 unsigned int getCatalyst() const {
@@ -34,13 +34,13 @@ namespace readdy {
                     return to;
                 }
 
-                double getRadius() const {
-                    return radius;
+                double getEductDistance() const {
+                    return eductDistance;
                 }
 
             protected:
                 const unsigned int catalyst, from, to;
-                const double radius;
+                const double eductDistance;
             };
         }
     }

@@ -10,6 +10,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/SingleCPUKernelStateModel.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUTestProgram.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUAddParticleProgram.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUDiffuseProgram.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUUpdateStateModelProgram.cpp")
 
 # --- potentials ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/SingleCPUPotentialFactory.cpp")

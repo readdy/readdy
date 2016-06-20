@@ -16,9 +16,21 @@ namespace readdy {
     namespace model {
         class Program {
         public:
+            Program(const std::string& name) : name(name) {};
             virtual void execute() = 0;
             virtual ~Program() = default;
+
+        protected:
+            const std::string name;
         };
+        namespace _internal {
+            template<typename T>
+            struct ProgramName { static const std::string value; };
+        }
+        template<typename ProgramType>
+        const std::string& getProgramName() {
+            return readdy::model::_internal::ProgramName<ProgramType>::value;
+        }
     }
 }
 

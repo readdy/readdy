@@ -73,6 +73,12 @@ namespace readdy {
              */
             virtual std::unique_ptr<Program> createProgram(const std::string &name) const;
 
+
+            template<typename ProgramType>
+            std::unique_ptr<Program> createProgram() const {
+                return createProgram(getProgramName<ProgramType>());
+            }
+
             /**
              * Get a vector of the registered predefined observable names, which can be created by createObservable(name).
              *

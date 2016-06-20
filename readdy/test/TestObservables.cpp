@@ -56,7 +56,7 @@ namespace {
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
             diffuseProgram->execute();
-            kernel->getKernelStateModel().updateModel(t, false, false);
+            kernel->getKernelStateModel().updateModel(t, false);
         }
 
         const auto&& result = obs->getResult();
@@ -80,7 +80,7 @@ namespace {
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
             diffuseProgram->execute();
-            kernel->getKernelStateModel().updateModel(t, false, false);
+            kernel->getKernelStateModel().updateModel(t, false);
         }
 
         const auto&& result = o3->getResult();

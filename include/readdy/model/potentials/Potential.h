@@ -52,7 +52,6 @@ namespace readdy {
             namespace _internal {
                 template<typename T>
                 struct PotentialName { static const std::string value; };
-
             }
 
             template<typename PotentialType>

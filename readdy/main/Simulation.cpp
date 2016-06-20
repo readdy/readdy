@@ -5,6 +5,7 @@
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
+#include <readdy/model/Programs.h>
 
 using namespace readdy;
 
@@ -59,9 +60,12 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
     }
     pimpl->kernel->getKernelContext().setTimeStep(timeStep);
     {
-        auto &&diffuseProgram = pimpl->kernel->createProgram("Diffuse");
-        for (auto &&t = 0; t < steps; ++t) {
+        auto &&diffuseProgram = pimpl->kernel->createProgram<readdy::model::DiffuseProgram>();
+        auto &&updateModelProgram = pimpl->kernel->createProgram<readdy::model::UpdateStateModelProgram>();
+        auto updateModelProgramPtr = dynamic_cast<readdy::model::UpdateStateModelProgram*>(updateModelProgram.get());
+        for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
             diffuseProgram->execute();
+            updateModelProgramPtr->execute_t(t);
         }
     }
 }

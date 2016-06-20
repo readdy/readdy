@@ -26,9 +26,10 @@ namespace readdy {
                 using factory_ptr_type = std::shared_ptr<SingleCPUProgramFactory>;
 
                 factory_ptr_type ptr = std::make_shared<SingleCPUProgramFactory>(this);
-                (*pimpl).programFactories.emplace(programs::SingleCPUTestProgram::getName(), ptr);
-                (*pimpl).programFactories.emplace(programs::SingleCPUAddParticleProgram::getName(), ptr);
-                (*pimpl).programFactories.emplace(programs::SingleCPUDiffuseProgram::getName(), ptr);
+                (*pimpl).programFactories.emplace(readdy::model::getProgramName<readdy::model::TestProgram>(), ptr);
+                (*pimpl).programFactories.emplace(readdy::model::getProgramName<readdy::model::AddParticleProgram>(), ptr);
+                (*pimpl).programFactories.emplace(readdy::model::getProgramName<readdy::model::DiffuseProgram>(), ptr);
+                (*pimpl).programFactories.emplace(readdy::model::getProgramName<readdy::model::UpdateStateModelProgram>(), ptr);
 
 
                 (*pimpl).potentials = std::make_unique<potentials::SingleCPUPotentialFactory>(this);

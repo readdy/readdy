@@ -52,6 +52,11 @@ namespace readdy {
             double getTimeStep() const;
             void setTimeStep(double dt);
 
+            const boost::uuids::uuid& registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate);
+            const boost::uuids::uuid& registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate, const double &eductDistance);
+            const boost::uuids::uuid& registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance, const double &rate);
+            const boost::uuids::uuid& registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate, const double &eductDistance);
+
             void deregisterPotential(const boost::uuids::uuid &potential);
 
             const boost::uuids::uuid& registerOrder1Potential(potentials::PotentialOrder1 const* const potential, const std::string &type);
