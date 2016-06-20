@@ -63,6 +63,10 @@ namespace readdy {
 
                 }
 
+                potentials::CubePotential *CubePotential::replicate() const {
+                    return new CubePotential(*this);
+                }
+
 
             }
         }

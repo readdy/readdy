@@ -28,6 +28,10 @@ namespace readdy {
                     virtual double calculateEnergy(const vec_t& x_i, const vec_t& x_j) override;
                     virtual void calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) override;
                     virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) override;
+
+                    virtual potentials::HarmonicRepulsion *replicate() const override;
+
+
                 };
 
             }

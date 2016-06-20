@@ -31,6 +31,8 @@ namespace readdy {
 
                     virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) override;
 
+                    virtual potentials::CubePotential *replicate() const override;
+
 
                 };
 

@@ -25,9 +25,10 @@ namespace readdy {
                         kernel(kernel)
                 { }
 
+                virtual CubePotential *replicate() const override = 0;
+
                 virtual void configureForType(const unsigned int &type) override {
-                    readdy::model::KernelContext ctx = kernel->getKernelContext();
-                    particleRadius = ctx.getParticleRadius(type);
+                    particleRadius = kernel->getKernelContext().getParticleRadius(type);
                     for (auto i = 0; i < 3; i++) {
                         if (origin[i] < origin[i] + extent[i]) {
                             min[i] = origin[i];

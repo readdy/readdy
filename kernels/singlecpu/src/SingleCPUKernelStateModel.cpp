@@ -64,7 +64,7 @@ namespace readdy {
                             auto type_j = *(pimpl->particleData->begin_types() + j);
                             const auto &pos_i = *(pimpl->particleData->begin_positions() + i);
                             const auto &pos_j = *(pimpl->particleData->begin_positions() + j);
-                            const auto &&potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
+                            const auto &potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
                             for (const auto &potential : potentials) {
                                 potential->calculateForceAndEnergy(*(pimpl->particleData->begin_forces() + i), pimpl->currentEnergy, pos_i, pos_j);
                             }

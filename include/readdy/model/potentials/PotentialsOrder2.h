@@ -25,6 +25,8 @@ namespace readdy {
                         PotentialOrder2(_internal::PotentialName<HarmonicRepulsion<KernelType>>::value),
                         kernel(kernel) { }
 
+                virtual HarmonicRepulsion *replicate() const override = 0;
+
                 double getSumOfParticleRadii() const {
                     return sumOfParticleRadii;
                 }
@@ -43,12 +45,10 @@ namespace readdy {
                     HarmonicRepulsion::forceConstant = forceConstant;
                 }
                 virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
-                    readdy::model::KernelContext ctx = kernel->getKernelContext();
-                    auto r1 = ctx.getParticleRadius(type1);
-                    auto r2 = ctx.getParticleRadius(type2);
+                    auto r1 = kernel->getKernelContext().getParticleRadius(type1);
+                    auto r2 = kernel->getKernelContext().getParticleRadius(type2);
                     sumOfParticleRadii = r1+r2;
                     sumOfParticleRadiiSquared = sumOfParticleRadii * sumOfParticleRadii;
-                    // todo
                 }
 
             protected:

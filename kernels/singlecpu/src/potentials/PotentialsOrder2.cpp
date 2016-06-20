@@ -48,6 +48,11 @@ namespace readdy {
 
                 HarmonicRepulsion::HarmonicRepulsion(const SingleCPUKernel *const kernel) : readdy::model::potentials::HarmonicRepulsion<SingleCPUKernel>(kernel) { }
 
+                potentials::HarmonicRepulsion *HarmonicRepulsion::replicate() const {
+                    return new HarmonicRepulsion(*this);
+                }
+
+
             }
         }
     }

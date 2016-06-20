@@ -27,6 +27,9 @@ namespace readdy {
 
             virtual void calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_i, const model::Vec3 &x_j) override;
 
+            virtual PotentialOrder2Wrapper *replicate() const override;
+
+
         protected:
             std::shared_ptr<boost::python::object> calcEnergyFun;
             std::shared_ptr<boost::python::object> calcForceFun;

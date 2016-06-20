@@ -11,7 +11,7 @@
 #include <readdy/model/KernelContext.h>
 #include "gtest/gtest.h"
 #include <readdy/common/Utils.h>
-#include <boost/log/trivial.hpp>
+#include <readdy/common/make_unique.h>
 
 namespace m = readdy::model;
 
@@ -22,6 +22,9 @@ namespace {
         virtual double calculateEnergy(const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {return 0;}
         virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
         virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
+
+        virtual NOOPPotential *replicate() const override { return new NOOPPotential(*this); }
+
 
     };
 
@@ -51,9 +54,9 @@ namespace {
 
     TEST(KernelContext, PotentialMap) {
         m::KernelContext ctx;
-        auto p1 = NOOPPotential();
-        ctx.registerOrder2Potential(p1, "a", "b");
-        ctx.registerOrder2Potential(p1, "b", "a");
+        auto p1 = std::make_unique<NOOPPotential>();
+        ctx.registerOrder2Potential(p1.get(), "a", "b");
+        ctx.registerOrder2Potential(p1.get(), "b", "a");
         auto&& vector = ctx.getOrder2Potentials("b", "a");
         EXPECT_EQ(vector.size(), 2);
     }

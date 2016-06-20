@@ -46,6 +46,12 @@ namespace readdy {
             energy += boost::python::extract<double>((*calcEnergyFun)(x_i, x_j));
             force += boost::python::extract<readdy::model::Vec3>((*calcForceFun)(x_i, x_j));
         }
+
+        PotentialOrder2Wrapper *PotentialOrder2Wrapper::replicate() const {
+            return new PotentialOrder2Wrapper(*this);
+        }
+
+
     }
 
 

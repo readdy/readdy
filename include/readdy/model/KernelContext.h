@@ -53,14 +53,14 @@ namespace readdy {
 
             void deregisterPotential(const boost::uuids::uuid &potential);
 
-            void registerOrder1Potential(potentials::PotentialOrder1 &potential, const std::string &type);
-            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const std::string& type) const;
-            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const unsigned int type) const;
+            const boost::uuids::uuid& registerOrder1Potential(potentials::PotentialOrder1 const* const potential, const std::string &type);
+            const std::vector<std::unique_ptr<potentials::PotentialOrder1>>& getOrder1Potentials(const std::string& type) const;
+            const std::vector<std::unique_ptr<potentials::PotentialOrder1>>& getOrder1Potentials(const unsigned int type) const;
             std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
 
-            void registerOrder2Potential(potentials::PotentialOrder2 &potential, const std::string &type1, const std::string &type2);
-            std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const std::string &type1, const std::string &type2) const;
-            std::vector<potentials::PotentialOrder2*> getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+            const boost::uuids::uuid& registerOrder2Potential(potentials::PotentialOrder2 const* const potential, const std::string &type1, const std::string &type2);
+            const std::vector<std::unique_ptr<potentials::PotentialOrder2>>& getOrder2Potentials(const std::string &type1, const std::string &type2) const;
+            const std::vector<std::unique_ptr<potentials::PotentialOrder2>>& getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
             std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> getAllOrder2RegisteredPotentialTypes() const;
 
             // ctor and dtor
@@ -74,9 +74,9 @@ namespace readdy {
             KernelContext &operator=(KernelContext &&rhs);
 
             // copy
-            KernelContext(const KernelContext &rhs);
+            KernelContext(const KernelContext &rhs) = delete;
 
-            KernelContext &operator=(const KernelContext &rhs);
+            KernelContext &operator=(const KernelContext &rhs) = delete;
 
         private:
             struct Impl;
