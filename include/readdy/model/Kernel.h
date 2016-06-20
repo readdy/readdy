@@ -162,7 +162,12 @@ namespace readdy {
             virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const;
 
             template<typename T>
-            std::unique_ptr<T> createPotentialAs(std::string& name) const{
+            std::unique_ptr<T> createPotentialAs() const {
+                return createPotentialAs<T>(readdy::model::potentials::getPotentialName<T>());
+            }
+
+            template<typename T>
+            std::unique_ptr<T> createPotentialAs(const std::string &name) const {
                 return getPotentialFactory().createPotentialAs<T>(name);
             }
 

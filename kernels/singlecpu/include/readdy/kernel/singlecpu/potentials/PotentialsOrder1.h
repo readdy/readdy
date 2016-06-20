@@ -21,9 +21,9 @@ namespace readdy {
             class SingleCPUKernel;
             namespace potentials {
 
-                class CubePotential : public readdy::model::potentials::CubePotential<SingleCPUKernel> {
+                class SingleCPUCubePotential : public readdy::model::potentials::CubePotential {
                 public:
-                    CubePotential(const SingleCPUKernel *const Kernel);
+                    SingleCPUCubePotential(const SingleCPUKernel *const kernel);
 
                     virtual double calculateEnergy(const readdy::model::Vec3 &position) override;
 
@@ -31,7 +31,7 @@ namespace readdy {
 
                     virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) override;
 
-                    virtual potentials::CubePotential *replicate() const override;
+                    virtual potentials::SingleCPUCubePotential *replicate() const override;
 
 
                 };

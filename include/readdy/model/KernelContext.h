@@ -18,6 +18,7 @@
 #include <unordered_set>
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
+#include <readdy/model/reactions/Reaction.h>
 
 #if BOOST_OS_MAC
 #include <string>

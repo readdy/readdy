@@ -135,7 +135,6 @@ namespace readdy {
             }
             auto pot = potential->replicate();
             pot->configureForTypes(type1Id, type2Id);
-            pot->setId(boost::uuids::random_generator()());
             pimpl->potentialO2Registry[pp].push_back(std::unique_ptr<potentials::PotentialOrder2>(pot));
             return pimpl->potentialO2Registry[pp].back()->getId();
         }
@@ -163,7 +162,6 @@ namespace readdy {
             }
             auto ptr = potential->replicate();
             ptr->configureForType(typeId);
-            ptr->setId(boost::uuids::random_generator()());
             pimpl->potentialO1Registry[typeId].push_back(std::unique_ptr<potentials::PotentialOrder1>(ptr));
             return pimpl->potentialO1Registry[typeId].back()->getId();
         }

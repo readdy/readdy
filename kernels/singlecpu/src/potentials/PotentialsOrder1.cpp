@@ -15,11 +15,9 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace potentials {
-                CubePotential::CubePotential(const readdy::kernel::singlecpu::SingleCPUKernel *const Kernel) : readdy::model::potentials::CubePotential<SingleCPUKernel>(Kernel) {
+                SingleCPUCubePotential::SingleCPUCubePotential(const readdy::kernel::singlecpu::SingleCPUKernel *const kernel) : readdy::model::potentials::CubePotential(kernel) { }
 
-                }
-
-                double CubePotential::calculateEnergy(const readdy::model::Vec3 &position) {
+                double SingleCPUCubePotential::calculateEnergy(const readdy::model::Vec3 &position) {
 
                     auto r = particleRadius;
                     if (!isConsiderParticleRadius()) r = 0;
@@ -39,7 +37,7 @@ namespace readdy {
                     return energy;
                 }
 
-                void CubePotential::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) {
+                void SingleCPUCubePotential::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) {
 
                     auto r = particleRadius;
                     if (!isConsiderParticleRadius()) r = 0;
@@ -56,15 +54,15 @@ namespace readdy {
 
                 }
 
-                void CubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) {
+                void SingleCPUCubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) {
 
                     energy += calculateEnergy(position);
                     calculateForce(force, position);
 
                 }
 
-                potentials::CubePotential *CubePotential::replicate() const {
-                    return new CubePotential(*this);
+                potentials::SingleCPUCubePotential *SingleCPUCubePotential::replicate() const {
+                    return new SingleCPUCubePotential(*this);
                 }
 
 

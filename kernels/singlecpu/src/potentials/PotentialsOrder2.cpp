@@ -15,7 +15,7 @@ namespace readdy {
         namespace singlecpu {
             namespace potentials {
 
-                double HarmonicRepulsion::calculateEnergy(const vec_t &x_i, const vec_t &x_j) {
+                double SingleCPUHarmonicRepulsion::calculateEnergy(const vec_t &x_i, const vec_t &x_j) {
                     auto distance = (x_j - x_i) * (x_j - x_i);
                     if (distance < getSumOfParticleRadiiSquared()) {
                         distance = std::sqrt(distance);
@@ -27,7 +27,7 @@ namespace readdy {
                     }
                 }
 
-                void HarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) {
+                void SingleCPUHarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) {
                     const auto &&r_ij = x_j - x_i;
                     auto distance = r_ij * r_ij;
                     if (distance < getSumOfParticleRadiiSquared()) {
@@ -36,7 +36,7 @@ namespace readdy {
                     }
                 }
 
-                void HarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) {
+                void SingleCPUHarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) {
                     const auto &&r_ij = x_j - x_i;
                     auto distance = r_ij * r_ij;
                     if (distance < getSumOfParticleRadiiSquared()) {
@@ -46,10 +46,10 @@ namespace readdy {
                     }
                 }
 
-                HarmonicRepulsion::HarmonicRepulsion(const SingleCPUKernel *const kernel) : readdy::model::potentials::HarmonicRepulsion<SingleCPUKernel>(kernel) { }
+                SingleCPUHarmonicRepulsion::SingleCPUHarmonicRepulsion(const SingleCPUKernel *const kernel) : readdy::model::potentials::HarmonicRepulsion(kernel) { }
 
-                potentials::HarmonicRepulsion *HarmonicRepulsion::replicate() const {
-                    return new HarmonicRepulsion(*this);
+                potentials::SingleCPUHarmonicRepulsion *SingleCPUHarmonicRepulsion::replicate() const {
+                    return new SingleCPUHarmonicRepulsion(*this);
                 }
 
 
