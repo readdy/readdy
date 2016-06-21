@@ -6,6 +6,7 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUProgramFactory.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
 #include <readdy/kernel/singlecpu/potentials/SingleCPUPotentialFactory.h>
+#include <readdy/kernel/singlecpu/reactions/SingleCPUReactionFactory.h>
 
 
 namespace readdy {
@@ -13,16 +14,20 @@ namespace readdy {
         namespace singlecpu {
             const std::string SingleCPUKernel::name = "SingleCPU";
             struct SingleCPUKernel::Impl {
-                std::unique_ptr<readdy::model::KernelContext> context = std::make_unique<readdy::model::KernelContext>();
-                std::unique_ptr<SingleCPUKernelStateModel> model = std::make_unique<SingleCPUKernelStateModel>(context.get());
                 std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
+                std::unique_ptr<readdy::model::KernelContext> context;
+                std::unique_ptr<SingleCPUKernelStateModel> model;
                 std::unique_ptr<potentials::SingleCPUPotentialFactory> potentials;
                 std::unique_ptr<programs::SingleCPUProgramFactory> programs;
+                std::unique_ptr<reactions::SingleCPUReactionFactory> reactions;
             };
 
             SingleCPUKernel::SingleCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<SingleCPUKernel::Impl>()) {
                 pimpl->programs = std::make_unique<programs::SingleCPUProgramFactory>(this);
                 pimpl->potentials = std::make_unique<potentials::SingleCPUPotentialFactory>(this);
+                pimpl->reactions = std::make_unique<reactions::SingleCPUReactionFactory>(this);
+                pimpl->context = std::make_unique<readdy::model::KernelContext>(pimpl->reactions.get());
+                pimpl->model = std::make_unique<SingleCPUKernelStateModel>(pimpl->context.get());
             }
 
             /**
@@ -68,6 +73,11 @@ namespace readdy {
             readdy::model::programs::ProgramFactory &SingleCPUKernel::getProgramFactory() const {
                 return *pimpl->programs;
             }
+
+            readdy::model::reactions::ReactionFactory &SingleCPUKernel::getReactionFactory() const {
+                return *pimpl->reactions;
+            }
+
 
             SingleCPUKernel &SingleCPUKernel::operator=(SingleCPUKernel &&rhs) = default;
 

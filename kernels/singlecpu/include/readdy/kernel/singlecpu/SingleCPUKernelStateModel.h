@@ -16,6 +16,7 @@
 #include <readdy/model/Vec3.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
 #include <readdy/model/KernelContext.h>
+#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
 
 namespace readdy {
     namespace kernel {
@@ -45,6 +46,8 @@ namespace readdy {
                 SingleCPUKernelStateModel& operator=(SingleCPUKernelStateModel &&rhs);
 
                 readdy::kernel::singlecpu::model::SingleCPUParticleData* getParticleData() const;
+
+                const model::SingleCPUNeighborList * const getNeighborList() const;
 
             private:
                 struct Impl;

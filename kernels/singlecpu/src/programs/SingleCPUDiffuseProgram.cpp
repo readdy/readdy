@@ -16,6 +16,9 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace programs {
+
+                SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};
+
                 void SingleCPUDiffuseProgram::execute() {
                     const auto& context = kernel->getKernelContext();
                     const auto&& dt = context.getTimeStep();
@@ -30,7 +33,6 @@ namespace readdy {
                         ++it_types;
                     }
                 }
-                SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};
             }
         }
     }

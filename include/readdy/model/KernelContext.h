@@ -19,6 +19,7 @@
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/reactions/Reaction.h>
+#include <readdy/model/reactions/ReactionFactory.h>
 
 #if BOOST_OS_MAC
 #include <string>
@@ -52,6 +53,16 @@ namespace readdy {
             double getTimeStep() const;
             void setTimeStep(double dt);
 
+            const std::vector<const reactions::Reaction<1>*> getAllOrder1Reactions() const;
+            const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string& name) const;
+            const std::vector<std::unique_ptr<reactions::Reaction<1>>>& getOrder1Reactions(const std::string& type) const;
+            const std::vector<std::unique_ptr<reactions::Reaction<1>>>& getOrder1Reactions(const unsigned int& type) const;
+
+            const std::vector<const reactions::Reaction<2>*> getAllOrder2Reactions() const;
+            const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string& name) const;
+            const std::vector<std::unique_ptr<reactions::Reaction<2>>>& getOrder2Reactions(const std::string& type1, const std::string& type2) const;
+            const std::vector<std::unique_ptr<reactions::Reaction<2>>>& getOrder2Reactions(const unsigned int& type1, const unsigned int& type2) const;
+
             const boost::uuids::uuid& registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate);
             const boost::uuids::uuid& registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate, const double &eductDistance);
             const boost::uuids::uuid& registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance, const double &rate);
@@ -70,7 +81,7 @@ namespace readdy {
             std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> getAllOrder2RegisteredPotentialTypes() const;
 
             // ctor and dtor
-            KernelContext();
+            KernelContext(reactions::ReactionFactory const* const reactionFactory);
 
             ~KernelContext();
 

@@ -22,7 +22,6 @@ namespace readdy {
 
                 public:
                     SingleCPUDiffuseProgram(SingleCPUKernel *kernel);
-                    virtual ~SingleCPUDiffuseProgram() override = default;
 
                     virtual void execute() override;
 

@@ -115,6 +115,10 @@ namespace readdy {
                 pimpl->currentEnergy += increase;
             }
 
+            const model::SingleCPUNeighborList *const SingleCPUKernelStateModel::getNeighborList() const {
+                return pimpl->neighborList.get();
+            }
+
 
             SingleCPUKernelStateModel &SingleCPUKernelStateModel::operator=(SingleCPUKernelStateModel &&rhs) = default;
 

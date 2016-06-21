@@ -50,20 +50,14 @@ namespace readdy {
         void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
             const fs::path p(directory);
             if (fs::exists(p) && fs::is_directory(p)) {
-                BOOST_LOG_TRIVIAL(debug) << "attempting to load plugins from directory " << p.string();
-                BOOST_LOG_TRIVIAL(debug) << "current path: " << fs::current_path().string();
                 for (auto &&dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
                     if (isSharedLibrary(dirEntry.path())) {
                         add(dirEntry.path());
-                    } else {
-                        BOOST_LOG_TRIVIAL(debug) << "... skipping " << dirEntry.path().string() << " since it was no shared library.";
                     }
                 }
             } else {
-                // TODO raise
-                BOOST_LOG_TRIVIAL(debug) << "file [" << p.string() << "] did not exist or was a file.";
+                throw std::runtime_error("file [" + p.string() + "] did not exist or was a file.");
             }
-            BOOST_LOG_TRIVIAL(debug) << "end of loadKernelsFromDirectory";
         }
 
 

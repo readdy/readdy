@@ -21,7 +21,6 @@ namespace readdy {
                 public:
                     SingleCPUUpdateStateModelProgram(SingleCPUKernel *kernel);
                     virtual void execute() override;
-                    virtual void setCurrentTimeStep(readdy::model::time_step_type t) override;
 
                 private:
                     SingleCPUKernel *kernel;

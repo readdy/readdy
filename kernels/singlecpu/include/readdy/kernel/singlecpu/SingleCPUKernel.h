@@ -43,6 +43,9 @@ namespace readdy {
 
                 virtual readdy::model::potentials::PotentialFactory& getPotentialFactory() const override;
 
+                virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+
+
             private:
                 struct Impl;
                 std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;

@@ -45,7 +45,6 @@ namespace readdy {
         }
 
         Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()) {
-            BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
             pimpl->name = name;
             pimpl->observableFactory = std::make_unique<_internal::ObservableFactory>(this);
             pimpl->modelTimeStepListener = [this] {
@@ -144,6 +143,10 @@ namespace readdy {
         }
 
         readdy::model::programs::ProgramFactory &Kernel::getProgramFactory() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
+        }
+
+        readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
             throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 

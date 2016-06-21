@@ -16,7 +16,7 @@ namespace readdy {
             class ProgramFactory {
             public:
                 std::vector<std::string> getAvailablePrograms() const {
-                    std::vector<std::string> names {factory.size()};
+                    std::vector<std::string> names {};
                     for(auto&& e : factory) {
                         names.push_back(e.first);
                     }

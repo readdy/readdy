@@ -15,12 +15,7 @@ readdy::kernel::singlecpu::programs::SingleCPUUpdateStateModelProgram::SingleCPU
 
 
 void readdy::kernel::singlecpu::programs::SingleCPUUpdateStateModelProgram::execute() {
-    kernel->getKernelStateModel().updateModel(t, true);
+    kernel->getKernelStateModel().updateModel(curr_t, true);
 }
-
-void readdy::kernel::singlecpu::programs::SingleCPUUpdateStateModelProgram::setCurrentTimeStep(readdy::model::time_step_type t) {
-    SingleCPUUpdateStateModelProgram::t = t;
-}
-
 
 

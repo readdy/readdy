@@ -83,9 +83,11 @@ namespace readdy {
 
                     void removeParticle(const size_t index);
 
-                    readdy::model::Particle operator[](const size_t index);
+                    void setParticleData(const readdy::model::Particle& particle, const size_t& index);
 
-                    bool isMarkedForDeactivation(int index);
+                    readdy::model::Particle operator[](const size_t index) const;
+
+                    bool isMarkedForDeactivation(const size_t index);
                     size_t getDeactivatedIndex() const;
                     size_t getNDeactivated() const;
 

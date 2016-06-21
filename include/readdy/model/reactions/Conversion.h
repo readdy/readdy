@@ -15,23 +15,24 @@
 namespace readdy {
     namespace model {
         namespace reactions {
-            class Conversion : public Reaction {
+            class Conversion : public Reaction<1> {
 
             public:
                 Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double &rate) :
-                        Reaction(name, rate), typeFrom(typeFrom), typeTo(typeTo)
-                { }
-
-                unsigned int getTypeFrom() const {
-                    return typeFrom;
+                        Reaction(name, rate, 0 ,0, 1)
+                {
+                    educts = {typeFrom};
+                    products = {typeTo};
                 }
 
-                unsigned int getTypeTo() const {
-                    return typeTo;
+                const unsigned int getTypeFrom() const {
+                    return educts[0];
                 }
 
-            protected:
-                const unsigned int typeFrom, typeTo;
+                const unsigned int getTypeTo() const {
+                    return products[0];
+                }
+
             };
         }
     }

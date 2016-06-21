@@ -15,32 +15,33 @@
 namespace readdy {
     namespace model {
         namespace reactions {
-            class Enzymatic : public Reaction {
+            class Enzymatic : public Reaction<2> {
 
             public:
                 Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double &rate, const double &eductDistance) :
-                        Reaction(name, rate), catalyst(catalyst), from(from), to(to), eductDistance(eductDistance) { }
-
-
-                unsigned int getCatalyst() const {
-                    return catalyst;
+                        Reaction(name, rate, eductDistance, 0, 2)
+                {
+                    educts = {from, catalyst};
+                    products = {to, catalyst};
                 }
 
-                unsigned int getFrom() const {
-                    return from;
+
+                const unsigned int getCatalyst() const {
+                    return educts[1];
                 }
 
-                unsigned int getTo() const {
-                    return to;
+                const unsigned int getFrom() const {
+                    return educts[0];
                 }
 
-                double getEductDistance() const {
+                const unsigned int getTo() const {
+                    return products[0];
+                }
+
+                const double getEductDistance() const {
                     return eductDistance;
                 }
 
-            protected:
-                const unsigned int catalyst, from, to;
-                const double eductDistance;
             };
         }
     }

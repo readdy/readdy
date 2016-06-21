@@ -15,6 +15,7 @@ namespace readdy {
                 const std::string ProgramName<AddParticleProgram>::value = "AddParticle";
                 const std::string ProgramName<DiffuseProgram>::value = "Diffuse";
                 const std::string ProgramName<UpdateStateModelProgram>::value = "UpdateStateModel";
+                const std::string ProgramName<DefaultReactionProgram>::value = "PerformReactions";
             }
         }
     }

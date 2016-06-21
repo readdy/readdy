@@ -33,6 +33,8 @@ namespace readdy {
 
                 virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
+                virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+
             protected:
                 virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
 

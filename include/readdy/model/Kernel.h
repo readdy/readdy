@@ -28,6 +28,7 @@
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/programs/ProgramFactory.h>
+#include <readdy/model/reactions/ReactionFactory.h>
 
 namespace readdy {
     namespace model {
@@ -175,6 +176,8 @@ namespace readdy {
             }
 
             virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const;
+
+            virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const;
 
         protected:
             struct Impl;

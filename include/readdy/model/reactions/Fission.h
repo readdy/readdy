@@ -15,32 +15,32 @@
 namespace readdy {
     namespace model {
         namespace reactions {
-            class Fission : public Reaction {
+            class Fission : public Reaction<1> {
 
             public:
                 Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate) :
-                        Reaction(name, rate), from(from), to1(to1), to2(to2), productDistance(productDistance)
-                { }
-
-                unsigned int getFrom() const {
-                    return from;
+                        Reaction(name, rate, 0, productDistance, 2)
+                {
+                    educts = {from};
+                    products = {to1, to2};
                 }
 
-                unsigned int getTo1() const {
-                    return to1;
+                const unsigned int getFrom() const {
+                    return educts[0];
                 }
 
-                unsigned int getTo2() const {
-                    return to2;
+                const unsigned int getTo1() const {
+                    return products[0];
+                }
+
+                const unsigned int getTo2() const {
+                    return products[1];
                 }
 
                 const double getProductDistance() const {
                     return productDistance;
                 }
 
-            protected:
-                const unsigned int from, to1, to2;
-                const double productDistance;
             };
         }
     }

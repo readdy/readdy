@@ -8,6 +8,7 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateStateModelProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUDefaultReactionProgram.h>
 
 namespace readdy {
     namespace kernel {
@@ -24,6 +25,9 @@ namespace readdy {
                     };
                     factory[core_p::getProgramName<core_p::UpdateStateModelProgram>()] = [kernel] {
                         return new SingleCPUUpdateStateModelProgram(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::DefaultReactionProgram>()] = [kernel] {
+                        return new SingleCPUDefaultReactionProgram(kernel);
                     };
                 }
             }

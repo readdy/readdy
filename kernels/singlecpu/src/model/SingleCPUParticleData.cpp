@@ -162,7 +162,7 @@ namespace readdy {
                     return type->begin()+deactivated_index;
                 }
 
-                readdy::model::Particle SingleCPUParticleData::operator[](const size_t index) {
+                readdy::model::Particle SingleCPUParticleData::operator[](const size_t index) const{
                     return readdy::model::Particle(*(begin_positions() + index), *(begin_types() + index), *(begin_ids() + index));
                 }
 
@@ -238,7 +238,7 @@ namespace readdy {
                     return type->cbegin()+deactivated_index;
                 }
 
-                bool SingleCPUParticleData::isMarkedForDeactivation(int index) {
+                bool SingleCPUParticleData::isMarkedForDeactivation(const size_t index) {
                     return (*deactivated)[index];
                 }
 
@@ -250,8 +250,11 @@ namespace readdy {
                     return n_deactivated;
                 }
 
-
-
+                void SingleCPUParticleData::setParticleData(const readdy::model::Particle& particle, const size_t& index) {
+                    (*ids)[index] = particle.getId();
+                    (*positions)[index] = particle.getPos();
+                    (*type)[index] = particle.getType();
+                }
 
             }
         }
