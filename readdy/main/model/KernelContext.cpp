@@ -85,7 +85,7 @@ namespace readdy {
             return pimpl->box_size;
         }
 
-        std::array<bool, 3> &KernelContext::getPeriodicBoundary() const {
+        const std::array<bool, 3> &KernelContext::getPeriodicBoundary() const {
             return pimpl->periodic_boundary;
         }
 

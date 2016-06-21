@@ -16,7 +16,8 @@ namespace readdy {
 
                 struct ReactionEvent {
                     unsigned int order;
-                    size_t idx1, idx2;
+                    // TODO: do we need these?
+                    unsigned long idx1, idx2;
                     std::function<void()> action;
                 };
 
@@ -42,7 +43,7 @@ namespace readdy {
 
                             for (const auto &reaction : reactions) {
                                 if (rnd.getUniform() < reaction->getRate() * dt) {
-                                    const size_t particleIdx = it_type - data->begin_types();
+                                    const unsigned long particleIdx = (const unsigned long) (it_type - data->begin_types());
 
                                     ReactionEvent evt{};
                                     evt.order = 1;
@@ -84,7 +85,7 @@ namespace readdy {
                                             }
                                         }
                                     };
-                                    reactionEvents.push_back(evt);
+                                    reactionEvents.push_back(std::move(evt));
                                 }
                             }
                             ++it_type;
@@ -143,13 +144,13 @@ namespace readdy {
                                         }
                                     };
 
-                                    reactionEvents.push_back(evt);
+                                    reactionEvents.push_back(std::move(evt));
                                 }
                             }
                         }
                     }
                     // shuffle reactions
-                    // todo
+                    std::random_shuffle(reactionEvents.begin(), reactionEvents.end());
 
                     // execute reactions
                     for (auto &&event : reactionEvents) {

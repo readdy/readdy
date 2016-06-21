@@ -30,8 +30,13 @@ namespace readdy {
             friend bool operator==(const Vec3& lhs, const Vec3& rhs);
             friend Vec3 operator+(const Vec3& lhs, const Vec3& rhs);
             friend Vec3 operator-(const Vec3& lhs, const Vec3& rhs);
+
         private:
             std::array<double, 3> data;
+
+            // todo: do this here?≠
+            //const std::array<double, 3> *const boxSize;
+            //const std::array<bool, 3> *const periodic;
         };
 
         inline double operator*(const Vec3 &lhs, const Vec3 &rhs) {
@@ -45,6 +50,33 @@ namespace readdy {
         inline Vec3 operator*(const double &rhs, const Vec3 &lhs) {
             return lhs * rhs;
         }
+
+        template<bool PX, bool PY, bool PZ, typename... Args>
+        double dist(const Vec3& lhs, const Vec3& rhs, Args... args);
+
+        template<bool PX, bool PY, bool PZ>
+        inline double dist(const Vec3& lhs, const Vec3& rhs, const double& dx, const double &dy, const double &dz) {
+            // todo: assuming lhs and rhs are within box already. compare: https://en.wikipedia.org/wiki/Periodic_boundary_conditions
+            auto dv = rhs - lhs;
+            if(PX) {
+                if(dv[0] > dx * .5) dv[0] -= dx;
+                if(dv[0] <= dx * .5) dv[0] += dx;
+            }
+            if(PY) {
+                if(dv[1] > dy * .5) dv[1] -= dy;
+                if(dv[1] <= dy * .5) dv[1] += dy;
+            }
+            if(PZ) {
+                if(dv[2] > dz * .5) dv[2] -= dz;
+                if(dv[2] <= dz * .5) dv[2] += dz;
+            }
+            return dv * dv;
+        };
+
+        template<>
+        inline double dist<false, false, false>(const Vec3& lhs, const Vec3 &rhs) {
+            return (lhs - rhs)*(lhs-rhs);
+        };
     }
 }
 

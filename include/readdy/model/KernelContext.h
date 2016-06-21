@@ -38,7 +38,7 @@ namespace readdy {
 
             void setBoxSize(double dx, double dy, double dz);
 
-            std::array<bool, 3>& getPeriodicBoundary() const;
+            const std::array<bool, 3>& getPeriodicBoundary() const;
             unsigned int getParticleTypeID(const std::string& name) const;
             void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
