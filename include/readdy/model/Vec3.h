@@ -26,7 +26,7 @@ namespace readdy {
             Vec3 &operator+=(const Vec3 &rhs);
 
             Vec3 &operator*=(const double a);
-            
+
             Vec3 &operator/=(const double a);
 
             double operator[](const unsigned int i) const;
@@ -53,11 +53,11 @@ namespace readdy {
             return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
         }
 
-        inline Vec3 operator*(const Vec3 &lhs, const double &rhs) {
+        inline Vec3 operator*(const Vec3 &lhs, const double rhs) {
             return Vec3(rhs * lhs[0], rhs * lhs[1], rhs * lhs[2]);
         }
 
-        inline Vec3 operator*(const double &rhs, const Vec3 &lhs) {
+        inline Vec3 operator*(const double rhs, const Vec3 &lhs) {
             return lhs * rhs;
         }
 

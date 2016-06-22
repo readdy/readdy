@@ -21,6 +21,7 @@ namespace readdy {
                 void SingleCPUDefaultReactionProgram::execute() {
                     const auto &ctx = kernel->getKernelContext();
                     const auto &dist = ctx.getDistSquaredFun();
+                    const auto &fixPos = ctx.getFixPositionFun();
                     const auto &dt = ctx.getTimeStep();
                     auto data = kernel->getKernelStateModelSingleCPU().getParticleData();
                     auto &rnd = kernel->getRandomProvider();
@@ -140,6 +141,8 @@ namespace readdy {
                     for (auto &&event : reactionEvents) {
                         event();
                     }
+                    // reposition particles to respect the periodic b.c.
+                    std::for_each(particlesToBeAdded.begin(), particlesToBeAdded.end(), [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
                     // update data structure
                     data->deactivateMarked();
                     data->addParticles(particlesToBeAdded);

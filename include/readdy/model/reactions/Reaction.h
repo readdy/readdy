@@ -17,6 +17,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <string>
 #include <boost/uuid/random_generator.hpp>
+#include <readdy/model/Particle.h>
 
 namespace readdy {
     namespace model {
@@ -25,14 +26,13 @@ namespace readdy {
             class Reaction {
 
             public:
-                Reaction(const std::string &name, const double &rate, const double& eductDistance, const double& productDistance, const unsigned int n_products) :
+                Reaction(const std::string &name, const double &rate, const double &eductDistance, const double &productDistance, const unsigned int n_products) :
                         name(name),
                         id(boost::uuids::random_generator()()),
                         rate(rate),
                         eductDistance(eductDistance),
                         productDistance(productDistance),
-                        _n_products(n_products)
-                { }
+                        _n_products(n_products) { }
 
                 virtual ~Reaction() = default;
 
@@ -57,15 +57,15 @@ namespace readdy {
                     return _n_products;
                 }
 
-                const double& getEductDistance() const {
+                const double &getEductDistance() const {
                     return eductDistance;
                 }
 
-                const double& getProductDistance() const {
+                const double &getProductDistance() const {
                     return productDistance;
                 }
 
-                virtual void perform(const Particle &p1_in, const Particle &p2_in, Particle& p1_out, Particle& p2_out) const {};
+                virtual void perform(const Particle &p1_in, const Particle &p2_in, Particle &p1_out, Particle &p2_out) const { };
 
             protected:
                 const unsigned int _n_educts = N_EDUCTS;

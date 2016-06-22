@@ -44,17 +44,17 @@ namespace readdy {
             data[2] = z;
         }
 
-        double Vec3::operator[](const unsigned int i) const{
+        double Vec3::operator[](const unsigned int i) const {
             assert(0 <= i && i < 3);
             return data[i];
         }
 
-        double& Vec3::operator[](const unsigned int i) {
+        double &Vec3::operator[](const unsigned int i) {
             assert(0 <= i && i < 3);
             return data[i];
         }
 
-        Vec3::Vec3()  : Vec3(0, 0, 0){
+        Vec3::Vec3() : Vec3(0, 0, 0) {
 
         }
 
@@ -65,56 +65,57 @@ namespace readdy {
         bool Vec3::operator!=(const Vec3 &rhs) {
             return !(data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2]);
         }
-        Vec3 operator+(const Vec3& lhs, const Vec3& rhs) {
-            return {lhs[0]+rhs[0], lhs[1]+rhs[1], lhs[2]+rhs[2]};
+
+        Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs) {
+            return {lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2]};
         }
 
-        Vec3 operator-(const Vec3& lhs, const Vec3& rhs) {
-            return lhs + (-1*rhs);
+        Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs) {
+            return {lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2]};
         }
 
-        std::ostream& operator<< (std::ostream& os, const Vec3& vec) {
-            os << "Vec3("<< vec[0] << ", "<< vec[1] << ", " << vec[2] << ")";
+        std::ostream &operator<<(std::ostream &os, const Vec3 &vec) {
+            os << "Vec3(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
             return os;
         }
 
-        bool operator==(const Vec3& lhs, const Vec3& rhs) {
+        bool operator==(const Vec3 &lhs, const Vec3 &rhs) {
             return lhs[0] == rhs[0] && lhs[1] == rhs[1] && lhs[2] == rhs[2];
         }
 
-        void fixPosition(Vec3& vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize) {
-            if(periodic[0]) {
-                if(periodic[1]) {
-                    if(periodic[2]) {
-                        fixPosition<true,true,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+        void fixPosition(Vec3 &vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize) {
+            if (periodic[0]) {
+                if (periodic[1]) {
+                    if (periodic[2]) {
+                        fixPosition<true, true, true>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     } else {
-                        fixPosition<true,true,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                        fixPosition<true, true, false>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     }
                 } else {
-                    if(periodic[2]) {
-                        fixPosition<true,false,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    if (periodic[2]) {
+                        fixPosition<true, false, true>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     } else {
-                        fixPosition<true,false,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                        fixPosition<true, false, false>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     }
                 }
             } else {
-                if(periodic[1]) {
-                    if(periodic[2]) {
-                        fixPosition<false,true,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                if (periodic[1]) {
+                    if (periodic[2]) {
+                        fixPosition<false, true, true>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     } else {
-                        fixPosition<false,true,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                        fixPosition<false, true, false>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     }
                 } else {
-                    if(periodic[2]) {
-                        fixPosition<false,false,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    if (periodic[2]) {
+                        fixPosition<false, false, true>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     } else {
-                        fixPosition<false,false,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                        fixPosition<false, false, false>(vec, boxSize[0], boxSize[1], boxSize[2]);
                     }
                 }
             }
         }
 
-        double distSquared(const Vec3& lhs, const Vec3 &rhs, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize) {
+        double distSquared(const Vec3 &lhs, const Vec3 &rhs, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize) {
             if (periodic[0]) {
                 if (periodic[1]) {
                     if (periodic[2]) {

@@ -21,6 +21,8 @@ namespace readdy {
         public:
             const Vec3 &getPos() const;
 
+            Vec3 &getPos();
+
             void setPos(const Vec3 &pos);
 
             unsigned int getType() const;

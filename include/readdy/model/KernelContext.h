@@ -28,64 +28,92 @@
 namespace readdy {
     namespace model {
         class ParticleTypePairHasher;
+
         class KernelContext {
         public:
             double getKBT() const;
 
             void setKBT(double kBT);
 
-            std::array<double, 3>& getBoxSize() const;
+            std::array<double, 3> &getBoxSize() const;
 
             void setBoxSize(double dx, double dy, double dz);
 
-            const std::array<bool, 3>& getPeriodicBoundary() const;
-            unsigned int getParticleTypeID(const std::string& name) const;
+            const std::array<bool, 3> &getPeriodicBoundary() const;
+
+            unsigned int getParticleTypeID(const std::string &name) const;
+
             void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
-            const std::function<void(Vec3&)>& getFixPositionFun() const;
-            const std::function<double(const Vec3&, const Vec3&)>& getDistSquaredFun() const;
-            const std::function<Vec3(const Vec3&, const Vec3&)>& getShortestDifferenceFun() const;
+            const std::function<void(Vec3 &)> &getFixPositionFun() const;
 
-            double getDiffusionConstant(const std::string& particleType) const;
+            const std::function<double(const Vec3 &, const Vec3 &)> &getDistSquaredFun() const;
+
+            const std::function<Vec3(const Vec3 &, const Vec3 &)> &getShortestDifferenceFun() const;
+
+            double getDiffusionConstant(const std::string &particleType) const;
+
             double getDiffusionConstant(const unsigned int particleType) const;
-            void setDiffusionConstant(const std::string& particleType, double D);
 
-            double getParticleRadius(const std::string& type) const;
-            double getParticleRadius(const unsigned int& type) const;
-            void setParticleRadius(const std::string& type, const double r);
+            void setDiffusionConstant(const std::string &particleType, double D);
+
+            double getParticleRadius(const std::string &type) const;
+
+            double getParticleRadius(const unsigned int &type) const;
+
+            void setParticleRadius(const std::string &type, const double r);
 
             double getTimeStep() const;
+
             void setTimeStep(double dt);
 
-            const std::vector<const reactions::Reaction<1>*> getAllOrder1Reactions() const;
-            const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string& name) const;
-            const std::vector<std::unique_ptr<reactions::Reaction<1>>>& getOrder1Reactions(const std::string& type) const;
-            const std::vector<std::unique_ptr<reactions::Reaction<1>>>& getOrder1Reactions(const unsigned int& type) const;
+            const std::vector<const reactions::Reaction<1> *> getAllOrder1Reactions() const;
 
-            const std::vector<const reactions::Reaction<2>*> getAllOrder2Reactions() const;
-            const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string& name) const;
-            const std::vector<std::unique_ptr<reactions::Reaction<2>>>& getOrder2Reactions(const std::string& type1, const std::string& type2) const;
-            const std::vector<std::unique_ptr<reactions::Reaction<2>>>& getOrder2Reactions(const unsigned int& type1, const unsigned int& type2) const;
+            const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string &name) const;
 
-            const boost::uuids::uuid& registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate);
-            const boost::uuids::uuid& registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate, const double &eductDistance);
-            const boost::uuids::uuid& registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance, const double &rate);
-            const boost::uuids::uuid& registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate, const double &eductDistance);
+            const std::vector<std::unique_ptr<reactions::Reaction<1>>> &getOrder1Reactions(const std::string &type) const;
+
+            const std::vector<std::unique_ptr<reactions::Reaction<1>>> &getOrder1Reactions(const unsigned int &type) const;
+
+            const std::vector<const reactions::Reaction<2> *> getAllOrder2Reactions() const;
+
+            const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string &name) const;
+
+            const std::vector<std::unique_ptr<reactions::Reaction<2>>> &getOrder2Reactions(const std::string &type1, const std::string &type2) const;
+
+            const std::vector<std::unique_ptr<reactions::Reaction<2>>> &getOrder2Reactions(const unsigned int &type1, const unsigned int &type2) const;
+
+            const boost::uuids::uuid &registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate);
+
+            const boost::uuids::uuid &registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate,
+                                                                const double &eductDistance);
+
+            const boost::uuids::uuid &registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance,
+                                                              const double &rate, const double &weight1 = 0.5, const double &weight2 = 0.5);
+
+            const boost::uuids::uuid &registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate,
+                                                             const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5);
 
             void deregisterPotential(const boost::uuids::uuid &potential);
 
-            const boost::uuids::uuid& registerOrder1Potential(potentials::PotentialOrder1 const* const potential, const std::string &type);
-            const std::vector<std::unique_ptr<potentials::PotentialOrder1>>& getOrder1Potentials(const std::string& type) const;
-            const std::vector<std::unique_ptr<potentials::PotentialOrder1>>& getOrder1Potentials(const unsigned int type) const;
+            const boost::uuids::uuid &registerOrder1Potential(potentials::PotentialOrder1 const *const potential, const std::string &type);
+
+            const std::vector<std::unique_ptr<potentials::PotentialOrder1>> &getOrder1Potentials(const std::string &type) const;
+
+            const std::vector<std::unique_ptr<potentials::PotentialOrder1>> &getOrder1Potentials(const unsigned int type) const;
+
             std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
 
-            const boost::uuids::uuid& registerOrder2Potential(potentials::PotentialOrder2 const* const potential, const std::string &type1, const std::string &type2);
-            const std::vector<std::unique_ptr<potentials::PotentialOrder2>>& getOrder2Potentials(const std::string &type1, const std::string &type2) const;
-            const std::vector<std::unique_ptr<potentials::PotentialOrder2>>& getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+            const boost::uuids::uuid &registerOrder2Potential(potentials::PotentialOrder2 const *const potential, const std::string &type1, const std::string &type2);
+
+            const std::vector<std::unique_ptr<potentials::PotentialOrder2>> &getOrder2Potentials(const std::string &type1, const std::string &type2) const;
+
+            const std::vector<std::unique_ptr<potentials::PotentialOrder2>> &getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+
             std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> getAllOrder2RegisteredPotentialTypes() const;
 
             // ctor and dtor
-            KernelContext(reactions::ReactionFactory const* const reactionFactory);
+            KernelContext(reactions::ReactionFactory const *const reactionFactory);
 
             ~KernelContext();
 
@@ -102,6 +130,7 @@ namespace readdy {
         private:
             struct Impl;
             std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
+
             unsigned int getOrCreateTypeId(const std::string &name);
         };
 

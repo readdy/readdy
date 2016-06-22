@@ -53,7 +53,9 @@ namespace readdy {
             reactions::ReactionFactory const *reactionFactory;
 
             std::function<void(Vec3 &)> fixPositionFun = [](Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, 1., 1., 1.); };
-            std::function<Vec3(const Vec3 &, const Vec3 &)> diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<true, true, true>(lhs, rhs, 1., 1., 1.); };
+            std::function<Vec3(const Vec3 &, const Vec3 &)> diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
+                return readdy::model::shortestDifference<true, true, true>(lhs, rhs, 1., 1., 1.);
+            };
             std::function<double(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> double {
                 auto dv = diffFun(lhs, rhs);
                 return dv * dv;
@@ -270,19 +272,19 @@ namespace readdy {
         }
 
         const boost::uuids::uuid &KernelContext::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance,
-                                                                         const double &rate) {
+                                                                         const double &rate, const double &weight1, const double &weight2) {
             const auto &idFrom = pimpl->typeMapping[from];
             const auto &idTo1 = pimpl->typeMapping[to1];
             const auto &idTo2 = pimpl->typeMapping[to2];
             if (pimpl->reactionOneEductRegistry.find(idFrom) == pimpl->reactionOneEductRegistry.end()) {
                 pimpl->reactionOneEductRegistry.emplace(idFrom, std::vector<std::unique_ptr<reactions::Reaction<1>>>());
             }
-            pimpl->reactionOneEductRegistry[idFrom].push_back(pimpl->reactionFactory->createReaction<reactions::Fission>(name, idFrom, idTo1, idTo2, productDistance, rate));
+            pimpl->reactionOneEductRegistry[idFrom].push_back(pimpl->reactionFactory->createReaction<reactions::Fission>(name, idFrom, idTo1, idTo2, productDistance, rate, weight1, weight2));
             return pimpl->reactionOneEductRegistry[idFrom].back()->getId();
         }
 
         const boost::uuids::uuid &KernelContext::registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate,
-                                                                        const double &eductDistance) {
+                                                                        const double &eductDistance, const double &weight1, const double &weight2) {
             const auto &idFrom1 = pimpl->typeMapping[from1];
             const auto &idFrom2 = pimpl->typeMapping[from2];
             const auto &idTo = pimpl->typeMapping[to];
@@ -290,7 +292,7 @@ namespace readdy {
             if (pimpl->reactionTwoEductsRegistry.find(pp) == pimpl->reactionTwoEductsRegistry.end()) {
                 pimpl->reactionTwoEductsRegistry.emplace(pp, std::vector<std::unique_ptr<reactions::Reaction<2>>>());
             }
-            pimpl->reactionTwoEductsRegistry[pp].push_back(pimpl->reactionFactory->createReaction<reactions::Fusion>(name, idFrom1, idFrom2, idTo, rate, eductDistance));
+            pimpl->reactionTwoEductsRegistry[pp].push_back(pimpl->reactionFactory->createReaction<reactions::Fusion>(name, idFrom1, idFrom2, idTo, rate, eductDistance, weight1, weight2));
             return pimpl->reactionTwoEductsRegistry[pp].back()->getId();
         }
 
@@ -349,15 +351,15 @@ namespace readdy {
             return nullptr;
         }
 
-        const std::function<void(Vec3 &)>& KernelContext::getFixPositionFun() const {
+        const std::function<void(Vec3 &)> &KernelContext::getFixPositionFun() const {
             return pimpl->fixPositionFun;
         }
 
-        const std::function<double(const Vec3 &, const Vec3 &)>& KernelContext::getDistSquaredFun() const {
+        const std::function<double(const Vec3 &, const Vec3 &)> &KernelContext::getDistSquaredFun() const {
             return pimpl->distFun;
         }
 
-        const std::function<Vec3(const Vec3 &, const Vec3 &)>& KernelContext::getShortestDifferenceFun() const {
+        const std::function<Vec3(const Vec3 &, const Vec3 &)> &KernelContext::getShortestDifferenceFun() const {
             return pimpl->diffFun;
         }
 
