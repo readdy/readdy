@@ -64,7 +64,7 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
         auto &&updateModelProgram = pimpl->kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
             diffuseProgram->execute();
-            updateModelProgram->configure(t);
+            updateModelProgram->configure(t, true);
             updateModelProgram->execute();
         }
     }

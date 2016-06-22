@@ -15,7 +15,7 @@ readdy::kernel::singlecpu::programs::SingleCPUUpdateStateModelProgram::SingleCPU
 
 
 void readdy::kernel::singlecpu::programs::SingleCPUUpdateStateModelProgram::execute() {
-    kernel->getKernelStateModel().updateModel(curr_t, true);
+    kernel->getKernelStateModel().updateModel(curr_t, updateForces);
 }
 
 

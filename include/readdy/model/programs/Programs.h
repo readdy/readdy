@@ -32,11 +32,13 @@ namespace readdy {
             class UpdateStateModelProgram : public Program {
             public:
                 UpdateStateModelProgram() : Program(getProgramName<UpdateStateModelProgram>()) { }
-                void configure(const readdy::model::time_step_type& t) {
+                void configure(const readdy::model::time_step_type& t, bool updateForces) {
                     curr_t = t;
+                    UpdateStateModelProgram::updateForces = updateForces;
                 }
             protected:
                 readdy::model::time_step_type curr_t;
+                bool updateForces;
             };
 
             class DefaultReactionProgram : public Program {

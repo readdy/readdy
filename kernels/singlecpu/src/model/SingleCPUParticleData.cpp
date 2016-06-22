@@ -43,7 +43,8 @@ namespace readdy {
                 }
 
                 size_t SingleCPUParticleData::size() const {
-                    return deactivated_index - markedForDeactivation->size();
+                    auto s = markedForDeactivation->size();
+                    return s <= deactivated_index ? deactivated_index - s : 0;
                 }
 
                 size_t SingleCPUParticleData::max_size() const {
@@ -100,6 +101,7 @@ namespace readdy {
                     std::swap((*deactivated)[index], (*deactivated)[deactivated_index-1]);
 
                     ++n_deactivated;
+                    if(deactivated_index == 0) throw std::runtime_error("hier sollte man aber nicht hinkommen!1");
                     --deactivated_index;
                 }
 
@@ -109,17 +111,24 @@ namespace readdy {
                 }
 
                 void SingleCPUParticleData::deactivateMarked() {
-                    auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
-                    for(auto&& idx : *markedForDeactivation) {
-                        while(*deactivatedIt && deactivatedIt != deactivated->begin()) {
-                            --deactivated_index;
-                            --deactivatedIt;
-                        }
-                        if(idx < deactivated_index) {
-                            removeParticle(idx);
-                            --deactivatedIt;
-                        } else {
-                            break;
+                    if(markedForDeactivation->size() == 0) return;
+                    if(deactivated->size() < deactivated_index-1) {
+                        throw std::runtime_error("this should not happen");
+                    }
+                    if (deactivated_index > 0) {
+                        auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
+                        for (auto &&idx : *markedForDeactivation) {
+                            while (*deactivatedIt && deactivatedIt != deactivated->begin()) {
+                                --deactivated_index;
+                                ++n_deactivated;
+                                --deactivatedIt;
+                            }
+                            if (idx < deactivated_index) {
+                                removeParticle(idx);
+                                --deactivatedIt;
+                            } else {
+                                break;
+                            }
                         }
                     }
                     markedForDeactivation->clear();

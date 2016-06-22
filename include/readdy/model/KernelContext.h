@@ -94,6 +94,8 @@ namespace readdy {
             const boost::uuids::uuid &registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate,
                                                              const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5);
 
+            const boost::uuids::uuid &registerDeathReaction(const std::string &name, const std::string &particleType, const double &rate);
+
             void deregisterPotential(const boost::uuids::uuid &potential);
 
             const boost::uuids::uuid &registerOrder1Potential(potentials::PotentialOrder1 const *const potential, const std::string &type);

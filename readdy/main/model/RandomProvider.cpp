@@ -34,7 +34,7 @@ namespace readdy {
 
         double RandomProvider::getUniform(double a, double b) {
             if(a > b) std::swap(a, b);
-            return (*pimpl->uniform01)(*pimpl->gen)*(b-a) - .5*(b-a);
+            return (*pimpl->uniform01)(*pimpl->gen)*(b-a) + a;
         }
 
 
