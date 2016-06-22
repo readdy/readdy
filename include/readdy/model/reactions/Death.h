@@ -23,7 +23,7 @@ namespace readdy {
                     educts[0] = typeFrom;
                 }
 
-                const unsigned int getTypeFrom() const {
+                const unsigned int& getTypeFrom() const {
                     return educts[0];
                 }
             };

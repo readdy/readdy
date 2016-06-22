@@ -25,11 +25,11 @@ namespace readdy {
                     products = {typeTo};
                 }
 
-                const unsigned int getTypeFrom() const {
+                const unsigned int& getTypeFrom() const {
                     return educts[0];
                 }
 
-                const unsigned int getTypeTo() const {
+                const unsigned int& getTypeTo() const {
                     return products[0];
                 }
 

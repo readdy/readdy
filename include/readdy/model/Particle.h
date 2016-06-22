@@ -29,6 +29,8 @@ namespace readdy {
 
             const boost::uuids::uuid &getId() const;
 
+            void setId(const boost::uuids::uuid &id);
+
             Particle();
 
             Particle(double x, double y, double z, unsigned int type);

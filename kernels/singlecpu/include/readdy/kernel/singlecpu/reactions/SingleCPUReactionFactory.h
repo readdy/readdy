@@ -24,9 +24,8 @@ namespace readdy {
                 protected:
                     virtual readdy::model::reactions::Conversion *createConversion(const std::string &name, unsigned int from, unsigned int to, const double &rate) const override;
                     virtual readdy::model::reactions::Enzymatic *createEnzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double &rate, const double &eductDistance) const override;
-                    virtual readdy::model::reactions::Fission *createFission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate) const override;
-                    virtual readdy::model::reactions::Fusion *createFusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance) const override;
-                    virtual readdy::model::reactions::Death *createDeath(const std::string &name, unsigned int typeFrom, const double &rate) const override;
+                    virtual readdy::model::reactions::Fission *createFission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate, const double &weight1 = 0.5, const double &weight2 = 0.5) const override;
+                    virtual readdy::model::reactions::Fusion *createFusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5) const override;
 
                     SingleCPUKernel const* const kernel;
                 };

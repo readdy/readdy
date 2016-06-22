@@ -26,20 +26,16 @@ namespace readdy {
                 }
 
 
-                const unsigned int getCatalyst() const {
+                const unsigned int& getCatalyst() const {
                     return educts[1];
                 }
 
-                const unsigned int getFrom() const {
+                const unsigned int& getFrom() const {
                     return educts[0];
                 }
 
-                const unsigned int getTo() const {
+                const unsigned int& getTo() const {
                     return products[0];
-                }
-
-                const double getEductDistance() const {
-                    return eductDistance;
                 }
 
             };

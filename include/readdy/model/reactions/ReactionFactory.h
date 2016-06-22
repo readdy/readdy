@@ -39,32 +39,23 @@ namespace readdy {
                 virtual Enzymatic* createEnzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double &rate, const double &eductDistance) const {
                     return new Enzymatic(name, catalyst, from, to, rate, eductDistance);
                 };
-                virtual Fission* createFission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate) const {
-                    return new Fission(name, from, to1, to2, productDistance, rate);
+                virtual Fission* createFission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate, const double &weight1 = 0.5, const double &weight2 = 0.5) const {
+                    return new Fission(name, from, to1, to2, productDistance, rate, weight1, weight2);
                 };
-                virtual Fusion* createFusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance) const {
-                    return new Fusion(name, from1, from2, to, rate, eductDistance);
+                virtual Fusion* createFusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5) const {
+                    return new Fusion(name, from1, from2, to, rate, eductDistance, weight1, weight2);
                 };
-                virtual Death* createDeath(const std::string &name, unsigned int typeFrom, const double &rate) const {
-                    return new Death(name, typeFrom, rate);
-                }
 
                 template<typename T, typename... Args> struct get_dispatcher;
 
                 template<typename T, typename... Args> struct get_dispatcher {
                     static T *impl(const ReactionFactory * self, Args... args) {
                         // this only invokes the normal constructor
-                        BOOST_LOG_TRIVIAL(warning) << "Non-specialized dispatcher called, invoking the normal constructor!";
                         return new T(std::forward<Args>(args)...);
                     };
                 };
             };
 
-            template<typename... Args> struct ReactionFactory::get_dispatcher<Death, Args...> {
-                static Death *impl(const ReactionFactory *self, Args... args) {
-                    return self->createDeath(std::forward<Args>(args)...);
-                }
-            };
 
             template<typename... Args> struct ReactionFactory::get_dispatcher<Conversion, Args...> {
                 static Conversion *impl(const ReactionFactory * self, Args... args) {

@@ -50,6 +50,10 @@ namespace readdy {
         Particle::Particle(Vec3 pos, unsigned int type, boost::uuids::uuid id) : pos(pos), type(type), id(id) {
         }
 
+        void Particle::setId(const boost::uuids::uuid &id) {
+            Particle::id = id;
+        }
+
 
         Particle::~Particle() = default;
 

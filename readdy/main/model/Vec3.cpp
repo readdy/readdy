@@ -20,10 +20,17 @@ namespace readdy {
             return *this;
         }
 
-        Vec3 &Vec3::operator*=(double a) {
+        Vec3 &Vec3::operator*=(const double a) {
             data[0] *= a;
             data[1] *= a;
             data[2] *= a;
+            return *this;
+        }
+
+        Vec3 &Vec3::operator/=(const double a) {
+            data[0] /= a;
+            data[1] /= a;
+            data[2] /= a;
             return *this;
         }
 

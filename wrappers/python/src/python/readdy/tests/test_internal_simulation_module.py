@@ -10,20 +10,19 @@ from readdy.util import platform_utils
 
 
 class TestInternalSimulationModule(unittest.TestCase):
-    def py_harmonic_repulsion_energy(self, x_i, x_j):
-        dist = (x_i - x_j) * (x_i - x_j)
-        # if dist < sqrt(25): return energy with force constant 1
+    def py_harmonic_repulsion_energy(self, x_ij):
+        dist = x_ij*x_ij
+        # if dist < sqrt(25): return energy with  force constant 1
         if dist < 25:
             return (np.sqrt(dist) - 5) ** 2
         else:
             return 0
 
-    def py_harmonic_repulsion_force(self, x_i, x_j):
-        r_ij = x_i - x_j
-        dist = r_ij * r_ij
+    def py_harmonic_repulsion_force(self, x_ij):
+        dist = x_ij * x_ij
         if dist < 25:
             dist = np.sqrt(dist)
-            return (2 * (dist - 5) / dist) * r_ij
+            return (2 * (dist - 5) / dist) * x_ij
         else:
             return Vec(0, 0, 0)
 

@@ -11,6 +11,7 @@
 #define READDY_MAIN_FISSION_H
 
 #include "Reaction.h"
+#include <boost/log/trivial.hpp>
 
 namespace readdy {
     namespace model {
@@ -18,28 +19,42 @@ namespace readdy {
             class Fission : public Reaction<1> {
 
             public:
-                Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate) :
-                        Reaction(name, rate, 0, productDistance, 2)
-                {
+                Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate, const double &weight1 = 0.5,
+                        const double &weight2 = 0.5) :
+                        Reaction(name, rate, 0, productDistance, 2), weight1(weight1), weight2(weight2) {
                     educts = {from};
                     products = {to1, to2};
+                    const auto sum = weight1 + weight2;
+                    if (sum != 1) {
+                        this->weight1 /= sum;
+                        this->weight2 /= sum;
+                        BOOST_LOG_TRIVIAL(warning) << "The weights did not add up to 1, they were changed to weight1=" << this->weight1 << ", weight2=" << this->weight2;
+                    }
                 }
 
-                const unsigned int getFrom() const {
+                const unsigned int& getFrom() const {
                     return educts[0];
                 }
 
-                const unsigned int getTo1() const {
+                const unsigned int& getTo1() const {
                     return products[0];
                 }
 
-                const unsigned int getTo2() const {
+                const unsigned int& getTo2() const {
                     return products[1];
                 }
 
-                const double getProductDistance() const {
-                    return productDistance;
+                const double& getWeight1() const {
+                    return weight1;
                 }
+
+                const double& getWeight2() const {
+                    return weight2;
+                }
+
+            protected:
+                double weight1, weight2;
+
 
             };
         }

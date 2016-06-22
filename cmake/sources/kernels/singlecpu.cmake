@@ -20,6 +20,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/PotentialsOrder2.cpp")
 
 # --- reactions ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/reactions/SingleCPUReactionFactory.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/reactions/SingleCPUReactions.cpp")
 
 # --- model ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SingleCPUParticleData.cpp")

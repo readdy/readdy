@@ -57,11 +57,11 @@ namespace readdy {
                     return _n_products;
                 }
 
-                const double getEductDistance() const {
+                const double& getEductDistance() const {
                     return eductDistance;
                 }
 
-                const double getProductDistance() const {
+                const double& getProductDistance() const {
                     return productDistance;
                 }
 
