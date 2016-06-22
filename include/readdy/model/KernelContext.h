@@ -42,6 +42,10 @@ namespace readdy {
             unsigned int getParticleTypeID(const std::string& name) const;
             void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
+            const std::function<void(Vec3&)>& getFixPositionFun() const;
+            const std::function<double(const Vec3&, const Vec3&)>& getDistSquaredFun() const;
+            const std::function<Vec3(const Vec3&, const Vec3&)>& getShortestDifferenceFun() const;
+
             double getDiffusionConstant(const std::string& particleType) const;
             double getDiffusionConstant(const unsigned int particleType) const;
             void setDiffusionConstant(const std::string& particleType, double D);

@@ -43,9 +43,9 @@ namespace {
     struct NOOPPotential : public m::potentials::PotentialOrder2 {
         NOOPPotential() : PotentialOrder2("no op") { }
 
-        virtual double calculateEnergy(const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {return 0;}
-        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
-        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_i, const readdy::model::Vec3 &x_j) override {}
+        virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override {return 0;}
+        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override {}
+        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) override {}
         virtual NOOPPotential *replicate() const override { return new NOOPPotential(*this); }
     };
 

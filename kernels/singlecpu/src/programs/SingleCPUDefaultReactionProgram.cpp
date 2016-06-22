@@ -14,24 +14,18 @@ namespace readdy {
         namespace singlecpu {
             namespace programs {
 
-                struct ReactionEvent {
-                    unsigned int order;
-                    // TODO: do we need these?
-                    unsigned long idx1, idx2;
-                    std::function<void()> action;
-                };
-
                 SingleCPUDefaultReactionProgram::SingleCPUDefaultReactionProgram(SingleCPUKernel const *const kernel) : kernel(kernel) {
 
                 }
 
                 void SingleCPUDefaultReactionProgram::execute() {
                     const auto &ctx = kernel->getKernelContext();
+                    const auto &dist = ctx.getDistSquaredFun();
                     const auto &dt = ctx.getTimeStep();
                     auto data = kernel->getKernelStateModelSingleCPU().getParticleData();
                     auto &rnd = kernel->getRandomProvider();
                     std::vector<readdy::model::Particle> particlesToBeAdded{};
-                    std::vector<ReactionEvent> reactionEvents{};
+                    std::vector<std::function<void()>> reactionEvents{};
 
                     // reactions with one educt
                     {
@@ -45,16 +39,14 @@ namespace readdy {
                                 if (rnd.getUniform() < reaction->getRate() * dt) {
                                     const unsigned long particleIdx = (const unsigned long) (it_type - data->begin_types());
 
-                                    ReactionEvent evt{};
-                                    evt.order = 1;
-                                    evt.idx1 = particleIdx;
-                                    evt.action = [&] {
+                                    reactionEvents.push_back([&] {
                                         if (data->isMarkedForDeactivation(particleIdx)) return;
 
                                         data->markForDeactivation(particleIdx);
                                         switch (reaction->getNProducts()) {
                                             case 0: {
-                                                // no op
+                                                // no operation, just deactivation
+                                                // (read out loud with saxony accent)
                                                 break;
                                             }
                                             case 1: {
@@ -62,30 +54,29 @@ namespace readdy {
                                                     particlesToBeAdded.push_back(mapping_11[reaction->getId()]((*data)[particleIdx]));
                                                 } else {
                                                     const auto particle = (*data)[particleIdx];
-                                                    readdy::model::Particle p1{};
-                                                    reaction->perform(particle, particle, p1, p1);
-                                                    particlesToBeAdded.push_back(p1);
+                                                    readdy::model::Particle outParticle1{};
+                                                    reaction->perform(particle, particle, outParticle1, outParticle1);
+                                                    particlesToBeAdded.push_back(outParticle1);
                                                 }
                                                 break;
                                             }
                                             case 2: {
                                                 const auto particle = (*data)[particleIdx];
-                                                readdy::model::Particle p1{}, p2{};
+                                                readdy::model::Particle outParticle1{}, outParticle2{};
                                                 if (mapping_12.find(reaction->getId()) != mapping_12.end()) {
-                                                    mapping_12[reaction->getId()](particle, p1, p2);
+                                                    mapping_12[reaction->getId()](particle, outParticle1, outParticle2);
                                                 } else {
-                                                    reaction->perform(particle, particle, p1, p2);
+                                                    reaction->perform(particle, particle, outParticle1, outParticle2);
                                                 }
-                                                particlesToBeAdded.push_back(p1);
-                                                particlesToBeAdded.push_back(p2);
+                                                particlesToBeAdded.push_back(outParticle1);
+                                                particlesToBeAdded.push_back(outParticle2);
                                                 break;
                                             }
                                             default: {
                                                 BOOST_LOG_TRIVIAL(error) << "This should not happen!";
                                             }
                                         }
-                                    };
-                                    reactionEvents.push_back(std::move(evt));
+                                    });
                                 }
                             }
                             ++it_type;
@@ -98,53 +89,46 @@ namespace readdy {
                         for (auto &&it = neighborList->begin(); it != neighborList->end(); ++it) {
                             const auto idx1 = it->idx1, idx2 = it->idx2;
                             const auto &reactions = ctx.getOrder2Reactions(*(data->begin_types() + idx1), *(data->begin_types() + idx2));
-                            // todo: make this generic (periodic bc)
-                            const auto posDiff = *(data->begin_positions() + idx1) - *(data->begin_positions() + idx2);
-                            const auto distSquared = posDiff * posDiff;
+
+                            const auto distSquared = dist(*(data->begin_positions() + idx1), *(data->begin_positions() + idx2));
 
                             for (const auto &reaction : reactions) {
                                 // if close enough and coin flip successful
                                 if (distSquared < reaction->getEductDistance() * reaction->getEductDistance() && rnd.getUniform() < reaction->getRate() * dt) {
-                                    ReactionEvent evt{};
-                                    evt.order = 2;
-                                    evt.idx1 = idx1;
-                                    evt.idx2 = idx2;
-                                    evt.action = [&] {
+                                    reactionEvents.push_back([&] {
                                         if (data->isMarkedForDeactivation(idx1)) return;
                                         if (data->isMarkedForDeactivation(idx2)) return;
                                         data->markForDeactivation(idx1);
                                         data->markForDeactivation(idx2);
-                                        const auto in1 = (*data)[idx1];
-                                        const auto in2 = (*data)[idx2];
+                                        const auto inParticle1 = (*data)[idx1];
+                                        const auto inParticle2 = (*data)[idx2];
                                         switch (reaction->getNProducts()) {
                                             case 1: {
                                                 if (mapping_21.find(reaction->getId()) != mapping_21.end()) {
-                                                    particlesToBeAdded.push_back(mapping_21[reaction->getId()](in1, in2));
+                                                    particlesToBeAdded.push_back(mapping_21[reaction->getId()](inParticle1, inParticle2));
                                                 } else {
-                                                    readdy::model::Particle p1{};
-                                                    reaction->perform(in1, in2, p1, p1);
-                                                    particlesToBeAdded.push_back(p1);
+                                                    readdy::model::Particle outParticle1{};
+                                                    reaction->perform(inParticle1, inParticle2, outParticle1, outParticle1);
+                                                    particlesToBeAdded.push_back(outParticle1);
                                                 }
                                                 break;
                                             }
                                             case 2: {
-                                                readdy::model::Particle p1{}, p2{};
+                                                readdy::model::Particle outParticle1{}, outParticle2{};
                                                 if (mapping_22.find(reaction->getId()) != mapping_22.end()) {
-                                                    mapping_22[reaction->getId()](in1, in2, p1, p2);
+                                                    mapping_22[reaction->getId()](inParticle1, inParticle2, outParticle1, outParticle2);
                                                 } else {
-                                                    reaction->perform(in1, in2, p1, p2);
+                                                    reaction->perform(inParticle1, inParticle2, outParticle1, outParticle2);
                                                 }
-                                                particlesToBeAdded.push_back(p1);
-                                                particlesToBeAdded.push_back(p2);
+                                                particlesToBeAdded.push_back(outParticle1);
+                                                particlesToBeAdded.push_back(outParticle2);
                                                 break;
                                             }
                                             default: {
                                                 BOOST_LOG_TRIVIAL(error) << "This should not happen!";
                                             }
                                         }
-                                    };
-
-                                    reactionEvents.push_back(std::move(evt));
+                                    });
                                 }
                             }
                         }
@@ -154,7 +138,7 @@ namespace readdy {
 
                     // execute reactions
                     for (auto &&event : reactionEvents) {
-                        event.action();
+                        event();
                     }
                     // update data structure
                     data->deactivateMarked();

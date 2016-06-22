@@ -54,7 +54,7 @@ namespace {
     }
 
     TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
-        simulation.setBoxSize(1, 1, 1);
+        simulation.setBoxSize(10, 10, 10);
         unsigned int n_particles = 103;
         double diffusionConstant = 1;
         simulation.registerParticleType("type", diffusionConstant);

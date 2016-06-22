@@ -74,6 +74,70 @@ namespace readdy {
         bool operator==(const Vec3& lhs, const Vec3& rhs) {
             return lhs[0] == rhs[0] && lhs[1] == rhs[1] && lhs[2] == rhs[2];
         }
+
+        void fixPosition(Vec3& vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize) {
+            if(periodic[0]) {
+                if(periodic[1]) {
+                    if(periodic[2]) {
+                        fixPosition<true,true,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        fixPosition<true,true,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                } else {
+                    if(periodic[2]) {
+                        fixPosition<true,false,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        fixPosition<true,false,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                }
+            } else {
+                if(periodic[1]) {
+                    if(periodic[2]) {
+                        fixPosition<false,true,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        fixPosition<false,true,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                } else {
+                    if(periodic[2]) {
+                        fixPosition<false,false,true>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        fixPosition<false,false,false>(vec, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                }
+            }
+        }
+
+        double distSquared(const Vec3& lhs, const Vec3 &rhs, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize) {
+            if (periodic[0]) {
+                if (periodic[1]) {
+                    if (periodic[2]) {
+                        return distSquared<true, true, true>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        return distSquared<true, true, false>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                } else {
+                    if (periodic[2]) {
+                        return distSquared<true, false, true>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        return distSquared<true, false, false>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                }
+            } else {
+                if (periodic[1]) {
+                    if (periodic[2]) {
+                        return distSquared<false, true, true>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        return distSquared<false, true, false>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                } else {
+                    if (periodic[2]) {
+                        return distSquared<false, false, true>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    } else {
+                        return distSquared<false, false, false>(lhs, rhs, boxSize[0], boxSize[1], boxSize[2]);
+                    }
+                }
+            }
+        }
     }
 }
 

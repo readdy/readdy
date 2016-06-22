@@ -9,15 +9,8 @@
  */
 
 #include <readdy/model/KernelContext.h>
-#include <readdy/common/make_unique.h>
-#include <unordered_map>
-#include <boost/log/trivial.hpp>
 #include <readdy/common/Utils.h>
 #include <readdy/model/_internal/ParticleTypePair.h>
-#include <readdy/model/reactions/Conversion.h>
-#include <readdy/model/reactions/Enzymatic.h>
-#include <readdy/model/reactions/Fission.h>
-#include <readdy/model/reactions/Fusion.h>
 
 namespace readdy {
     namespace model {
@@ -45,8 +38,8 @@ namespace readdy {
             uint typeCounter;
             std::unordered_map<std::string, uint> typeMapping;
             double kBT = 0;
-            std::array<double, 3> box_size{};
-            std::array<bool, 3> periodic_boundary{};
+            std::array<double, 3> box_size{{1, 1, 1}};
+            std::array<bool, 3> periodic_boundary{{true, true, true}};
             std::unordered_map<uint, double> diffusionConstants{};
             std::unordered_map<uint, double> particleRadii{};
             std::unordered_map<unsigned int, std::vector<std::unique_ptr<potentials::PotentialOrder1>>> potentialO1Registry{};
@@ -57,7 +50,54 @@ namespace readdy {
 
             double timeStep;
 
-             reactions::ReactionFactory const * reactionFactory;
+            reactions::ReactionFactory const *reactionFactory;
+
+            std::function<void(Vec3 &)> fixPositionFun = [](Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, 1., 1., 1.); };
+            std::function<Vec3(const Vec3 &, const Vec3 &)> diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<true, true, true>(lhs, rhs, 1., 1., 1.); };
+            std::function<double(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> double {
+                auto dv = diffFun(lhs, rhs);
+                return dv * dv;
+            };
+
+            void updateDistAndFixPositionFun() {
+                if (periodic_boundary[0]) {
+                    if (periodic_boundary[1]) {
+                        if (periodic_boundary[2]) {
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<true, true, true>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, box_size[0], box_size[1], box_size[2]); };
+                        } else {
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<true, true, false>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<true, true, false>(vec, box_size[0], box_size[1], box_size[2]); };
+                        }
+                    } else {
+                        if (periodic_boundary[2]) {
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<true, false, true>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<true, false, true>(vec, box_size[0], box_size[1], box_size[2]); };
+                        } else {
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<true, false, false>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<true, false, false>(vec, box_size[0], box_size[1], box_size[2]); };
+                        }
+                    }
+                } else {
+                    if (periodic_boundary[1]) {
+                        if (periodic_boundary[2]) {
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<false, true, true>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<false, true, true>(vec, box_size[0], box_size[1], box_size[2]); };
+                        } else {
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<false, true, false>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<false, true, false>(vec, box_size[0], box_size[1], box_size[2]); };
+                        }
+                    } else {
+                        if (periodic_boundary[2]) {
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<false, false, true>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<false, false, true>(vec, box_size[0], box_size[1], box_size[2]); };
+                        } else {
+                            diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<false, false, false>(lhs, rhs); };
+                            fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<false, false, false>(vec, box_size[0], box_size[1], box_size[2]); };
+                        }
+                    }
+                }
+            }
         };
 
 
@@ -71,13 +111,15 @@ namespace readdy {
 
         void KernelContext::setBoxSize(double dx, double dy, double dz) {
             (*pimpl).box_size = {dx, dy, dz};
+            pimpl->updateDistAndFixPositionFun();
         }
 
         void KernelContext::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
             (*pimpl).periodic_boundary = {pb_x, pb_y, pb_z};
+            pimpl->updateDistAndFixPositionFun();
         }
 
-        KernelContext::KernelContext(reactions::ReactionFactory const* const reactionFactory) : pimpl(std::make_unique<KernelContext::Impl>()) {
+        KernelContext::KernelContext(reactions::ReactionFactory const *const reactionFactory) : pimpl(std::make_unique<KernelContext::Impl>()) {
             pimpl->reactionFactory = reactionFactory;
         }
 
@@ -252,11 +294,11 @@ namespace readdy {
             return pimpl->reactionTwoEductsRegistry[pp].back()->getId();
         }
 
-        const std::vector<std::unique_ptr<reactions::Reaction<1>>>& KernelContext::getOrder1Reactions(const std::string &type) const {
+        const std::vector<std::unique_ptr<reactions::Reaction<1>>> &KernelContext::getOrder1Reactions(const std::string &type) const {
             return getOrder1Reactions(pimpl->typeMapping[type]);
         }
 
-        const std::vector<std::unique_ptr<reactions::Reaction<1>>>& KernelContext::getOrder1Reactions(const unsigned int &type) const {
+        const std::vector<std::unique_ptr<reactions::Reaction<1>>> &KernelContext::getOrder1Reactions(const unsigned int &type) const {
             return pimpl->reactionOneEductRegistry[type];
         }
 
@@ -270,8 +312,8 @@ namespace readdy {
 
         const std::vector<const reactions::Reaction<1> *> KernelContext::getAllOrder1Reactions() const {
             auto result = std::vector<const reactions::Reaction<1> *>();
-            for(const auto& mapEntry : pimpl->reactionOneEductRegistry) {
-                for(const auto& reaction : mapEntry.second) {
+            for (const auto &mapEntry : pimpl->reactionOneEductRegistry) {
+                for (const auto &reaction : mapEntry.second) {
                     result.push_back(reaction.get());
                 }
             }
@@ -279,9 +321,9 @@ namespace readdy {
         }
 
         const reactions::Reaction<1> *const KernelContext::getReactionOrder1WithName(const std::string &name) const {
-            for(const auto& mapEntry : pimpl->reactionOneEductRegistry) {
-                for(const auto& reaction : mapEntry.second) {
-                    if(reaction->getName() == name) return reaction.get();
+            for (const auto &mapEntry : pimpl->reactionOneEductRegistry) {
+                for (const auto &reaction : mapEntry.second) {
+                    if (reaction->getName() == name) return reaction.get();
                 }
             }
 
@@ -290,8 +332,8 @@ namespace readdy {
 
         const std::vector<const reactions::Reaction<2> *> KernelContext::getAllOrder2Reactions() const {
             auto result = std::vector<const reactions::Reaction<2> *>();
-            for(const auto& mapEntry : pimpl->reactionTwoEductsRegistry) {
-                for(const auto& reaction : mapEntry.second) {
+            for (const auto &mapEntry : pimpl->reactionTwoEductsRegistry) {
+                for (const auto &reaction : mapEntry.second) {
                     result.push_back(reaction.get());
                 }
             }
@@ -299,12 +341,24 @@ namespace readdy {
         }
 
         const reactions::Reaction<2> *const KernelContext::getReactionOrder2WithName(const std::string &name) const {
-            for(const auto& mapEntry : pimpl->reactionTwoEductsRegistry) {
-                for(const auto& reaction : mapEntry.second) {
-                    if(reaction->getName() == name) return reaction.get();
+            for (const auto &mapEntry : pimpl->reactionTwoEductsRegistry) {
+                for (const auto &reaction : mapEntry.second) {
+                    if (reaction->getName() == name) return reaction.get();
                 }
             }
             return nullptr;
+        }
+
+        const std::function<void(Vec3 &)>& KernelContext::getFixPositionFun() const {
+            return pimpl->fixPositionFun;
+        }
+
+        const std::function<double(const Vec3 &, const Vec3 &)>& KernelContext::getDistSquaredFun() const {
+            return pimpl->distFun;
+        }
+
+        const std::function<Vec3(const Vec3 &, const Vec3 &)>& KernelContext::getShortestDifferenceFun() const {
+            return pimpl->diffFun;
         }
 
 

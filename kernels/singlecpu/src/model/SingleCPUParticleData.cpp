@@ -60,18 +60,24 @@ namespace readdy {
 
                 void SingleCPUParticleData::addParticles(const std::vector<readdy::model::Particle> &particles) {
                     auto added = particles.cbegin();
+                    auto ids_it = ids->begin() + deactivated_index;
+                    auto positions_it = positions->begin() + deactivated_index;
+                    auto forces_it = forces->begin() + deactivated_index;
+                    auto type_it = type->begin() + deactivated_index;
+                    auto deactivated_it = deactivated->begin() + deactivated_index;
                     while (added != particles.cend()) {
                         if (n_deactivated > 0) {
-                            const auto idx = deactivated_index;
 
-                            (*ids)[idx] = added->getId();
-                            (*positions)[idx] = added->getPos();
-                            (*forces)[idx] = {0, 0, 0};
-                            (*type)[idx] = added->getType();
-                            (*deactivated)[idx] = false;
+                            *ids_it = added->getId();
+                            *positions_it = added->getPos();
+                            *forces_it = {0, 0, 0};
+                            *type_it = added->getType();
+                            *deactivated_it = false;
 
                             --n_deactivated;
                             ++deactivated_index;
+
+                            ++ids_it; ++positions_it; ++forces_it; ++type_it; ++deactivated_it;
                         } else {
                             ids->push_back(added->getId());
                             positions->push_back(added->getPos());
@@ -80,7 +86,7 @@ namespace readdy {
                             deactivated->push_back(false);
                             ++deactivated_index;
                         }
-                        added++;
+                        ++added;
                     }
                 }
 

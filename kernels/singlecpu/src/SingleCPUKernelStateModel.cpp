@@ -30,6 +30,7 @@ namespace readdy {
 
             void SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces) {
                 const auto timeStepChanged = t != pimpl->t;
+                const auto& difference = pimpl->context->getShortestDifferenceFun();
                 pimpl->t = t;
                 if (timeStepChanged) {
                     fireTimeStepChanged();
@@ -66,7 +67,7 @@ namespace readdy {
                             const auto &pos_j = *(pimpl->particleData->begin_positions() + j);
                             const auto &potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
                             for (const auto &potential : potentials) {
-                                potential->calculateForceAndEnergy(*(pimpl->particleData->begin_forces() + i), pimpl->currentEnergy, pos_i, pos_j);
+                                potential->calculateForceAndEnergy(*(pimpl->particleData->begin_forces() + i), pimpl->currentEnergy, difference(pos_i, pos_j));
                             }
                         }
                     }
