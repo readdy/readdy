@@ -42,8 +42,9 @@ namespace readdy {
                                 if (rnd.getUniform() < r) {
                                     const size_t particleIdx = (const size_t) (it_type - data->begin_types());
                                     events.push_back([particleIdx, &newParticles, &reaction, this] {
-                                        if (kernel->getKernelStateModelSingleCPU().getParticleData()->isMarkedForDeactivation(particleIdx)) return;
-                                        kernel->getKernelStateModelSingleCPU().getParticleData()->markForDeactivation(particleIdx);
+                                        auto&& _data = kernel->getKernelStateModelSingleCPU().getParticleData();
+                                        if (_data->isMarkedForDeactivation(particleIdx)) return;
+                                        _data->markForDeactivation(particleIdx);
 
                                         switch (reaction->getNProducts()) {
                                             case 0: {
@@ -54,10 +55,10 @@ namespace readdy {
                                             case 1: {
                                                 if (mapping_11.find(reaction->getId()) != mapping_11.end()) {
                                                     newParticles.push_back(
-                                                            mapping_11[reaction->getId()]((*kernel->getKernelStateModelSingleCPU().getParticleData())[particleIdx])
+                                                            mapping_11[reaction->getId()]((*_data)[particleIdx])
                                                     );
                                                 } else {
-                                                    const auto particle = (*kernel->getKernelStateModelSingleCPU().getParticleData())[particleIdx];
+                                                    const auto particle = (*_data)[particleIdx];
                                                     particle_t outParticle1 {};
                                                     reaction->perform(particle, particle, outParticle1, outParticle1);
                                                     newParticles.push_back(outParticle1);
@@ -65,7 +66,7 @@ namespace readdy {
                                                 break;
                                             }
                                             case 2: {
-                                                const auto particle = (*kernel->getKernelStateModelSingleCPU().getParticleData())[particleIdx];
+                                                const auto particle = (*_data)[particleIdx];
                                                 particle_t outParticle1{}, outParticle2{};
                                                 if (mapping_12.find(reaction->getId()) != mapping_12.end()) {
                                                     mapping_12[reaction->getId()](particle, outParticle1, outParticle2);
@@ -105,7 +106,7 @@ namespace readdy {
                                 if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
                                     && rnd.getUniform() < reaction->getRate() * dt) {
                                     events.push_back([idx1, idx2, this, &newParticles, &reaction] {
-                                        const auto& _data = kernel->getKernelStateModelSingleCPU().getParticleData();
+                                        auto&& _data = kernel->getKernelStateModelSingleCPU().getParticleData();
                                         if (_data->isMarkedForDeactivation(idx1)) return;
                                         if (_data->isMarkedForDeactivation(idx2)) return;
                                         _data->markForDeactivation(idx1);
