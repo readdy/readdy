@@ -72,7 +72,7 @@ fi
 # therefore fix this value.
 if [ "$TRAVIS" == "true" ]; then CPU_COUNT=2; fi
 
-mkdir build
+mkdir build || true
 cd build
 echo "calling cmake with flags: "
 for flag in ${CMAKE_FLAGS// /$'\n'}

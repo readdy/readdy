@@ -48,6 +48,7 @@ namespace readdy {
         }
 
         void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
+            BOOST_LOG_TRIVIAL(debug) << "loading kernels from directory: " << directory;
             const fs::path p(directory);
             if (fs::exists(p) && fs::is_directory(p)) {
                 for (auto &&dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {

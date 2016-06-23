@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 
-set -evx
+if false
+then
+    set -evx
 
-source activate _test
-if ! [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-    PREFIX=$HOME/miniconda/envs/_test runUnitTests
-    PREFIX=$HOME/miniconda/envs/_test DYLD_LIBRARY_PATH=$HOME/miniconda/envs/_test/lib/readdy_plugins runUnitTests_singlecpu
+    source activate _test
+    if ! [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+        runUnitTests
+        export DYLD_LIBRARY_PATH=${CONDA_ENV_PATH}/lib/readdy_plugins
+        runUnitTests_singlecpu
+    fi
+
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+        runUnitTests
+        export LD_LIBRARY_PATH=${CONDA_ENV_PATH}/lib/readdy_plugins
+        runUnitTests_singlecpu
+    fi
+
+    source deactivate
 fi
-
-if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-    PREFIX=$HOME/miniconda/envs/_test runUnitTests
-    PREFIX=$HOME/miniconda/envs/_test LD_LIBRARY_PATH=$HOME/miniconda/envs/_test/lib/readdy_plugins runUnitTests_singlecpu
-fi
-
-source deactivate

@@ -14,286 +14,293 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
 
-namespace {
+class SingleCPUTestReactions : public ::testing::Test {
+protected:
+    SingleCPUTestReactions() {
+        // if we're in conda
+        const char *env = std::getenv("CONDA_ENV_PATH");
+        std::string pluginDir = "lib/readdy_plugins";
+        if (env) {
+            auto _env = std::string(env);
+            if (!boost::algorithm::ends_with(env, "/")) {
+                _env = _env.append("/");
+            }
+            pluginDir = _env.append(pluginDir);
+        }
+        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
+    }
+};
 
+TEST_F(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     using fusion_t = readdy::model::reactions::Fusion;
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Death;
     using particle_t = readdy::model::Particle;
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+    kernel->getKernelContext().setPeriodicBoundary(false, false, false);
+    kernel->getKernelContext().setBoxSize(100, 100, 100);
+    const auto diff = kernel->getKernelContext().getShortestDifferenceFun();
+    kernel->getKernelContext().setDiffusionConstant("A", .1); // type id 0
+    kernel->getKernelContext().setDiffusionConstant("B", .1); // type id 1
+    kernel->getKernelContext().setDiffusionConstant("C", .1); // type id 2
 
-    class SingleCPUTestReactions : public ::testing::Test {
-    protected:
-        SingleCPUTestReactions() {
-            // if we're in conda
-            const char *env = std::getenv("PREFIX");
-            std::string pluginDir = "lib/readdy_plugins";
-            if (env) {
-                auto _env = std::string(env);
-                if (!boost::algorithm::ends_with(env, "/")) {
-                    _env = _env.append("/");
-                }
-                pluginDir = _env.append(pluginDir);
-            }
-            readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-        }
-    };
+    // test conversion
+    {
+        auto conversion = kernel->getReactionFactory().createReaction<conversion_t>("A->B", 0, 1, 1);
+        particle_t p_A{0, 0, 0, 0};
+        particle_t p_out{5, 5, 5, 1};
+        conversion->perform(p_A, p_A, p_out, p_out);
+        EXPECT_EQ(p_out.getType(), conversion->getTypeTo());
+        EXPECT_EQ(p_out.getPos(), p_A.getPos());
+    }
 
-    TEST_F(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
-        auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-        kernel->getKernelContext().setPeriodicBoundary(false, false, false);
-        kernel->getKernelContext().setBoxSize(100, 100, 100);
-        const auto diff = kernel->getKernelContext().getShortestDifferenceFun();
-        kernel->getKernelContext().setDiffusionConstant("A", .1); // type id 0
-        kernel->getKernelContext().setDiffusionConstant("B", .1); // type id 1
-        kernel->getKernelContext().setDiffusionConstant("C", .1); // type id 2
+    // test fusion
+    {
+        double eductDistance = .4;
+        double weight1 = .3, weight2 = .7;
+        auto fusion = kernel->getReactionFactory().createReaction<fusion_t>("A+B->C", 0, 1, 2, 1, eductDistance, weight1, weight2);
+        particle_t p_out1{50, 50, 50, 70};
+        particle_t p_out2{50, 50, 50, 70};
+        particle_t p_A{1, 0, 0, 0};
+        particle_t p_B{-1, 0, 0, 1};
+        fusion->perform(p_A, p_B, p_out1, p_out1);
+        fusion->perform(p_B, p_A, p_out2, p_out2);
 
-        // test conversion
+        EXPECT_EQ(p_out1.getPos(), p_out2.getPos());
+        EXPECT_EQ(p_out1.getType(), p_out2.getType());
+        EXPECT_EQ(p_out1.getType(), fusion->getTo());
+
+        EXPECT_EQ(readdy::model::Vec3(.4, 0, 0), p_out1.getPos());
+    }
+
+    // fission
+    {
+        double productDistance = .4;
+        double weight1 = .3, weight2 = .7;
+        auto fission = kernel->getReactionFactory().createReaction<fission_t>("C->A+B", 2, 0, 1, productDistance, 1, weight1, weight2);
+        particle_t p_C{0, 0, 0, 2};
+        particle_t p_out1{50, 50, 50, 70};
+        particle_t p_out2{50, 50, 50, 70};
+        fission->perform(p_C, p_C, p_out1, p_out2);
+
+        EXPECT_EQ(p_out1.getType(), fission->getTo1());
+        EXPECT_EQ(p_out2.getType(), fission->getTo2());
+        auto p_12 = diff(p_out1.getPos(), p_out2.getPos());
+        auto p_12_nondirect = p_out2.getPos() - p_out1.getPos();
+        EXPECT_EQ(p_12_nondirect, p_12);
+        auto distance = sqrt(p_12 * p_12);
+        EXPECT_DOUBLE_EQ(productDistance, distance);
+    }
+
+    // enzymatic
+    {
+        auto enzymatic = kernel->getReactionFactory().createReaction<enzymatic_t>("A+C->B+C", 2, 0, 1, 1, .5);
+        particle_t p_A{0, 0, 0, 0};
+        particle_t p_C{5, 5, 5, 2};
         {
-            auto conversion = kernel->getReactionFactory().createReaction<conversion_t>("A->B", 0, 1, 1);
-            particle_t p_A{0, 0, 0, 0};
-            particle_t p_out{5, 5, 5, 1};
-            conversion->perform(p_A, p_A, p_out, p_out);
-            EXPECT_EQ(p_out.getType(), conversion->getTypeTo());
-            EXPECT_EQ(p_out.getPos(), p_A.getPos());
-        }
-
-        // test fusion
-        {
-            double eductDistance = .4;
-            double weight1 = .3, weight2 = .7;
-            auto fusion = kernel->getReactionFactory().createReaction<fusion_t>("A+B->C", 0, 1, 2, 1, eductDistance, weight1, weight2);
             particle_t p_out1{50, 50, 50, 70};
             particle_t p_out2{50, 50, 50, 70};
-            particle_t p_A{1, 0, 0, 0};
-            particle_t p_B{-1, 0, 0, 1};
-            fusion->perform(p_A, p_B, p_out1, p_out1);
-            fusion->perform(p_B, p_A, p_out2, p_out2);
-
-            EXPECT_EQ(p_out1.getPos(), p_out2.getPos());
-            EXPECT_EQ(p_out1.getType(), p_out2.getType());
-            EXPECT_EQ(p_out1.getType(), fusion->getTo());
-
-            EXPECT_EQ(readdy::model::Vec3(.4, 0, 0), p_out1.getPos());
+            enzymatic->perform(p_A, p_C, p_out1, p_out2);
+            if (p_out1.getType() == enzymatic->getCatalyst()) {
+                EXPECT_EQ(enzymatic->getCatalyst(), p_out1.getType());
+                EXPECT_EQ(enzymatic->getTo(), p_out2.getType());
+                EXPECT_EQ(p_C.getPos(), p_out1.getPos());
+                EXPECT_EQ(p_A.getPos(), p_out2.getPos());
+            } else {
+                EXPECT_EQ(enzymatic->getCatalyst(), p_out2.getType());
+                EXPECT_EQ(enzymatic->getTo(), p_out1.getType());
+                EXPECT_EQ(p_C.getPos(), p_out2.getPos());
+                EXPECT_EQ(p_A.getPos(), p_out1.getPos());
+            }
         }
-
-        // fission
         {
-            double productDistance = .4;
-            double weight1 = .3, weight2 = .7;
-            auto fission = kernel->getReactionFactory().createReaction<fission_t>("C->A+B", 2, 0, 1, productDistance, 1, weight1, weight2);
-            particle_t p_C{0, 0, 0, 2};
             particle_t p_out1{50, 50, 50, 70};
             particle_t p_out2{50, 50, 50, 70};
-            fission->perform(p_C, p_C, p_out1, p_out2);
-
-            EXPECT_EQ(p_out1.getType(), fission->getTo1());
-            EXPECT_EQ(p_out2.getType(), fission->getTo2());
-            auto p_12 = diff(p_out1.getPos(), p_out2.getPos());
-            auto p_12_nondirect = p_out2.getPos() - p_out1.getPos();
-            EXPECT_EQ(p_12_nondirect, p_12);
-            auto distance = sqrt(p_12 * p_12);
-            EXPECT_DOUBLE_EQ(productDistance, distance);
-        }
-
-        // enzymatic
-        {
-            auto enzymatic = kernel->getReactionFactory().createReaction<enzymatic_t>("A+C->B+C", 2, 0, 1, 1, .5);
-            particle_t p_A{0, 0, 0, 0};
-            particle_t p_C{5, 5, 5, 2};
-            {
-                particle_t p_out1{50, 50, 50, 70};
-                particle_t p_out2{50, 50, 50, 70};
-                enzymatic->perform(p_A, p_C, p_out1, p_out2);
-                if (p_out1.getType() == enzymatic->getCatalyst()) {
-                    EXPECT_EQ(enzymatic->getCatalyst(), p_out1.getType());
-                    EXPECT_EQ(enzymatic->getTo(), p_out2.getType());
-                    EXPECT_EQ(p_C.getPos(), p_out1.getPos());
-                    EXPECT_EQ(p_A.getPos(), p_out2.getPos());
-                } else {
-                    EXPECT_EQ(enzymatic->getCatalyst(), p_out2.getType());
-                    EXPECT_EQ(enzymatic->getTo(), p_out1.getType());
-                    EXPECT_EQ(p_C.getPos(), p_out2.getPos());
-                    EXPECT_EQ(p_A.getPos(), p_out1.getPos());
-                }
-            }
-            {
-                particle_t p_out1{50, 50, 50, 70};
-                particle_t p_out2{50, 50, 50, 70};
-                enzymatic->perform(p_C, p_A, p_out1, p_out2);
-                if (p_out1.getType() == enzymatic->getCatalyst()) {
-                    EXPECT_EQ(enzymatic->getCatalyst(), p_out1.getType());
-                    EXPECT_EQ(enzymatic->getTo(), p_out2.getType());
-                    EXPECT_EQ(p_C.getPos(), p_out1.getPos());
-                    EXPECT_EQ(p_A.getPos(), p_out2.getPos());
-                } else {
-                    EXPECT_EQ(enzymatic->getCatalyst(), p_out2.getType());
-                    EXPECT_EQ(enzymatic->getTo(), p_out1.getType());
-                    EXPECT_EQ(p_C.getPos(), p_out2.getPos());
-                    EXPECT_EQ(p_A.getPos(), p_out1.getPos());
-                }
+            enzymatic->perform(p_C, p_A, p_out1, p_out2);
+            if (p_out1.getType() == enzymatic->getCatalyst()) {
+                EXPECT_EQ(enzymatic->getCatalyst(), p_out1.getType());
+                EXPECT_EQ(enzymatic->getTo(), p_out2.getType());
+                EXPECT_EQ(p_C.getPos(), p_out1.getPos());
+                EXPECT_EQ(p_A.getPos(), p_out2.getPos());
+            } else {
+                EXPECT_EQ(enzymatic->getCatalyst(), p_out2.getType());
+                EXPECT_EQ(enzymatic->getTo(), p_out1.getType());
+                EXPECT_EQ(p_C.getPos(), p_out2.getPos());
+                EXPECT_EQ(p_A.getPos(), p_out1.getPos());
             }
         }
+    }
+
+}
+
+TEST_F(SingleCPUTestReactions, TestDecay) {
+    using fusion_t = readdy::model::reactions::Fusion;
+    using fission_t = readdy::model::reactions::Fission;
+    using enzymatic_t = readdy::model::reactions::Enzymatic;
+    using conversion_t = readdy::model::reactions::Conversion;
+    using death_t = readdy::model::reactions::Death;
+    using particle_t = readdy::model::Particle;
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().setTimeStep(1);
+    kernel->getKernelContext().setDiffusionConstant("X", .25);
+    kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
+    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
+
+    auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+    auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+
+    auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>();
+    pp_obs->setStride(1);
+    auto connection = kernel->registerObservable(pp_obs.get());
+
+    const int n_particles = 200;
+    const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
+    std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
+    kernel->getKernelStateModel().addParticles(particlesToBeginWith);
+
+    for (size_t t = 0; t < 20; t++) {
+
+        diffuseProgram->execute();
+        updateModelProgram->configure(t, true);
+        updateModelProgram->execute();
+
+        reactionsProgram->execute();
+        updateModelProgram->configure(t, false);
+        updateModelProgram->execute();
+
+        pp_obs->evaluate();
 
     }
 
-    TEST_F(SingleCPUTestReactions, TestDecay) {
-        auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-        kernel->getKernelContext().setBoxSize(10, 10, 10);
-        kernel->getKernelContext().setTimeStep(1);
-        kernel->getKernelContext().setDiffusionConstant("X", .25);
-        kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
-        kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
+    EXPECT_EQ(0, kernel->getKernelStateModel().getParticlePositions().size());
 
-        auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
-        auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
-        auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+    connection.disconnect();
+}
 
-        auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>();
-        pp_obs->setStride(1);
-        auto connection = kernel->registerObservable(pp_obs.get());
+/**
+ * Setting:
+ *  - Five particle types A,B,C,D,E.
+ *  - They are instantiated such that there is one A particle, one B and one C particle.
+ *  - B and C particle are within the reaction radius of their assigned reaction.
+ * Reactions (all with rate 1, dt = 1):
+ *  - A has no interaction with the other particles and dies after one time step (death rate 1)
+ *  - B + C -> E
+ *  - B + D -> A
+ *  - E -> A
+ *  - C -> D
+ * Expected:
+ *  - After one time step, the A particle dies and either C -> D or B + C -> E
+ *  - After two time steps:
+ *      - If previously C -> D, one is left with one B and one D particle,
+ *        which will react to one A particle
+ *      - If previously B + C -> E, one is left with one E particle,
+ *        which will convert to one A particle
+ *  - After three time steps, one is left with one A particle which then will
+ *    decay within the next timestep, leaving no particles.
+ * Assert:
+ *   - t = 0: n_particles == 3 with 1x A, 1x B, 1x C
+ *   - t = 1: n_particles == 2 || n_particles == 1 with (1x B, 1x D) || 1x E
+ *   - t = 2: n_particles == 1 with 1x A
+ *   - t > 2: n_particles == 0
+ */
+TEST_F(SingleCPUTestReactions, TestMultipleReactionTypes) {
+    using fusion_t = readdy::model::reactions::Fusion;
+    using fission_t = readdy::model::reactions::Fission;
+    using enzymatic_t = readdy::model::reactions::Enzymatic;
+    using conversion_t = readdy::model::reactions::Conversion;
+    using death_t = readdy::model::reactions::Death;
+    using particle_t = readdy::model::Particle;
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().setTimeStep(1);
 
-        const int n_particles = 200;
-        const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
-        std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
-        kernel->getKernelStateModel().addParticles(particlesToBeginWith);
+    kernel->getKernelContext().setDiffusionConstant("A", .25);
+    kernel->getKernelContext().setDiffusionConstant("B", .25);
+    kernel->getKernelContext().setDiffusionConstant("C", .25);
+    kernel->getKernelContext().setDiffusionConstant("D", .25);
+    kernel->getKernelContext().setDiffusionConstant("E", .25);
 
-        for (size_t t = 0; t < 20; t++) {
+    kernel->getKernelContext().registerDeathReaction("A decay", "A", 1);
+    kernel->getKernelContext().registerFusionReaction("B+C->E", "B", "C", "E", 1, 13);
+    kernel->getKernelContext().registerFusionReaction("B+D->A", "B", "D", "A", 1, 13);
+    kernel->getKernelContext().registerConversionReaction("E->A", "E", "A", 1);
+    kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
 
-            diffuseProgram->execute();
-            updateModelProgram->configure(t, true);
-            updateModelProgram->execute();
+    auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+    auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
 
-            reactionsProgram->execute();
-            updateModelProgram->configure(t, false);
-            updateModelProgram->execute();
+    const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
+    const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
+    const auto typeId_C = kernel->getKernelContext().getParticleTypeID("C");
+    const auto typeId_D = kernel->getKernelContext().getParticleTypeID("D");
+    const auto typeId_E = kernel->getKernelContext().getParticleTypeID("E");
 
-            pp_obs->evaluate();
+    kernel->getKernelStateModel().addParticle({4, 4, 4, typeId_A});
+    kernel->getKernelStateModel().addParticle({-2, 0, 0, typeId_B});
+    kernel->getKernelStateModel().addParticle({2, 0, 0, typeId_C});
 
-        }
+    auto pred_contains_A = [=](const readdy::model::Particle &p) { return p.getType() == typeId_A; };
+    auto pred_contains_B = [=](const readdy::model::Particle &p) { return p.getType() == typeId_B; };
+    auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
+    auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
+    auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
 
-        EXPECT_EQ(0, kernel->getKernelStateModel().getParticlePositions().size());
+    for (unsigned int t = 0; t < 4; t++) {
 
-        connection.disconnect();
-    }
+        const auto particles = kernel->getKernelStateModel().getParticles();
 
-    /**
-     * Setting:
-     *  - Five particle types A,B,C,D,E.
-     *  - They are instantiated such that there is one A particle, one B and one C particle.
-     *  - B and C particle are within the reaction radius of their assigned reaction.
-     * Reactions (all with rate 1, dt = 1):
-     *  - A has no interaction with the other particles and dies after one time step (death rate 1)
-     *  - B + C -> E
-     *  - B + D -> A
-     *  - E -> A
-     *  - C -> D
-     * Expected:
-     *  - After one time step, the A particle dies and either C -> D or B + C -> E
-     *  - After two time steps:
-     *      - If previously C -> D, one is left with one B and one D particle,
-     *        which will react to one A particle
-     *      - If previously B + C -> E, one is left with one E particle,
-     *        which will convert to one A particle
-     *  - After three time steps, one is left with one A particle which then will
-     *    decay within the next timestep, leaving no particles.
-     * Assert:
-     *   - t = 0: n_particles == 3 with 1x A, 1x B, 1x C
-     *   - t = 1: n_particles == 2 || n_particles == 1 with (1x B, 1x D) || 1x E
-     *   - t = 2: n_particles == 1 with 1x A
-     *   - t > 2: n_particles == 0
-     */
-    TEST_F(SingleCPUTestReactions, TestMultipleReactionTypes) {
-        auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-        kernel->getKernelContext().setBoxSize(10, 10, 10);
-        kernel->getKernelContext().setTimeStep(1);
+        bool containsA = std::find_if(particles.begin(), particles.end(), pred_contains_A) != particles.end();
+        bool containsB = std::find_if(particles.begin(), particles.end(), pred_contains_B) != particles.end();
+        bool containsC = std::find_if(particles.begin(), particles.end(), pred_contains_C) != particles.end();
+        bool containsD = std::find_if(particles.begin(), particles.end(), pred_contains_D) != particles.end();
+        bool containsE = std::find_if(particles.begin(), particles.end(), pred_contains_E) != particles.end();
 
-        kernel->getKernelContext().setDiffusionConstant("A", .25);
-        kernel->getKernelContext().setDiffusionConstant("B", .25);
-        kernel->getKernelContext().setDiffusionConstant("C", .25);
-        kernel->getKernelContext().setDiffusionConstant("D", .25);
-        kernel->getKernelContext().setDiffusionConstant("E", .25);
-
-        kernel->getKernelContext().registerDeathReaction("A decay", "A", 1);
-        kernel->getKernelContext().registerFusionReaction("B+C->E", "B", "C", "E", 1, 13);
-        kernel->getKernelContext().registerFusionReaction("B+D->A", "B", "D", "A", 1, 13);
-        kernel->getKernelContext().registerConversionReaction("E->A", "E", "A", 1);
-        kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
-
-        auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
-        auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
-        auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
-
-        const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
-        const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
-        const auto typeId_C = kernel->getKernelContext().getParticleTypeID("C");
-        const auto typeId_D = kernel->getKernelContext().getParticleTypeID("D");
-        const auto typeId_E = kernel->getKernelContext().getParticleTypeID("E");
-
-        kernel->getKernelStateModel().addParticle({4, 4, 4, typeId_A});
-        kernel->getKernelStateModel().addParticle({-2, 0, 0, typeId_B});
-        kernel->getKernelStateModel().addParticle({2, 0, 0, typeId_C});
-
-        auto pred_contains_A = [=](const readdy::model::Particle &p) { return p.getType() == typeId_A; };
-        auto pred_contains_B = [=](const readdy::model::Particle &p) { return p.getType() == typeId_B; };
-        auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
-        auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
-        auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
-
-        for (unsigned int t = 0; t < 4; t++) {
-
-            const auto particles = kernel->getKernelStateModel().getParticles();
-
-            bool containsA = std::find_if(particles.begin(), particles.end(), pred_contains_A) != particles.end();
-            bool containsB = std::find_if(particles.begin(), particles.end(), pred_contains_B) != particles.end();
-            bool containsC = std::find_if(particles.begin(), particles.end(), pred_contains_C) != particles.end();
-            bool containsD = std::find_if(particles.begin(), particles.end(), pred_contains_D) != particles.end();
-            bool containsE = std::find_if(particles.begin(), particles.end(), pred_contains_E) != particles.end();
-
-            switch (t) {
-                case 0: {
-                    EXPECT_EQ(3, particles.size());
-                    EXPECT_TRUE(containsA);
+        switch (t) {
+            case 0: {
+                EXPECT_EQ(3, particles.size());
+                EXPECT_TRUE(containsA);
+                EXPECT_TRUE(containsB);
+                EXPECT_TRUE(containsC);
+                break;
+            }
+            case 1: {
+                EXPECT_TRUE(particles.size() == 2 || particles.size() == 1);
+                if (particles.size() == 2) {
+                    BOOST_LOG_TRIVIAL(debug) << "------> conversion happened";
                     EXPECT_TRUE(containsB);
-                    EXPECT_TRUE(containsC);
-                    break;
+                    EXPECT_TRUE(containsD);
+                } else {
+                    BOOST_LOG_TRIVIAL(debug) << "------> fusion happened";
+                    EXPECT_TRUE(containsE);
                 }
-                case 1: {
-                    EXPECT_TRUE(particles.size() == 2 || particles.size() == 1);
-                    if (particles.size() == 2) {
-                        BOOST_LOG_TRIVIAL(debug) << "------> conversion happened";
-                        EXPECT_TRUE(containsB);
-                        EXPECT_TRUE(containsD);
-                    } else {
-                        BOOST_LOG_TRIVIAL(debug) << "------> fusion happened";
-                        EXPECT_TRUE(containsE);
-                    }
-                    break;
-                }
-                case 2: {
-                    EXPECT_EQ(1, particles.size());
-                    EXPECT_TRUE(containsA);
-                    break;
-                }
-                case 3: {
-                    EXPECT_EQ(0, particles.size());
-                    break;
-                }
-                default: {
-                    FAIL();
-                }
+                break;
             }
-
-            // propagate
-            diffuseProgram->execute();
-            updateModelProgram->configure(t, true);
-            updateModelProgram->execute();
-
-            reactionsProgram->execute();
-            updateModelProgram->configure(t, false);
-            updateModelProgram->execute();
+            case 2: {
+                EXPECT_EQ(1, particles.size());
+                EXPECT_TRUE(containsA);
+                break;
+            }
+            case 3: {
+                EXPECT_EQ(0, particles.size());
+                break;
+            }
+            default: {
+                FAIL();
+            }
         }
-    }
 
+        // propagate
+        diffuseProgram->execute();
+        updateModelProgram->configure(t, true);
+        updateModelProgram->execute();
+
+        reactionsProgram->execute();
+        updateModelProgram->configure(t, false);
+        updateModelProgram->execute();
+    }
 }
