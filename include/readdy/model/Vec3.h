@@ -61,9 +61,6 @@ namespace readdy {
             return lhs * rhs;
         }
 
-        template<bool PX, bool PY, bool PZ, typename... Args>
-        void fixPosition(Vec3 &vec, Args... args);
-
         template<bool PX, bool PY, bool PZ>
         inline void fixPosition(Vec3 &vec, const double &dx, const double &dy, const double &dz) {
             if (PX) {
@@ -78,9 +75,6 @@ namespace readdy {
         };
 
         void fixPosition(Vec3 &vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize);
-
-        template<bool PX, bool PY, bool PZ, typename... Args>
-        Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, Args... args);
 
         template<bool PX, bool PY, bool PZ>
         inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const double &dx, const double &dy, const double &dz) {
@@ -100,23 +94,10 @@ namespace readdy {
             return dv;
         };
 
-        template<>
-        inline Vec3 shortestDifference<false, false, false>(const Vec3 &lhs, const Vec3 &rhs) {
-            return rhs - lhs;
-        };
-
-        template<bool PX, bool PY, bool PZ, typename... Args>
-        double distSquared(const Vec3 &lhs, const Vec3 &rhs, Args... args);
-
         template<bool PX, bool PY, bool PZ>
         inline double distSquared(const Vec3 &lhs, const Vec3 &rhs, const double &dx, const double &dy, const double &dz) {
             auto dv = shortestDifference<PX, PY, PZ>(lhs, rhs, dx, dy, dz);
             return dv * dv;
-        };
-
-        template<>
-        inline double distSquared<false, false, false>(const Vec3 &lhs, const Vec3 &rhs) {
-            return (lhs - rhs) * (lhs - rhs);
         };
 
         double distSquared(const Vec3 &lhs, const Vec3 &rhs, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize);

@@ -94,7 +94,7 @@ namespace readdy {
                             diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<false, false, true>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
                             fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<false, false, true>(vec, box_size[0], box_size[1], box_size[2]); };
                         } else {
-                            diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<false, false, false>(lhs, rhs); };
+                            diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 { return readdy::model::shortestDifference<false, false, false>(lhs, rhs, box_size[0], box_size[1], box_size[2]); };
                             fixPositionFun = [&](Vec3 &vec) -> void { readdy::model::fixPosition<false, false, false>(vec, box_size[0], box_size[1], box_size[2]); };
                         }
                     }
