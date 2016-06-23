@@ -67,6 +67,9 @@ namespace readdy {
 
                 virtual void perform(const Particle &p1_in, const Particle &p2_in, Particle &p1_out, Particle &p2_out) const { };
 
+                /*template<unsigned int _N>
+                friend std::ostream &operator<<(std::ostream& os, const Reaction& reaction);*/
+
             protected:
                 const unsigned int _n_educts = N_EDUCTS;
                 const unsigned int _n_products;
@@ -78,6 +81,23 @@ namespace readdy {
                 const double eductDistance;
                 const double productDistance;
             };
+
+            /*template<unsigned int _N>
+            inline std::ostream& operator<<(std::ostream& os, const Reaction<_N>& reaction) {
+                os << "Reaction(\"" << reaction.name <<"\", N_Educts="<<_N<<", N_Products="<<reaction._n_products<<", (";
+                for(int i = 0; i < _N; i++) {
+                    if(i > 0) os << ",";
+                    os << reaction.educts[i];
+                }
+                os <<") -> (";
+                for(int i = 0; i < reaction._n_products; i++) {
+                    if(i > 0) os << ",";
+                    os << reaction.products[i];
+                }
+                os <<"), rate="<<reaction.rate<<", eductDist="<<reaction.eductDistance<<", prodDist="<<reaction.productDistance<<")";
+                return os;
+            }*/
+
         }
     }
 }

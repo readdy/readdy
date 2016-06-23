@@ -1,7 +1,3 @@
-#include <readdy/model/RandomProvider.h>
-#include <boost/random.hpp>
-#include <readdy/common/make_unique.h>
-
 /**
  * << detailed description >>
  *
@@ -10,6 +6,12 @@
  * @author clonker
  * @date 19.04.16
  */
+
+#include <readdy/model/RandomProvider.h>
+#include <boost/random.hpp>
+#include <readdy/common/make_unique.h>
+#include <ctime>
+
 namespace readdy {
     namespace model {
         struct RandomProvider::Impl {

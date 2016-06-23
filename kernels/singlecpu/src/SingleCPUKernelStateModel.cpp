@@ -23,6 +23,7 @@ namespace readdy {
             struct SingleCPUKernelStateModel::Impl {
                 readdy::model::time_step_type t = 0;
                 double currentEnergy = 0;
+                bool firstUpdate = true;
                 std::unique_ptr<model::SingleCPUParticleData> particleData;
                 std::unique_ptr<model::SingleCPUNeighborList> neighborList;
                 readdy::model::KernelContext const *context;
@@ -32,10 +33,11 @@ namespace readdy {
                 const auto timeStepChanged = t != pimpl->t;
                 const auto& difference = pimpl->context->getShortestDifferenceFun();
                 pimpl->t = t;
-                if (timeStepChanged) {
+                if (timeStepChanged || pimpl->firstUpdate) {
                     fireTimeStepChanged();
                     pimpl->currentEnergy = 0;
                     pimpl->neighborList->create(*pimpl->particleData);
+                    pimpl->firstUpdate = false;
                 }
 
                 if (forces) {
@@ -118,6 +120,14 @@ namespace readdy {
 
             const model::SingleCPUNeighborList *const SingleCPUKernelStateModel::getNeighborList() const {
                 return pimpl->neighborList.get();
+            }
+
+            const std::vector<readdy::model::Particle> SingleCPUKernelStateModel::getParticles() const {
+                std::vector<readdy::model::Particle> result;
+                for(auto i = 0; i < pimpl->particleData->size(); ++i) {
+                    result.push_back((*pimpl->particleData)[i]);
+                }
+                return result;
             }
 
 

@@ -27,6 +27,7 @@ namespace readdy {
             // const accessor methods
             virtual const time_step_type getCurrentTimeStep() const = 0;
             virtual const std::vector<Vec3> getParticlePositions() const = 0;
+            virtual const std::vector<Particle> getParticles() const = 0;
 
             virtual void updateModel(time_step_type t, bool forces) = 0;
 

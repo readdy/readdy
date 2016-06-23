@@ -142,9 +142,9 @@ namespace {
         auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         kernel->getKernelContext().setBoxSize(10, 10, 10);
         kernel->getKernelContext().setTimeStep(1);
-        kernel->getKernelContext().setDiffusionConstant("X", .55);
-        kernel->getKernelContext().registerDeathReaction("X decay", "X", .05);
-        kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .5, .00);
+        kernel->getKernelContext().setDiffusionConstant("X", .25);
+        kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
+        kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
 
         auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
         auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
@@ -154,18 +154,15 @@ namespace {
         pp_obs->setStride(1);
         auto connection = kernel->registerObservable(pp_obs.get());
 
-        const int n_particles = 2000;
+        const int n_particles = 200;
         const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
-        std::vector<readdy::model::Particle> particlesToBeginWith {n_particles, {0,0,0,typeId}};
-        BOOST_LOG_TRIVIAL(debug) << "n_particles="<<particlesToBeginWith.size();
+        std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
         kernel->getKernelStateModel().addParticles(particlesToBeginWith);
 
-        std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
-
-        for(size_t t = 0; t < 1000; t++) {
+        for (size_t t = 0; t < 20; t++) {
 
             diffuseProgram->execute();
-            updateModelProgram->configure(t, false);
+            updateModelProgram->configure(t, true);
             updateModelProgram->execute();
 
             reactionsProgram->execute();
@@ -173,11 +170,130 @@ namespace {
             updateModelProgram->execute();
 
             pp_obs->evaluate();
-            BOOST_LOG_TRIVIAL(debug) << "\tcurrently n particles: " << pp_obs->getResult()->size();
 
         }
 
+        EXPECT_EQ(0, kernel->getKernelStateModel().getParticlePositions().size());
+
         connection.disconnect();
+    }
+
+    /**
+     * Setting:
+     *  - Five particle types A,B,C,D,E.
+     *  - They are instantiated such that there is one A particle, one B and one C particle.
+     *  - B and C particle are within the reaction radius of their assigned reaction.
+     * Reactions (all with rate 1, dt = 1):
+     *  - A has no interaction with the other particles and dies after one time step (death rate 1)
+     *  - B + C -> E
+     *  - B + D -> A
+     *  - E -> A
+     *  - C -> D
+     * Expected:
+     *  - After one time step, the A particle dies and either C -> D or B + C -> E
+     *  - After two time steps:
+     *      - If previously C -> D, one is left with one B and one D particle,
+     *        which will react to one A particle
+     *      - If previously B + C -> E, one is left with one E particle,
+     *        which will convert to one A particle
+     *  - After three time steps, one is left with one A particle which then will
+     *    decay within the next timestep, leaving no particles.
+     * Assert:
+     *   - t = 0: n_particles == 3 with 1x A, 1x B, 1x C
+     *   - t = 1: n_particles == 2 || n_particles == 1 with (1x B, 1x D) || 1x E
+     *   - t = 2: n_particles == 1 with 1x A
+     *   - t > 2: n_particles == 0
+     */
+    TEST_F(SingleCPUTestReactions, TestMultipleReactionTypes) {
+        auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+        kernel->getKernelContext().setBoxSize(10, 10, 10);
+        kernel->getKernelContext().setTimeStep(1);
+
+        kernel->getKernelContext().setDiffusionConstant("A", .25);
+        kernel->getKernelContext().setDiffusionConstant("B", .25);
+        kernel->getKernelContext().setDiffusionConstant("C", .25);
+        kernel->getKernelContext().setDiffusionConstant("D", .25);
+        kernel->getKernelContext().setDiffusionConstant("E", .25);
+
+        kernel->getKernelContext().registerDeathReaction("A decay", "A", 1);
+        kernel->getKernelContext().registerFusionReaction("B+C->E", "B", "C", "E", 1, 13);
+        kernel->getKernelContext().registerFusionReaction("B+D->A", "B", "D", "A", 1, 13);
+        kernel->getKernelContext().registerConversionReaction("E->A", "E", "A", 1);
+        kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
+
+        auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+        auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+        auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+
+        const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
+        const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
+        const auto typeId_C = kernel->getKernelContext().getParticleTypeID("C");
+        const auto typeId_D = kernel->getKernelContext().getParticleTypeID("D");
+        const auto typeId_E = kernel->getKernelContext().getParticleTypeID("E");
+
+        kernel->getKernelStateModel().addParticle({4, 4, 4, typeId_A});
+        kernel->getKernelStateModel().addParticle({-2, 0, 0, typeId_B});
+        kernel->getKernelStateModel().addParticle({2, 0, 0, typeId_C});
+
+        auto pred_contains_A = [=](const readdy::model::Particle &p) { return p.getType() == typeId_A; };
+        auto pred_contains_B = [=](const readdy::model::Particle &p) { return p.getType() == typeId_B; };
+        auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
+        auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
+        auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
+
+        for (unsigned int t = 0; t < 4; t++) {
+
+            const auto particles = kernel->getKernelStateModel().getParticles();
+
+            bool containsA = std::find_if(particles.begin(), particles.end(), pred_contains_A) != particles.end();
+            bool containsB = std::find_if(particles.begin(), particles.end(), pred_contains_B) != particles.end();
+            bool containsC = std::find_if(particles.begin(), particles.end(), pred_contains_C) != particles.end();
+            bool containsD = std::find_if(particles.begin(), particles.end(), pred_contains_D) != particles.end();
+            bool containsE = std::find_if(particles.begin(), particles.end(), pred_contains_E) != particles.end();
+
+            switch (t) {
+                case 0: {
+                    EXPECT_EQ(3, particles.size());
+                    EXPECT_TRUE(containsA);
+                    EXPECT_TRUE(containsB);
+                    EXPECT_TRUE(containsC);
+                    break;
+                }
+                case 1: {
+                    EXPECT_TRUE(particles.size() == 2 || particles.size() == 1);
+                    if (particles.size() == 2) {
+                        BOOST_LOG_TRIVIAL(debug) << "------> conversion happened";
+                        EXPECT_TRUE(containsB);
+                        EXPECT_TRUE(containsD);
+                    } else {
+                        BOOST_LOG_TRIVIAL(debug) << "------> fusion happened";
+                        EXPECT_TRUE(containsE);
+                    }
+                    break;
+                }
+                case 2: {
+                    EXPECT_EQ(1, particles.size());
+                    EXPECT_TRUE(containsA);
+                    break;
+                }
+                case 3: {
+                    EXPECT_EQ(0, particles.size());
+                    break;
+                }
+                default: {
+                    FAIL();
+                }
+            }
+
+            // propagate
+            diffuseProgram->execute();
+            updateModelProgram->configure(t, true);
+            updateModelProgram->execute();
+
+            reactionsProgram->execute();
+            updateModelProgram->configure(t, false);
+            updateModelProgram->execute();
+        }
     }
 
 }

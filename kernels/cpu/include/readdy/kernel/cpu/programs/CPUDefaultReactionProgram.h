@@ -23,6 +23,8 @@ namespace readdy {
 
                     virtual void execute() override;
 
+                protected:
+                    CPUKernel const *const kernel;
                 };
 
             }

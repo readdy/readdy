@@ -49,6 +49,8 @@ namespace readdy {
 
                 const model::SingleCPUNeighborList * const getNeighborList() const;
 
+                virtual const std::vector<readdy::model::Particle> getParticles() const override;
+
             private:
                 struct Impl;
                 std::unique_ptr<Impl> pimpl;

@@ -13,6 +13,7 @@
 
 namespace readdy {
     namespace model {
+
         struct Kernel::Impl {
             /**
              * The name of the kernel.
@@ -52,6 +53,7 @@ namespace readdy {
                     evaluateObservables();
                 }
             };
+            std::srand((unsigned int) std::time(0));
         }
 
         Kernel::~Kernel() {

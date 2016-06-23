@@ -87,15 +87,15 @@ namespace readdy {
             auto dv = rhs - lhs;
             if (PX) {
                 if (dv[0] > dx * .5) dv[0] -= dx;
-                else if (dv[0] <= dx * .5) dv[0] += dx;
+                else if (dv[0] <= -dx * .5) dv[0] += dx;
             }
             if (PY) {
                 if (dv[1] > dy * .5) dv[1] -= dy;
-                else if (dv[1] <= dy * .5) dv[1] += dy;
+                else if (dv[1] <= -dy * .5) dv[1] += dy;
             }
             if (PZ) {
                 if (dv[2] > dz * .5) dv[2] -= dz;
-                else if (dv[2] <= dz * .5) dv[2] += dz;
+                else if (dv[2] <= -dz * .5) dv[2] += dz;
             }
             return dv;
         };
