@@ -2,9 +2,12 @@
 
 #include <Python.h>
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
 #include "PyPotential.h"
+#include "PyFunction.h"
 
 namespace py = boost::python;
 using sim = readdy::Simulation;
@@ -14,6 +17,7 @@ using pot2 = readdy::py::PotentialOrder2Wrapper;
 using model = readdy::model::KernelStateModel;
 using ctx = readdy::model::KernelContext;
 using kern = readdy::model::Kernel;
+using uuid = boost::uuids::uuid;
 
 boost::python::list getPeriodicBoundarySimulationWrapper(const sim &simulation) {
     auto p = simulation.getPeriodicBoundary();
@@ -40,6 +44,11 @@ void registerPotentialOrder2_name(sim& self, std::string potentialType, std::str
 py::list getKernelAvailableObservables(kern& self) { return py::list{self.getAvailableObservables()}; };
 double pyVec3Bracket(vec& self, const unsigned int i) {return self[i];}
 
+boost::uuids::uuid registerObservable_ParticlePositions(sim& self, unsigned int stride, const boost::python::object &callbackFun) {
+    auto pyFun = readdy::py::PyFunction<void, const readdy::model::ParticlePositionObservable::result_t &>(callbackFun);
+    return self.registerObservable<readdy::model::ParticlePositionObservable>(stride, std::move(pyFun));
+}
+
 // module
 BOOST_PYTHON_MODULE (simulation) {
 
@@ -54,6 +63,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("getSelectedKernelType", &getSelectedKernelType)
             .def("registerPotentialOrder2", &registerPotentialOrder2)
             .def("registerPotentialOrder2", &registerPotentialOrder2_name)
+            .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
             .def("setKernel", &sim::setKernel)
             .def("run", &sim::run);
 
@@ -74,6 +84,9 @@ BOOST_PYTHON_MODULE (simulation) {
             .def(py::self_ns::str(py::self))
             .def("__getitem__", &pyVec3Bracket);
 
+    py::class_<std::vector<vec>>("Vecvec")
+            .def(boost::python::vector_indexing_suite<std::vector<vec>>());
+
     py::class_<pot2>("Pot2", py::init<std::string, boost::python::object, boost::python::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);
@@ -81,6 +94,9 @@ BOOST_PYTHON_MODULE (simulation) {
     py::class_<kern, boost::noncopyable>("Kernel", py::no_init)
             .def("getName", &kern::getName, py::return_value_policy<py::reference_existing_object>())
             .def("getAvailableObservables", &getKernelAvailableObservables);
+
+    py::class_<uuid>("uuid", py::no_init)
+            .def("__str__", +[](const uuid& uuid) { return boost::uuids::to_string(uuid);});
 }
 
 #endif

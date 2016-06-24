@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 import numpy as np
@@ -44,6 +45,10 @@ class TestInternalSimulationModule(unittest.TestCase):
         self.simulation.box_size = Vec(1, 3.6, 7)
         np.testing.assert_equal(self.simulation.box_size, Vec(1, 3.6, 7))
 
+    def py_position_observable_callback(self, positions):
+        print("yus?")
+        pass
+
     def test_potentials(self):
         if not self.simulation.isKernelSelected():
             self.simulation.setKernel("SingleCPU")
@@ -55,6 +60,7 @@ class TestInternalSimulationModule(unittest.TestCase):
         self.simulation.registerParticleType("ParticleTypeB_internal", 3.0)
         self.simulation.registerPotentialOrder2(pot, "ParticleTypeA", "ParticleTypeB")
         self.simulation.registerPotentialOrder2("HarmonicRepulsion", "ParticleTypeA_internal", "ParticleTypeB_internal")
+        self.simulation.registerObservable_ParticlePositions(1, self.py_position_observable_callback)
         self.simulation.run(100, 1)
 
 if __name__ == '__main__':

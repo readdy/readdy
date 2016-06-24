@@ -2,17 +2,19 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/Simulation.h>
-#include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
 
 using namespace readdy;
 
+using uuid_t = boost::uuids::uuid;
+
 struct Simulation::Impl {
     std::unique_ptr<readdy::model::Kernel> kernel;
-    std::vector<std::unique_ptr<readdy::model::ObservableBase>> createdObservables {};
-    std::vector<boost::signals2::connection> observableConnections {};
+    std::vector<std::unique_ptr<readdy::model::ObservableBase>> foo {};
+    std::unordered_map<uuid_t, std::unique_ptr<readdy::model::ObservableBase>, boost::hash<uuid_t>> observables {};
+    std::unordered_map<uuid_t, boost::signals2::scoped_connection, boost::hash<uuid_t>> observableConnections {};
 };
 
 double Simulation::getKBT() const {
@@ -108,7 +110,7 @@ const std::vector<readdy::model::Vec3> Simulation::getParticlePositions() const 
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
 
-const boost::uuids::uuid& Simulation::registerPotentialOrder1(std::string name, const std::string &type) {
+const uuid_t& Simulation::registerPotentialOrder1(std::string name, const std::string &type) {
     ensureKernelSelected();
     auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder1>(name);
     return pimpl->kernel->getKernelContext().registerOrder1Potential(ptr.get(), name);
@@ -119,11 +121,11 @@ void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrd
     pimpl->kernel->getKernelContext().registerOrder1Potential(ptr, type);
 }
 
-void Simulation::deregisterPotential(const boost::uuids::uuid &uuid) {
+void Simulation::deregisterPotential(const uuid_t &uuid) {
     pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };
 
-const boost::uuids::uuid& Simulation::registerPotentialOrder2(std::string potential, const std::string &type1, const std::string &type2) {
+const uuid_t& Simulation::registerPotentialOrder2(std::string potential, const std::string &type1, const std::string &type2) {
     ensureKernelSelected();
     auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder2>(potential);
     return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), type1, type2);
@@ -145,18 +147,36 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-void Simulation::registerObservable(const std::string &name, unsigned int stride) {
+uuid_t Simulation::registerObservable(const std::string &name, unsigned int stride) {
     ensureKernelSelected();
-    pimpl->createdObservables.push_back(pimpl->kernel->createObservable(name));
-    (**(pimpl->createdObservables.end()-1)).setStride(stride);
-    auto&& connection = pimpl->kernel->registerObservable((*(pimpl->createdObservables.end()-1)).get());
-    pimpl->observableConnections.push_back(connection);
+    boost::uuids::random_generator uuid_gen;
+    auto uuid = uuid_gen();
+    pimpl->observables.emplace(uuid, pimpl->kernel->createObservable(name));
+    pimpl->observables[uuid]->setStride(stride);
+    auto&& connection = pimpl->kernel->connectObservable(pimpl->observables[uuid].get());
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+    return uuid;
 }
 
-void Simulation::registerObservable(readdy::model::ObservableBase &observable) {
+uuid_t Simulation::registerObservable(readdy::model::ObservableBase &observable) {
     ensureKernelSelected();
-    auto&& connection = pimpl->kernel->registerObservable(&observable);
-    pimpl->observableConnections.push_back(connection);
+    boost::uuids::random_generator uuid_gen;
+    auto uuid = uuid_gen();
+    auto&& connection = pimpl->kernel->connectObservable(&observable);
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+    return uuid;
+}
+
+void Simulation::deregisterObservable(const uuid_t uuid) {
+    pimpl->observableConnections.erase(uuid);
+    if(pimpl->observables.find(uuid) != pimpl->observables.end()) {
+        pimpl->observables.erase(uuid);
+    }
+}
+
+std::vector<std::string> Simulation::getAvailableObservables() {
+    ensureKernelSelected();
+    return pimpl->kernel->getAvailableObservables();
 }
 
 
@@ -165,10 +185,24 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 Simulation::Simulation(Simulation &&rhs) = default;
 
 Simulation::~Simulation() {
-    for(auto&& connection : pimpl->observableConnections) {
-        connection.disconnect();
-    }
 }
+
+template<typename T>
+uuid_t Simulation::registerObservable(unsigned int stride, std::function<void(const typename T::result_t &)>&& callbackFun) {
+    ensureKernelSelected();
+    boost::uuids::random_generator uuid_gen;
+    auto uuid = uuid_gen();
+    auto && obs = pimpl->kernel->createObservable<T>();
+    obs->setCallback(std::move(callbackFun));
+    pimpl->observables.emplace(uuid, std::move(obs));
+    pimpl->observables[uuid]->setStride(stride);
+    auto&& connection = pimpl->kernel->connectObservable(pimpl->observables[uuid].get());
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+    return uuid;
+}
+
+
+template uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(unsigned int, std::function<void(const typename readdy::model::ParticlePositionObservable::result_t &)>&&);
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

@@ -24,7 +24,6 @@ namespace readdy {
 
         private:
             std::shared_ptr<boost::python::object> py_ptr;
-
         };
     }
 }

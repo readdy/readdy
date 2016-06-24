@@ -155,7 +155,7 @@ TEST_F(SingleCPUTestReactions, TestDecay) {
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>();
     pp_obs->setStride(1);
-    auto connection = kernel->registerObservable(pp_obs.get());
+    auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
     const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");

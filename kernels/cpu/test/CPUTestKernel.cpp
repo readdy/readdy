@@ -46,7 +46,7 @@ namespace {
 
         auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>();
         pp_obs->setStride(1);
-        auto connection = kernel->registerObservable(pp_obs.get());
+        auto connection = kernel->connectObservable(pp_obs.get());
 
         const int n_particles = 2000;
         const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
@@ -67,7 +67,7 @@ namespace {
             updateModelProgram->execute();
 
             pp_obs->evaluate();
-            BOOST_LOG_TRIVIAL(debug) << "\tcurrently n particles: " << pp_obs->getResult()->size();
+            BOOST_LOG_TRIVIAL(debug) << "\tcurrently n particles: " << pp_obs->getResult().size();
 
         }
 

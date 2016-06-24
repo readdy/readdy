@@ -34,10 +34,10 @@ namespace readdy {
                 const auto& difference = pimpl->context->getShortestDifferenceFun();
                 pimpl->t = t;
                 if (timeStepChanged || pimpl->firstUpdate) {
-                    fireTimeStepChanged();
-                    pimpl->currentEnergy = 0;
                     pimpl->neighborList->create(*pimpl->particleData);
+                    pimpl->currentEnergy = 0;
                     pimpl->firstUpdate = false;
+                    fireTimeStepChanged();
                 }
 
                 if (forces) {

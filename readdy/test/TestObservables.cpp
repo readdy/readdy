@@ -51,7 +51,7 @@ namespace {
         kernel->getKernelStateModel().addParticles(particles);
         auto&& obs = kernel->createObservable<m::ParticlePositionObservable>();
         obs->setStride(3);
-        auto &&connection = kernel->registerObservable(obs.get());
+        auto &&connection = kernel->connectObservable(obs.get());
 
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
@@ -59,11 +59,11 @@ namespace {
             kernel->getKernelStateModel().updateModel(t, false);
         }
 
-        const auto&& result = obs->getResult();
+        const auto& result = obs->getResult();
         const auto&& positions = kernel->getKernelStateModel().getParticlePositions();
         auto it_pos = positions.begin();
         int j = 0;
-        for(auto it = result->begin(); it != result->end(); it = std::next(it)) {
+        for(auto it = result.begin(); it != result.end(); it = std::next(it)) {
             EXPECT_TRUE(*it == *it_pos);
             it_pos++;
             ++j;
@@ -76,15 +76,15 @@ namespace {
         auto&& o1 = kernel->createObservable<m::ParticlePositionObservable>();
         auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>();
         auto&& o3 = kernel->createObservable<m::TestCombinerObservable>(o1.get(), o2.get());
-        auto&& connection = kernel->registerObservable(o3.get());
+        auto&& connection = kernel->connectObservable(o3.get());
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
             diffuseProgram->execute();
             kernel->getKernelStateModel().updateModel(t, false);
         }
 
-        const auto&& result = o3->getResult();
-        for(auto&& p : *result) {
+        const auto& result = o3->getResult();
+        for(auto&& p : result) {
             // todo
         }
 

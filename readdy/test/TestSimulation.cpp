@@ -71,4 +71,25 @@ namespace {
         msd /= positions.size();
         BOOST_LOG_TRIVIAL(debug) << "mean squared displacement: " << msd;
     }
+
+    TEST_F(TestSimulation, TestObservables) {
+        Simulation simulation;
+        simulation.setKernel("SingleCPU");
+        simulation.setBoxSize(10, 10, 10);
+        unsigned int n_particles = 103;
+        double diffusionConstant = 1;
+        simulation.registerParticleType("type", diffusionConstant);
+        for (auto _ = 0; _ < n_particles; ++_) {
+            simulation.addParticle(0, 0, 0, "type");
+        }
+        double timestep = 1;
+
+        int n_callbacks = 0;
+        simulation.registerObservable<readdy::model::ParticlePositionObservable>(1, [&n_callbacks](const readdy::model::ParticlePositionObservable::result_t &result) -> void {
+            ++n_callbacks;
+            EXPECT_EQ(103, result.size());
+        });
+        simulation.run(100, timestep);
+        EXPECT_EQ(100, n_callbacks);
+    }
 }

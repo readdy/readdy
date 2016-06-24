@@ -27,6 +27,5 @@ namespace readdy {
             interpreter_lock lock;
             (*py_ptr)(*kernel);
         }
-
     }
 }

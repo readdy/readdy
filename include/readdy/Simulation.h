@@ -53,8 +53,19 @@ namespace readdy {
 
         void setPeriodicBoundary(std::array<bool, 3> periodic);
 
-        void registerObservable(const std::string &name, unsigned int stride);
-        void registerObservable(readdy::model::ObservableBase& observable);
+        /**
+         * Registers an observable with the kernel. A list of available observables can be obtained by
+         *
+         */
+        template<typename T>
+        boost::uuids::uuid registerObservable(unsigned int stride, std::function<void(const typename T::result_t&)>&& callbackFun);
+
+        boost::uuids::uuid registerObservable(const std::string &name, unsigned int stride);
+        boost::uuids::uuid registerObservable(readdy::model::ObservableBase& observable);
+        std::vector<std::string> getAvailableObservables();
+        void deregisterObservable(const boost::uuids::uuid uuid);
+
+
         void registerParticleType(const std::string &name, const double diffusionCoefficient);
 
         void deregisterPotential(const boost::uuids::uuid& uuid);

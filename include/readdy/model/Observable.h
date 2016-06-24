@@ -41,7 +41,8 @@ namespace readdy {
             virtual ~ObservableBase();
 
             virtual void callback(readdy::model::time_step_type t) {
-                if(t_current == t) return;
+                if(t_current == t && !firstCall) return;
+                firstCall = false;
                 t_current = t;
                 evaluate();
             };
@@ -52,21 +53,22 @@ namespace readdy {
             unsigned int stride;
             readdy::model::Kernel *const kernel;
             readdy::model::time_step_type t_current = 0;
+            bool firstCall = true;
         };
 
         template<typename Result>
         class Observable : public ObservableBase {
         public:
+            typedef Result result_t;
             Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride) {
-                result = std::make_unique<Result>();
             }
 
-            Result* getResult() {
-                return result.get();
+            const result_t& getResult() {
+                return result;
             }
 
-            void setCallback(const std::function<void(Result *)> &callbackFun) {
-                Observable::_callback_f = callbackFun;
+            void setCallback(std::function<void(const result_t&)>&& callbackFun) {
+                Observable::_callback_f = std::move(callbackFun);
             }
 
             virtual void callback(readdy::model::time_step_type t) override {
@@ -76,8 +78,8 @@ namespace readdy {
 
 
         protected:
-            std::unique_ptr<Result> result;
-            std::function<void(Result*)> _callback_f = [](Result*){};
+            Result result;
+            std::function<void(const Result&)> _callback_f = [](const Result&){};
         };
 
         template<typename Res_t, typename Obs1_t, typename Obs2_t>
