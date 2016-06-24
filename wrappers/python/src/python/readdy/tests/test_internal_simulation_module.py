@@ -46,8 +46,11 @@ class TestInternalSimulationModule(unittest.TestCase):
         np.testing.assert_equal(self.simulation.box_size, Vec(1, 3.6, 7))
 
     def py_position_observable_callback(self, positions):
-        print("yus?")
-        pass
+        _vec_sum = Vec(0,0,0)
+        for v in positions:
+            _vec_sum += v
+        mean = _vec_sum / float(len(positions))
+        print("mean=%s" % mean)
 
     def test_potentials(self):
         if not self.simulation.isKernelSelected():
@@ -60,6 +63,8 @@ class TestInternalSimulationModule(unittest.TestCase):
         self.simulation.registerParticleType("ParticleTypeB_internal", 3.0)
         self.simulation.registerPotentialOrder2(pot, "ParticleTypeA", "ParticleTypeB")
         self.simulation.registerPotentialOrder2("HarmonicRepulsion", "ParticleTypeA_internal", "ParticleTypeB_internal")
+        self.simulation.addParticle("ParticleTypeA", Vec(0,0,0))
+        self.simulation.addParticle("ParticleTypeB", Vec(1,1,1))
         self.simulation.registerObservable_ParticlePositions(1, self.py_position_observable_callback)
         self.simulation.run(100, 1)
 

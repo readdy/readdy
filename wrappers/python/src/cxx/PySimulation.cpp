@@ -45,7 +45,7 @@ py::list getKernelAvailableObservables(kern& self) { return py::list{self.getAva
 double pyVec3Bracket(vec& self, const unsigned int i) {return self[i];}
 
 boost::uuids::uuid registerObservable_ParticlePositions(sim& self, unsigned int stride, const boost::python::object &callbackFun) {
-    auto pyFun = readdy::py::PyFunction<void, const readdy::model::ParticlePositionObservable::result_t &>(callbackFun);
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(stride, std::move(pyFun));
 }
 
@@ -76,6 +76,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def(py::self + py::self)
             .def(py::self - py::self)
             .def(double() * py::self)
+            .def(py::self / double())
             .def(py::self += py::self)
             .def(py::self *= double())
             .def(py::self == py::self)

@@ -45,6 +45,8 @@ namespace readdy {
 
             friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
 
+            friend Vec3 operator/(const Vec3& lhs, const double &rhs);
+
         private:
             std::array<double, 3> data;
         };

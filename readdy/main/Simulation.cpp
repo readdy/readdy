@@ -188,7 +188,7 @@ Simulation::~Simulation() {
 }
 
 template<typename T>
-uuid_t Simulation::registerObservable(unsigned int stride, std::function<void(const typename T::result_t &)>&& callbackFun) {
+uuid_t Simulation::registerObservable(unsigned int stride, std::function<void(typename T::result_t)>&& callbackFun) {
     ensureKernelSelected();
     boost::uuids::random_generator uuid_gen;
     auto uuid = uuid_gen();
@@ -202,7 +202,7 @@ uuid_t Simulation::registerObservable(unsigned int stride, std::function<void(co
 }
 
 
-template uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(unsigned int, std::function<void(const typename readdy::model::ParticlePositionObservable::result_t &)>&&);
+template uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(unsigned int, std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&);
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

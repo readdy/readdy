@@ -30,19 +30,16 @@ namespace readdy {
 
         double PotentialOrder2Wrapper::calculateEnergy(const model::Vec3 &x_ij) {
             interpreter_lock lock;
-            std::cout << "calc energy" << std::endl;
             return boost::python::extract<double>((*calcEnergyFun)(x_ij));
         }
 
         void PotentialOrder2Wrapper::calculateForce(model::Vec3 &force, const model::Vec3 &x_ij) {
             interpreter_lock lock;
-            std::cout << "calc force" << std::endl;
             force += boost::python::extract<readdy::model::Vec3>((*calcForceFun)(x_ij));
         }
 
         void PotentialOrder2Wrapper::calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_ij) {
             interpreter_lock lock;
-            std::cout << "calc force & energy" << std::endl;
             energy += boost::python::extract<double>((*calcEnergyFun)(x_ij));
             force += boost::python::extract<readdy::model::Vec3>((*calcForceFun)(x_ij));
         }

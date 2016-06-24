@@ -73,13 +73,13 @@ namespace readdy {
 
             virtual void callback(readdy::model::time_step_type t) override {
                 ObservableBase::callback(t);
-                _callback_f(getResult());
+                _callback_f(result);
             }
 
 
         protected:
             Result result;
-            std::function<void(const Result&)> _callback_f = [](const Result&){};
+            std::function<void(Result)> _callback_f = [](const Result){};
         };
 
         template<typename Res_t, typename Obs1_t, typename Obs2_t>
