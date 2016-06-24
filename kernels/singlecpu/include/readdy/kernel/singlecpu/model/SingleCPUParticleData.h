@@ -92,6 +92,17 @@ namespace readdy {
                     size_t getNDeactivated() const;
 
                     void markForDeactivation(size_t index);
+
+                    /**
+                     * This method is the counterpart to markForDeactivation.
+                     * The particles that were marked are now deactivated, i.e.,
+                     * for each marked particle:
+                     *   - If it is at the very end of the particle list, the
+                     *     counters are updated.
+                     *   - If not, the particle is swapped with the last active particle,
+                     *     so that again, all deactivated particles reside at the end
+                     *     of the internal data structure.
+                     */
                     void deactivateMarked();
 
                 protected:

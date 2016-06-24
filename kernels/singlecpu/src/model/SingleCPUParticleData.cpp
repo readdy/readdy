@@ -111,22 +111,45 @@ namespace readdy {
                 }
 
                 void SingleCPUParticleData::deactivateMarked() {
+                    // if we havent marked anything, return
                     if(markedForDeactivation->size() == 0) return;
+                    // sanity check: the deactivated_index is pointing to the
+                    // first (real) deactivated particle, i.e., marks the end of the
+                    // active data structure. "deactivated" is a vector<bool>
+                    // that is as long as the data, thus the deactivated_index
+                    // can be at most deactivated->begin() - deactivated->end().
                     if(deactivated->size() < deactivated_index-1) {
                         throw std::runtime_error("this should not happen");
                     }
+                    // if we have active particles
                     if (deactivated_index > 0) {
+                        // we now are going backwards through the active part of the data structure,
+                        // starting with the first _active_ (but possible marked) particle
                         auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
+                        // for each index in the markedForDeactivation data structure
+                        // (which is a set and thus sorted)
                         for (auto &&idx : *markedForDeactivation) {
+                            // if there are marked particles at the very end,
+                            // just shift the deactivated_index and increase n_deactivated
                             while (*deactivatedIt && deactivatedIt != deactivated->begin()) {
                                 --deactivated_index;
                                 ++n_deactivated;
                                 --deactivatedIt;
                             }
+                            // since the deactivated_index might have decreased
+                            // so that we already have deactivated "idx", we check
+                            // if it has been deactivated already (by the above loop)
                             if (idx < deactivated_index) {
+                                // performs swapping of this particle with the last active
+                                // particle
                                 removeParticle(idx);
-                                --deactivatedIt;
+                                // if we are not at the begin already,
+                                // we want to decrease the current particle considered in
+                                // deactivatedIt
+                                if(deactivatedIt != deactivated->begin()) --deactivatedIt;
                             } else {
+                                // since the set is sorted and we start with the smallest idx,
+                                // we can stop here
                                 break;
                             }
                         }
