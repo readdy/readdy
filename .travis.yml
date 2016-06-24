@@ -57,7 +57,6 @@ install:
 
 script:
 - conda build -q tools/conda-recipe
-- tools/ci/travis/travis_test.sh
 
 after_success:
 - tools/ci/travis/make_docs.sh
