@@ -51,7 +51,6 @@ namespace readdy {
         void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
             BOOST_LOG_TRIVIAL(debug) << "loading kernels from directory: " << directory;
             const fs::path p(directory);
-            std::exception_ptr eptr;
             if (fs::exists(p) && fs::is_directory(p)) {
                 for (auto &&dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
                     try {
@@ -59,9 +58,9 @@ namespace readdy {
                             add(dirEntry.path());
                         }
                     } catch(const std::exception& e) {
-                        BOOST_LOG_TRIVIAL(error) << "Could not load " << dirEntry << " due to: " << e.what();
+                        BOOST_LOG_TRIVIAL(warning) << "Could not load " << dirEntry << " due to: " << e.what();
                     } catch(const boost::exception& e) {
-                        BOOST_LOG_TRIVIAL(error) << "Could not load " << dirEntry << " due to: " << boost::diagnostic_information(e);
+                        BOOST_LOG_TRIVIAL(warning) << "Could not load " << dirEntry << " due to: " << boost::diagnostic_information(e);
                     }
                 }
             } else {
@@ -83,7 +82,6 @@ namespace readdy {
         }
 
         void KernelProvider::add(const boost::filesystem::path &sharedLib) {
-            // todo rework this such that the shared lib has a getName entry point and we dont have to create the kernel beforehand
             using namespace _internal;
             const auto name = loadKernelName(sharedLib);
             factory.emplace(std::make_pair(name, [sharedLib] {return new KernelPluginDecorator(sharedLib);}));
