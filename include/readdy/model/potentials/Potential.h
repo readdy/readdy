@@ -41,12 +41,17 @@ namespace readdy {
                 const boost::uuids::uuid &getId() const {
                     return id;
                 }
+
+                void setId(const boost::uuids::uuid id) {
+                    Potential::id = id;
+                }
+
+                virtual Potential* replicate() const = 0;
             };
 
             namespace _internal {
                 template<typename T>
                 struct PotentialName { static const std::string value; };
-
             }
 
             template<typename PotentialType>

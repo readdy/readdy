@@ -32,7 +32,11 @@ namespace readdy {
 
                 template<typename T>
                 std::unique_ptr<T> createPotentialAs(const std::string &name) const {
-                    return std::unique_ptr<T>(dynamic_cast<T*>(factory.find(name)->second()));
+                    auto&& it = factory.find(name);
+                    if(it != factory.end()) {
+                        return std::unique_ptr<T>(dynamic_cast<T *>(it->second()));
+                    }
+                    throw std::runtime_error("Could not find requested potential \""+name+"\" in factory.");
                 }
 
                 std::unique_ptr<Potential> createPotential(std::string name) const {

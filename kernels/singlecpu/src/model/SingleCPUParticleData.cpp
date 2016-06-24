@@ -43,7 +43,8 @@ namespace readdy {
                 }
 
                 size_t SingleCPUParticleData::size() const {
-                    return deactivated_index - markedForDeactivation->size();
+                    auto s = markedForDeactivation->size();
+                    return s <= deactivated_index ? deactivated_index - s : 0;
                 }
 
                 size_t SingleCPUParticleData::max_size() const {
@@ -60,18 +61,24 @@ namespace readdy {
 
                 void SingleCPUParticleData::addParticles(const std::vector<readdy::model::Particle> &particles) {
                     auto added = particles.cbegin();
+                    auto ids_it = ids->begin() + deactivated_index;
+                    auto positions_it = positions->begin() + deactivated_index;
+                    auto forces_it = forces->begin() + deactivated_index;
+                    auto type_it = type->begin() + deactivated_index;
+                    auto deactivated_it = deactivated->begin() + deactivated_index;
                     while (added != particles.cend()) {
                         if (n_deactivated > 0) {
-                            const auto idx = deactivated_index;
 
-                            (*ids)[idx] = added->getId();
-                            (*positions)[idx] = added->getPos();
-                            (*forces)[idx] = {0, 0, 0};
-                            (*type)[idx] = added->getType();
-                            (*deactivated)[idx] = false;
+                            *ids_it = added->getId();
+                            *positions_it = added->getPos();
+                            *forces_it = {0, 0, 0};
+                            *type_it = added->getType();
+                            *deactivated_it = false;
 
                             --n_deactivated;
                             ++deactivated_index;
+
+                            ++ids_it; ++positions_it; ++forces_it; ++type_it; ++deactivated_it;
                         } else {
                             ids->push_back(added->getId());
                             positions->push_back(added->getPos());
@@ -80,7 +87,7 @@ namespace readdy {
                             deactivated->push_back(false);
                             ++deactivated_index;
                         }
-                        added++;
+                        ++added;
                     }
                 }
 
@@ -94,6 +101,7 @@ namespace readdy {
                     std::swap((*deactivated)[index], (*deactivated)[deactivated_index-1]);
 
                     ++n_deactivated;
+                    if(deactivated_index == 0) throw std::runtime_error("hier sollte man aber nicht hinkommen!1");
                     --deactivated_index;
                 }
 
@@ -103,17 +111,47 @@ namespace readdy {
                 }
 
                 void SingleCPUParticleData::deactivateMarked() {
-                    auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
-                    for(auto&& idx : *markedForDeactivation) {
-                        while(*deactivatedIt && deactivatedIt != deactivated->begin()) {
-                            --deactivated_index;
-                            --deactivatedIt;
-                        }
-                        if(idx < deactivated_index) {
-                            removeParticle(idx);
-                            --deactivatedIt;
-                        } else {
-                            break;
+                    // if we havent marked anything, return
+                    if(markedForDeactivation->size() == 0) return;
+                    // sanity check: the deactivated_index is pointing to the
+                    // first (real) deactivated particle, i.e., marks the end of the
+                    // active data structure. "deactivated" is a vector<bool>
+                    // that is as long as the data, thus the deactivated_index
+                    // can be at most deactivated->begin() - deactivated->end().
+                    if(deactivated->size() < deactivated_index-1) {
+                        throw std::runtime_error("this should not happen");
+                    }
+                    // if we have active particles
+                    if (deactivated_index > 0) {
+                        // we now are going backwards through the active part of the data structure,
+                        // starting with the first _active_ (but possible marked) particle
+                        auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
+                        // for each index in the markedForDeactivation data structure
+                        // (which is a set and thus sorted)
+                        for (auto &&idx : *markedForDeactivation) {
+                            // if there are marked particles at the very end,
+                            // just shift the deactivated_index and increase n_deactivated
+                            while (*deactivatedIt && deactivatedIt != deactivated->begin()) {
+                                --deactivated_index;
+                                ++n_deactivated;
+                                --deactivatedIt;
+                            }
+                            // since the deactivated_index might have decreased
+                            // so that we already have deactivated "idx", we check
+                            // if it has been deactivated already (by the above loop)
+                            if (idx < deactivated_index) {
+                                // performs swapping of this particle with the last active
+                                // particle
+                                removeParticle(idx);
+                                // if we are not at the begin already,
+                                // we want to decrease the current particle considered in
+                                // deactivatedIt
+                                if(deactivatedIt != deactivated->begin()) --deactivatedIt;
+                            } else {
+                                // since the set is sorted and we start with the smallest idx,
+                                // we can stop here
+                                break;
+                            }
                         }
                     }
                     markedForDeactivation->clear();
@@ -162,7 +200,7 @@ namespace readdy {
                     return type->begin()+deactivated_index;
                 }
 
-                readdy::model::Particle SingleCPUParticleData::operator[](const size_t index) {
+                readdy::model::Particle SingleCPUParticleData::operator[](const size_t index) const{
                     return readdy::model::Particle(*(begin_positions() + index), *(begin_types() + index), *(begin_ids() + index));
                 }
 
@@ -238,7 +276,7 @@ namespace readdy {
                     return type->cbegin()+deactivated_index;
                 }
 
-                bool SingleCPUParticleData::isMarkedForDeactivation(int index) {
+                bool SingleCPUParticleData::isMarkedForDeactivation(const size_t index) {
                     return (*deactivated)[index];
                 }
 
@@ -250,8 +288,11 @@ namespace readdy {
                     return n_deactivated;
                 }
 
-
-
+                void SingleCPUParticleData::setParticleData(const readdy::model::Particle& particle, const size_t& index) {
+                    (*ids)[index] = particle.getId();
+                    (*positions)[index] = particle.getPos();
+                    (*type)[index] = particle.getType();
+                }
 
             }
         }

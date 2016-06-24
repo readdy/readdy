@@ -15,38 +15,41 @@ namespace readdy {
         namespace singlecpu {
             namespace potentials {
 
-                double HarmonicRepulsion::calculateEnergy(const vec_t &x_i, const vec_t &x_j) {
-                    auto distance = (x_j - x_i) * (x_j - x_i);
-                    if (distance < getSumOfParticleRadiiSquared()) {
-                        distance = std::sqrt(distance);
-                        distance -= getSumOfParticleRadii();
-                        distance *= distance;
-                        return distance * getForceConstant();
+                double SingleCPUHarmonicRepulsion::calculateEnergy(const vec_t &x_ij) {
+                    auto distanceSquared = x_ij*x_ij;
+                    if (distanceSquared < getSumOfParticleRadiiSquared()) {
+                        distanceSquared = std::sqrt(distanceSquared);
+                        distanceSquared -= getSumOfParticleRadii();
+                        distanceSquared *= distanceSquared;
+                        return distanceSquared * getForceConstant();
                     } else {
                         return 0;
                     }
                 }
 
-                void HarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) {
-                    const auto &&r_ij = x_j - x_i;
-                    auto distance = r_ij * r_ij;
-                    if (distance < getSumOfParticleRadiiSquared()) {
-                        distance = std::sqrt(distance);
-                        force += (2 * getForceConstant() * (distance - getSumOfParticleRadii())) / distance * r_ij;
+                void SingleCPUHarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_ij) {
+                    auto squared = x_ij * x_ij;
+                    if (squared < getSumOfParticleRadiiSquared()) {
+                        squared = std::sqrt(squared);
+                        force += (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
                     }
                 }
 
-                void HarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) {
-                    const auto &&r_ij = x_j - x_i;
-                    auto distance = r_ij * r_ij;
-                    if (distance < getSumOfParticleRadiiSquared()) {
-                        distance = std::sqrt(distance);
-                        energy += getForceConstant() * std::pow(distance - getSumOfParticleRadii(), 2);
-                        force += (2 * getForceConstant() * (distance - getSumOfParticleRadii())) / distance * r_ij;
+                void SingleCPUHarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) {
+                    auto squared = x_ij * x_ij;
+                    if (squared < getSumOfParticleRadiiSquared()) {
+                        squared = std::sqrt(squared);
+                        energy += getForceConstant() * std::pow(squared - getSumOfParticleRadii(), 2);
+                        force += (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
                     }
                 }
 
-                HarmonicRepulsion::HarmonicRepulsion(const SingleCPUKernel *const kernel) : readdy::model::potentials::HarmonicRepulsion<SingleCPUKernel>(kernel) { }
+                SingleCPUHarmonicRepulsion::SingleCPUHarmonicRepulsion(const SingleCPUKernel *const kernel) : readdy::model::potentials::HarmonicRepulsion(kernel) { }
+
+                potentials::SingleCPUHarmonicRepulsion *SingleCPUHarmonicRepulsion::replicate() const {
+                    return new SingleCPUHarmonicRepulsion(*this);
+                }
+
 
             }
         }

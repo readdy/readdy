@@ -3,27 +3,36 @@
 //
 
 #include <readdy/common/make_unique.h>
-#include <readdy/kernel/singlecpu/SingleCPUProgramFactory.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUProgramFactory.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUUpdateStateModelProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUDefaultReactionProgram.h>
 
-std::unique_ptr<readdy::model::Program> readdy::kernel::singlecpu::SingleCPUProgramFactory::createProgram(const std::string& name) const {
-    namespace prog = readdy::kernel::singlecpu::programs;
-    if(name == prog::SingleCPUTestProgram::getName()) {
-        return std::make_unique<prog::SingleCPUTestProgram>();
+namespace readdy {
+    namespace kernel {
+        namespace singlecpu {
+            namespace programs {
+                SingleCPUProgramFactory::SingleCPUProgramFactory(SingleCPUKernel *kernel) : kernel(kernel) {
+                    namespace core_p = readdy::model::programs;
+                    factory[core_p::getProgramName<core_p::TestProgram>()] = [] { return new SingleCPUTestProgram(); };
+                    factory[core_p::getProgramName<core_p::AddParticleProgram>()] = [kernel] {
+                        return new SingleCPUAddParticleProgram(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::DiffuseProgram>()] = [kernel] {
+                        return new SingleCPUDiffuseProgram(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::UpdateStateModelProgram>()] = [kernel] {
+                        return new SingleCPUUpdateStateModelProgram(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::DefaultReactionProgram>()] = [kernel] {
+                        return new SingleCPUDefaultReactionProgram(kernel);
+                    };
+                }
+            }
+        }
     }
-    if(name == prog::SingleCPUAddParticleProgram::getName()) {
-        return std::make_unique<prog::SingleCPUAddParticleProgram>(kernel);
-    }
-    if(name == prog::SingleCPUDiffuseProgram::getName()) {
-        return std::make_unique<prog::SingleCPUDiffuseProgram>(kernel);
-    }
-    return nullptr;
-}
-
-readdy::kernel::singlecpu::SingleCPUProgramFactory::SingleCPUProgramFactory(SingleCPUKernel *kernel) : kernel(kernel){
-
 }
 
 

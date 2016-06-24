@@ -13,6 +13,7 @@
 
 namespace readdy {
     namespace model {
+
         struct Kernel::Impl {
             /**
              * The name of the kernel.
@@ -45,7 +46,6 @@ namespace readdy {
         }
 
         Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()) {
-            BOOST_LOG_TRIVIAL(trace) << "creating kernel " << name;
             pimpl->name = name;
             pimpl->observableFactory = std::make_unique<_internal::ObservableFactory>(this);
             pimpl->modelTimeStepListener = [this] {
@@ -53,20 +53,13 @@ namespace readdy {
                     evaluateObservables();
                 }
             };
+            std::srand((unsigned int) std::time(0));
         }
 
         Kernel::~Kernel() {
             if (pimpl->hasModelTimeStepListener) {
                 pimpl->modelTimeStepListenerConnection.disconnect();
             }
-        }
-
-        std::unique_ptr<Program> Kernel::createProgram(const std::string &name) const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
-        std::vector<std::string> Kernel::getAvailablePrograms() const {
-            return std::vector<std::string>();
         }
 
         readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
@@ -148,6 +141,14 @@ namespace readdy {
         }
 
         potentials::PotentialFactory &Kernel::getPotentialFactory() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
+        }
+
+        readdy::model::programs::ProgramFactory &Kernel::getProgramFactory() const {
+            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
+        }
+
+        readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
             throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 

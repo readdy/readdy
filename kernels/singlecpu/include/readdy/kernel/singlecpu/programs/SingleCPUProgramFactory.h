@@ -5,7 +5,7 @@
 #ifndef READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 #define READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 
-#include <readdy/model/ProgramFactory.h>
+#include <readdy/model/programs/ProgramFactory.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
@@ -13,15 +13,15 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             class SingleCPUKernel;
-            class SingleCPUProgramFactory : public readdy::model::ProgramFactory {
-            public:
-                SingleCPUProgramFactory(SingleCPUKernel *kernel);
+            namespace programs {
+                class SingleCPUProgramFactory : public readdy::model::programs::ProgramFactory {
+                public:
+                    SingleCPUProgramFactory(SingleCPUKernel *kernel);
 
-                virtual std::unique_ptr<readdy::model::Program> createProgram(const std::string& name) const override;
-
-            private:
-                SingleCPUKernel *kernel;
-            };
+                private:
+                    SingleCPUKernel *kernel;
+                };
+            }
         }
     }
 }

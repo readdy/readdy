@@ -16,8 +16,12 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace programs {
+
+                SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};
+
                 void SingleCPUDiffuseProgram::execute() {
                     const auto& context = kernel->getKernelContext();
+                    const auto& fixPos = context.getFixPositionFun();
                     const auto&& dt = context.getTimeStep();
                     const auto&& pd = kernel->getKernelStateModelSingleCPU().getParticleData();
                     auto it_pos = pd->begin_positions();
@@ -26,11 +30,11 @@ namespace readdy {
                         const double D = context.getDiffusionConstant(*it_types);
                         auto displacement = sqrt(2. * D * dt) * (kernel->getRandomProvider().getNormal3());
                         *it_pos += displacement;
+                        fixPos(*it_pos);
                         ++it_pos;
                         ++it_types;
                     }
                 }
-                SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};
             }
         }
     }

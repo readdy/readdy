@@ -14,7 +14,6 @@ const std::string &plug::KernelPluginDecorator::getName() const {
 
 readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const boost::filesystem::path sharedLib)
         : readdy::model::Kernel::Kernel(sharedLib.string()) {
-    BOOST_LOG_TRIVIAL(debug) << "... loading kernel " << sharedLib.string();
     // load the library
     lib = dll::shared_library(sharedLib, dll::load_mode::rtld_lazy | dll::load_mode::rtld_global);
     // check if library has required symbol
@@ -29,20 +28,11 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const bo
         typedef std::unique_ptr<readdy::model::Kernel> (kernel_t)();
         boost::function<kernel_t> factory = dll::import_alias<kernel_t>(lib, "createKernel");
         reference = factory();
-        BOOST_LOG_TRIVIAL(debug) << "loaded.";
     }
 }
 
 readdy::model::KernelStateModel& readdy::plugin::_internal::KernelPluginDecorator::getKernelStateModel() const {
     return (*reference).getKernelStateModel();
-}
-
-std::unique_ptr<readdy::model::Program> readdy::plugin::_internal::KernelPluginDecorator::createProgram(const std::string& name) const {
-    return (*reference).createProgram(name);
-}
-
-std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAvailablePrograms() const {
-    return (*reference).getAvailablePrograms();
 }
 
 readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
@@ -63,6 +53,14 @@ std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAv
 
 readdy::model::potentials::PotentialFactory &readdy::plugin::_internal::KernelPluginDecorator::getPotentialFactory() const {
     return reference->getPotentialFactory();
+}
+
+readdy::model::programs::ProgramFactory &readdy::plugin::_internal::KernelPluginDecorator::getProgramFactory() const {
+    return reference->getProgramFactory();
+}
+
+readdy::model::reactions::ReactionFactory &readdy::plugin::_internal::KernelPluginDecorator::getReactionFactory() const {
+    return reference->getReactionFactory();
 }
 
 

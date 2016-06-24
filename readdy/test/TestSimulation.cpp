@@ -18,7 +18,7 @@ namespace {
 
         TestSimulation() {
             // if we're in conda
-            const char *env = std::getenv("PREFIX");
+            const char *env = std::getenv("CONDA_ENV_PATH");
             std::string pluginDir = "lib/readdy_plugins";
             if (env) {
                 auto _env = std::string(env);
@@ -54,7 +54,7 @@ namespace {
     }
 
     TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
-        simulation.setBoxSize(1, 1, 1);
+        simulation.setBoxSize(10, 10, 10);
         unsigned int n_particles = 103;
         double diffusionConstant = 1;
         simulation.registerParticleType("type", diffusionConstant);

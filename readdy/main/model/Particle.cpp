@@ -27,7 +27,7 @@ namespace readdy {
             this->type = type;
         }
 
-        const Vec3 &Particle::getPos() const{
+        const Vec3 &Particle::getPos() const {
             return pos;
         }
 
@@ -48,6 +48,14 @@ namespace readdy {
         }
 
         Particle::Particle(Vec3 pos, unsigned int type, boost::uuids::uuid id) : pos(pos), type(type), id(id) {
+        }
+
+        void Particle::setId(const boost::uuids::uuid &id) {
+            Particle::id = id;
+        }
+
+        Vec3 &Particle::getPos() {
+            return pos;
         }
 
 

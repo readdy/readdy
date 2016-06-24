@@ -19,15 +19,19 @@ namespace readdy {
             class SingleCPUKernel;
 
             namespace potentials {
-                class HarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion<SingleCPUKernel>{
+                class SingleCPUHarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion{
                     using vec_t = readdy::model::Vec3;
 
                 public:
-                    HarmonicRepulsion(const SingleCPUKernel *const kernel);
+                    SingleCPUHarmonicRepulsion(const SingleCPUKernel *const kernel);
 
-                    virtual double calculateEnergy(const vec_t& x_i, const vec_t& x_j) override;
-                    virtual void calculateForce(vec_t &force, const vec_t &x_i, const vec_t &x_j) override;
-                    virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_i, const vec_t &x_j) override;
+                    virtual double calculateEnergy(const vec_t& x_ij) override;
+                    virtual void calculateForce(vec_t &force, const vec_t &x_ij) override;
+                    virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) override;
+
+                    virtual potentials::SingleCPUHarmonicRepulsion *replicate() const override;
+
+
                 };
 
             }

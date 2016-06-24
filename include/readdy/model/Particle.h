@@ -21,6 +21,8 @@ namespace readdy {
         public:
             const Vec3 &getPos() const;
 
+            Vec3 &getPos();
+
             void setPos(const Vec3 &pos);
 
             unsigned int getType() const;
@@ -28,6 +30,8 @@ namespace readdy {
             void setType(const unsigned int type);
 
             const boost::uuids::uuid &getId() const;
+
+            void setId(const boost::uuids::uuid &id);
 
             Particle();
 

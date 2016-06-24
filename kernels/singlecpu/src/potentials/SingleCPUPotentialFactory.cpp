@@ -9,6 +9,7 @@
 
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/kernel/singlecpu/potentials/SingleCPUPotentialFactory.h>
+#include <readdy/kernel/singlecpu/potentials/PotentialsOrder1.h>
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
 
 namespace readdy {
@@ -17,7 +18,10 @@ namespace readdy {
             namespace potentials {
                 SingleCPUPotentialFactory::SingleCPUPotentialFactory(SingleCPUKernel *const kernel) : readdy::model::potentials::PotentialFactory(), kernel(kernel) {
                     namespace p = readdy::model::potentials;
-                    factory[p::getPotentialName<p::HarmonicRepulsion<SingleCPUKernel>>()] = [kernel] {return new HarmonicRepulsion(kernel);};
+                    // order 1
+                    factory[p::getPotentialName<p::CubePotential>()] = [kernel] {return new SingleCPUCubePotential(kernel);};
+                    // order 2
+                    factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] {return new SingleCPUHarmonicRepulsion(kernel);};
                 }
 
             }

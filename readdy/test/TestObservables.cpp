@@ -21,7 +21,7 @@ namespace {
 
         TestObservables() {
             // if we're in conda
-            const char *env = std::getenv("PREFIX");
+            const char *env = std::getenv("CONDA_ENV_PATH");
             std::string pluginDir = "lib/readdy_plugins";
             if (env) {
                 auto _env = std::string(env);
@@ -56,7 +56,7 @@ namespace {
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
             diffuseProgram->execute();
-            kernel->getKernelStateModel().updateModel(t, false, false);
+            kernel->getKernelStateModel().updateModel(t, false);
         }
 
         const auto&& result = obs->getResult();
@@ -80,7 +80,7 @@ namespace {
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
             diffuseProgram->execute();
-            kernel->getKernelStateModel().updateModel(t, false, false);
+            kernel->getKernelStateModel().updateModel(t, false);
         }
 
         const auto&& result = o3->getResult();

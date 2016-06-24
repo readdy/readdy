@@ -72,7 +72,7 @@ fi
 # therefore fix this value.
 if [ "$TRAVIS" == "true" ]; then CPU_COUNT=2; fi
 
-mkdir build
+mkdir build || true
 cd build
 echo "calling cmake with flags: "
 for flag in ${CMAKE_FLAGS// /$'\n'}
@@ -82,3 +82,9 @@ done
 cmake .. ${CMAKE_FLAGS}
 make -j${CPU_COUNT}
 make install &> /dev/null
+
+if [ $(uname) = "Darwin" ]; then
+    install_name_tool -add_rpath @loader_path/../lib/readdy_plugins/ $PREFIX/bin/runUnitTests_singlecpu
+    # install_name_tool -add_rpath @loader_path/./ $PREFIX/lib/readdy_plugins/libReaDDy_kernel_singlecpu.dylib
+    # install_name_tool -add_rpath @loader_path/../ $PREFIX/lib/readdy_plugins/libReaDDy_kernel_singlecpu.dylib
+fi

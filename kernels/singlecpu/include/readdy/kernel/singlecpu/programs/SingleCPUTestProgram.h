@@ -5,13 +5,13 @@
 #ifndef READDY_MAIN_SINGLECPUTESTPROGRAM_H
 #define READDY_MAIN_SINGLECPUTESTPROGRAM_H
 
-#include <readdy/model/Programs.h>
+#include <readdy/model/programs/Programs.h>
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace programs {
-                class SingleCPUTestProgram : public readdy::model::TestProgram {
+                class SingleCPUTestProgram : public readdy::model::programs::TestProgram {
                 public:
                     SingleCPUTestProgram();
                     ~SingleCPUTestProgram();

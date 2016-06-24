@@ -60,9 +60,9 @@ namespace readdy {
         void deregisterPotential(const boost::uuids::uuid& uuid);
 
         const boost::uuids::uuid& registerPotentialOrder1(std::string name, const std::string &type);
-        void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 &potential, const std::string &type);
+        void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 const* const ptr, const std::string &type);
         const boost::uuids::uuid& registerPotentialOrder2(std::string name, const std::string &type1, const std::string &type2);
-        void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 &potential, const std::string &type1, const std::string &type2);
+        void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 const* const ptr, const std::string &type1, const std::string &type2);
 
         //void registerReaction(const Reaction& reaction);
         //void registerReactionByDescriptor(const std::string descriptor);

@@ -147,12 +147,24 @@ TEST(ParticleData, markingForRemoval2) {
     }
     EXPECT_TRUE(noDeactivatedIds);
 
+    deactivatedIds = {
+            *(data->begin_ids()+4),
+            *(data->begin_ids()+2),
+            *(data->begin_ids()+0),
+            *(data->begin_ids()+3),
+            *(data->begin_ids()+1)
+    };
     data->markForDeactivation(4);
     data->markForDeactivation(2);
     data->markForDeactivation(0);
     data->markForDeactivation(3);
     data->markForDeactivation(1);
     data->deactivateMarked();
+    noDeactivatedIds = true;
+    for(auto it = deactivatedIds.begin(); it != deactivatedIds.end(); ++it) {
+        noDeactivatedIds &= std::find(data->begin_ids(), data->end_ids(), *it) == data->end_ids();
+    }
+    EXPECT_TRUE(noDeactivatedIds);
     EXPECT_EQ(data->size(), 1);
 
     data->markForDeactivation(0);

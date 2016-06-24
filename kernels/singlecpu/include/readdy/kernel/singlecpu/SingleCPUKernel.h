@@ -10,7 +10,7 @@
 #include <boost/dll.hpp>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
-#define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
+//#define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
 
 namespace readdy {
     namespace kernel {
@@ -28,15 +28,14 @@ namespace readdy {
                 // factory method
                 static std::unique_ptr<SingleCPUKernel> create();
 
-                virtual std::unique_ptr<readdy::model::Program> createProgram(const std::string& name) const override;
                 virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
                 readdy::kernel::singlecpu::SingleCPUKernelStateModel& getKernelStateModelSingleCPU() const;
-
-                virtual std::vector<std::string> getAvailablePrograms() const override;
 
                 virtual readdy::model::KernelContext& getKernelContext() const override;
 
                 readdy::model::RandomProvider& getRandomProvider() const;
+
+                virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
                 virtual std::vector<std::string> getAvailablePotentials() const override;
 
@@ -44,11 +43,14 @@ namespace readdy {
 
                 virtual readdy::model::potentials::PotentialFactory& getPotentialFactory() const override;
 
+                virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+
+
             private:
                 struct Impl;
                 std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;
             };
-
+#ifndef KERNEL_SINGLECPU_NO_EXPORT_ALIAS
             BOOST_DLL_ALIAS(
                     readdy::kernel::singlecpu::SingleCPUKernel::name,
                     name
@@ -58,6 +60,7 @@ namespace readdy {
                     readdy::kernel::singlecpu::SingleCPUKernel::create,
                     createKernel
             );
+#endif
         }
     }
 }

@@ -15,59 +15,36 @@
 
 namespace readdy {
     namespace model {
+        class Kernel;
         namespace potentials {
 
-            template<typename KernelType>
             class HarmonicRepulsion : public PotentialOrder2 {
 
             public:
-                HarmonicRepulsion(const KernelType * const kernel) :
-                        PotentialOrder2(_internal::PotentialName<HarmonicRepulsion<KernelType>>::value),
-                        kernel(kernel) { }
+                HarmonicRepulsion(const Kernel * const kernel);
 
-                double getSumOfParticleRadii() const {
-                    return sumOfParticleRadii;
-                }
+                virtual HarmonicRepulsion *replicate() const override = 0;
 
+                double getSumOfParticleRadii() const;
+                double getSumOfParticleRadiiSquared() const;
+                double getForceConstant() const;
+                void setForceConstant(double forceConstant);
 
-                double getSumOfParticleRadiiSquared() const {
-                    return sumOfParticleRadiiSquared;
-                }
-
-
-                double getForceConstant() const {
-                    return forceConstant;
-                }
-
-                void setForceConstant(double forceConstant) {
-                    HarmonicRepulsion::forceConstant = forceConstant;
-                }
-                virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
-                    readdy::model::KernelContext ctx = kernel->getKernelContext();
-                    auto r1 = ctx.getParticleRadius(type1);
-                    auto r2 = ctx.getParticleRadius(type2);
-                    sumOfParticleRadii = r1+r2;
-                    sumOfParticleRadiiSquared = sumOfParticleRadii * sumOfParticleRadii;
-                    // todo
-                }
+                virtual void configureForTypes(unsigned int type1, unsigned int type2) override;
 
             protected:
-                const KernelType * const kernel;
+                const Kernel * const kernel;
                 double sumOfParticleRadii;
                 double sumOfParticleRadiiSquared;
                 double forceConstant;
 
-
             };
 
             namespace _internal {
-                template<typename KernelType>
-                struct PotentialName<HarmonicRepulsion<KernelType>> { static const std::string value; };
+                template<> struct PotentialName<HarmonicRepulsion> { static const std::string value; };
             }
         }
     }
 }
-
-#include "_impl/PotentialsOrder2Impl.h"
 
 #endif //READDY_MAIN_POTENTIALSORDER2_H

@@ -7,7 +7,6 @@
  * @date 15.06.16
  */
 
-#include <readdy/model/KernelContext.h>
 #include "PotentialOrder1.h"
 
 #ifndef READDY_MAIN_POTENTIALSORDER1_H
@@ -15,66 +14,29 @@
 
 namespace readdy {
     namespace model {
+        class Kernel;
         namespace potentials {
-            template<typename KernelType>
             class CubePotential : public PotentialOrder1 {
 
             public:
-                CubePotential(const KernelType * const kernel) :
-                        PotentialOrder1(getPotentialName<CubePotential<KernelType>>()),
-                        kernel(kernel)
-                { }
+                CubePotential(const Kernel * const kernel);
 
-                virtual void configureForType(const unsigned int &type) override {
-                    readdy::model::KernelContext ctx = kernel->getKernelContext();
-                    particleRadius = ctx.getParticleRadius(type);
-                    for (auto i = 0; i < 3; i++) {
-                        if (origin[i] < origin[i] + extent[i]) {
-                            min[i] = origin[i];
-                            max[i] = origin[i] + extent[i];
-                        } else {
-                            min[i] = origin[i] + extent[i];
-                            max[i] = origin[i];
-                        }
-                    }
-                }
+                virtual CubePotential *replicate() const override = 0;
 
+                virtual void configureForType(const unsigned int &type) override;
 
-                const Vec3 &getOrigin() const {
-                    return origin;
-                }
-
-                void setOrigin(const Vec3 &origin) {
-                    CubePotential::origin = origin;
-                }
-
-                const Vec3 &getExtent() const {
-                    return extent;
-                }
-
-                void setExtent(const Vec3 &extent) {
-                    CubePotential::extent = extent;
-                }
-
-                double getForceConstant() const {
-                    return forceConstant;
-                }
-
-                void setForceConstant(double forceConstant) {
-                    CubePotential::forceConstant = forceConstant;
-                }
-
-
-                bool isConsiderParticleRadius() const {
-                    return considerParticleRadius;
-                }
-
-                void setConsiderParticleRadius(bool considerParticleRadius) {
-                    CubePotential::considerParticleRadius = considerParticleRadius;
-                }
+                const Vec3 &getOrigin() const;
+                void setOrigin(const Vec3 &origin);
+                const Vec3 &getExtent() const;
+                void setExtent(const Vec3 &extent);
+                double getForceConstant() const;
+                void setForceConstant(double forceConstant);
+                bool isConsiderParticleRadius() const;
+                void setConsiderParticleRadius(bool considerParticleRadius);
+                double getParticleRadius() const;
 
             protected:
-                const KernelType * const kernel;
+                const Kernel * const kernel;
                 Vec3 origin;
                 Vec3 extent;
                 Vec3 min {}, max {};
@@ -84,13 +46,10 @@ namespace readdy {
             };
 
             namespace _internal {
-                template<typename KernelType>
-                struct PotentialName<CubePotential<KernelType>> {static const std::string value;};
+                template <> struct PotentialName<CubePotential> {static const std::string value;};
             }
         }
     }
 }
-
-#include "_impl/PotentialsOrder1Impl.h"
 
 #endif //READDY_MAIN_POTENTIALSORDER1_H

@@ -21,10 +21,6 @@ namespace readdy {
                 KernelPluginDecorator(const boost::filesystem::path sharedLib);
                 virtual ~KernelPluginDecorator();
 
-                virtual std::unique_ptr<readdy::model::Program> createProgram(const std::string& name) const override;
-
-                virtual std::vector<std::string> getAvailablePrograms() const override;
-
                 virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
 
                 virtual readdy::model::KernelContext& getKernelContext() const override;
@@ -34,6 +30,10 @@ namespace readdy {
                 virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
 
                 virtual std::vector<std::string> getAvailablePotentials() const override;
+
+                virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+
+                virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
             protected:
                 virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;

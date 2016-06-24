@@ -23,18 +23,21 @@ namespace readdy {
             struct SingleCPUKernelStateModel::Impl {
                 readdy::model::time_step_type t = 0;
                 double currentEnergy = 0;
+                bool firstUpdate = true;
                 std::unique_ptr<model::SingleCPUParticleData> particleData;
                 std::unique_ptr<model::SingleCPUNeighborList> neighborList;
                 readdy::model::KernelContext const *context;
             };
 
-            void SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces, bool distances) {
+            void SingleCPUKernelStateModel::updateModel(readdy::model::time_step_type t, bool forces) {
                 const auto timeStepChanged = t != pimpl->t;
+                const auto& difference = pimpl->context->getShortestDifferenceFun();
                 pimpl->t = t;
-                if (timeStepChanged) {
+                if (timeStepChanged || pimpl->firstUpdate) {
                     fireTimeStepChanged();
                     pimpl->currentEnergy = 0;
                     pimpl->neighborList->create(*pimpl->particleData);
+                    pimpl->firstUpdate = false;
                 }
 
                 if (forces) {
@@ -64,9 +67,9 @@ namespace readdy {
                             auto type_j = *(pimpl->particleData->begin_types() + j);
                             const auto &pos_i = *(pimpl->particleData->begin_positions() + i);
                             const auto &pos_j = *(pimpl->particleData->begin_positions() + j);
-                            const auto &&potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
+                            const auto &potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
                             for (const auto &potential : potentials) {
-                                potential->calculateForceAndEnergy(*(pimpl->particleData->begin_forces() + i), pimpl->currentEnergy, pos_i, pos_j);
+                                potential->calculateForceAndEnergy(*(pimpl->particleData->begin_forces() + i), pimpl->currentEnergy, difference(pos_i, pos_j));
                             }
                         }
                     }
@@ -113,6 +116,18 @@ namespace readdy {
 
             void readdy::kernel::singlecpu::SingleCPUKernelStateModel::increaseEnergy(double increase) {
                 pimpl->currentEnergy += increase;
+            }
+
+            const model::SingleCPUNeighborList *const SingleCPUKernelStateModel::getNeighborList() const {
+                return pimpl->neighborList.get();
+            }
+
+            const std::vector<readdy::model::Particle> SingleCPUKernelStateModel::getParticles() const {
+                std::vector<readdy::model::Particle> result;
+                for(auto i = 0; i < pimpl->particleData->size(); ++i) {
+                    result.push_back((*pimpl->particleData)[i]);
+                }
+                return result;
             }
 
 
