@@ -10,6 +10,9 @@ build:
     - CC
     - BOOST_DOWNLOAD_CACHE_DIR
     - TRAVIS
+  rpaths:
+    - lib/
+    - lib/readdy_plugins/
 
 requirements:
   build:

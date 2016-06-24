@@ -11,14 +11,11 @@ print("ran test command")
 if command_result != 0:
     sys.exit(command_result)
 
-print("***"*15 + " running c++ tests " + "***"*15)
+print("***"*15 + " running singlecpu c++ tests " + "***"*15)
 
 test_command = "runUnitTests_singlecpu"
 print("Test command = %s" % test_command)
-readdy_env = os.environ.copy()
-readdy_env["LD_LIBRARY_PATH"] = os.path.abspath(os.path.join(readdy_env["CONDA_ENV_PATH"], "lib", "readdy_plugins"))
-readdy_env["DYLD_LIBRARY_PATH"] = os.path.abspath(os.path.join(readdy_env["CONDA_ENV_PATH"], "lib", "readdy_plugins"))
-command_result = subprocess.call(test_command, shell=True, env=readdy_env)
+command_result = subprocess.call(test_command, shell=True)
 print("ran test command")
 if command_result != 0:
     sys.exit(command_result)
