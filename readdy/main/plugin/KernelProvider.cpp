@@ -6,6 +6,7 @@
 #include <boost/dll.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include <readdy/common/Utils.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
@@ -50,10 +51,17 @@ namespace readdy {
         void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
             BOOST_LOG_TRIVIAL(debug) << "loading kernels from directory: " << directory;
             const fs::path p(directory);
+            std::exception_ptr eptr;
             if (fs::exists(p) && fs::is_directory(p)) {
                 for (auto &&dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
-                    if (isSharedLibrary(dirEntry.path())) {
-                        add(dirEntry.path());
+                    try {
+                        if (isSharedLibrary(dirEntry.path())) {
+                            add(dirEntry.path());
+                        }
+                    } catch(const std::exception& e) {
+                        BOOST_LOG_TRIVIAL(error) << "Could not load " << dirEntry << " due to: " << e.what();
+                    } catch(const boost::exception& e) {
+                        BOOST_LOG_TRIVIAL(error) << "Could not load " << dirEntry << " due to: " << boost::diagnostic_information(e);
                     }
                 }
             } else {
