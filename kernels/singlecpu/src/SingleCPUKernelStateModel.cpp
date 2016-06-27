@@ -12,10 +12,6 @@
 #include <vector>
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
-#include <readdy/common/make_unique.h>
-#include <boost/log/trivial.hpp>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <readdy/model/potentials/PotentialOrder2.h>
 
 namespace readdy {
     namespace kernel {
@@ -92,9 +88,10 @@ namespace readdy {
             }
 
             const std::vector<readdy::model::Vec3> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() const {
+                const auto size = pimpl->particleData->size();
                 std::vector<readdy::model::Vec3> target{};
-                target.reserve(pimpl->particleData->size());
-                std::copy(pimpl->particleData->begin_positions(), pimpl->particleData->end_positions(), std::back_inserter(target));
+                target.reserve(size);
+                std::copy(pimpl->particleData->begin_positions(), pimpl->particleData->begin_positions() + size, std::back_inserter(target));
                 return target;
             }
 

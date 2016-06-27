@@ -14,24 +14,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
 
-class SingleCPUTestReactions : public ::testing::Test {
-protected:
-    SingleCPUTestReactions() {
-        // if we're in conda
-        const char *env = std::getenv("CONDA_ENV_PATH");
-        std::string pluginDir = "lib/readdy_plugins";
-        if (env) {
-            auto _env = std::string(env);
-            if (!boost::algorithm::ends_with(env, "/")) {
-                _env = _env.append("/");
-            }
-            pluginDir = _env.append(pluginDir);
-        }
-        readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-    }
-};
-
-TEST_F(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
+TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     using fusion_t = readdy::model::reactions::Fusion;
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;
@@ -135,7 +118,7 @@ TEST_F(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
 
 }
 
-TEST_F(SingleCPUTestReactions, TestDecay) {
+TEST(SingleCPUTestReactions, TestDecay) {
     using fusion_t = readdy::model::reactions::Fusion;
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;
@@ -207,7 +190,7 @@ TEST_F(SingleCPUTestReactions, TestDecay) {
  *   - t = 2: n_particles == 1 with 1x A
  *   - t > 2: n_particles == 0
  */
-TEST_F(SingleCPUTestReactions, TestMultipleReactionTypes) {
+TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     using fusion_t = readdy::model::reactions::Fusion;
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;

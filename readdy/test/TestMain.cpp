@@ -11,9 +11,11 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/thread/thread.hpp>
+#include <readdy/common/Utils.h>
 #include "gtest/gtest.h"
 
 int perform_tests(int argc, char **argv) {
+    readdy::utils::testing::loadPlugins();
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

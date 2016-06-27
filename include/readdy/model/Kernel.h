@@ -175,6 +175,11 @@ namespace readdy {
             }
 
             /**
+             * Adds a particle of the type "type" at position "pos".
+             */
+            void addParticle(const std::string& type, const Vec3 &pos);
+
+            /**
              * @todo implement this properly
              */
             virtual readdy::model::KernelStateModel &getKernelStateModel() const;

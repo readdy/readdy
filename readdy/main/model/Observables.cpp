@@ -19,7 +19,7 @@ namespace readdy {
 
         const std::string ObservableName<ParticlePositionObservable>::value = "ParticlePositionObservable";
         void ParticlePositionObservable::evaluate() {
-            result = kernel->getKernelStateModel().getParticlePositions();
+            ParticlePositionObservable::result = kernel->getKernelStateModel().getParticlePositions();
         }
 
         void TestCombinerObservable::evaluate() {

@@ -20,17 +20,6 @@ namespace {
         std::unique_ptr<m::Kernel> kernel;
 
         TestObservables() {
-            // if we're in conda
-            const char *env = std::getenv("CONDA_ENV_PATH");
-            std::string pluginDir = "lib/readdy_plugins";
-            if (env) {
-                auto _env = std::string(env);
-                if (!boost::algorithm::ends_with(env, "/")) {
-                    _env = _env.append("/");
-                }
-                pluginDir = _env.append(pluginDir);
-            }
-            readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
             kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         }
     };
@@ -64,7 +53,7 @@ namespace {
         auto it_pos = positions.begin();
         int j = 0;
         for(auto it = result.begin(); it != result.end(); it = std::next(it)) {
-            EXPECT_TRUE(*it == *it_pos);
+            EXPECT_EQ(*it, *it_pos);
             it_pos++;
             ++j;
         }

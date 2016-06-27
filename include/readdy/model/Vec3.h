@@ -33,19 +33,22 @@ namespace readdy {
 
             double &operator[](const unsigned int i);
 
-            bool operator==(const Vec3 &rhs);
+            bool operator==(const Vec3 &rhs) const;
 
-            bool operator!=(const Vec3 &rhs);
+            bool operator!=(const Vec3 &rhs) const;
 
             friend std::ostream &operator<<(std::ostream &, const Vec3 &);
-
-            friend bool operator==(const Vec3 &lhs, const Vec3 &rhs);
 
             friend Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs);
 
             friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
 
             friend Vec3 operator/(const Vec3& lhs, const double &rhs);
+
+            friend bool operator>=(const Vec3 &lhs, const Vec3 &rhs);
+            friend bool operator<=(const Vec3 &lhs, const Vec3 &rhs);
+            friend bool operator>(const Vec3 &lhs, const Vec3 &rhs);
+            friend bool operator<(const Vec3 &lhs, const Vec3 &rhs);
 
         private:
             std::array<double, 3> data;

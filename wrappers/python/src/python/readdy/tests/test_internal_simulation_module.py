@@ -65,7 +65,6 @@ class TestInternalSimulationModule(unittest.TestCase):
         self.simulation.registerPotentialOrder2("HarmonicRepulsion", "ParticleTypeA_internal", "ParticleTypeB_internal")
         self.simulation.addParticle("ParticleTypeA", Vec(0,0,0))
         self.simulation.addParticle("ParticleTypeB", Vec(1,1,1))
-        self.simulation.registerObservable_ParticlePositions(1, self.py_position_observable_callback)
         self.simulation.run(100, 1)
 
 if __name__ == '__main__':

@@ -38,6 +38,10 @@ namespace readdy {
             }
         }
 
+        namespace testing {
+            void loadPlugins();
+        }
+
     }
 }
 

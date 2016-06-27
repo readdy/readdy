@@ -37,7 +37,7 @@ namespace readdy {
         struct KernelContext::Impl {
             uint typeCounter;
             std::unordered_map<std::string, uint> typeMapping;
-            double kBT = 0;
+            double kBT = 1;
             std::array<double, 3> box_size{{1, 1, 1}};
             std::array<bool, 3> periodic_boundary{{true, true, true}};
             std::unordered_map<uint, double> diffusionConstants{};
@@ -162,6 +162,10 @@ namespace readdy {
         }
 
         double KernelContext::getParticleRadius(const unsigned int &type) const {
+            if(pimpl->particleRadii.find(type) == pimpl->particleRadii.end()) {
+                BOOST_LOG_TRIVIAL(warning) << "No particle radius was set for the particle type id " << type <<", setting r=1";
+                pimpl->particleRadii[type] = 1;
+            }
             return pimpl->particleRadii[type];
         }
 

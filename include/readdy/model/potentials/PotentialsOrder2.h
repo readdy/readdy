@@ -36,7 +36,7 @@ namespace readdy {
                 const Kernel * const kernel;
                 double sumOfParticleRadii;
                 double sumOfParticleRadiiSquared;
-                double forceConstant;
+                double forceConstant = 0;
 
             };
 

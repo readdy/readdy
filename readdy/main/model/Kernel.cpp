@@ -159,6 +159,10 @@ namespace readdy {
             throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
+        void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
+            getKernelStateModel().addParticle({pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)});
+        }
+
 
         Kernel &Kernel::operator=(Kernel &&rhs) = default;
 

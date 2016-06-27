@@ -39,9 +39,9 @@ namespace readdy {
                 const Kernel * const kernel;
                 Vec3 origin;
                 Vec3 extent;
-                Vec3 min {}, max {};
-                double particleRadius;
-                double forceConstant;
+                Vec3 min {0,0,0}, max {0,0,0};
+                double particleRadius = 0;
+                double forceConstant = 1;
                 bool considerParticleRadius;
             };
 

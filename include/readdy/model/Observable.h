@@ -67,8 +67,8 @@ namespace readdy {
                 return result;
             }
 
-            void setCallback(std::function<void(const result_t&)>&& callbackFun) {
-                Observable::_callback_f = std::move(callbackFun);
+            void setCallback(std::function<void(const result_t&)> callbackFun) {
+                Observable::_callback_f = callbackFun;
             }
 
             virtual void callback(readdy::model::time_step_type t) override {
