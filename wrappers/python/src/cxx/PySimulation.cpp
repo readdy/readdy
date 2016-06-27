@@ -40,13 +40,18 @@ void registerPotentialOrder2(sim& self, pot2& potential, std::string type1, std:
     std::unique_ptr<pot2> ptr {potential.replicate()};
     self.registerPotentialOrder2(ptr.get(), type1, type2);
 }
-py::list getKernelAvailableObservables(kern& self) { return py::list{self.getAvailableObservables()}; };
+
 double pyVec3Bracket(vec& self, const unsigned int i) {return self[i];}
 
 boost::uuids::uuid registerObservable_ParticlePositions(sim& self, unsigned int stride, const boost::python::object &callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::ParticlePositionObservable>(stride, std::move(pyFun));
+    return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
 }
+
+/*boost::uuids::uuid registerObservable_RadialDistribution(sim& self, unsigned int stride, const boost::python::object &callbackFun, const std::vector<double> &binBorders, bool useTimeAverage) {
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::RadialDistributionObservable::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), stride, binBorders, useTimeAverage);
+}*/
 
 // module
 BOOST_PYTHON_MODULE (simulation) {
@@ -93,8 +98,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("calc_force", &pot2::calculateForce);
 
     py::class_<kern, boost::noncopyable>("Kernel", py::no_init)
-            .def("getName", &kern::getName, py::return_value_policy<py::reference_existing_object>())
-            .def("getAvailableObservables", &getKernelAvailableObservables);
+            .def("getName", &kern::getName, py::return_value_policy<py::reference_existing_object>());
 
     py::class_<uuid>("uuid", py::no_init)
             .def("__str__", +[](const uuid& uuid) { return boost::uuids::to_string(uuid);});

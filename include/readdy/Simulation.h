@@ -57,11 +57,10 @@ namespace readdy {
          * Registers an observable with the kernel. A list of available observables can be obtained by
          *
          */
-        template<typename T>
-        boost::uuids::uuid registerObservable(unsigned int stride, std::function<void(typename T::result_t)>&& callbackFun);
+        template<typename T, typename... Args>
+        boost::uuids::uuid registerObservable(std::function<void(typename T::result_t)>&& callbackFun, unsigned int stride, Args... args);
 
 
-        boost::uuids::uuid registerObservable(const std::string &name, unsigned int stride);
         boost::uuids::uuid registerObservable(readdy::model::ObservableBase& observable);
         std::vector<std::string> getAvailableObservables();
         void deregisterObservable(const boost::uuids::uuid uuid);

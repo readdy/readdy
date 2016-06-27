@@ -44,7 +44,7 @@ namespace {
 
         kernel->getKernelContext().registerOrder1Potential(cubePot.get(), "A");
         kernel->getKernelContext().registerOrder1Potential(cubePot.get(), "B");
-        auto ppObs = kernel->createObservable<readdy::model::ParticlePositionObservable>();
+        auto ppObs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
         readdy::model::Vec3 lowerBound{-2.5, -2.5, -2.5}, upperBound{2.5, 2.5, 2.5};
         ppObs->setCallback([lowerBound, upperBound](readdy::model::ParticlePositionObservable::result_t currentResult) {
             readdy::model::Vec3 avg{0, 0, 0};
@@ -57,7 +57,6 @@ namespace {
             if (!allWithinBounds) BOOST_LOG_TRIVIAL(debug) << "Average position: " << avg;
             ASSERT_TRUE(allWithinBounds);
         });
-        ppObs->setStride(1);
         auto connection = kernel->connectObservable(ppObs.get());
         kernel->evaluateObservablesAutomatically(true);
 

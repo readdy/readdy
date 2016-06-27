@@ -83,24 +83,9 @@ namespace readdy {
                 return getProgramFactory().createProgramAs<ProgramType>(programs::getProgramName<ProgramType>());
             }
 
-            /**
-             * Get a vector of the registered predefined observable names, which can be created by createObservable(name).
-             *
-             * @return the vector of available observable names
-             */
-            virtual std::vector<std::string> getAvailableObservables();
-
-
-            /**
-             * Creates an observable that is already available as part of the kernel implementation. The list of observables can be obtained by getAvailableObservables().
-             *
-             * @return a shared pointer to the created observable
-             */
-            virtual std::unique_ptr<ObservableBase> createObservable(const std::string &name);
-
-            template<typename T>
-            std::unique_ptr<T> createObservable() {
-                return getObservableFactory().create<T>();
+            template<typename T, typename... Args>
+            std::unique_ptr<T> createObservable(unsigned int stride, Args... args) {
+                return getObservableFactory().create<T>(stride, std::forward<Args>(args)...);
             }
 
             template<typename T, typename Obs1, typename Obs2>
@@ -115,18 +100,10 @@ namespace readdy {
              */
             template<typename T>
             std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection> createAndConnectObservable(unsigned int stride) {
-                auto &&obs = createObservable<T>();
-                obs->setStride(stride);
+                auto &&obs = createObservable<T>(stride);
                 auto &&connection = connectObservable(obs.get());
                 return std::make_tuple(std::move(obs), connection);
             };
-
-            /**
-             * Creates an observable and connects it to the kernel.
-             *
-             * @return a tuple of the created observable and a scoped_connection object.
-             */
-            std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::scoped_connection> createAndConnectObservable(const std::string &name, unsigned int stride);
 
             /**
              * Connects an observable to the kernel signal.

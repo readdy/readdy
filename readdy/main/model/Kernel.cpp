@@ -95,23 +95,6 @@ namespace readdy {
             return std::make_tuple(std::move(wrap), std::move(connection));
         }
 
-        std::vector<std::string> Kernel::getAvailableObservables() {
-            return pimpl->observableFactory->getRegisteredObservableNames();
-        }
-
-        std::unique_ptr<ObservableBase> Kernel::createObservable(const std::string &name) {
-            pimpl->ensureModelTimeStepListener(&getKernelStateModel());
-            return pimpl->observableFactory->create(name);
-        }
-
-        std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::scoped_connection> Kernel::createAndConnectObservable(const std::string &name, unsigned int stride) {
-            pimpl->ensureModelTimeStepListener(&getKernelStateModel());
-            auto &&obs = createObservable(name);
-            obs->setStride(stride);
-            auto &&connection = connectObservable(obs.get());
-            return std::make_tuple(std::move(obs), std::move(connection));
-        }
-
         const _internal::ObservableFactory &Kernel::getObservableFactory() const {
             return *pimpl->observableFactory;
         }

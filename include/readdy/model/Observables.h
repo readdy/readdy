@@ -31,7 +31,21 @@ namespace readdy {
 
             virtual void evaluate() override;
         };
-        template<> struct ObservableName<ParticlePositionObservable> { static const std::string value; };
+
+        class RadialDistributionObservable : public Observable<std::pair<std::vector<double>, std::vector<double>>> {
+        public:
+            RadialDistributionObservable(Kernel *const kernel, unsigned int stride, const std::vector<double> &binBorders, unsigned int typeCountFrom, unsigned int typeCountTo, double particleDensity);
+
+            virtual void evaluate() override;
+
+            const std::vector<double> &getBinBorders() const;
+            void setBinBorders(const std::vector<double> &binBorders);
+        protected:
+            std::vector<double> binBorders;
+            std::vector<double> counts;
+            unsigned int typeCountFrom, typeCountTo;
+            double particleDensity;
+        };
 
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {
         public:

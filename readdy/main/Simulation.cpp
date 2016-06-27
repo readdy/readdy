@@ -156,17 +156,6 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-uuid_t Simulation::registerObservable(const std::string &name, unsigned int stride) {
-    ensureKernelSelected();
-    boost::uuids::random_generator uuid_gen;
-    auto uuid = uuid_gen();
-    pimpl->observables.emplace(uuid, pimpl->kernel->createObservable(name));
-    pimpl->observables[uuid]->setStride(stride);
-    auto&& connection = pimpl->kernel->connectObservable(pimpl->observables[uuid].get());
-    pimpl->observableConnections.emplace(uuid, std::move(connection));
-    return uuid;
-}
-
 uuid_t Simulation::registerObservable(readdy::model::ObservableBase &observable) {
     ensureKernelSelected();
     boost::uuids::random_generator uuid_gen;
@@ -185,7 +174,8 @@ void Simulation::deregisterObservable(const uuid_t uuid) {
 
 std::vector<std::string> Simulation::getAvailableObservables() {
     ensureKernelSelected();
-    return pimpl->kernel->getAvailableObservables();
+    // TODO compile a list of observables
+    return {"hallo"};
 }
 
 
@@ -196,20 +186,19 @@ Simulation::Simulation(Simulation &&rhs) = default;
 Simulation::~Simulation() {
 }
 
-template<typename T>
-uuid_t Simulation::registerObservable(unsigned int stride, std::function<void(typename T::result_t)>&& callbackFun) {
+template<typename T, typename... Args>
+uuid_t Simulation::registerObservable(std::function<void(typename T::result_t)>&& callbackFun, unsigned int stride, Args... args) {
     ensureKernelSelected();
     boost::uuids::random_generator uuid_gen;
     auto uuid = uuid_gen();
-    auto && obs = pimpl->kernel->createObservable<T>();
+    auto && obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
     obs->setCallback(std::move(callbackFun));
     pimpl->observables.emplace(uuid, std::move(obs));
-    pimpl->observables[uuid]->setStride(stride);
     auto&& connection = pimpl->kernel->connectObservable(pimpl->observables[uuid].get());
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return uuid;
 }
-template uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(unsigned int, std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&);
+template uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&, unsigned int);
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

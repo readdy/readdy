@@ -26,7 +26,7 @@ namespace {
 
     TEST_F(TestObservables, Foo) {
         readdy::model::_internal::ObservableFactory obsf(kernel.get());
-        auto x = obsf.create<m::ParticlePositionObservable>();
+        auto x = obsf.create<m::ParticlePositionObservable>(1);
     }
 
     TEST_F(TestObservables, TestParticlePositions) {
@@ -38,8 +38,7 @@ namespace {
         const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
         const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0,0,0, particleTypeId));
         kernel->getKernelStateModel().addParticles(particles);
-        auto&& obs = kernel->createObservable<m::ParticlePositionObservable>();
-        obs->setStride(3);
+        auto&& obs = kernel->createObservable<m::ParticlePositionObservable>(3);
         auto &&connection = kernel->connectObservable(obs.get());
 
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
@@ -62,8 +61,8 @@ namespace {
     }
 
     TEST_F(TestObservables, TestCombinerObservable) {
-        auto&& o1 = kernel->createObservable<m::ParticlePositionObservable>();
-        auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>();
+        auto&& o1 = kernel->createObservable<m::ParticlePositionObservable>(1);
+        auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>(1);
         auto&& o3 = kernel->createObservable<m::TestCombinerObservable>(o1.get(), o2.get());
         auto&& connection = kernel->connectObservable(o3.get());
         auto&& diffuseProgram = kernel->createProgram("Diffuse");

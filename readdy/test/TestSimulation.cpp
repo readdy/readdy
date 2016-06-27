@@ -73,10 +73,10 @@ namespace {
         double timestep = 1;
 
         int n_callbacks = 0;
-        simulation.registerObservable<readdy::model::ParticlePositionObservable>(1, [&n_callbacks](const readdy::model::ParticlePositionObservable::result_t &result) -> void {
+        simulation.registerObservable<readdy::model::ParticlePositionObservable>([&n_callbacks](const readdy::model::ParticlePositionObservable::result_t &result) -> void {
             ++n_callbacks;
             EXPECT_EQ(103, result.size());
-        });
+        }, 1);
         simulation.run(100, timestep);
         EXPECT_EQ(100, n_callbacks);
     }

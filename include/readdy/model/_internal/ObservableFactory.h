@@ -22,38 +22,32 @@ namespace readdy {
     namespace model {
         class Kernel;
         namespace _internal {
-            class NoSuchObservableException : public std::runtime_error {
-            public:
-                NoSuchObservableException(const std::string &__arg);
-            };
 
             class ObservableFactory {
             public:
-                ObservableFactory(Kernel *const kernel);
-
-                void registerObservable(const std::string &name, const std::function<readdy::model::ObservableBase *()> create);
-
-                std::unique_ptr<ObservableBase> create(const std::string &name) const;
+                ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
 
                 template<typename T, typename Obs1, typename Obs2>
                 inline std::unique_ptr<T> create(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
                     return std::make_unique<T>(kernel, obs1, obs2, stride);
                 };
 
-                template<typename T>
-                inline std::unique_ptr<T> create() const {
-                    const auto& name = ObservableName<T>::value;
-                    if (readdy::utils::collections::hasKey(factory, name)) {
-                        return std::unique_ptr<T>(dynamic_cast<T *>(factory.find(name)->second()));
-                    }
-                    throw NoSuchObservableException("The requested observable \"" + std::string(name) + "\" was not registered in the observable factory.");
+                template<typename R, typename... Args>
+                inline std::unique_ptr<R> create(unsigned int stride, Args... args) const {
+                    return std::unique_ptr<R>(ObservableFactory::get_dispatcher<R, Args...>::impl(this, kernel, stride, std::forward<Args>(args)...));
                 }
 
-                std::vector<std::string> getRegisteredObservableNames() const;
-
-            private:
-                std::unordered_map<std::string, std::function<ObservableBase *()>> factory;
+            protected:
                 Kernel *const kernel;
+
+                template<typename T, typename... Args> struct get_dispatcher;
+
+                template<typename T, typename... Args> struct get_dispatcher {
+                    static T *impl(const ObservableFactory * self, Kernel *const kernel, unsigned int stride, Args... args) {
+                        // this only invokes the normal constructor
+                        return new T(kernel, stride, std::forward<Args>(args)...);
+                    };
+                };
             };
         }
     }
