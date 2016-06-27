@@ -45,7 +45,7 @@ namespace {
         simulation.setBoxSize(10, 10, 10);
         unsigned int n_particles = 103;
         double diffusionConstant = 1;
-        simulation.registerParticleType("type", diffusionConstant);
+        simulation.registerParticleType("type", diffusionConstant, .1);
         for (auto _ = 0; _ < n_particles; ++_) {
             simulation.addParticle(0, 0, 0, "type");
         }
@@ -66,7 +66,7 @@ namespace {
         simulation.setBoxSize(10, 10, 10);
         unsigned int n_particles = 103;
         double diffusionConstant = 1;
-        simulation.registerParticleType("type", diffusionConstant);
+        simulation.registerParticleType("type", diffusionConstant, .1);
         for (auto _ = 0; _ < n_particles; ++_) {
             simulation.addParticle(0, 0, 0, "type");
         }

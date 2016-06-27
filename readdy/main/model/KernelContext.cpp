@@ -398,6 +398,19 @@ namespace readdy {
             return pimpl->reactionOneEductRegistry[typeId].back()->getId();
         }
 
+        void KernelContext::configure() {
+            for(auto&& e : pimpl->potentialO1Registry) {
+                for(auto&& pot : e.second) {
+                    pot->configureForType(e.first);
+                }
+            }
+            for(auto&& e : pimpl->potentialO2Registry) {
+                for(auto&& pot : e.second) {
+                    pot->configureForTypes(e.first.t1, e.first.t2);
+                }
+            }
+        }
+
 
         KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 

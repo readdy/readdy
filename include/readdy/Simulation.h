@@ -60,19 +60,29 @@ namespace readdy {
         template<typename T>
         boost::uuids::uuid registerObservable(unsigned int stride, std::function<void(typename T::result_t)>&& callbackFun);
 
+
         boost::uuids::uuid registerObservable(const std::string &name, unsigned int stride);
         boost::uuids::uuid registerObservable(readdy::model::ObservableBase& observable);
         std::vector<std::string> getAvailableObservables();
         void deregisterObservable(const boost::uuids::uuid uuid);
 
 
-        void registerParticleType(const std::string &name, const double diffusionCoefficient);
+        void registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius);
 
         void deregisterPotential(const boost::uuids::uuid& uuid);
 
-        const boost::uuids::uuid& registerPotentialOrder1(std::string name, const std::string &type);
+        //const boost::uuids::uuid& registerPotentialOrder1(std::string name, const std::string &type);
+
+        //----------------------
+        // Order 1 potentials
+        //----------------------
+        boost::uuids::uuid registerBoxPotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, readdy::model::Vec3 extent, bool considerParticleRadius);
         void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 const* const ptr, const std::string &type);
-        const boost::uuids::uuid& registerPotentialOrder2(std::string name, const std::string &type1, const std::string &type2);
+
+        //----------------------
+        // Order 2 potentials
+        //----------------------
+        boost::uuids::uuid registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB, double forceConstant);
         void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 const* const ptr, const std::string &type1, const std::string &type2);
 
         //void registerReaction(const Reaction& reaction);

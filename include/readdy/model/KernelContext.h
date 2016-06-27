@@ -114,6 +114,8 @@ namespace readdy {
 
             std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> getAllOrder2RegisteredPotentialTypes() const;
 
+            void configure();
+
             // ctor and dtor
             KernelContext(reactions::ReactionFactory const *const reactionFactory);
 

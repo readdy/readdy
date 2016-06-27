@@ -5,6 +5,8 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
+#include <readdy/model/potentials/PotentialsOrder2.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
 
 using namespace readdy;
 
@@ -64,6 +66,7 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
     {
         auto &&diffuseProgram = pimpl->kernel->createProgram<readdy::model::programs::DiffuseProgram>();
         auto &&updateModelProgram = pimpl->kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+        pimpl->kernel->getKernelContext().configure();
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
             diffuseProgram->execute();
             updateModelProgram->configure(t, true);
@@ -100,20 +103,15 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
 
 }
 
-void Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient) {
+void Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().setDiffusionConstant(name, diffusionCoefficient);
+    pimpl->kernel->getKernelContext().setParticleRadius(name, radius);
 }
 
 const std::vector<readdy::model::Vec3> Simulation::getParticlePositions() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
-}
-
-const uuid_t& Simulation::registerPotentialOrder1(std::string name, const std::string &type) {
-    ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder1>(name);
-    return pimpl->kernel->getKernelContext().registerOrder1Potential(ptr.get(), name);
 }
 
 void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 const* const ptr, const std::string &type) {
@@ -125,10 +123,21 @@ void Simulation::deregisterPotential(const uuid_t &uuid) {
     pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };
 
-const uuid_t& Simulation::registerPotentialOrder2(std::string potential, const std::string &type1, const std::string &type2) {
+boost::uuids::uuid Simulation::registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB, double forceConstant) {
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder2>(potential);
-    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), type1, type2);
+    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
+    ptr->setForceConstant(forceConstant);
+    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+}
+
+boost::uuids::uuid Simulation::registerBoxPotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, readdy::model::Vec3 extent, bool considerParticleRadius) {
+    ensureKernelSelected();
+    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
+    ptr->setOrigin(origin);
+    ptr->setExtent(extent);
+    ptr->setConsiderParticleRadius(considerParticleRadius);
+    ptr->setForceConstant(forceConstant);
+    return pimpl->kernel->getKernelContext().registerOrder1Potential(ptr.get(), particleType);
 }
 
 void Simulation::registerPotentialOrder2(model::potentials::PotentialOrder2 const* const ptr, const std::string &type1, const std::string &type2) {
@@ -200,8 +209,6 @@ uuid_t Simulation::registerObservable(unsigned int stride, std::function<void(ty
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return uuid;
 }
-
-
 template uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(unsigned int, std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&);
 
 
