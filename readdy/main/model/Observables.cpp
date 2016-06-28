@@ -9,7 +9,6 @@
 
 #include <readdy/model/Observables.h>
 #include <readdy/model/Kernel.h>
-#include <math.h>
 
 namespace readdy {
     namespace model {
