@@ -121,12 +121,30 @@ namespace readdy {
 
         }
 
+        CenterOfMassObservable::CenterOfMassObservable(readdy::model::Kernel *const kernel, unsigned int stride, unsigned int particleType)
+                : Observable(kernel, stride), particleType(particleType){
+        }
+
+        CenterOfMassObservable::CenterOfMassObservable(Kernel *const kernel, unsigned int stride, const std::string &particleType)
+                : CenterOfMassObservable(kernel, stride, kernel->getKernelContext().getParticleTypeID(particleType))
+        { }
+
+        void CenterOfMassObservable::evaluate() {
+            readdy::model::Vec3 com {0,0,0};
+            unsigned long n_particles = 0;
+            for(auto&& p : kernel->getKernelStateModel().getParticles()) {
+                if(p.getType() == particleType ) {
+                    ++n_particles;
+                    com += p.getPos();
+                }
+            }
+            com /= n_particles;
+            result = com;
+        }
+
 
     }
 
 
 }
-
-
-
 

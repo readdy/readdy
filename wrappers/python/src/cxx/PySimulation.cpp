@@ -49,13 +49,18 @@ boost::uuids::uuid registerObservable_ParticlePositions(sim& self, unsigned int 
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
 }
 
-boost::uuids::uuid registerObservable_RadialDistribution(sim& self, int stride, const boost::python::object &callbackFun, boost::python::numeric::array& binBorders, std::string typeCountFrom, std::string typeCountTo, double particleDensity) {
+boost::uuids::uuid registerObservable_RadialDistribution(sim& self, unsigned int stride, const boost::python::object &callbackFun, boost::python::numeric::array& binBorders, std::string typeCountFrom, std::string typeCountTo, double particleDensity) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::RadialDistributionObservable::result_t)>(callbackFun);
     const auto size = boost::python::len(binBorders);
     std::vector<double> binBordersVec {};
     binBordersVec.reserve((unsigned long) size);
     for(auto i = 0; i < size; ++i) binBordersVec.push_back(boost::python::extract<double>(binBorders[i]));
-    return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), (unsigned int) stride, binBordersVec, typeCountFrom, typeCountTo, particleDensity);
+    return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), stride, binBordersVec, typeCountFrom, typeCountTo, particleDensity);
+}
+
+boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int stride, const boost::python::object &callbackFun, std::string particleType) {
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, particleType);
 }
 
 // module

@@ -48,6 +48,18 @@ namespace readdy {
             double particleDensity;
         };
 
+        class CenterOfMassObservable : public Observable<readdy::model::Vec3> {
+
+        public:
+            CenterOfMassObservable(Kernel *const kernel, unsigned int stride, unsigned int particleType);
+            CenterOfMassObservable(Kernel *const kernel, unsigned int stride, const std::string& particleType);
+
+            virtual void evaluate() override;
+
+        protected:
+            unsigned int particleType;
+        };
+
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {
         public:
 

@@ -10,10 +10,11 @@ import matplotlib.pyplot as plt
 rdf = None
 centers = None
 n_calls = 0
+T = 200000000
 
 
 def rdf_callback(pair):
-    global rdf, centers, n_calls
+    global rdf, centers, n_calls, T
     if centers is None:
         centers = pair[0]
     if rdf is None:
@@ -21,6 +22,8 @@ def rdf_callback(pair):
     else:
         rdf += pair[1]
     n_calls += 1
+    if n_calls % 10000 == 0:
+        print("%s" % (10.*float(n_calls)/float(T)))
 
 
 if __name__ == '__main__':
@@ -39,12 +42,14 @@ if __name__ == '__main__':
     simulation.addParticle("A", Vec(-2.5, 0, 0))
     simulation.addParticle("B", Vec(0, 0, 0))
 
-    T = 50000000
-    simulation.registerObservable_RadialDistribution(1, rdf_callback, np.arange(0, 5, .01), "A", "B", 1. / (box_size[0] * box_size[1] * box_size[2]))
+    simulation.registerObservable_RadialDistribution(10, rdf_callback, np.arange(0, 5, .01), "A", "B", 1. / (box_size[0] * box_size[1] * box_size[2]))
     simulation.run(T, 0.02)
 
     print("n_calls=%s" % n_calls)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(centers, rdf / n_calls)
+
+    np.savetxt("bins", centers)
+    np.savetxt("rdf", rdf/n_calls)
     plt.show()

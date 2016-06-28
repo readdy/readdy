@@ -203,6 +203,9 @@ template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistrib
         std::function<void(typename readdy::model::RadialDistributionObservable::result_t)>&&, unsigned int,
         std::vector<double>, const std::string, const std::string, double
 );
+template _sim_uuid_t Simulation::registerObservable<readdy::model::CenterOfMassObservable>(
+        std::function<void(typename readdy::model::CenterOfMassObservable::result_t)>&&, unsigned int, const std::string
+);
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };
