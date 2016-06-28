@@ -34,7 +34,8 @@ namespace readdy {
 
         class RadialDistributionObservable : public Observable<std::pair<std::vector<double>, std::vector<double>>> {
         public:
-            RadialDistributionObservable(Kernel *const kernel, unsigned int stride, const std::vector<double> &binBorders, unsigned int typeCountFrom, unsigned int typeCountTo, double particleDensity);
+            RadialDistributionObservable(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders, unsigned int typeCountFrom, unsigned int typeCountTo, double particleDensity);
+            RadialDistributionObservable(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders, const std::string& typeCountFrom, const std::string& typeCountTo, double particleDensity);
 
             virtual void evaluate() override;
 

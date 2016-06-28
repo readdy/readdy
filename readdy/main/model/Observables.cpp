@@ -38,16 +38,17 @@ namespace readdy {
             TestCombinerObservable::result = result;
         }
 
-        RadialDistributionObservable::RadialDistributionObservable(Kernel *const kernel, unsigned int stride, const std::vector<double> &binBorders, unsigned int typeCountFrom, unsigned int typeCountTo, double particleDensity)
+        RadialDistributionObservable::RadialDistributionObservable(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders, unsigned int typeCountFrom,
+                                                                   unsigned int typeCountTo, double particleDensity)
                 : Observable(kernel, stride), typeCountFrom(typeCountFrom), typeCountTo(typeCountTo), particleDensity(particleDensity) {
             setBinBorders(binBorders);
         }
 
         void RadialDistributionObservable::evaluate() {
-            if(binBorders.size() > 1) {
-
+            if (binBorders.size() > 1) {
+                std::fill(counts.begin(), counts.end(), 0);
                 const auto particles = kernel->getKernelStateModel().getParticles();
-                const auto n_particles = particles.size();
+                const auto n_from_particles = std::count_if(particles.begin(), particles.end(), [this](const readdy::model::Particle& p) {return p.getType() == typeCountFrom;});
                 {
                     const auto &distSquared = kernel->getKernelContext().getDistSquaredFun();
                     for (auto &&pFrom : particles) {
@@ -69,13 +70,13 @@ namespace readdy {
                 auto &radialDistribution = std::get<1>(result);
                 {
                     const auto &binCenters = std::get<0>(result);
-                    auto&& it_centers = binCenters.begin();
-                    auto&& it_distribution = radialDistribution.begin();
-                    for(auto&& it_counts = counts.begin(); it_counts != counts.end(); ++it_counts) {
+                    auto &&it_centers = binCenters.begin();
+                    auto &&it_distribution = radialDistribution.begin();
+                    for (auto &&it_counts = counts.begin(); it_counts != counts.end(); ++it_counts) {
                         const auto idx = it_centers - binCenters.begin();
                         const auto r = *it_centers;
-                        const auto dr = binBorders[idx+1] - binBorders[idx];
-                        *it_distribution = (*it_counts)/(4*M_PI*r*r*dr*n_particles*particleDensity);
+                        const auto dr = binBorders[idx + 1] - binBorders[idx];
+                        *it_distribution = (*it_counts) / (4 * M_PI * r * r * dr * n_from_particles * particleDensity);
 
                         ++it_distribution;
                         ++it_centers;
@@ -89,7 +90,7 @@ namespace readdy {
         }
 
         void RadialDistributionObservable::setBinBorders(const std::vector<double> &binBorders) {
-            if(binBorders.size() > 1) {
+            if (binBorders.size() > 1) {
                 RadialDistributionObservable::binBorders = binBorders;
                 auto nCenters = binBorders.size() - 1;
                 result = std::make_pair(std::vector<double>(nCenters), std::vector<double>(nCenters));
@@ -108,6 +109,18 @@ namespace readdy {
             }
 
         }
+
+        RadialDistributionObservable::RadialDistributionObservable(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders, const std::string &typeCountFrom,
+                                                                   const std::string &typeCountTo, double particleDensity)
+                : RadialDistributionObservable(
+                kernel, stride, binBorders,
+                kernel->getKernelContext().getParticleTypeID(typeCountFrom),
+                kernel->getKernelContext().getParticleTypeID(typeCountTo),
+                particleDensity
+        ) {
+
+        }
+
 
     }
 

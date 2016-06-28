@@ -94,7 +94,7 @@ const std::string &Simulation::getSelectedKernelType() const {
 void Simulation::addParticle(double x, double y, double z, const std::string &type) {
     ensureKernelSelected();
     const auto &&s = getBoxSize();
-    if (0 <= x && x <= s[0] && 0 <= y && y <= s[1] && 0 <= z && z <= s[2]) {
+    if (fabs(x) <= .5*s[0] && fabs(y) <= .5*s[1] && fabs(z) <= .5*s[2]) {
         readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
         pimpl->kernel->getKernelStateModel().addParticle(p);
     } else {
@@ -199,6 +199,10 @@ _sim_uuid_t Simulation::registerObservable(std::function<void(typename T::result
     return uuid;
 }
 template _sim_uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&, unsigned int);
+template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistributionObservable>(
+        std::function<void(typename readdy::model::RadialDistributionObservable::result_t)>&&, unsigned int,
+        std::vector<double>, const std::string, const std::string, double
+);
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };
