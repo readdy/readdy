@@ -18,7 +18,6 @@ namespace readdy {
         namespace singlecpu {
             namespace reactions {
                 void SingleCPUConversion::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
-                    std::cout << "conversion happened" << std::endl;
                     p1_out.setPos(p1_in.getPos());
                     p1_out.setType(getTypeTo());
                     p1_out.setId(p1_in.getId());
@@ -45,6 +44,7 @@ namespace readdy {
                 }
 
                 void SingleCPUFission::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                    std::cout << "fission happened" << std::endl;
                     // as long as the orientation is uniform, it does not matter of which type p1_in and p2_in are.
                     auto n3 = rand->getNormal3();
                     n3 /= sqrt(n3 * n3);

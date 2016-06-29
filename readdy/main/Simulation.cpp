@@ -66,11 +66,16 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
     {
         auto &&diffuseProgram = pimpl->kernel->createProgram<readdy::model::programs::DiffuseProgram>();
         auto &&updateModelProgram = pimpl->kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+        auto &&reactionsProgram = pimpl->kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
         pimpl->kernel->getKernelContext().configure();
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
-            diffuseProgram->execute();
             updateModelProgram->configure(t, true);
             updateModelProgram->execute();
+            diffuseProgram->execute();
+
+            updateModelProgram->configure(t, false);
+            updateModelProgram->execute();
+            reactionsProgram->execute();
         }
     }
 }

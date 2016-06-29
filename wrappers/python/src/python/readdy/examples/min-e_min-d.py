@@ -132,7 +132,7 @@ class MinEMinDSimulation(object):
 
         simulation.registerObservable_CenterOfMass(1, self.com_callback_mind, ["D", "D_P", "D_PB"])
         simulation.registerObservable_CenterOfMass(1, self.com_callback_mine, ["E"])
-        simulation.registerObservable_CenterOfMass(1, self.com_callback_minde, ["DE"])
+        simulation.registerObservable_CenterOfMass(1, self.com_callback_minde, ["DE", "D_PB"])
 
         ###################################
         #
@@ -171,8 +171,8 @@ class MinEMinDSimulation(object):
                 simulation.addParticle("M", Vec(origin[0] + .5, x, z))
                 simulation.addParticle("M", Vec(-1 * origin[0] - .5, x, z))
         print("done adding membrane particles")
-        n_minE_particles = 50
-        n_minD_particles = 50*4
+        n_minE_particles = 250
+        n_minD_particles = n_minE_particles*4
         mine_x = np.random.uniform(origin[0] + .5, -1 * origin[0] - .5, n_minE_particles)
         mine_y = np.random.uniform(origin[1] + .5, -1 * origin[1] - .5, n_minE_particles)
         mine_z = np.random.uniform(origin[2] + .5, -1 * origin[2] - .5, n_minE_particles)
