@@ -15,6 +15,7 @@
 #include <vector>
 #include <readdy/common/Types.h>
 #include <iostream>
+#include <set>
 
 namespace readdy {
     namespace model {
@@ -52,12 +53,14 @@ namespace readdy {
 
         public:
             CenterOfMassObservable(Kernel *const kernel, unsigned int stride, unsigned int particleType);
+            CenterOfMassObservable(Kernel *const kernel, unsigned int stride, const std::vector<unsigned int>& particleTypes);
             CenterOfMassObservable(Kernel *const kernel, unsigned int stride, const std::string& particleType);
+            CenterOfMassObservable(Kernel *const kernel, unsigned int stride, const std::vector<std::string>& particleType);
 
             virtual void evaluate() override;
 
         protected:
-            unsigned int particleType;
+            std::set<unsigned int> particleTypes;
         };
 
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {

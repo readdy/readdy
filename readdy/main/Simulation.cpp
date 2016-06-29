@@ -234,7 +234,7 @@ template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistrib
         std::vector<double>, const std::string, const std::string, double
 );
 template _sim_uuid_t Simulation::registerObservable<readdy::model::CenterOfMassObservable>(
-        std::function<void(typename readdy::model::CenterOfMassObservable::result_t)>&&, unsigned int, const std::string
+        std::function<void(typename readdy::model::CenterOfMassObservable::result_t)>&&, unsigned int, const std::vector<std::string>
 );
 
 

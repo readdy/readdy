@@ -58,16 +58,34 @@ boost::uuids::uuid registerObservable_RadialDistribution(sim& self, unsigned int
     return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), stride, binBordersVec, typeCountFrom, typeCountTo, particleDensity);
 }
 
-boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int stride, const boost::python::object &callbackFun, std::string particleType) {
+boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int stride, const boost::python::object &callbackFun, boost::python::list types) {
+    std::vector<std::string> typesVec {};
+    const auto len = boost::python::len(types);
+    typesVec.reserve((unsigned long) len);
+    for(auto i = 0; i < len; ++i) {
+        typesVec.push_back(boost::python::extract<std::string>(types[i]));
+    }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, particleType);
+    return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, typesVec);
+}
+
+#if PY_MAJOR_VERSION >= 3
+int
+#else
+void
+#endif
+init_numpy()
+{
+    import_array();
 }
 
 // module
 BOOST_PYTHON_MODULE (simulation) {
 
     PyEval_InitThreads();
-    import_array();
+
+    init_numpy();
+
     boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
 
     readdy::py::std_vector_to_python_converter<double>();

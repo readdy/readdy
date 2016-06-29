@@ -4,6 +4,10 @@ from readdy.util import platform_utils
 
 
 class MinEMinDSimulation(object):
+
+    def com_callback(self, centerOfMass):
+        print("center of mass = %s" % centerOfMass)
+
     def execute(self):
         kernel_provider = KernelProvider.get()
         kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
@@ -51,6 +55,7 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
+        simulation.registerObservable_CenterOfMass(1, self.com_callback, ["D", "D_P", "D_PB"])
 
         ###################################
         #
