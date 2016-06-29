@@ -109,7 +109,7 @@ void Simulation::registerParticleType(const std::string &name, const double diff
     pimpl->kernel->getKernelContext().setParticleRadius(name, radius);
 }
 
-const std::vector<readdy::model::Vec3> Simulation::getParticlePositions() const {
+const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
@@ -237,6 +237,19 @@ const boost::uuids::uuid &Simulation::registerDeathReaction(const std::string &n
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().registerDeathReaction(name, particleType, rate);
 }
+
+std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string type) {
+    unsigned int typeId = pimpl->kernel->getKernelContext().getParticleTypeID(type);
+    const auto particles = pimpl->kernel->getKernelStateModel().getParticles();
+    std::vector<readdy::model::Vec3> positions;
+    for(auto&& p : particles) {
+        if(p.getType() == typeId) {
+            positions.push_back(p.getPos());
+        }
+    }
+    return positions;
+}
+
 
 template _sim_uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&, unsigned int);
 template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistributionObservable>(

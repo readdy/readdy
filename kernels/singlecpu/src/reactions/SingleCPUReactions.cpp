@@ -9,6 +9,7 @@
 
 #include <readdy/model/Particle.h>
 #include <readdy/kernel/singlecpu/reactions/SingleCPUReactions.h>
+#include <iostream>
 
 using particle_t = readdy::model::Particle;
 
@@ -17,6 +18,7 @@ namespace readdy {
         namespace singlecpu {
             namespace reactions {
                 void SingleCPUConversion::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                    std::cout << "conversion happened" << std::endl;
                     p1_out.setPos(p1_in.getPos());
                     p1_out.setType(getTypeTo());
                     p1_out.setId(p1_in.getId());
@@ -24,6 +26,7 @@ namespace readdy {
 
 
                 void SingleCPUEnzymatic::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                    std::cout << "enzymatic happened" << std::endl;
                     if (p1_in.getType() == getCatalyst()) {
                         // p1 is the catalyst
                         p1_out.setType(getCatalyst());
@@ -53,6 +56,7 @@ namespace readdy {
                 }
 
                 void SingleCPUFusion::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                    std::cout << "fusion happened" << std::endl;
                     p1_out.setType(getTo());
                     if (getFrom1() == p1_in.getType()) {
                         p1_out.setPos(p1_in.getPos() + getWeight1() * (p2_in.getPos() - p1_in.getPos()));

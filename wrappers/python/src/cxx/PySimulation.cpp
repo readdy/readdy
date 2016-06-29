@@ -103,6 +103,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("registerHarmonicRepulsionPotential", &sim::registerHarmonicRepulsionPotential)
             .def("registerWeakInteractionPiecewiseHarmonicPotential", &sim::registerWeakInteractionPiecewiseHarmonicPotential)
             .def("registerBoxPotential", &sim::registerBoxPotential)
+            .def("getParticlePositions", &sim::getParticlePositions)
             .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
             .def("registerObservable_RadialDistribution", &registerObservable_RadialDistribution)
             .def("registerObservable_CenterOfMass", &registerObservable_CenterOfMass)

@@ -51,7 +51,7 @@ namespace {
         }
         double timestep = 1;
         simulation.run(100, timestep);
-        auto positions = simulation.getParticlePositions();
+        auto positions = simulation.getAllParticlePositions();
         double msd = 0;
         for(auto&& position : positions) {
             msd += position*position;

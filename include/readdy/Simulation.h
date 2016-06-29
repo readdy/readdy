@@ -81,6 +81,7 @@ namespace readdy {
          */
         void deregisterObservable(const boost::uuids::uuid uuid);
 
+        std::vector<readdy::model::Vec3> getParticlePositions(std::string type);
 
         void registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius);
 
@@ -106,7 +107,7 @@ namespace readdy {
 
         void addParticle(double x, double y, double z, const std::string& type);
 
-        const std::vector<readdy::model::Vec3> getParticlePositions() const;
+        const std::vector<readdy::model::Vec3> getAllParticlePositions() const;
 
         void setKernel(const std::string& kernel);
 
