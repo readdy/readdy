@@ -63,6 +63,13 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
+        simulation.registerBoxPotential("D", 10., Vec(-7.5, -7.5, -7.5), Vec(15, 15, 15), True)  # (force constant, origin, extent, considerParticleRadius) todo: force constant reasonable?
+        simulation.registerBoxPotential("D_P", 10., Vec(-7.5, -7.5, -7.5), Vec(15, 15, 15), True)  # (force constant, origin, extent, considerParticleRadius) todo: force constant reasonable?
+        simulation.registerBoxPotential("D_PB", 10., Vec(-7.5, -7.5, -7.5), Vec(15, 15, 15), True)  # (force constant, origin, extent, considerParticleRadius) todo: force constant reasonable?
+        simulation.registerBoxPotential("E", 10., Vec(-7.5, -7.5, -7.5), Vec(15, 15, 15), True)  # (force constant, origin, extent, considerParticleRadius) todo: force constant reasonable?
+        simulation.registerBoxPotential("DE", 10., Vec(-7.5, -7.5, -7.5), Vec(15, 15, 15), True)  # (force constant, origin, extent, considerParticleRadius) todo: force constant reasonable?
+
+        simulation.registerWeakInteractionPiecewiseHarmonicPotential("D_P", "D_PB", 10, 10, 10, 20)  # (force constant, desired dist, depth, no interaction dist)
 
 if __name__ == '__main__':
     sim = MinEMinDSimulation()

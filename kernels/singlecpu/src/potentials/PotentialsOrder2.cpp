@@ -16,7 +16,7 @@ namespace readdy {
             namespace potentials {
 
                 double SingleCPUHarmonicRepulsion::calculateEnergy(const vec_t &x_ij) {
-                    auto distanceSquared = x_ij*x_ij;
+                    auto distanceSquared = x_ij * x_ij;
                     if (distanceSquared < getSumOfParticleRadiiSquared()) {
                         distanceSquared = std::sqrt(distanceSquared);
                         distanceSquared -= getSumOfParticleRadii();
@@ -51,7 +51,63 @@ namespace readdy {
                 }
 
 
+                SingleCPUWeakInteractionPiecewiseHarmonic::SingleCPUWeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel)
+                        : readdy::model::potentials::WeakInteractionPiecewiseHarmonic(kernel) { }
+
+                potentials::SingleCPUWeakInteractionPiecewiseHarmonic *SingleCPUWeakInteractionPiecewiseHarmonic::replicate() const {
+                    return new SingleCPUWeakInteractionPiecewiseHarmonic(*this);
+                }
+
+                double SingleCPUWeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Vec3 &x_ij) {
+                    const auto dist = sqrt(x_ij * x_ij);
+                    const auto len_part2 = noInteractionDistance - desiredParticleDistance;
+                    if (dist < desiredParticleDistance) {
+                        // repulsive as we are closer than the desired distance
+                        return .5 * forceConstant * (dist - desiredParticleDistance) * (dist - desiredParticleDistance) - depthAtDesiredDistance;
+                    } else {
+                        // attractive as we are further (but not too far) apart than the desired distance
+                        if (dist < desiredParticleDistance + .5 * len_part2) {
+                            return .5 * depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (dist - desiredParticleDistance) * (dist - desiredParticleDistance) -
+                                   depthAtDesiredDistance;
+                        } else {
+                            // if we are not too far apart but still further than in the previous case, attractive
+                            if (dist < noInteractionDistance) {
+                                return -0.5 * depthAtDesiredDistance * (1 / (0.5 * len_part2)) * (1 / (0.5 * len_part2)) * (dist - noInteractionDistance) * (dist - noInteractionDistance);
+                            }
+                        }
+                    }
+                    return 0;
+                }
+
+                void SingleCPUWeakInteractionPiecewiseHarmonic::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) {
+                    const auto dist = sqrt(x_ij * x_ij);
+                    const auto len_part2 = noInteractionDistance - desiredParticleDistance;
+                    double factor = 0;
+                    if (dist < desiredParticleDistance) {
+                        // repulsive as we are closer than the desired distance
+                        factor = forceConstant * (desiredParticleDistance - dist) / dist;
+                    } else {
+                        // attractive as we are further (but not too far) apart than the desired distance
+                        if (dist < desiredParticleDistance + .5 * len_part2) {
+                            factor = depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (desiredParticleDistance - dist) / dist;
+                        } else {
+                            // if we are not too far apart but still further than in the previous case, attractive
+                            if (dist < noInteractionDistance) {
+                                factor = -1 * depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (noInteractionDistance - dist) / dist;
+                            }
+                        }
+                    }
+                    force += factor * x_ij;
+                }
+
+                void SingleCPUWeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) {
+                    energy += calculateEnergy(x_ij);
+                    calculateForce(force, x_ij);
+                }
+
+
             }
         }
     }
 }
+

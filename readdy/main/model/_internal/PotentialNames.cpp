@@ -19,6 +19,7 @@ namespace readdy {
 
                 // order 2
                 const std::string PotentialName<HarmonicRepulsion>::value = "HarmonicRepulsion";
+                const std::string PotentialName<WeakInteractionPiecewiseHarmonic>::value = "WeakInteractionPiecewiseHarmonic";
             }
         }
     }

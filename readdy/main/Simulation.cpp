@@ -130,6 +130,17 @@ boost::uuids::uuid Simulation::registerHarmonicRepulsionPotential(std::string pa
     return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
 }
 
+boost::uuids::uuid Simulation::registerWeakInteractionPiecewiseHarmonicPotential(std::string particleTypeA, std::string particleTypeB, double forceConstant, double desiredParticleDistance,
+                                                                                 double depth, double noInteractionDistance) {
+    ensureKernelSelected();
+    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::WeakInteractionPiecewiseHarmonic>();
+    ptr->setForceConstant(forceConstant);
+    ptr->setDesiredParticleDistance(desiredParticleDistance);
+    ptr->setDepthAtDesiredDistance(depth);
+    ptr->setNoInteractionDistance(noInteractionDistance);
+    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+}
+
 boost::uuids::uuid Simulation::registerBoxPotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, readdy::model::Vec3 extent, bool considerParticleRadius) {
     ensureKernelSelected();
     auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
@@ -226,7 +237,6 @@ const boost::uuids::uuid &Simulation::registerDeathReaction(const std::string &n
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().registerDeathReaction(name, particleType, rate);
 }
-
 
 template _sim_uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&, unsigned int);
 template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistributionObservable>(

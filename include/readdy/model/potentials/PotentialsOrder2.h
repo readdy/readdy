@@ -40,8 +40,31 @@ namespace readdy {
 
             };
 
+            class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
+
+            public:
+                WeakInteractionPiecewiseHarmonic(const Kernel* const kernel);
+                virtual WeakInteractionPiecewiseHarmonic *replicate() const override = 0;
+
+                virtual void configureForTypes(unsigned int type1, unsigned int type2) override;
+
+
+                void setDesiredParticleDistance(double desiredParticleDistance);
+                void setForceConstant(double forceConstant);
+                void setDepthAtDesiredDistance(double depthAtDesiredDistance);
+                void setNoInteractionDistance(double noInteractionDistance);
+
+            protected:
+                const Kernel* const kernel;
+                double desiredParticleDistance;
+                double forceConstant;
+                double depthAtDesiredDistance;
+                double noInteractionDistance;
+            };
+
             namespace _internal {
                 template<> struct PotentialName<HarmonicRepulsion> { static const std::string value; };
+                template<> struct PotentialName<WeakInteractionPiecewiseHarmonic> { static const std::string value; };
             }
         }
     }

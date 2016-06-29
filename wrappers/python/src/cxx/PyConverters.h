@@ -18,6 +18,7 @@
 #include <boost/python/to_python_converter.hpp>
 #include <boost/python.hpp>
 #include <iostream>
+#include <vector>
 
 namespace readdy {
     namespace py {

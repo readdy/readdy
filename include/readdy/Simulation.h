@@ -98,6 +98,7 @@ namespace readdy {
         // Order 2 potentials
         //----------------------
         boost::uuids::uuid registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB, double forceConstant);
+        boost::uuids::uuid registerWeakInteractionPiecewiseHarmonicPotential(std::string particleTypeA, std::string particleTypeB, double forceConstant, double desiredParticleDistance, double depth, double noInteractionDistance);
         void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 const* const ptr, const std::string &type1, const std::string &type2);
 
         //void registerReaction(const Reaction& reaction);

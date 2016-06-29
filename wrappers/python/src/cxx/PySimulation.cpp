@@ -101,6 +101,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("getSelectedKernelType", &getSelectedKernelType)
             .def("registerPotentialOrder2", &registerPotentialOrder2)
             .def("registerHarmonicRepulsionPotential", &sim::registerHarmonicRepulsionPotential)
+            .def("registerWeakInteractionPiecewiseHarmonicPotential", &sim::registerWeakInteractionPiecewiseHarmonicPotential)
             .def("registerBoxPotential", &sim::registerBoxPotential)
             .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
             .def("registerObservable_RadialDistribution", &registerObservable_RadialDistribution)

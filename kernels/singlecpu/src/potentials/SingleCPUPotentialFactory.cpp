@@ -19,9 +19,10 @@ namespace readdy {
                 SingleCPUPotentialFactory::SingleCPUPotentialFactory(SingleCPUKernel *const kernel) : readdy::model::potentials::PotentialFactory(), kernel(kernel) {
                     namespace p = readdy::model::potentials;
                     // order 1
-                    factory[p::getPotentialName<p::CubePotential>()] = [kernel] {return new SingleCPUCubePotential(kernel);};
+                    factory[p::getPotentialName<p::CubePotential>()] = [kernel] { return new SingleCPUCubePotential(kernel); };
                     // order 2
-                    factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] {return new SingleCPUHarmonicRepulsion(kernel);};
+                    factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] { return new SingleCPUHarmonicRepulsion(kernel); };
+                    factory[p::getPotentialName<p::WeakInteractionPiecewiseHarmonic>()] = [kernel] { return new SingleCPUWeakInteractionPiecewiseHarmonic(kernel); };
                 }
 
             }
