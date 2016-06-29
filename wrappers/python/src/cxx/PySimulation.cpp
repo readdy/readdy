@@ -63,10 +63,6 @@ boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int strid
     return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, particleType);
 }
 
-boost::uuids::uuid registerConversionReaction(sim& self, std::string name, std::string from, std::string to, double rate) {
-    return self.registerConversionReaction(name, from, to, rate);
-}
-
 // module
 BOOST_PYTHON_MODULE (simulation) {
 
@@ -90,7 +86,12 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("registerBoxPotential", &sim::registerBoxPotential)
             .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
             .def("registerObservable_RadialDistribution", &registerObservable_RadialDistribution)
-            .def("registerConversionReaction", &registerConversionReaction)
+            .def("registerObservable_CenterOfMass", &registerObservable_CenterOfMass)
+            .def("registerConversionReaction", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("registerEnzymaticReaction", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("registerFissionReaction", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("registerFusionReaction", &sim::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("registerDeathReaction", &sim::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("setKernel", &sim::setKernel)
             .def("run", &sim::run);
 
