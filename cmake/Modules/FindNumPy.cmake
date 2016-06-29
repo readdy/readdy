@@ -5,6 +5,7 @@ IF (NOT NUMPY_INCLUDE_DIR)
                 COMMAND ${PYTHON_EXECUTABLE} "${READDY_GLOBAL_DIR}/libraries/boost/numpy_include_dir.py"
                 OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
                 RESULT_VARIABLE Result
+                OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         MESSAGE(STATUS "Found numpy include dir: ${NUMPY_INCLUDE_DIR}")
         IF(NOT Result EQUAL "0")
