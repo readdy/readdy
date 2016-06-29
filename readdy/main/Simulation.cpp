@@ -198,6 +198,36 @@ _sim_uuid_t Simulation::registerObservable(std::function<void(typename T::result
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return uuid;
 }
+
+const boost::uuids::uuid &Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerConversionReaction(name, from, to, rate);
+}
+
+const boost::uuids::uuid &Simulation::registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate,
+                                                                const double &eductDistance) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
+}
+
+const boost::uuids::uuid &Simulation::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance,
+                                                              const double &rate, const double &weight1, const double &weight2) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerFissionReaction(name, from, to1, to2, productDistance, rate, weight1, weight2);
+}
+
+const boost::uuids::uuid &Simulation::registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate,
+                                                             const double &eductDistance, const double &weight1, const double &weight2) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
+}
+
+const boost::uuids::uuid &Simulation::registerDeathReaction(const std::string &name, const std::string &particleType, const double &rate) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerDeathReaction(name, particleType, rate);
+}
+
+
 template _sim_uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&, unsigned int);
 template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistributionObservable>(
         std::function<void(typename readdy::model::RadialDistributionObservable::result_t)>&&, unsigned int,

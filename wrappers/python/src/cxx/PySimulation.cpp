@@ -1,8 +1,8 @@
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h>
 #include "PyConverters.h"
-#include <numpy/ndarrayobject.h>
-#include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <readdy/Simulation.h>
@@ -63,6 +63,10 @@ boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int strid
     return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, particleType);
 }
 
+boost::uuids::uuid registerConversionReaction(sim& self, std::string name, std::string from, std::string to, double rate) {
+    return self.registerConversionReaction(name, from, to, rate);
+}
+
 // module
 BOOST_PYTHON_MODULE (simulation) {
 
@@ -86,6 +90,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("registerBoxPotential", &sim::registerBoxPotential)
             .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
             .def("registerObservable_RadialDistribution", &registerObservable_RadialDistribution)
+            .def("registerConversionReaction", &registerConversionReaction)
             .def("setKernel", &sim::setKernel)
             .def("run", &sim::run);
 

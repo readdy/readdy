@@ -54,15 +54,31 @@ namespace readdy {
         void setPeriodicBoundary(std::array<bool, 3> periodic);
 
         /**
-         * Registers an observable with the kernel. A list of available observables can be obtained by
-         *
+         * Registers a predefined observable with the kernel. A list of available observables can be obtained by getAvailableObservables().
+         * @param callbackFun a function which gets called upon evaluation of the observable
+         * @param stride the stride argument which decides how often the observable gets called
+         * @param args arguments for creation of the observable
+         * @return a uuid with which the observable is associated
          */
         template<typename T, typename... Args>
         boost::uuids::uuid registerObservable(std::function<void(typename T::result_t)>&& callbackFun, unsigned int stride, Args... args);
 
-
+        /**
+         * Registers an observable that implements the readdy::model::ObservableBase interface.
+         * @param observable the observable
+         * @return a uuid with which the observable is associated
+         */
         boost::uuids::uuid registerObservable(readdy::model::ObservableBase& observable);
+        /**
+         * Gives all available predefined observable names.
+         * @return a vector containing all predefined observable names
+         * @todo implement this (changed the factory type to constructor+dispatcher)
+         */
         std::vector<std::string> getAvailableObservables();
+        /**
+         * Removes an observable by uuid.
+         * @param uuid the uuid of the observable to be removed.
+         */
         void deregisterObservable(const boost::uuids::uuid uuid);
 
 
@@ -96,6 +112,19 @@ namespace readdy {
         bool isKernelSelected() const;
 
         const std::string& getSelectedKernelType() const;
+
+        const boost::uuids::uuid &registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate);
+
+        const boost::uuids::uuid &registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate,
+                                                            const double &eductDistance);
+
+        const boost::uuids::uuid &registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance,
+                                                          const double &rate, const double &weight1 = 0.5, const double &weight2 = 0.5);
+
+        const boost::uuids::uuid &registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate,
+                                                         const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5);
+
+        const boost::uuids::uuid &registerDeathReaction(const std::string &name, const std::string &particleType, const double &rate);
 
         virtual void run(const readdy::model::time_step_type steps, const double timeStep);
 

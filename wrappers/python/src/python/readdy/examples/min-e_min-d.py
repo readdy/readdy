@@ -21,3 +21,5 @@ if __name__ == '__main__':
     simulation.registerParticleType("D_PB", .01, .5)
     # MinDE
     simulation.registerParticleType("DE", .01, .5)
+
+    simulation.registerConversionReaction("D", "D_P", .5)
