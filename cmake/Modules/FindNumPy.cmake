@@ -1,13 +1,12 @@
-#  NUMPY_INCLUDE_DIR, where to find numpy/arrayobject.h, etc.
-#  NUMPY_FOUND, If false, do not try to use numpy headers.
 IF (NOT NUMPY_INCLUDE_DIR)
     FIND_PACKAGE(PythonInterp REQUIRED)
     IF (PYTHON_EXECUTABLE)
         EXECUTE_PROCESS(
-                COMMAND ${PYTHON_EXECUTABLE} "-c 'import numpy; print numpy.get_include()'"
+                COMMAND ${PYTHON_EXECUTABLE} "${READDY_GLOBAL_DIR}/libraries/boost/numpy_include_dir.py"
                 OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
-                RESULT_VARIABLE NUMPY_NOT_FOUND
+                RESULT_VARIABLE Result
         )
+        MESSAGE(STATUS "Found numpy include dir: ${NUMPY_INCLUDE_DIR}, result=${Result}")
         IF(NOT Result EQUAL "0")
             MESSAGE(WARNING "No NumPy installed for interpreter ${PYTHON_EXECUTABLE}.")
             SET(NUMPY_FOUND FALSE)
