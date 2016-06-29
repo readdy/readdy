@@ -6,7 +6,7 @@ IF (NOT NUMPY_INCLUDE_DIR)
                 OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
                 RESULT_VARIABLE Result
         )
-        MESSAGE(STATUS "Found numpy include dir: ${NUMPY_INCLUDE_DIR}, result=${Result}")
+        MESSAGE(STATUS "Found numpy include dir: ${NUMPY_INCLUDE_DIR}")
         IF(NOT Result EQUAL "0")
             MESSAGE(WARNING "No NumPy installed for interpreter ${PYTHON_EXECUTABLE}.")
             SET(NUMPY_FOUND FALSE)
