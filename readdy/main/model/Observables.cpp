@@ -159,3 +159,29 @@ namespace readdy {
 
 }
 
+
+readdy::model::HistogramAlongAxisObservable::HistogramAlongAxisObservable(readdy::model::Kernel *const kernel, unsigned int stride,
+                                                                          std::vector<double> binBorders, std::set<unsigned int> typesToCount, unsigned int axis)
+        : Observable(kernel, stride), binBorders(binBorders), typesToCount(typesToCount), axis(axis) {
+    auto nCenters = binBorders.size() - 1;
+    result = std::vector<double>(nCenters);
+}
+
+std::set<unsigned int> readdy::model::HistogramAlongAxisObservable::transformTypes(std::vector<std::string> types, const readdy::model::KernelContext &ctx) {
+    std::set<unsigned int> result;
+    for(auto&& t : types) {
+        result.insert(ctx.getParticleTypeID(t));
+    }
+    return result;
+}
+
+readdy::model::HistogramAlongAxisObservable::HistogramAlongAxisObservable(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typesToCount, unsigned int axis)
+        : HistogramAlongAxisObservable(kernel, stride, binBorders, transformTypes(typesToCount, kernel->getKernelContext()), axis)
+{
+
+}
+
+
+
+
+

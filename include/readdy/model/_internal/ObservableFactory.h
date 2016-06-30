@@ -37,6 +37,12 @@ namespace readdy {
                     return std::unique_ptr<R>(ObservableFactory::get_dispatcher<R, Args...>::impl(this, kernel, stride, std::forward<Args>(args)...));
                 }
 
+                virtual HistogramAlongAxisObservable* createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride,
+                                                                                    std::vector<double> binBorders, std::vector<std::string> typesToCount, unsigned int axis) const {
+                    // todo: provide default impl
+                    throw std::runtime_error("Should be overridden (or todo: provide default impl)");
+                }
+
             protected:
                 Kernel *const kernel;
 
@@ -47,6 +53,12 @@ namespace readdy {
                         // this only invokes the normal constructor
                         return new T(kernel, stride, std::forward<Args>(args)...);
                     };
+                };
+
+                template<typename... Args> struct get_dispatcher<readdy::model::HistogramAlongAxisObservable, Args...> {
+                    static HistogramAlongAxisObservable *impl(const ObservableFactory * self, Kernel *const kernel, unsigned int stride, Args... args) {
+                        return self->createAxisHistogramObservable(kernel, stride, std::forward<Args>(args)...);
+                    }
                 };
             };
         }

@@ -69,6 +69,24 @@ boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int strid
     return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, typesVec);
 }
 
+boost::uuids::uuid registerObservable_HistogramAlongAxisObservable(sim& self, unsigned int stride, const bpy::object& callbackFun, bpy::numeric::array& binBorders, bpy::list types, unsigned int axis) {
+    const auto sizeBorders = bpy::len(binBorders);
+    const auto sizeTypes = bpy::len(types);
+    std::vector<std::string> typesVec {};
+    typesVec.reserve((unsigned long) sizeTypes);
+    std::vector<double> binBordersVec {};
+    binBordersVec.reserve((unsigned long) sizeBorders);
+    for(auto i = 0; i < sizeBorders; ++i) {
+        binBordersVec.push_back(bpy::extract<double>(binBorders[i]));
+    }
+    for(auto i = 0; i < sizeTypes; ++i) {
+        typesVec.push_back(bpy::extract<std::string>(types[i]));
+    }
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec, typesVec, axis);
+
+}
+
 #if PY_MAJOR_VERSION >= 3
 int
 #else
@@ -106,6 +124,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("getParticlePositions", &sim::getParticlePositions)
             .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
             .def("registerObservable_RadialDistribution", &registerObservable_RadialDistribution)
+            .def("registerObservable_HistogramAlongAxisObservable", &registerObservable_HistogramAlongAxisObservable)
             .def("registerObservable_CenterOfMass", &registerObservable_CenterOfMass)
             .def("registerConversionReaction", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("registerEnzymaticReaction", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())

@@ -184,11 +184,11 @@ namespace readdy {
 
             virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const;
 
+            virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const;
         protected:
             struct Impl;
             std::unique_ptr<Impl> pimpl;
 
-            const _internal::ObservableFactory &getObservableFactory() const;
 
         };
 

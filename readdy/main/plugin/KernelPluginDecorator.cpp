@@ -63,6 +63,10 @@ readdy::model::reactions::ReactionFactory &readdy::plugin::_internal::KernelPlug
     return reference->getReactionFactory();
 }
 
+readdy::model::_internal::ObservableFactory &readdy::plugin::_internal::KernelPluginDecorator::getObservableFactory() const {
+    return reference->getObservableFactory();
+}
+
 
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) { }
 

@@ -30,7 +30,18 @@ class MinEMinDSimulation(object):
         self.prev_mine = None
         self.prev_mind = None
         self.prev_minde = None
+        self._hist_data = None
         plt.ioff()
+
+    def histrogram_callback(self, histogramTuple):
+        plt.clf()
+        counts = histogramTuple[:]
+        if self._hist_data is None:
+            self._hist_data = np.array(counts)
+        else:
+            self._hist_data = np.vstack((self._hist_data, counts))
+            plt.imshow(self._hist_data, cmap='hot')
+            plt.pause(.00001)
 
     def com_callback_mind(self, centerOfMass):
         self.t_d += 1
@@ -77,7 +88,6 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-
         kernel_provider = KernelProvider.get()
         kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
         simulation = Simulation()
@@ -103,7 +113,8 @@ class MinEMinDSimulation(object):
         # particle size, see: http://bmccellbiol.biomedcentral.com/articles/10.1186/1471-2121-5-29
         # "The size of the V-ATPase complex is about 15 nm (diameter) x 25 nm (length from lumen side to tip of head)"
 
-        simulation.registerParticleType("M", 0, .125)  # membrane particle
+        membrane_particle_size = .125
+        simulation.registerParticleType("M", 0, membrane_particle_size)  # membrane particle
         simulation.registerParticleType("D", 2.5, .01)  # MinD-ADP (without phosphor)
         simulation.registerParticleType("D_P", 2.5, .01)  # MinD-ATP (with phosphor)
         simulation.registerParticleType("E", 2.5, .01)  # MinE
@@ -130,9 +141,12 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        simulation.registerObservable_CenterOfMass(1, self.com_callback_mind, ["D", "D_P", "D_PB"])
-        simulation.registerObservable_CenterOfMass(1, self.com_callback_mine, ["E"])
-        simulation.registerObservable_CenterOfMass(1, self.com_callback_minde, ["DE", "D_PB"])
+        #simulation.registerObservable_CenterOfMass(1, self.com_callback_mind, ["D", "D_P", "D_PB"])
+        #simulation.registerObservable_CenterOfMass(1, self.com_callback_mine, ["E"])
+        #simulation.registerObservable_CenterOfMass(1, self.com_callback_minde, ["DE", "D_PB"])
+        print("histogram start")
+        simulation.registerObservable_HistogramAlongAxisObservable(50, self.histrogram_callback, np.arange(-3, 3, .01), ["D", "D_P", "D_PB"], 2)
+        print("histogram end")
 
         ###################################
         #
@@ -140,9 +154,10 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        membrane_size = Vec(2, 2, 4)
-        extent = membrane_size + Vec(1, 1, 1)
-        origin = -.5 * membrane_size - Vec(.5, .5, .5)
+        membrane_size = Vec(.4, 2, 4)
+        layer = Vec(.05, .05, .05)
+        extent = membrane_size + 2*layer
+        origin = -.5 * membrane_size - layer
         simulation.registerBoxPotential("D", 10., origin, extent, True)  # (force constant, origin, extent, considerParticleRadius)
         simulation.registerBoxPotential("D_P", 10., origin, extent, True)  # (force constant, origin, extent, considerParticleRadius)
         simulation.registerBoxPotential("D_PB", 10., origin, extent, True)  # (force constant, origin, extent, considerParticleRadius)
@@ -156,30 +171,32 @@ class MinEMinDSimulation(object):
         # membrane particles
         #
         ###################################
-        stepwidth = 0.2
-        dx = dy = np.arange(origin[0] + .5, -1 * origin[0] - .5 + stepwidth, stepwidth)
-        dz = np.arange(origin[2] + .5, -1 * origin[2] - .5 + stepwidth, stepwidth)
+        dx = np.linspace(origin[0] + layer[0], -1 * origin[0] - layer[0], int(float(membrane_size[0])/membrane_particle_size), endpoint=True)
+        dy = np.linspace(origin[1] + layer[1], -1 * origin[1] - layer[1], int(float(membrane_size[1])/membrane_particle_size), endpoint=True)
+        dz = np.linspace(origin[2] + layer[2], -1 * origin[2] - layer[2], int(float(membrane_size[2])/membrane_particle_size), endpoint=True)
         # front and back
         for x in dx:
             for y in dy:
-                simulation.addParticle("M", Vec(x, y, origin[2] + .5))
-                simulation.addParticle("M", Vec(x, y, -1 * origin[2] - .5))
+                simulation.addParticle("M", Vec(x, y, origin[2] + layer[2]))
+                simulation.addParticle("M", Vec(x, y, -1 * origin[2] - layer[2]))
         for x in dx:
             for z in dz:
-                simulation.addParticle("M", Vec(x, origin[1] + .5, z))
-                simulation.addParticle("M", Vec(x, -1 * origin[1] - .5, z))
-                simulation.addParticle("M", Vec(origin[0] + .5, x, z))
-                simulation.addParticle("M", Vec(-1 * origin[0] - .5, x, z))
+                simulation.addParticle("M", Vec(x, origin[1] + layer[1], z))
+                simulation.addParticle("M", Vec(x, -1 * origin[1] - layer[1], z))
+        for y in dy:
+            for z in dz:
+                simulation.addParticle("M", Vec(origin[0] + layer[0], y, z))
+                simulation.addParticle("M", Vec(-1 * origin[0] - layer[0], y, z))
         print("done adding membrane particles")
         n_minE_particles = 250
         n_minD_particles = n_minE_particles*4
-        mine_x = np.random.uniform(origin[0] + .5, -1 * origin[0] - .5, n_minE_particles)
-        mine_y = np.random.uniform(origin[1] + .5, -1 * origin[1] - .5, n_minE_particles)
-        mine_z = np.random.uniform(origin[2] + .5, -1 * origin[2] - .5, n_minE_particles)
+        mine_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minE_particles)
+        mine_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minE_particles)
+        mine_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minE_particles)
 
-        mind_x = np.random.uniform(origin[0] + .5, -1 * origin[0] - .5, n_minD_particles)
-        mind_y = np.random.uniform(origin[1] + .5, -1 * origin[1] - .5, n_minD_particles)
-        mind_z = np.random.uniform(origin[2] + .5, -1 * origin[2] - .5, n_minD_particles)
+        mind_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minD_particles)
+        mind_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minD_particles)
+        mind_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minD_particles)
 
         for i in range(n_minE_particles):
             simulation.addParticle("E", Vec(mine_x[i], mine_y[i], mine_z[i]))
@@ -187,17 +204,17 @@ class MinEMinDSimulation(object):
         for i in range(n_minD_particles):
             simulation.addParticle("D", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
-        # membrane_positions = simulation.getParticlePositions("M")
-        # print("done retrieving positions")
-        # xs,ys,zs = np.array([v[0] for v in membrane_positions]), np.array([v[1] for v in membrane_positions]), np.array([v[2] for v in membrane_positions])
-        # print("done transposing")
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111, projection='3d')
-        # ax.scatter(xs,ys,zs)
-        # plt.show()
+        membrane_positions = simulation.getParticlePositions("M")
+        xs,ys,zs = np.array([v[0] for v in membrane_positions]), np.array([v[1] for v in membrane_positions]), np.array([v[2] for v in membrane_positions])
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(xs,ys,zs)
+        plt.show()
 
         print("starting simulation")
         simulation.run(10000, .05)
+
+        np.savetxt("histdata.txt", self._hist_data)
 
 
 if __name__ == '__main__':

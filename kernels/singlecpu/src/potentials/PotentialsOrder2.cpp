@@ -50,6 +50,10 @@ namespace readdy {
                     return new SingleCPUHarmonicRepulsion(*this);
                 }
 
+                double SingleCPUHarmonicRepulsion::getCutoffRadius() {
+                    return sumOfParticleRadii;
+                }
+                
 
                 SingleCPUWeakInteractionPiecewiseHarmonic::SingleCPUWeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel)
                         : readdy::model::potentials::WeakInteractionPiecewiseHarmonic(kernel) { }
@@ -103,6 +107,10 @@ namespace readdy {
                 void SingleCPUWeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) {
                     energy += calculateEnergy(x_ij);
                     calculateForce(force, x_ij);
+                }
+
+                double SingleCPUWeakInteractionPiecewiseHarmonic::getCutoffRadius() {
+                    return 0;
                 }
 
 

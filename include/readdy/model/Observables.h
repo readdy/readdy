@@ -20,6 +20,7 @@
 namespace readdy {
     namespace model {
 
+        class KernelContext;
 
         class ParticlePositionObservable : public Observable<std::vector<Vec3>> {
         public:
@@ -63,6 +64,22 @@ namespace readdy {
             std::set<unsigned int> particleTypes;
         };
 
+        class HistogramAlongAxisObservable : public Observable<std::vector<double>> {
+
+        public:
+            HistogramAlongAxisObservable(readdy::model::Kernel *const kernel, unsigned int stride,
+                                                     std::vector<double> binBorders, std::set<unsigned int> typesToCount, unsigned int axis);
+            HistogramAlongAxisObservable(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typesToCount, unsigned int axis);
+
+            virtual void evaluate() = 0;
+
+        protected:
+            std::vector<double> binBorders;
+            std::set<unsigned int> typesToCount;
+            std::set<unsigned int> transformTypes(std::vector<std::string> types, const readdy::model::KernelContext &ctx);
+            unsigned int axis;
+        };
+
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {
         public:
 
@@ -71,8 +88,6 @@ namespace readdy {
             }
 
             virtual void evaluate() override;
-
-
         };
     }
 }

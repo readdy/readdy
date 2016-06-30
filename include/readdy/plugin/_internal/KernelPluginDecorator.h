@@ -35,7 +35,10 @@ namespace readdy {
 
                 virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
+
+
             protected:
+                virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
                 virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
 
 

@@ -25,7 +25,6 @@ namespace readdy {
 
 
                 void SingleCPUEnzymatic::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
-                    std::cout << "enzymatic happened" << std::endl;
                     if (p1_in.getType() == getCatalyst()) {
                         // p1 is the catalyst
                         p1_out.setType(getCatalyst());
@@ -44,7 +43,6 @@ namespace readdy {
                 }
 
                 void SingleCPUFission::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
-                    std::cout << "fission happened" << std::endl;
                     // as long as the orientation is uniform, it does not matter of which type p1_in and p2_in are.
                     auto n3 = rand->getNormal3();
                     n3 /= sqrt(n3 * n3);
@@ -56,7 +54,6 @@ namespace readdy {
                 }
 
                 void SingleCPUFusion::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
-                    std::cout << "fusion happened" << std::endl;
                     p1_out.setType(getTo());
                     if (getFrom1() == p1_in.getType()) {
                         p1_out.setPos(p1_in.getPos() + getWeight1() * (p2_in.getPos() - p1_in.getPos()));

@@ -95,7 +95,7 @@ namespace readdy {
             return std::make_tuple(std::move(wrap), std::move(connection));
         }
 
-        const _internal::ObservableFactory &Kernel::getObservableFactory() const {
+        readdy::model::_internal::ObservableFactory &Kernel::getObservableFactory() const {
             return *pimpl->observableFactory;
         }
 

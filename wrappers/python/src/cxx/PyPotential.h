@@ -29,6 +29,11 @@ namespace readdy {
 
             virtual PotentialOrder2Wrapper *replicate() const override;
 
+            virtual double getCutoffRadius() override {
+                // todo!
+                return 50;
+            }
+
 
         protected:
             std::shared_ptr<boost::python::object> calcEnergyFun;
