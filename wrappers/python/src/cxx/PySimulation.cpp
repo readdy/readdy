@@ -94,15 +94,17 @@ void
 #endif
 init_numpy()
 {
-    import_array();
+    if(PyArray_API == NULL)
+    {
+        import_array();
+    }
 }
 
 // module
 BOOST_PYTHON_MODULE (simulation) {
 
-    PyEval_InitThreads();
-
     init_numpy();
+    PyEval_InitThreads();
 
     boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
 

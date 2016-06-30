@@ -39,7 +39,7 @@ namespace readdy {
         }
 
         namespace testing {
-            void loadPlugins();
+            std::string getPluginsDirectory();
         }
 
     }

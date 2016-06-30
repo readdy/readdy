@@ -6,6 +6,8 @@ from readdy.util import platform_utils
 from scipy.optimize import brentq
 
 import numpy as np
+import matplotlib
+# matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -36,8 +38,7 @@ class MinEMinDSimulation(object):
         self.prev_mind = None
         self.prev_minde = None
         self._hist_data = [None, None, None, None, None, None]
-        #for fig in self.figs:
-        #    fig.show()
+        self.fig.show()
         plt.draw()
         plt.ioff()
 
@@ -47,7 +48,7 @@ class MinEMinDSimulation(object):
         else:
             self._hist_data[idx] = np.vstack((self._hist_data[idx], data))
             axis.imshow(self._hist_data[idx], cmap='hot')
-            plt.pause(.00001)
+            plt.pause(.001)
 
     def histogram_callback_minD(self, histogramTuple):
         self.callback_histogram(histogramTuple, 0, self.axis[0])
@@ -180,8 +181,8 @@ class MinEMinDSimulation(object):
         print("histogram start")
         # simulation.registerObservable_HistogramAlongAxisObservable(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
         # simulation.registerObservable_HistogramAlongAxisObservable(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
-        stride = 100
-        bins = np.linspace(-3, 3, 50)
+        stride = 1000
+        bins = np.linspace(-2.5, 2.5, 80)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minD, bins, ["D"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDP, bins, ["D_P"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDPB, bins, ["D_PB"], 2)
@@ -197,7 +198,7 @@ class MinEMinDSimulation(object):
         ###################################
 
         membrane_size = Vec(.4, 2, 4)
-        layer = Vec(.05, .05, .05)
+        layer = Vec(.08, .08, .08)
         extent = membrane_size + 2 * layer
         origin = -.5 * membrane_size - layer
         simulation.registerBoxPotential("D", 10., origin, extent, False)  # (force constant, origin, extent, considerParticleRadius)
@@ -260,9 +261,9 @@ class MinEMinDSimulation(object):
         # plt.show()
 
         print("starting simulation")
-        simulation.run(1000000, .005)
+        simulation.run(1000000, .0005)
 
-        np.savetxt("histdata2.txt", self._hist_data)
+        np.savetxt("histdata3.txt", self._hist_data)
 
 
 if __name__ == '__main__':

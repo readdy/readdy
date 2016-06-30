@@ -4,7 +4,6 @@
 
 #include <boost/predef.h>
 #include <readdy/common/Utils.h>
-#include <readdy/plugin/KernelProvider.h>
 #include <boost/algorithm/string.hpp>
 
 namespace readdy {
@@ -30,9 +29,7 @@ namespace readdy {
         }
 
         namespace testing {
-            void loadPlugins() {
-                static bool loaded = false;
-                if(!loaded) {
+            std::string getPluginsDirectory() {
                     // if we're in conda
                     const char *env = std::getenv("CONDA_ENV_PATH");
                     if(!env) {
@@ -46,9 +43,7 @@ namespace readdy {
                         }
                         pluginDir = _env.append(pluginDir);
                     }
-                    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-                }
-                loaded = true;
+                    return pluginDir;
             }
         }
     }
