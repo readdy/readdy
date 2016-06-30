@@ -112,7 +112,7 @@ namespace readdy {
 
             const std::vector<std::unique_ptr<potentials::PotentialOrder2>> &getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
 
-            std::unordered_set<std::tuple<unsigned int, unsigned int>, readdy::model::ParticleTypePairHasher> getAllOrder2RegisteredPotentialTypes() const;
+            std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 
             void configure();
 

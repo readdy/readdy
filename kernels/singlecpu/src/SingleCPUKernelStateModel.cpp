@@ -75,7 +75,7 @@ namespace readdy {
 
             SingleCPUKernelStateModel::SingleCPUKernelStateModel(readdy::model::KernelContext const *context) : pimpl(std::make_unique<SingleCPUKernelStateModel::Impl>()) {
                 pimpl->particleData = std::make_unique<model::SingleCPUParticleData>(10);
-                pimpl->neighborList = std::make_unique<model::NaiveSingleCPUNeighborList>();
+                pimpl->neighborList = std::make_unique<model::NotThatNaiveSingleCPUNeighborList>(context);
                 pimpl->context = context;
             }
 

@@ -206,10 +206,10 @@ namespace readdy {
             return pimpl->potentialO2Registry[{type1, type2}];
         }
 
-        std::unordered_set<std::tuple<unsigned int, unsigned int>, ParticleTypePairHasher> KernelContext::getAllOrder2RegisteredPotentialTypes() const {
-            std::unordered_set<std::tuple<unsigned int, unsigned int>, ParticleTypePairHasher> result{};
+        std::vector<std::tuple<unsigned int, unsigned int>> KernelContext::getAllOrder2RegisteredPotentialTypes() const {
+            std::vector<std::tuple<unsigned int, unsigned int>> result{};
             for (auto it = pimpl->potentialO2Registry.begin(); it != pimpl->potentialO2Registry.end(); ++it) {
-                result.insert(std::make_tuple(it->first.t1, it->first.t2));
+                result.push_back(std::make_tuple(it->first.t1, it->first.t2));
             }
             return result;
         }

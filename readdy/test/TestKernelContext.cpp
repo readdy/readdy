@@ -31,6 +31,11 @@ namespace {
     struct NOOPPotential : public m::potentials::PotentialOrder2 {
         NOOPPotential() : PotentialOrder2("no op") { }
 
+        virtual double getCutoffRadius() override {
+            return 0;
+        }
+
+
         virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override {return 0;}
         virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override {}
         virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) override {}

@@ -145,7 +145,7 @@ class MinEMinDSimulation(object):
         #simulation.registerObservable_CenterOfMass(1, self.com_callback_mine, ["E"])
         #simulation.registerObservable_CenterOfMass(1, self.com_callback_minde, ["DE", "D_PB"])
         print("histogram start")
-        simulation.registerObservable_HistogramAlongAxisObservable(50, self.histrogram_callback, np.arange(-3, 3, .01), ["D", "D_P", "D_PB"], 2)
+        simulation.registerObservable_HistogramAlongAxisObservable(100, self.histrogram_callback, np.arange(-3, 3, .01), ["D", "D_P", "D_PB"], 2)
         print("histogram end")
 
         ###################################
@@ -192,11 +192,11 @@ class MinEMinDSimulation(object):
         n_minD_particles = n_minE_particles*4
         mine_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minE_particles)
         mine_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minE_particles)
-        mine_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minE_particles)
+        mine_z = np.random.uniform(origin[2] + layer[2], .5*(-1 * origin[2] - layer[2]), n_minE_particles)
 
         mind_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minD_particles)
         mind_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minD_particles)
-        mind_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minD_particles)
+        mind_z = np.random.uniform(.5*(-1 * origin[2] - layer[2]), -1 * origin[2] - layer[2], n_minD_particles)
 
         for i in range(n_minE_particles):
             simulation.addParticle("E", Vec(mine_x[i], mine_y[i], mine_z[i]))
@@ -212,7 +212,7 @@ class MinEMinDSimulation(object):
         plt.show()
 
         print("starting simulation")
-        simulation.run(10000, .05)
+        simulation.run(10000, .005)
 
         np.savetxt("histdata.txt", self._hist_data)
 

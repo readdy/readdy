@@ -13,6 +13,7 @@
 #include "SingleCPUParticleData.h"
 #include <unordered_set>
 #include <boost/functional/hash.hpp>
+#include <readdy/model/KernelContext.h>
 
 namespace readdy {
     namespace kernel {
@@ -101,6 +102,26 @@ namespace readdy {
 
 
                 protected:
+                    struct Impl;
+                    std::unique_ptr<Impl> pimpl;
+                };
+
+                struct NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborList {
+
+                    NotThatNaiveSingleCPUNeighborList(const readdy::model::KernelContext *const ctx);
+                    ~NotThatNaiveSingleCPUNeighborList();
+
+                    virtual void create(const SingleCPUParticleData &data) override;
+
+                    virtual iter_type begin() override;
+                    virtual const_iter_type begin() const override;
+                    virtual const_iter_type cbegin() const override;
+                    virtual iter_type end() override;
+                    virtual const_iter_type end() const override;
+                    virtual const_iter_type cend() const override;
+
+                protected:
+                    struct Box;
                     struct Impl;
                     std::unique_ptr<Impl> pimpl;
                 };

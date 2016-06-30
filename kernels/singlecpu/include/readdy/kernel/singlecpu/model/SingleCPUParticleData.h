@@ -75,6 +75,7 @@ namespace readdy {
                     size_t max_size() const;
 
                     bool empty() const;
+                    void clear();
 
                     void addParticle(const readdy::model::Particle &particle);
                     void addParticles(const std::vector<readdy::model::Particle> &particles);
