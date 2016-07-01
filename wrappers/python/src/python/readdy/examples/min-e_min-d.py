@@ -7,6 +7,7 @@ from scipy.optimize import brentq
 
 import numpy as np
 import matplotlib
+
 matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot as plt
@@ -20,53 +21,62 @@ def plot(f, x_range, **kw):
 
 
 class MinEMinDSimulation(object):
-    def __init__(self):
+    def __init__(self, result_fname="histdata.txt", generate_plots=True):
+        self._result_fname = result_fname
+        self._generate_plots = generate_plots
         self.t_d = 0
         self.t_e = 0
-        # self.figs = [plt.figure() for _ in range(6)]
-        self.fig = plt.figure()
-        self.axis = [self.fig.add_subplot(231), self.fig.add_subplot(232), self.fig.add_subplot(233), self.fig.add_subplot(234), self.fig.add_subplot(235), self.fig.add_subplot(236)]
-        # self.axis = [fig.add_subplot(111) for fig in self.figs]
-        self.axis[0].set_title("MinD")
-        self.axis[1].set_title("MinDP")
-        self.axis[2].set_title("MinDPB")
-        self.axis[3].set_title("MinE")
-        self.axis[4].set_title("MinDE")
-        self.axis[5].set_title("M")
-        self.prev_pos = {}
-        self.prev_mine = None
-        self.prev_mind = None
-        self.prev_minde = None
+        self.stride = 2000
+        self.timestep = .0005
+        if self._generate_plots:
+            self.fig = plt.figure()
+            self.fig.suptitle(self._result_fname)
+            self.axis = [self.fig.add_subplot(231), self.fig.add_subplot(232), self.fig.add_subplot(233), self.fig.add_subplot(234), self.fig.add_subplot(235), self.fig.add_subplot(236)]
+            self.axis[0].set_title("MinD")
+            self.axis[1].set_title("MinDP")
+            self.axis[2].set_title("MinDPB")
+            self.axis[3].set_title("MinE")
+            self.axis[4].set_title("MinDE")
+            self.axis[5].set_title("MinD+MinDP+MinDPB+MinDE")
+            self.prev_pos = {}
+            self.prev_mine = None
+            self.prev_mind = None
+            self.prev_minde = None
+            self.fig.show()
+            plt.draw()
+            plt.ioff()
         self._hist_data = [None, None, None, None, None, None]
-        self.fig.show()
-        plt.draw()
-        plt.ioff()
 
-    def callback_histogram(self, data, idx, axis):
+    def callback_histogram(self, data, idx):
+
         if self._hist_data[idx] is None:
             self._hist_data[idx] = np.array(data)
         else:
             self._hist_data[idx] = np.vstack((self._hist_data[idx], data))
-            axis.imshow(self._hist_data[idx], cmap='hot')
-            plt.pause(.001)
+            if self._generate_plots:
+                self.axis[idx].imshow(self._hist_data[idx], cmap='hot')
+                plt.pause(.00001)
+        if idx == 0:
+            print("t=%s (%s sec)"%(self.t_d*self.stride, self.t_d*self.stride*self.timestep))
+            self.t_d += 1
 
     def histogram_callback_minD(self, histogramTuple):
-        self.callback_histogram(histogramTuple, 0, self.axis[0])
+        self.callback_histogram(histogramTuple, 0)
 
     def histogram_callback_minDP(self, histogramTuple):
-        self.callback_histogram(histogramTuple, 1, self.axis[1])
+        self.callback_histogram(histogramTuple, 1)
 
     def histogram_callback_minDPB(self, histogramTuple):
-        self.callback_histogram(histogramTuple, 2, self.axis[2])
+        self.callback_histogram(histogramTuple, 2)
 
     def histogram_callback_minE(self, histogramTuple):
-        self.callback_histogram(histogramTuple, 3, self.axis[3])
+        self.callback_histogram(histogramTuple, 3)
 
     def histogram_callback_minDE(self, histogramTuple):
-        self.callback_histogram(histogramTuple, 4, self.axis[4])
+        self.callback_histogram(histogramTuple, 4)
 
     def histogram_callback_M(self, histogramTuple):
-        self.callback_histogram(histogramTuple, 5, self.axis[5])
+        self.callback_histogram(histogramTuple, 5)
 
     def histrogram_callback_bound(self, histogramTuple):
         counts = histogramTuple[:]
@@ -133,7 +143,7 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        box_size = Vec(2, 4, 6)
+        box_size = Vec(2, 5, 8)
         simulation.box_size = box_size
         simulation.kbt = 2.437  # room temperature
         simulation.periodic_boundary = [False, False, False]
@@ -161,12 +171,12 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        reaction_radius = (0.01 + 0.01)*5  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
+        reaction_radius = (0.01 + 0.01) * 5  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
         k_fusion = brentq(lambda x: self.erban_chapman(.093, 2.5 + .01, reaction_radius, x), 1, 5000000)
         print("k_fusion=%s" % k_fusion)
         simulation.registerConversionReaction("Phosphorylation", "D", "D_P", .5)
-        simulation.registerEnzymaticReaction("Attach to membrane", "M", "D_P", "D_PB", .5, .01 + membrane_particle_size) #.01 + .025  # todo: rate?
-        simulation.registerFusionReaction("bound MinD+MinE->MinDE", "D_PB", "E", "DE", k_fusion, reaction_radius, .5, .5)
+        simulation.registerEnzymaticReaction("Attach to membrane", "M", "D_P", "D_PB", .5, .01 + membrane_particle_size)  # .01 + .025  # todo: rate?
+        simulation.registerFusionReaction("bound MinD+MinE->MinDE", "D_PB", "E", "DE", k_fusion, reaction_radius*4, .5, .5)
         simulation.registerFissionReaction("MinDE to MinD and MinE, detach", "DE", "D", "E", .25, reaction_radius, .5, .5)
 
         ###################################
@@ -181,14 +191,14 @@ class MinEMinDSimulation(object):
         print("histogram start")
         # simulation.registerObservable_HistogramAlongAxisObservable(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
         # simulation.registerObservable_HistogramAlongAxisObservable(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
-        stride = 1000
+        stride = self.stride
         bins = np.linspace(-2.5, 2.5, 80)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minD, bins, ["D"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDP, bins, ["D_P"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDPB, bins, ["D_PB"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minE, bins, ["E"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDE, bins, ["DE"], 2)
-        simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_M, bins, ["M"], 2)
+        simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_M, bins, ["D", "D_P", "D_PB", "DE"], 2)
         print("histogram end")
 
         ###################################
@@ -214,23 +224,23 @@ class MinEMinDSimulation(object):
         # membrane particles
         #
         ###################################
-        usingMembrane=False
-        if usingMembrane:
+        using_membrane_particles = False
+        if using_membrane_particles:
             dx = np.linspace(origin[0] + layer[0], -1 * origin[0] - layer[0], int(float(membrane_size[0]) / membrane_particle_size), endpoint=True)
             dy = np.linspace(origin[1] + layer[1], -1 * origin[1] - layer[1], int(float(membrane_size[1]) / membrane_particle_size), endpoint=True)
             dz = np.linspace(origin[2] + layer[2], -1 * origin[2] - layer[2], int(float(membrane_size[2]) / membrane_particle_size), endpoint=True)
             # front and back
-            #for x in dx:
+            # for x in dx:
             #    for y in dy:
             #        simulation.addParticle("M", Vec(x, y, origin[2] + layer[2]))
             #        simulation.addParticle("M", Vec(x, y, -1 * origin[2] - layer[2]))
-            #for x in dx:
+            # for x in dx:
             #    for z in dz:
             #        simulation.addParticle("M", Vec(x, origin[1] + layer[1], z))
             #        simulation.addParticle("M", Vec(x, -1 * origin[1] - layer[1], z))
             for y in dy:
                 for z in dz:
-            #        simulation.addParticle("M", Vec(origin[0] + layer[0], y, z))
+                    #        simulation.addParticle("M", Vec(origin[0] + layer[0], y, z))
                     simulation.addParticle("M", Vec(-1 * origin[0] - layer[0], y, z))
             print("done adding membrane particles")
             # ax = self.fig.add_subplot(111, projection='3d')
@@ -246,7 +256,7 @@ class MinEMinDSimulation(object):
         else:
             simulation.registerConversionReaction("Phosphorylation", "D_P", "D_PB", .5)
             simulation.registerEnzymaticReaction("Enzymatic DP+DPB->DPB + DPB", "D_PB", "D_P", "D_PB", .5, .02)
-        using_uniform_distribution=True
+        using_uniform_distribution = True
         n_minE_particles = 250
         n_minD_particles = n_minE_particles * 4
         mine_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minE_particles)
@@ -266,17 +276,18 @@ class MinEMinDSimulation(object):
         for i in range(n_minE_particles):
             simulation.addParticle("E", Vec(mine_x[i], mine_y[i], mine_z[i]))
 
-        for i in range(int(.5*n_minD_particles)):
+        for i in range(int(.5 * n_minD_particles)):
             simulation.addParticle("D", Vec(mind_x[i], mind_y[i], mind_z[i]))
-        for i in range(int(.5*n_minD_particles), n_minD_particles):
+        for i in range(int(.5 * n_minD_particles), n_minD_particles):
             simulation.addParticle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
         print("starting simulation")
-        simulation.run(10000000, .0005)
+        simulation.run(3000000, self.timestep)  # effectively: 1500 sec
 
-        np.savetxt("histdata3.txt", self._hist_data)
+        with open(self._result_fname, 'w') as f:
+            np.save(f, np.array(self._hist_data))
 
 
 if __name__ == '__main__':
-    sim = MinEMinDSimulation()
+    sim = MinEMinDSimulation("test_mind_mine_no_membrane2.npy", False)
     sim.execute()
