@@ -7,7 +7,7 @@ from scipy.optimize import brentq
 
 import numpy as np
 import matplotlib
-# matplotlib.use('Qt4Agg')
+matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -197,7 +197,7 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        membrane_size = Vec(.4, 2, 4)
+        membrane_size = Vec(.4, 3, 6)
         layer = Vec(.08, .08, .08)
         extent = membrane_size + 2 * layer
         origin = -.5 * membrane_size - layer
@@ -214,54 +214,65 @@ class MinEMinDSimulation(object):
         # membrane particles
         #
         ###################################
-        dx = np.linspace(origin[0] + layer[0], -1 * origin[0] - layer[0], int(float(membrane_size[0]) / membrane_particle_size), endpoint=True)
-        dy = np.linspace(origin[1] + layer[1], -1 * origin[1] - layer[1], int(float(membrane_size[1]) / membrane_particle_size), endpoint=True)
-        dz = np.linspace(origin[2] + layer[2], -1 * origin[2] - layer[2], int(float(membrane_size[2]) / membrane_particle_size), endpoint=True)
-        # front and back
-        #for x in dx:
-        #    for y in dy:
-        #        simulation.addParticle("M", Vec(x, y, origin[2] + layer[2]))
-        #        simulation.addParticle("M", Vec(x, y, -1 * origin[2] - layer[2]))
-        #for x in dx:
-        #    for z in dz:
-        #        simulation.addParticle("M", Vec(x, origin[1] + layer[1], z))
-        #        simulation.addParticle("M", Vec(x, -1 * origin[1] - layer[1], z))
-        for y in dy:
-            for z in dz:
-        #        simulation.addParticle("M", Vec(origin[0] + layer[0], y, z))
-                simulation.addParticle("M", Vec(-1 * origin[0] - layer[0], y, z))
-        print("done adding membrane particles")
+        usingMembrane=False
+        if usingMembrane:
+            dx = np.linspace(origin[0] + layer[0], -1 * origin[0] - layer[0], int(float(membrane_size[0]) / membrane_particle_size), endpoint=True)
+            dy = np.linspace(origin[1] + layer[1], -1 * origin[1] - layer[1], int(float(membrane_size[1]) / membrane_particle_size), endpoint=True)
+            dz = np.linspace(origin[2] + layer[2], -1 * origin[2] - layer[2], int(float(membrane_size[2]) / membrane_particle_size), endpoint=True)
+            # front and back
+            #for x in dx:
+            #    for y in dy:
+            #        simulation.addParticle("M", Vec(x, y, origin[2] + layer[2]))
+            #        simulation.addParticle("M", Vec(x, y, -1 * origin[2] - layer[2]))
+            #for x in dx:
+            #    for z in dz:
+            #        simulation.addParticle("M", Vec(x, origin[1] + layer[1], z))
+            #        simulation.addParticle("M", Vec(x, -1 * origin[1] - layer[1], z))
+            for y in dy:
+                for z in dz:
+            #        simulation.addParticle("M", Vec(origin[0] + layer[0], y, z))
+                    simulation.addParticle("M", Vec(-1 * origin[0] - layer[0], y, z))
+            print("done adding membrane particles")
+            # ax = self.fig.add_subplot(111, projection='3d')
+            # plt.xlabel("x")
+            # plt.ylabel("y")
+
+            # membrane_positions = simulation.getParticlePositions("M")
+            # xs,ys,zs = np.array([v[0] for v in membrane_positions]), np.array([v[1] for v in membrane_positions]), np.array([v[2] for v in membrane_positions])
+            # fig = plt.figure()
+            # ax = fig.add_subplot(111, projection='3d')
+            # ax.scatter(xs,ys,zs)
+            # plt.show()
+        else:
+            simulation.registerConversionReaction("Phosphorylation", "D_P", "D_PB", .5)
+            simulation.registerEnzymaticReaction("Enzymatic DP+DPB->DPB + DPB", "D_PB", "D_P", "D_PB", .5, .02)
+        using_uniform_distribution=True
         n_minE_particles = 250
         n_minD_particles = n_minE_particles * 4
         mine_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minE_particles)
         mine_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minE_particles)
-        #mine_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minE_particles)
-        mine_z = np.random.uniform(origin[2] + layer[2], .5 * (-1 * origin[2] - layer[2]), n_minE_particles)
+        if using_uniform_distribution:
+            mine_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minE_particles)
+        else:
+            mine_z = np.random.uniform(origin[2] + layer[2], .5 * (-1 * origin[2] - layer[2]), n_minE_particles)
 
         mind_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minD_particles)
         mind_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minD_particles)
-        # mind_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minD_particles)
-        mind_z = np.random.uniform(.5 * (-1 * origin[2] - layer[2]), -1 * origin[2] - layer[2], n_minD_particles)
+        if using_uniform_distribution:
+            mind_z = np.random.uniform(origin[2] + layer[2], -1 * origin[2] - layer[2], n_minD_particles)
+        else:
+            mind_z = np.random.uniform(.5 * (-1 * origin[2] - layer[2]), -1 * origin[2] - layer[2], n_minD_particles)
 
         for i in range(n_minE_particles):
             simulation.addParticle("E", Vec(mine_x[i], mine_y[i], mine_z[i]))
 
-        for i in range(n_minD_particles):
+        for i in range(int(.5*n_minD_particles)):
             simulation.addParticle("D", Vec(mind_x[i], mind_y[i], mind_z[i]))
-
-        # ax = self.fig.add_subplot(111, projection='3d')
-        # plt.xlabel("x")
-        # plt.ylabel("y")
-
-        # membrane_positions = simulation.getParticlePositions("M")
-        # xs,ys,zs = np.array([v[0] for v in membrane_positions]), np.array([v[1] for v in membrane_positions]), np.array([v[2] for v in membrane_positions])
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111, projection='3d')
-        # ax.scatter(xs,ys,zs)
-        # plt.show()
+        for i in range(int(.5*n_minD_particles), n_minD_particles):
+            simulation.addParticle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
         print("starting simulation")
-        simulation.run(1000000, .0005)
+        simulation.run(10000000, .0005)
 
         np.savetxt("histdata3.txt", self._hist_data)
 
