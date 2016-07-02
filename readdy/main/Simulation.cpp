@@ -267,6 +267,9 @@ template _sim_uuid_t Simulation::registerObservable<readdy::model::CenterOfMassO
 template _sim_uuid_t Simulation::registerObservable<readdy::model::HistogramAlongAxisObservable>(
         std::function<void(typename readdy::model::HistogramAlongAxisObservable::result_t)>&&, unsigned int, std::vector<double> , std::vector<std::string> , unsigned int
 );
+template _sim_uuid_t Simulation::registerObservable<readdy::model::NParticlesObservable>(
+        std::function<void(typename readdy::model::NParticlesObservable::result_t)>&&, unsigned int
+);
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

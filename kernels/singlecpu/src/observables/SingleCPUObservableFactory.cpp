@@ -24,6 +24,11 @@ namespace readdy {
                     return new SingleCPUHistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount, axis);
                 }
 
+                readdy::model::NParticlesObservable *SingleCPUObservableFactory::createNParticlesObservable(
+                        readdy::model::Kernel *const kernel, unsigned int stride) const {
+                    return new SingleCPUNparticlesObservable(kernel, stride);
+                }
+
 
             }
         }

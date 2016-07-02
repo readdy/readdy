@@ -80,6 +80,13 @@ namespace readdy {
             unsigned int axis;
         };
 
+        class NParticlesObservable : public Observable<long> {
+
+        public:
+            NParticlesObservable(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) { }
+            virtual void evaluate() = 0;
+        };
+
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {
         public:
 

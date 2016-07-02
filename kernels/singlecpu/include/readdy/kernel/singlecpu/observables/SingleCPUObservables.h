@@ -32,6 +32,18 @@ namespace readdy {
                     size_t size;
                 };
 
+                class SingleCPUNparticlesObservable : public readdy::model::NParticlesObservable {
+
+                public:
+                    SingleCPUNparticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride);
+
+                    virtual void evaluate() override;
+
+                protected:
+                    readdy::kernel::singlecpu::SingleCPUKernel *const singleCPUKernel;
+
+                };
+
             }
         }
     }

@@ -87,6 +87,11 @@ boost::uuids::uuid registerObservable_HistogramAlongAxisObservable(sim& self, un
 
 }
 
+boost::uuids::uuid registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun) {
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride);
+}
+
 #if PY_MAJOR_VERSION >= 3
 int
 #else
@@ -113,7 +118,8 @@ BOOST_PYTHON_MODULE (simulation) {
 
     bpy::class_<sim, boost::noncopyable>("Simulation")
             .add_property("kbt", &sim::getKBT, &sim::setKBT)
-            .add_property("periodic_boundary", &getPeriodicBoundarySimulationWrapper, &setPeriodicBoundarySimulationWrapper)
+            .add_property("periodic_boundary", &getPeriodicBoundarySimulationWrapper,
+                          &setPeriodicBoundarySimulationWrapper)
             .add_property("box_size", &sim::getBoxSize, &setBoxSize)
             .def("registerParticleType", &sim::registerParticleType)
             .def("addParticle", &addParticle)
@@ -121,13 +127,15 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("getSelectedKernelType", &getSelectedKernelType)
             .def("registerPotentialOrder2", &registerPotentialOrder2)
             .def("registerHarmonicRepulsionPotential", &sim::registerHarmonicRepulsionPotential)
-            .def("registerWeakInteractionPiecewiseHarmonicPotential", &sim::registerWeakInteractionPiecewiseHarmonicPotential)
+            .def("registerWeakInteractionPiecewiseHarmonicPotential",
+                 &sim::registerWeakInteractionPiecewiseHarmonicPotential)
             .def("registerBoxPotential", &sim::registerBoxPotential)
             .def("getParticlePositions", &sim::getParticlePositions)
             .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
             .def("registerObservable_RadialDistribution", &registerObservable_RadialDistribution)
             .def("registerObservable_HistogramAlongAxisObservable", &registerObservable_HistogramAlongAxisObservable)
             .def("registerObservable_CenterOfMass", &registerObservable_CenterOfMass)
+            .def("registerObservable_NParticles", &registerObservable_NParticles)
             .def("registerConversionReaction", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("registerEnzymaticReaction", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("registerFissionReaction", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())

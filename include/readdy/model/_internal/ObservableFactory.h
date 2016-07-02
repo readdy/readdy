@@ -17,6 +17,7 @@
 #include <readdy/model/Observable.h>
 #include <readdy/common/Utils.h>
 #include <readdy/model/Observables.h>
+#include <readdy/model/Kernel.h>
 
 namespace readdy {
     namespace model {
@@ -43,6 +44,10 @@ namespace readdy {
                     throw std::runtime_error("Should be overridden (or todo: provide default impl)");
                 }
 
+                virtual NParticlesObservable* createNParticlesObservable(readdy::model::Kernel* const kernel, unsigned int stride) const {
+                    throw std::runtime_error("should be overrideen (or todo: provide default impl)");
+                }
+
             protected:
                 Kernel *const kernel;
 
@@ -58,6 +63,12 @@ namespace readdy {
                 template<typename... Args> struct get_dispatcher<readdy::model::HistogramAlongAxisObservable, Args...> {
                     static HistogramAlongAxisObservable *impl(const ObservableFactory * self, Kernel *const kernel, unsigned int stride, Args... args) {
                         return self->createAxisHistogramObservable(kernel, stride, std::forward<Args>(args)...);
+                    }
+                };
+
+                template<typename... Args> struct get_dispatcher<readdy::model::NParticlesObservable, Args...> {
+                    static NParticlesObservable* impl(const ObservableFactory* self, Kernel*const kernel, unsigned int stride, Args... args) {
+                        return self->createNParticlesObservable(kernel, stride, std::forward<Args>(args)...);
                     }
                 };
             };

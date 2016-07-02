@@ -22,12 +22,14 @@ def plot(f, x_range, **kw):
 
 class MinEMinDSimulation(object):
     def __init__(self, result_fname="histdata.txt", generate_plots=True):
+        print("Init MinE/MinD simulation, fname=%s"%result_fname)
         self._result_fname = result_fname
         self._generate_plots = generate_plots
         self.t_d = 0
         self.t_e = 0
         self.stride = 2000
         self.timestep = .0005
+        self.n_timesteps = 3000000
         if self._generate_plots:
             self.fig = plt.figure()
             self.fig.suptitle(self._result_fname)
@@ -57,7 +59,7 @@ class MinEMinDSimulation(object):
                 self.axis[idx].imshow(self._hist_data[idx], cmap='hot')
                 plt.pause(.00001)
         if idx == 0:
-            print("t=%s (%s sec)"%(self.t_d*self.stride, self.t_d*self.stride*self.timestep))
+            print("t={0} ({1} sec) -> {2}%".format(self.t_d*self.stride, self.t_d*self.stride*self.timestep, 100.*self.t_d*self.stride/float(self.n_timesteps)))
             self.t_d += 1
 
     def histogram_callback_minD(self, histogramTuple):
@@ -76,7 +78,11 @@ class MinEMinDSimulation(object):
         self.callback_histogram(histogramTuple, 4)
 
     def histogram_callback_M(self, histogramTuple):
+        print("n MinD=%s" % sum(histogramTuple))
         self.callback_histogram(histogramTuple, 5)
+
+    def n_particles_callback(self, n_particles):
+        print("n_particles_total=%s"%n_particles)
 
     def histrogram_callback_bound(self, histogramTuple):
         counts = histogramTuple[:]
@@ -192,13 +198,14 @@ class MinEMinDSimulation(object):
         # simulation.registerObservable_HistogramAlongAxisObservable(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
         # simulation.registerObservable_HistogramAlongAxisObservable(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
         stride = self.stride
-        bins = np.linspace(-2.5, 2.5, 80)
+        bins = np.linspace(-5, 5, 80)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minD, bins, ["D"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDP, bins, ["D_P"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDPB, bins, ["D_PB"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minE, bins, ["E"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_minDE, bins, ["DE"], 2)
         simulation.registerObservable_HistogramAlongAxisObservable(stride, self.histogram_callback_M, bins, ["D", "D_P", "D_PB", "DE"], 2)
+        simulation.registerObservable_NParticles(stride, self.n_particles_callback)
         print("histogram end")
 
         ###################################
@@ -217,7 +224,7 @@ class MinEMinDSimulation(object):
         simulation.registerBoxPotential("E", 10., origin, extent, False)  # (force constant, origin, extent, considerParticleRadius)
         simulation.registerBoxPotential("DE", 10., origin, extent, False)  # (force constant, origin, extent, considerParticleRadius)
 
-        simulation.registerWeakInteractionPiecewiseHarmonicPotential("D_P", "D_PB", 10, .025, 2, .05)  # (force constant, desired dist, depth, no interaction dist)
+        # simulation.registerWeakInteractionPiecewiseHarmonicPotential("D_P", "D_PB", 3, .02, 2, .05)  # (force constant, desired dist, depth, no interaction dist)
 
         ###################################
         #
@@ -282,12 +289,17 @@ class MinEMinDSimulation(object):
             simulation.addParticle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
         print("starting simulation")
-        simulation.run(3000000, self.timestep)  # effectively: 1500 sec
+        simulation.run(self.n_timesteps, self.timestep)  # effectively: 750 sec
 
         with open(self._result_fname, 'w') as f:
             np.save(f, np.array(self._hist_data))
 
 
 if __name__ == '__main__':
+    # test_mind_mine_no_membrane2.npy: reaction radius * 4 longer
+    # test_mind_mine_no_membrane3.npy: reaction radius * 4
+    # test_mind_mine_no_membrane4.npy: reaction radius * 3
+    # test_mind_mine_no_membrane5.npy: reaction radius * 2
+    # test_mind_mine_no_membrane6.npy: reaction radius
     sim = MinEMinDSimulation("test_mind_mine_no_membrane2.npy", False)
     sim.execute()
