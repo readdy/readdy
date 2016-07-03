@@ -59,7 +59,7 @@ class MinEMinDSimulation(object):
                 self.axis[idx].imshow(self._hist_data[idx], cmap='hot')
                 plt.pause(.00001)
         if idx == 0:
-            print("t={0} ({1} sec) -> {2}%".format(self.t_d*self.stride, self.t_d*self.stride*self.timestep, 100.*self.t_d*self.stride/float(self.n_timesteps)))
+            print("t={0} ({1} sec) -> {2:.3f}%".format(self.t_d*self.stride, self.t_d*self.stride*self.timestep, 100.*self.t_d*self.stride/float(self.n_timesteps)))
             self.t_d += 1
 
     def histogram_callback_minD(self, histogramTuple):
@@ -78,11 +78,11 @@ class MinEMinDSimulation(object):
         self.callback_histogram(histogramTuple, 4)
 
     def histogram_callback_M(self, histogramTuple):
-        print("n MinD=%s" % sum(histogramTuple))
         self.callback_histogram(histogramTuple, 5)
 
     def n_particles_callback(self, n_particles):
-        print("n_particles_total=%s"%n_particles)
+        # print("n_particles_total=%s"%n_particles)
+        pass
 
     def histrogram_callback_bound(self, histogramTuple):
         counts = histogramTuple[:]
@@ -182,7 +182,7 @@ class MinEMinDSimulation(object):
         print("k_fusion=%s" % k_fusion)
         simulation.registerConversionReaction("Phosphorylation", "D", "D_P", .5)
         simulation.registerEnzymaticReaction("Attach to membrane", "M", "D_P", "D_PB", .5, .01 + membrane_particle_size)  # .01 + .025  # todo: rate?
-        simulation.registerFusionReaction("bound MinD+MinE->MinDE", "D_PB", "E", "DE", k_fusion, reaction_radius*4, .5, .5)
+        simulation.registerFusionReaction("bound MinD+MinE->MinDE", "D_PB", "E", "DE", k_fusion, reaction_radius*3.5, .5, .5)
         simulation.registerFissionReaction("MinDE to MinD and MinE, detach", "DE", "D", "E", .25, reaction_radius, .5, .5)
 
         ###################################
@@ -296,10 +296,18 @@ class MinEMinDSimulation(object):
 
 
 if __name__ == '__main__':
+    # test_mind_mine_no_membrane1.npy: reaction radius * 3.5 longer
     # test_mind_mine_no_membrane2.npy: reaction radius * 4 longer
     # test_mind_mine_no_membrane3.npy: reaction radius * 4
     # test_mind_mine_no_membrane4.npy: reaction radius * 3
     # test_mind_mine_no_membrane5.npy: reaction radius * 2
     # test_mind_mine_no_membrane6.npy: reaction radius
-    sim = MinEMinDSimulation("test_mind_mine_no_membrane2.npy", False)
-    sim.execute()
+    #sim = MinEMinDSimulation("test_mind_mine_no_membrane1.npy", False)
+    #sim.execute()
+
+    X = np.load('test_mind_mine_no_membrane6.npy')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    print(X[5].shape)
+    ax.imshow(X[5], cmap='hot')
+    plt.show()
