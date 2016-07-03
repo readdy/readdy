@@ -3,7 +3,9 @@ import unittest
 from readdy._internal.simulation import KernelProvider, Simulation, Vec
 
 from readdy.util import platform_utils
+import matplotlib
 
+matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
