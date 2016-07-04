@@ -31,18 +31,18 @@ class Capture(object):
         self._rdf = None
         self._rdf_n_calls = 0
 
-        self.T = 40000000
+        self.T = 4000000
 
     def harmonic_force(self, r, forceConstant=5., depth=2., desired_dist=.2, no_interaction_dist=.5):
         len_part2 = no_interaction_dist - desired_dist
         if r < desired_dist:
-            return forceConstant * (desired_dist - r)
+            return -1 * forceConstant * (desired_dist - r)
         else:
             if r < desired_dist + .5 * len_part2:
-                return -1* depth * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (r - desired_dist)
+                return -1 * depth * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (r - desired_dist)
             else:
                 if r < no_interaction_dist:
-                    return -1 * depth * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (no_interaction_dist - r)
+                    return depth * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (no_interaction_dist - r)
         return 0
 
     def harmonic_energy(self, r, forceConstant=5., depth=2., desired_dist=.2, no_interaction_dist=.5):
@@ -64,13 +64,13 @@ class Capture(object):
             self.ax.set_ylim([-3, 3])
             self.ax.set_zlim([-3, 3])
             r = [-.5, .5]
-            for s, e in combinations(np.array(list(product(r,r,r))), 2):
-                if np.sum(np.abs(s-e)) == r[1]-r[0]:
-                    self.ax.plot3D(*zip(s,e), color="b")
+            for s, e in combinations(np.array(list(product(r, r, r))), 2):
+                if np.sum(np.abs(s - e)) == r[1] - r[0]:
+                    self.ax.plot3D(*zip(s, e), color="b")
             A = self.simulation.getParticlePositions("A")[0]
             B = self.simulation.getParticlePositions("B")[0]
-            self.ax.scatter([A[0]],[A[1]],[A[2]],color="g",s=100)
-            self.ax.scatter([B[0]],[B[1]],[B[2]],color="r",s=100)
+            self.ax.scatter([A[0]], [A[1]], [A[2]], color="g", s=100)
+            self.ax.scatter([B[0]], [B[1]], [B[2]], color="r", s=100)
             plt.pause(.001)
 
     def rdf_callback(self, pair):
@@ -86,17 +86,18 @@ class Capture(object):
 
     def start(self):
         box_size = Vec(1.0, 1.0, 1.0)
-        depth = 1.
+        depth = .5
         desired_dist = .25
-        force_constant = 2 * depth / (desired_dist * desired_dist)
+        force_constant = 4 * depth / (desired_dist * desired_dist)
         no_interaction_dist = 0.4
-        print("fc=%s"%force_constant)
+        print("fc=%s" % force_constant)
         self.simulation.kbt = 1.
         self.simulation.periodic_boundary = [True, True, True]
         self.simulation.box_size = box_size
         self.simulation.registerParticleType("A", .1, .1)
         self.simulation.registerParticleType("B", .1, .1)
-        self.simulation.registerWeakInteractionPiecewiseHarmonicPotential("A", "B", force_constant, desired_dist, depth, no_interaction_dist)  # (force constant, desired dist, depth, no interaction dist)
+        self.simulation.registerWeakInteractionPiecewiseHarmonicPotential("A", "B", force_constant, desired_dist, depth,
+                                                                          no_interaction_dist)  # (force constant, desired dist, depth, no interaction dist)
         self.simulation.registerObservable_RadialDistribution(10, self.rdf_callback, np.arange(0, .5, .01), "A", "B", 1. / (box_size[0] * box_size[1] * box_size[2]))
         # self.simulation.registerBoxPotential("A", 10, Vec(-2, -2, -2), Vec(4, 4, 4), True)
         # self.simulation.registerBoxPotential("B", 10, Vec(-2, -2, -2), Vec(4, 4, 4), True)
@@ -117,5 +118,5 @@ class Capture(object):
 
 
 if __name__ == '__main__':
-    c = Capture(plot_particles=False)
+    c = Capture(plot_particles=True)
     c.start()

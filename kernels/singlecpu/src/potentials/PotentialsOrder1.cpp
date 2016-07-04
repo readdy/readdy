@@ -41,7 +41,6 @@ namespace readdy {
 
                     auto r = particleRadius;
                     if (!isConsiderParticleRadius()) r = 0;
-
                     for (auto i = 0; i < 3; i++) {
                         if (position[i] - r < min[i] || position[i] + r > max[i]) {
                             if (position[i] - r < min[i]) {
