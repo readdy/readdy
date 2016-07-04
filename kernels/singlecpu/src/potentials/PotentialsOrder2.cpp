@@ -29,18 +29,22 @@ namespace readdy {
 
                 void SingleCPUHarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_ij) {
                     auto squared = x_ij * x_ij;
-                    if (squared < getSumOfParticleRadiiSquared()) {
+                    if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
                         squared = std::sqrt(squared);
-                        force += (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
+                        force = (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
+                    } else {
+                        force = {0,0,0};
                     }
                 }
 
                 void SingleCPUHarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) {
                     auto squared = x_ij * x_ij;
-                    if (squared < getSumOfParticleRadiiSquared()) {
+                    if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
                         squared = std::sqrt(squared);
                         energy += getForceConstant() * std::pow(squared - getSumOfParticleRadii(), 2);
-                        force += (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
+                        force = (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
+                    } else {
+                        force = {0,0,0};
                     }
                 }
 
@@ -89,19 +93,23 @@ namespace readdy {
                     double factor = 0;
                     if (dist < desiredParticleDistance) {
                         // repulsive as we are closer than the desired distance
-                        factor = forceConstant * (desiredParticleDistance - dist) / dist;
+                        factor = -1 * forceConstant * (desiredParticleDistance - dist);
                     } else {
                         // attractive as we are further (but not too far) apart than the desired distance
                         if (dist < desiredParticleDistance + .5 * len_part2) {
-                            factor = depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (desiredParticleDistance - dist) / dist;
+                            factor = -1 * depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (desiredParticleDistance - dist);
                         } else {
                             // if we are not too far apart but still further than in the previous case, attractive
                             if (dist < noInteractionDistance) {
-                                factor = -1 * depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (noInteractionDistance - dist) / dist;
+                                factor = depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) * (noInteractionDistance - dist);
                             }
                         }
                     }
-                    force += factor * x_ij;
+                    if(dist > 0 && factor != 0) {
+                        force = factor * x_ij / dist;
+                    } else {
+                        force = {0,0,0};
+                    }
                 }
 
                 void SingleCPUWeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) {
@@ -110,7 +118,7 @@ namespace readdy {
                 }
 
                 double SingleCPUWeakInteractionPiecewiseHarmonic::getCutoffRadius() {
-                    return 0;
+                    return noInteractionDistance;
                 }
 
 

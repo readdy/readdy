@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 rdf = None
 centers = None
 n_calls = 0
-T = 200000000
+# T = 200000000
+T = 20000000
 
 
 def rdf_callback(pair):
@@ -50,6 +51,6 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
     ax.plot(centers, rdf / n_calls)
 
-    np.savetxt("bins", centers)
-    np.savetxt("rdf", rdf/n_calls)
+    np.savetxt("bins_", centers)
+    np.savetxt("rdf_", rdf/n_calls)
     plt.show()
