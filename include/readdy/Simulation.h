@@ -63,6 +63,9 @@ namespace readdy {
         template<typename T, typename... Args>
         boost::uuids::uuid registerObservable(std::function<void(typename T::result_t)>&& callbackFun, unsigned int stride, Args... args);
 
+        template<typename T, typename... Args>
+        boost::uuids::uuid registerObservable(const std::function<void(typename T::result_t)>& callbackFun, unsigned int stride, Args... args);
+
         /**
          * Registers an observable that implements the readdy::model::ObservableBase interface.
          * @param observable the observable

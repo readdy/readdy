@@ -11,6 +11,27 @@
 using namespace readdy;
 
 namespace {
+
+    struct MSDAggregator {
+
+        double msd = 0;
+        long T = 0;
+        std::vector<readdy::model::Vec3> initialPositions;
+        double* result;
+
+        void operator()(readdy::model::ParticlePositionObservable::result_t positions) {
+            auto it_init = initialPositions.begin();
+            auto it_pos = positions.begin();
+            while(it_pos != positions.end()) {
+                msd += (*it_init - *it_pos)*(*it_init - *it_pos);
+                ++it_init;
+                ++it_pos;
+            }
+            ++T;
+            *result = msd/T;
+        }
+    };
+
     class TestSimulation : public ::testing::Test {
     protected:
         Simulation simulation;
@@ -50,6 +71,9 @@ namespace {
             simulation.addParticle(0, 0, 0, "type");
         }
         double timestep = 1;
+        double result = 0;
+        const MSDAggregator aggregator(simulation.getAllParticlePositions(), &result);
+        simulation.registerObservable<readdy::model::ParticlePositionObservable>(std::move(aggregator), 1);
         simulation.run(100, timestep);
         auto positions = simulation.getAllParticlePositions();
         double msd = 0;
@@ -58,6 +82,7 @@ namespace {
         }
         msd /= positions.size();
         BOOST_LOG_TRIVIAL(debug) << "mean squared displacement: " << msd;
+        BOOST_LOG_TRIVIAL(debug) << "mean squared displacement2: " << result;
     }
 
     TEST_F(TestSimulation, TestObservables) {

@@ -30,7 +30,7 @@ namespace readdy {
             void CubePotential::configureForType(const unsigned int &type) {
                 particleRadius = kernel->getKernelContext().getParticleRadius(type);
                 for (auto i = 0; i < 3; i++) {
-                    if (origin[i] < origin[i] + extent[i]) {
+                    if (extent[i] > 0) {
                         min[i] = origin[i];
                         max[i] = origin[i] + extent[i];
                     } else {

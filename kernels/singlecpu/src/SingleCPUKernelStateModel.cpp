@@ -67,8 +67,8 @@ namespace readdy {
                             const auto &potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
                             for (const auto &potential : potentials) {
                                 potential->calculateForceAndEnergy(forceVec, pimpl->currentEnergy, difference(pos_i, pos_j));
-                                *(pimpl->particleData->begin_forces() + i) = forceVec;
-                                *(pimpl->particleData->begin_forces() + j) = -1*forceVec;
+                                *(pimpl->particleData->begin_forces() + i) += forceVec;
+                                *(pimpl->particleData->begin_forces() + j) += -1*forceVec;
                             }
                         }
                     }
