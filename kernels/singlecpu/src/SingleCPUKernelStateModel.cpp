@@ -56,6 +56,7 @@ namespace readdy {
 
                     // update forces and energy order 2 potentials
                     {
+                        readdy::model::Vec3 forceVec {0,0,0};
                         for (auto &&it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
                             auto i = it->idx1;
                             auto j = it->idx2;
@@ -65,7 +66,9 @@ namespace readdy {
                             const auto &pos_j = *(pimpl->particleData->begin_positions() + j);
                             const auto &potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
                             for (const auto &potential : potentials) {
-                                potential->calculateForceAndEnergy(*(pimpl->particleData->begin_forces() + i), pimpl->currentEnergy, difference(pos_i, pos_j));
+                                potential->calculateForceAndEnergy(forceVec, pimpl->currentEnergy, difference(pos_i, pos_j));
+                                *(pimpl->particleData->begin_forces() + i) = forceVec;
+                                *(pimpl->particleData->begin_forces() + j) = -1*forceVec;
                             }
                         }
                     }

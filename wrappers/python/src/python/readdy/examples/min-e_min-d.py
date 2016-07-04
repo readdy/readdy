@@ -308,6 +308,6 @@ if __name__ == '__main__':
     X = np.load('test_mind_mine_no_membrane6.npy')
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    print(X[5].shape)
-    ax.imshow(X[5], cmap='hot')
+    print(X[1].shape)
+    ax.imshow(X[5][450:], cmap='hot')
     plt.show()
