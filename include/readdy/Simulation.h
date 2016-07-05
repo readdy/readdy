@@ -5,17 +5,7 @@
 #ifndef READDY_SIMULATION_H
 #define READDY_SIMULATION_H
 
-#include <memory>
-
-#include <boost/predef.h>
-#include <vector>
-#include <readdy/model/Vec3.h>
-#include <readdy/model/KernelStateModel.h>
-#include <functional>
-#include <readdy/model/potentials/Potential.h>
-#include <readdy/model/potentials/PotentialOrder2.h>
-#include <readdy/model/Observable.h>
-#include <readdy/model/potentials/PotentialOrder1.h>
+#include <readdy/model/Kernel.h>
 
 #if BOOST_OS_MACOS
 #include <array>
@@ -61,10 +51,7 @@ namespace readdy {
          * @return a uuid with which the observable is associated
          */
         template<typename T, typename... Args>
-        boost::uuids::uuid registerObservable(std::function<void(typename T::result_t)>&& callbackFun, unsigned int stride, Args... args);
-
-        template<typename T, typename... Args>
-        boost::uuids::uuid registerObservable(const std::function<void(typename T::result_t)>& callbackFun, unsigned int stride, Args... args);
+        boost::uuids::uuid registerObservable(const std::function<void(typename T::result_t)> callbackFun, unsigned int stride, Args... args);
 
         /**
          * Registers an observable that implements the readdy::model::ObservableBase interface.
@@ -144,6 +131,8 @@ namespace readdy {
     public:
         NoKernelSelectedException(const std::string &__arg);
     };
+
+    #include <readdy/_internal/SimulationImpl.h>
 
 }
 

@@ -28,22 +28,21 @@ def rdf_callback(pair):
 
 
 if __name__ == '__main__':
-    kernel_provider = KernelProvider.get()
-    kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
+    KernelProvider.get().load_from_dir(platform_utils.get_readdy_plugin_dir())
     simulation = Simulation()
-    simulation.setKernel("SingleCPU")
+    simulation.set_kernel("SingleCPU")
 
     box_size = Vec(10, 10, 10)
     simulation.kbt = 2
     simulation.periodic_boundary = [True, True, True]
     simulation.box_size = box_size
-    simulation.registerParticleType("A", .2, 1.)
-    simulation.registerParticleType("B", .2, 1.)
-    simulation.registerHarmonicRepulsionPotential("A", "B", 10)
-    simulation.addParticle("A", Vec(-2.5, 0, 0))
-    simulation.addParticle("B", Vec(0, 0, 0))
+    simulation.register_particle_type("A", .2, 1.)
+    simulation.register_particle_type("B", .2, 1.)
+    simulation.register_potential_harmonic_repulsion("A", "B", 10)
+    simulation.add_particle("A", Vec(-2.5, 0, 0))
+    simulation.add_particle("B", Vec(0, 0, 0))
 
-    simulation.registerObservable_RadialDistribution(10, rdf_callback, np.arange(0, 5, .01), "A", "B", 1. / (box_size[0] * box_size[1] * box_size[2]))
+    simulation.register_observable_radial_distribution(10, rdf_callback, np.arange(0, 5, .01), "A", "B", 1. / (box_size[0] * box_size[1] * box_size[2]))
     simulation.run(T, 0.02)
 
     print("n_calls=%s" % n_calls)
@@ -51,6 +50,6 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
     ax.plot(centers, rdf / n_calls)
 
-    np.savetxt("bins_", centers)
-    np.savetxt("rdf_", rdf/n_calls)
+    #np.savetxt("bins_", centers)
+    #np.savetxt("rdf_", rdf/n_calls)
     plt.show()

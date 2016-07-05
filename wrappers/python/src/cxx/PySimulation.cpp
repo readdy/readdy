@@ -116,32 +116,34 @@ BOOST_PYTHON_MODULE (simulation) {
     readdy::py::std_vector_to_python_converter<double>();
     readdy::py::std_pair_to_python_converter<std::vector<double>, std::vector<double>>();
 
+    bpy::docstring_options doc_options;
+    doc_options.enable_all();
     bpy::class_<sim, boost::noncopyable>("Simulation")
             .add_property("kbt", &sim::getKBT, &sim::setKBT)
             .add_property("periodic_boundary", &getPeriodicBoundarySimulationWrapper,
                           &setPeriodicBoundarySimulationWrapper)
             .add_property("box_size", &sim::getBoxSize, &setBoxSize)
-            .def("registerParticleType", &sim::registerParticleType)
-            .def("addParticle", &addParticle)
-            .def("isKernelSelected", &sim::isKernelSelected)
-            .def("getSelectedKernelType", &getSelectedKernelType)
-            .def("registerPotentialOrder2", &registerPotentialOrder2)
-            .def("registerHarmonicRepulsionPotential", &sim::registerHarmonicRepulsionPotential)
-            .def("registerWeakInteractionPiecewiseHarmonicPotential",
+            .def("register_particle_type", &sim::registerParticleType)
+            .def("add_particle", &addParticle)
+            .def("is_kernel_selected", &sim::isKernelSelected)
+            .def("get_selected_kernel_type", &getSelectedKernelType)
+            .def("register_potential_order_2", &registerPotentialOrder2)
+            .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential)
+            .def("register_potential_piecewise_weak_interaction",
                  &sim::registerWeakInteractionPiecewiseHarmonicPotential)
-            .def("registerBoxPotential", &sim::registerBoxPotential)
-            .def("getParticlePositions", &sim::getParticlePositions)
-            .def("registerObservable_ParticlePositions", &registerObservable_ParticlePositions)
-            .def("registerObservable_RadialDistribution", &registerObservable_RadialDistribution)
-            .def("registerObservable_HistogramAlongAxisObservable", &registerObservable_HistogramAlongAxisObservable)
-            .def("registerObservable_CenterOfMass", &registerObservable_CenterOfMass)
-            .def("registerObservable_NParticles", &registerObservable_NParticles)
-            .def("registerConversionReaction", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("registerEnzymaticReaction", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("registerFissionReaction", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("registerFusionReaction", &sim::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("registerDeathReaction", &sim::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("setKernel", &sim::setKernel)
+            .def("register_potential_box", &sim::registerBoxPotential)
+            .def("get_particle_positions", &sim::getParticlePositions)
+            .def("register_observable_particle_positions", &registerObservable_ParticlePositions)
+            .def("register_observable_radial_distribution", &registerObservable_RadialDistribution)
+            .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable)
+            .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
+            .def("register_observable_n_particles", &registerObservable_NParticles)
+            .def("register_reaction_conversion", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_reaction_decay", &sim::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("set_kernel", &sim::setKernel)
             .def("run", &sim::run);
 
     bpy::class_<kp, boost::noncopyable>("KernelProvider", bpy::no_init)
@@ -170,7 +172,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("calc_force", &pot2::calculateForce);
 
     bpy::class_<kern, boost::noncopyable>("Kernel", bpy::no_init)
-            .def("getName", &kern::getName, bpy::return_value_policy<bpy::reference_existing_object>());
+            .def("get_name", &kern::getName, bpy::return_value_policy<bpy::reference_existing_object>());
 
     bpy::class_<uuid>("uuid", bpy::no_init)
             .def("__str__", +[](const uuid& uuid) { return boost::uuids::to_string(uuid);});
