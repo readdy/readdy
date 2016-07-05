@@ -10,15 +10,6 @@
 
 using namespace readdy;
 
-using _sim_uuid_t = boost::uuids::uuid;
-
-struct Simulation::Impl {
-    std::unique_ptr<readdy::model::Kernel> kernel;
-    std::vector<std::unique_ptr<readdy::model::ObservableBase>> foo {};
-    std::unordered_map<_sim_uuid_t, std::unique_ptr<readdy::model::ObservableBase>, boost::hash<_sim_uuid_t>> observables {};
-    std::unordered_map<_sim_uuid_t, boost::signals2::scoped_connection, boost::hash<_sim_uuid_t>> observableConnections {};
-};
-
 double Simulation::getKBT() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().getKBT();
@@ -124,7 +115,7 @@ void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrd
     pimpl->kernel->getKernelContext().registerOrder1Potential(ptr, type);
 }
 
-void Simulation::deregisterPotential(const _sim_uuid_t &uuid) {
+void Simulation::deregisterPotential(const boost::uuids::uuid &uuid) {
     pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };
 
@@ -172,7 +163,7 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-_sim_uuid_t Simulation::registerObservable(readdy::model::ObservableBase &observable) {
+boost::uuids::uuid Simulation::registerObservable(readdy::model::ObservableBase &observable) {
     ensureKernelSelected();
     boost::uuids::random_generator uuid_gen;
     auto uuid = uuid_gen();
@@ -181,7 +172,7 @@ _sim_uuid_t Simulation::registerObservable(readdy::model::ObservableBase &observ
     return uuid;
 }
 
-void Simulation::deregisterObservable(const _sim_uuid_t uuid) {
+void Simulation::deregisterObservable(const boost::uuids::uuid uuid) {
     pimpl->observableConnections.erase(uuid);
     if(pimpl->observables.find(uuid) != pimpl->observables.end()) {
         pimpl->observables.erase(uuid);
@@ -200,33 +191,6 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 Simulation::Simulation(Simulation &&rhs) = default;
 
 Simulation::~Simulation() {
-}
-
-template<typename T, typename... Args>
-_sim_uuid_t Simulation::registerObservable(std::function<void(typename T::result_t)>&& callbackFun, unsigned int stride, Args... args) {
-    ensureKernelSelected();
-    boost::uuids::random_generator uuid_gen;
-    auto uuid = uuid_gen();
-    auto && obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
-    obs->setCallback(std::move(callbackFun));
-    pimpl->observables.emplace(uuid, std::move(obs));
-    auto&& connection = pimpl->kernel->connectObservable(pimpl->observables[uuid].get());
-    pimpl->observableConnections.emplace(uuid, std::move(connection));
-    return uuid;
-}
-
-
-template<typename T, typename... Args>
-boost::uuids::uuid Simulation::registerObservable(const std::function<void(typename T::result_t)>& callbackFun, unsigned int stride, Args... args) {
-    ensureKernelSelected();
-    boost::uuids::random_generator uuid_gen;
-    auto uuid = uuid_gen();
-    auto && obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
-    obs->setCallback(callbackFun);
-    pimpl->observables.emplace(uuid, std::move(obs));
-    auto&& connection = pimpl->kernel->connectObservable(pimpl->observables[uuid].get());
-    pimpl->observableConnections.emplace(uuid, std::move(connection));
-    return uuid;
 }
 
 const boost::uuids::uuid &Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate) {
@@ -269,35 +233,20 @@ std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string ty
     return positions;
 }
 
-template _sim_uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&&, unsigned int);
-template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistributionObservable>(
-        std::function<void(typename readdy::model::RadialDistributionObservable::result_t)>&&, unsigned int,
+/*template boost::uuids::uuid Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(const typename readdy::model::ParticlePositionObservable::result_t)>, unsigned int);
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::RadialDistributionObservable>(
+        std::function<void(const typename readdy::model::RadialDistributionObservable::result_t)>, unsigned int,
         std::vector<double>, const std::string, const std::string, double
 );
-template _sim_uuid_t Simulation::registerObservable<readdy::model::CenterOfMassObservable>(
-        std::function<void(typename readdy::model::CenterOfMassObservable::result_t)>&&, unsigned int, const std::vector<std::string>
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::CenterOfMassObservable>(
+        std::function<void(const typename readdy::model::CenterOfMassObservable::result_t)>, unsigned int, const std::vector<std::string>
 );
-template _sim_uuid_t Simulation::registerObservable<readdy::model::HistogramAlongAxisObservable>(
-        std::function<void(typename readdy::model::HistogramAlongAxisObservable::result_t)>&&, unsigned int, std::vector<double> , std::vector<std::string> , unsigned int
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::HistogramAlongAxisObservable>(
+        std::function<void(const typename readdy::model::HistogramAlongAxisObservable::result_t)>, unsigned int, std::vector<double> , std::vector<std::string> , unsigned int
 );
-template _sim_uuid_t Simulation::registerObservable<readdy::model::NParticlesObservable>(
-        std::function<void(typename readdy::model::NParticlesObservable::result_t)>&&, unsigned int
-);
-
-template _sim_uuid_t Simulation::registerObservable<readdy::model::ParticlePositionObservable>(const std::function<void(typename readdy::model::ParticlePositionObservable::result_t)>&, unsigned int);
-template _sim_uuid_t Simulation::registerObservable<readdy::model::RadialDistributionObservable>(
-        const std::function<void(typename readdy::model::RadialDistributionObservable::result_t)>&, unsigned int,
-        std::vector<double>, const std::string, const std::string, double
-);
-template _sim_uuid_t Simulation::registerObservable<readdy::model::CenterOfMassObservable>(
-        const std::function<void(typename readdy::model::CenterOfMassObservable::result_t)>&, unsigned int, const std::vector<std::string>
-);
-template _sim_uuid_t Simulation::registerObservable<readdy::model::HistogramAlongAxisObservable>(
-        const std::function<void(typename readdy::model::HistogramAlongAxisObservable::result_t)>&, unsigned int, std::vector<double> , std::vector<std::string> , unsigned int
-);
-template _sim_uuid_t Simulation::registerObservable<readdy::model::NParticlesObservable>(
-        const std::function<void(typename readdy::model::NParticlesObservable::result_t)>&, unsigned int
-);
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::NParticlesObservable>(
+        std::function<void(const typename readdy::model::NParticlesObservable::result_t)>, unsigned int
+);*/
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

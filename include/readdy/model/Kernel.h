@@ -15,7 +15,6 @@
 
 #include <map> 
 #include <iostream>
-#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 #include <readdy/model/Plugin.h>
 #include <boost/log/sources/logger.hpp>

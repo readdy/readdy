@@ -10,6 +10,7 @@
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
 #include <atomic>
+#include <boost/log/trivial.hpp>
 
 namespace readdy {
     namespace model {

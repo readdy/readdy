@@ -16,7 +16,7 @@ class TestPlot(unittest.TestCase):
         cls.kernel_provider = KernelProvider.get()
         cls.kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
         cls.simulation = Simulation()
-        cls.simulation.setKernel("SingleCPU")
+        cls.simulation.set_kernel("SingleCPU")
 
         cls.fig = plt.figure()
         cls.ax = cls.fig.add_subplot(111, projection='3d')
@@ -43,11 +43,11 @@ class TestPlot(unittest.TestCase):
         self.simulation.kbt = 1.0
         self.simulation.periodic_boundary = [False, False, False]
         self.simulation.box_size = Vec(5.0, 5.0, 5.0)
-        self.simulation.registerParticleType("A", .1, 1.0)
-        self.simulation.registerHarmonicRepulsionPotential("A", "A", .1)
-        self.simulation.registerBoxPotential("A", 10, Vec(-1, -1, -1), Vec(2, 2, 2), True)
-        self.simulation.addParticle("A", Vec(0, 0, 0))
-        self.simulation.registerObservable_ParticlePositions(1, self.position_callback)
+        self.simulation.register_particle_type("A", .1, 1.0)
+        self.simulation.register_potential_harmonic_repulsion("A", "A", .1)
+        self.simulation.register_potential_box("A", 10, Vec(-1, -1, -1), Vec(2, 2, 2), True)
+        self.simulation.add_particle("A", Vec(0, 0, 0))
+        self.simulation.register_observable_particle_positions(1, self.position_callback)
         self.simulation.run(100, .1)
 
 if __name__ == '__main__':

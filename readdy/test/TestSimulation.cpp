@@ -17,7 +17,7 @@ namespace {
         double msd = 0;
         long T = 0;
         std::vector<readdy::model::Vec3> initialPositions;
-        double* result;
+        std::shared_ptr<double> result = std::make_shared<double>(0);
 
         void operator()(readdy::model::ParticlePositionObservable::result_t positions) {
             auto it_init = initialPositions.begin();
@@ -63,6 +63,8 @@ namespace {
     }
 
     TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
+        Simulation simulation;
+        simulation.setKernel("SingleCPU");
         simulation.setBoxSize(10, 10, 10);
         unsigned int n_particles = 103;
         double diffusionConstant = 1;
@@ -71,9 +73,9 @@ namespace {
             simulation.addParticle(0, 0, 0, "type");
         }
         double timestep = 1;
-        double result = 0;
-        const MSDAggregator aggregator(simulation.getAllParticlePositions(), &result);
-        simulation.registerObservable<readdy::model::ParticlePositionObservable>(std::move(aggregator), 1);
+        MSDAggregator aggregator;
+        aggregator.initialPositions = simulation.getAllParticlePositions();
+        simulation.registerObservable<readdy::model::ParticlePositionObservable>(aggregator, 1);
         simulation.run(100, timestep);
         auto positions = simulation.getAllParticlePositions();
         double msd = 0;
@@ -82,7 +84,7 @@ namespace {
         }
         msd /= positions.size();
         BOOST_LOG_TRIVIAL(debug) << "mean squared displacement: " << msd;
-        BOOST_LOG_TRIVIAL(debug) << "mean squared displacement2: " << result;
+        BOOST_LOG_TRIVIAL(debug) << "mean squared displacement2: " << *aggregator.result;
     }
 
     TEST_F(TestSimulation, TestObservables) {
