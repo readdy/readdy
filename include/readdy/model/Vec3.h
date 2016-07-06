@@ -1,8 +1,8 @@
 /**
- * << detailed description >>
+ * A three-dimensional vector.
  *
  * @file Vec3.h
- * @brief << brief description >>
+ * @brief File containing the definitions for Vec3.
  * @author clonker
  * @date 21.04.16
  */

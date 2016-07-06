@@ -1,5 +1,5 @@
 /**
- * << detailed description >>
+ * This queue synchronizes access.
  *
  * @file SynchronizedQueue.h
  * @brief Queue wrapper that synchronizes the access.

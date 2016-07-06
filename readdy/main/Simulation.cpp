@@ -190,8 +190,7 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 
 Simulation::Simulation(Simulation &&rhs) = default;
 
-Simulation::~Simulation() {
-}
+Simulation::~Simulation() = default;
 
 const boost::uuids::uuid &Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate) {
     ensureKernelSelected();

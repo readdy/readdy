@@ -5,6 +5,7 @@
 #include <boost/predef.h>
 #include <readdy/common/Utils.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace readdy {
     namespace utils {
@@ -34,6 +35,9 @@ namespace readdy {
                     const char *env = std::getenv("CONDA_ENV_PATH");
                     if(!env) {
                         env = std::getenv("PREFIX");
+                        if(env) BOOST_LOG_TRIVIAL(trace) << "PREFIX=" << env;
+                    } else {
+                        BOOST_LOG_TRIVIAL(trace) << "CONDA_ENV_PATH=" << env;
                     }
                     std::string pluginDir = "lib/readdy_plugins";
                     if (env) {
@@ -42,6 +46,8 @@ namespace readdy {
                             _env = _env.append("/");
                         }
                         pluginDir = _env.append(pluginDir);
+                    } else {
+                        BOOST_LOG_TRIVIAL(trace) << "no environment variables found that indicate plugins dir.";
                     }
                     return pluginDir;
             }

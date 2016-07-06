@@ -1,6 +1,12 @@
-//
-// Created by clonker on 14.03.16.
-//
+/**
+ * The KernelPluginDecorator class wraps a loaded kernel instance and the corresponding boost::dll::shared_library
+ * instance by using the decorator pattern.
+ *
+ * @file KernelPluginDecorator.h
+ * @brief This file contains the KernelPluginDecorator class definitions.
+ * @author clonker
+ * @date 14.03.16
+ */
 
 #ifndef READDY_MAIN_KERNELPLUGINDECORATOR_H
 #define READDY_MAIN_KERNELPLUGINDECORATOR_H

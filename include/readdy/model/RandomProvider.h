@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * The random provider can provide normal and uniform distributed random numbers. The choice of random generator is
+ * hidden within the implementation and can currently not be altered.
  *
  * @file Random.h
- * @brief << brief description >>
+ * @brief Header file containing the definitions for readdy::model::RandomProvider.
  * @author clonker
  * @date 19.04.16
  */

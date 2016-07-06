@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * The KernelProvider gives means to access kernels that are in shared libs. The can be indexed by calling
+ * loadKernelsFromDirectory(directory).
  *
  * @file KernelProvider.h
- * @brief << brief description >>
+ * @brief This file contains the KernelProvider class. It is used to make kernels that reside in shared libs accessible.
  * @author clonker
  * @date 02.05.16
  */

@@ -1,10 +1,10 @@
 /**
- * << detailed description >>
- *
- * ... should not be instantiated directly
+ * This header file contains the definition of the ObservableFactory. Its purpose is to create observable of different
+ * types in the form of unique_ptrs. The actual implementation of an observable can be changed by specializing the
+ * dispatcher for its type and invoking a virtual (and then: overridden) method within the factory.
  *
  * @file ObservableFactory.h
- * @brief << brief description >>
+ * @brief This header file contains the definition of the ObservableFactory.
  * @author clonker
  * @date 29.04.16
  */

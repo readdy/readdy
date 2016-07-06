@@ -1,6 +1,20 @@
-//
-// Created by clonker on 11.04.16.
-//
+/**
+ * This files contains a selection of possible programs that can be executed on a kernel:
+ *   - TestProgram: Program that has no other operation than printing something to the log.
+ *   - AddParticleProgram: A program with which particles can be added.
+ *   - DiffuseProgram: A program that propagates the particles through the system. The update model program should be
+ *                     called beforehand, such that forces are available.
+ *   - UpdateStateModelProgram: A program that creates neighbor lists and potentially calculates forces.
+ *   - DefaultReactionProgram: A program that executes the default reaction scheme.
+ *
+ * Further, specializations of ProgramName<T> are declared.
+ *
+ * @file Programs.h
+ * @brief Declaration of all globally available programs.
+ * @author clonker
+ * @date 11.04.16
+ * @todo provide more detailed descriptions for some of the programs
+ */
 
 #ifndef READDY_MAIN_PROGRAMS_H_H
 #define READDY_MAIN_PROGRAMS_H_H

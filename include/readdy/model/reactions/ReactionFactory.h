@@ -1,8 +1,10 @@
 /**
- * << detailed description >>
+ * The reaction factory is for creating reaction objects. In order to provide polymorphism, the templated
+ * createReaction(args) method is executed by a dispatcher, that can be specialized in case a reaction type
+ * needs to be overridden.
  *
  * @file ReactionFactory.h
- * @brief << brief description >>
+ * @brief In this header, the reaction factory is declared.
  * @author clonker
  * @date 21.06.16
  */
@@ -29,20 +31,29 @@ namespace readdy {
             public:
                 template<typename R, typename... Args>
                 std::unique_ptr<R> createReaction(Args&&... args) const {
-                    return std::unique_ptr<R>(ReactionFactory::get_dispatcher<R, Args...>::impl(this, std::forward<Args>(args)...));
+                    return std::unique_ptr<R>(ReactionFactory::get_dispatcher<R, Args...>::impl(
+                            this, std::forward<Args>(args)...)
+                    );
                 }
 
             protected:
-                virtual Conversion* createConversion(const std::string &name, unsigned int from, unsigned int to, const double& rate) const {
+                virtual Conversion* createConversion(const std::string &name, unsigned int from, unsigned int to,
+                                                     const double& rate) const {
                     return new Conversion(name, from, to, rate);
                 };
-                virtual Enzymatic* createEnzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double &rate, const double &eductDistance) const {
+                virtual Enzymatic* createEnzymatic(const std::string &name, unsigned int catalyst, unsigned int from,
+                                                   unsigned int to, const double &rate,
+                                                   const double &eductDistance) const {
                     return new Enzymatic(name, catalyst, from, to, rate, eductDistance);
                 };
-                virtual Fission* createFission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate, const double &weight1 = 0.5, const double &weight2 = 0.5) const {
+                virtual Fission* createFission(const std::string &name, unsigned int from, unsigned int to1,
+                                               unsigned int to2, const double productDistance, const double &rate,
+                                               const double &weight1 = 0.5, const double &weight2 = 0.5) const {
                     return new Fission(name, from, to1, to2, productDistance, rate, weight1, weight2);
                 };
-                virtual Fusion* createFusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5) const {
+                virtual Fusion* createFusion(const std::string &name, unsigned int from1, unsigned int from2,
+                                             unsigned int to, const double &rate, const double &eductDistance,
+                                             const double &weight1 = 0.5, const double &weight2 = 0.5) const {
                     return new Fusion(name, from1, from2, to, rate, eductDistance, weight1, weight2);
                 };
 

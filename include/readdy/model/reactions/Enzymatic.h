@@ -1,8 +1,8 @@
 /**
- * << detailed description >>
+ * This file contains the declaration for enzymatic reactions, i.e., A+C->B+C.
  *
  * @file Enzymatic.h
- * @brief << brief description >>
+ * @brief Declaration file of enzymatic reactions, i.e., A+C->B+C.
  * @author clonker
  * @date 20.06.16
  */

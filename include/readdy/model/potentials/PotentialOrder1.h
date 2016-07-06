@@ -1,8 +1,11 @@
 /**
- * << detailed description >>
+ * Declaration of the base class of all order 1 potentials.
+ * Subclasses have to implement calculateEnergy, calculateForce calculateForceAndEnergy, and replicate.
+ * The first three methods take a modifiable reference and a particle's position. The last method is for replication
+ * of the potential, so that it can be assigned to multiple particle types.
  *
  * @file PotentialOrder1.h
- * @brief << brief description >>
+ * @brief Declaration of the base class of all order 1 potentials
  * @author clonker
  * @date 31.05.16
  */
