@@ -12,10 +12,6 @@
 #include <vector>
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
-#include <readdy/common/make_unique.h>
-#include <boost/log/trivial.hpp>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <readdy/model/potentials/PotentialOrder2.h>
 
 namespace readdy {
     namespace kernel {
@@ -34,10 +30,10 @@ namespace readdy {
                 const auto& difference = pimpl->context->getShortestDifferenceFun();
                 pimpl->t = t;
                 if (timeStepChanged || pimpl->firstUpdate) {
-                    fireTimeStepChanged();
-                    pimpl->currentEnergy = 0;
                     pimpl->neighborList->create(*pimpl->particleData);
+                    pimpl->currentEnergy = 0;
                     pimpl->firstUpdate = false;
+                    fireTimeStepChanged();
                 }
 
                 if (forces) {
@@ -60,6 +56,7 @@ namespace readdy {
 
                     // update forces and energy order 2 potentials
                     {
+                        readdy::model::Vec3 forceVec {0,0,0};
                         for (auto &&it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
                             auto i = it->idx1;
                             auto j = it->idx2;
@@ -69,7 +66,9 @@ namespace readdy {
                             const auto &pos_j = *(pimpl->particleData->begin_positions() + j);
                             const auto &potentials = pimpl->context->getOrder2Potentials(type_i, type_j);
                             for (const auto &potential : potentials) {
-                                potential->calculateForceAndEnergy(*(pimpl->particleData->begin_forces() + i), pimpl->currentEnergy, difference(pos_i, pos_j));
+                                potential->calculateForceAndEnergy(forceVec, pimpl->currentEnergy, difference(pos_i, pos_j));
+                                *(pimpl->particleData->begin_forces() + i) += forceVec;
+                                *(pimpl->particleData->begin_forces() + j) += -1*forceVec;
                             }
                         }
                     }
@@ -79,7 +78,7 @@ namespace readdy {
 
             SingleCPUKernelStateModel::SingleCPUKernelStateModel(readdy::model::KernelContext const *context) : pimpl(std::make_unique<SingleCPUKernelStateModel::Impl>()) {
                 pimpl->particleData = std::make_unique<model::SingleCPUParticleData>(10);
-                pimpl->neighborList = std::make_unique<model::NaiveSingleCPUNeighborList>();
+                pimpl->neighborList = std::make_unique<model::NotThatNaiveSingleCPUNeighborList>(context);
                 pimpl->context = context;
             }
 
@@ -92,9 +91,10 @@ namespace readdy {
             }
 
             const std::vector<readdy::model::Vec3> readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() const {
+                const auto size = pimpl->particleData->size();
                 std::vector<readdy::model::Vec3> target{};
-                target.reserve(pimpl->particleData->size());
-                std::copy(pimpl->particleData->begin_positions(), pimpl->particleData->end_positions(), std::back_inserter(target));
+                target.reserve(size);
+                std::copy(pimpl->particleData->begin_positions(), pimpl->particleData->begin_positions() + size, std::back_inserter(target));
                 return target;
             }
 

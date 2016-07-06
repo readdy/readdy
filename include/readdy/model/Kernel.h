@@ -15,7 +15,6 @@
 
 #include <map> 
 #include <iostream>
-#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 #include <readdy/model/Plugin.h>
 #include <boost/log/sources/logger.hpp>
@@ -83,24 +82,9 @@ namespace readdy {
                 return getProgramFactory().createProgramAs<ProgramType>(programs::getProgramName<ProgramType>());
             }
 
-            /**
-             * Get a vector of the registered predefined observable names, which can be created by createObservable(name).
-             *
-             * @return the vector of available observable names
-             */
-            virtual std::vector<std::string> getAvailableObservables();
-
-
-            /**
-             * Creates an observable that is already available as part of the kernel implementation. The list of observables can be obtained by getAvailableObservables().
-             *
-             * @return a shared pointer to the created observable
-             */
-            virtual std::unique_ptr<ObservableBase> createObservable(const std::string &name);
-
-            template<typename T>
-            std::unique_ptr<T> createObservable() {
-                return getObservableFactory().create<T>();
+            template<typename T, typename... Args>
+            std::unique_ptr<T> createObservable(unsigned int stride, Args... args) {
+                return getObservableFactory().create<T>(stride, std::forward<Args>(args)...);
             }
 
             template<typename T, typename Obs1, typename Obs2>
@@ -108,36 +92,51 @@ namespace readdy {
                 return getObservableFactory().create<T>(obs1, obs2, stride);
             };
 
-            // todo test this
+            /**
+             * Creates an observable and connects it to the kernel.
+             *
+             * @return a tuple of the created observable and a scoped_connection object.
+             */
             template<typename T>
-            std::tuple<std::unique_ptr<T>, boost::signals2::connection> createAndRegisterObservable(unsigned int stride) {
-                auto &&obs = createObservable<T>();
-                obs->setStride(stride);
-                auto &&connection = registerObservable(obs.get());
+            std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection> createAndConnectObservable(unsigned int stride) {
+                auto &&obs = createObservable<T>(stride);
+                auto &&connection = connectObservable(obs.get());
                 return std::make_tuple(std::move(obs), connection);
             };
 
-            // todo test this
-            std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::connection> createAndRegisterObservable(const std::string &name, unsigned int stride);
+            /**
+             * Connects an observable to the kernel signal.
+             *
+             * @return A scoped_connection object that, once deleted, releases the connection of the observable.
+             */
+            boost::signals2::scoped_connection connectObservable(ObservableBase *const observable);
 
             /**
-             * Registers an observable to the kernel signal.
+             * If set to true, all (for the current timestep unblocked) observables
+             * will be evaluated once the model gets advanced in time.
              */
-            boost::signals2::connection registerObservable(ObservableBase *const observable);
-
-            //todo
             void evaluateObservablesAutomatically(bool evaluate);
 
+            /**
+             * Evaluates all unblocked observables.
+             */
             void evaluateObservables();
 
+            /**
+             * Evaluates all observables, regardless if they are blocked or not.
+             */
             void evaluateAllObservables();
 
-            void deregisterObservable(ObservableBase *const observable);
+            /**
+             * Deconnects the observable of the signal, deletes the
+             * corresponding connection block object.
+             */
+            void deconnectObservable(ObservableBase *const observable);
 
             /**
              * Registers an observable to the kernel signal.
              */
-            std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::connection> registerObservable(const ObservableType &observable, unsigned int stride);
+            std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::scoped_connection> registerObservable(const ObservableType &observable, unsigned int stride);
 
             virtual readdy::model::programs::ProgramFactory &getProgramFactory() const;
 
@@ -150,6 +149,11 @@ namespace readdy {
             std::vector<std::string> getAvailablePrograms() const {
                 return getProgramFactory().getAvailablePrograms();
             }
+
+            /**
+             * Adds a particle of the type "type" at position "pos".
+             */
+            void addParticle(const std::string& type, const Vec3 &pos);
 
             /**
              * @todo implement this properly
@@ -179,11 +183,11 @@ namespace readdy {
 
             virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const;
 
+            virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const;
         protected:
             struct Impl;
             std::unique_ptr<Impl> pimpl;
 
-            const _internal::ObservableFactory &getObservableFactory() const;
 
         };
 

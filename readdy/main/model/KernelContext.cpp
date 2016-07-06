@@ -37,7 +37,7 @@ namespace readdy {
         struct KernelContext::Impl {
             uint typeCounter;
             std::unordered_map<std::string, uint> typeMapping;
-            double kBT = 0;
+            double kBT = 1;
             std::array<double, 3> box_size{{1, 1, 1}};
             std::array<bool, 3> periodic_boundary{{true, true, true}};
             std::unordered_map<uint, double> diffusionConstants{};
@@ -162,6 +162,10 @@ namespace readdy {
         }
 
         double KernelContext::getParticleRadius(const unsigned int &type) const {
+            if(pimpl->particleRadii.find(type) == pimpl->particleRadii.end()) {
+                BOOST_LOG_TRIVIAL(warning) << "No particle radius was set for the particle type id " << type <<", setting r=1";
+                pimpl->particleRadii[type] = 1;
+            }
             return pimpl->particleRadii[type];
         }
 
@@ -202,10 +206,10 @@ namespace readdy {
             return pimpl->potentialO2Registry[{type1, type2}];
         }
 
-        std::unordered_set<std::tuple<unsigned int, unsigned int>, ParticleTypePairHasher> KernelContext::getAllOrder2RegisteredPotentialTypes() const {
-            std::unordered_set<std::tuple<unsigned int, unsigned int>, ParticleTypePairHasher> result{};
+        std::vector<std::tuple<unsigned int, unsigned int>> KernelContext::getAllOrder2RegisteredPotentialTypes() const {
+            std::vector<std::tuple<unsigned int, unsigned int>> result{};
             for (auto it = pimpl->potentialO2Registry.begin(); it != pimpl->potentialO2Registry.end(); ++it) {
-                result.insert(std::make_tuple(it->first.t1, it->first.t2));
+                result.push_back(std::make_tuple(it->first.t1, it->first.t2));
             }
             return result;
         }
@@ -392,6 +396,19 @@ namespace readdy {
                     pimpl->reactionFactory->createReaction<readdy::model::reactions::Death>(name, typeId, rate)
             );
             return pimpl->reactionOneEductRegistry[typeId].back()->getId();
+        }
+
+        void KernelContext::configure() {
+            for(auto&& e : pimpl->potentialO1Registry) {
+                for(auto&& pot : e.second) {
+                    pot->configureForType(e.first);
+                }
+            }
+            for(auto&& e : pimpl->potentialO2Registry) {
+                for(auto&& pot : e.second) {
+                    pot->configureForTypes(e.first.t1, e.first.t2);
+                }
+            }
         }
 
 

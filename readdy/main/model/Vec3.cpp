@@ -58,16 +58,36 @@ namespace readdy {
 
         }
 
-        bool Vec3::operator==(const Vec3 &rhs) {
+        bool Vec3::operator==(const Vec3 &rhs) const {
             return data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2];
         }
 
-        bool Vec3::operator!=(const Vec3 &rhs) {
+        bool operator<=(const Vec3 &lhs, const Vec3 &rhs) {
+            return lhs[0] <= rhs[0] && lhs[1] <= rhs[1] && lhs[2] <= rhs[2];
+        }
+
+        bool operator>(const Vec3 &lhs, const Vec3 &rhs) {
+            return !(lhs <= rhs);
+        }
+
+        bool operator>=(const Vec3 &lhs, const Vec3 &rhs) {
+            return lhs.data[0] >= rhs.data[0] && lhs.data[1] >= rhs.data[1] && lhs.data[2] >= rhs.data[2];
+        }
+
+        bool operator<(const Vec3 &lhs, const Vec3 &rhs) {
+            return !(lhs >= rhs);
+        }
+
+        bool Vec3::operator!=(const Vec3 &rhs) const {
             return !(data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2]);
         }
 
         Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs) {
             return {lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2]};
+        }
+
+        Vec3 operator/(const Vec3 &lhs, const double &rhs) {
+            return {lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs};
         }
 
         Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs) {
@@ -77,10 +97,6 @@ namespace readdy {
         std::ostream &operator<<(std::ostream &os, const Vec3 &vec) {
             os << "Vec3(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
             return os;
-        }
-
-        bool operator==(const Vec3 &lhs, const Vec3 &rhs) {
-            return lhs[0] == rhs[0] && lhs[1] == rhs[1] && lhs[2] == rhs[2];
         }
 
         void fixPosition(Vec3 &vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize) {

@@ -2,18 +2,13 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/Simulation.h>
-#include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
+#include <readdy/model/potentials/PotentialsOrder2.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
 
 using namespace readdy;
-
-struct Simulation::Impl {
-    std::unique_ptr<readdy::model::Kernel> kernel;
-    std::vector<std::unique_ptr<readdy::model::ObservableBase>> createdObservables {};
-    std::vector<boost::signals2::connection> observableConnections {};
-};
 
 double Simulation::getKBT() const {
     ensureKernelSelected();
@@ -62,10 +57,16 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
     {
         auto &&diffuseProgram = pimpl->kernel->createProgram<readdy::model::programs::DiffuseProgram>();
         auto &&updateModelProgram = pimpl->kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+        auto &&reactionsProgram = pimpl->kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+        pimpl->kernel->getKernelContext().configure();
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
-            diffuseProgram->execute();
             updateModelProgram->configure(t, true);
             updateModelProgram->execute();
+            diffuseProgram->execute();
+
+            updateModelProgram->configure(t, false);
+            updateModelProgram->execute();
+            reactionsProgram->execute();
         }
     }
 }
@@ -89,7 +90,7 @@ const std::string &Simulation::getSelectedKernelType() const {
 void Simulation::addParticle(double x, double y, double z, const std::string &type) {
     ensureKernelSelected();
     const auto &&s = getBoxSize();
-    if (0 <= x && x <= s[0] && 0 <= y && y <= s[1] && 0 <= z && z <= s[2]) {
+    if (fabs(x) <= .5*s[0] && fabs(y) <= .5*s[1] && fabs(z) <= .5*s[2]) {
         readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
         pimpl->kernel->getKernelStateModel().addParticle(p);
     } else {
@@ -98,20 +99,15 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
 
 }
 
-void Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient) {
+void Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().setDiffusionConstant(name, diffusionCoefficient);
+    pimpl->kernel->getKernelContext().setParticleRadius(name, radius);
 }
 
-const std::vector<readdy::model::Vec3> Simulation::getParticlePositions() const {
+const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
-}
-
-const boost::uuids::uuid& Simulation::registerPotentialOrder1(std::string name, const std::string &type) {
-    ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder1>(name);
-    return pimpl->kernel->getKernelContext().registerOrder1Potential(ptr.get(), name);
 }
 
 void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 const* const ptr, const std::string &type) {
@@ -123,10 +119,32 @@ void Simulation::deregisterPotential(const boost::uuids::uuid &uuid) {
     pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };
 
-const boost::uuids::uuid& Simulation::registerPotentialOrder2(std::string potential, const std::string &type1, const std::string &type2) {
+boost::uuids::uuid Simulation::registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB, double forceConstant) {
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::PotentialOrder2>(potential);
-    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), type1, type2);
+    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
+    ptr->setForceConstant(forceConstant);
+    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+}
+
+boost::uuids::uuid Simulation::registerWeakInteractionPiecewiseHarmonicPotential(std::string particleTypeA, std::string particleTypeB, double forceConstant, double desiredParticleDistance,
+                                                                                 double depth, double noInteractionDistance) {
+    ensureKernelSelected();
+    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::WeakInteractionPiecewiseHarmonic>();
+    ptr->setForceConstant(forceConstant);
+    ptr->setDesiredParticleDistance(desiredParticleDistance);
+    ptr->setDepthAtDesiredDistance(depth);
+    ptr->setNoInteractionDistance(noInteractionDistance);
+    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+}
+
+boost::uuids::uuid Simulation::registerBoxPotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, readdy::model::Vec3 extent, bool considerParticleRadius) {
+    ensureKernelSelected();
+    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
+    ptr->setOrigin(origin);
+    ptr->setExtent(extent);
+    ptr->setConsiderParticleRadius(considerParticleRadius);
+    ptr->setForceConstant(forceConstant);
+    return pimpl->kernel->getKernelContext().registerOrder1Potential(ptr.get(), particleType);
 }
 
 void Simulation::registerPotentialOrder2(model::potentials::PotentialOrder2 const* const ptr, const std::string &type1, const std::string &type2) {
@@ -145,18 +163,26 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-void Simulation::registerObservable(const std::string &name, unsigned int stride) {
+boost::uuids::uuid Simulation::registerObservable(readdy::model::ObservableBase &observable) {
     ensureKernelSelected();
-    pimpl->createdObservables.push_back(pimpl->kernel->createObservable(name));
-    (**(pimpl->createdObservables.end()-1)).setStride(stride);
-    auto&& connection = pimpl->kernel->registerObservable((*(pimpl->createdObservables.end()-1)).get());
-    pimpl->observableConnections.push_back(connection);
+    boost::uuids::random_generator uuid_gen;
+    auto uuid = uuid_gen();
+    auto&& connection = pimpl->kernel->connectObservable(&observable);
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+    return uuid;
 }
 
-void Simulation::registerObservable(readdy::model::ObservableBase &observable) {
+void Simulation::deregisterObservable(const boost::uuids::uuid uuid) {
+    pimpl->observableConnections.erase(uuid);
+    if(pimpl->observables.find(uuid) != pimpl->observables.end()) {
+        pimpl->observables.erase(uuid);
+    }
+}
+
+std::vector<std::string> Simulation::getAvailableObservables() {
     ensureKernelSelected();
-    auto&& connection = pimpl->kernel->registerObservable(&observable);
-    pimpl->observableConnections.push_back(connection);
+    // TODO compile a list of observables
+    return {"hallo"};
 }
 
 
@@ -164,11 +190,62 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 
 Simulation::Simulation(Simulation &&rhs) = default;
 
-Simulation::~Simulation() {
-    for(auto&& connection : pimpl->observableConnections) {
-        connection.disconnect();
-    }
+Simulation::~Simulation() = default;
+
+const boost::uuids::uuid &Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerConversionReaction(name, from, to, rate);
 }
+
+const boost::uuids::uuid &Simulation::registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate,
+                                                                const double &eductDistance) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
+}
+
+const boost::uuids::uuid &Simulation::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance,
+                                                              const double &rate, const double &weight1, const double &weight2) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerFissionReaction(name, from, to1, to2, productDistance, rate, weight1, weight2);
+}
+
+const boost::uuids::uuid &Simulation::registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate,
+                                                             const double &eductDistance, const double &weight1, const double &weight2) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
+}
+
+const boost::uuids::uuid &Simulation::registerDeathReaction(const std::string &name, const std::string &particleType, const double &rate) {
+    ensureKernelSelected();
+    return pimpl->kernel->getKernelContext().registerDeathReaction(name, particleType, rate);
+}
+
+std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string type) {
+    unsigned int typeId = pimpl->kernel->getKernelContext().getParticleTypeID(type);
+    const auto particles = pimpl->kernel->getKernelStateModel().getParticles();
+    std::vector<readdy::model::Vec3> positions;
+    for(auto&& p : particles) {
+        if(p.getType() == typeId) {
+            positions.push_back(p.getPos());
+        }
+    }
+    return positions;
+}
+
+/*template boost::uuids::uuid Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(const typename readdy::model::ParticlePositionObservable::result_t)>, unsigned int);
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::RadialDistributionObservable>(
+        std::function<void(const typename readdy::model::RadialDistributionObservable::result_t)>, unsigned int,
+        std::vector<double>, const std::string, const std::string, double
+);
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::CenterOfMassObservable>(
+        std::function<void(const typename readdy::model::CenterOfMassObservable::result_t)>, unsigned int, const std::vector<std::string>
+);
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::HistogramAlongAxisObservable>(
+        std::function<void(const typename readdy::model::HistogramAlongAxisObservable::result_t)>, unsigned int, std::vector<double> , std::vector<std::string> , unsigned int
+);
+template boost::uuids::uuid Simulation::registerObservable<readdy::model::NParticlesObservable>(
+        std::function<void(const typename readdy::model::NParticlesObservable::result_t)>, unsigned int
+);*/
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

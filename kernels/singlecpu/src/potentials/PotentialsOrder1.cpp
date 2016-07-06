@@ -41,13 +41,12 @@ namespace readdy {
 
                     auto r = particleRadius;
                     if (!isConsiderParticleRadius()) r = 0;
-
                     for (auto i = 0; i < 3; i++) {
                         if (position[i] - r < min[i] || position[i] + r > max[i]) {
                             if (position[i] - r < min[i]) {
-                                force[i] += forceConstant * (position[i] - r - min[i]);
+                                force[i] += -1 * forceConstant * (position[i] - r - min[i]);
                             } else {
-                                force[i] += forceConstant * (position[i] + r - max[i]);
+                                force[i] += -1 * forceConstant * (position[i] + r - max[i]);
                             }
                         }
                     }

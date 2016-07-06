@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * A particle is a composite of position, type, and id. The type is an "unsigned int" value, which is mapped by
+ * the KernelContext.
  *
  * @file Particle.h
- * @brief << brief description >>
+ * @brief Header file containing the definitions for the particle class.
  * @author clonker
  * @date 19.04.16
  */

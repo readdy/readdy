@@ -1,8 +1,8 @@
 /**
- * << detailed description >>
+ * Decay reactions simply remove particles of a certain type with a certain rate of the system.
  *
  * @file Death.h
- * @brief << brief description >>
+ * @brief This file contains the declaration of decay reactions.
  * @author clonker
  * @date 21.06.16
  */

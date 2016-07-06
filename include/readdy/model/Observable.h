@@ -1,8 +1,17 @@
 /**
- * << detailed description >>
+ * The struct ObservableName is specialized for every observable type, giving access to a static string that corresponds
+ * to an observable's name.
+ *
+ * ObservableBase is the base class of all observables. They have a stride and a current time step. Also, they provide
+ * an abstract evaluate method, in which the subclasses should execute their calculations.
+ *
+ * Observable derives from ObservableBase and is templateized to a certain result type.
+ *
+ * CombinerObservable takes two Observables and combines their results into a third result to avoid duplication of
+ * work.
  *
  * @file Observable.h
- * @brief << brief description >>
+ * @brief Header file containing the definitions for ObservableName, ObservableBase, Observable and CombinerObservable.
  * @author clonker
  * @date 22.04.16
  */
@@ -41,7 +50,8 @@ namespace readdy {
             virtual ~ObservableBase();
 
             virtual void callback(readdy::model::time_step_type t) {
-                if(t_current == t) return;
+                if(t_current == t && !firstCall) return;
+                firstCall = false;
                 t_current = t;
                 evaluate();
             };
@@ -52,32 +62,38 @@ namespace readdy {
             unsigned int stride;
             readdy::model::Kernel *const kernel;
             readdy::model::time_step_type t_current = 0;
+            bool firstCall = true;
         };
 
         template<typename Result>
         class Observable : public ObservableBase {
         public:
+            typedef Result result_t;
             Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride) {
-                result = std::make_unique<Result>();
             }
 
-            Result* getResult() {
-                return result.get();
+            const result_t& getResult() {
+                return result;
             }
 
-            void setCallback(const std::function<void(Result *)> &callbackFun) {
+            void setCallback(std::function<void(const result_t&)>&& callbackFun) {
+                Observable::_callback_f = std::move(callbackFun);
+            }
+
+            void setCallback(const std::function<void(const result_t&)>& callbackFun) {
                 Observable::_callback_f = callbackFun;
             }
 
             virtual void callback(readdy::model::time_step_type t) override {
+                if(t_current == t && !firstCall) return;
                 ObservableBase::callback(t);
-                _callback_f(getResult());
+                _callback_f(result);
             }
 
 
         protected:
-            std::unique_ptr<Result> result;
-            std::function<void(Result*)> _callback_f = [](Result*){};
+            Result result;
+            std::function<void(Result)> _callback_f = [](const Result){};
         };
 
         template<typename Res_t, typename Obs1_t, typename Obs2_t>

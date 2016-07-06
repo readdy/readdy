@@ -11,9 +11,13 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/thread/thread.hpp>
+#include <readdy/common/Utils.h>
+#include <readdy/plugin/KernelProvider.h>
 #include "gtest/gtest.h"
 
 int perform_tests(int argc, char **argv) {
+    const auto dir = readdy::utils::testing::getPluginsDirectory();
+    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

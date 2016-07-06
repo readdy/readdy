@@ -20,24 +20,13 @@ namespace {
         std::unique_ptr<m::Kernel> kernel;
 
         TestObservables() {
-            // if we're in conda
-            const char *env = std::getenv("CONDA_ENV_PATH");
-            std::string pluginDir = "lib/readdy_plugins";
-            if (env) {
-                auto _env = std::string(env);
-                if (!boost::algorithm::ends_with(env, "/")) {
-                    _env = _env.append("/");
-                }
-                pluginDir = _env.append(pluginDir);
-            }
-            readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
             kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         }
     };
 
     TEST_F(TestObservables, Foo) {
         readdy::model::_internal::ObservableFactory obsf(kernel.get());
-        auto x = obsf.create<m::ParticlePositionObservable>();
+        auto x = obsf.create<m::ParticlePositionObservable>(1);
     }
 
     TEST_F(TestObservables, TestParticlePositions) {
@@ -49,9 +38,8 @@ namespace {
         const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
         const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0,0,0, particleTypeId));
         kernel->getKernelStateModel().addParticles(particles);
-        auto&& obs = kernel->createObservable<m::ParticlePositionObservable>();
-        obs->setStride(3);
-        auto &&connection = kernel->registerObservable(obs.get());
+        auto&& obs = kernel->createObservable<m::ParticlePositionObservable>(3);
+        auto &&connection = kernel->connectObservable(obs.get());
 
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
@@ -59,12 +47,12 @@ namespace {
             kernel->getKernelStateModel().updateModel(t, false);
         }
 
-        const auto&& result = obs->getResult();
+        const auto& result = obs->getResult();
         const auto&& positions = kernel->getKernelStateModel().getParticlePositions();
         auto it_pos = positions.begin();
         int j = 0;
-        for(auto it = result->begin(); it != result->end(); it = std::next(it)) {
-            EXPECT_TRUE(*it == *it_pos);
+        for(auto it = result.begin(); it != result.end(); it = std::next(it)) {
+            EXPECT_EQ(*it, *it_pos);
             it_pos++;
             ++j;
         }
@@ -73,18 +61,18 @@ namespace {
     }
 
     TEST_F(TestObservables, TestCombinerObservable) {
-        auto&& o1 = kernel->createObservable<m::ParticlePositionObservable>();
-        auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>();
+        auto&& o1 = kernel->createObservable<m::ParticlePositionObservable>(1);
+        auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>(1);
         auto&& o3 = kernel->createObservable<m::TestCombinerObservable>(o1.get(), o2.get());
-        auto&& connection = kernel->registerObservable(o3.get());
+        auto&& connection = kernel->connectObservable(o3.get());
         auto&& diffuseProgram = kernel->createProgram("Diffuse");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
             diffuseProgram->execute();
             kernel->getKernelStateModel().updateModel(t, false);
         }
 
-        const auto&& result = o3->getResult();
-        for(auto&& p : *result) {
+        const auto& result = o3->getResult();
+        for(auto&& p : result) {
             // todo
         }
 

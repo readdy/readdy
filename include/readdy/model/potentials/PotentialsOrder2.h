@@ -1,8 +1,10 @@
 /**
- * << detailed description >>
+ * This header contains the declarations of order 2 potentials. Currently:
+ *   - Harmonic repulsion
+ *   - Weak interaction piecewise harmonic
  *
  * @file PotentialsOrder2.h
- * @brief << brief description >>
+ * @brief Contains the declaration of order 2 potentials.
  * @author clonker
  * @date 09.06.16
  */
@@ -36,12 +38,35 @@ namespace readdy {
                 const Kernel * const kernel;
                 double sumOfParticleRadii;
                 double sumOfParticleRadiiSquared;
-                double forceConstant;
+                double forceConstant = 0;
 
+            };
+
+            class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
+
+            public:
+                WeakInteractionPiecewiseHarmonic(const Kernel* const kernel);
+                virtual WeakInteractionPiecewiseHarmonic *replicate() const override = 0;
+
+                virtual void configureForTypes(unsigned int type1, unsigned int type2) override;
+
+
+                void setDesiredParticleDistance(double desiredParticleDistance);
+                void setForceConstant(double forceConstant);
+                void setDepthAtDesiredDistance(double depthAtDesiredDistance);
+                void setNoInteractionDistance(double noInteractionDistance);
+
+            protected:
+                const Kernel* const kernel;
+                double desiredParticleDistance;
+                double forceConstant;
+                double depthAtDesiredDistance;
+                double noInteractionDistance;
             };
 
             namespace _internal {
                 template<> struct PotentialName<HarmonicRepulsion> { static const std::string value; };
+                template<> struct PotentialName<WeakInteractionPiecewiseHarmonic> { static const std::string value; };
             }
         }
     }

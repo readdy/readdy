@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * This header file contains the definition of the PotentialFactory. It contains a map of available potentials to
+ * a std function object that will create a new instance upon invocation.
  *
  * @file PotentialFactory.h
- * @brief << brief description >>
+ * @brief Header file containing the definition of the PotentialFactory.
  * @author clonker
  * @date 31.05.16
  */

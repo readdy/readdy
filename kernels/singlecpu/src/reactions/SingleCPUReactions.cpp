@@ -9,6 +9,7 @@
 
 #include <readdy/model/Particle.h>
 #include <readdy/kernel/singlecpu/reactions/SingleCPUReactions.h>
+#include <iostream>
 
 using particle_t = readdy::model::Particle;
 

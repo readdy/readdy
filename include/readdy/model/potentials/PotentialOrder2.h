@@ -1,8 +1,11 @@
 /**
- * << detailed description >>
+ * Declaration of the base class for all order 2 potentials. They basically have calculateForce, calculateEnergy and
+ * calculateForceAndEnergy methods, which take a modifiable reference argument and the difference vector x_ij between
+ * two particles.
+ * Further, subclasses have to implement getCutoffRadius so that the neighbor list can be created more efficiently.
  *
  * @file PotentialOrder2.h
- * @brief << brief description >>
+ * @brief Declaration of the base class for all order 2 potentials.
  * @author clonker
  * @date 31.05.16
  */
@@ -25,6 +28,8 @@ namespace readdy {
                 virtual void configureForTypes(unsigned int type1, unsigned int type2) {}
 
                 virtual PotentialOrder2 *replicate() const override = 0;
+
+                virtual double getCutoffRadius() = 0;
 
             };
         }

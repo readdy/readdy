@@ -10,6 +10,7 @@
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
 #include <atomic>
+#include <boost/log/trivial.hpp>
 
 namespace readdy {
     namespace model {
@@ -39,6 +40,12 @@ namespace readdy {
             boost::signals2::connection modelTimeStepListenerConnection;
 
             bool evaluateObservablesAutomatically = true;
+
+            void ensureModelTimeStepListener(KernelStateModel * model) {
+                if (!hasModelTimeStepListener.exchange(true) && modelTimeStepListener) {
+                    modelTimeStepListenerConnection = model->addListener(modelTimeStepListener);
+                }
+            }
         };
 
         const std::string &Kernel::getName() const {
@@ -70,11 +77,9 @@ namespace readdy {
             throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
         }
 
-        boost::signals2::connection Kernel::registerObservable(ObservableBase *const observable) {
-            if (!pimpl->hasModelTimeStepListener.exchange(true)) {
-                pimpl->modelTimeStepListenerConnection = getKernelStateModel().addListener(pimpl->modelTimeStepListener);
-            }
-            boost::signals2::connection connection = pimpl->signal.get()->connect(std::bind(&ObservableBase::callback, observable, std::placeholders::_1));
+        boost::signals2::scoped_connection Kernel::connectObservable(ObservableBase *const observable) {
+            pimpl->ensureModelTimeStepListener(&getKernelStateModel());
+            boost::signals2::scoped_connection connection (pimpl->signal.get()->connect(std::bind(&ObservableBase::callback, observable, std::placeholders::_1)));
             boost::signals2::shared_connection_block block{connection, false};
             pimpl->observableBlocks[observable] = block;
             return connection;
@@ -84,28 +89,14 @@ namespace readdy {
             pimpl->evaluateObservablesAutomatically = evaluate;
         }
 
-        std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, boost::signals2::connection> Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
+        std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, boost::signals2::scoped_connection> Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
+            pimpl->ensureModelTimeStepListener(&getKernelStateModel());
             auto&& wrap = std::make_unique<ObservableWrapper>(this, observable, stride);
-            auto&& connection = registerObservable(wrap.get());
-            return std::make_tuple(std::move(wrap), connection);
+            auto&& connection = connectObservable(wrap.get());
+            return std::make_tuple(std::move(wrap), std::move(connection));
         }
 
-        std::vector<std::string> Kernel::getAvailableObservables() {
-            return pimpl->observableFactory->getRegisteredObservableNames();
-        }
-
-        std::unique_ptr<ObservableBase> Kernel::createObservable(const std::string &name) {
-            return pimpl->observableFactory->create(name);
-        }
-
-        std::tuple<std::unique_ptr<ObservableBase>, boost::signals2::connection> Kernel::createAndRegisterObservable(const std::string &name, unsigned int stride) {
-            auto &&obs = createObservable(name);
-            obs->setStride(stride);
-            auto &&connection = registerObservable(obs.get());
-            return std::make_tuple(std::move(obs), connection);
-        }
-
-        const _internal::ObservableFactory &Kernel::getObservableFactory() const {
+        readdy::model::_internal::ObservableFactory &Kernel::getObservableFactory() const {
             return *pimpl->observableFactory;
         }
 
@@ -128,7 +119,7 @@ namespace readdy {
             (*pimpl->signal)(getKernelStateModel().getCurrentTimeStep());
         }
 
-        void Kernel::deregisterObservable(ObservableBase *const observable) {
+        void Kernel::deconnectObservable(ObservableBase *const observable) {
             pimpl->observableBlocks.erase(observable);
         }
 
@@ -150,6 +141,10 @@ namespace readdy {
 
         readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
             throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
+        }
+
+        void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
+            getKernelStateModel().addParticle({pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)});
         }
 
 

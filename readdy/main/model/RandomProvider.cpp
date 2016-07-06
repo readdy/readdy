@@ -15,7 +15,7 @@
 namespace readdy {
     namespace model {
         struct RandomProvider::Impl {
-            std::unique_ptr<boost::random::ranlux3> gen = std::make_unique<boost::random::ranlux3>();
+            std::unique_ptr<boost::random::ranlux3> gen = std::make_unique<boost::random::ranlux3>((unsigned int) std::time(0));
 
             std::unique_ptr<boost::random::normal_distribution<>> normal01 = std::make_unique<boost::random::normal_distribution<>>(0.,1.);
             std::unique_ptr<boost::random::uniform_01<>> uniform01 = std::make_unique<boost::random::uniform_01<>>();

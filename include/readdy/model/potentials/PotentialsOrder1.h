@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * This header file contains the declarations of all possibly available order 1 potentials. Currently:
+ *   - Cube potential
  *
  * @file PotentialsOrder1.h
- * @brief << brief description >>
+ * @brief This header file contains the declarations of all possibly available order 1 potentials.
  * @author clonker
  * @date 15.06.16
  */
@@ -39,9 +40,9 @@ namespace readdy {
                 const Kernel * const kernel;
                 Vec3 origin;
                 Vec3 extent;
-                Vec3 min {}, max {};
-                double particleRadius;
-                double forceConstant;
+                Vec3 min {0,0,0}, max {0,0,0};
+                double particleRadius = 0;
+                double forceConstant = 1;
                 bool considerParticleRadius;
             };
 

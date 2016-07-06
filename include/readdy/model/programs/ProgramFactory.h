@@ -1,6 +1,12 @@
-//
-// Created by clonker on 08.04.16.
-//
+/**
+ * This file contains the declaration of the program factory. Internally, the factory is simply a map of
+ * string -> std::function<Program*()>, which then can get called.
+ *
+ * @file ProgramFactory.h
+ * @brief Declaration of the program factory.
+ * @author clonker
+ * @date 08.04.16
+ */
 
 #ifndef READDY_MAIN_PROGRAMFACTORY_H
 #define READDY_MAIN_PROGRAMFACTORY_H

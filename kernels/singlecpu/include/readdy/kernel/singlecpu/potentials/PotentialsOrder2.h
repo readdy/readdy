@@ -29,7 +29,26 @@ namespace readdy {
                     virtual void calculateForce(vec_t &force, const vec_t &x_ij) override;
                     virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) override;
 
+                    virtual double getCutoffRadius() override;
+
+
                     virtual potentials::SingleCPUHarmonicRepulsion *replicate() const override;
+
+
+                };
+
+                class SingleCPUWeakInteractionPiecewiseHarmonic : public readdy::model::potentials::WeakInteractionPiecewiseHarmonic {
+                    using vec_t = readdy::model::Vec3;
+                public:
+                    SingleCPUWeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel);
+
+                    virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override;
+                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override;
+                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) override;
+
+                    virtual potentials::SingleCPUWeakInteractionPiecewiseHarmonic *replicate() const override;
+
+                    virtual double getCutoffRadius() override;
 
 
                 };

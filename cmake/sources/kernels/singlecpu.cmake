@@ -25,3 +25,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/reactions/SingleCPUReactions.cpp")
 # --- model ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SingleCPUParticleData.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SingleCPUNeighborList.cpp")
+
+# --- observables ---
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/observables/SingleCPUObservableFactory.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/observables/SingleCPUObservables.cpp")

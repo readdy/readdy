@@ -294,6 +294,12 @@ namespace readdy {
                     (*type)[index] = particle.getType();
                 }
 
+                void SingleCPUParticleData::clear() {
+                    deactivated_index = 0;
+                    n_deactivated = ids->size();
+                }
+
+
             }
         }
     }

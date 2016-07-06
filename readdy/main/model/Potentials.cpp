@@ -30,7 +30,7 @@ namespace readdy {
             void CubePotential::configureForType(const unsigned int &type) {
                 particleRadius = kernel->getKernelContext().getParticleRadius(type);
                 for (auto i = 0; i < 3; i++) {
-                    if (origin[i] < origin[i] + extent[i]) {
+                    if (extent[i] > 0) {
                         min[i] = origin[i];
                         max[i] = origin[i] + extent[i];
                     } else {
@@ -82,7 +82,39 @@ namespace readdy {
                 HarmonicRepulsion::forceConstant = forceConstant;
             }
 
+            /**
+             * Weak interaction piecewise harmonig
+             */
+
+            WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel) : PotentialOrder2(_internal::PotentialName<WeakInteractionPiecewiseHarmonic>::value), kernel(kernel) {
+                desiredParticleDistance = 0;
+                forceConstant = 0;
+                depthAtDesiredDistance = 0;
+                noInteractionDistance = 0;
+            }
+
+            void WeakInteractionPiecewiseHarmonic::setDesiredParticleDistance(double desiredParticleDistance) {
+                WeakInteractionPiecewiseHarmonic::desiredParticleDistance = desiredParticleDistance;
+            }
+
+            void WeakInteractionPiecewiseHarmonic::setForceConstant(double forceConstant) {
+                WeakInteractionPiecewiseHarmonic::forceConstant = forceConstant;
+            }
+
+            void WeakInteractionPiecewiseHarmonic::setDepthAtDesiredDistance(double depthAtDesiredDistance) {
+                WeakInteractionPiecewiseHarmonic::depthAtDesiredDistance = depthAtDesiredDistance;
+            }
+
+            void WeakInteractionPiecewiseHarmonic::setNoInteractionDistance(double noInteractionDistance) {
+                WeakInteractionPiecewiseHarmonic::noInteractionDistance = noInteractionDistance;
+            }
+
+            void WeakInteractionPiecewiseHarmonic::configureForTypes(unsigned int type1, unsigned int type2) {
+
+            }
+
 
         }
     }
 }
+

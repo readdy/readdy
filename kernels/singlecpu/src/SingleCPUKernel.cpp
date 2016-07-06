@@ -7,6 +7,7 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
 #include <readdy/kernel/singlecpu/potentials/SingleCPUPotentialFactory.h>
 #include <readdy/kernel/singlecpu/reactions/SingleCPUReactionFactory.h>
+#include <readdy/kernel/singlecpu/observables/SingleCPUObservableFactory.h>
 
 
 namespace readdy {
@@ -20,6 +21,7 @@ namespace readdy {
                 std::unique_ptr<potentials::SingleCPUPotentialFactory> potentials;
                 std::unique_ptr<programs::SingleCPUProgramFactory> programs;
                 std::unique_ptr<reactions::SingleCPUReactionFactory> reactions;
+                std::unique_ptr<observables::SingleCPUObservableFactory> observables;
             };
 
             SingleCPUKernel::SingleCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<SingleCPUKernel::Impl>()) {
@@ -28,6 +30,7 @@ namespace readdy {
                 pimpl->reactions = std::make_unique<reactions::SingleCPUReactionFactory>(this);
                 pimpl->context = std::make_unique<readdy::model::KernelContext>(pimpl->reactions.get());
                 pimpl->model = std::make_unique<SingleCPUKernelStateModel>(pimpl->context.get());
+                pimpl->observables = std::make_unique<observables::SingleCPUObservableFactory>(this);
             }
 
             /**
@@ -76,6 +79,10 @@ namespace readdy {
 
             readdy::model::reactions::ReactionFactory &SingleCPUKernel::getReactionFactory() const {
                 return *pimpl->reactions;
+            }
+
+            readdy::model::_internal::ObservableFactory &SingleCPUKernel::getObservableFactory() const {
+                return *pimpl->observables;
             }
 
 

@@ -23,25 +23,18 @@ namespace {
 
     class TestKernelContext : public ::testing::Test {
     protected:
-        TestKernelContext() {
-            // if we're in conda
-            const char *env = std::getenv("CONDA_ENV_PATH");
-            std::string pluginDir = "lib/readdy_plugins";
-            if (env) {
-                auto _env = std::string(env);
-                if (!boost::algorithm::ends_with(env, "/")) {
-                    _env = _env.append("/");
-                }
-                pluginDir = _env.append(pluginDir);
-            }
-            readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-        }
+        TestKernelContext() { }
 
         std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory {new readdy::model::reactions::ReactionFactory()};
     };
 
     struct NOOPPotential : public m::potentials::PotentialOrder2 {
         NOOPPotential() : PotentialOrder2("no op") { }
+
+        virtual double getCutoffRadius() override {
+            return 0;
+        }
+
 
         virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override {return 0;}
         virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override {}
