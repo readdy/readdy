@@ -1,8 +1,10 @@
 /**
- * << detailed description >>
+ * This header contains the declarations of order 2 potentials. Currently:
+ *   - Harmonic repulsion
+ *   - Weak interaction piecewise harmonic
  *
  * @file PotentialsOrder2.h
- * @brief << brief description >>
+ * @brief Contains the declaration of order 2 potentials.
  * @author clonker
  * @date 09.06.16
  */

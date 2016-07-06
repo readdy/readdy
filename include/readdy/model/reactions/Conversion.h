@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * This file contains the declaration for conversion reactions, i.e., A->B. They are assigned to two types and happen
+ * with a certain rate.
  *
  * @file Conversion.h
- * @brief << brief description >>
+ * @brief Declaration of Conversion reactions, i.e., A->B.
  * @author clonker
  * @date 20.06.16
  */

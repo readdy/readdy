@@ -1,10 +1,17 @@
 /**
- * << detailed description >>
+ * Header file containing definitions for various observables. Currently:
+ *  - ParticlePositionObservable,
+ *  - RadialDistributionObservable,
+ *  - CenterOfMassObservable,
+ *  - HistogramAlongAxisObservable,
+ *  - NParticlesObservable,
+ *  - TestCombinerObservable
  *
  * @file Observables.h
- * @brief << brief description >>
+ * @brief Header file containing definitions for various observables.
  * @author clonker
  * @date 26.04.16
+ * @todo for demonstration purposes, add a more meaningful combiner observable, such as velocity
  */
 
 #ifndef READDY_MAIN_OBSERVABLES_H

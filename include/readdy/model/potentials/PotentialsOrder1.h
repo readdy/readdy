@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * This header file contains the declarations of all possibly available order 1 potentials. Currently:
+ *   - Cube potential
  *
  * @file PotentialsOrder1.h
- * @brief << brief description >>
+ * @brief This header file contains the declarations of all possibly available order 1 potentials.
  * @author clonker
  * @date 15.06.16
  */

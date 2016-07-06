@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * Declaration of fusion reactions, i.e., A+B->C. Additionally to the types, they also have a rate, an educt
+ * distance and two weights, which determine where (on a line between A and B) C should be placed.
  *
  * @file Fusion.h
- * @brief << brief description >>
+ * @brief Header file containing the declaration for fusion reactions, i.e., A+B->C.
  * @author clonker
  * @date 20.06.16
  */
@@ -19,7 +20,8 @@ namespace readdy {
             class Fusion : public Reaction<2> {
 
             public:
-                Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance, const double &weight1 = 0.5,
+                Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to,
+                       const double &rate, const double &eductDistance, const double &weight1 = 0.5,
                        const double &weight2 = 0.5) :
                         Reaction(name, rate, eductDistance, 0, 1), weight1(weight1), weight2(weight2) {
                     educts = {from1, from2};
@@ -29,7 +31,8 @@ namespace readdy {
                     if (sum != 1) {
                         this->weight1 /= sum;
                         this->weight2 /= sum;
-                        BOOST_LOG_TRIVIAL(warning) << "The weights did not add up to 1, they were changed to weight1=" << this->weight1 << ", weight2=" << this->weight2;
+                        BOOST_LOG_TRIVIAL(warning) << "The weights did not add up to 1, they were changed to weight1="
+                                                   << this->weight1 << ", weight2=" << this->weight2;
                     }
                 }
 

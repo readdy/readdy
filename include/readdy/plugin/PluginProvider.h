@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * The PluginProvider is a factory superclass for plugin-typed objects. If no plugin with the requested name was found,
+ * a NoSuchPluginException is thrown.
  *
  * @file PluginProvider.h
- * @brief << brief description >>
+ * @brief This header contains the PluginProvider class and the NoSuchPluginException.
  * @author clonker
  * @date 02.05.16
  */

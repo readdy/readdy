@@ -1,6 +1,11 @@
-//
-// Created by mho on 04.03.16.
-//
+/**
+ * Base class for all plugins.
+ *
+ * @file Plugin.h
+ * @brief Header file containing the definitions for readdy::model::Plugin.
+ * @author clonker
+ * @date 04.03.16
+ */
 
 #ifndef READDY_MAIN_PLUGIN_H
 #define READDY_MAIN_PLUGIN_H

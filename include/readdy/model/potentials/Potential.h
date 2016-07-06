@@ -1,8 +1,10 @@
 /**
- * << detailed description >>
+ * This header file contains the base class for all potentials. In particular, all potentials shall have
+ * a uuid by which they can be identified, a name that describes the type and an order, which indicates the number of
+ * particles which are interacting with one another.
  *
  * @file Potential.h
- * @brief << brief description >>
+ * @brief Header file containing the base class for all potentials.
  * @author clonker
  * @date 31.05.16
  */
@@ -25,7 +27,8 @@ namespace readdy {
                 boost::uuids::uuid id;
 
             public:
-                Potential(const std::string &name, const int order) : name(name), order(order), id(boost::uuids::random_generator()()) {
+                Potential(const std::string &name, const int order) : name(name), order(order),
+                                                                      id(boost::uuids::random_generator()()) {
                 }
                 virtual ~Potential() = default;
 

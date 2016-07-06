@@ -1,8 +1,11 @@
 /**
- * << detailed description >>
+ * Contains various typedefs. Currently:
+ *   - time_step_type: the type used for time steps
+ *   - signal_t: the boost.signals2 type for observables
+ *   - ObservableType: the std::function type used for observables
  *
  * @file Types.h
- * @brief << brief description >>
+ * @brief Header file containing some basic typedefs.
  * @author clonker
  * @date 27.04.16
  */

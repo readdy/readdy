@@ -1,8 +1,17 @@
 /**
- * << detailed description >>
+ * The struct ObservableName is specialized for every observable type, giving access to a static string that corresponds
+ * to an observable's name.
+ *
+ * ObservableBase is the base class of all observables. They have a stride and a current time step. Also, they provide
+ * an abstract evaluate method, in which the subclasses should execute their calculations.
+ *
+ * Observable derives from ObservableBase and is templateized to a certain result type.
+ *
+ * CombinerObservable takes two Observables and combines their results into a third result to avoid duplication of
+ * work.
  *
  * @file Observable.h
- * @brief << brief description >>
+ * @brief Header file containing the definitions for ObservableName, ObservableBase, Observable and CombinerObservable.
  * @author clonker
  * @date 22.04.16
  */

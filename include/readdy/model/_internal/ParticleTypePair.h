@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * This header file contains the ParticleTypePair class. Its purpose is to provide a _sorted_ tuple of particle types,
+ * so that it does not matter if, e.g., in a map, the type pair <i,j> or type pair <j,i> is requested.
  *
  * @file ParticleTypePair.h
- * @brief << brief description >>
+ * @brief Header file containing the ParticleTypePair class, which is a sorted tuple of unsigned ints.
  * @author clonker
  * @date 09.06.16
  */
@@ -10,7 +11,6 @@
 #ifndef READDY_MAIN_PARTICLETYPEPAIR_H
 #define READDY_MAIN_PARTICLETYPEPAIR_H
 
-#include <boost/mpl/size_t.hpp>
 #include <boost/functional/hash.hpp>
 
 namespace readdy {

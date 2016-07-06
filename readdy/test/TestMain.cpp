@@ -16,7 +16,8 @@
 #include "gtest/gtest.h"
 
 int perform_tests(int argc, char **argv) {
-    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(readdy::utils::testing::getPluginsDirectory());
+    const auto dir = readdy::utils::testing::getPluginsDirectory();
+    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(dir);
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

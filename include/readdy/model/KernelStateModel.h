@@ -1,8 +1,9 @@
 /**
- * Header for the container of time dependent data in a kernel.
+ * The KernelStateModel keeps information about the current state of the system, like particle positions and forces.
+ * A listener can be attached, that fires when the time step changes.
  *
  * @file KernelStateModel.h
- * @brief Defines KernelStateModel.
+ * @brief Defines the KernelStateModel, which gives information about the system's current state.
  * @author clonker
  * @date 18/04/16
  */

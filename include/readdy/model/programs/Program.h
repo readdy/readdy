@@ -1,6 +1,12 @@
-//
-// Created by clonker on 08.04.16.
-//
+/**
+ * This file contains the declaration of the base class of all programs. They
+ * have a name and potentially a templatized ProgramName struct.
+ *
+ * @file Program.h
+ * @brief Declaration of the program base class.
+ * @author clonker
+ * @date 08.04.16
+ */
 
 #ifndef READDY_MAIN_PROGRAM_H
 #define READDY_MAIN_PROGRAM_H
