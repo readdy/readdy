@@ -22,7 +22,6 @@ namespace readdy {
                 }
 
                 void CPUDefaultReactionProgram::execute() {
-                    BOOST_LOG_TRIVIAL(debug) << "calling CPU default reaction program...";
                     super::execute();
                 }
 

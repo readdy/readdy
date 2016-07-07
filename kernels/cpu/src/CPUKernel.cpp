@@ -9,6 +9,7 @@
 
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
+#include <thread>
 
 namespace readdy {
     namespace kernel {
@@ -29,6 +30,10 @@ namespace readdy {
 
             CPUKernel::CPUKernel() : pimpl(std::make_unique<Impl>()){
                 pimpl->programFactory = std::make_unique<programs::CPUProgramFactory>(this);
+            }
+
+            unsigned int CPUKernel::getNCores() {
+                return std::thread::hardware_concurrency();
             }
 
 
