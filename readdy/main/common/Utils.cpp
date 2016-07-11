@@ -31,25 +31,27 @@ namespace readdy {
 
         namespace testing {
             std::string getPluginsDirectory() {
-                    // if we're in conda
-                    const char *env = std::getenv("CONDA_ENV_PATH");
-                    if(!env) {
-                        env = std::getenv("PREFIX");
-                        if(env) BOOST_LOG_TRIVIAL(trace) << "PREFIX=" << env;
-                    } else {
-                        BOOST_LOG_TRIVIAL(trace) << "CONDA_ENV_PATH=" << env;
+                // test for several environment variables
+                const std::string envs[] {"CONDA_ENV_PATH", "CONDA_PREFIX", "PREFIX"};
+                const char *env = nullptr;
+                for(auto&& key : envs) {
+                    env = std::getenv(key.c_str());
+                    if(env) {
+                        BOOST_LOG_TRIVIAL(trace) << "Using env-variable for plugin dir prefix " << key << "=" << env;
+                        break;
                     }
-                    std::string pluginDir = "lib/readdy_plugins";
-                    if (env) {
-                        auto _env = std::string(env);
-                        if (!boost::algorithm::ends_with(env, "/")) {
-                            _env = _env.append("/");
-                        }
-                        pluginDir = _env.append(pluginDir);
-                    } else {
-                        BOOST_LOG_TRIVIAL(trace) << "no environment variables found that indicate plugins dir.";
+                }
+                std::string pluginDir = "lib/readdy_plugins";
+                if (env) {
+                    auto _env = std::string(env);
+                    if (!boost::algorithm::ends_with(env, "/")) {
+                        _env = _env.append("/");
                     }
-                    return pluginDir;
+                    pluginDir = _env.append(pluginDir);
+                } else {
+                    BOOST_LOG_TRIVIAL(trace) << "no environment variables found that indicate plugins dir.";
+                }
+                return pluginDir;
             }
         }
     }

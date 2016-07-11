@@ -7,8 +7,8 @@
  * @date 19.04.16
  */
 
-#ifndef READDY_MAIN_SingleCPUEulerDBIntegrator_H
-#define READDY_MAIN_SingleCPUEulerDBIntegrator_H
+#ifndef READDY_MAIN_SingleCPUEulerBDIntegrator_H
+#define READDY_MAIN_SingleCPUEulerBDIntegrator_H
 
 #include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
@@ -18,10 +18,10 @@ namespace readdy {
         namespace singlecpu {
 
             namespace programs {
-                class SingleCPUEulerDBIntegrator : public readdy::model::programs::EulerBDIntegrator {
+                class SingleCPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
 
                 public:
-                    SingleCPUEulerDBIntegrator(SingleCPUKernel *kernel);
+                    SingleCPUEulerBDIntegrator(SingleCPUKernel *kernel);
 
                     virtual void execute() override;
 
@@ -34,4 +34,4 @@ namespace readdy {
 }
 
 
-#endif //READDY_MAIN_SingleCPUEulerDBIntegrator_H
+#endif //READDY_MAIN_SingleCPUEulerBDIntegrator_H
