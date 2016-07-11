@@ -10,6 +10,7 @@
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
 #include <thread>
+#include <readdy/kernel/cpu/model/CPUNeighborList.h>
 
 namespace readdy {
     namespace kernel {
@@ -30,6 +31,7 @@ namespace readdy {
 
             CPUKernel::CPUKernel() : pimpl(std::make_unique<Impl>()){
                 pimpl->programFactory = std::make_unique<programs::CPUProgramFactory>(this);
+                getKernelStateModelSingleCPU().setNeighborList(std::make_unique<model::NotThatNaiveCPUNeighborList>(&getKernelContext()));
             }
 
             unsigned int CPUKernel::getNCores() {

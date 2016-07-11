@@ -116,6 +116,10 @@ namespace readdy {
                 }
             }
 
+            void SingleCPUKernelStateModel::setNeighborList(std::unique_ptr<model::SingleCPUNeighborList> ptr) {
+                pimpl->neighborList.swap(ptr);
+            }
+
 
             SingleCPUKernelStateModel &SingleCPUKernelStateModel::operator=(SingleCPUKernelStateModel &&rhs) = default;
 

@@ -109,9 +109,11 @@ namespace readdy {
                 struct NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborList {
 
                     NotThatNaiveSingleCPUNeighborList(const readdy::model::KernelContext *const ctx);
-                    ~NotThatNaiveSingleCPUNeighborList();
+                    virtual ~NotThatNaiveSingleCPUNeighborList();
 
                     virtual void create(const SingleCPUParticleData &data) override;
+                    virtual void setupBoxes();
+                    virtual void fillBoxes(const SingleCPUParticleData &data);
 
                     virtual iter_type begin() override;
                     virtual const_iter_type begin() const override;
@@ -121,9 +123,25 @@ namespace readdy {
                     virtual const_iter_type cend() const override;
 
                 protected:
-                    struct Box;
-                    struct Impl;
-                    std::unique_ptr<Impl> pimpl;
+                    struct Box {
+                        std::vector<Box *> neighboringBoxes{};
+                        std::vector<long> particleIndices{};
+                        long i, j, k;
+                        long id = 0;
+
+                        Box(long i, long j, long k, long id);
+                        void addNeighbor(Box *box);
+                    };
+                    const readdy::model::KernelContext *ctx;
+                    std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher> pairs{};
+                    std::vector<Box> boxes{};
+                    std::array<int, 3> nBoxes{{0, 0, 0}};
+                    readdy::model::Vec3 boxSize{0, 0, 0};
+                    double maxCutoff = 0;
+
+                    long positive_modulo(long i, long n) const;
+                    Box *getBox(long i, long j, long k);
+
                 };
 
             }

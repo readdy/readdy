@@ -8,9 +8,6 @@
  */
 
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <iostream>
-#include <readdy/common/make_unique.h>
 
 namespace readdy {
     namespace kernel {
@@ -64,35 +61,16 @@ namespace readdy {
 
                 NaiveSingleCPUNeighborList::NaiveSingleCPUNeighborList(NaiveSingleCPUNeighborList &&rhs) = default;
 
-                struct NotThatNaiveSingleCPUNeighborList::Box {
-
-                    std::vector<Box *> neighboringBoxes{};
-                    std::vector<long> particleIndices{};
-                    long i, j, k;
-                    long id = 0;
-
-                    Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
-                    };
-
-                    void addNeighbor(Box *box) {
-                        if (box && box->id != id) neighboringBoxes.push_back(box);
-                    }
+                NotThatNaiveSingleCPUNeighborList::Box::Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
                 };
 
-                struct NotThatNaiveSingleCPUNeighborList::Impl {
-                    const readdy::model::KernelContext *ctx;
-                    std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher> pairs{};
-                    std::vector<Box> boxes{};
-                    std::array<int, 3> nBoxes{{0, 0, 0}};
-                    readdy::model::Vec3 boxSize{0, 0, 0};
-                    double maxCutoff = 0;
+                void NotThatNaiveSingleCPUNeighborList::Box::addNeighbor(Box *box) {
+                    if (box && box->id != id) neighboringBoxes.push_back(box);
+                }
 
-
-                    inline long positive_modulo(long i, long n) const {
-                        return (i % n + n) % n;
-                    }
-
-                    Box *getBox(long i, long j, long k) {
+                NotThatNaiveSingleCPUNeighborList::Box *NotThatNaiveSingleCPUNeighborList::getBox(
+                        long i, long j, long k
+                ) {
                         const auto &periodic = ctx->getPeriodicBoundary();
                         if (periodic[0]) i = positive_modulo(i, nBoxes[0]);
                         else if (i < 0 || i >= nBoxes[0]) return nullptr;
@@ -102,67 +80,97 @@ namespace readdy {
                         else if (k < 0 || k >= nBoxes[2]) return nullptr;
                         return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
                     }
-                };
 
                 NotThatNaiveSingleCPUNeighborList::NotThatNaiveSingleCPUNeighborList(
-                        const readdy::model::KernelContext *const ctx) : pimpl(std::make_unique<Impl>()) {
-                    pimpl->ctx = ctx;
+                        const readdy::model::KernelContext *const ctx) : ctx(ctx) {
                 }
 
                 void NotThatNaiveSingleCPUNeighborList::create(const SingleCPUParticleData &data) {
-                    const auto simBoxSize = pimpl->ctx->getBoxSize();
-                    if (pimpl->boxes.empty()) {
+                    setupBoxes();
+                    fillBoxes(data);
+                }
+
+                iter_type NotThatNaiveSingleCPUNeighborList::begin() {
+                    return pairs.begin();
+                }
+
+                const_iter_type NotThatNaiveSingleCPUNeighborList::begin() const {
+                    return cbegin();
+                }
+
+                const_iter_type NotThatNaiveSingleCPUNeighborList::cbegin() const {
+                    return pairs.cbegin();
+                }
+
+                iter_type NotThatNaiveSingleCPUNeighborList::end() {
+                    return pairs.end();
+                }
+
+                const_iter_type NotThatNaiveSingleCPUNeighborList::end() const {
+                    return cend();
+                }
+
+                const_iter_type NotThatNaiveSingleCPUNeighborList::cend() const {
+                    return pairs.cend();
+                }
+
+                void NotThatNaiveSingleCPUNeighborList::setupBoxes() {
+                    const auto simBoxSize = ctx->getBoxSize();
+                    if (boxes.empty()) {
                         double maxCutoff = 0;
-                        for (auto &&e : pimpl->ctx->getAllOrder2RegisteredPotentialTypes()) {
-                            for (auto &&p : pimpl->ctx->getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
+                        for (auto &&e : ctx->getAllOrder2RegisteredPotentialTypes()) {
+                            for (auto &&p : ctx->getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
                                 maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
                             }
                         }
-                        for (auto &&e : pimpl->ctx->getAllOrder2Reactions()) {
+                        for (auto &&e : ctx->getAllOrder2Reactions()) {
                             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
                         }
-                        pimpl->maxCutoff = maxCutoff;
+                        maxCutoff = maxCutoff;
                         if (maxCutoff > 0) {
 
                             for (unsigned int i = 0; i < 3; ++i) {
-                                pimpl->nBoxes[i] = (int) floor(simBoxSize[i] / maxCutoff);
-                                if (pimpl->nBoxes[i] == 0) pimpl->nBoxes[i] = 1;
-                                pimpl->boxSize[i] = simBoxSize[i] / pimpl->nBoxes[i];
+                                nBoxes[i] = (int) floor(simBoxSize[i] / maxCutoff);
+                                if (nBoxes[i] == 0) nBoxes[i] = 1;
+                                boxSize[i] = simBoxSize[i] / nBoxes[i];
                             }
-                            for (long i = 0; i < pimpl->nBoxes[0]; ++i) {
-                                for (long j = 0; j < pimpl->nBoxes[1]; ++j) {
-                                    for (long k = 0; k < pimpl->nBoxes[2]; ++k) {
-                                        pimpl->boxes.push_back({i, j, k, k + j * pimpl->nBoxes[2] +
-                                                                         i * pimpl->nBoxes[2] * pimpl->nBoxes[1]});
+                            for (long i = 0; i < nBoxes[0]; ++i) {
+                                for (long j = 0; j < nBoxes[1]; ++j) {
+                                    for (long k = 0; k < nBoxes[2]; ++k) {
+                                        boxes.push_back({i, j, k, k + j * nBoxes[2] +
+                                                                         i * nBoxes[2] * nBoxes[1]});
                                     }
                                 }
                             }
-                            for (long i = 0; i < pimpl->nBoxes[0]; ++i) {
-                                for (long j = 0; j < pimpl->nBoxes[1]; ++j) {
-                                    for (long k = 0; k < pimpl->nBoxes[2]; ++k) {
-                                        auto me = pimpl->getBox(i, j, k);
-                                        me->addNeighbor(pimpl->getBox(i + 0, j + 0, k + 1));
-                                        me->addNeighbor(pimpl->getBox(i + 0, j + 1, k - 1));
-                                        me->addNeighbor(pimpl->getBox(i + 0, j + 1, k + 0));
-                                        me->addNeighbor(pimpl->getBox(i + 0, j + 1, k + 1));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j - 1, k - 1));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j - 1, k + 0));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j - 1, k + 1));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j + 0, k - 1));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j + 0, k + 0));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j + 0, k + 1));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j + 1, k - 1));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j + 1, k + 0));
-                                        me->addNeighbor(pimpl->getBox(i + 1, j + 1, k + 1));
+                            for (long i = 0; i < nBoxes[0]; ++i) {
+                                for (long j = 0; j < nBoxes[1]; ++j) {
+                                    for (long k = 0; k < nBoxes[2]; ++k) {
+                                        auto me = getBox(i, j, k);
+                                        me->addNeighbor(getBox(i + 0, j + 0, k + 1));
+                                        me->addNeighbor(getBox(i + 0, j + 1, k - 1));
+                                        me->addNeighbor(getBox(i + 0, j + 1, k + 0));
+                                        me->addNeighbor(getBox(i + 0, j + 1, k + 1));
+                                        me->addNeighbor(getBox(i + 1, j - 1, k - 1));
+                                        me->addNeighbor(getBox(i + 1, j - 1, k + 0));
+                                        me->addNeighbor(getBox(i + 1, j - 1, k + 1));
+                                        me->addNeighbor(getBox(i + 1, j + 0, k - 1));
+                                        me->addNeighbor(getBox(i + 1, j + 0, k + 0));
+                                        me->addNeighbor(getBox(i + 1, j + 0, k + 1));
+                                        me->addNeighbor(getBox(i + 1, j + 1, k - 1));
+                                        me->addNeighbor(getBox(i + 1, j + 1, k + 0));
+                                        me->addNeighbor(getBox(i + 1, j + 1, k + 1));
                                     }
                                 }
                             }
                         }
                     }
+                }
 
-                    if (pimpl->maxCutoff > 0) {
+                void NotThatNaiveSingleCPUNeighborList::fillBoxes(const SingleCPUParticleData &data) {
+                    const auto simBoxSize = ctx->getBoxSize();
+                    if (maxCutoff > 0) {
 
-                        for (auto &&box : pimpl->boxes) {
+                        for (auto &&box : boxes) {
                             box.particleIndices.clear();
                         }
 
@@ -172,58 +180,38 @@ namespace readdy {
                                                                .5 * simBoxSize[2]);
                         while (it_pos != data.cend_positions()) {
                             const auto pos_shifted = *it_pos + shift;
-                            const long i = (const long) floor(pos_shifted[0] / pimpl->boxSize[0]);
-                            const long j = (const long) floor(pos_shifted[1] / pimpl->boxSize[1]);
-                            const long k = (const long) floor(pos_shifted[2] / pimpl->boxSize[2]);
-                            auto box = pimpl->getBox(i, j, k);
+                            const long i = (const long) floor(pos_shifted[0] / boxSize[0]);
+                            const long j = (const long) floor(pos_shifted[1] / boxSize[1]);
+                            const long k = (const long) floor(pos_shifted[2] / boxSize[2]);
+                            auto box = getBox(i, j, k);
                             if (box) {
                                 box->particleIndices.push_back(idx);
                             }
                             ++idx;
                             ++it_pos;
                         }
-
-                        for (auto &&box : pimpl->boxes) {
+ 
+                        for (auto &&box : boxes) {
                             for (long i = 0; i < box.particleIndices.size(); ++i) {
                                 const auto pI = box.particleIndices[i];
                                 for (long j = i + 1; j < box.particleIndices.size(); ++j) {
-                                    pimpl->pairs.emplace(pI, box.particleIndices[j]);
+                                    pairs.emplace(pI, box.particleIndices[j]);
                                 }
 
                                 for (auto &&neighboringBox : box.neighboringBoxes) {
                                     for (const auto &pJ : neighboringBox->particleIndices) {
-                                        pimpl->pairs.emplace(pI, pJ);
+                                        pairs.emplace(pI, pJ);
                                     }
                                 }
                             }
                         }
                     }
-
                 }
 
-                iter_type NotThatNaiveSingleCPUNeighborList::begin() {
-                    return pimpl->pairs.begin();
+                long NotThatNaiveSingleCPUNeighborList::positive_modulo(long i, long n) const {
+                    return (i % n + n) % n;
                 }
 
-                const_iter_type NotThatNaiveSingleCPUNeighborList::begin() const {
-                    return cbegin();
-                }
-
-                const_iter_type NotThatNaiveSingleCPUNeighborList::cbegin() const {
-                    return pimpl->pairs.cbegin();
-                }
-
-                iter_type NotThatNaiveSingleCPUNeighborList::end() {
-                    return pimpl->pairs.end();
-                }
-
-                const_iter_type NotThatNaiveSingleCPUNeighborList::end() const {
-                    return cend();
-                }
-
-                const_iter_type NotThatNaiveSingleCPUNeighborList::cend() const {
-                    return pimpl->pairs.cend();
-                }
 
                 NotThatNaiveSingleCPUNeighborList::~NotThatNaiveSingleCPUNeighborList() = default;
 
