@@ -6,6 +6,8 @@
 #include <readdy/common/Utils.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
+#include <chrono>
+#include <readdy/common/make_unique.h>
 
 namespace readdy {
     namespace utils {
@@ -56,3 +58,32 @@ namespace readdy {
         }
     }
 }
+
+struct readdy::utils::testing::timer::Impl {
+    std::chrono::high_resolution_clock::time_point begin = std::chrono::high_resolution_clock::now();
+    std::string label;
+    bool print;
+};
+
+readdy::utils::testing::timer::timer(std::string label, bool print) : pimpl(std::make_unique<Impl>()) {
+    pimpl->label = label;
+    pimpl->print = print;
+}
+
+readdy::utils::testing::timer::~timer() {
+    if(pimpl->print) {
+        BOOST_LOG_TRIVIAL(debug) << "Elapsed (" << pimpl->label << "): " << getSeconds() << " seconds";
+    }
+}
+
+double readdy::utils::testing::timer::getSeconds() {
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+    long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - pimpl->begin).count();
+    return (double) 1e-6 * (double) elapsed;
+}
+
+
+
+
+
+

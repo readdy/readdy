@@ -15,8 +15,10 @@
 
 namespace {
 
-    void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_type steps = 100) {
+    void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_type steps = 20) {
         std::srand((unsigned int) std::time(0));
+
+        using timer = readdy::utils::testing::timer;
 
         auto stdRand = [] (double lower = 0.0, double upper = 1.0) -> double {
             return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
@@ -56,8 +58,9 @@ namespace {
         kernel.getKernelContext().registerFissionReaction("C->A+B", "C", "A", "B", 2.0, .5);
 
         auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
-        auto &&updateModelProgram = kernel.createProgram<readdy::model::programs::UpdateStateModelProgram>();
-        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::DefaultReactionProgram>();
+        auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
+        auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
+        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
         kernel.getKernelContext().configure();
 
         auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(10);
@@ -66,15 +69,42 @@ namespace {
         });
         auto connection = kernel.connectObservable(obs.get());
 
-        for(readdy::model::time_step_type t = 0; t < steps; ++t) {
-            updateModelProgram->configure(t, true);
-            updateModelProgram->execute();
-            integrator->execute();
+        double t_forces=0, t_integrator=0, t_nl=0, t_reactions = 0;
 
-            updateModelProgram->configure(t, false);
-            updateModelProgram->execute();
-            reactionsProgram->execute();
+        neighborList->execute();
+        for(readdy::model::time_step_type t = 0; t < steps; ++t) {
+            BOOST_LOG_TRIVIAL(debug) << "----------";
+            BOOST_LOG_TRIVIAL(debug) << "t = " << t;
+            {
+                timer c("forces");
+                forces->execute();
+                t_forces+=c.getSeconds();
+            }
+            {
+                timer c("integrator");
+                integrator->execute();
+                t_integrator += c.getSeconds();
+            }
+            {
+                timer c("neighbor list");
+                neighborList->execute();
+                t_nl += c.getSeconds();
+            }
+
+            {
+                timer c("reactions");
+                reactionsProgram->execute();
+                t_reactions += c.getSeconds();
+            }
+            kernel.evaluateObservables(t);
         }
+
+        BOOST_LOG_TRIVIAL(debug) << "--------------------------------------------------------------";
+        BOOST_LOG_TRIVIAL(debug) << "Average time for calculating forces: " << t_forces / steps;
+        BOOST_LOG_TRIVIAL(debug) << "Average time for the integrator:     " << t_integrator / steps;
+        BOOST_LOG_TRIVIAL(debug) << "Average time for the neighbor list:  " << t_nl / steps;
+        BOOST_LOG_TRIVIAL(debug) << "Average time for handling reactions: " << t_reactions / steps;
+        BOOST_LOG_TRIVIAL(debug) << "--------------------------------------------------------------";
     }
 
     TEST(TestPerformance, SingleCPU) {
