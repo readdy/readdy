@@ -11,11 +11,13 @@ namespace readdy {
     namespace model {
         namespace programs {
             namespace _internal {
-                const std::string ProgramName<TestProgram>::value = "TestProgram";
-                const std::string ProgramName<AddParticleProgram>::value = "AddParticle";
-                const std::string ProgramName<DiffuseProgram>::value = "Diffuse";
-                const std::string ProgramName<UpdateStateModelProgram>::value = "UpdateStateModel";
-                const std::string ProgramName<DefaultReactionProgram>::value = "PerformReactions";
+                const std::string ProgramName<Test>::value = "Test";
+                const std::string ProgramName<AddParticle>::value = "AddParticle";
+                const std::string ProgramName<EulerBDIntegrator>::value = "Eulerian Brownian dynamics integrator";
+                const std::string ProgramName<CalculateForces>::value = "Calculate forces";
+                const std::string ProgramName<UpdateNeighborList>::value = "Update neighbor list";
+
+                const std::string ProgramName<reactions::UncontrolledApproximation>::value = "Uncontrolled approximation of reactions";
             }
         }
     }

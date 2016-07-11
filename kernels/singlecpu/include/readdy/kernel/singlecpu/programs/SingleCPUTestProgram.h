@@ -11,7 +11,7 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace programs {
-                class SingleCPUTestProgram : public readdy::model::programs::TestProgram {
+                class SingleCPUTestProgram : public readdy::model::programs::Test {
                 public:
                     SingleCPUTestProgram();
                     ~SingleCPUTestProgram();

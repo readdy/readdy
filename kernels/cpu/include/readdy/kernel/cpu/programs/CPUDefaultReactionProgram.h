@@ -11,13 +11,13 @@
 #define READDY_MAIN_CPUDEFAULTREACTIONPROGRAM_H
 
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUDefaultReactionProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
-                class CPUDefaultReactionProgram : public singlecpu::programs::SingleCPUDefaultReactionProgram {
+                class CPUDefaultReactionProgram : public singlecpu::programs::reactions::UncontrolledApproximation {
                 public:
                     CPUDefaultReactionProgram(const CPUKernel *const kernel);
 

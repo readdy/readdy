@@ -132,9 +132,10 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
     kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
 
-    auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
-    auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
+    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
+    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
+    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
     auto connection = kernel->connectObservable(pp_obs.get());
@@ -144,15 +145,13 @@ TEST(SingleCPUTestReactions, TestDecay) {
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
 
+    neighborList->execute();
     for (size_t t = 0; t < 20; t++) {
 
-        diffuseProgram->execute();
-        updateModelProgram->configure(t, true);
-        updateModelProgram->execute();
-
+        forces->execute();
+        integrator->execute();
+        neighborList->execute();
         reactionsProgram->execute();
-        updateModelProgram->configure(t, false);
-        updateModelProgram->execute();
 
         pp_obs->evaluate();
 
@@ -212,9 +211,10 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->getKernelContext().registerConversionReaction("E->A", "E", "A", 1);
     kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
 
-    auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
-    auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
+    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
+    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
+    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
     const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
     const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
@@ -277,12 +277,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
         }
 
         // propagate
-        diffuseProgram->execute();
-        updateModelProgram->configure(t, true);
-        updateModelProgram->execute();
+        neighborList->execute();
+        forces->execute();
+        integrator->execute();
 
+        neighborList->execute();
         reactionsProgram->execute();
-        updateModelProgram->configure(t, false);
-        updateModelProgram->execute();
     }
 }

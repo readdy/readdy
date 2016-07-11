@@ -46,6 +46,7 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
 }
 
 void Simulation::run(const readdy::model::time_step_type steps, const double timeStep) {
+    namespace rmp = readdy::model::programs; 
     ensureKernelSelected();
     {
         BOOST_LOG_TRIVIAL(debug) << "available programs: ";
@@ -55,18 +56,20 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
     }
     pimpl->kernel->getKernelContext().setTimeStep(timeStep);
     {
-        auto &&diffuseProgram = pimpl->kernel->createProgram<readdy::model::programs::DiffuseProgram>();
-        auto &&updateModelProgram = pimpl->kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
-        auto &&reactionsProgram = pimpl->kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+        auto &&integrator = pimpl->kernel->createProgram<rmp::EulerBDIntegrator>();
+        auto &&forces = pimpl->kernel->createProgram<rmp::CalculateForces>();
+        auto &&neighborList = pimpl->kernel->createProgram<rmp::UpdateNeighborList>();
+        auto &&reactionsProgram = pimpl->kernel->createProgram<rmp::reactions::UncontrolledApproximation>();
         pimpl->kernel->getKernelContext().configure();
+        neighborList->execute();
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
-            updateModelProgram->configure(t, true);
-            updateModelProgram->execute();
-            diffuseProgram->execute();
+            forces->execute();
+            integrator->execute();
+            neighborList->execute();
 
-            updateModelProgram->configure(t, false);
-            updateModelProgram->execute();
+            forces->execute();
             reactionsProgram->execute();
+            pimpl->kernel->evaluateObservables(t);
         }
     }
 }

@@ -60,7 +60,7 @@ namespace {
 
     TEST(KernelProvider, TestTestProgram) {
         auto single_cpu_kernel = plug::KernelProvider::getInstance().create("SingleCPU");
-        auto test_program = single_cpu_kernel.get()->createProgram("TestProgram");
+        auto test_program = single_cpu_kernel.get()->createProgram("Test");
         test_program.get()->execute();
     }
 }

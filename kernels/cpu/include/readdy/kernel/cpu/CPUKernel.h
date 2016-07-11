@@ -25,6 +25,8 @@ namespace readdy {
 
                 CPUKernel();
 
+                unsigned int getNCores();
+
                 // factory method
                 static std::unique_ptr<CPUKernel> create();
 

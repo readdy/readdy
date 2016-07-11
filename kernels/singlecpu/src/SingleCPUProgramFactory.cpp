@@ -6,9 +6,10 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUProgramFactory.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUUpdateStateModelProgram.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUDefaultReactionProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUEulerBDIntegrator.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 
 namespace readdy {
     namespace kernel {
@@ -16,18 +17,21 @@ namespace readdy {
             namespace programs {
                 SingleCPUProgramFactory::SingleCPUProgramFactory(SingleCPUKernel *kernel) : kernel(kernel) {
                     namespace core_p = readdy::model::programs;
-                    factory[core_p::getProgramName<core_p::TestProgram>()] = [] { return new SingleCPUTestProgram(); };
-                    factory[core_p::getProgramName<core_p::AddParticleProgram>()] = [kernel] {
+                    factory[core_p::getProgramName<core_p::Test>()] = [] { return new SingleCPUTestProgram(); };
+                    factory[core_p::getProgramName<core_p::AddParticle>()] = [kernel] {
                         return new SingleCPUAddParticleProgram(kernel);
                     };
-                    factory[core_p::getProgramName<core_p::DiffuseProgram>()] = [kernel] {
-                        return new SingleCPUDiffuseProgram(kernel);
+                    factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
+                        return new SingleCPUEulerBDIntegrator(kernel);
                     };
-                    factory[core_p::getProgramName<core_p::UpdateStateModelProgram>()] = [kernel] {
-                        return new SingleCPUUpdateStateModelProgram(kernel);
+                    factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
+                        return new SingleCPUUpdateNeighborList(kernel);
                     };
-                    factory[core_p::getProgramName<core_p::DefaultReactionProgram>()] = [kernel] {
-                        return new SingleCPUDefaultReactionProgram(kernel);
+                    factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
+                        return new SingleCPUCalculateForces(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
+                        return new reactions::UncontrolledApproximation(kernel);
                     };
                 }
             }

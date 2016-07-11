@@ -58,15 +58,16 @@ namespace {
             ASSERT_TRUE(allWithinBounds);
         });
         auto connection = kernel->connectObservable(ppObs.get());
-        kernel->evaluateObservablesAutomatically(true);
 
         unsigned int nSteps = 1000;
-        auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
-        auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+        auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
+        auto &&nl = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
+        auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
+        nl->execute();
         for (readdy::model::time_step_type &&t = 0; t < nSteps; ++t) {
-            diffuseProgram->execute();
-            updateModelProgram->configure(t, true);
-            updateModelProgram->execute();
+            forces->execute();
+            integrator->execute();
+            nl->execute();
         }
     }
 }

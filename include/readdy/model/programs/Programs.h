@@ -2,9 +2,10 @@
  * This files contains a selection of possible programs that can be executed on a kernel:
  *   - TestProgram: Program that has no other operation than printing something to the log.
  *   - AddParticleProgram: A program with which particles can be added.
- *   - DiffuseProgram: A program that propagates the particles through the system. The update model program should be
+ *   - EulerBDIntegrator: A program that propagates the particles through the system. The update model program should be
  *                     called beforehand, such that forces are available.
- *   - UpdateStateModelProgram: A program that creates neighbor lists and potentially calculates forces.
+ *   - UpdateNeighborList: A program that creates neighbor lists.
+ *   - CalculateForces: A program that calculates forces for later use in, e.g., integration schemes.
  *   - DefaultReactionProgram: A program that executes the default reaction scheme.
  *
  * Further, specializations of ProgramName<T> are declared.
@@ -26,57 +27,61 @@
 namespace readdy {
     namespace model {
         namespace programs {
-            class TestProgram : public Program {
+            class Test : public Program {
 
             public:
-                TestProgram() : Program(getProgramName<TestProgram>()) { }
+                Test() : Program(getProgramName<Test>()) { }
             };
 
-            class AddParticleProgram : public Program {
+            class AddParticle : public Program {
 
             public:
-                AddParticleProgram() : Program(getProgramName<AddParticleProgram>()) { }
+                AddParticle() : Program(getProgramName<AddParticle>()) { }
             };
 
-            class DiffuseProgram : public Program {
+            class EulerBDIntegrator : public Program {
             public:
-                DiffuseProgram() : Program(getProgramName<DiffuseProgram>()) { }
+                EulerBDIntegrator() : Program(getProgramName<EulerBDIntegrator>()) { }
             };
 
-            class UpdateStateModelProgram : public Program {
+            class CalculateForces : public Program {
             public:
-                UpdateStateModelProgram() : Program(getProgramName<UpdateStateModelProgram>()) { }
-                void configure(const readdy::model::time_step_type& t, bool updateForces) {
-                    curr_t = t;
-                    UpdateStateModelProgram::updateForces = updateForces;
-                }
-            protected:
-                readdy::model::time_step_type curr_t;
-                bool updateForces;
+                CalculateForces() : Program(getProgramName<CalculateForces>()) {}
             };
 
-            class DefaultReactionProgram : public Program {
-
+            class UpdateNeighborList : public Program {
             public:
-                using reaction_11 = std::function<model::Particle(const model::Particle&)>;
-                using reaction_12 = std::function<void(const model::Particle&, model::Particle&, model::Particle&)>;
-                using reaction_21 = std::function<model::Particle(const model::Particle&, const model::Particle&)>;
-                using reaction_22 = std::function<void(const model::Particle&, const model::Particle&, model::Particle&, model::Particle&)>;
-
-                DefaultReactionProgram() : Program(getProgramName<DefaultReactionProgram>()) { }
-                virtual void configure() = 0;
-                virtual void registerReactionScheme_11(const std::string& reactionName, reaction_11 fun) = 0;
-                virtual void registerReactionScheme_12(const std::string& reactionName, reaction_12 fun) = 0;
-                virtual void registerReactionScheme_21(const std::string& reactionName, reaction_21 fun) = 0;
-                virtual void registerReactionScheme_22(const std::string& reactionName, reaction_22 fun) = 0;
+                UpdateNeighborList() : Program(getProgramName<UpdateNeighborList>()) {}
             };
+
+            namespace reactions {
+                class UncontrolledApproximation : public Program {
+
+                public:
+                    using reaction_11 = std::function<model::Particle(const model::Particle&)>;
+                    using reaction_12 = std::function<void(const model::Particle&, model::Particle&, model::Particle&)>;
+                    using reaction_21 = std::function<model::Particle(const model::Particle&, const model::Particle&)>;
+                    using reaction_22 = std::function<void(const model::Particle&, const model::Particle&, model::Particle&, model::Particle&)>;
+
+                    UncontrolledApproximation() : Program(getProgramName<UncontrolledApproximation>()) { }
+                    virtual void registerReactionScheme_11(const std::string& reactionName, reaction_11 fun) = 0;
+                    virtual void registerReactionScheme_12(const std::string& reactionName, reaction_12 fun) = 0;
+                    virtual void registerReactionScheme_21(const std::string& reactionName, reaction_21 fun) = 0;
+                    virtual void registerReactionScheme_22(const std::string& reactionName, reaction_22 fun) = 0;
+                };
+
+
+
+            }
 
             namespace _internal {
-                template<> struct ProgramName<TestProgram> { static const std::string value; };
-                template<> struct ProgramName<AddParticleProgram> { static const std::string value; };
-                template<> struct ProgramName<DiffuseProgram> { static const std::string value; };
-                template<> struct ProgramName<UpdateStateModelProgram> { static const std::string value; };
-                template<> struct ProgramName<DefaultReactionProgram> { static const std::string value; };
+                template<> struct ProgramName<Test> { static const std::string value; };
+                template<> struct ProgramName<AddParticle> { static const std::string value; };
+                template<> struct ProgramName<EulerBDIntegrator> { static const std::string value; };
+                template<> struct ProgramName<CalculateForces> { static const std::string value; };
+                template<> struct ProgramName<UpdateNeighborList> { static const std::string value; };
+
+                template<> struct ProgramName<reactions::UncontrolledApproximation> { static const std::string value; };
             }
         }
     }

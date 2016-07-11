@@ -6,4 +6,5 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUKernel.cpp")
 
 # --- programs ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/CPUProgramFactory.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/CPUEulerBDIntegrator.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/CPUDefaultReactionProgram.cpp")

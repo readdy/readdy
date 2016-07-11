@@ -120,12 +120,12 @@ namespace readdy {
             /**
              * Evaluates all unblocked observables.
              */
-            void evaluateObservables();
+            void evaluateObservables(readdy::model::time_step_type t);
 
             /**
              * Evaluates all observables, regardless if they are blocked or not.
              */
-            void evaluateAllObservables();
+            void evaluateAllObservables(readdy::model::time_step_type t);
 
             /**
              * Deconnects the observable of the signal, deletes the

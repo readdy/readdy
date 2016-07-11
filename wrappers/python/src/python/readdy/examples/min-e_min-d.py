@@ -142,7 +142,7 @@ class MinEMinDSimulation(object):
         kernel_provider = KernelProvider.get()
         kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
         simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
+        simulation.set_kernel("CPU")
 
         ###################################
         #

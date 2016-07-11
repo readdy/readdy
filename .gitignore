@@ -37,6 +37,10 @@ bin/*
 # python build temporaries
 *.egg-info
 
+# python schmutz
+*__pycache__
+*.pyc
+
 # osx resources
 .DS_Store
 
