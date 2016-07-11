@@ -8,7 +8,7 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUEulerDBIntegrator.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUDefaultReactionProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 
 namespace readdy {
@@ -30,8 +30,8 @@ namespace readdy {
                     factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
                         return new SingleCPUCalculateForces(kernel);
                     };
-                    factory[core_p::getProgramName<core_p::DefaultReactionProgram>()] = [kernel] {
-                        return new SingleCPUDefaultReactionProgram(kernel);
+                    factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
+                        return new reactions::UncontrolledApproximation(kernel);
                     };
                 }
             }

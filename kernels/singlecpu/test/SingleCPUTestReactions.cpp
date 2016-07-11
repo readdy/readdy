@@ -135,7 +135,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
     auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
     auto connection = kernel->connectObservable(pp_obs.get());
@@ -214,7 +214,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
     auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
+    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
     const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
     const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");

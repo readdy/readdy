@@ -9,14 +9,15 @@
 
 #include <readdy/kernel/cpu/programs/CPUDefaultReactionProgram.h>
 
-using super = readdy::kernel::singlecpu::programs::SingleCPUDefaultReactionProgram;
+using super = readdy::kernel::singlecpu::programs::reactions::UncontrolledApproximation;
 using particle_t = readdy::model::Particle;
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
-                CPUDefaultReactionProgram::CPUDefaultReactionProgram(const CPUKernel *const kernel) : super::SingleCPUDefaultReactionProgram(kernel), kernel(kernel)
+                CPUDefaultReactionProgram::CPUDefaultReactionProgram(const CPUKernel *const kernel)
+                        : super::UncontrolledApproximation(kernel), kernel(kernel)
                 {
 
                 }

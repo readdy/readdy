@@ -54,20 +54,25 @@ namespace readdy {
                 UpdateNeighborList() : Program(getProgramName<UpdateNeighborList>()) {}
             };
 
-            class DefaultReactionProgram : public Program {
+            namespace reactions {
+                class UncontrolledApproximation : public Program {
 
-            public:
-                using reaction_11 = std::function<model::Particle(const model::Particle&)>;
-                using reaction_12 = std::function<void(const model::Particle&, model::Particle&, model::Particle&)>;
-                using reaction_21 = std::function<model::Particle(const model::Particle&, const model::Particle&)>;
-                using reaction_22 = std::function<void(const model::Particle&, const model::Particle&, model::Particle&, model::Particle&)>;
+                public:
+                    using reaction_11 = std::function<model::Particle(const model::Particle&)>;
+                    using reaction_12 = std::function<void(const model::Particle&, model::Particle&, model::Particle&)>;
+                    using reaction_21 = std::function<model::Particle(const model::Particle&, const model::Particle&)>;
+                    using reaction_22 = std::function<void(const model::Particle&, const model::Particle&, model::Particle&, model::Particle&)>;
 
-                DefaultReactionProgram() : Program(getProgramName<DefaultReactionProgram>()) { }
-                virtual void registerReactionScheme_11(const std::string& reactionName, reaction_11 fun) = 0;
-                virtual void registerReactionScheme_12(const std::string& reactionName, reaction_12 fun) = 0;
-                virtual void registerReactionScheme_21(const std::string& reactionName, reaction_21 fun) = 0;
-                virtual void registerReactionScheme_22(const std::string& reactionName, reaction_22 fun) = 0;
-            };
+                    UncontrolledApproximation() : Program(getProgramName<UncontrolledApproximation>()) { }
+                    virtual void registerReactionScheme_11(const std::string& reactionName, reaction_11 fun) = 0;
+                    virtual void registerReactionScheme_12(const std::string& reactionName, reaction_12 fun) = 0;
+                    virtual void registerReactionScheme_21(const std::string& reactionName, reaction_21 fun) = 0;
+                    virtual void registerReactionScheme_22(const std::string& reactionName, reaction_22 fun) = 0;
+                };
+
+
+
+            }
 
             namespace _internal {
                 template<> struct ProgramName<Test> { static const std::string value; };
@@ -75,7 +80,8 @@ namespace readdy {
                 template<> struct ProgramName<EulerBDIntegrator> { static const std::string value; };
                 template<> struct ProgramName<CalculateForces> { static const std::string value; };
                 template<> struct ProgramName<UpdateNeighborList> { static const std::string value; };
-                template<> struct ProgramName<DefaultReactionProgram> { static const std::string value; };
+
+                template<> struct ProgramName<reactions::UncontrolledApproximation> { static const std::string value; };
             }
         }
     }

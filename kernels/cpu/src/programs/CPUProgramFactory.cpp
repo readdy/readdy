@@ -20,7 +20,7 @@ namespace readdy {
         namespace cpu {
             namespace programs {
                 CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) : super::SingleCPUProgramFactory(kernel) {
-                    factory[core_p::getProgramName<core_p::DefaultReactionProgram>()] = [kernel] {
+                    factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
                         return new CPUDefaultReactionProgram(kernel);
                     };
                     factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {

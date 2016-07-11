@@ -12,7 +12,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUAddParticleProgr
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUEulerDBIntegrator.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUUpdateNeighborList.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUCalculateForces.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUDefaultReactionProgram.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUReactionImpls.cpp")
 
 # --- potentials ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/SingleCPUPotentialFactory.cpp")

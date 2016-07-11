@@ -59,7 +59,7 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
         auto &&integrator = pimpl->kernel->createProgram<rmp::EulerBDIntegrator>();
         auto &&forces = pimpl->kernel->createProgram<rmp::CalculateForces>();
         auto &&neighborList = pimpl->kernel->createProgram<rmp::UpdateNeighborList>();
-        auto &&reactionsProgram = pimpl->kernel->createProgram<rmp::DefaultReactionProgram>();
+        auto &&reactionsProgram = pimpl->kernel->createProgram<rmp::reactions::UncontrolledApproximation>();
         pimpl->kernel->getKernelContext().configure();
         neighborList->execute();
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
