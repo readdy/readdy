@@ -24,9 +24,10 @@ namespace readdy {
 
             class SingleCPUKernelStateModel : public readdy::model::KernelStateModel {
             public:
-                virtual const readdy::model::time_step_type getCurrentTimeStep() const override;
 
-                virtual void updateModel(readdy::model::time_step_type t, bool forces) override;
+
+                virtual void updateNeighborList() override;
+                virtual void calculateForces() override;
 
                 virtual void addParticle(const readdy::model::Particle &p) override;
                 virtual void addParticles(const std::vector<readdy::model::Particle> &p) override;

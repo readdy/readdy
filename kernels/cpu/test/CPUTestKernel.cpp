@@ -25,7 +25,8 @@ namespace {
         kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .5, .00);
 
         auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-        auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+        auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
+        auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
         auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
 
         auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
@@ -37,17 +38,14 @@ namespace {
         BOOST_LOG_TRIVIAL(debug) << "n_particles="<<particlesToBeginWith.size();
         kernel->getKernelStateModel().addParticles(particlesToBeginWith);
 
-        std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
-
+        neighborList->execute();
         for(size_t t = 0; t < 1000; t++) {
 
+            forces->execute();
             integrator->execute();
-            updateModelProgram->configure(t, false);
-            updateModelProgram->execute();
+            neighborList->execute();
 
             reactionsProgram->execute();
-            updateModelProgram->configure(t, false);
-            updateModelProgram->execute();
 
             pp_obs->evaluate();
             BOOST_LOG_TRIVIAL(debug) << "\tcurrently n particles: " << pp_obs->getResult().size();

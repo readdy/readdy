@@ -4,7 +4,8 @@
  *   - AddParticleProgram: A program with which particles can be added.
  *   - EulerBDIntegrator: A program that propagates the particles through the system. The update model program should be
  *                     called beforehand, such that forces are available.
- *   - UpdateStateModelProgram: A program that creates neighbor lists and potentially calculates forces.
+ *   - UpdateNeighborList: A program that creates neighbor lists.
+ *   - CalculateForces: A program that calculates forces for later use in, e.g., integration schemes.
  *   - DefaultReactionProgram: A program that executes the default reaction scheme.
  *
  * Further, specializations of ProgramName<T> are declared.
@@ -43,16 +44,14 @@ namespace readdy {
                 EulerBDIntegrator() : Program(getProgramName<EulerBDIntegrator>()) { }
             };
 
-            class UpdateStateModelProgram : public Program {
+            class CalculateForces : public Program {
             public:
-                UpdateStateModelProgram() : Program(getProgramName<UpdateStateModelProgram>()) { }
-                void configure(const readdy::model::time_step_type& t, bool updateForces) {
-                    curr_t = t;
-                    UpdateStateModelProgram::updateForces = updateForces;
-                }
-            protected:
-                readdy::model::time_step_type curr_t;
-                bool updateForces;
+                CalculateForces() : Program(getProgramName<CalculateForces>()) {}
+            };
+
+            class UpdateNeighborList : public Program {
+            public:
+                UpdateNeighborList() : Program(getProgramName<UpdateNeighborList>()) {}
             };
 
             class DefaultReactionProgram : public Program {
@@ -74,7 +73,8 @@ namespace readdy {
                 template<> struct ProgramName<Test> { static const std::string value; };
                 template<> struct ProgramName<AddParticle> { static const std::string value; };
                 template<> struct ProgramName<EulerBDIntegrator> { static const std::string value; };
-                template<> struct ProgramName<UpdateStateModelProgram> { static const std::string value; };
+                template<> struct ProgramName<CalculateForces> { static const std::string value; };
+                template<> struct ProgramName<UpdateNeighborList> { static const std::string value; };
                 template<> struct ProgramName<DefaultReactionProgram> { static const std::string value; };
             }
         }

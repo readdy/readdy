@@ -101,9 +101,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = @READDY_GLOBAL_DIR@/include \
-                         @READDY_GLOBAL_DIR@/readdy \
-                         @READDY_GLOBAL_DIR@/kernels
+INPUT                  = @READDY_GLOBAL_DIR@/include
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          =
 RECURSIVE              = YES

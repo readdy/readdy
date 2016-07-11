@@ -133,7 +133,8 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
 
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
+    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
@@ -144,15 +145,13 @@ TEST(SingleCPUTestReactions, TestDecay) {
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
 
+    neighborList->execute();
     for (size_t t = 0; t < 20; t++) {
 
+        forces->execute();
         integrator->execute();
-        updateModelProgram->configure(t, true);
-        updateModelProgram->execute();
-
+        neighborList->execute();
         reactionsProgram->execute();
-        updateModelProgram->configure(t, false);
-        updateModelProgram->execute();
 
         pp_obs->evaluate();
 
@@ -213,7 +212,8 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
 
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
+    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
+    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
 
     const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
@@ -277,12 +277,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
         }
 
         // propagate
+        neighborList->execute();
+        forces->execute();
         integrator->execute();
-        updateModelProgram->configure(t, true);
-        updateModelProgram->execute();
 
+        neighborList->execute();
         reactionsProgram->execute();
-        updateModelProgram->configure(t, false);
-        updateModelProgram->execute();
     }
 }

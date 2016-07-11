@@ -7,8 +7,9 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUTestProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUEulerDBIntegrator.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUUpdateStateModelProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUDefaultReactionProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 
 namespace readdy {
     namespace kernel {
@@ -23,8 +24,11 @@ namespace readdy {
                     factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
                         return new SingleCPUEulerDBIntegrator(kernel);
                     };
-                    factory[core_p::getProgramName<core_p::UpdateStateModelProgram>()] = [kernel] {
-                        return new SingleCPUUpdateStateModelProgram(kernel);
+                    factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
+                        return new SingleCPUUpdateNeighborList(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
+                        return new SingleCPUCalculateForces(kernel);
                     };
                     factory[core_p::getProgramName<core_p::DefaultReactionProgram>()] = [kernel] {
                         return new SingleCPUDefaultReactionProgram(kernel);
