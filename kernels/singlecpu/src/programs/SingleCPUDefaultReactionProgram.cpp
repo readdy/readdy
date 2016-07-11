@@ -158,10 +158,6 @@ namespace readdy {
                     data->addParticles(newParticles);
                 }
 
-                void SingleCPUDefaultReactionProgram::configure() {
-
-                }
-
                 void SingleCPUDefaultReactionProgram::registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) {
                     auto reaction = kernel->getKernelContext().getReactionOrder1WithName(reactionName);
                     if (reaction) {

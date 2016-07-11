@@ -19,7 +19,7 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace programs {
-                class SingleCPUAddParticleProgram : public readdy::model::programs::AddParticleProgram {
+                class SingleCPUAddParticleProgram : public readdy::model::programs::AddParticle {
                 public:
                     SingleCPUAddParticleProgram(SingleCPUKernel* kernel);
 

@@ -16,8 +16,8 @@ namespace readdy {
             namespace programs {
                 SingleCPUProgramFactory::SingleCPUProgramFactory(SingleCPUKernel *kernel) : kernel(kernel) {
                     namespace core_p = readdy::model::programs;
-                    factory[core_p::getProgramName<core_p::TestProgram>()] = [] { return new SingleCPUTestProgram(); };
-                    factory[core_p::getProgramName<core_p::AddParticleProgram>()] = [kernel] {
+                    factory[core_p::getProgramName<core_p::Test>()] = [] { return new SingleCPUTestProgram(); };
+                    factory[core_p::getProgramName<core_p::AddParticle>()] = [kernel] {
                         return new SingleCPUAddParticleProgram(kernel);
                     };
                     factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {

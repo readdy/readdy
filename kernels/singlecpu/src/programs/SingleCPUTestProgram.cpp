@@ -7,7 +7,7 @@
 
 namespace sctp = readdy::kernel::singlecpu::programs;
 
-sctp::SingleCPUTestProgram::SingleCPUTestProgram() : readdy::model::programs::TestProgram() {
+sctp::SingleCPUTestProgram::SingleCPUTestProgram() : readdy::model::programs::Test() {
 
 }
 

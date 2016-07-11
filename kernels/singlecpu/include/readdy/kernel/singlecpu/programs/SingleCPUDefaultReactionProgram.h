@@ -24,7 +24,6 @@ namespace readdy {
 
                     virtual void execute() override;
 
-                    virtual void configure() override;
                     virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override;
                     virtual void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override;
                     virtual void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override;
