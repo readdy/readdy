@@ -9,7 +9,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/SingleCPUKernelStateModel.cpp")
 # --- programs ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUTestProgram.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUAddParticleProgram.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUEulerDBIntegrator.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUEulerBDIntegrator.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUUpdateNeighborList.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUCalculateForces.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/programs/SingleCPUReactionImpls.cpp")

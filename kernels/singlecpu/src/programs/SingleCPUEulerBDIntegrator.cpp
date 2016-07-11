@@ -7,7 +7,7 @@
  * @date 19.04.16
  */
 
-#include <readdy/kernel/singlecpu/programs/SingleCPUEulerDBIntegrator.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUEulerBDIntegrator.h>
 
 #if BOOST_OS_MACOS
 #include <math.h>
@@ -17,10 +17,10 @@ namespace readdy {
         namespace singlecpu {
             namespace programs {
 
-                SingleCPUEulerDBIntegrator::SingleCPUEulerDBIntegrator(SingleCPUKernel *kernel)
+                SingleCPUEulerBDIntegrator::SingleCPUEulerBDIntegrator(SingleCPUKernel *kernel)
                         : readdy::model::programs::EulerBDIntegrator(), kernel(kernel) {};
 
-                void SingleCPUEulerDBIntegrator::execute() {
+                void SingleCPUEulerBDIntegrator::execute() {
                     const auto& context = kernel->getKernelContext();
                     const auto& kbt = context.getKBT();
                     const auto& fixPos = context.getFixPositionFun();

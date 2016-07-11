@@ -12,13 +12,13 @@
 
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUEulerDBIntegrator.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUEulerBDIntegrator.h>
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
-                class CPUEulerBDIntegrator : public readdy::kernel::singlecpu::programs::SingleCPUEulerDBIntegrator {
+                class CPUEulerBDIntegrator : public readdy::kernel::singlecpu::programs::SingleCPUEulerBDIntegrator {
 
                 public:
                     CPUEulerBDIntegrator(CPUKernel * kernel);

@@ -61,7 +61,7 @@ namespace readdy {
                 }
 
                 CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel)
-                        : SingleCPUEulerDBIntegrator(kernel), kernel(kernel) { }
+                        : SingleCPUEulerBDIntegrator(kernel), kernel(kernel) { }
 
             }
         }
