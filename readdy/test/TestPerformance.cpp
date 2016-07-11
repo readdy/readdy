@@ -55,7 +55,7 @@ namespace {
         kernel.getKernelContext().registerFusionReaction("A+B->C", "A", "B", "C", .5, 2.0);
         kernel.getKernelContext().registerFissionReaction("C->A+B", "C", "A", "B", 2.0, .5);
 
-        auto &&diffuseProgram = kernel.createProgram<readdy::model::programs::DiffuseProgram>();
+        auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&updateModelProgram = kernel.createProgram<readdy::model::programs::UpdateStateModelProgram>();
         auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::DefaultReactionProgram>();
         kernel.getKernelContext().configure();
@@ -69,7 +69,7 @@ namespace {
         for(readdy::model::time_step_type t = 0; t < steps; ++t) {
             updateModelProgram->configure(t, true);
             updateModelProgram->execute();
-            diffuseProgram->execute();
+            integrator->execute();
 
             updateModelProgram->configure(t, false);
             updateModelProgram->execute();

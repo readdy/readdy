@@ -1,13 +1,13 @@
 /**
  * << detailed description >>
  *
- * @file SingleCPUDiffuseProgram.cpp
+ * @file SingleCPUEulerDBIntegrator.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 19.04.16
  */
 
-#include <readdy/kernel/singlecpu/programs/SingleCPUDiffuseProgram.h>
+#include <readdy/kernel/singlecpu/programs/SingleCPUEulerDBIntegrator.h>
 
 #if BOOST_OS_MACOS
 #include <math.h>
@@ -17,9 +17,10 @@ namespace readdy {
         namespace singlecpu {
             namespace programs {
 
-                SingleCPUDiffuseProgram::SingleCPUDiffuseProgram(SingleCPUKernel *kernel) : DiffuseProgram(), kernel(kernel) {};
+                SingleCPUEulerDBIntegrator::SingleCPUEulerDBIntegrator(SingleCPUKernel *kernel)
+                        : readdy::model::programs::EulerBDIntegrator(), kernel(kernel) {};
 
-                void SingleCPUDiffuseProgram::execute() {
+                void SingleCPUEulerDBIntegrator::execute() {
                     const auto& context = kernel->getKernelContext();
                     const auto& kbt = context.getKBT();
                     const auto& fixPos = context.getFixPositionFun();

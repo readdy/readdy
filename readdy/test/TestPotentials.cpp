@@ -61,10 +61,10 @@ namespace {
         kernel->evaluateObservablesAutomatically(true);
 
         unsigned int nSteps = 1000;
-        auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+        auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
         for (readdy::model::time_step_type &&t = 0; t < nSteps; ++t) {
-            diffuseProgram->execute();
+            integrator->execute();
             updateModelProgram->configure(t, true);
             updateModelProgram->execute();
         }

@@ -23,7 +23,7 @@ namespace readdy {
                     factory[core_p::getProgramName<core_p::DefaultReactionProgram>()] = [kernel] {
                         return new CPUDefaultReactionProgram(kernel);
                     };
-                    factory[core_p::getProgramName<core_p::DiffuseProgram>()] = [kernel] {
+                    factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
                         return new CPUEulerBDIntegrator(kernel);
                     };
                 }

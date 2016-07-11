@@ -41,9 +41,9 @@ namespace {
         auto&& obs = kernel->createObservable<m::ParticlePositionObservable>(3);
         auto &&connection = kernel->connectObservable(obs.get());
 
-        auto&& diffuseProgram = kernel->createProgram("Diffuse");
+        auto&& integrator = kernel->createProgram("Eulerian Brownian dynamics integrator");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
-            diffuseProgram->execute();
+            integrator->execute();
             kernel->getKernelStateModel().updateModel(t, false);
         }
 
@@ -65,9 +65,9 @@ namespace {
         auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>(1);
         auto&& o3 = kernel->createObservable<m::TestCombinerObservable>(o1.get(), o2.get());
         auto&& connection = kernel->connectObservable(o3.get());
-        auto&& diffuseProgram = kernel->createProgram("Diffuse");
+        auto&& integrator = kernel->createProgram("Eulerian Brownian dynamics integrator");
         for(readdy::model::time_step_type t = 0; t < 100; t++) {
-            diffuseProgram->execute();
+            integrator->execute();
             kernel->getKernelStateModel().updateModel(t, false);
         }
 

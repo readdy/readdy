@@ -132,7 +132,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
     kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
 
-    auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
 
@@ -146,7 +146,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
 
     for (size_t t = 0; t < 20; t++) {
 
-        diffuseProgram->execute();
+        integrator->execute();
         updateModelProgram->configure(t, true);
         updateModelProgram->execute();
 
@@ -212,7 +212,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->getKernelContext().registerConversionReaction("E->A", "E", "A", 1);
     kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
 
-    auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
 
@@ -277,7 +277,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
         }
 
         // propagate
-        diffuseProgram->execute();
+        integrator->execute();
         updateModelProgram->configure(t, true);
         updateModelProgram->execute();
 

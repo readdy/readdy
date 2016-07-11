@@ -1,14 +1,14 @@
 /**
  * << detailed description >>
  *
- * @file SingleCPUDiffuseProgram.h
+ * @file SingleCPUEulerDBIntegrator.h
  * @brief << brief description >>
  * @author clonker
  * @date 19.04.16
  */
 
-#ifndef READDY_MAIN_SINGLECPUDIFFUSEPROGRAM_H
-#define READDY_MAIN_SINGLECPUDIFFUSEPROGRAM_H
+#ifndef READDY_MAIN_SingleCPUEulerDBIntegrator_H
+#define READDY_MAIN_SingleCPUEulerDBIntegrator_H
 
 #include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
@@ -18,10 +18,10 @@ namespace readdy {
         namespace singlecpu {
 
             namespace programs {
-                class SingleCPUDiffuseProgram : public readdy::model::programs::DiffuseProgram{
+                class SingleCPUEulerDBIntegrator : public readdy::model::programs::EulerBDIntegrator {
 
                 public:
-                    SingleCPUDiffuseProgram(SingleCPUKernel *kernel);
+                    SingleCPUEulerDBIntegrator(SingleCPUKernel *kernel);
 
                     virtual void execute() override;
 
@@ -34,4 +34,4 @@ namespace readdy {
 }
 
 
-#endif //READDY_MAIN_SINGLECPUDIFFUSEPROGRAM_H
+#endif //READDY_MAIN_SingleCPUEulerDBIntegrator_H

@@ -13,7 +13,7 @@ namespace readdy {
             namespace _internal {
                 const std::string ProgramName<TestProgram>::value = "TestProgram";
                 const std::string ProgramName<AddParticleProgram>::value = "AddParticle";
-                const std::string ProgramName<DiffuseProgram>::value = "Diffuse";
+                const std::string ProgramName<EulerBDIntegrator>::value = "Eulerian Brownian dynamics integrator";
                 const std::string ProgramName<UpdateStateModelProgram>::value = "UpdateStateModel";
                 const std::string ProgramName<DefaultReactionProgram>::value = "PerformReactions";
             }

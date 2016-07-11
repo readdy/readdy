@@ -2,7 +2,7 @@
  * This files contains a selection of possible programs that can be executed on a kernel:
  *   - TestProgram: Program that has no other operation than printing something to the log.
  *   - AddParticleProgram: A program with which particles can be added.
- *   - DiffuseProgram: A program that propagates the particles through the system. The update model program should be
+ *   - EulerBDIntegrator: A program that propagates the particles through the system. The update model program should be
  *                     called beforehand, such that forces are available.
  *   - UpdateStateModelProgram: A program that creates neighbor lists and potentially calculates forces.
  *   - DefaultReactionProgram: A program that executes the default reaction scheme.
@@ -38,9 +38,9 @@ namespace readdy {
                 AddParticleProgram() : Program(getProgramName<AddParticleProgram>()) { }
             };
 
-            class DiffuseProgram : public Program {
+            class EulerBDIntegrator : public Program {
             public:
-                DiffuseProgram() : Program(getProgramName<DiffuseProgram>()) { }
+                EulerBDIntegrator() : Program(getProgramName<EulerBDIntegrator>()) { }
             };
 
             class UpdateStateModelProgram : public Program {
@@ -74,7 +74,7 @@ namespace readdy {
             namespace _internal {
                 template<> struct ProgramName<TestProgram> { static const std::string value; };
                 template<> struct ProgramName<AddParticleProgram> { static const std::string value; };
-                template<> struct ProgramName<DiffuseProgram> { static const std::string value; };
+                template<> struct ProgramName<EulerBDIntegrator> { static const std::string value; };
                 template<> struct ProgramName<UpdateStateModelProgram> { static const std::string value; };
                 template<> struct ProgramName<DefaultReactionProgram> { static const std::string value; };
             }

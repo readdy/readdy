@@ -55,14 +55,14 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
     }
     pimpl->kernel->getKernelContext().setTimeStep(timeStep);
     {
-        auto &&diffuseProgram = pimpl->kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+        auto &&integrator = pimpl->kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&updateModelProgram = pimpl->kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
         auto &&reactionsProgram = pimpl->kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
         pimpl->kernel->getKernelContext().configure();
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
             updateModelProgram->configure(t, true);
             updateModelProgram->execute();
-            diffuseProgram->execute();
+            integrator->execute();
 
             updateModelProgram->configure(t, false);
             updateModelProgram->execute();

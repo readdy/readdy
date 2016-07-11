@@ -24,7 +24,7 @@ namespace {
         kernel->getKernelContext().registerDeathReaction("X decay", "X", .05);
         kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .5, .00);
 
-        auto &&diffuseProgram = kernel->createProgram<readdy::model::programs::DiffuseProgram>();
+        auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&updateModelProgram = kernel->createProgram<readdy::model::programs::UpdateStateModelProgram>();
         auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::DefaultReactionProgram>();
 
@@ -41,7 +41,7 @@ namespace {
 
         for(size_t t = 0; t < 1000; t++) {
 
-            diffuseProgram->execute();
+            integrator->execute();
             updateModelProgram->configure(t, false);
             updateModelProgram->execute();
 
