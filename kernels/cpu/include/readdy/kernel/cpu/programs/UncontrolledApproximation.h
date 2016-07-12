@@ -17,15 +17,17 @@ namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
-                class CPUDefaultReactionProgram : public singlecpu::programs::reactions::UncontrolledApproximation {
-                public:
-                    CPUDefaultReactionProgram(const CPUKernel *const kernel);
+                namespace reactions {
+                    class UncontrolledApproximation : public singlecpu::programs::reactions::UncontrolledApproximation {
+                    public:
+                        UncontrolledApproximation(const CPUKernel *const kernel);
 
-                    virtual void execute() override;
+                        virtual void execute() override;
 
-                protected:
-                    CPUKernel const *const kernel;
-                };
+                    protected:
+                        CPUKernel const *const kernel;
+                    };
+                }
 
             }
         }

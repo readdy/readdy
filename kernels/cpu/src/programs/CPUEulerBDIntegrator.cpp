@@ -10,6 +10,8 @@
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
 #include <thread>
 
+using super = readdy::kernel::singlecpu::programs::SingleCPUEulerBDIntegrator;
+
 namespace readdy {
     namespace kernel {
         namespace cpu {
@@ -61,7 +63,7 @@ namespace readdy {
                 }
 
                 CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel)
-                        : SingleCPUEulerBDIntegrator(kernel), kernel(kernel) { }
+                        : super(kernel), kernel(kernel) { }
 
             }
         }
