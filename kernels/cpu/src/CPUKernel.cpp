@@ -39,7 +39,7 @@ namespace readdy {
                 pimpl->context = std::make_unique<readdy::model::KernelContext>(pimpl->reactionFactory.get());
                 pimpl->programFactory = std::make_unique<programs::CPUProgramFactory>(this);
                 pimpl->stateModel = std::make_unique<CPUStateModel>();
-                pimpl->potentialFactory = std::make_unique<potentials::CPUPotentialFactory>();
+                pimpl->potentialFactory = std::make_unique<potentials::CPUPotentialFactory>(this);
             }
 
             unsigned int CPUKernel::getNCores() {
