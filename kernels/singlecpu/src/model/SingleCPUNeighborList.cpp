@@ -80,6 +80,7 @@ namespace readdy {
                         for (auto &&e : ctx->getAllOrder2Reactions()) {
                             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
                         }
+                        NotThatNaiveSingleCPUNeighborList<T>::maxCutoff = maxCutoff;
                         if (maxCutoff > 0) {
 
                             for (unsigned int i = 0; i < 3; ++i) {

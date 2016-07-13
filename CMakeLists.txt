@@ -180,6 +180,8 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
         ENABLE_TESTING()
 
+        ADD_SUBDIRECTORY(readdy_testing)
+
     ELSE()
         MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
         # disable testing if there was no submodule
@@ -258,10 +260,8 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
     IF (READDY_CREATE_TEST_TARGET)
-        ADD_SUBDIRECTORY(readdy_testing)
         ADD_SUBDIRECTORY(readdy/test)
         ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
-
     ENDIF ()
 
     #####################################
