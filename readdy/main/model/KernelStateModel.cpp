@@ -15,16 +15,7 @@ namespace readdy {
     namespace model {
         KernelStateModel::~KernelStateModel() = default;
 
-        boost::signals2::connection KernelStateModel::addListener(const signal_t::slot_type &l) {
-            return signal->connect(l);
-        }
-
-        void KernelStateModel::fireTimeStepChanged() {
-            (*signal)();
-        }
-
         KernelStateModel::KernelStateModel() {
-            signal = std::make_unique<signal_t>();
         }
 
 

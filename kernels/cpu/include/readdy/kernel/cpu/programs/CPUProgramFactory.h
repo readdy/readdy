@@ -12,13 +12,12 @@
 #define READDY_MAIN_CPUPROGRAMFACTORY_H
 
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUProgramFactory.h>
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
-                class CPUProgramFactory : public singlecpu::programs::SingleCPUProgramFactory {
+                class CPUProgramFactory : public readdy::model::programs::ProgramFactory {
 
                 public:
                     CPUProgramFactory(CPUKernel *kernel);

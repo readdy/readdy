@@ -12,13 +12,14 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
 #include <readdy/model/potentials/PotentialsOrder2.h>
+#include <readdy/testing/Timer.h>
 
 namespace {
 
     void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_type steps = 20) {
         std::srand((unsigned int) std::time(0));
 
-        using timer = readdy::utils::testing::timer;
+        using timer = readdy::testing::Timer;
 
         auto stdRand = [] (double lower = 0.0, double upper = 1.0) -> double {
             return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;

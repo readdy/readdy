@@ -11,15 +11,16 @@
 #ifndef READDY_MAIN_CPUKERNEL_H
 #define READDY_MAIN_CPUKERNEL_H
 
-#define KERNEL_SINGLECPU_NO_EXPORT_ALIAS
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
+#include <boost/dll.hpp>
+#include <readdy/model/Kernel.h>
+#include "CPUStateModel.h"
 
 // #define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
-            class CPUKernel : public singlecpu::SingleCPUKernel {
+            class CPUKernel : public readdy::model::Kernel {
             public:
                 static const std::string name;
 
@@ -31,6 +32,15 @@ namespace readdy {
                 static std::unique_ptr<CPUKernel> create();
 
                 virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+
+                virtual CPUStateModel &getKernelStateModel() const override;
+
+                virtual readdy::model::KernelContext &getKernelContext() const override;
+
+                virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
+
+                virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+
 
             private:
                 struct Impl;

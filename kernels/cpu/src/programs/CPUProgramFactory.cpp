@@ -12,14 +12,13 @@
 #include <readdy/kernel/cpu/programs/UncontrolledApproximation.h>
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
 
-using super = readdy::kernel::singlecpu::programs::SingleCPUProgramFactory;
 namespace core_p = readdy::model::programs;
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
-                CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) : super::SingleCPUProgramFactory(kernel) {
+                CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
                     factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
                         return new reactions::UncontrolledApproximation(kernel);
                     };

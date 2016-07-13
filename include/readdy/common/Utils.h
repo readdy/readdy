@@ -48,21 +48,6 @@ namespace readdy {
             }
         }
 
-        namespace testing {
-            std::string getPluginsDirectory();
-
-            struct timer {
-
-                timer(std::string label, bool print=true);
-                double getSeconds();
-                ~timer();
-
-            private :
-                struct Impl;
-                std::unique_ptr<Impl> pimpl;
-            };
-        }
-
     }
 }
 

@@ -9,7 +9,6 @@
 
 #include <readdy/kernel/cpu/programs/UncontrolledApproximation.h>
 
-using super = readdy::kernel::singlecpu::programs::reactions::UncontrolledApproximation;
 using particle_t = readdy::model::Particle;
 
 namespace readdy {
@@ -18,12 +17,11 @@ namespace readdy {
             namespace programs {
                 namespace reactions {
                     UncontrolledApproximation::UncontrolledApproximation(const CPUKernel *const kernel)
-                            : super::UncontrolledApproximation(kernel), kernel(kernel) {
+                            : kernel(kernel) {
 
                     }
 
                     void UncontrolledApproximation::execute() {
-                        super::execute();
                     }
                 }
 

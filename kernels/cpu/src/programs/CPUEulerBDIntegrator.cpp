@@ -9,15 +9,14 @@
 
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
 #include <thread>
-
-using super = readdy::kernel::singlecpu::programs::SingleCPUEulerBDIntegrator;
+#include <readdy/model/RandomProvider.h>
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
                 void CPUEulerBDIntegrator::execute() {
-                    const auto &&pd = kernel->getKernelStateModel().getParticleData();
+                    /*const auto &&pd = kernel->getKernelStateModel().getParticleData();
                     const auto size = pd->size();
                     std::vector<std::thread> threads(kernel->getNCores());
                     const std::size_t grainSize = size / kernel->getNCores();
@@ -58,12 +57,11 @@ namespace readdy {
                     for(auto&& i : threads) {
                         i.join();
                     }
-
+                */
 
                 }
 
-                CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel)
-                        : super(kernel), kernel(kernel) { }
+                CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel) : kernel(kernel) { }
 
             }
         }

@@ -36,6 +36,15 @@ SET(BOOST_DOWNLOAD_CACHE_DIR "${CMAKE_BINARY_DIR}/download/external/boost" CACHE
 
 #####################################
 #                                   #
+# Advanced cache variables          #
+#                                   #
+#####################################
+
+SET(INCLUDE_PERFORMANCE_TESTS OFF CACHE BOOL "Whether to include performance tests into test targets.")
+MARK_AS_ADVANCED(INCLUDE_PERFORMANCE_TESTS)
+
+#####################################
+#                                   #
 # Basic setup of the project        #
 #                                   #
 #####################################
@@ -154,15 +163,20 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
         SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
 
-        ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
+        SET(GOOGLEMOCK_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
+        SET(GOOGLEMOCK_INCLUDE ${GOOGLEMOCK_ROOT}/googlemock/include)
+        SET(GOOGLEMOCK_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
+        SET(GOOGLEMOCK_LIBRARY ${GOOGLEMOCK_BINARY_DIR}/googlemock)
+
         SET(BUILD_GTEST ON)
-        SET(BUILD_GMOCK OFF)
+        SET(BUILD_GMOCK ON)
         SET(gtest_force_shared_crt ON)
         SET(BUILD_SHARED_LIBS ON)
+        ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
         SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
                 COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-                )
+        )
 
         ENABLE_TESTING()
 
@@ -244,8 +258,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
     IF (READDY_CREATE_TEST_TARGET)
-
-        INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+        ADD_SUBDIRECTORY(readdy_testing)
         ADD_SUBDIRECTORY(readdy/test)
         ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
 

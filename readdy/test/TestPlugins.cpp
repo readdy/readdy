@@ -2,16 +2,17 @@
 // Created by clonker on 07.03.16.
 //
 
-#include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <boost/algorithm/string/predicate.hpp>
-#include "gtest/gtest.h"
+#include <readdy/testing/KernelMock.h>
+#include <gtest/gtest.h>
 
 namespace plug = readdy::plugin;
 
 namespace {
+
     TEST(Kernel, LoadingNonexistingPlugin) {
-        plug::KernelProvider::getInstance().add("foo", [] {return new readdy::model::Kernel("foo");});
+        plug::KernelProvider::getInstance().add("foo", [] {return new readdy::testing::KernelMock("foo");});
         try {
             plug::KernelProvider::getInstance().create("foo2");
             FAIL() << "Expected NoSuchPluginException!";
@@ -23,7 +24,7 @@ namespace {
     }
 
     TEST(Kernel, LoadingExistingPlugin) {
-        plug::KernelProvider::getInstance().add("bar", [] {return new readdy::model::Kernel("bar");});
+        plug::KernelProvider::getInstance().add("bar", [] {return new readdy::testing::KernelMock("bar");});
         auto kk_ptr = plug::KernelProvider::getInstance().create("bar");
         EXPECT_STREQ("bar", kk_ptr.get()->getName().c_str());
     }
