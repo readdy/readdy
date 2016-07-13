@@ -14,15 +14,11 @@ namespace readdy {
         namespace singlecpu {
             namespace model {
 
-                struct NaiveSingleCPUNeighborList::Impl {
-                    std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher> pairs{};
-                };
-
                 void NaiveSingleCPUNeighborList::create(const SingleCPUParticleData &data) {
-                    pimpl->pairs.clear();
+                    pairs->clear();
                     for (size_t i = 0; i < data.size(); ++i) {
                         for (size_t j = i + 1; j < data.size(); ++j) {
-                            pimpl->pairs.emplace(i, j);
+                            pairs->emplace(i, j);
                         }
                     }
                 }
@@ -31,44 +27,23 @@ namespace readdy {
                         NaiveSingleCPUNeighborList &&rhs) = default;
 
 
-                NaiveSingleCPUNeighborList::NaiveSingleCPUNeighborList() : pimpl(std::make_unique<Impl>()) { }
-
-                iter_type NaiveSingleCPUNeighborList::begin() {
-                    return pimpl->pairs.begin();
-                }
-
-                const_iter_type NaiveSingleCPUNeighborList::begin() const {
-                    return cbegin();
-                }
-
-                const_iter_type NaiveSingleCPUNeighborList::cbegin() const {
-                    return pimpl->pairs.cbegin();
-                }
-
-                iter_type NaiveSingleCPUNeighborList::end() {
-                    return pimpl->pairs.end();
-                }
-
-                const_iter_type NaiveSingleCPUNeighborList::end() const {
-                    return cend();
-                }
-
-                const_iter_type NaiveSingleCPUNeighborList::cend() const {
-                    return pimpl->pairs.cend();
-                }
+                NaiveSingleCPUNeighborList::NaiveSingleCPUNeighborList() = default;
 
                 NaiveSingleCPUNeighborList::~NaiveSingleCPUNeighborList() = default;
 
                 NaiveSingleCPUNeighborList::NaiveSingleCPUNeighborList(NaiveSingleCPUNeighborList &&rhs) = default;
 
-                NotThatNaiveSingleCPUNeighborList::Box::Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
+                template<typename T>
+                NotThatNaiveSingleCPUNeighborList<T>::Box::Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
                 };
 
-                void NotThatNaiveSingleCPUNeighborList::Box::addNeighbor(Box *box) {
+                template<typename T>
+                void NotThatNaiveSingleCPUNeighborList<T>::Box::addNeighbor(Box *box) {
                     if (box && box->id != id) neighboringBoxes.push_back(box);
                 }
 
-                NotThatNaiveSingleCPUNeighborList::Box *NotThatNaiveSingleCPUNeighborList::getBox(
+                template<typename T>
+                typename NotThatNaiveSingleCPUNeighborList<T>::Box *NotThatNaiveSingleCPUNeighborList<T>::getBox(
                         long i, long j, long k
                 ) {
                         const auto &periodic = ctx->getPeriodicBoundary();
@@ -81,40 +56,19 @@ namespace readdy {
                         return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
                     }
 
-                NotThatNaiveSingleCPUNeighborList::NotThatNaiveSingleCPUNeighborList(
+                template<typename T>
+                NotThatNaiveSingleCPUNeighborList<T>::NotThatNaiveSingleCPUNeighborList(
                         const readdy::model::KernelContext *const ctx) : ctx(ctx) {
                 }
 
-                void NotThatNaiveSingleCPUNeighborList::create(const SingleCPUParticleData &data) {
+                template<typename T>
+                void NotThatNaiveSingleCPUNeighborList<T>::create(const SingleCPUParticleData &data) {
                     setupBoxes();
                     fillBoxes(data);
                 }
 
-                iter_type NotThatNaiveSingleCPUNeighborList::begin() {
-                    return pairs.begin();
-                }
-
-                const_iter_type NotThatNaiveSingleCPUNeighborList::begin() const {
-                    return cbegin();
-                }
-
-                const_iter_type NotThatNaiveSingleCPUNeighborList::cbegin() const {
-                    return pairs.cbegin();
-                }
-
-                iter_type NotThatNaiveSingleCPUNeighborList::end() {
-                    return pairs.end();
-                }
-
-                const_iter_type NotThatNaiveSingleCPUNeighborList::end() const {
-                    return cend();
-                }
-
-                const_iter_type NotThatNaiveSingleCPUNeighborList::cend() const {
-                    return pairs.cend();
-                }
-
-                void NotThatNaiveSingleCPUNeighborList::setupBoxes() {
+                template<typename T>
+                void NotThatNaiveSingleCPUNeighborList<T>::setupBoxes() {
                     const auto simBoxSize = ctx->getBoxSize();
                     if (boxes.empty()) {
                         double maxCutoff = 0;
@@ -126,7 +80,6 @@ namespace readdy {
                         for (auto &&e : ctx->getAllOrder2Reactions()) {
                             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
                         }
-                        maxCutoff = maxCutoff;
                         if (maxCutoff > 0) {
 
                             for (unsigned int i = 0; i < 3; ++i) {
@@ -166,7 +119,8 @@ namespace readdy {
                     }
                 }
 
-                void NotThatNaiveSingleCPUNeighborList::fillBoxes(const SingleCPUParticleData &data) {
+                template<typename T>
+                void NotThatNaiveSingleCPUNeighborList<T>::fillBoxes(const SingleCPUParticleData &data) {
                     const auto simBoxSize = ctx->getBoxSize();
                     if (maxCutoff > 0) {
 
@@ -175,7 +129,7 @@ namespace readdy {
                         }
 
                         auto it_pos = data.cbegin_positions();
-                        long idx = 0;
+                        unsigned long idx = 0;
                         const auto shift = readdy::model::Vec3(.5 * simBoxSize[0], .5 * simBoxSize[1],
                                                                .5 * simBoxSize[2]);
                         while (it_pos != data.cend_positions()) {
@@ -195,12 +149,12 @@ namespace readdy {
                             for (long i = 0; i < box.particleIndices.size(); ++i) {
                                 const auto pI = box.particleIndices[i];
                                 for (long j = i + 1; j < box.particleIndices.size(); ++j) {
-                                    pairs.emplace(pI, box.particleIndices[j]);
+                                    super::pairs->emplace(pI, box.particleIndices[j]);
                                 }
 
                                 for (auto &&neighboringBox : box.neighboringBoxes) {
                                     for (const auto &pJ : neighboringBox->particleIndices) {
-                                        pairs.emplace(pI, pJ);
+                                        super::pairs->emplace(pI, pJ);
                                     }
                                 }
                             }
@@ -208,14 +162,16 @@ namespace readdy {
                     }
                 }
 
-                long NotThatNaiveSingleCPUNeighborList::positive_modulo(long i, long n) const {
+                template<typename T>
+                long NotThatNaiveSingleCPUNeighborList<T>::positive_modulo(long i, long n) const {
                     return (i % n + n) % n;
                 }
 
 
-                NotThatNaiveSingleCPUNeighborList::~NotThatNaiveSingleCPUNeighborList() = default;
+                template<typename T>
+                NotThatNaiveSingleCPUNeighborList<T>::~NotThatNaiveSingleCPUNeighborList() = default;
 
-
+                template struct NotThatNaiveSingleCPUNeighborList<>;
             }
         }
     }

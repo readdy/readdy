@@ -58,21 +58,27 @@ namespace readdy {
                     }
                 };
 
-                using iter_type = std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>::iterator;
-                using const_iter_type = std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>::const_iterator;
-
-                struct SingleCPUNeighborList {
+                struct SingleCPUNeighborListBase {
                     virtual void create(const SingleCPUParticleData &data) = 0;
-
-                    virtual iter_type begin() = 0;
-                    virtual const_iter_type begin() const = 0;
-                    virtual const_iter_type cbegin() const = 0;
-                    virtual iter_type end() = 0;
-                    virtual const_iter_type end() const = 0;
-                    virtual const_iter_type cend() const = 0;
                 };
 
-                struct NaiveSingleCPUNeighborList : public SingleCPUNeighborList{
+                template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
+                struct SingleCPUNeighborListContainer : public SingleCPUNeighborListBase {
+                    typedef typename container::iterator iter_type;
+                    typedef typename container::const_iterator const_iter_type;
+
+                    virtual iter_type begin() { return pairs->begin(); };
+                    virtual const_iter_type begin() const { return cbegin(); };
+                    virtual const_iter_type cbegin() const { return pairs->cbegin(); };
+                    virtual iter_type end() { return pairs->end(); };
+                    virtual const_iter_type end() const { return cend(); };
+                    virtual const_iter_type cend() const { return pairs->cend(); };
+
+                protected:
+                    std::unique_ptr<container> pairs = std::make_unique<container>();
+                };
+
+                struct NaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<>{
                     virtual void create(const SingleCPUParticleData &data) override;
 
                     // ctor and dtor
@@ -88,25 +94,11 @@ namespace readdy {
                     NaiveSingleCPUNeighborList(const NaiveSingleCPUNeighborList &rhs) = delete;
                     NaiveSingleCPUNeighborList &operator=(const NaiveSingleCPUNeighborList &rhs) = delete;
 
-                    virtual iter_type begin() override;
-
-                    virtual const_iter_type begin() const override;
-
-                    virtual const_iter_type cbegin() const override;
-
-                    virtual iter_type end() override;
-
-                    virtual const_iter_type end() const override;
-
-                    virtual const_iter_type cend() const override;
-
-
-                protected:
-                    struct Impl;
-                    std::unique_ptr<Impl> pimpl;
                 };
 
-                struct NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborList {
+                template<typename T=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
+                struct NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<T> {
+                    typedef SingleCPUNeighborListContainer<T> super;
 
                     NotThatNaiveSingleCPUNeighborList(const readdy::model::KernelContext *const ctx);
                     virtual ~NotThatNaiveSingleCPUNeighborList();
@@ -115,17 +107,10 @@ namespace readdy {
                     virtual void setupBoxes();
                     virtual void fillBoxes(const SingleCPUParticleData &data);
 
-                    virtual iter_type begin() override;
-                    virtual const_iter_type begin() const override;
-                    virtual const_iter_type cbegin() const override;
-                    virtual iter_type end() override;
-                    virtual const_iter_type end() const override;
-                    virtual const_iter_type cend() const override;
-
                 protected:
                     struct Box {
                         std::vector<Box *> neighboringBoxes{};
-                        std::vector<long> particleIndices{};
+                        std::vector<unsigned long> particleIndices{};
                         long i, j, k;
                         long id = 0;
 
@@ -133,7 +118,6 @@ namespace readdy {
                         void addNeighbor(Box *box);
                     };
                     const readdy::model::KernelContext *ctx;
-                    std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher> pairs{};
                     std::vector<Box> boxes{};
                     std::array<int, 3> nBoxes{{0, 0, 0}};
                     readdy::model::Vec3 boxSize{0, 0, 0};
@@ -142,6 +126,11 @@ namespace readdy {
                     long positive_modulo(long i, long n) const;
                     Box *getBox(long i, long j, long k);
 
+                };
+
+                struct SingleCPUNeighborList : public NotThatNaiveSingleCPUNeighborList<> {
+                    SingleCPUNeighborList(const readdy::model::KernelContext *const ctx)
+                             : NotThatNaiveSingleCPUNeighborList(ctx) { }
                 };
 
             }

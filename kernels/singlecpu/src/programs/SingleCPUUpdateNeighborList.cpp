@@ -15,7 +15,7 @@ namespace readdy {
                 SingleCPUUpdateNeighborList::SingleCPUUpdateNeighborList(SingleCPUKernel *kernel) : kernel(kernel) { }
 
                 void SingleCPUUpdateNeighborList::execute() {
-                    kernel->getKernelStateModelSingleCPU().updateNeighborList();
+                    kernel->getKernelStateModel().updateNeighborList();
                 }
             }
         }

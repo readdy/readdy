@@ -28,8 +28,7 @@ namespace readdy {
                 // factory method
                 static std::unique_ptr<SingleCPUKernel> create();
 
-                virtual readdy::model::KernelStateModel& getKernelStateModel() const override;
-                readdy::kernel::singlecpu::SingleCPUKernelStateModel& getKernelStateModelSingleCPU() const;
+                virtual SingleCPUKernelStateModel& getKernelStateModel() const override;
 
                 virtual readdy::model::KernelContext& getKernelContext() const override;
 
@@ -44,7 +43,6 @@ namespace readdy {
                 virtual readdy::model::potentials::PotentialFactory& getPotentialFactory() const override;
 
                 virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
-
 
                 virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
 

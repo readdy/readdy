@@ -17,7 +17,7 @@ namespace readdy {
         namespace cpu {
             namespace programs {
                 void CPUEulerBDIntegrator::execute() {
-                    const auto &&pd = kernel->getKernelStateModelSingleCPU().getParticleData();
+                    const auto &&pd = kernel->getKernelStateModel().getParticleData();
                     const auto size = pd->size();
                     std::vector<std::thread> threads(kernel->getNCores());
                     const std::size_t grainSize = size / kernel->getNCores();

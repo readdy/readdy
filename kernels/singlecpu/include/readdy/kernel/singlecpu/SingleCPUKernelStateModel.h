@@ -39,7 +39,6 @@ namespace readdy {
 
                 void increaseEnergy(double increase);
 
-
                 SingleCPUKernelStateModel(readdy::model::KernelContext const* context);
                 ~SingleCPUKernelStateModel();
                 // move

@@ -24,7 +24,7 @@ namespace readdy {
                 void SingleCPUHistogramAlongAxisObservable::evaluate() {
                     std::fill(result.begin(), result.end(), 0);
 
-                    const auto &model = singleCPUKernel->getKernelStateModelSingleCPU();
+                    const auto &model = singleCPUKernel->getKernelStateModel();
                     const auto data = model.getParticleData();
 
                     auto it_pos = data->begin_positions();
@@ -51,7 +51,7 @@ namespace readdy {
                         kernel, stride), singleCPUKernel(dynamic_cast<SingleCPUKernel *>(kernel)) { }
 
                 void SingleCPUNparticlesObservable::evaluate() {
-                    result = singleCPUKernel->getKernelStateModelSingleCPU().getParticleData()->size();
+                    result = singleCPUKernel->getKernelStateModel().getParticleData()->size();
                 }
 
 
