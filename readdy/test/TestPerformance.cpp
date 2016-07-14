@@ -110,7 +110,7 @@ namespace {
 
     TEST(TestPerformance, SingleCPU) {
         auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-        runPerformanceTest(*kernel);
+        //runPerformanceTest(*kernel);
     }
 
     TEST(TestPerformance, CPU) {

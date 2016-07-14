@@ -9,8 +9,10 @@
 
 #include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
 #include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/programs/UncontrolledApproximation.h>
+#include <readdy/kernel/cpu/programs/Reactions.h>
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu/programs/UpdateNeighborList.h>
+#include <readdy/kernel/cpu/programs/CalculateForces.h>
 
 namespace core_p = readdy::model::programs;
 
@@ -24,6 +26,12 @@ namespace readdy {
                     };
                     factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
                         return new CPUEulerBDIntegrator(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
+                        return new UpdateNeighborList(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
+                        return new CalculateForces(kernel);
                     };
                 }
             }
