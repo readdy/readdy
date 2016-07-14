@@ -1,5 +1,4 @@
 #include <readdy/model/KernelStateModel.h>
-#include <readdy/common/make_unique.h>
 
 /**
  * << detailed description >>

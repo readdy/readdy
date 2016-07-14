@@ -49,6 +49,15 @@ namespace readdy {
             void CubePotential::setConsiderParticleRadius(bool considerParticleRadius) { CubePotential::considerParticleRadius = considerParticleRadius; }
             double CubePotential::getParticleRadius() const { return particleRadius; }
 
+            double CubePotential::getMaximalForce(double kbt) const noexcept {
+                return 0;
+            }
+
+            double CubePotential::getRelevantLengthScale() const noexcept {
+                return std::min(extent[0], std::min(extent[1], extent[2]));
+            }
+
+
 
 
 
@@ -82,8 +91,13 @@ namespace readdy {
                 HarmonicRepulsion::forceConstant = forceConstant;
             }
 
+            double HarmonicRepulsion::getMaximalForce(double kbt) const noexcept {
+                return forceConstant*getCutoffRadius();
+            }
+
+
             /**
-             * Weak interaction piecewise harmonig
+             * Weak interaction piecewise harmonic
              */
 
             WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel) : PotentialOrder2(_internal::PotentialName<WeakInteractionPiecewiseHarmonic>::value), kernel(kernel) {
@@ -111,6 +125,12 @@ namespace readdy {
 
             void WeakInteractionPiecewiseHarmonic::configureForTypes(unsigned int type1, unsigned int type2) {
 
+            }
+
+            double WeakInteractionPiecewiseHarmonic::getMaximalForce(double kbt) const noexcept {
+                double fMax1 = forceConstant * desiredParticleDistance;
+                double fMax2 = 2*depthAtDesiredDistance*(noInteractionDistance-desiredParticleDistance);
+                return std::max(fMax1, fMax2);
             }
 
 

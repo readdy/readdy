@@ -36,6 +36,12 @@ namespace readdy {
                 void setConsiderParticleRadius(bool considerParticleRadius);
                 double getParticleRadius() const;
 
+                virtual double getRelevantLengthScale() const noexcept override;
+
+
+                virtual double getMaximalForce(double kbt) const noexcept override;
+
+
             protected:
                 const Kernel * const kernel;
                 Vec3 origin;

@@ -29,7 +29,7 @@ namespace readdy {
 
                 virtual PotentialOrder2 *replicate() const override = 0;
 
-                virtual double getCutoffRadius() = 0;
+                virtual double getCutoffRadius() const = 0;
 
             };
         }

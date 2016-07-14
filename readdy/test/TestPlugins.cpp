@@ -5,7 +5,6 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include <readdy/testing/KernelMock.h>
-#include <gtest/gtest.h>
 
 namespace plug = readdy::plugin;
 

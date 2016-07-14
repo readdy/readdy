@@ -323,6 +323,8 @@ namespace readdy {
 
         virtual void run(const readdy::model::time_step_type steps, const double timeStep);
 
+        double getRecommendedTimeStep(unsigned int N) const;
+
     private:
         struct Impl;
         std::unique_ptr<readdy::Simulation::Impl> pimpl;

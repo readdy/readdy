@@ -29,7 +29,7 @@ namespace readdy {
                     virtual void calculateForce(vec_t &force, const vec_t &x_ij) override;
                     virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) override;
 
-                    virtual double getCutoffRadius() override;
+                    virtual double getCutoffRadius() const override;
 
 
                     virtual potentials::SingleCPUHarmonicRepulsion *replicate() const override;
@@ -48,7 +48,7 @@ namespace readdy {
 
                     virtual potentials::SingleCPUWeakInteractionPiecewiseHarmonic *replicate() const override;
 
-                    virtual double getCutoffRadius() override;
+                    virtual double getCutoffRadius() const override;
 
 
                 };

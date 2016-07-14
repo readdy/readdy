@@ -49,6 +49,8 @@ namespace readdy {
                     Potential::id = id;
                 }
 
+                virtual double getMaximalForce(double kbt) const noexcept = 0;
+
                 virtual Potential* replicate() const = 0;
             };
 

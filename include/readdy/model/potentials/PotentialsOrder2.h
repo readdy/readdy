@@ -34,6 +34,8 @@ namespace readdy {
 
                 virtual void configureForTypes(unsigned int type1, unsigned int type2) override;
 
+                virtual double getMaximalForce(double kbt) const noexcept override;
+
             protected:
                 const Kernel * const kernel;
                 double sumOfParticleRadii;
@@ -55,6 +57,8 @@ namespace readdy {
                 void setForceConstant(double forceConstant);
                 void setDepthAtDesiredDistance(double depthAtDesiredDistance);
                 void setNoInteractionDistance(double noInteractionDistance);
+
+                virtual double getMaximalForce(double kbt) const noexcept override;
 
             protected:
                 const Kernel* const kernel;

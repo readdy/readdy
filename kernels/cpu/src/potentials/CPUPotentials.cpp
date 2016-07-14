@@ -110,7 +110,7 @@ namespace readdy {
                     return new CPUHarmonicRepulsion(*this);
                 }
 
-                double CPUHarmonicRepulsion::getCutoffRadius() {
+                double CPUHarmonicRepulsion::getCutoffRadius() const {
                     return sumOfParticleRadii;
                 }
 

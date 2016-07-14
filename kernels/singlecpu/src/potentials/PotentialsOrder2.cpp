@@ -54,7 +54,7 @@ namespace readdy {
                     return new SingleCPUHarmonicRepulsion(*this);
                 }
 
-                double SingleCPUHarmonicRepulsion::getCutoffRadius() {
+                double SingleCPUHarmonicRepulsion::getCutoffRadius() const {
                     return sumOfParticleRadii;
                 }
                 
@@ -117,7 +117,7 @@ namespace readdy {
                     calculateForce(force, x_ij);
                 }
 
-                double SingleCPUWeakInteractionPiecewiseHarmonic::getCutoffRadius() {
+                double SingleCPUWeakInteractionPiecewiseHarmonic::getCutoffRadius() const {
                     return noInteractionDistance;
                 }
 

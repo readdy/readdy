@@ -142,7 +142,7 @@ class MinEMinDSimulation(object):
         kernel_provider = KernelProvider.get()
         kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
         simulation = Simulation()
-        simulation.set_kernel("CPU")
+        simulation.set_kernel("SingleCPU")
 
         ###################################
         #
@@ -290,7 +290,8 @@ class MinEMinDSimulation(object):
             simulation.add_particle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
         print("starting simulation")
-        simulation.run(self.n_timesteps, self.timestep)  # effectively: 750 sec
+        tau = simulation.get_recommended_time_step(1)
+        simulation.run(self.n_timesteps, tau)  # effectively: 750 sec
 
         if self._result_fname is not None:
             with open(self._result_fname, 'w') as f:

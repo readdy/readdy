@@ -143,6 +143,7 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("register_reaction_decay", &sim::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
             .def("run", &sim::run);
 

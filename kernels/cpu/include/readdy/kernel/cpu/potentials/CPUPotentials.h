@@ -33,7 +33,7 @@ namespace readdy {
                     virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override;
                     virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy,
                                                          const readdy::model::Vec3 &x_ij) override;
-                    virtual double getCutoffRadius() override;
+                    virtual double getCutoffRadius() const override;
                     virtual CPUHarmonicRepulsion *replicate() const override;
                 };
             }
