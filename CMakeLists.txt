@@ -15,6 +15,7 @@ PROJECT(ReaDDy_Main C CXX)
 SET(READDY_CREATE_TEST_TARGET ON CACHE BOOL "Determines if the test target should be added.")
 SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF CACHE BOOL "Determines if valgrind test targets should be added. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
 SET(READDY_INSTALL_UNIT_TEST_EXECUTABLE OFF CACHE BOOL "Determines if the unit test executable should be installed. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
+SET(READDY_KERNELS_TO_TEST "SingleCPU,CPU" CACHE STRING "Variable holding which kernels should be tested in the core library.")
 
 # build single libraries or as a single shared library holding the whole thing
 SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared library or shared libraries with respect to the components should be built")

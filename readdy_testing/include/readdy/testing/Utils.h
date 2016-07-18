@@ -7,16 +7,27 @@
  * @date 13.07.16
  */
 
-#ifndef READDY_MAIN_UTILS_H
-#define READDY_MAIN_UTILS_H
+#ifndef READDY_TESTING_UTILS_H
+#define READDY_TESTING_UTILS_H
 
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
+#include <readdy/common/Utils.h>
 
 namespace readdy {
     namespace testing {
-        std::string getPluginsDirectory() {
+
+        inline std::vector<std::string> getKernelsToTest() {
+            #ifdef READDY_KERNELS_TO_TEST
+            std::vector<std::string> kernels = readdy::utils::split(std::string(READDY_KERNELS_TO_TEST), ',');
+            #else
+            std::vector<std::string> kernels {"SingleCPU"};
+            #endif
+            return kernels;
+        }
+
+        inline std::string getPluginsDirectory() {
             // test for several environment variables
             const std::string envs[] {"CONDA_ENV_PATH", "CONDA_PREFIX", "PREFIX"};
             const char *env = nullptr;
@@ -41,4 +52,4 @@ namespace readdy {
         }
     }
 }
-#endif //READDY_MAIN_UTILS_H
+#endif //READDY_TESTING_UTILS_H

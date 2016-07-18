@@ -29,6 +29,10 @@ namespace readdy {
 
         bool isWindows();
 
+        std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
+
+        std::vector<std::string> split(const std::string &s, char delim);
+
         namespace boost2std {
             template<typename T>
             boost::shared_ptr<T> make_shared_ptr(std::shared_ptr<T> &ptr) {
