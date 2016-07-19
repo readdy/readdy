@@ -7,6 +7,7 @@
  * @date 13.07.16
  */
 
+#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
 #include <readdy/kernel/cpu/CPUStateModel.h>
 #include <readdy/kernel/cpu/model/NeighborList.h>
 
@@ -16,7 +17,7 @@ namespace readdy {
 
             struct CPUStateModel::Impl {
                 readdy::model::KernelContext* context;
-                std::unique_ptr<readdy::kernel::cpu::model::ParticleData> particleData;
+                std::unique_ptr<readdy::kernel::singlecpu::model::SingleCPUParticleData> particleData;
                 std::unique_ptr<readdy::kernel::cpu::model::NeighborList> neighborList;
                 double currentEnergy = 0;
             };
@@ -100,7 +101,7 @@ namespace readdy {
             CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context) : pimpl(std::make_unique<Impl>())
             {
                 pimpl->context = context;
-                pimpl->particleData = std::make_unique<model::ParticleData>(0);
+                pimpl->particleData = std::make_unique<readdy::kernel::singlecpu::model::SingleCPUParticleData>(0);
                 pimpl->neighborList = std::make_unique<model::NeighborList>(context);
             }
 
@@ -128,7 +129,7 @@ namespace readdy {
                 return pimpl->neighborList->cend();
             }
 
-            model::ParticleData *const CPUStateModel::getParticleData() const {
+            readdy::kernel::singlecpu::model::SingleCPUParticleData *const CPUStateModel::getParticleData() const {
                 return pimpl->particleData.get();
             }
 

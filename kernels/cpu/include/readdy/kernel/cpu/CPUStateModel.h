@@ -14,7 +14,7 @@
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/cpu/model/ParticleData.h>
+#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
 
 namespace readdy {
     namespace kernel {
@@ -33,7 +33,7 @@ namespace readdy {
                 virtual void removeParticle(const readdy::model::Particle &p) override;
                 virtual double getEnergy() const override;
 
-                model::ParticleData *const getParticleData() const;
+                readdy::kernel::singlecpu::model::SingleCPUParticleData *const getParticleData() const;
 
                 std::vector<model::ParticleIndexPair>::iterator begin_neighborList();
                 std::vector<model::ParticleIndexPair>::iterator end_neighborList();
