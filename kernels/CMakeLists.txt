@@ -1,2 +1,1 @@
-ADD_SUBDIRECTORY(singlecpu)
 ADD_SUBDIRECTORY(cpu)

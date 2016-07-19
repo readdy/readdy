@@ -204,6 +204,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         INCLUDE(cmake/sources/sources_model.cmake)
         INCLUDE(cmake/sources/sources_io.cmake)
         INCLUDE(cmake/sources/sources_plugin.cmake)
+        INCLUDE(cmake/sources/kernels/singlecpu.cmake)
         INCLUDE(cmake/sources/sources_readdy.cmake)
         # create library
         ADD_LIBRARY(${READDY_PROJECT_NAME} ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
@@ -220,6 +221,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         ADD_SUBDIRECTORY(readdy/main/model)
         ADD_SUBDIRECTORY(readdy/main/io)
         ADD_SUBDIRECTORY(readdy/main/plugin)
+        ADD_SUBDIRECTORY(kernels/singlecpu)
         ADD_SUBDIRECTORY(readdy/main)
     ENDIF(READDY_BUILD_SHARED_COMBINED)
 
@@ -263,6 +265,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     IF (READDY_CREATE_TEST_TARGET)
         ADD_SUBDIRECTORY(readdy/test)
         ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
+        ADD_SUBDIRECTORY(kernels/singlecpu/test)
     ENDIF ()
 
     #####################################

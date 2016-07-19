@@ -7,10 +7,7 @@
 
 #include <readdy/model/RandomProvider.h>
 #include <readdy/model/Kernel.h>
-#include <boost/dll.hpp>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
-
-//#define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
 
 namespace readdy {
     namespace kernel {
@@ -50,17 +47,6 @@ namespace readdy {
                 struct Impl;
                 std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;
             };
-#ifndef KERNEL_SINGLECPU_NO_EXPORT_ALIAS
-            BOOST_DLL_ALIAS(
-                    readdy::kernel::singlecpu::SingleCPUKernel::name,
-                    name
-            );
-            // export factory method as "create_kernel"
-            BOOST_DLL_ALIAS(
-                    readdy::kernel::singlecpu::SingleCPUKernel::create,
-                    createKernel
-            );
-#endif
         }
     }
 }

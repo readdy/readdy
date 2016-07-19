@@ -6,6 +6,7 @@
 #include <readdy/model/programs/Programs.h>
 #include <readdy/model/potentials/PotentialsOrder2.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 using namespace readdy;
 
@@ -236,6 +237,8 @@ std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string ty
 
 double Simulation::getRecommendedTimeStep(unsigned int N) const {
     double tau_R = 0;
+
+    readdy::kernel::singlecpu::SingleCPUKernel k;
 
     const auto& context = pimpl->kernel->getKernelContext();
     double kbt = context.getKBT();
