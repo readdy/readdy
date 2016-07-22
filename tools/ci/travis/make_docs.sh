@@ -51,7 +51,8 @@ function setup_docs_repo {
     git config user.email "clonker@users.noreply.github.com"
     git remote add upstream "https://$GH_TOKEN@github.com/readdy/readdy.git"
     git fetch upstream
-    git reset upstream/gh-pages
+    git checkout --orphan workbranch
+    git reset --hard
     cd -
 }
 
@@ -62,8 +63,8 @@ function deploy {
     cd $HOME/_readdy_docs/docs/html
     touch .
     git add -A .
-    git commit -m "deploy pages at ${rev}"
-    git push -q upstream HEAD:gh-pages
+    git commit -m "github pages"
+    git push -q -f upstream workbranch:gh-pages
 }
 
 set_this_up
