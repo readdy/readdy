@@ -8,7 +8,6 @@
  */
 
 
-#include "gtest/gtest.h"
 #include <readdy/common/Utils.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
@@ -16,6 +15,8 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
 #include <readdy/model/potentials/PotentialsOrder2.h>
+#include <readdy/testing/KernelTest.h>
+#include <readdy/testing/Utils.h>
 
 namespace m = readdy::model;
 
@@ -28,10 +29,14 @@ namespace {
         std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory {new readdy::model::reactions::ReactionFactory()};
     };
 
+    class TestKernelContextWithKernels : public KernelTest {
+
+    };
+
     struct NOOPPotential : public m::potentials::PotentialOrder2 {
         NOOPPotential() : PotentialOrder2("no op") { }
 
-        virtual double getCutoffRadius() override {
+        virtual double getCutoffRadius() const override {
             return 0;
         }
 
@@ -39,6 +44,7 @@ namespace {
         virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override {return 0;}
         virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override {}
         virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) override {}
+        virtual double getMaximalForce(double kbt) const noexcept override { return 0; }
         virtual NOOPPotential *replicate() const override { return new NOOPPotential(*this); }
     };
 
@@ -75,7 +81,7 @@ namespace {
         EXPECT_EQ(vector.size(), 2);
     }
 
-    TEST_F(TestKernelContext, PotentialOrder1Map) {
+    TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
         auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
 
         namespace rmp = readdy::model::potentials;
@@ -183,5 +189,8 @@ namespace {
         }
 
     }
+
+    INSTANTIATE_TEST_CASE_P(TestKernelContext, TestKernelContextWithKernels,
+                            ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 
 }

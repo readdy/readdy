@@ -21,7 +21,7 @@ namespace {
         kernel->getKernelContext().setBoxSize(10, 10, 10);
         kernel->getKernelContext().setTimeStep(1);
         kernel->getKernelContext().setDiffusionConstant("X", .55);
-        kernel->getKernelContext().registerDeathReaction("X decay", "X", .05);
+        kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
         kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .5, .00);
 
         auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();

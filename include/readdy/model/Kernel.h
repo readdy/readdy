@@ -112,12 +112,6 @@ namespace readdy {
             boost::signals2::scoped_connection connectObservable(ObservableBase *const observable);
 
             /**
-             * If set to true, all (for the current timestep unblocked) observables
-             * will be evaluated once the model gets advanced in time.
-             */
-            void evaluateObservablesAutomatically(bool evaluate);
-
-            /**
              * Evaluates all unblocked observables.
              */
             void evaluateObservables(readdy::model::time_step_type t);
@@ -138,7 +132,7 @@ namespace readdy {
              */
             std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::scoped_connection> registerObservable(const ObservableType &observable, unsigned int stride);
 
-            virtual readdy::model::programs::ProgramFactory &getProgramFactory() const;
+            virtual readdy::model::programs::ProgramFactory &getProgramFactory() const = 0;
 
             /**
              * Returns a vector containing all available program names for this specific kernel instance.
@@ -158,12 +152,12 @@ namespace readdy {
             /**
              * @todo implement this properly
              */
-            virtual readdy::model::KernelStateModel &getKernelStateModel() const;
+            virtual readdy::model::KernelStateModel &getKernelStateModel() const = 0;
 
             /**
              * @todo implement & document this properly
              */
-            virtual readdy::model::KernelContext &getKernelContext() const;
+            virtual readdy::model::KernelContext &getKernelContext() const = 0;
 
             virtual std::vector<std::string> getAvailablePotentials() const;
 
@@ -179,16 +173,14 @@ namespace readdy {
                 return getPotentialFactory().createPotentialAs<T>(name);
             }
 
-            virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const;
+            virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const = 0;
 
-            virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const;
+            virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const = 0;
 
             virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const;
         protected:
             struct Impl;
             std::unique_ptr<Impl> pimpl;
-
-
         };
 
 

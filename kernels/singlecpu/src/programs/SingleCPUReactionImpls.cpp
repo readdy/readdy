@@ -26,7 +26,7 @@ namespace readdy {
                         const auto &dist = ctx.getDistSquaredFun();
                         const auto &fixPos = ctx.getFixPositionFun();
                         const auto &dt = ctx.getTimeStep();
-                        auto data = kernel->getKernelStateModelSingleCPU().getParticleData();
+                        auto data = kernel->getKernelStateModel().getParticleData();
                         auto &rnd = kernel->getRandomProvider();
                         std::vector<particle_t> newParticles{};
                         std::vector<std::function<void()>> events{};
@@ -43,7 +43,7 @@ namespace readdy {
                                     if (rnd.getUniform() < r) {
                                         const size_t particleIdx = (const size_t) (it_type - data->begin_types());
                                         events.push_back([particleIdx, &newParticles, &reaction, this] {
-                                            auto &&_data = kernel->getKernelStateModelSingleCPU().getParticleData();
+                                            auto &&_data = kernel->getKernelStateModel().getParticleData();
                                             if (_data->isMarkedForDeactivation(particleIdx)) return;
                                             _data->markForDeactivation(particleIdx);
 
@@ -94,7 +94,7 @@ namespace readdy {
 
                         // reactions with two educts
                         {
-                            const auto *neighborList = kernel->getKernelStateModelSingleCPU().getNeighborList();
+                            const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
                             for (auto &&it = neighborList->begin(); it != neighborList->end(); ++it) {
                                 const auto idx1 = it->idx1, idx2 = it->idx2;
                                 const auto &reactions = ctx.getOrder2Reactions(
@@ -110,7 +110,7 @@ namespace readdy {
                                     if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
                                         && rnd.getUniform() < reaction->getRate() * dt) {
                                         events.push_back([idx1, idx2, this, &newParticles, &reaction] {
-                                            auto &&_data = kernel->getKernelStateModelSingleCPU().getParticleData();
+                                            auto &&_data = kernel->getKernelStateModel().getParticleData();
                                             if (_data->isMarkedForDeactivation(idx1)) return;
                                             if (_data->isMarkedForDeactivation(idx2)) return;
                                             _data->markForDeactivation(idx1);

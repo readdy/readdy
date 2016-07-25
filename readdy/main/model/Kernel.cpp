@@ -46,14 +46,6 @@ namespace readdy {
         Kernel::~Kernel() {
         }
 
-        readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
-        readdy::model::KernelContext &Kernel::getKernelContext() const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
         boost::signals2::scoped_connection Kernel::connectObservable(ObservableBase *const observable) {
             boost::signals2::scoped_connection connection (pimpl->signal.get()->connect(std::bind(&ObservableBase::callback, observable, std::placeholders::_1)));
             boost::signals2::shared_connection_block block{connection, false};
@@ -97,24 +89,12 @@ namespace readdy {
             return std::vector<std::string>();
         }
 
-        std::unique_ptr<readdy::model::potentials::Potential> Kernel::createPotential(std::string &name) const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
-        potentials::PotentialFactory &Kernel::getPotentialFactory() const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
-        readdy::model::programs::ProgramFactory &Kernel::getProgramFactory() const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
-        readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
-            throw std::runtime_error("This method should not be called directly but overridden in a kernel implementation.");
-        }
-
         void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
             getKernelStateModel().addParticle({pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)});
+        }
+
+        std::unique_ptr<readdy::model::potentials::Potential> Kernel::createPotential(std::string &name) const {
+            return getPotentialFactory().createPotential(name);
         }
 
 

@@ -15,6 +15,7 @@ PROJECT(ReaDDy_Main C CXX)
 SET(READDY_CREATE_TEST_TARGET ON CACHE BOOL "Determines if the test target should be added.")
 SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF CACHE BOOL "Determines if valgrind test targets should be added. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
 SET(READDY_INSTALL_UNIT_TEST_EXECUTABLE OFF CACHE BOOL "Determines if the unit test executable should be installed. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
+SET(READDY_KERNELS_TO_TEST "SingleCPU,CPU" CACHE STRING "Variable holding which kernels should be tested in the core library.")
 
 # build single libraries or as a single shared library holding the whole thing
 SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared library or shared libraries with respect to the components should be built")
@@ -33,6 +34,15 @@ SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of r
 
 # boost download cache dir
 SET(BOOST_DOWNLOAD_CACHE_DIR "${CMAKE_BINARY_DIR}/download/external/boost" CACHE PATH "Path to the directory into which the boost libraries are downloaded and installed.")
+
+#####################################
+#                                   #
+# Advanced cache variables          #
+#                                   #
+#####################################
+
+SET(INCLUDE_PERFORMANCE_TESTS OFF CACHE BOOL "Whether to include performance tests into test targets.")
+MARK_AS_ADVANCED(INCLUDE_PERFORMANCE_TESTS)
 
 #####################################
 #                                   #
@@ -154,17 +164,24 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
         SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
 
-        ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
+        SET(GOOGLEMOCK_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
+        SET(GOOGLEMOCK_INCLUDE ${GOOGLEMOCK_ROOT}/googlemock/include)
+        SET(GOOGLEMOCK_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
+        SET(GOOGLEMOCK_LIBRARY ${GOOGLEMOCK_BINARY_DIR}/googlemock)
+
         SET(BUILD_GTEST ON)
-        SET(BUILD_GMOCK OFF)
+        SET(BUILD_GMOCK ON)
         SET(gtest_force_shared_crt ON)
         SET(BUILD_SHARED_LIBS ON)
+        ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
         SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
                 COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-                )
+        )
 
         ENABLE_TESTING()
+
+        ADD_SUBDIRECTORY(readdy_testing)
 
     ELSE()
         MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
@@ -187,6 +204,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         INCLUDE(cmake/sources/sources_model.cmake)
         INCLUDE(cmake/sources/sources_io.cmake)
         INCLUDE(cmake/sources/sources_plugin.cmake)
+        INCLUDE(cmake/sources/kernels/singlecpu.cmake)
         INCLUDE(cmake/sources/sources_readdy.cmake)
         # create library
         ADD_LIBRARY(${READDY_PROJECT_NAME} ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
@@ -203,6 +221,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         ADD_SUBDIRECTORY(readdy/main/model)
         ADD_SUBDIRECTORY(readdy/main/io)
         ADD_SUBDIRECTORY(readdy/main/plugin)
+        ADD_SUBDIRECTORY(kernels/singlecpu)
         ADD_SUBDIRECTORY(readdy/main)
     ENDIF(READDY_BUILD_SHARED_COMBINED)
 
@@ -244,11 +263,9 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
     IF (READDY_CREATE_TEST_TARGET)
-
-        INCLUDE_DIRECTORIES(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
         ADD_SUBDIRECTORY(readdy/test)
         ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
-
+        ADD_SUBDIRECTORY(kernels/singlecpu/test)
     ENDIF ()
 
     #####################################

@@ -2,11 +2,11 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/Simulation.h>
-#include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
 #include <readdy/model/potentials/PotentialsOrder2.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 using namespace readdy;
 
@@ -235,20 +235,98 @@ std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string ty
     return positions;
 }
 
-/*template boost::uuids::uuid Simulation::registerObservable<readdy::model::ParticlePositionObservable>(std::function<void(const typename readdy::model::ParticlePositionObservable::result_t)>, unsigned int);
-template boost::uuids::uuid Simulation::registerObservable<readdy::model::RadialDistributionObservable>(
-        std::function<void(const typename readdy::model::RadialDistributionObservable::result_t)>, unsigned int,
-        std::vector<double>, const std::string, const std::string, double
-);
-template boost::uuids::uuid Simulation::registerObservable<readdy::model::CenterOfMassObservable>(
-        std::function<void(const typename readdy::model::CenterOfMassObservable::result_t)>, unsigned int, const std::vector<std::string>
-);
-template boost::uuids::uuid Simulation::registerObservable<readdy::model::HistogramAlongAxisObservable>(
-        std::function<void(const typename readdy::model::HistogramAlongAxisObservable::result_t)>, unsigned int, std::vector<double> , std::vector<std::string> , unsigned int
-);
-template boost::uuids::uuid Simulation::registerObservable<readdy::model::NParticlesObservable>(
-        std::function<void(const typename readdy::model::NParticlesObservable::result_t)>, unsigned int
-);*/
+double Simulation::getRecommendedTimeStep(unsigned int N) const {
+    double tau_R = 0;
+
+    readdy::kernel::singlecpu::SingleCPUKernel k;
+
+    const auto& context = pimpl->kernel->getKernelContext();
+    double kbt = context.getKBT();
+    double kReactionMax = 0;
+
+    for(auto&& reactionO1 : context.getAllOrder1Reactions()) {
+        kReactionMax = std::max(kReactionMax, reactionO1->getRate());
+    }
+    for(auto&& reactionO2 : context.getAllOrder2Reactions()) {
+        kReactionMax = std::max(kReactionMax, reactionO2->getRate());
+    }
+
+    double tDMin = 0;
+    std::unordered_map<unsigned int, double> fMaxes;
+    for(auto&& pI : context.getAllRegisteredParticleTypes()) {
+        double D = context.getDiffusionConstant(pI);
+        double tD = 0;
+        double xi = 0; // 1/(beta*Fmax)
+        double fMax = 0;
+        double rMin = std::numeric_limits<double>::max();
+
+        for (auto &&reaction : context.getOrder1Reactions(pI)) {
+            if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
+                rMin = std::min(rMin, reaction->getProductDistance());
+            }
+        }
+
+        for (auto &&pot : context.getOrder1Potentials(pI)) {
+            fMax = std::max(pot->getMaximalForce(kbt), fMax);
+            if(pot->getRelevantLengthScale() > 0) {
+                rMin = std::min(rMin, pot->getRelevantLengthScale());
+            }
+        }
+
+        for (auto &&pJ : context.getAllRegisteredParticleTypes()) {
+
+            for (auto &&reaction : context.getOrder2Reactions(pI, pJ)) {
+                if (reaction->getEductDistance() > 0) {
+                    rMin = std::min(rMin, reaction->getEductDistance());
+                }
+                if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
+                    rMin = std::min(rMin, reaction->getProductDistance());
+                }
+            }
+
+            for (auto &&pot : context.getOrder2Potentials(pI, pJ)) {
+                if (pot->getCutoffRadius() > 0) {
+                    rMin = std::min(rMin, pot->getCutoffRadius());
+                    fMax = std::max(pot->getMaximalForce(kbt), fMax);
+                } else {
+                    BOOST_LOG_TRIVIAL(warning) << "Discovered potential with cutoff radius 0.";
+                }
+            }
+        }
+        double rho = rMin / 2;
+        if (fMax > 0) {
+            xi = 1. / (context.getKBT() * fMax);
+            tD = (xi * xi / D) * (1 + rho / xi - sqrt(1 + 2 * rho / xi));
+        } else if(D > 0) {
+            tD = .5 * rho * rho / D;
+        }
+        fMaxes.emplace(pI, fMax);
+        BOOST_LOG_TRIVIAL(trace) << " tau for " << context.getParticleName(pI) << ": " << tD << "( xi = "
+                                 << xi << ", rho=" << rho << ")";
+        if (tDMin == 0) {
+            tDMin = tD;
+        } else {
+            tDMin = std::min(tDMin, tD);
+        }
+    }
+
+    BOOST_LOG_TRIVIAL(debug) << "Maximal displacement for particle types per time step (stochastic + deterministic): ";
+    for(auto&& pI : context.getAllRegisteredParticleTypes()) {
+        double D = context.getDiffusionConstant(pI);
+        double xmax = sqrt(2*D*tDMin) + D*kbt*fMaxes[pI]*tDMin;
+        BOOST_LOG_TRIVIAL(debug) << "\t - " << context.getParticleName(pI) << ": " << sqrt(2*D*tDMin) << " + "
+                                 << D*kbt*fMaxes[pI]*tDMin << " = " << xmax;
+    }
+
+    if (kReactionMax>0) tau_R  = 1./kReactionMax;
+
+    double tau = std::max(tau_R, tDMin);
+    if(tau_R > 0) tau = std::min(tau_R, tau);
+    if(tDMin > 0) tau = std::min(tDMin, tau);
+    tau /= (double) N;
+    BOOST_LOG_TRIVIAL(debug) << "Estimated time step: " << tau;
+    return tau;
+}
 
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) { };

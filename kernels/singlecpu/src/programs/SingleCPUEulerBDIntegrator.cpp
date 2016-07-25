@@ -25,7 +25,7 @@ namespace readdy {
                     const auto& kbt = context.getKBT();
                     const auto& fixPos = context.getFixPositionFun();
                     const auto&& dt = context.getTimeStep();
-                    const auto&& pd = kernel->getKernelStateModelSingleCPU().getParticleData();
+                    const auto&& pd = kernel->getKernelStateModel().getParticleData();
                     auto it_pos = pd->begin_positions();
                     auto it_types = pd->begin_types();
                     auto it_forces = pd->begin_forces();

@@ -9,22 +9,29 @@
 
 #include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
 #include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/programs/CPUDefaultReactionProgram.h>
+#include <readdy/kernel/cpu/programs/Reactions.h>
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu/programs/UpdateNeighborList.h>
+#include <readdy/kernel/cpu/programs/CalculateForces.h>
 
-using super = readdy::kernel::singlecpu::programs::SingleCPUProgramFactory;
 namespace core_p = readdy::model::programs;
 
 namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace programs {
-                CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) : super::SingleCPUProgramFactory(kernel) {
+                CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
                     factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
-                        return new CPUDefaultReactionProgram(kernel);
+                        return new reactions::UncontrolledApproximation(kernel);
                     };
                     factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
                         return new CPUEulerBDIntegrator(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
+                        return new UpdateNeighborList(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
+                        return new CalculateForces(kernel);
                     };
                 }
             }

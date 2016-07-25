@@ -4,8 +4,6 @@
 
 #include <boost/predef.h>
 #include <readdy/common/Utils.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 
 namespace readdy {
     namespace utils {
@@ -29,30 +27,20 @@ namespace readdy {
             #endif
         }
 
-        namespace testing {
-            std::string getPluginsDirectory() {
-                // test for several environment variables
-                const std::string envs[] {"CONDA_ENV_PATH", "CONDA_PREFIX", "PREFIX"};
-                const char *env = nullptr;
-                for(auto&& key : envs) {
-                    env = std::getenv(key.c_str());
-                    if(env) {
-                        BOOST_LOG_TRIVIAL(trace) << "Using env-variable for plugin dir prefix " << key << "=" << env;
-                        break;
-                    }
-                }
-                std::string pluginDir = "lib/readdy_plugins";
-                if (env) {
-                    auto _env = std::string(env);
-                    if (!boost::algorithm::ends_with(env, "/")) {
-                        _env = _env.append("/");
-                    }
-                    pluginDir = _env.append(pluginDir);
-                } else {
-                    BOOST_LOG_TRIVIAL(trace) << "no environment variables found that indicate plugins dir.";
-                }
-                return pluginDir;
+        std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+            std::stringstream ss(s);
+            std::string item;
+            while (std::getline(ss, item, delim)) {
+                elems.push_back(item);
             }
+            return elems;
         }
+
+        std::vector<std::string> split(const std::string &s, char delim) {
+            std::vector<std::string> elems;
+            split(s, delim, elems);
+            return elems;
+        }
+
     }
 }

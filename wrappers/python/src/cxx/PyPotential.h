@@ -29,9 +29,14 @@ namespace readdy {
 
             virtual PotentialOrder2Wrapper *replicate() const override;
 
-            virtual double getCutoffRadius() override {
+            virtual double getCutoffRadius() const override {
                 // todo!
                 return 50;
+            }
+
+            virtual double getMaximalForce(double kbt) const noexcept override {
+                // todo!
+                return 0;
             }
 
 

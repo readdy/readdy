@@ -12,6 +12,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace fs = boost::filesystem;
 namespace utl = readdy::utils;
@@ -20,6 +21,8 @@ namespace readdy {
 
         KernelProvider &KernelProvider::getInstance() {
             static KernelProvider instance;
+            using singleCPUKernel = readdy::kernel::singlecpu::SingleCPUKernel;
+            instance.add(readdy::kernel::singlecpu::SingleCPUKernel::name, [] {return new readdy::kernel::singlecpu::SingleCPUKernel();});
             return instance;
         }
 

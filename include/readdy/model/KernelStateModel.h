@@ -20,7 +20,6 @@
 namespace readdy {
     namespace model {
         class KernelStateModel {
-        typedef boost::signals2::signal<void()> signal_t;
         public:
             KernelStateModel();
             virtual ~KernelStateModel();
@@ -40,15 +39,8 @@ namespace readdy {
 
             virtual double getEnergy() const = 0;
 
-            boost::signals2::connection addListener(const signal_t::slot_type& l);
-
             KernelStateModel(KernelStateModel&& rhs);
             KernelStateModel& operator=(KernelStateModel&& rhs);
-
-        protected:
-            std::unique_ptr<signal_t> signal;
-
-            void fireTimeStepChanged();
         };
     }
 }

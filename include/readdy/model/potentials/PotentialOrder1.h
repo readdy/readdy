@@ -28,6 +28,8 @@ namespace readdy {
 
                 virtual void configureForType(const unsigned int &type) {}
 
+                virtual double getRelevantLengthScale() const noexcept = 0;
+
                 virtual PotentialOrder1 *replicate() const override = 0;
 
 

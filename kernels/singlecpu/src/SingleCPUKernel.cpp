@@ -45,7 +45,7 @@ namespace readdy {
              */
             SingleCPUKernel::~SingleCPUKernel() = default;
 
-            readdy::model::KernelStateModel &SingleCPUKernel::getKernelStateModel() const {
+            SingleCPUKernelStateModel &SingleCPUKernel::getKernelStateModel() const {
                 return *pimpl->model;
             }
 
@@ -55,10 +55,6 @@ namespace readdy {
 
             readdy::model::KernelContext &SingleCPUKernel::getKernelContext() const {
                 return *pimpl->context;
-            }
-
-            SingleCPUKernelStateModel &SingleCPUKernel::getKernelStateModelSingleCPU() const {
-                return *pimpl->model;
             }
 
             std::vector<std::string> SingleCPUKernel::getAvailablePotentials() const {

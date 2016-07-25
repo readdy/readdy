@@ -13,10 +13,16 @@
 #include <readdy/model/potentials/PotentialsOrder2.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
 #include <readdy/model/programs/Programs.h>
+#include <readdy/testing/KernelTest.h>
+#include <readdy/testing/Utils.h>
 
 namespace {
 
-    TEST(TestPotentials, TestParticlesStayInBox) {
+    class TestPotentials : public KernelTest {
+
+    };
+
+    TEST_P(TestPotentials, TestParticlesStayInBox) {
         auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         kernel->getKernelContext().setDiffusionConstant("A", 1);
         kernel->getKernelContext().setDiffusionConstant("B", .1);
@@ -70,4 +76,7 @@ namespace {
             nl->execute();
         }
     }
+
+    INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,
+                            ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 }

@@ -39,7 +39,6 @@ namespace readdy {
 
                 void increaseEnergy(double increase);
 
-
                 SingleCPUKernelStateModel(readdy::model::KernelContext const* context);
                 ~SingleCPUKernelStateModel();
                 // move
@@ -48,6 +47,7 @@ namespace readdy {
 
                 readdy::kernel::singlecpu::model::SingleCPUParticleData* getParticleData() const;
 
+                void setNeighborList(std::unique_ptr<model::SingleCPUNeighborList> ptr);
                 const model::SingleCPUNeighborList * const getNeighborList() const;
 
                 virtual const std::vector<readdy::model::Particle> getParticles() const override;

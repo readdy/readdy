@@ -11,12 +11,13 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/Simulation.h>
 #include <readdy/model/programs/Programs.h>
-#include "gtest/gtest.h"
+#include <readdy/testing/KernelTest.h>
+#include <readdy/testing/Utils.h>
 
 namespace m = readdy::model;
 
 namespace {
-    class  TestObservables : public ::testing::Test {
+    class  TestObservables : public KernelTest {
     protected:
         std::unique_ptr<m::Kernel> kernel;
 
@@ -25,12 +26,12 @@ namespace {
         }
     };
 
-    TEST_F(TestObservables, Foo) {
+    TEST_P(TestObservables, Foo) {
         readdy::model::_internal::ObservableFactory obsf(kernel.get());
         auto x = obsf.create<m::ParticlePositionObservable>(1);
     }
 
-    TEST_F(TestObservables, TestParticlePositions) {
+    TEST_P(TestObservables, TestParticlePositions) {
         const unsigned int n_particles = 100;
         const double diffusionConstant = 1;
         kernel->getKernelContext().setDiffusionConstant("type", diffusionConstant);
@@ -63,7 +64,7 @@ namespace {
         connection.disconnect();
     }
 
-    TEST_F(TestObservables, TestCombinerObservable) {
+    TEST_P(TestObservables, TestCombinerObservable) {
         auto&& o1 = kernel->createObservable<m::ParticlePositionObservable>(1);
         auto&& o2 = kernel->createObservable<m::ParticlePositionObservable>(1);
         auto&& o3 = kernel->createObservable<m::TestCombinerObservable>(o1.get(), o2.get());
@@ -82,5 +83,8 @@ namespace {
 
         connection.disconnect();
     }
+
+    INSTANTIATE_TEST_CASE_P(TestObservables, TestObservables,
+                            ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 }
 

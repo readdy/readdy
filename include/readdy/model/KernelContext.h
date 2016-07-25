@@ -114,6 +114,9 @@ namespace readdy {
 
             std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 
+            std::vector<unsigned int> getAllRegisteredParticleTypes() const;
+            std::string getParticleName(unsigned int id) const;
+
             void configure();
 
             // ctor and dtor

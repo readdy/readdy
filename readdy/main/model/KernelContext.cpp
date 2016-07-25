@@ -411,6 +411,21 @@ namespace readdy {
             }
         }
 
+        std::vector<unsigned int> KernelContext::getAllRegisteredParticleTypes() const {
+            std::vector<unsigned int> v;
+            for(auto&& entry : pimpl->typeMapping) {
+                v.push_back(entry.second);
+            }
+            return v;
+        }
+
+        std::string KernelContext::getParticleName(unsigned int id) const {
+            for(auto&& e : pimpl->typeMapping) {
+                if(e.second == id) return e.first;
+            }
+            return "";
+        }
+
 
         KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 

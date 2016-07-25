@@ -206,8 +206,8 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->getKernelContext().setDiffusionConstant("E", .25);
 
     kernel->getKernelContext().registerDeathReaction("A decay", "A", 1);
-    kernel->getKernelContext().registerFusionReaction("B+C->E", "B", "C", "E", 1, 13);
-    kernel->getKernelContext().registerFusionReaction("B+D->A", "B", "D", "A", 1, 13);
+    kernel->getKernelContext().registerFusionReaction("B+C->E", "B", "C", "E", 1, 17);
+    kernel->getKernelContext().registerFusionReaction("B+D->A", "B", "D", "A", 1, 17);
     kernel->getKernelContext().registerConversionReaction("E->A", "E", "A", 1);
     kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
 
@@ -283,5 +283,6 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
 
         neighborList->execute();
         reactionsProgram->execute();
+        kernel->evaluateObservables(t);
     }
 }

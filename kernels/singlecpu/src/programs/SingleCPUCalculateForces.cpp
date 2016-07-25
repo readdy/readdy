@@ -16,7 +16,7 @@ namespace readdy {
                 SingleCPUCalculateForces::SingleCPUCalculateForces(SingleCPUKernel *kernel) : kernel(kernel) {}
 
                 void SingleCPUCalculateForces::execute() {
-                    kernel->getKernelStateModelSingleCPU().calculateForces();
+                    kernel->getKernelStateModel().calculateForces();
                 }
 
             }
