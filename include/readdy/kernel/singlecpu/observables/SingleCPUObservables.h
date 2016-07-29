@@ -12,12 +12,12 @@
 #define READDY_MAIN_SINGLECPUOBSERVABLES_H
 
 #include <readdy/model/Observables.h>
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
-            class SingleCPUKernel;
             namespace observables {
                 class SingleCPUHistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
 
@@ -32,16 +32,20 @@ namespace readdy {
                     size_t size;
                 };
 
-                class SingleCPUNparticlesObservable : public readdy::model::NParticlesObservable {
-
+                template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
+                class NParticlesObservable : public readdy::model::NParticlesObservable {
                 public:
-                    SingleCPUNparticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride);
+                    NParticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride) :
+                            readdy::model::NParticlesObservable(kernel, stride),
+                            singleCPUKernel(dynamic_cast<kernel_t *>(kernel))
+                    { }
 
-                    virtual void evaluate() override;
+                    virtual void evaluate() override {
+                        result = singleCPUKernel->getKernelStateModel().getParticleData()->size();
+                    }
 
                 protected:
-                    readdy::kernel::singlecpu::SingleCPUKernel *const singleCPUKernel;
-
+                     kernel_t*const singleCPUKernel;
                 };
 
             }

@@ -21,14 +21,15 @@ namespace readdy {
 
         KernelProvider &KernelProvider::getInstance() {
             static KernelProvider instance;
-            using singleCPUKernel = readdy::kernel::singlecpu::SingleCPUKernel;
-            instance.add(readdy::kernel::singlecpu::SingleCPUKernel::name, [] {return new readdy::kernel::singlecpu::SingleCPUKernel();});
             return instance;
         }
 
         KernelProvider::KernelProvider() {
             fs::path path = fs::current_path();
             BOOST_LOG_TRIVIAL(debug) << "current path is " << path;
+            add(readdy::kernel::singlecpu::SingleCPUKernel::name, [] {
+                return new readdy::kernel::singlecpu::SingleCPUKernel();
+            });
         }
 
         const std::string KernelProvider::getDefaultKernelDirectory() {

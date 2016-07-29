@@ -48,7 +48,7 @@ namespace readdy {
                     }
                 }
 
-                SingleCPUHarmonicRepulsion::SingleCPUHarmonicRepulsion(const SingleCPUKernel *const kernel) : readdy::model::potentials::HarmonicRepulsion(kernel) { }
+                SingleCPUHarmonicRepulsion::SingleCPUHarmonicRepulsion(const readdy::model::Kernel *const kernel) : readdy::model::potentials::HarmonicRepulsion(kernel) { }
 
                 potentials::SingleCPUHarmonicRepulsion *SingleCPUHarmonicRepulsion::replicate() const {
                     return new SingleCPUHarmonicRepulsion(*this);

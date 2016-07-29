@@ -40,7 +40,6 @@ namespace readdy {
         Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()) {
             pimpl->name = name;
             pimpl->observableFactory = std::make_unique<_internal::ObservableFactory>(this);
-            std::srand((unsigned int) std::time(0));
         }
 
         Kernel::~Kernel() {

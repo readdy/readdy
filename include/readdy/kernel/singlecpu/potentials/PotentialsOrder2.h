@@ -11,19 +11,19 @@
 #define READDY_MAIN_POTENTIALSORDER2_H_H
 
 #include <readdy/model/potentials/PotentialsOrder2.h>
+#include <readdy/model/Kernel.h>
 
 namespace readdy {
 
     namespace kernel {
         namespace singlecpu {
-            class SingleCPUKernel;
 
             namespace potentials {
                 class SingleCPUHarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion{
                     using vec_t = readdy::model::Vec3;
 
                 public:
-                    SingleCPUHarmonicRepulsion(const SingleCPUKernel *const kernel);
+                    SingleCPUHarmonicRepulsion(const readdy::model::Kernel *const kernel);
 
                     virtual double calculateEnergy(const vec_t& x_ij) override;
                     virtual void calculateForce(vec_t &force, const vec_t &x_ij) override;

@@ -41,6 +41,8 @@ namespace readdy {
 
                 virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
+                virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+
 
             private:
                 struct Impl;

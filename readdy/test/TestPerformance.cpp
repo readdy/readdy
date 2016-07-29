@@ -16,9 +16,7 @@
 
 namespace {
 
-    void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_type steps = 20) {
-        std::srand((unsigned int) std::time(0));
-
+    void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_type steps = 3) {
         using timer = readdy::testing::Timer;
 
         auto stdRand = [] (double lower = 0.0, double upper = 1.0) -> double {
@@ -46,7 +44,7 @@ namespace {
             kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "B", "C");
         }
 
-        const unsigned int nParticles = 1000;
+        const unsigned int nParticles = 5000;
         for(unsigned long _ = 0; _ < nParticles; ++_) {
             for(const auto& t : types) {
                 readdy::model::Particle p{stdRand(-7.5, 7.5), stdRand(-7.5, 7.5), stdRand(-7.5, 7.5),
@@ -64,7 +62,7 @@ namespace {
         auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
         kernel.getKernelContext().configure();
 
-        auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(10);
+        auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
         obs->setCallback([] (const long n) {
             BOOST_LOG_TRIVIAL(debug) << "have n particles = " << n;
         });
@@ -76,6 +74,7 @@ namespace {
         for(readdy::model::time_step_type t = 0; t < steps; ++t) {
             BOOST_LOG_TRIVIAL(debug) << "----------";
             BOOST_LOG_TRIVIAL(debug) << "t = " << t;
+            kernel.evaluateObservables(t);
             {
                 timer c("forces");
                 forces->execute();
@@ -97,7 +96,6 @@ namespace {
                 reactionsProgram->execute();
                 t_reactions += c.getSeconds();
             }
-            kernel.evaluateObservables(t);
         }
 
         BOOST_LOG_TRIVIAL(debug) << "--------------------------------------------------------------";
@@ -109,13 +107,17 @@ namespace {
     }
 
     TEST(TestPerformance, SingleCPU) {
-        auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-        //runPerformanceTest(*kernel);
+        {
+            auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+            runPerformanceTest(*kernel);
+        }
     }
 
     TEST(TestPerformance, CPU) {
-        auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-        runPerformanceTest(*kernel);
+        {
+            auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+            runPerformanceTest(*kernel);
+        }
     }
 
 }

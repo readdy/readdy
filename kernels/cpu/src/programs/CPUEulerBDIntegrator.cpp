@@ -16,7 +16,7 @@ namespace readdy {
         namespace cpu {
             namespace programs {
                 void CPUEulerBDIntegrator::execute() {
-                    /*const auto &&pd = kernel->getKernelStateModel().getParticleData();
+                    const auto &&pd = kernel->getKernelStateModel().getParticleData();
                     const auto size = pd->size();
                     std::vector<std::thread> threads(kernel->getNCores());
                     const std::size_t grainSize = size / kernel->getNCores();
@@ -54,10 +54,10 @@ namespace readdy {
                     threads.back() = std::thread(worker, work_iter, pd->end_positions(), pd->begin_forces() + pos,
                                                  pd->begin_types() + pos);
 
-                    for(auto&& i : threads) {
+                    for (auto &&i : threads) {
                         i.join();
                     }
-                */
+
 
                 }
 

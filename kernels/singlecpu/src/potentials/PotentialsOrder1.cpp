@@ -15,7 +15,7 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace potentials {
-                SingleCPUCubePotential::SingleCPUCubePotential(const readdy::kernel::singlecpu::SingleCPUKernel *const kernel) : readdy::model::potentials::CubePotential(kernel) { }
+                SingleCPUCubePotential::SingleCPUCubePotential(const readdy::model::Kernel *const kernel) : readdy::model::potentials::CubePotential(kernel) { }
 
                 double SingleCPUCubePotential::calculateEnergy(const readdy::model::Vec3 &position) {
 

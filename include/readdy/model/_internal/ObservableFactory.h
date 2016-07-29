@@ -17,7 +17,6 @@
 #include <readdy/model/Observable.h>
 #include <readdy/common/Utils.h>
 #include <readdy/model/Observables.h>
-#include <readdy/model/Kernel.h>
 
 namespace readdy {
     namespace model {
@@ -45,7 +44,7 @@ namespace readdy {
                 }
 
                 virtual NParticlesObservable* createNParticlesObservable(readdy::model::Kernel* const kernel, unsigned int stride) const {
-                    throw std::runtime_error("should be overrideen (or todo: provide default impl)");
+                    throw std::runtime_error("should be overridden (or todo: provide default impl)");
                 }
 
             protected:

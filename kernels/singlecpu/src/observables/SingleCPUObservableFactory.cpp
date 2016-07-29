@@ -26,7 +26,7 @@ namespace readdy {
 
                 readdy::model::NParticlesObservable *SingleCPUObservableFactory::createNParticlesObservable(
                         readdy::model::Kernel *const kernel, unsigned int stride) const {
-                    return new SingleCPUNparticlesObservable(kernel, stride);
+                    return new NParticlesObservable<>(kernel, stride);
                 }
 
 

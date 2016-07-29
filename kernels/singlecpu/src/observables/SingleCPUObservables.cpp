@@ -46,14 +46,6 @@ namespace readdy {
                     }
                 }
 
-                SingleCPUNparticlesObservable::SingleCPUNparticlesObservable(
-                        readdy::model::Kernel *const kernel, unsigned int stride) : readdy::model::NParticlesObservable(
-                        kernel, stride), singleCPUKernel(dynamic_cast<SingleCPUKernel *>(kernel)) { }
-
-                void SingleCPUNparticlesObservable::evaluate() {
-                    result = singleCPUKernel->getKernelStateModel().getParticleData()->size();
-                }
-
 
             }
 

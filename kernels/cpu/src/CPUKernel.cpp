@@ -11,6 +11,7 @@
 #include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
 #include <readdy/kernel/cpu/potentials/CPUPotentialFactory.h>
 #include <readdy/kernel/cpu/reactions/CPUReactionFactory.h>
+#include <readdy/kernel/cpu/observables/ObservableFactory.h>
 #include <thread>
 
 namespace readdy {
@@ -22,6 +23,7 @@ namespace readdy {
                 std::unique_ptr<programs::CPUProgramFactory> programFactory;
                 std::unique_ptr<potentials::CPUPotentialFactory> potentialFactory;
                 std::unique_ptr<reactions::CPUReactionFactory> reactionFactory;
+                std::unique_ptr<observables::ObservableFactory> observableFactory;
                 std::unique_ptr<CPUStateModel> stateModel;
                 std::unique_ptr<readdy::model::KernelContext> context;
             };
@@ -40,6 +42,7 @@ namespace readdy {
                 pimpl->programFactory = std::make_unique<programs::CPUProgramFactory>(this);
                 pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get());
                 pimpl->potentialFactory = std::make_unique<potentials::CPUPotentialFactory>(this);
+                pimpl->observableFactory = std::make_unique<observables::ObservableFactory>(this);
             }
 
             unsigned int CPUKernel::getNCores() {
@@ -60,6 +63,10 @@ namespace readdy {
 
             readdy::model::reactions::ReactionFactory &CPUKernel::getReactionFactory() const {
                 return *pimpl->reactionFactory;
+            }
+
+            readdy::model::_internal::ObservableFactory &CPUKernel::getObservableFactory() const {
+                return *pimpl->observableFactory;
             }
 
 
