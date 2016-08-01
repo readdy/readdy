@@ -17,7 +17,7 @@ namespace readdy {
             namespace potentials {
                 SingleCPUCubePotential::SingleCPUCubePotential(const readdy::model::Kernel *const kernel) : readdy::model::potentials::CubePotential(kernel) { }
 
-                double SingleCPUCubePotential::calculateEnergy(const readdy::model::Vec3 &position) {
+                double SingleCPUCubePotential::calculateEnergy(const readdy::model::Vec3 &position) const {
 
                     auto r = particleRadius;
                     if (!isConsiderParticleRadius()) r = 0;
@@ -37,7 +37,7 @@ namespace readdy {
                     return energy;
                 }
 
-                void SingleCPUCubePotential::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) {
+                void SingleCPUCubePotential::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const {
 
                     auto r = particleRadius;
                     if (!isConsiderParticleRadius()) r = 0;
@@ -53,7 +53,7 @@ namespace readdy {
 
                 }
 
-                void SingleCPUCubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) {
+                void SingleCPUCubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) const {
 
                     energy += calculateEnergy(position);
                     calculateForce(force, position);

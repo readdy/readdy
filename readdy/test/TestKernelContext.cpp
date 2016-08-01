@@ -41,9 +41,9 @@ namespace {
         }
 
 
-        virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override {return 0;}
-        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override {}
-        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) override {}
+        virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override {return 0;}
+        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const override {}
+        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const override {}
         virtual double getMaximalForce(double kbt) const noexcept override { return 0; }
         virtual NOOPPotential *replicate() const override { return new NOOPPotential(*this); }
     };

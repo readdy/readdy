@@ -10,6 +10,7 @@
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
 #include <thread>
 #include <readdy/model/RandomProvider.h>
+#include <readdy/kernel/cpu/util/ScopedThread.h>
 
 namespace readdy {
     namespace kernel {
@@ -18,7 +19,8 @@ namespace readdy {
                 void CPUEulerBDIntegrator::execute() {
                     const auto &&pd = kernel->getKernelStateModel().getParticleData();
                     const auto size = pd->size();
-                    std::vector<std::thread> threads(kernel->getNCores());
+                    std::vector<util::ScopedThread> threads;
+                    threads.reserve(kernel->getNCores());
                     const std::size_t grainSize = size / kernel->getNCores();
 
                     const auto &context = kernel->getKernelContext();
@@ -45,23 +47,29 @@ namespace readdy {
                     };
                     auto work_iter = pd->begin_positions();
                     std::size_t pos = 0;
-                    for (auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
-                        *it = std::thread(worker, work_iter, work_iter + grainSize, pd->begin_forces() + pos,
-                                          pd->begin_types() + pos);
-                        work_iter += grainSize;
-                        pos += grainSize;
-                    }
-                    threads.back() = std::thread(worker, work_iter, pd->end_positions(), pd->begin_forces() + pos,
-                                                 pd->begin_types() + pos);
 
-                    for (auto &&i : threads) {
-                        i.join();
-                    }
+                    {
 
+                        for (unsigned int i = 0; i < kernel->getNCores() - 1; ++i) {
+                            threads.push_back(
+                                    util::ScopedThread(
+                                            std::thread(worker, work_iter, work_iter + grainSize,
+                                                        pd->begin_forces() + pos,
+                                                        pd->begin_types() + pos)
+                                    )
+                            );
+                            work_iter += grainSize;
+                            pos += grainSize;
+                        }
+                        threads.push_back(util::ScopedThread(
+                                std::thread(worker, work_iter, pd->end_positions(), pd->begin_forces() + pos,
+                                            pd->begin_types() + pos))
+                        );
+                    }
 
                 }
 
-                CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel) : kernel(kernel) { }
+                CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel) : kernel(kernel) {}
 
             }
         }
