@@ -23,6 +23,14 @@ namespace readdy {
                                                               unsigned int stride) const {
                     return new readdy::kernel::singlecpu::observables::NParticlesObservable<CPUKernel>(kernel, stride);
                 }
+
+                readdy::model::HistogramAlongAxisObservable *
+                ObservableFactory::createAxisHistogramObservable(readdy::model::Kernel *const kernel,
+                                                                 unsigned int stride, std::vector<double> binBorders,
+                                                                 std::vector<std::string> typesToCount,
+                                                                 unsigned int axis) const {
+                    return new readdy::kernel::singlecpu::observables::SingleCPUHistogramAlongAxisObservable<readdy::kernel::cpu::CPUKernel>(kernel, stride, binBorders, typesToCount, axis);
+                }
             }
         }
     }

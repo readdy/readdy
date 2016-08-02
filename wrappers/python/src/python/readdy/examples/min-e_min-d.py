@@ -243,7 +243,7 @@ class MinEMinDSimulation(object):
             simulation.register_reaction_conversion("Phosphorylation", "D_P", "D_PB", .5)
             simulation.register_reaction_enzymatic("Enzymatic DP+DPB->DPB + DPB", "D_PB", "D_P", "D_PB", .5, .02)
         using_uniform_distribution = True
-        n_minE_particles = 250
+        n_minE_particles = 5000
         n_minD_particles = n_minE_particles * 4
         mine_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minE_particles)
         mine_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minE_particles)
@@ -281,7 +281,7 @@ class MinEMinDSimulation(object):
         print("histogram start")
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
-        stride = int(int(1./self.timestep) / 32)
+        stride = int(1./self.timestep)
         self.stride = stride
         print("using stride=%s" % stride)
         bins = np.linspace(-5, 5, 80)

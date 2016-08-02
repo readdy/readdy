@@ -21,7 +21,7 @@ namespace readdy {
 
                 readdy::model::HistogramAlongAxisObservable *SingleCPUObservableFactory::createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
                                                                                                                std::vector<std::string> typesToCount, unsigned int axis) const {
-                    return new SingleCPUHistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount, axis);
+                    return new SingleCPUHistogramAlongAxisObservable<>(kernel, stride, binBorders, typesToCount, axis);
                 }
 
                 readdy::model::NParticlesObservable *SingleCPUObservableFactory::createNParticlesObservable(

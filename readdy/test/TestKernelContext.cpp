@@ -77,6 +77,7 @@ namespace {
         auto p1 = std::make_unique<NOOPPotential>();
         ctx.registerOrder2Potential(p1.get(), "a", "b");
         ctx.registerOrder2Potential(p1.get(), "b", "a");
+        ctx.configure();
         auto vector = ctx.getOrder2Potentials("b", "a");
         EXPECT_EQ(vector.size(), 2);
     }
@@ -113,6 +114,7 @@ namespace {
 
             uuid2_1 = kernel->getKernelContext().registerOrder2Potential(pot2.get(), "A", "C");
             uuid2_2 = kernel->getKernelContext().registerOrder2Potential(pot2.get(), "B", "C");
+            kernel->getKernelContext().configure();
             EXPECT_EQ(pot2->getId(), uuid2_1);
             EXPECT_EQ(pot2->getId(), uuid2_2);
         }
@@ -177,6 +179,7 @@ namespace {
         {
             // only one potential for particle type B has a different uuid
             kernel->getKernelContext().deregisterPotential(uuid1_1);
+            kernel->getKernelContext().configure();
             EXPECT_EQ(kernel->getKernelContext().getOrder1Potentials("A").size(), 0);
             EXPECT_EQ(kernel->getKernelContext().getOrder1Potentials("B").size(), 1);
             EXPECT_EQ(kernel->getKernelContext().getOrder1Potentials("C").size(), 0);
@@ -184,6 +187,7 @@ namespace {
 
             // both potentials have same uuid, so they should be discarded both
             kernel->getKernelContext().deregisterPotential(uuid2_2);
+            kernel->getKernelContext().configure();
             EXPECT_EQ(kernel->getKernelContext().getOrder2Potentials("A", "C").size(), 0);
             EXPECT_EQ(kernel->getKernelContext().getOrder2Potentials("B", "C").size(), 0);
         }

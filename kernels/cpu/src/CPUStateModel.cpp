@@ -39,9 +39,6 @@ namespace readdy {
                         const readdy::model::Vec3 zero{0, 0, 0};
                         auto &&it_forces = data->begin_forces() + idx;
                         auto &&it_pos = data->cbegin_positions() + idx;
-                        BOOST_LOG_TRIVIAL(debug) << "calculating force of particle with idx "
-                                                 << it_types - data->cbegin_types() << " up to "
-                                                 << it_types_end - data->cbegin_types();
                         while (it_types != it_types_end) {
                             *it_forces = zero;
                             for (auto po1 : pot1Map[*it_types]) {
@@ -55,7 +52,6 @@ namespace readdy {
 
                     const auto size = pimpl->particleData->size();
                     const std::size_t grainSize = size / util::getNThreads();
-                    BOOST_LOG_TRIVIAL(debug) << "pd size = " << size << ", resulting grainsize=" << grainSize;
                     auto it = pimpl->particleData->cbegin_types();
                     for (auto i = 0; i < util::getNThreads() - 1; ++i) {
                         energyUpdate.push_back(0);

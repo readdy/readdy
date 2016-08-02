@@ -32,7 +32,6 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SingleCPUNeighborList.cpp")
 
 # --- observables ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/observables/SingleCPUObservableFactory.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/observables/SingleCPUObservables.cpp")
 
 
 # --- all sources ---
