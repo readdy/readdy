@@ -103,6 +103,23 @@ namespace readdy {
                         fillBoxes(data);
                     }
 
+                    virtual void setupNeighboringBoxes(unsigned long i, unsigned long j, unsigned long k) {
+                        auto me = getBox(i, j, k);
+                        me->addNeighbor(getBox(i + 0, j + 0, k + 1));
+                        me->addNeighbor(getBox(i + 0, j + 1, k - 1));
+                        me->addNeighbor(getBox(i + 0, j + 1, k + 0));
+                        me->addNeighbor(getBox(i + 0, j + 1, k + 1));
+                        me->addNeighbor(getBox(i + 1, j - 1, k - 1));
+                        me->addNeighbor(getBox(i + 1, j - 1, k + 0));
+                        me->addNeighbor(getBox(i + 1, j - 1, k + 1));
+                        me->addNeighbor(getBox(i + 1, j + 0, k - 1));
+                        me->addNeighbor(getBox(i + 1, j + 0, k + 0));
+                        me->addNeighbor(getBox(i + 1, j + 0, k + 1));
+                        me->addNeighbor(getBox(i + 1, j + 1, k - 1));
+                        me->addNeighbor(getBox(i + 1, j + 1, k + 0));
+                        me->addNeighbor(getBox(i + 1, j + 1, k + 1));
+                    }
+
                     virtual void setupBoxes() {
                         const auto simBoxSize = ctx->getBoxSize();
                         if (boxes.empty()) {
@@ -131,23 +148,10 @@ namespace readdy {
                                         }
                                     }
                                 }
-                                for (long i = 0; i < nBoxes[0]; ++i) {
-                                    for (long j = 0; j < nBoxes[1]; ++j) {
-                                        for (long k = 0; k < nBoxes[2]; ++k) {
-                                            auto me = getBox(i, j, k);
-                                            me->addNeighbor(getBox(i + 0, j + 0, k + 1));
-                                            me->addNeighbor(getBox(i + 0, j + 1, k - 1));
-                                            me->addNeighbor(getBox(i + 0, j + 1, k + 0));
-                                            me->addNeighbor(getBox(i + 0, j + 1, k + 1));
-                                            me->addNeighbor(getBox(i + 1, j - 1, k - 1));
-                                            me->addNeighbor(getBox(i + 1, j - 1, k + 0));
-                                            me->addNeighbor(getBox(i + 1, j - 1, k + 1));
-                                            me->addNeighbor(getBox(i + 1, j + 0, k - 1));
-                                            me->addNeighbor(getBox(i + 1, j + 0, k + 0));
-                                            me->addNeighbor(getBox(i + 1, j + 0, k + 1));
-                                            me->addNeighbor(getBox(i + 1, j + 1, k - 1));
-                                            me->addNeighbor(getBox(i + 1, j + 1, k + 0));
-                                            me->addNeighbor(getBox(i + 1, j + 1, k + 1));
+                                for (unsigned long i = 0; i < nBoxes[0]; ++i) {
+                                    for (unsigned long j = 0; j < nBoxes[1]; ++j) {
+                                        for (unsigned long k = 0; k < nBoxes[2]; ++k) {
+                                            setupNeighboringBoxes(i,j,k);
                                         }
                                     }
                                 }
@@ -161,6 +165,7 @@ namespace readdy {
                             for (auto &&box : boxes) {
                                 box.particleIndices.clear();
                             }
+                            super::pairs->clear();
 
                             auto it_pos = data.cbegin_positions();
                             unsigned long idx = 0;

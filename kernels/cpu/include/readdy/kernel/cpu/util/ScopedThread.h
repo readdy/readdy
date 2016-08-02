@@ -25,7 +25,9 @@ namespace readdy {
                     }
 
                     ~ScopedThread() {
-                        if(t.joinable()) t.join();
+                        if(t.joinable()) {
+                            t.join();
+                        }
                     }
 
                     ScopedThread(ScopedThread&& rhs) {

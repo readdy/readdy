@@ -45,10 +45,6 @@ namespace readdy {
                 pimpl->observableFactory = std::make_unique<observables::ObservableFactory>(this);
             }
 
-            unsigned int CPUKernel::getNCores() {
-                return std::thread::hardware_concurrency();
-            }
-
             CPUStateModel &CPUKernel::getKernelStateModel() const {
                 return *pimpl->stateModel;
             }

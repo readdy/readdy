@@ -82,49 +82,52 @@ namespace readdy {
 
                         // reactions with two educts
                         {
-                            auto cbegin = kernel->getKernelStateModel().cbegin_neighborList();
-                            const auto cend = kernel->getKernelStateModel().cend_neighborList();
+                            auto cbegin = kernel->getKernelStateModel().getNeighborList()->pairs->cbegin();
+                            const auto cend = kernel->getKernelStateModel().getNeighborList()->pairs->cend();
                             for (auto &it = cbegin; it != cend; ++it) {
-                                const auto idx1 = it->idx1, idx2 = it->idx2;
-                                const auto &reactions = ctx.getOrder2Reactions(
-                                        *(data->begin_types() + idx1), *(data->begin_types() + idx2)
-                                );
+                                const auto idx1 = it->first;
+                                for(const auto& idx2 : it->second) {
+                                    if(idx1 > idx2) continue;
+                                    const auto &reactions = ctx.getOrder2Reactions(
+                                            *(data->begin_types() + idx1), *(data->begin_types() + idx2)
+                                    );
 
-                                const auto distSquared = dist(
-                                        *(data->begin_positions() + idx1), *(data->begin_positions() + idx2)
-                                );
+                                    const auto distSquared = dist(
+                                            *(data->begin_positions() + idx1), *(data->begin_positions() + idx2)
+                                    );
 
-                                for (const auto &reaction : reactions) {
-                                    // if close enough and coin flip successful
-                                    if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
-                                        && rnd.getUniform() < reaction->getRate() * dt) {
-                                        events.push_back([idx1, idx2, this, &newParticles, &reaction] {
-                                            auto &&_data = kernel->getKernelStateModel().getParticleData();
-                                            if (_data->isMarkedForDeactivation(idx1)) return;
-                                            if (_data->isMarkedForDeactivation(idx2)) return;
-                                            _data->markForDeactivation(idx1);
-                                            _data->markForDeactivation(idx2);
-                                            const auto inParticle1 = (*_data)[idx1];
-                                            const auto inParticle2 = (*_data)[idx2];
-                                            switch (reaction->getNProducts()) {
-                                                case 1: {
-                                                    particle_t out{};
-                                                    reaction->perform(inParticle1, inParticle2, out, out);
-                                                    newParticles.push_back(out);
-                                                    break;
+                                    for (const auto &reaction : reactions) {
+                                        // if close enough and coin flip successful
+                                        if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
+                                            && rnd.getUniform() < reaction->getRate() * dt) {
+                                            events.push_back([idx1, idx2, this, &newParticles, &reaction] {
+                                                auto &&_data = kernel->getKernelStateModel().getParticleData();
+                                                if (_data->isMarkedForDeactivation(idx1)) return;
+                                                if (_data->isMarkedForDeactivation(idx2)) return;
+                                                _data->markForDeactivation(idx1);
+                                                _data->markForDeactivation(idx2);
+                                                const auto inParticle1 = (*_data)[idx1];
+                                                const auto inParticle2 = (*_data)[idx2];
+                                                switch (reaction->getNProducts()) {
+                                                    case 1: {
+                                                        particle_t out{};
+                                                        reaction->perform(inParticle1, inParticle2, out, out);
+                                                        newParticles.push_back(out);
+                                                        break;
+                                                    }
+                                                    case 2: {
+                                                        particle_t out1{}, out2{};
+                                                        reaction->perform(inParticle1, inParticle2, out1, out2);
+                                                        newParticles.push_back(out1);
+                                                        newParticles.push_back(out2);
+                                                        break;
+                                                    }
+                                                    default: {
+                                                        BOOST_LOG_TRIVIAL(error) << "This should not happen!";
+                                                    }
                                                 }
-                                                case 2: {
-                                                    particle_t out1{}, out2{};
-                                                    reaction->perform(inParticle1, inParticle2, out1, out2);
-                                                    newParticles.push_back(out1);
-                                                    newParticles.push_back(out2);
-                                                    break;
-                                                }
-                                                default: {
-                                                    BOOST_LOG_TRIVIAL(error) << "This should not happen!";
-                                                }
-                                            }
-                                        });
+                                            });
+                                        }
                                     }
                                 }
                             }

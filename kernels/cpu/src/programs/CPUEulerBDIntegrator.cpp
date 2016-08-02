@@ -11,6 +11,7 @@
 #include <thread>
 #include <readdy/model/RandomProvider.h>
 #include <readdy/kernel/cpu/util/ScopedThread.h>
+#include <readdy/kernel/cpu/util/ConfigUtils.h>
 
 namespace readdy {
     namespace kernel {
@@ -20,8 +21,8 @@ namespace readdy {
                     const auto &&pd = kernel->getKernelStateModel().getParticleData();
                     const auto size = pd->size();
                     std::vector<util::ScopedThread> threads;
-                    threads.reserve(kernel->getNCores());
-                    const std::size_t grainSize = size / kernel->getNCores();
+                    threads.reserve(util::getNThreads());
+                    const std::size_t grainSize = size / util::getNThreads();
 
                     const auto &context = kernel->getKernelContext();
                     using _it_vec3_t = std::vector<readdy::model::Vec3>::iterator;
@@ -50,7 +51,7 @@ namespace readdy {
 
                     {
 
-                        for (unsigned int i = 0; i < kernel->getNCores() - 1; ++i) {
+                        for (unsigned int i = 0; i < util::getNThreads() - 1; ++i) {
                             threads.push_back(
                                     util::ScopedThread(
                                             std::thread(worker, work_iter, work_iter + grainSize,
