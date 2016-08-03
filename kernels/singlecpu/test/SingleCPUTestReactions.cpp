@@ -129,8 +129,8 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->getKernelContext().setBoxSize(10, 10, 10);
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setDiffusionConstant("X", .25);
-    kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
-    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
+    kernel->getKernelContext().registerDeathReaction("X decay", "X", 1);
+    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .3, .5);
 
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
@@ -138,6 +138,9 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
+    pp_obs->setCallback([](const readdy::model::ParticlePositionObservable::result_t &t) {
+        BOOST_LOG_TRIVIAL(trace) << "got n particles=" << t.size();
+    });
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
@@ -153,7 +156,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
         neighborList->execute();
         reactionsProgram->execute();
 
-        pp_obs->evaluate();
+        kernel->evaluateObservables(t);
 
     }
 
