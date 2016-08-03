@@ -10,28 +10,9 @@
 
 #include <readdy/model/KernelContext.h>
 #include <readdy/common/Utils.h>
-#include <readdy/model/_internal/ParticleTypePair.h>
 
 namespace readdy {
     namespace model {
-        std::size_t ParticleTypePairHasher::operator()(const _internal::ParticleTypePair &k) const {
-            return hash_value(k);
-        }
-
-        std::size_t ParticleTypePairHasher::operator()(const std::tuple<unsigned int, unsigned int> &k) const {
-            std::size_t seed = 0;
-            const auto &t1 = std::get<0>(k);
-            const auto &t2 = std::get<1>(k);
-            if (t1 <= t2) {
-                boost::hash_combine(seed, t1);
-                boost::hash_combine(seed, t2);
-            } else {
-                boost::hash_combine(seed, t2);
-                boost::hash_combine(seed, t1);
-            }
-            return seed;
-        }
-
         struct KernelContext::Impl {
             uint typeCounter;
             std::unordered_map<std::string, uint> typeMapping;
@@ -42,14 +23,14 @@ namespace readdy {
             std::unordered_map<uint, double> particleRadii{};
 
             std::unordered_map<unsigned int, std::vector<potentials::PotentialOrder1 *>> potentialO1Registry{};
-            std::unordered_map<_internal::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, ParticleTypePairHasher> potentialO2Registry{};
+            std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher> potentialO2Registry{};
             std::unordered_map<unsigned int, std::vector<std::unique_ptr<potentials::PotentialOrder1>>> internalPotentialO1Registry{};
-            std::unordered_map<_internal::ParticleTypePair, std::vector<std::unique_ptr<potentials::PotentialOrder2>>, ParticleTypePairHasher> internalPotentialO2Registry{};
+            std::unordered_map<readdy::util::ParticleTypePair, std::vector<std::unique_ptr<potentials::PotentialOrder2>>, readdy::util::ParticleTypePairHasher> internalPotentialO2Registry{};
 
             std::unordered_map<unsigned int, std::vector<reactions::Reaction<1> *>> reactionOneEductRegistry{};
-            std::unordered_map<_internal::ParticleTypePair, std::vector<reactions::Reaction<2> *>, ParticleTypePairHasher> reactionTwoEductsRegistry{};
+            std::unordered_map<readdy::util::ParticleTypePair, std::vector<reactions::Reaction<2> *>, readdy::util::ParticleTypePairHasher> reactionTwoEductsRegistry{};
             std::unordered_map<unsigned int, std::vector<std::unique_ptr<reactions::Reaction<1>>>> internalReactionOneEductRegistry{};
-            std::unordered_map<_internal::ParticleTypePair, std::vector<std::unique_ptr<reactions::Reaction<2>>>, ParticleTypePairHasher> internalReactionTwoEductsRegistry{};
+            std::unordered_map<readdy::util::ParticleTypePair, std::vector<std::unique_ptr<reactions::Reaction<2>>>, readdy::util::ParticleTypePairHasher> internalReactionTwoEductsRegistry{};
 
             double timeStep;
 
@@ -245,7 +226,7 @@ namespace readdy {
             // wlog: type1 <= type2
             auto type1Id = pimpl->typeMapping[type1];
             auto type2Id = pimpl->typeMapping[type2];
-            _internal::ParticleTypePair pp{type1Id, type2Id};
+            readdy::util::ParticleTypePair pp{type1Id, type2Id};
             if (pimpl->internalPotentialO2Registry.find(pp) == pimpl->internalPotentialO2Registry.end()) {
                 pimpl->internalPotentialO2Registry.emplace(pp,
                                                            std::vector<std::unique_ptr<potentials::PotentialOrder2>>());
@@ -346,7 +327,7 @@ namespace readdy {
             const auto &idFrom = pimpl->typeMapping[from];
             const auto &idTo = pimpl->typeMapping[to];
             const auto &idCat = pimpl->typeMapping[catalyst];
-            const _internal::ParticleTypePair pp{idFrom, idCat};
+            const readdy::util::ParticleTypePair pp{idFrom, idCat};
             if (pimpl->internalReactionTwoEductsRegistry.find(pp) == pimpl->internalReactionTwoEductsRegistry.end()) {
                 pimpl->internalReactionTwoEductsRegistry.emplace(pp,
                                                                  std::vector<std::unique_ptr<reactions::Reaction<2>>>());
@@ -386,7 +367,7 @@ namespace readdy {
             const auto &idFrom1 = pimpl->typeMapping[from1];
             const auto &idFrom2 = pimpl->typeMapping[from2];
             const auto &idTo = pimpl->typeMapping[to];
-            const _internal::ParticleTypePair pp{idFrom1, idFrom2};
+            const readdy::util::ParticleTypePair pp{idFrom1, idFrom2};
             if (pimpl->internalReactionTwoEductsRegistry.find(pp) == pimpl->internalReactionTwoEductsRegistry.end()) {
                 pimpl->internalReactionTwoEductsRegistry.emplace(pp,
                                                                  std::vector<std::unique_ptr<reactions::Reaction<2>>>());
@@ -543,7 +524,7 @@ namespace readdy {
             return pimpl->potentialO1Registry;
         }
 
-        const std::unordered_map<_internal::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, readdy::model::ParticleTypePairHasher>
+        const std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher>
         KernelContext::getAllOrder2Potentials() const {
             return pimpl->potentialO2Registry;
         }
