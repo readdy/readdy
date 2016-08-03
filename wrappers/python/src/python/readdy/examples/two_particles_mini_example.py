@@ -1,6 +1,6 @@
 from itertools import combinations, product
 
-from readdy._internal.simulation import KernelProvider, Simulation, Vec
+from readdy._internal.api import KernelProvider, Simulation, Vec
 
 from readdy.util import platform_utils
 import numpy as np

@@ -1,5 +1,5 @@
 from __future__ import print_function
-from readdy._internal.simulation import KernelProvider, Simulation, Vec
+from readdy._internal.api import KernelProvider, Simulation, Vec
 
 import numpy as np
 

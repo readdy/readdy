@@ -1,6 +1,6 @@
 # coding=utf-8
 from __future__ import print_function
-from readdy._internal.simulation import KernelProvider, Simulation, Vec
+from readdy._internal.api import KernelProvider, Simulation, Vec
 
 from readdy.util import platform_utils
 from scipy.optimize import brentq

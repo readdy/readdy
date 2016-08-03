@@ -64,7 +64,7 @@ if (PYTHON)
     add_custom_command(OUTPUT ${OUTPUT}
             COMMAND ${PYTHON} ${SETUP_PY} build
             COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
-            DEPENDS simulation)
+            DEPENDS api prototyping)
 
     add_custom_target(target ALL DEPENDS ${OUTPUT})
 
