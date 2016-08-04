@@ -68,10 +68,13 @@ namespace readdy {
 
                     virtual void setupNeighboringBoxes(unsigned long i, unsigned long j, unsigned long k) {
                         auto me = getBox(i, j, k);
-                        for(int _i = 0; _i < 3; ++_i) {
-                            for(int _j = 0; _j < 3; ++_j) {
-                                for(int _k = 0; _k < 3; ++_k) {
-                                    me->addNeighbor(getBox(_i, _j, _k));
+                        for(int _i = -1; _i < 2; ++_i) {
+                            for(int _j = -1; _j < 2; ++_j) {
+                                for(int _k = -1; _k < 2; ++_k) {
+                                    // don't add me as neighbor to myself
+                                    if(!(_i == 0 && _j == 0 && _k == 0)) {
+                                        me->addNeighbor(getBox(i + _i, j + _j, k + _k));
+                                    }
                                 }
                             }
                         }
@@ -105,7 +108,7 @@ namespace readdy {
                             }
 
 
-                            {
+                            {/*
                                 const auto size = boxes.size();
                                 const std::size_t grainSize = size / util::getNThreads();
 
@@ -134,24 +137,22 @@ namespace readdy {
                                     threads.push_back(util::ScopedThread(std::thread(worker, i*grainSize, (i+1)*grainSize)));
                                 }
                                 threads.push_back(util::ScopedThread(std::thread(worker, (util::getNThreads()-1)*grainSize, boxes.size())));
-                            }
+                            */}
 
-                                /*for (auto &&box : boxes) {
-                                    for (long i = 0; i < box.particleIndices.size(); ++i) {
-                                        const auto pI = box.particleIndices[i];
-                                        for (long j = 0; j < box.particleIndices.size(); ++j) {
-                                            if(i != j) (*pairs)[pI].push_back(box.particleIndices[j]);
-                                        }
+                            for (auto &&box : boxes) {
+                                for (long i = 0; i < box.particleIndices.size(); ++i) {
+                                    const auto pI = box.particleIndices[i];
+                                    for (long j = 0; j < box.particleIndices.size(); ++j) {
+                                        if(i != j) (*pairs)[pI].push_back(box.particleIndices[j]);
+                                    }
 
-                                        for (auto &&neighboringBox : box.neighboringBoxes) {
-                                            for (const auto &pJ : neighboringBox->particleIndices) {
-                                                (*pairs)[pI].push_back(pJ);
-                                            }
+                                    for (auto &&neighboringBox : box.neighboringBoxes) {
+                                        for (const auto &pJ : neighboringBox->particleIndices) {
+                                            (*pairs)[pI].push_back(pJ);
                                         }
                                     }
-                                }*/
-
-
+                                }
+                            }
                         }
                     }
 

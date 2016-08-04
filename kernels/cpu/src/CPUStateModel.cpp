@@ -116,6 +116,10 @@ namespace readdy {
                 }
                 std::for_each(energyUpdate.begin(), energyUpdate.end(),
                               [this](const double &e) { pimpl->currentEnergy += e; });
+                /**
+                 * We need to take 0.5*energy as we iterate over every particle-neighbor-pair twice.
+                 */
+                pimpl->currentEnergy /= 2.0;
             }
 
             const std::vector<readdy::model::Vec3> CPUStateModel::getParticlePositions() const {
