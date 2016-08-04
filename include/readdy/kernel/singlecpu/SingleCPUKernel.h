@@ -29,8 +29,6 @@ namespace readdy {
 
                 virtual readdy::model::KernelContext& getKernelContext() const override;
 
-                readdy::model::RandomProvider& getRandomProvider() const;
-
                 virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
                 virtual std::vector<std::string> getAvailablePotentials() const override;

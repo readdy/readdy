@@ -11,23 +11,23 @@
 #define READDY_MAIN_POTENTIALSORDER2_H_H
 
 #include <readdy/model/potentials/PotentialsOrder2.h>
+#include <readdy/model/Kernel.h>
 
 namespace readdy {
 
     namespace kernel {
         namespace singlecpu {
-            class SingleCPUKernel;
 
             namespace potentials {
                 class SingleCPUHarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion{
                     using vec_t = readdy::model::Vec3;
 
                 public:
-                    SingleCPUHarmonicRepulsion(const SingleCPUKernel *const kernel);
+                    SingleCPUHarmonicRepulsion(const readdy::model::Kernel *const kernel);
 
-                    virtual double calculateEnergy(const vec_t& x_ij) override;
-                    virtual void calculateForce(vec_t &force, const vec_t &x_ij) override;
-                    virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) override;
+                    virtual double calculateEnergy(const vec_t& x_ij) const override;
+                    virtual void calculateForce(vec_t &force, const vec_t &x_ij) const override;
+                    virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const override;
 
                     virtual double getCutoffRadius() const override;
 
@@ -42,9 +42,9 @@ namespace readdy {
                 public:
                     SingleCPUWeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel);
 
-                    virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override;
-                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override;
-                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) override;
+                    virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override;
+                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const override;
+                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const override;
 
                     virtual potentials::SingleCPUWeakInteractionPiecewiseHarmonic *replicate() const override;
 

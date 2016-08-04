@@ -17,13 +17,8 @@
 namespace m = readdy::model;
 
 namespace {
-    class  TestObservables : public KernelTest {
-    protected:
-        std::unique_ptr<m::Kernel> kernel;
+    class TestObservables : public KernelTest {
 
-        TestObservables() {
-            kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-        }
     };
 
     TEST_P(TestObservables, Foo) {

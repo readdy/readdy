@@ -13,23 +13,23 @@
 #include <string>
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialsOrder1.h>
+#include <readdy/model/Kernel.h>
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
 
-            class SingleCPUKernel;
             namespace potentials {
 
                 class SingleCPUCubePotential : public readdy::model::potentials::CubePotential {
                 public:
-                    SingleCPUCubePotential(const SingleCPUKernel *const kernel);
+                    SingleCPUCubePotential(const readdy::model::Kernel *const kernel);
 
-                    virtual double calculateEnergy(const readdy::model::Vec3 &position) override;
+                    virtual double calculateEnergy(const readdy::model::Vec3 &position) const override;
 
-                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) override;
+                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const override;
 
-                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) override;
+                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) const override;
 
                     virtual potentials::SingleCPUCubePotential *replicate() const override;
 

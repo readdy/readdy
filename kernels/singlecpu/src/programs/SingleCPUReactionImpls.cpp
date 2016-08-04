@@ -27,7 +27,7 @@ namespace readdy {
                         const auto &fixPos = ctx.getFixPositionFun();
                         const auto &dt = ctx.getTimeStep();
                         auto data = kernel->getKernelStateModel().getParticleData();
-                        auto &rnd = kernel->getRandomProvider();
+                        auto rnd = readdy::model::RandomProvider();
                         std::vector<particle_t> newParticles{};
                         std::vector<std::function<void()>> events{};
 

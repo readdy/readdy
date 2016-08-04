@@ -30,7 +30,7 @@ def rdf_callback(pair):
 if __name__ == '__main__':
     KernelProvider.get().load_from_dir(platform_utils.get_readdy_plugin_dir())
     simulation = Simulation()
-    simulation.set_kernel("SingleCPU")
+    simulation.set_kernel("CPU")
 
     box_size = Vec(10, 10, 10)
     simulation.kbt = 2
@@ -49,7 +49,4 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(centers, rdf / n_calls)
-
-    #np.savetxt("bins_", centers)
-    #np.savetxt("rdf_", rdf/n_calls)
     plt.show()

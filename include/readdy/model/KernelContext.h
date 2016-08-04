@@ -20,6 +20,7 @@
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionFactory.h>
+#include <readdy/model/_internal/ParticleTypePair.h>
 
 #if BOOST_OS_MAC
 #include <string>
@@ -27,7 +28,11 @@
 
 namespace readdy {
     namespace model {
-        class ParticleTypePairHasher;
+        class ParticleTypePairHasher {
+        public:
+            std::size_t operator()(const _internal::ParticleTypePair &k) const;
+            std::size_t operator()(const std::tuple<unsigned int, unsigned int> &k) const;
+        };
 
         class KernelContext {
         public:
@@ -71,17 +76,17 @@ namespace readdy {
 
             const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string &name) const;
 
-            const std::vector<std::unique_ptr<reactions::Reaction<1>>> &getOrder1Reactions(const std::string &type) const;
+            const std::vector<reactions::Reaction<1>*> &getOrder1Reactions(const std::string &type) const;
 
-            const std::vector<std::unique_ptr<reactions::Reaction<1>>> &getOrder1Reactions(const unsigned int &type) const;
+            const std::vector<reactions::Reaction<1>*> &getOrder1Reactions(const unsigned int &type) const;
 
             const std::vector<const reactions::Reaction<2> *> getAllOrder2Reactions() const;
 
             const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string &name) const;
 
-            const std::vector<std::unique_ptr<reactions::Reaction<2>>> &getOrder2Reactions(const std::string &type1, const std::string &type2) const;
+            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const std::string &type1, const std::string &type2) const;
 
-            const std::vector<std::unique_ptr<reactions::Reaction<2>>> &getOrder2Reactions(const unsigned int &type1, const unsigned int &type2) const;
+            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const unsigned int &type1, const unsigned int &type2) const;
 
             const boost::uuids::uuid &registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate);
 
@@ -100,17 +105,21 @@ namespace readdy {
 
             const boost::uuids::uuid &registerOrder1Potential(potentials::PotentialOrder1 const *const potential, const std::string &type);
 
-            const std::vector<std::unique_ptr<potentials::PotentialOrder1>> &getOrder1Potentials(const std::string &type) const;
+            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const std::string &type) const;
 
-            const std::vector<std::unique_ptr<potentials::PotentialOrder1>> &getOrder1Potentials(const unsigned int type) const;
+            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const unsigned int type) const;
+
+            const std::unordered_map<unsigned int, std::vector<potentials::PotentialOrder1*>> getAllOrder1Potentials() const;
 
             std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
 
             const boost::uuids::uuid &registerOrder2Potential(potentials::PotentialOrder2 const *const potential, const std::string &type1, const std::string &type2);
 
-            const std::vector<std::unique_ptr<potentials::PotentialOrder2>> &getOrder2Potentials(const std::string &type1, const std::string &type2) const;
+            const std::vector<potentials::PotentialOrder2*> &getOrder2Potentials(const std::string &type1, const std::string &type2) const;
 
-            const std::vector<std::unique_ptr<potentials::PotentialOrder2>> &getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+            const std::vector<potentials::PotentialOrder2*> &getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+
+            const std::unordered_map<_internal::ParticleTypePair, std::vector<potentials::PotentialOrder2*>, readdy::model::ParticleTypePairHasher> getAllOrder2Potentials() const;
 
             std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 

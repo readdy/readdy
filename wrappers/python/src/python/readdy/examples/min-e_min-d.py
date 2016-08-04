@@ -8,7 +8,7 @@ from scipy.optimize import brentq
 import numpy as np
 import matplotlib
 
-matplotlib.use('Qt4Agg')
+# matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -48,6 +48,7 @@ class MinEMinDSimulation(object):
             self.fig.show()
             plt.draw()
             plt.ioff()
+            plt.pause(.01)
         self._hist_data = [None, None, None, None, None, None]
 
     def callback_histogram(self, data, idx):
@@ -58,7 +59,7 @@ class MinEMinDSimulation(object):
             self._hist_data[idx] = np.vstack((self._hist_data[idx], data))
             if self._generate_plots:
                 self.axis[idx].imshow(self._hist_data[idx], cmap='hot')
-                plt.pause(.00001)
+                plt.pause(.1)
         if idx == 0:
             print("t={0} ({1} sec) -> {2:.3f}%".format(self.t_d*self.stride, self.t_d*self.stride*self.timestep, 100.*self.t_d*self.stride/float(self.n_timesteps)))
             self.t_d += 1
@@ -142,7 +143,7 @@ class MinEMinDSimulation(object):
         kernel_provider = KernelProvider.get()
         kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
         simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
+        simulation.set_kernel("CPU")
 
         ###################################
         #
@@ -182,32 +183,8 @@ class MinEMinDSimulation(object):
         k_fusion = brentq(lambda x: self.erban_chapman(.093, 2.5 + .01, reaction_radius, x), 1, 5000000)
         print("k_fusion=%s" % k_fusion)
         simulation.register_reaction_conversion("Phosphorylation", "D", "D_P", .5)
-        simulation.register_reaction_enzymatic("Attach to membrane", "M", "D_P", "D_PB", .5, .01 + membrane_particle_size)  # .01 + .025  # todo: rate?
         simulation.register_reaction_fusion("bound MinD+MinE->MinDE", "D_PB", "E", "DE", k_fusion, reaction_radius*3.5, .5, .5)
         simulation.register_reaction_fission("MinDE to MinD and MinE, detach", "DE", "D", "E", .25, reaction_radius, .5, .5)
-
-        ###################################
-        #
-        # register observables
-        #
-        ###################################
-
-        # simulation.register_observable_center_of_mass(1, self.com_callback_mind, ["D", "D_P", "D_PB"])
-        # simulation.register_observable_center_of_mass(1, self.com_callback_mine, ["E"])
-        # simulation.register_observable_center_of_mass(1, self.com_callback_minde, ["DE", "D_PB"])
-        print("histogram start")
-        # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
-        # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
-        stride = self.stride
-        bins = np.linspace(-5, 5, 80)
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minD, bins, ["D"], 2)
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDP, bins, ["D_P"], 2)
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDPB, bins, ["D_PB"], 2)
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minE, bins, ["E"], 2)
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDE, bins, ["DE"], 2)
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_M, bins, ["D", "D_P", "D_PB", "DE"], 2)
-        simulation.register_observable_n_particles(stride, self.n_particles_callback)
-        print("histogram end")
 
         ###################################
         #
@@ -234,6 +211,7 @@ class MinEMinDSimulation(object):
         ###################################
         using_membrane_particles = False
         if using_membrane_particles:
+            simulation.register_reaction_enzymatic("Attach to membrane", "M", "D_P", "D_PB", .5, .01 + membrane_particle_size)  # .01 + .025  # todo: rate?
             dx = np.linspace(origin[0] + layer[0], -1 * origin[0] - layer[0], int(float(membrane_size[0]) / membrane_particle_size), endpoint=True)
             dy = np.linspace(origin[1] + layer[1], -1 * origin[1] - layer[1], int(float(membrane_size[1]) / membrane_particle_size), endpoint=True)
             dz = np.linspace(origin[2] + layer[2], -1 * origin[2] - layer[2], int(float(membrane_size[2]) / membrane_particle_size), endpoint=True)
@@ -265,7 +243,7 @@ class MinEMinDSimulation(object):
             simulation.register_reaction_conversion("Phosphorylation", "D_P", "D_PB", .5)
             simulation.register_reaction_enzymatic("Enzymatic DP+DPB->DPB + DPB", "D_PB", "D_P", "D_PB", .5, .02)
         using_uniform_distribution = True
-        n_minE_particles = 250
+        n_minE_particles = 5000
         n_minD_particles = n_minE_particles * 4
         mine_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minE_particles)
         mine_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minE_particles)
@@ -289,9 +267,37 @@ class MinEMinDSimulation(object):
         for i in range(int(.5 * n_minD_particles), n_minD_particles):
             simulation.add_particle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
-        print("starting simulation")
-        tau = simulation.get_recommended_time_step(1)
-        simulation.run(self.n_timesteps, tau)  # effectively: 750 sec
+        self.timestep = simulation.get_recommended_time_step(1)
+
+        ###################################
+        #
+        # register observables
+        #
+        ###################################
+
+        # simulation.register_observable_center_of_mass(1, self.com_callback_mind, ["D", "D_P", "D_PB"])
+        # simulation.register_observable_center_of_mass(1, self.com_callback_mine, ["E"])
+        # simulation.register_observable_center_of_mass(1, self.com_callback_minde, ["DE", "D_PB"])
+        print("histogram start")
+        # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
+        # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
+        stride = int(1./self.timestep)
+        self.stride = stride
+        print("using stride=%s" % stride)
+        bins = np.linspace(-5, 5, 80)
+        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minD, bins, ["D"], 2)
+        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDP, bins, ["D_P"], 2)
+        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDPB, bins, ["D_PB"], 2)
+        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minE, bins, ["E"], 2)
+        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDE, bins, ["DE"], 2)
+        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_M, bins, ["D", "D_P", "D_PB", "DE"], 2)
+        simulation.register_observable_n_particles(stride, self.n_particles_callback)
+        print("histogram end")
+
+        self.n_timesteps = int(600./self.timestep)
+
+        print("starting simulation for effectively %s sec" % (self.timestep * self.n_timesteps))
+        simulation.run(self.n_timesteps, self.timestep)
 
         if self._result_fname is not None:
             with open(self._result_fname, 'w') as f:

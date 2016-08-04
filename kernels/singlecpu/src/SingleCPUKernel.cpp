@@ -49,10 +49,6 @@ namespace readdy {
                 return *pimpl->model;
             }
 
-            readdy::model::RandomProvider &SingleCPUKernel::getRandomProvider() const {
-                return *pimpl->rand;
-            }
-
             readdy::model::KernelContext &SingleCPUKernel::getKernelContext() const {
                 return *pimpl->context;
             }

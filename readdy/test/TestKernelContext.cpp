@@ -41,9 +41,9 @@ namespace {
         }
 
 
-        virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) override {return 0;}
-        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) override {}
-        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) override {}
+        virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override {return 0;}
+        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const override {}
+        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const override {}
         virtual double getMaximalForce(double kbt) const noexcept override { return 0; }
         virtual NOOPPotential *replicate() const override { return new NOOPPotential(*this); }
     };
@@ -77,7 +77,8 @@ namespace {
         auto p1 = std::make_unique<NOOPPotential>();
         ctx.registerOrder2Potential(p1.get(), "a", "b");
         ctx.registerOrder2Potential(p1.get(), "b", "a");
-        auto&& vector = ctx.getOrder2Potentials("b", "a");
+        ctx.configure();
+        auto vector = ctx.getOrder2Potentials("b", "a");
         EXPECT_EQ(vector.size(), 2);
     }
 
@@ -113,6 +114,7 @@ namespace {
 
             uuid2_1 = kernel->getKernelContext().registerOrder2Potential(pot2.get(), "A", "C");
             uuid2_2 = kernel->getKernelContext().registerOrder2Potential(pot2.get(), "B", "C");
+            kernel->getKernelContext().configure();
             EXPECT_EQ(pot2->getId(), uuid2_1);
             EXPECT_EQ(pot2->getId(), uuid2_2);
         }
@@ -123,14 +125,14 @@ namespace {
                 EXPECT_EQ(pot1_A.size(), 1);
                 EXPECT_EQ(pot1_A[0]->getId(), uuid1_1);
                 EXPECT_EQ(pot1_A[0]->getName(), rmp::getPotentialName<rmp::CubePotential>());
-                EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_A[0].get())->getParticleRadius(), 1.0);
+                EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_A[0])->getParticleRadius(), 1.0);
             }
             {
                 const auto &pot1_B = kernel->getKernelContext().getOrder1Potentials("B");
                 EXPECT_EQ(pot1_B.size(), 1);
                 EXPECT_EQ(pot1_B[0]->getId(), uuid1_11);
                 EXPECT_EQ(pot1_B[0]->getName(), rmp::getPotentialName<rmp::CubePotential>());
-                EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_B[0].get())->getParticleRadius(), 2.0);
+                EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_B[0])->getParticleRadius(), 2.0);
             }
             {
                 const auto &pot1_C = kernel->getKernelContext().getOrder1Potentials("C");
@@ -138,7 +140,7 @@ namespace {
                 for (auto &&ptr : pot1_C) {
                     EXPECT_EQ(ptr->getId(), uuid1_1);
                     EXPECT_EQ(ptr->getName(), rmp::getPotentialName<rmp::CubePotential>());
-                    EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(ptr.get())->getParticleRadius(), 3.0);
+                    EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(ptr)->getParticleRadius(), 3.0);
                 }
             }
             {
@@ -146,7 +148,7 @@ namespace {
                 EXPECT_EQ(pot1_D.size(), 1);
                 EXPECT_EQ(pot1_D[0]->getId(), uuid1_1);
                 EXPECT_EQ(pot1_D[0]->getName(), rmp::getPotentialName<rmp::CubePotential>());
-                EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_D[0].get())->getParticleRadius(), 4.0);
+                EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_D[0])->getParticleRadius(), 4.0);
             }
         }
         // test that order 2 potentials are set up correctly
@@ -163,13 +165,13 @@ namespace {
                 const auto &pot2_AC = kernel->getKernelContext().getOrder2Potentials("A", "C");
                 EXPECT_EQ(pot2_AC[0]->getId(), uuid2_1);
                 EXPECT_EQ(pot2_AC[0]->getName(), rmp::getPotentialName<rmp::HarmonicRepulsion>());
-                EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_AC[0].get())->getSumOfParticleRadii(), 1+3);
+                EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_AC[0])->getSumOfParticleRadii(), 1+3);
             }
             {
                 const auto &pot2_BC = kernel->getKernelContext().getOrder2Potentials("B", "C");
                 EXPECT_EQ(pot2_BC[0]->getId(), uuid2_2);
                 EXPECT_EQ(pot2_BC[0]->getName(), rmp::getPotentialName<rmp::HarmonicRepulsion>());
-                EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_BC[0].get())->getSumOfParticleRadii(), 2+3);
+                EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_BC[0])->getSumOfParticleRadii(), 2+3);
             }
         }
 
@@ -177,6 +179,7 @@ namespace {
         {
             // only one potential for particle type B has a different uuid
             kernel->getKernelContext().deregisterPotential(uuid1_1);
+            kernel->getKernelContext().configure();
             EXPECT_EQ(kernel->getKernelContext().getOrder1Potentials("A").size(), 0);
             EXPECT_EQ(kernel->getKernelContext().getOrder1Potentials("B").size(), 1);
             EXPECT_EQ(kernel->getKernelContext().getOrder1Potentials("C").size(), 0);
@@ -184,6 +187,7 @@ namespace {
 
             // both potentials have same uuid, so they should be discarded both
             kernel->getKernelContext().deregisterPotential(uuid2_2);
+            kernel->getKernelContext().configure();
             EXPECT_EQ(kernel->getKernelContext().getOrder2Potentials("A", "C").size(), 0);
             EXPECT_EQ(kernel->getKernelContext().getOrder2Potentials("B", "C").size(), 0);
         }

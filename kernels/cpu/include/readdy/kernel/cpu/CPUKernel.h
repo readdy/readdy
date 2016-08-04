@@ -26,8 +26,6 @@ namespace readdy {
 
                 CPUKernel();
 
-                unsigned int getNCores();
-
                 // factory method
                 static std::unique_ptr<CPUKernel> create();
 
@@ -40,6 +38,8 @@ namespace readdy {
                 virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
 
                 virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+
+                virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
 
 
             private:

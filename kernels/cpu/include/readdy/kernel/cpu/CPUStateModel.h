@@ -15,6 +15,7 @@
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
+#include <readdy/kernel/cpu/model/NeighborList.h>
 
 namespace readdy {
     namespace kernel {
@@ -35,15 +36,7 @@ namespace readdy {
 
                 readdy::kernel::singlecpu::model::SingleCPUParticleData *const getParticleData() const;
 
-                std::vector<model::ParticleIndexPair>::iterator begin_neighborList();
-                std::vector<model::ParticleIndexPair>::iterator end_neighborList();
-
-                std::vector<model::ParticleIndexPair>::const_iterator begin_neighborList() const;
-                std::vector<model::ParticleIndexPair>::const_iterator end_neighborList() const;
-
-                std::vector<model::ParticleIndexPair>::const_iterator cbegin_neighborList() const;
-                std::vector<model::ParticleIndexPair>::const_iterator cend_neighborList() const;
-
+                const model::NeighborList*const getNeighborList() const;
             private:
                 struct Impl;
                 std::unique_ptr<Impl> pimpl;

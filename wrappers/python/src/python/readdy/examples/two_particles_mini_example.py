@@ -15,7 +15,7 @@ class TwoParticlesMiniExample(object):
     def __init__(self):
         KernelProvider.get().load_from_dir(platform_utils.get_readdy_plugin_dir())
         self.simulation = Simulation()
-        self.simulation.set_kernel("SingleCPU")
+        self.simulation.set_kernel("CPU")
 
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111, projection='3d')
@@ -66,6 +66,7 @@ class TwoParticlesMiniExample(object):
         self.simulation.register_reaction_fission("fission", "C", "A", "B", .25, 100., .5, .5)
         self.simulation.register_potential_box("A", 100., Vec(-.75, -.75, -.75), Vec(1.5, 1.5, 1.5), False)
         self.simulation.register_potential_box("B", 100., Vec(-.75, -.75, -.75), Vec(1.5, 1.5, 1.5), False)
+        self.simulation.register_potential_box("C", 100., Vec(-.75, -.75, -.75), Vec(1.5, 1.5, 1.5), False)
         self.simulation.add_particle("A", Vec(-.0, -.0, -.0))
         self.simulation.add_particle("B", Vec(0.1, 0.1, 0.1))
         self.simulation.register_observable_particle_positions(1, self.ppos_callback)

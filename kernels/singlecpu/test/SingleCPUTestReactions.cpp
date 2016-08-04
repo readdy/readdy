@@ -129,8 +129,8 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->getKernelContext().setBoxSize(10, 10, 10);
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setDiffusionConstant("X", .25);
-    kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
-    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .15, .00);
+    kernel->getKernelContext().registerDeathReaction("X decay", "X", 1);
+    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .3, .5);
 
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
@@ -138,13 +138,16 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
+    pp_obs->setCallback([](const readdy::model::ParticlePositionObservable::result_t &t) {
+        BOOST_LOG_TRIVIAL(trace) << "got n particles=" << t.size();
+    });
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
     const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
-
+    kernel->getKernelContext().configure();
     neighborList->execute();
     for (size_t t = 0; t < 20; t++) {
 
@@ -153,7 +156,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
         neighborList->execute();
         reactionsProgram->execute();
 
-        pp_obs->evaluate();
+        kernel->evaluateObservables(t);
 
     }
 
@@ -231,6 +234,8 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
     auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
     auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
+
+    kernel->getKernelContext().configure();
 
     for (unsigned int t = 0; t < 4; t++) {
 
