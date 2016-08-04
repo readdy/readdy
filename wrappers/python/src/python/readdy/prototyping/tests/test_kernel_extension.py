@@ -21,7 +21,7 @@ class TestTest(unittest.TestCase):
     def test_load_prototyping_module(self):
         scpu = SingleCPUExtension()
         program_factory = scpu.get_program_factory()
-        addp = program_factory.create_program_add_particles()
+        addp = program_factory.create_add_particles()
         addp.execute()
 
 
