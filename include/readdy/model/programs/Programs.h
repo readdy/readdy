@@ -23,6 +23,7 @@
 #include <readdy/model/programs/Program.h>
 #include <readdy/common/Types.h>
 #include <readdy/model/Particle.h>
+#include <type_traits>
 
 namespace readdy {
     namespace model {
@@ -30,28 +31,28 @@ namespace readdy {
             class Test : public Program {
 
             public:
-                Test() : Program(getProgramName<Test>()) { }
+                Test() : Program() { }
             };
 
             class AddParticle : public Program {
 
             public:
-                AddParticle() : Program(getProgramName<AddParticle>()) { }
+                AddParticle() : Program() { }
             };
 
             class EulerBDIntegrator : public Program {
             public:
-                EulerBDIntegrator() : Program(getProgramName<EulerBDIntegrator>()) { }
+                EulerBDIntegrator() : Program() { }
             };
 
             class CalculateForces : public Program {
             public:
-                CalculateForces() : Program(getProgramName<CalculateForces>()) {}
+                CalculateForces() : Program() {}
             };
 
             class UpdateNeighborList : public Program {
             public:
-                UpdateNeighborList() : Program(getProgramName<UpdateNeighborList>()) {}
+                UpdateNeighborList() : Program() {}
             };
 
             namespace reactions {
@@ -63,26 +64,42 @@ namespace readdy {
                     using reaction_21 = std::function<model::Particle(const model::Particle&, const model::Particle&)>;
                     using reaction_22 = std::function<void(const model::Particle&, const model::Particle&, model::Particle&, model::Particle&)>;
 
-                    UncontrolledApproximation() : Program(getProgramName<UncontrolledApproximation>()) { }
+                    UncontrolledApproximation() : Program() { }
                     virtual void registerReactionScheme_11(const std::string& reactionName, reaction_11 fun) = 0;
                     virtual void registerReactionScheme_12(const std::string& reactionName, reaction_12 fun) = 0;
                     virtual void registerReactionScheme_21(const std::string& reactionName, reaction_21 fun) = 0;
                     virtual void registerReactionScheme_22(const std::string& reactionName, reaction_22 fun) = 0;
                 };
 
-
-
             }
 
-            namespace _internal {
-                template<> struct ProgramName<Test> { static const std::string value; };
-                template<> struct ProgramName<AddParticle> { static const std::string value; };
-                template<> struct ProgramName<EulerBDIntegrator> { static const std::string value; };
-                template<> struct ProgramName<CalculateForces> { static const std::string value; };
-                template<> struct ProgramName<UpdateNeighborList> { static const std::string value; };
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<Test, T>::value>::type* = 0) {
+                return "Test";
+            };
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<AddParticle, T>::value>::type* = 0) {
+                return "AddParticle";
+            };
 
-                template<> struct ProgramName<reactions::UncontrolledApproximation> { static const std::string value; };
-            }
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type* = 0) {
+                return "Eulerian Brownian dynamics integrator";
+            };
+
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type* = 0) {
+                return "Calculate forces";
+            };
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type* = 0) {
+                return "Update neighbor list";
+            };
+
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type* = 0) {
+                return "Uncontrolled approximation of reactions";
+            };
         }
     }
 }

@@ -60,11 +60,11 @@ BOOST_PYTHON_MODULE (prototyping) {
     exportPrograms();
 
     bpy::class_<scpu_kernel_wrap_t, boost::noncopyable>("SingleCPUKernel")
-            .def("get_kernel_state_model", &scpu_kernel_wrap_t::getKernelStateModel, bpy::return_value_policy<bpy::reference_existing_object>(), "hi")
+            .def("get_kernel_state_model", &scpu_kernel_wrap_t::getKernelStateModel, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("get_kernel_context", &scpu_kernel_wrap_t::getKernelContext, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("get_available_potentials", &scpu_kernel_wrap_t::getAvailablePotentials)
             .def("get_potential_factory", &scpu_kernel_wrap_t::getPotentialFactory, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("get_reaction_factory", &scpu_kernel_wrap_t::getReactionFactory, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("get_observable_factory", &scpu_kernel_wrap_t::getObservableFactory, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("create_program_add_particle", &scpu_kernel_wrap_t::createProgram<readdy::model::programs::AddParticle>);
+            .def("get_program_factory", &scpu_kernel_wrap_t::getProgramFactory, bpy::return_value_policy<bpy::reference_existing_object>());
 }

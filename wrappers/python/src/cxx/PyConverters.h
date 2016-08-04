@@ -37,6 +37,15 @@ namespace readdy {
             );
         }
 
+        template <typename T, typename C, typename ...Args>
+        boost::python::object adapt_unique(std::unique_ptr<T> (C::*fn)(Args...) const) {
+            return boost::python::make_function(
+                    [fn](C& self, Args... args) { return (self.*fn)(args...).release(); },
+                    boost::python::return_value_policy<boost::python::manage_new_object>(),
+                    boost::mpl::vector<T*, C&, Args...>()
+            );
+        }
+
         // Converts a std::pair instance to a Python tuple.
         template <typename T1, typename T2>
         struct std_pair_to_tuple

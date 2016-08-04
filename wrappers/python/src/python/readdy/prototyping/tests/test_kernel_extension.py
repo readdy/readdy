@@ -20,7 +20,8 @@ class TestTest(unittest.TestCase):
 
     def test_load_prototyping_module(self):
         scpu = SingleCPUExtension()
-        addp = pr.AddParticle(scpu)
+        program_factory = scpu.get_program_factory()
+        addp = program_factory.create_program_add_particles()
         addp.execute()
 
 

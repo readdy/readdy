@@ -6,7 +6,6 @@
 #define READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 
 #include <readdy/model/programs/ProgramFactory.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
 namespace readdy {

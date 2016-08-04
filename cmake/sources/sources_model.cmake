@@ -20,7 +20,6 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/Potentials.cpp")
 # internal sources
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/_internal/ObservableWrapper.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/_internal/PotentialNames.cpp")
-LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/_internal/ProgramNames.cpp")
 
 # all sources
 LIST(APPEND READDY_ALL_SOURCES ${READDY_MODEL_SOURCES})

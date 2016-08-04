@@ -106,7 +106,7 @@ init_numpy()
 }
 
 // module
-BOOST_PYTHON_MODULE (simulation) {
+BOOST_PYTHON_MODULE (api) {
 
     init_numpy();
     PyEval_InitThreads();
