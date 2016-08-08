@@ -236,7 +236,7 @@ namespace readdy {
                     const readdy::model::KernelContext *const ctx;
                 };
 
-                struct SingleCPUNeighborList : public NotThatNaiveSingleCPUNeighborList<> {
+                struct SingleCPUNeighborList : public NotThatNaiveSingleCPUNeighborList<std::vector<ParticleIndexPair>> {
                     SingleCPUNeighborList(const readdy::model::KernelContext *const ctx)
                              : NotThatNaiveSingleCPUNeighborList(ctx) { }
                 };
