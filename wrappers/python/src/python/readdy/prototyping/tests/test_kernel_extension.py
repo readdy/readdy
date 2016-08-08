@@ -16,7 +16,7 @@ def creator():
     return SingleCPUExtension()
 
 
-class TestTest(unittest.TestCase):
+class TestKernelExtension(unittest.TestCase):
 
     def test_load_prototyping_module(self):
         scpu = SingleCPUExtension()

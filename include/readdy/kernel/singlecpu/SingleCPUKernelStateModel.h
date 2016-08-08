@@ -37,7 +37,7 @@ namespace readdy {
 
                 virtual double getEnergy() const override;
 
-                void increaseEnergy(double increase);
+                virtual void increaseEnergy(double increase);
 
                 SingleCPUKernelStateModel(readdy::model::KernelContext const* context);
                 ~SingleCPUKernelStateModel();
@@ -45,10 +45,11 @@ namespace readdy {
                 SingleCPUKernelStateModel(SingleCPUKernelStateModel &&rhs);
                 SingleCPUKernelStateModel& operator=(SingleCPUKernelStateModel &&rhs);
 
-                readdy::kernel::singlecpu::model::SingleCPUParticleData* getParticleData() const;
+                virtual readdy::kernel::singlecpu::model::SingleCPUParticleData* getParticleData() const;
 
-                void setNeighborList(std::unique_ptr<model::SingleCPUNeighborList> ptr);
-                const model::SingleCPUNeighborList * const getNeighborList() const;
+                virtual void setNeighborList(std::unique_ptr<model::SingleCPUNeighborList> ptr);
+
+                virtual const model::SingleCPUNeighborList * getNeighborList() const;
 
                 virtual const std::vector<readdy::model::Particle> getParticles() const override;
 

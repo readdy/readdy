@@ -9,25 +9,58 @@
 
 #include <boost/python.hpp>
 
-
 #include <readdy/model/Particle.h>
 #include <PyConverters.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
+#include "ModelWrap.h"
 
 namespace bpy = boost::python;
+namespace mpl = boost::mpl;
 namespace rp = readdy::py;
+
+using uuid_t = boost::uuids::uuid;
 
 using ctx_t = readdy::model::KernelContext;
 using particle_t = readdy::model::Particle;
+using vec_t = readdy::model::Vec3;
+
+using scpu_model_t = readdy::kernel::singlecpu::SingleCPUKernelStateModel;
+using scpu_model_wrap_t = readdy::py::Model;
 
 using scpu_nl_t = readdy::kernel::singlecpu::model::SingleCPUNeighborList;
 using scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
 void exportModelClasses() {
+
     bpy::class_<std::vector<unsigned long>>("Vec_ulong").def(bpy::vector_indexing_suite<std::vector<unsigned long>>());
     bpy::class_<std::vector<scpu_nl_box_t>>("Vec_box").def(bpy::vector_indexing_suite<std::vector<scpu_nl_box_t>>());
+
+    bpy::class_<particle_t>("Particle", boost::python::init<double, double, double, unsigned int>())
+            .add_property("pos", +[](particle_t& self) {return self.getPos();}, &particle_t::setPos)
+            .add_property("type", &particle_t::getType, &particle_t::setType)
+            .add_property("id", bpy::make_function(&particle_t::getId, bpy::return_value_policy<bpy::reference_existing_object>()))
+            .def(bpy::self == bpy::self)
+            .def(bpy::self != bpy::self);
+
+    bpy::class_<ctx_t, boost::noncopyable>("Context", bpy::no_init)
+            .add_property("kbt", &ctx_t::getKBT, &ctx_t::setKBT)
+            .add_property("box_size",
+                          +[](ctx_t& self) {return readdy::model::Vec3(self.getBoxSize());},
+                          +[](ctx_t& self, readdy::model::Vec3 vec) {self.setBoxSize(vec[0], vec[1], vec[2]);})
+            .def("set_diffusion_constant", &ctx_t::setDiffusionConstant);
+
+    bpy::class_<scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<ctx_t*>())
+            .def("remove_particle", &scpu_model_t::removeParticle, &scpu_model_wrap_t::default_removeParticle)
+            .def("get_particle_positions", &scpu_model_t::getParticlePositions, &scpu_model_wrap_t::default_getParticlePositions)
+            .def("get_energy", &scpu_model_t::getEnergy, &scpu_model_wrap_t::default_getEnergy)
+            .def("increase_energy", &scpu_model_t::increaseEnergy, &scpu_model_wrap_t::default_increaseEnergy)
+            .def("get_particle_data", &scpu_model_t::getParticleData, &scpu_model_wrap_t::default_getParticleData, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("get_neighbor_list", &scpu_model_t::getNeighborList, &scpu_model_wrap_t::default_getNeighborList, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("get_particles", &scpu_model_t::getParticles, &scpu_model_wrap_t::default_getParticles);
 
     bpy::class_<scpu_nl_t, boost::noncopyable>("NeighborList", bpy::init<ctx_t *>())
             .def("create", &scpu_nl_t::create)

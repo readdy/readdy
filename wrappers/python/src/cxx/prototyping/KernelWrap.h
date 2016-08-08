@@ -76,15 +76,5 @@ namespace readdy {
                 return scpu_kernel_t::getObservableFactory();
             }
         };
-        /*
-         * with default impl:
-         *
-         * int f()
-         *   {
-         *       if (override f = this->get_override("f"))
-         *           return f();
-         *       return Base::f();
-         *   }
-         **/
     }
 }
