@@ -91,6 +91,27 @@ namespace readdy {
 
                 };
 
+                struct Box {
+                    std::vector<Box *> neighboringBoxes{};
+                    std::vector<unsigned long> particleIndices{};
+                    long i, j, k;
+                    long id = 0;
+
+                    Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
+                    }
+                    void addNeighbor(Box *box) {
+                        if (box && box->id != id) neighboringBoxes.push_back(box);
+                    }
+
+                    friend bool operator==(const Box& lhs, const Box& rhs) {
+                        return lhs.id == rhs.id;
+                    }
+
+                    friend bool operator!=(const Box& lhs, const Box& rhs) {
+                        return !(lhs == rhs);
+                    }
+                };
+
                 template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
                 class NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<container> {
                     using super = readdy::kernel::singlecpu::model::SingleCPUNeighborListContainer<container>;
@@ -203,18 +224,6 @@ namespace readdy {
 
 
                 protected:
-                    struct Box {
-                        std::vector<Box *> neighboringBoxes{};
-                        std::vector<unsigned long> particleIndices{};
-                        long i, j, k;
-                        long id = 0;
-
-                        Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
-                        }
-                        void addNeighbor(Box *box) {
-                            if (box && box->id != id) neighboringBoxes.push_back(box);
-                        }
-                    };
                     std::vector<Box> boxes{};
                     std::array<int, 3> nBoxes{{0, 0, 0}};
                     readdy::model::Vec3 boxSize{0, 0, 0};

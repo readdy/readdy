@@ -32,6 +32,7 @@ init_numpy() {
 }
 
 void exportPrograms();
+void exportModelClasses();
 
 namespace bpy = boost::python;
 namespace scpu = readdy::kernel::singlecpu;
@@ -58,6 +59,7 @@ BOOST_PYTHON_MODULE (prototyping) {
     doc_options.enable_all();
 
     exportPrograms();
+    exportModelClasses();
 
     bpy::class_<scpu_kernel_wrap_t, boost::noncopyable>("SingleCPUKernel")
             .def("get_kernel_state_model", &scpu_kernel_wrap_t::getKernelStateModel, bpy::return_value_policy<bpy::reference_existing_object>())

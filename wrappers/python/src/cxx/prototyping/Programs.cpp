@@ -14,9 +14,16 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
+#include <PyFunction.h>
 
 namespace bpy = boost::python;
 namespace rp = readdy::py;
+
+using particle_t = readdy::model::Particle;
+using py_fun_11_t = rp::PyFunction<particle_t(const particle_t&)>;
+using py_fun_12_t = rp::PyFunction<void(const particle_t&, particle_t&, particle_t&)>;
+using py_fun_21_t = rp::PyFunction<particle_t(const particle_t&, const particle_t&)>;
+using py_fun_22_t = rp::PyFunction<void(const particle_t&, const particle_t&, particle_t&, particle_t&)>;
 
 using prog_factory_t = readdy::model::programs::ProgramFactory;
 
@@ -25,14 +32,14 @@ using euler_integrator_t = readdy::kernel::singlecpu::programs::SingleCPUEulerBD
 using forces_t = readdy::kernel::singlecpu::programs::SingleCPUCalculateForces;
 using neighbor_list_t = readdy::kernel::singlecpu::programs::SingleCPUUpdateNeighborList;
 
-using reactions_uncontrolled_approx_t = readdy::kernel::singlecpu::programs::reactions::UncontrolledApproximation;
+using reactions_u_a_t = readdy::kernel::singlecpu::programs::reactions::UncontrolledApproximation;
 
 void exportPrograms() {
     auto f_add_particle = &prog_factory_t::createProgram<add_particle_t>;
     auto f_euler_integrator = &prog_factory_t::createProgram<euler_integrator_t>;
     auto f_forces = &prog_factory_t::createProgram<forces_t>;
     auto f_neighbor_list = &prog_factory_t::createProgram<neighbor_list_t>;
-    auto f_reactions_uncontrolled_approximation = &prog_factory_t::createProgram<reactions_uncontrolled_approx_t>;
+    auto f_reactions_uncontrolled_approximation = &prog_factory_t::createProgram<reactions_u_a_t>;
 
     using scpu_kernel_t = readdy::kernel::singlecpu::SingleCPUKernel;
 
@@ -53,4 +60,22 @@ void exportPrograms() {
 
     bpy::class_<forces_t>("CalculateForces", bpy::init<scpu_kernel_t*>())
             .def("execute", &forces_t::execute);
+
+    bpy::class_<neighbor_list_t>("UpdateNeighborList", bpy::init<scpu_kernel_t*>())
+            .def("execute", &neighbor_list_t::execute);
+
+    bpy::class_<reactions_u_a_t>("ReactionsUncontrolledApproximation", bpy::init<scpu_kernel_t*>())
+            .def("execute", &reactions_u_a_t::execute)
+            .def("register_reaction_scheme_11", +[] (reactions_u_a_t& self, const std::string name, bpy::object handler) {
+                self.registerReactionScheme_11(name, py_fun_11_t(handler));
+            })
+            .def("register_reaction_scheme_12", +[] (reactions_u_a_t& self, const std::string name, bpy::object handler) {
+                self.registerReactionScheme_12(name, py_fun_12_t(handler));
+            })
+            .def("register_reaction_scheme_21", +[] (reactions_u_a_t& self, const std::string name, bpy::object handler) {
+                self.registerReactionScheme_21(name, py_fun_21_t(handler));
+            })
+            .def("register_reaction_scheme_22", +[] (reactions_u_a_t& self, const std::string name, bpy::object handler) {
+                self.registerReactionScheme_22(name, py_fun_22_t(handler));
+            });
 }
