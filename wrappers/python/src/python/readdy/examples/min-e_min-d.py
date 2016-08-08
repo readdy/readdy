@@ -180,7 +180,7 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        reaction_radius = (0.01 + 0.01) * 5  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
+        reaction_radius = (0.01 + 0.01)*4  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
         k_fusion = brentq(lambda x: self.erban_chapman(.093, 2.5 + .01, reaction_radius, x), 1, 5000000)
         print("k_fusion=%s" % k_fusion)
         simulation.register_reaction_conversion("Phosphorylation", "D", "D_P", .5)
@@ -269,7 +269,7 @@ class MinEMinDSimulation(object):
         for i in range(int(.5 * n_minD_particles), n_minD_particles):
             simulation.add_particle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
-        self.timestep = simulation.get_recommended_time_step(1)
+        self.timestep = simulation.get_recommended_time_step(5)
 
         ###################################
         #

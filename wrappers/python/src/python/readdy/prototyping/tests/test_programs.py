@@ -14,7 +14,6 @@ class TestPrograms(unittest.TestCase):
                 return result
 
         class CustomKernel(pr.SingleCPUKernel):
-
             def __init__(self):
                 super(CustomKernel, self).__init__()
                 self._model = CustomStateModel(self.get_kernel_context())
@@ -63,6 +62,13 @@ class TestPrograms(unittest.TestCase):
         positions = state_model.get_particle_positions()
         np.testing.assert_equal(positions[0], sim.Vec(0, 0, 0))
         np.testing.assert_equal(positions[1], sim.Vec(1, 1, 1))
+
+        it = kernel.get_kernel_state_model().get_particle_data().positions
+        assert it.next() == sim.Vec(0, 0, 0)
+        assert it.next() == sim.Vec(1, 1, 1)
+
+        with np.testing.assert_raises(StopIteration):
+            next(it)
 
 
 if __name__ == '__main__':

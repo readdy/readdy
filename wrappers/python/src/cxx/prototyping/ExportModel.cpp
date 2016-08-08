@@ -34,13 +34,15 @@ using scpu_nl_t = readdy::kernel::singlecpu::model::SingleCPUNeighborList;
 using scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
+using default_policy = bpy::objects::default_iterator_call_policies;
+
 void exportModelClasses() {
 
     bpy::class_<std::vector<unsigned long>>("Vec_ulong").def(bpy::vector_indexing_suite<std::vector<unsigned long>>());
     bpy::class_<std::vector<scpu_nl_box_t>>("Vec_box").def(bpy::vector_indexing_suite<std::vector<scpu_nl_box_t>>());
 
     bpy::class_<particle_t>("Particle", boost::python::init<double, double, double, unsigned int>())
-            .add_property("pos", +[](particle_t& self) {return self.getPos();}, &particle_t::setPos)
+            .add_property("pos", +[](particle_t &self) { return self.getPos(); }, &particle_t::setPos)
             .add_property("type", &particle_t::getType, &particle_t::setType)
             .add_property("id", bpy::make_function(&particle_t::getId, bpy::return_value_policy<bpy::reference_existing_object>()))
             .def(bpy::self == bpy::self)
@@ -49,11 +51,11 @@ void exportModelClasses() {
     bpy::class_<ctx_t, boost::noncopyable>("Context", bpy::no_init)
             .add_property("kbt", &ctx_t::getKBT, &ctx_t::setKBT)
             .add_property("box_size",
-                          +[](ctx_t& self) {return readdy::model::Vec3(self.getBoxSize());},
-                          +[](ctx_t& self, readdy::model::Vec3 vec) {self.setBoxSize(vec[0], vec[1], vec[2]);})
+                          +[](ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); },
+                          +[](ctx_t &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
             .def("set_diffusion_constant", &ctx_t::setDiffusionConstant);
 
-    bpy::class_<scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<ctx_t*>())
+    bpy::class_<scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<ctx_t *>())
             .def("remove_particle", &scpu_model_t::removeParticle, &scpu_model_wrap_t::default_removeParticle)
             .def("get_particle_positions", &scpu_model_t::getParticlePositions, &scpu_model_wrap_t::default_getParticlePositions)
             .def("get_energy", &scpu_model_t::getEnergy, &scpu_model_wrap_t::default_getEnergy)
@@ -84,12 +86,16 @@ void exportModelClasses() {
             .def("clear", &scpu_pd_t::clear)
             .def("add_particle", &scpu_pd_t::addParticle)
             .def("add_particles", &scpu_pd_t::addParticles)
-            .def("remove_particle", +[](scpu_pd_t &self, particle_t particle) {self.removeParticle(particle);})
-            .def("remove_particle", +[](scpu_pd_t &self, std::size_t index) {self.removeParticle(index);})
+            .def("remove_particle", +[](scpu_pd_t &self, particle_t particle) { self.removeParticle(particle); })
+            .def("remove_particle", +[](scpu_pd_t &self, std::size_t index) { self.removeParticle(index); })
             .def("is_marked_for_deactivation", &scpu_pd_t::isMarkedForDeactivation)
             .def("get_deactivated_index", &scpu_pd_t::getDeactivatedIndex)
             .def("get_n_deactivated", &scpu_pd_t::getNDeactivated)
             .def("mark_for_deactivation", &scpu_pd_t::markForDeactivation)
             .def("deactivate_marked", &scpu_pd_t::deactivateMarked)
-            .def("__getitem__", +[](scpu_pd_t &self, const unsigned int i) {return self[i];});
+            .add_property("ids", bpy::range(&scpu_pd_t::cbegin_ids, &scpu_pd_t::cend_ids))
+            .add_property("positions", bpy::range(&scpu_pd_t::cbegin_positions, &scpu_pd_t::cend_positions))
+            .add_property("forces", bpy::range(&scpu_pd_t::cbegin_forces, &scpu_pd_t::cend_forces))
+            .add_property("types", bpy::range(&scpu_pd_t::cbegin_types, &scpu_pd_t::cend_types))
+            .def("__getitem__", +[](scpu_pd_t &self, const unsigned int i) { return self[i]; });
 }
