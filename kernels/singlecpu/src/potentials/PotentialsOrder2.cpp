@@ -1,8 +1,6 @@
 /**
  * SingleCPU implementations of potentials of second order (particle-particle interactions).
- * This is where actual forces and energies are calculated. Second order potentials are
- * currently: harmonic repulsion and piece-wise harmonic interaction (similar to
- * Lennard-Jones).
+ * This is where actual forces and energies are calculated.
  *
  * @file PotentialsOrder2.cpp
  * @brief Calculate forces and energies of second-order potentials.
