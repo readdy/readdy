@@ -59,14 +59,10 @@ boost::uuids::uuid registerObservable_RadialDistribution(sim& self, unsigned int
 }
 
 boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int stride, const boost::python::object &callbackFun, boost::python::list types) {
-    std::vector<std::string> typesVec {};
-    const auto len = boost::python::len(types);
-    typesVec.reserve((unsigned long) len);
-    for(auto i = 0; i < len; ++i) {
-        typesVec.push_back(boost::python::extract<std::string>(types[i]));
-    }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, typesVec);
+    return self.registerObservable<readdy::model::CenterOfMassObservable>(
+            std::move(pyFun), stride, readdy::py::sequence_to_vector<std::string>(types)
+    );
 }
 
 boost::uuids::uuid registerObservable_HistogramAlongAxisObservable(sim& self, unsigned int stride, const bpy::object& callbackFun, bpy::numeric::array& binBorders, bpy::list types, unsigned int axis) {

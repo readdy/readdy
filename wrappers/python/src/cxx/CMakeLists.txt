@@ -30,6 +30,7 @@ SET_TARGET_PROPERTIES(api
 
 LIST(APPEND PROTOTYPING_SOURCES prototyping/PrototypingModule.cpp)
 LIST(APPEND PROTOTYPING_SOURCES prototyping/KernelWrap.h)
+LIST(APPEND PROTOTYPING_SOURCES prototyping/ProgramWrap.h)
 LIST(APPEND PROTOTYPING_SOURCES prototyping/Programs.cpp)
 LIST(APPEND PROTOTYPING_SOURCES prototyping/Model.cpp)
 

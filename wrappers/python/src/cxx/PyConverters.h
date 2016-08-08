@@ -19,9 +19,22 @@
 #include <boost/python.hpp>
 #include <iostream>
 #include <vector>
+#include <list>
 
 namespace readdy {
     namespace py {
+
+        template<typename T>
+        std::list<T> sequence_to_list(const boost::python::object& o) {
+            boost::python::stl_input_iterator<T> begin(o), end;
+            return std::list<T>(begin, end);
+        }
+
+        template<typename T>
+        std::vector<T> sequence_to_vector(const boost::python::object& o) {
+            boost::python::stl_input_iterator<T> begin(o), end;
+            return std::vector<T>(begin, end);
+        }
 
         /**
          * Takes a unique pointer and transfers its ownership to python

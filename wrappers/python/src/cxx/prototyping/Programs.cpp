@@ -15,6 +15,7 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 #include <PyFunction.h>
+#include "ProgramWrap.h"
 
 namespace bpy = boost::python;
 namespace rp = readdy::py;
@@ -26,6 +27,9 @@ using py_fun_21_t = rp::PyFunction<particle_t(const particle_t&, const particle_
 using py_fun_22_t = rp::PyFunction<void(const particle_t&, const particle_t&, particle_t&, particle_t&)>;
 
 using prog_factory_t = readdy::model::programs::ProgramFactory;
+
+using program_t = readdy::model::programs::Program;
+using program_wrap_t = readdy::py::Program;
 
 using add_particle_t = readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram;
 using euler_integrator_t = readdy::kernel::singlecpu::programs::SingleCPUEulerBDIntegrator;
@@ -50,21 +54,23 @@ void exportPrograms() {
             .def("create_update_neighbor_list", rp::adapt_unique(f_neighbor_list))
             .def("create_reactions_uncontrolled_approximation", rp::adapt_unique(f_reactions_uncontrolled_approximation));
 
-    bpy::class_<add_particle_t>("AddParticle", bpy::init<scpu_kernel_t*>())
+    bpy::class_<program_wrap_t, boost::noncopyable>("Program").def("execute", bpy::pure_virtual(&program_t::execute));
+
+    bpy::class_<add_particle_t, boost::python::bases<program_t>>("AddParticle", bpy::init<scpu_kernel_t*>())
             .def("execute", &add_particle_t::execute)
             .def("add_particle", &add_particle_t::addParticle)
             .def("set_particles", &add_particle_t::setParticles);
 
-    bpy::class_<euler_integrator_t>("EulerBDIntegrator", bpy::init<scpu_kernel_t*>())
+    bpy::class_<euler_integrator_t, boost::python::bases<program_t>>("EulerBDIntegrator", bpy::init<scpu_kernel_t*>())
             .def("execute", &euler_integrator_t::execute);
 
-    bpy::class_<forces_t>("CalculateForces", bpy::init<scpu_kernel_t*>())
+    bpy::class_<forces_t, boost::python::bases<program_t>>("CalculateForces", bpy::init<scpu_kernel_t*>())
             .def("execute", &forces_t::execute);
 
-    bpy::class_<neighbor_list_t>("UpdateNeighborList", bpy::init<scpu_kernel_t*>())
+    bpy::class_<neighbor_list_t, boost::python::bases<program_t>>("UpdateNeighborList", bpy::init<scpu_kernel_t*>())
             .def("execute", &neighbor_list_t::execute);
 
-    bpy::class_<reactions_u_a_t>("ReactionsUncontrolledApproximation", bpy::init<scpu_kernel_t*>())
+    bpy::class_<reactions_u_a_t, boost::python::bases<program_t>>("ReactionsUncontrolledApproximation", bpy::init<scpu_kernel_t*>())
             .def("execute", &reactions_u_a_t::execute)
             .def("register_reaction_scheme_11", +[] (reactions_u_a_t& self, const std::string name, bpy::object handler) {
                 self.registerReactionScheme_11(name, py_fun_11_t(handler));
