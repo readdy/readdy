@@ -1,8 +1,11 @@
 /**
- * << detailed description >>
+ * SingleCPU implementations of potentials of second order (particle-particle interactions).
+ * This is where actual forces and energies are calculated. Second order potentials are
+ * currently: harmonic repulsion and piece-wise harmonic interaction (similar to
+ * Lennard-Jones).
  *
  * @file PotentialsOrder2.cpp
- * @brief << brief description >>
+ * @brief Calculate forces and energies of second-order potentials.
  * @author clonker
  * @date 09.06.16
  */
@@ -21,7 +24,7 @@ namespace readdy {
                         distanceSquared = std::sqrt(distanceSquared);
                         distanceSquared -= getSumOfParticleRadii();
                         distanceSquared *= distanceSquared;
-                        return distanceSquared * getForceConstant();
+                        return 0.5 * distanceSquared * getForceConstant();
                     } else {
                         return 0;
                     }
@@ -31,7 +34,7 @@ namespace readdy {
                     auto squared = x_ij * x_ij;
                     if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
                         squared = std::sqrt(squared);
-                        force = (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
+                        force = (getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
                     } else {
                         force = {0,0,0};
                     }
@@ -41,8 +44,8 @@ namespace readdy {
                     auto squared = x_ij * x_ij;
                     if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
                         squared = std::sqrt(squared);
-                        energy += getForceConstant() * std::pow(squared - getSumOfParticleRadii(), 2);
-                        force = (2 * getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
+                        energy += 0.5 * getForceConstant() * std::pow(squared - getSumOfParticleRadii(), 2);
+                        force = (getForceConstant() * (squared - getSumOfParticleRadii())) / squared * x_ij;
                     } else {
                         force = {0,0,0};
                     }
