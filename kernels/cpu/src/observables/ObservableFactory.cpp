@@ -20,8 +20,8 @@ namespace readdy {
 
                 readdy::model::NParticlesObservable *
                 ObservableFactory::createNParticlesObservable(readdy::model::Kernel *const kernel,
-                                                              unsigned int stride) const {
-                    return new readdy::kernel::singlecpu::observables::NParticlesObservable<CPUKernel>(kernel, stride);
+                                                              unsigned int stride, std::vector<std::string> typesToCount) const {
+                    return new readdy::kernel::singlecpu::observables::NParticlesObservable<CPUKernel>(kernel, stride, typesToCount);
                 }
 
                 readdy::model::HistogramAlongAxisObservable *

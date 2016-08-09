@@ -20,11 +20,11 @@
 namespace bpy = boost::python;
 namespace rp = readdy::py;
 
-using particle_t = readdy::model::Particle;
-using py_fun_11_t = rp::PyFunction<particle_t(const particle_t&)>;
-using py_fun_12_t = rp::PyFunction<void(const particle_t&, particle_t&, particle_t&)>;
-using py_fun_21_t = rp::PyFunction<particle_t(const particle_t&, const particle_t&)>;
-using py_fun_22_t = rp::PyFunction<void(const particle_t&, const particle_t&, particle_t&, particle_t&)>;
+using _rdy_particle_t = readdy::model::Particle;
+using py_fun_11_t = rp::PyFunction<_rdy_particle_t(const _rdy_particle_t&)>;
+using py_fun_12_t = rp::PyFunction<void(const _rdy_particle_t&, _rdy_particle_t&, _rdy_particle_t&)>;
+using py_fun_21_t = rp::PyFunction<_rdy_particle_t(const _rdy_particle_t&, const _rdy_particle_t&)>;
+using py_fun_22_t = rp::PyFunction<void(const _rdy_particle_t&, const _rdy_particle_t&, _rdy_particle_t&, _rdy_particle_t&)>;
 
 using prog_factory_t = readdy::model::programs::ProgramFactory;
 

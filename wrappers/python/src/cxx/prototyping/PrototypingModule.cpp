@@ -37,7 +37,7 @@ void exportModelClasses();
 namespace bpy = boost::python;
 namespace scpu = readdy::kernel::singlecpu;
 
-using scpu_model_t = scpu::SingleCPUKernelStateModel;
+using _rdy_scpu_model_t = scpu::SingleCPUKernelStateModel;
 using scpu_kernel_t = scpu::SingleCPUKernel;
 
 using scpu_kernel_wrap_t = scpu_kernel_t; // todo: do i need readdy::py::SingleCPUKernelWrap here?

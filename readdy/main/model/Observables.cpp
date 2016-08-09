@@ -9,6 +9,7 @@
 
 #include <readdy/model/Observables.h>
 #include <readdy/model/Kernel.h>
+#include <readdy/model/_internal/Util.h.h>
 
 namespace readdy {
     namespace model {
@@ -153,7 +154,16 @@ namespace readdy {
 
         }
 
+        NParticlesObservable::NParticlesObservable(Kernel *const kernel, unsigned int stride,
+                                                   std::vector<std::string> typesToCount)
+                : NParticlesObservable(kernel, stride, _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {
 
+        }
+
+        NParticlesObservable::NParticlesObservable(Kernel *const kernel, unsigned int stride,
+                                                   std::vector<unsigned int> typesToCount)
+                : Observable(kernel, stride), typesToCount(typesToCount) {
+        }
     }
 
 
@@ -167,16 +177,8 @@ readdy::model::HistogramAlongAxisObservable::HistogramAlongAxisObservable(readdy
     result = std::vector<double>(nCenters);
 }
 
-std::set<unsigned int> readdy::model::HistogramAlongAxisObservable::transformTypes(std::vector<std::string> types, const readdy::model::KernelContext &ctx) {
-    std::set<unsigned int> result;
-    for(auto&& t : types) {
-        result.insert(ctx.getParticleTypeID(t));
-    }
-    return result;
-}
-
 readdy::model::HistogramAlongAxisObservable::HistogramAlongAxisObservable(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typesToCount, unsigned int axis)
-        : HistogramAlongAxisObservable(kernel, stride, binBorders, transformTypes(typesToCount, kernel->getKernelContext()), axis)
+        : HistogramAlongAxisObservable(kernel, stride, binBorders, _internal::util::transformTypes(typesToCount, kernel->getKernelContext()), axis)
 {
 
 }

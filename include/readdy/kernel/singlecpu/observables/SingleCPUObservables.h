@@ -66,12 +66,31 @@ namespace readdy {
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class NParticlesObservable : public readdy::model::NParticlesObservable {
                 public:
-                    NParticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride) :
-                            readdy::model::NParticlesObservable(kernel, stride),
+                    NParticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+                            readdy::model::NParticlesObservable(kernel, stride, typesToCount),
                             singleCPUKernel(dynamic_cast<kernel_t *>(kernel)) {}
 
                     virtual void evaluate() override {
-                        result = singleCPUKernel->getKernelStateModel().getParticleData()->size();
+                        std::vector<unsigned long> resultVec = {};
+                        if(typesToCount.empty()) {
+                            resultVec.push_back(singleCPUKernel->getKernelStateModel().getParticleData()->size());
+                        } else {
+                            resultVec.resize(typesToCount.size());
+                            const auto& pd = singleCPUKernel->getKernelStateModel().getParticleData();
+                            auto typesIt = pd->cbegin_types();
+                            while(typesIt != pd->cend_types()) {
+                                unsigned int idx = 0;
+                                for(const auto t : typesToCount) {
+                                    if(*typesIt == t) {
+                                        resultVec[idx]++;
+                                        break;
+                                    }
+                                    ++idx;
+                                }
+                                ++typesIt;
+                            }
+                        }
+                        result = resultVec;
                     }
 
                 protected:

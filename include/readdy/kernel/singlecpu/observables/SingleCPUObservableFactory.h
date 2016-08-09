@@ -25,7 +25,7 @@ namespace readdy {
                                                                                                std::vector<std::string> typesToCount, unsigned int axis) const override;
 
                     virtual readdy::model::NParticlesObservable *createNParticlesObservable(readdy::model::Kernel *const kernel,
-                                                                                    unsigned int stride) const override;
+                                                                                    unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
 
                 };

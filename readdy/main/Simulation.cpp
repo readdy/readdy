@@ -61,15 +61,19 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
         auto &&neighborList = pimpl->kernel->createProgram<rmp::UpdateNeighborList>();
         auto &&reactionsProgram = pimpl->kernel->createProgram<rmp::reactions::UncontrolledApproximation>();
         pimpl->kernel->getKernelContext().configure();
+
         neighborList->execute();
+        forces->execute();
+        pimpl->kernel->evaluateObservables(0);
         for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
-            forces->execute();
             integrator->execute();
             neighborList->execute();
-
             forces->execute();
+
             reactionsProgram->execute();
-            pimpl->kernel->evaluateObservables(t);
+            neighborList->execute();
+            forces->execute();
+            pimpl->kernel->evaluateObservables(t+1);
         }
     }
 }

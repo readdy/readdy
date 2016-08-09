@@ -23,7 +23,7 @@ namespace readdy {
                 public:
                     ObservableFactory(CPUKernel *const kernel);
                     virtual readdy::model::NParticlesObservable *
-                    createNParticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride) const override;
+                    createNParticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
                     virtual readdy::model::HistogramAlongAxisObservable *
                     createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride,

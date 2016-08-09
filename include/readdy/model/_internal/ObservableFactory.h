@@ -43,7 +43,7 @@ namespace readdy {
                     throw std::runtime_error("Should be overridden (or todo: provide default impl)");
                 }
 
-                virtual NParticlesObservable* createNParticlesObservable(readdy::model::Kernel* const kernel, unsigned int stride) const {
+                virtual NParticlesObservable* createNParticlesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const {
                     throw std::runtime_error("should be overridden (or todo: provide default impl)");
                 }
 

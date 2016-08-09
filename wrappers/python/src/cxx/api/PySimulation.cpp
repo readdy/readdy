@@ -83,6 +83,17 @@ boost::uuids::uuid registerObservable_HistogramAlongAxisObservable(sim& self, un
 
 }
 
+boost::uuids::uuid registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list types, const bpy::object &callbackFun) {
+    const auto sizeTypes = bpy::len(types);
+    std::vector<std::string> typesVec {};
+    typesVec.reserve((unsigned long) sizeTypes);
+    for(auto i = 0; i < sizeTypes; ++i) {
+        typesVec.push_back(bpy::extract<std::string>(types[i]));
+    }
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, typesVec);
+}
+
 boost::uuids::uuid registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride);
@@ -134,6 +145,7 @@ BOOST_PYTHON_MODULE (api) {
             .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable)
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
+            .def("register_observable_n_particles_types", &registerObservable_NParticlesTypes)
             .def("register_reaction_conversion", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
             .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
@@ -161,8 +173,8 @@ BOOST_PYTHON_MODULE (api) {
             .def(bpy::self_ns::str(bpy::self))
             .def("__getitem__", &pyVec3Bracket);
 
-    bpy::class_<std::vector<vec>>("Vecvec")
-            .def(boost::python::vector_indexing_suite<std::vector<vec>>());
+    bpy::class_<std::vector<vec>>("Vecvec").def(boost::python::vector_indexing_suite<std::vector<vec>>());
+    bpy::class_<std::vector<unsigned long>>("ulong_vec").def(boost::python::vector_indexing_suite<std::vector<unsigned long>>());
 
     bpy::class_<pot2>("Pot2", bpy::init<std::string, boost::python::object, boost::python::object>())
             .def("calc_energy", &pot2::calculateEnergy)
