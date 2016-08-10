@@ -7,14 +7,14 @@
  * @date 03.08.16
  */
 #include <boost/python.hpp>
-#include <PyConverters.h>
+#include <../PyConverters.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUProgramFactory.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUEulerBDIntegrator.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
-#include <PyFunction.h>
+#include <../PyFunction.h>
 #include "ProgramWrap.h"
 
 namespace bpy = boost::python;

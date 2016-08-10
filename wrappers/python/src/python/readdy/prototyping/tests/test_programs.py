@@ -1,15 +1,16 @@
 import unittest
 import numpy as np
 
+import readdy._internal.common as cmn
 import readdy._internal.prototyping as pr
-import readdy._internal.simulation as sim
+import readdy._internal.api as sim
 
 
 class TestPrograms(unittest.TestCase):
     def test_custom_state_model(self):
         class CustomStateModel(pr.Model):
             def get_particle_positions(self):
-                result = sim.Vecvec()
+                result = cmn.Vecvec()
                 result.append(sim.Vec(-1, -1, -1))
                 return result
 
@@ -46,6 +47,7 @@ class TestPrograms(unittest.TestCase):
     def test_factory_programs(self):
         kernel = pr.SingleCPUKernel()
         kernel.get_kernel_context().set_diffusion_constant("A", 1.0)
+        print("periodic x: %s" % kernel.get_kernel_context().periodic_boundary)
         factory = kernel.get_program_factory()
 
         add_particles = factory.create_add_particles()

@@ -2,13 +2,13 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h>
-#include "PyConverters.h"
+#include "../PyConverters.h"
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
-#include "PyPotential.h"
-#include "PyFunction.h"
+#include "../PyPotential.h"
+#include "../PyFunction.h"
 
 namespace bpy = boost::python;
 using sim = readdy::Simulation;
@@ -120,9 +120,6 @@ BOOST_PYTHON_MODULE (api) {
 
     boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
 
-    readdy::py::std_vector_to_python_converter<double>();
-    readdy::py::std_pair_to_python_converter<std::vector<double>, std::vector<double>>();
-
     bpy::docstring_options doc_options;
     doc_options.enable_all();
     bpy::class_<sim, boost::noncopyable>("Simulation")
@@ -172,9 +169,6 @@ BOOST_PYTHON_MODULE (api) {
             .def(bpy::self * bpy::self)
             .def(bpy::self_ns::str(bpy::self))
             .def("__getitem__", &pyVec3Bracket);
-
-    bpy::class_<std::vector<vec>>("Vecvec").def(boost::python::vector_indexing_suite<std::vector<vec>>());
-    bpy::class_<std::vector<unsigned long>>("ulong_vec").def(boost::python::vector_indexing_suite<std::vector<unsigned long>>());
 
     bpy::class_<pot2>("Pot2", bpy::init<std::string, boost::python::object, boost::python::object>())
             .def("calc_energy", &pot2::calculateEnergy)

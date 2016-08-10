@@ -10,6 +10,8 @@
 #ifndef READDY_MAIN_PYCONVERTERS_H
 #define READDY_MAIN_PYCONVERTERS_H
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h>
 #include <numpy/ndarrayobject.h>
 #include <boost/python/module.hpp>
@@ -23,6 +25,15 @@
 
 namespace readdy {
     namespace py {
+
+        template<typename T, std::size_t N>
+        boost::python::list toList(std::array<T, N> arr) {
+            boost::python::list list;
+            for(T t : arr) {
+                list.append<T>(t);
+            }
+            return list;
+        };
 
         template<typename T>
         std::list<T> sequence_to_list(const boost::python::object& o) {

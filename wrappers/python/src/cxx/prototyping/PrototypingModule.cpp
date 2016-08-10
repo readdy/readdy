@@ -14,9 +14,8 @@
 #include <boost/python.hpp>
 // singlecpu includes
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
-#include <readdy/model/programs/Programs.h>
 #include "KernelWrap.h"
-#include "PyFunction.h"
+#include "../PyFunction.h"
 
 
 #if PY_MAJOR_VERSION >= 3

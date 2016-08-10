@@ -10,7 +10,7 @@
 #include <boost/python.hpp>
 
 #include <readdy/model/Particle.h>
-#include <PyConverters.h>
+#include <../PyConverters.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -36,9 +36,6 @@ using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
  void exportModelClasses() {
 
-    bpy::class_<std::vector<unsigned long>>("Vec_ulong").def(bpy::vector_indexing_suite<std::vector<unsigned long>>());
-    bpy::class_<std::vector<_rdy_scpu_nl_box_t>>("Vec_box").def(bpy::vector_indexing_suite<std::vector<_rdy_scpu_nl_box_t>>());
-
     bpy::class_<_rdy_particle_t>("Particle", boost::python::init<double, double, double, unsigned int>())
             .add_property("pos", +[](_rdy_particle_t &self) { return self.getPos(); }, &_rdy_particle_t::setPos)
             .add_property("type", &_rdy_particle_t::getType, &_rdy_particle_t::setType)
@@ -51,6 +48,7 @@ using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
             .add_property("box_size",
                           +[](_rdy_ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); },
                           +[](_rdy_ctx_t &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
+            .add_property("periodic_boundary", +[](_rdy_ctx_t &self) {return rp::toList(self.getPeriodicBoundary());})
             .def("set_diffusion_constant", &_rdy_ctx_t::setDiffusionConstant);
 
     bpy::class_<_rdy_scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<_rdy_ctx_t *>())
