@@ -162,6 +162,4 @@ BOOST_PYTHON_MODULE (api) {
     bpy::class_<kern, boost::noncopyable>("Kernel", bpy::no_init)
             .def("get_name", &kern::getName, bpy::return_value_policy<bpy::reference_existing_object>());
 
-    bpy::class_<uuid>("uuid", bpy::no_init)
-            .def("__str__", +[](const uuid& uuid) { return boost::uuids::to_string(uuid);});
 }

@@ -34,6 +34,8 @@ using _rdy_scpu_nl_t = readdy::kernel::singlecpu::model::SingleCPUNeighborList;
 using _rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
+using _rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
+
 const std::function<readdy::model::Vec3(readdy::model::Vec3, readdy::model::Vec3)> getShortestDistanceFunWrap(_rdy_ctx_t& self) {
     auto shortestDifference = self.getShortestDifferenceFun();
     return [shortestDifference](readdy::model::Vec3 v1, readdy::model::Vec3 v2) {
@@ -81,6 +83,14 @@ void exportModelClasses() {
             .def("get_dist_squared_fun", rp::adapt_function(&getDistSquaredFunWrap))
             .def("get_particle_radius", +[](_rdy_ctx_t& self, std::string type) {return self.getParticleRadius(type);})
             .def("set_particle_radius", &_rdy_ctx_t::setParticleRadius)
+            .def("register_conversion_reaction", &_rdy_ctx_t::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_enzymatic_reaction", &_rdy_ctx_t::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_fission_reaction", &_rdy_ctx_t::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_fusion_reaction", &_rdy_ctx_t::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_decay_reaction", &_rdy_ctx_t::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_potential_order_1", +[](_rdy_ctx_t& self, _rdy_pot_1& pot, std::string type) {
+                return self.registerOrder1Potential(&pot, type);
+            })
             .def("configure", &_rdy_ctx_t::configure);
 
     bpy::class_<_rdy_scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<_rdy_ctx_t *>())
