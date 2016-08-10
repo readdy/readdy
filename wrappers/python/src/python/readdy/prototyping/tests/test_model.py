@@ -56,5 +56,14 @@ class TestModel(unittest.TestCase):
         test.assert_equal(dist(cmn.Vec(0,0,0), cmn.Vec(1,0,0)), 1.0)
         test.assert_equal(dist(cmn.Vec(-.5,0,0), cmn.Vec(-1.5, 0, 0)), 1.0)
 
+    def test_kernel_context_particle_radius(self):
+        self.ctx.set_diffusion_constant("A", 1.0)
+        self.ctx.set_particle_radius("A", 5.0)
+        test.assert_equal(self.ctx.get_particle_radius("A"), 5.0)
+
+    def test_kernel_context_time_step(self):
+        self.ctx.timestep = 111.0
+        test.assert_equal(self.ctx.timestep, 111.0)
+
 if __name__ == '__main__':
     unittest.main()

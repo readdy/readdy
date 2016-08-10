@@ -60,6 +60,7 @@ void exportModelClasses() {
 
     bpy::class_<_rdy_ctx_t, boost::noncopyable>("Context", bpy::no_init)
             .add_property("kbt", &_rdy_ctx_t::getKBT, &_rdy_ctx_t::setKBT)
+            .add_property("timestep", &_rdy_ctx_t::getTimeStep, &_rdy_ctx_t::setTimeStep)
             .add_property("box_size",
                           +[](_rdy_ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); },
                           +[](_rdy_ctx_t &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
@@ -77,7 +78,10 @@ void exportModelClasses() {
             })
             .def("get_fix_position_fun", rp::adapt_function(&_rdy_ctx_t::getFixPositionFun))
             .def("get_shortest_difference_fun", rp::adapt_function(&getShortestDistanceFunWrap))
-            .def("get_dist_squared_fun", rp::adapt_function(&getDistSquaredFunWrap));
+            .def("get_dist_squared_fun", rp::adapt_function(&getDistSquaredFunWrap))
+            .def("get_particle_radius", +[](_rdy_ctx_t& self, std::string type) {return self.getParticleRadius(type);})
+            .def("set_particle_radius", &_rdy_ctx_t::setParticleRadius)
+            .def("configure", &_rdy_ctx_t::configure);
 
     bpy::class_<_rdy_scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<_rdy_ctx_t *>())
             .def("remove_particle", &_rdy_scpu_model_t::removeParticle, &_rdy_scpu_model_wrap_t::default_removeParticle)
