@@ -42,8 +42,6 @@ void registerPotentialOrder2(sim& self, pot2& potential, std::string type1, std:
     self.registerPotentialOrder2(ptr.get(), type1, type2);
 }
 
-double pyVec3Bracket(vec& self, const unsigned int i) {return self[i];}
-
 boost::uuids::uuid registerObservable_ParticlePositions(sim& self, unsigned int stride, const boost::python::object &callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
@@ -156,19 +154,6 @@ BOOST_PYTHON_MODULE (api) {
             .def("get", &kp::getInstance, bpy::return_value_policy<bpy::reference_existing_object>())
             .staticmethod("get")
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
-
-    bpy::class_<vec>("Vec", bpy::init<double, double, double>())
-            .def(bpy::self + bpy::self)
-            .def(bpy::self - bpy::self)
-            .def(double() * bpy::self)
-            .def(bpy::self / double())
-            .def(bpy::self += bpy::self)
-            .def(bpy::self *= double())
-            .def(bpy::self == bpy::self)
-            .def(bpy::self != bpy::self)
-            .def(bpy::self * bpy::self)
-            .def(bpy::self_ns::str(bpy::self))
-            .def("__getitem__", &pyVec3Bracket);
 
     bpy::class_<pot2>("Pot2", bpy::init<std::string, boost::python::object, boost::python::object>())
             .def("calc_energy", &pot2::calculateEnergy)

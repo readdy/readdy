@@ -11,7 +11,7 @@ class TestPrograms(unittest.TestCase):
         class CustomStateModel(pr.Model):
             def get_particle_positions(self):
                 result = cmn.Vecvec()
-                result.append(sim.Vec(-1, -1, -1))
+                result.append(cmn.Vec(-1, -1, -1))
                 return result
 
         class CustomKernel(pr.SingleCPUKernel):
@@ -25,7 +25,7 @@ class TestPrograms(unittest.TestCase):
         kernel = CustomKernel()
         pos = kernel.get_kernel_state_model().get_particle_positions()
         assert len(pos) == 1
-        assert pos[0] == sim.Vec(-1, -1, -1)
+        assert pos[0] == cmn.Vec(-1, -1, -1)
 
     def test_custom_program(self):
         class CustomProgram(pr.Program):
@@ -47,7 +47,6 @@ class TestPrograms(unittest.TestCase):
     def test_factory_programs(self):
         kernel = pr.SingleCPUKernel()
         kernel.get_kernel_context().set_diffusion_constant("A", 1.0)
-        print("periodic x: %s" % kernel.get_kernel_context().periodic_boundary)
         factory = kernel.get_program_factory()
 
         add_particles = factory.create_add_particles()
@@ -62,12 +61,12 @@ class TestPrograms(unittest.TestCase):
 
         state_model = kernel.get_kernel_state_model()
         positions = state_model.get_particle_positions()
-        np.testing.assert_equal(positions[0], sim.Vec(0, 0, 0))
-        np.testing.assert_equal(positions[1], sim.Vec(1, 1, 1))
+        np.testing.assert_equal(positions[0], cmn.Vec(0, 0, 0))
+        np.testing.assert_equal(positions[1], cmn.Vec(1, 1, 1))
 
         it = kernel.get_kernel_state_model().get_particle_data().positions
-        assert it.next() == sim.Vec(0, 0, 0)
-        assert it.next() == sim.Vec(1, 1, 1)
+        assert it.next() == cmn.Vec(0, 0, 0)
+        assert it.next() == cmn.Vec(1, 1, 1)
 
         with np.testing.assert_raises(StopIteration):
             next(it)

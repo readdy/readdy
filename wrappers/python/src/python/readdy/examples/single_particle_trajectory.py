@@ -1,6 +1,7 @@
 import unittest
 
-from readdy._internal.api import KernelProvider, Simulation, Vec
+from readdy._internal.api import KernelProvider, Simulation
+from readdy._internal.common import Vec
 
 from readdy.util import platform_utils
 import matplotlib

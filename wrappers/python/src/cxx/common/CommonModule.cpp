@@ -39,6 +39,19 @@ BOOST_PYTHON_MODULE (common) {
     bpy::docstring_options doc_options;
     doc_options.enable_all();
 
+    bpy::class_<vec>("Vec", bpy::init<double, double, double>())
+            .def(bpy::self + bpy::self)
+            .def(bpy::self - bpy::self)
+            .def(double() * bpy::self)
+            .def(bpy::self / double())
+            .def(bpy::self += bpy::self)
+            .def(bpy::self *= double())
+            .def(bpy::self == bpy::self)
+            .def(bpy::self != bpy::self)
+            .def(bpy::self * bpy::self)
+            .def(bpy::self_ns::str(bpy::self))
+            .def("__getitem__", +[](vec& self, const unsigned int i) {return self[i];});
+
     readdy::py::std_vector_to_python_converter<double>();
     readdy::py::std_pair_to_python_converter<std::vector<double>, std::vector<double>>();
     bpy::class_<std::vector<unsigned long>>("Vec_ulong").def(bpy::vector_indexing_suite<std::vector<unsigned long>>());

@@ -26,6 +26,28 @@
 namespace readdy {
     namespace py {
 
+        template<typename T, typename C, typename... Args, typename... Args2>
+        boost::python::object adapt_function(const std::function<T(Args2...)>& (C::*fn)(Args...) const) {
+            return boost::python::make_function(
+                    [fn](C& self, Args... args) { return boost::python::make_function(
+                            (self.*fn)(args...),
+                            boost::python::return_value_policy<boost::python::reference_existing_object>(),
+                            boost::mpl::vector<T, Args2...>()
+                    );}, boost::python::default_call_policies(), boost::mpl::vector<boost::python::object, C&>()
+            );
+        };
+
+        template<typename T, typename C, typename... Args, typename... Args2>
+        boost::python::object adapt_function(const std::function<T(Args2...)> (*fn)(C, Args...)) {
+            return boost::python::make_function(
+                    [fn](C& self, Args... args) { return boost::python::make_function(
+                            (*fn)(self, args...),
+                            boost::python::default_call_policies(),
+                            boost::mpl::vector<T, Args2...>()
+                    );}, boost::python::default_call_policies(), boost::mpl::vector<boost::python::object, C&>()
+            );
+        };
+
         template<typename T, std::size_t N>
         boost::python::list toList(std::array<T, N> arr) {
             boost::python::list list;

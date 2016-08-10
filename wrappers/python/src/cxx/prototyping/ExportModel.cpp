@@ -34,12 +34,27 @@ using _rdy_scpu_nl_t = readdy::kernel::singlecpu::model::SingleCPUNeighborList;
 using _rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
- void exportModelClasses() {
+const std::function<readdy::model::Vec3(readdy::model::Vec3, readdy::model::Vec3)> getShortestDistanceFunWrap(_rdy_ctx_t& self) {
+    auto shortestDifference = self.getShortestDifferenceFun();
+    return [shortestDifference](readdy::model::Vec3 v1, readdy::model::Vec3 v2) {
+        return shortestDifference(v1, v2);
+    };
+}
+
+const std::function<double(readdy::model::Vec3, readdy::model::Vec3)> getDistSquaredFunWrap(_rdy_ctx_t& self) {
+    auto dist = self.getDistSquaredFun();
+    return [dist](readdy::model::Vec3 v1, readdy::model::Vec3 v2) {
+        return dist(v1, v2);
+    };
+}
+
+void exportModelClasses() {
 
     bpy::class_<_rdy_particle_t>("Particle", boost::python::init<double, double, double, unsigned int>())
             .add_property("pos", +[](_rdy_particle_t &self) { return self.getPos(); }, &_rdy_particle_t::setPos)
             .add_property("type", &_rdy_particle_t::getType, &_rdy_particle_t::setType)
-            .add_property("id", bpy::make_function(&_rdy_particle_t::getId, bpy::return_value_policy<bpy::reference_existing_object>()))
+            .add_property("id", bpy::make_function(&_rdy_particle_t::getId,
+                                                   bpy::return_value_policy<bpy::reference_existing_object>()))
             .def(bpy::self == bpy::self)
             .def(bpy::self != bpy::self);
 
@@ -48,16 +63,34 @@ using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
             .add_property("box_size",
                           +[](_rdy_ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); },
                           +[](_rdy_ctx_t &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
-            .add_property("periodic_boundary", +[](_rdy_ctx_t &self) {return rp::toList(self.getPeriodicBoundary());})
-            .def("set_diffusion_constant", &_rdy_ctx_t::setDiffusionConstant);
+            .add_property("periodic_boundary",
+                          +[](_rdy_ctx_t &self) { return rp::toList(self.getPeriodicBoundary()); },
+                          +[](_rdy_ctx_t &self, bpy::list args) {
+                              self.setPeriodicBoundary(bpy::extract<bool>(args[0]),
+                                                       bpy::extract<bool>(args[1]),
+                                                       bpy::extract<bool>(args[2]));
+                          }
+            )
+            .def("set_diffusion_constant", &_rdy_ctx_t::setDiffusionConstant)
+            .def("get_diffusion_constant", +[](_rdy_ctx_t &self, std::string type) {
+                return self.getDiffusionConstant(type);
+            })
+            .def("get_fix_position_fun", rp::adapt_function(&_rdy_ctx_t::getFixPositionFun))
+            .def("get_shortest_difference_fun", rp::adapt_function(&getShortestDistanceFunWrap))
+            .def("get_dist_squared_fun", rp::adapt_function(&getDistSquaredFunWrap));
 
     bpy::class_<_rdy_scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<_rdy_ctx_t *>())
             .def("remove_particle", &_rdy_scpu_model_t::removeParticle, &_rdy_scpu_model_wrap_t::default_removeParticle)
-            .def("get_particle_positions", &_rdy_scpu_model_t::getParticlePositions, &_rdy_scpu_model_wrap_t::default_getParticlePositions)
+            .def("get_particle_positions", &_rdy_scpu_model_t::getParticlePositions,
+                 &_rdy_scpu_model_wrap_t::default_getParticlePositions)
             .def("get_energy", &_rdy_scpu_model_t::getEnergy, &_rdy_scpu_model_wrap_t::default_getEnergy)
             .def("increase_energy", &_rdy_scpu_model_t::increaseEnergy, &_rdy_scpu_model_wrap_t::default_increaseEnergy)
-            .def("get_particle_data", &_rdy_scpu_model_t::getParticleData, &_rdy_scpu_model_wrap_t::default_getParticleData, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("get_neighbor_list", &_rdy_scpu_model_t::getNeighborList, &_rdy_scpu_model_wrap_t::default_getNeighborList, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("get_particle_data", &_rdy_scpu_model_t::getParticleData,
+                 &_rdy_scpu_model_wrap_t::default_getParticleData,
+                 bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("get_neighbor_list", &_rdy_scpu_model_t::getNeighborList,
+                 &_rdy_scpu_model_wrap_t::default_getNeighborList,
+                 bpy::return_value_policy<bpy::reference_existing_object>())
             .def("get_particles", &_rdy_scpu_model_t::getParticles, &_rdy_scpu_model_wrap_t::default_getParticles);
 
     bpy::class_<_rdy_scpu_nl_t, boost::noncopyable>("NeighborList", bpy::init<_rdy_ctx_t *>())
@@ -82,7 +115,8 @@ using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
             .def("clear", &_rdy_scpu_pd_t::clear)
             .def("add_particle", &_rdy_scpu_pd_t::addParticle)
             .def("add_particles", &_rdy_scpu_pd_t::addParticles)
-            .def("remove_particle", +[](_rdy_scpu_pd_t &self, _rdy_particle_t particle) { self.removeParticle(particle); })
+            .def("remove_particle",
+                 +[](_rdy_scpu_pd_t &self, _rdy_particle_t particle) { self.removeParticle(particle); })
             .def("remove_particle", +[](_rdy_scpu_pd_t &self, std::size_t index) { self.removeParticle(index); })
             .def("is_marked_for_deactivation", &_rdy_scpu_pd_t::isMarkedForDeactivation)
             .def("get_deactivated_index", &_rdy_scpu_pd_t::getDeactivatedIndex)
