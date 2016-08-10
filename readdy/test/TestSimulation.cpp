@@ -104,6 +104,6 @@ namespace {
             EXPECT_EQ(103, result.size());
         }, 1);
         simulation.run(100, timestep);
-        EXPECT_EQ(100, n_callbacks);
+        EXPECT_EQ(101, n_callbacks);
     }
 }
