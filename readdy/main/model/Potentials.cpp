@@ -77,7 +77,7 @@ namespace readdy {
                 sumOfParticleRadii = r1 + r2;
                 sumOfParticleRadiiSquared = sumOfParticleRadii * sumOfParticleRadii;
             }
-            HarmonicRepulsion::HarmonicRepulsion(const Kernel *const kernel) : PotentialOrder2(_internal::PotentialName<HarmonicRepulsion>::value), kernel(kernel) { }
+            HarmonicRepulsion::HarmonicRepulsion(const Kernel *const kernel) : PotentialOrder2(getPotentialName<HarmonicRepulsion>()), kernel(kernel) { }
             double HarmonicRepulsion::getSumOfParticleRadii() const {
                 return sumOfParticleRadii;
             }
@@ -100,7 +100,7 @@ namespace readdy {
              * Weak interaction piecewise harmonic
              */
 
-            WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel) : PotentialOrder2(_internal::PotentialName<WeakInteractionPiecewiseHarmonic>::value), kernel(kernel) {
+            WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel) : PotentialOrder2(getPotentialName<WeakInteractionPiecewiseHarmonic>()), kernel(kernel) {
                 desiredParticleDistance = 0;
                 forceConstant = 0;
                 depthAtDesiredDistance = 0;

@@ -19,7 +19,7 @@
 
 namespace bpy = boost::python;
 namespace mpl = boost::mpl;
-namespace rp = readdy::py;
+namespace rpy = readdy::py;
 
 using _rdy_uuid_t = boost::uuids::uuid;
 
@@ -51,13 +51,16 @@ const std::function<double(readdy::model::Vec3, readdy::model::Vec3)> getDistSqu
     };
 }
 
+template<std::size_t owner = 1, class bp = bpy::default_call_policies>
+using internal_ref = bpy::return_internal_reference<owner, bp>;
+
 void exportModelClasses() {
 
     bpy::class_<_rdy_particle_t>("Particle", boost::python::init<double, double, double, unsigned int>())
             .add_property("pos", +[](_rdy_particle_t &self) { return self.getPos(); }, &_rdy_particle_t::setPos)
             .add_property("type", &_rdy_particle_t::getType, &_rdy_particle_t::setType)
             .add_property("id", bpy::make_function(&_rdy_particle_t::getId,
-                                                   bpy::return_internal_reference<>()))
+                                                   internal_ref<>()))
             .def(bpy::self == bpy::self)
             .def(bpy::self != bpy::self);
 
@@ -68,7 +71,7 @@ void exportModelClasses() {
                           +[](_rdy_ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); },
                           +[](_rdy_ctx_t &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
             .add_property("periodic_boundary",
-                          +[](_rdy_ctx_t &self) { return rp::toList(self.getPeriodicBoundary()); },
+                          +[](_rdy_ctx_t &self) { return rpy::toList(self.getPeriodicBoundary()); },
                           +[](_rdy_ctx_t &self, bpy::list args) {
                               self.setPeriodicBoundary(bpy::extract<bool>(args[0]),
                                                        bpy::extract<bool>(args[1]),
@@ -79,24 +82,24 @@ void exportModelClasses() {
             .def("get_diffusion_constant", +[](_rdy_ctx_t &self, std::string type) {
                 return self.getDiffusionConstant(type);
             })
-            .def("get_fix_position_fun", rp::adapt_function(&_rdy_ctx_t::getFixPositionFun))
-            .def("get_shortest_difference_fun", rp::adapt_function(&getShortestDistanceFunWrap))
-            .def("get_dist_squared_fun", rp::adapt_function(&getDistSquaredFunWrap))
+            .def("get_fix_position_fun", rpy::adapt_function(&_rdy_ctx_t::getFixPositionFun))
+            .def("get_shortest_difference_fun", rpy::adapt_function(&getShortestDistanceFunWrap))
+            .def("get_dist_squared_fun", rpy::adapt_function(&getDistSquaredFunWrap))
             .def("get_particle_radius", +[](_rdy_ctx_t& self, std::string type) {return self.getParticleRadius(type);})
             .def("set_particle_radius", &_rdy_ctx_t::setParticleRadius)
-            .def("register_conversion_reaction", &_rdy_ctx_t::registerConversionReaction,  bpy::return_internal_reference<>())
-            .def("register_enzymatic_reaction", &_rdy_ctx_t::registerEnzymaticReaction,  bpy::return_internal_reference<>())
-            .def("register_fission_reaction", &_rdy_ctx_t::registerFissionReaction, bpy::return_internal_reference<>())
-            .def("register_fusion_reaction", &_rdy_ctx_t::registerFusionReaction, bpy::return_internal_reference<>())
-            .def("register_decay_reaction", &_rdy_ctx_t::registerDeathReaction, bpy::return_internal_reference<>())
+            .def("register_conversion_reaction", &_rdy_ctx_t::registerConversionReaction,  internal_ref<>())
+            .def("register_enzymatic_reaction", &_rdy_ctx_t::registerEnzymaticReaction,  internal_ref<>())
+            .def("register_fission_reaction", &_rdy_ctx_t::registerFissionReaction, internal_ref<>())
+            .def("register_fusion_reaction", &_rdy_ctx_t::registerFusionReaction, internal_ref<>())
+            .def("register_decay_reaction", &_rdy_ctx_t::registerDeathReaction, internal_ref<>())
             .def("register_potential_order_1",
                  +[](_rdy_ctx_t& self, _rdy_pot_1& pot, std::string type) -> const _rdy_uuid_t& {
                      return self.registerOrder1Potential(&pot, type);
-                 }, bpy::return_internal_reference<>())
+                 }, internal_ref<>())
             .def("register_potential_order_2",
                  +[](_rdy_ctx_t& self, _rdy_pot_2& p, std::string t1, std::string t2) -> const _rdy_uuid_t& {
                      return self.registerOrder2Potential(&p, t1, t2);
-                 }, bpy::return_internal_reference<>())
+                 }, internal_ref<>())
             .def("get_particle_type_id", &_rdy_ctx_t::getParticleTypeID)
             .def("configure", &_rdy_ctx_t::configure);
 
@@ -108,10 +111,10 @@ void exportModelClasses() {
             .def("increase_energy", &_rdy_scpu_model_t::increaseEnergy, &_rdy_scpu_model_wrap_t::default_increaseEnergy)
             .def("get_particle_data", &_rdy_scpu_model_t::getParticleData,
                  &_rdy_scpu_model_wrap_t::default_getParticleData,
-                 bpy::return_internal_reference<>())
+                 internal_ref<>())
             .def("get_neighbor_list", &_rdy_scpu_model_t::getNeighborList,
                  &_rdy_scpu_model_wrap_t::default_getNeighborList,
-                 bpy::return_internal_reference<>())
+                 internal_ref<>())
             .def("get_particles", &_rdy_scpu_model_t::getParticles, &_rdy_scpu_model_wrap_t::default_getParticles);
 
     bpy::class_<_rdy_scpu_nl_t, boost::noncopyable>("NeighborList", bpy::init<_rdy_ctx_t *>())

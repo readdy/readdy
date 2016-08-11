@@ -68,9 +68,14 @@ namespace readdy {
                 double noInteractionDistance;
             };
 
-            namespace _internal {
-                template<> struct PotentialName<HarmonicRepulsion> { static const std::string value; };
-                template<> struct PotentialName<WeakInteractionPiecewiseHarmonic> { static const std::string value; };
+            template<typename T>
+            const std::string getPotentialName(typename std::enable_if<std::is_base_of<HarmonicRepulsion, T>::value>::type* = 0) {
+                return "HarmonicRepulsion";
+            }
+
+            template<typename T>
+            const std::string getPotentialName(typename std::enable_if<std::is_base_of<WeakInteractionPiecewiseHarmonic, T>::value>::type* = 0) {
+                return "WeakInteractionPiecewiseHarmonic";
             }
         }
     }

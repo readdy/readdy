@@ -12,6 +12,7 @@ class TestModel(unittest.TestCase):
         self.ctx = self.kernel.get_kernel_context()
         self.model = self.kernel.get_kernel_state_model()
         self.progs = self.kernel.get_program_factory()
+        self.pots = self.kernel.get_potential_factory()
 
     def test_kernel_context_kbt(self):
         self.ctx.kbt = 5.0
@@ -157,6 +158,16 @@ class TestModel(unittest.TestCase):
 
         with np.testing.assert_raises(StopIteration):
             next(it_forces)
+
+    def test_potential_factory(self):
+        cube_pot = self.pots.create_cube_potential()
+        np.testing.assert_equal(cube_pot.get_name(), "Cube")
+
+        repulsion_pot = self.pots.create_harmonic_repulsion()
+        np.testing.assert_equal(repulsion_pot.get_name(), "HarmonicRepulsion")
+
+        weak_interaction_pot = self.pots.create_weak_interaction()
+        np.testing.assert_equal(weak_interaction_pot.get_name(), "WeakInteractionPiecewiseHarmonic")
 
 if __name__ == '__main__':
     unittest.main()

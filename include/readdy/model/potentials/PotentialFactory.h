@@ -14,7 +14,8 @@
 #include <unordered_map>
 #include <functional>
 
-#include <readdy/model/potentials/Potential.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
+#include <readdy/model/potentials/PotentialsOrder2.h>
 
 namespace readdy {
     namespace model {
@@ -38,6 +39,11 @@ namespace readdy {
                         return std::unique_ptr<T>(dynamic_cast<T *>(it->second()));
                     }
                     throw std::runtime_error("Could not find requested potential \""+name+"\" in factory.");
+                }
+
+                template<typename T>
+                std::unique_ptr<T> createPotential() const {
+                    return createPotentialAs<T>(getPotentialName<T>());
                 }
 
                 std::unique_ptr<Potential> createPotential(std::string name) const {

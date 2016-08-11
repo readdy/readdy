@@ -18,13 +18,13 @@
 #include "ProgramWrap.h"
 
 namespace bpy = boost::python;
-namespace rp = readdy::py;
+namespace rpy = readdy::py;
 
 using _rdy_particle_t = readdy::model::Particle;
-using py_fun_11_t = rp::PyFunction<_rdy_particle_t(const _rdy_particle_t&)>;
-using py_fun_12_t = rp::PyFunction<void(const _rdy_particle_t&, _rdy_particle_t&, _rdy_particle_t&)>;
-using py_fun_21_t = rp::PyFunction<_rdy_particle_t(const _rdy_particle_t&, const _rdy_particle_t&)>;
-using py_fun_22_t = rp::PyFunction<void(const _rdy_particle_t&, const _rdy_particle_t&, _rdy_particle_t&, _rdy_particle_t&)>;
+using py_fun_11_t = rpy::PyFunction<_rdy_particle_t(const _rdy_particle_t&)>;
+using py_fun_12_t = rpy::PyFunction<void(const _rdy_particle_t&, _rdy_particle_t&, _rdy_particle_t&)>;
+using py_fun_21_t = rpy::PyFunction<_rdy_particle_t(const _rdy_particle_t&, const _rdy_particle_t&)>;
+using py_fun_22_t = rpy::PyFunction<void(const _rdy_particle_t&, const _rdy_particle_t&, _rdy_particle_t&, _rdy_particle_t&)>;
 
 using prog_factory_t = readdy::model::programs::ProgramFactory;
 
@@ -48,11 +48,11 @@ void exportPrograms() {
     using scpu_kernel_t = readdy::kernel::singlecpu::SingleCPUKernel;
 
     bpy::class_<prog_factory_t>("ProgramFactory", bpy::no_init)
-            .def("create_add_particles", rp::adapt_unique(f_add_particle))
-            .def("create_euler_integrator", rp::adapt_unique(f_euler_integrator))
-            .def("create_update_forces", rp::adapt_unique(f_forces))
-            .def("create_update_neighbor_list", rp::adapt_unique(f_neighbor_list))
-            .def("create_reactions_uncontrolled_approximation", rp::adapt_unique(f_reactions_uncontrolled_approximation));
+            .def("create_add_particles", rpy::adapt_unique(f_add_particle))
+            .def("create_euler_integrator", rpy::adapt_unique(f_euler_integrator))
+            .def("create_update_forces", rpy::adapt_unique(f_forces))
+            .def("create_update_neighbor_list", rpy::adapt_unique(f_neighbor_list))
+            .def("create_reactions_uncontrolled_approximation", rpy::adapt_unique(f_reactions_uncontrolled_approximation));
 
     bpy::class_<program_wrap_t, boost::noncopyable>("Program").def("execute", bpy::pure_virtual(&program_t::execute));
 

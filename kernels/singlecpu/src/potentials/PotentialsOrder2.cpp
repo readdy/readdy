@@ -15,7 +15,7 @@ namespace readdy {
         namespace singlecpu {
             namespace potentials {
 
-                double SingleCPUHarmonicRepulsion::calculateEnergy(const vec_t &x_ij) const {
+                double HarmonicRepulsion::calculateEnergy(const vec_t &x_ij) const {
                     auto distanceSquared = x_ij * x_ij;
                     if (distanceSquared < getSumOfParticleRadiiSquared()) {
                         distanceSquared = std::sqrt(distanceSquared);
@@ -27,7 +27,7 @@ namespace readdy {
                     }
                 }
 
-                void SingleCPUHarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_ij) const {
+                void HarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_ij) const {
                     auto squared = x_ij * x_ij;
                     if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
                         squared = std::sqrt(squared);
@@ -37,7 +37,7 @@ namespace readdy {
                     }
                 }
 
-                void SingleCPUHarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const {
+                void HarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const {
                     auto squared = x_ij * x_ij;
                     if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
                         squared = std::sqrt(squared);
@@ -48,25 +48,25 @@ namespace readdy {
                     }
                 }
 
-                SingleCPUHarmonicRepulsion::SingleCPUHarmonicRepulsion(const readdy::model::Kernel *const kernel) : readdy::model::potentials::HarmonicRepulsion(kernel) { }
+                HarmonicRepulsion::HarmonicRepulsion(const readdy::model::Kernel *const kernel) : readdy::model::potentials::HarmonicRepulsion(kernel) { }
 
-                potentials::SingleCPUHarmonicRepulsion *SingleCPUHarmonicRepulsion::replicate() const {
-                    return new SingleCPUHarmonicRepulsion(*this);
+                potentials::HarmonicRepulsion *HarmonicRepulsion::replicate() const {
+                    return new HarmonicRepulsion(*this);
                 }
 
-                double SingleCPUHarmonicRepulsion::getCutoffRadius() const {
+                double HarmonicRepulsion::getCutoffRadius() const {
                     return sumOfParticleRadii;
                 }
                 
 
-                SingleCPUWeakInteractionPiecewiseHarmonic::SingleCPUWeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel)
+                WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel)
                         : readdy::model::potentials::WeakInteractionPiecewiseHarmonic(kernel) { }
 
-                potentials::SingleCPUWeakInteractionPiecewiseHarmonic *SingleCPUWeakInteractionPiecewiseHarmonic::replicate() const {
-                    return new SingleCPUWeakInteractionPiecewiseHarmonic(*this);
+                potentials::WeakInteractionPiecewiseHarmonic *WeakInteractionPiecewiseHarmonic::replicate() const {
+                    return new WeakInteractionPiecewiseHarmonic(*this);
                 }
 
-                double SingleCPUWeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Vec3 &x_ij) const {
+                double WeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Vec3 &x_ij) const {
                     const auto dist = sqrt(x_ij * x_ij);
                     const auto len_part2 = noInteractionDistance - desiredParticleDistance;
                     if (dist < desiredParticleDistance) {
@@ -87,7 +87,7 @@ namespace readdy {
                     return 0;
                 }
 
-                void SingleCPUWeakInteractionPiecewiseHarmonic::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const {
+                void WeakInteractionPiecewiseHarmonic::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const {
                     const auto dist = sqrt(x_ij * x_ij);
                     const auto len_part2 = noInteractionDistance - desiredParticleDistance;
                     double factor = 0;
@@ -112,12 +112,12 @@ namespace readdy {
                     }
                 }
 
-                void SingleCPUWeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const {
+                void WeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const {
                     energy += calculateEnergy(x_ij);
                     calculateForce(force, x_ij);
                 }
 
-                double SingleCPUWeakInteractionPiecewiseHarmonic::getCutoffRadius() const {
+                double WeakInteractionPiecewiseHarmonic::getCutoffRadius() const {
                     return noInteractionDistance;
                 }
 
