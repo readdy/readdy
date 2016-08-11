@@ -10,7 +10,7 @@
 #include <readdy/kernel/cpu/programs/Reactions.h>
 #include <readdy/model/RandomProvider.h>
 
-using particle_t = readdy::model::Particle;
+using _rdy_particle_t = readdy::model::Particle;
 
 namespace readdy {
     namespace kernel {
@@ -29,7 +29,7 @@ namespace readdy {
                         const auto &dt = ctx.getTimeStep();
                         auto data = kernel->getKernelStateModel().getParticleData();
                         auto rnd = readdy::model::RandomProvider();
-                        std::vector<particle_t> newParticles{};
+                        std::vector<_rdy_particle_t> newParticles{};
                         std::vector<std::function<void()>> events{};
 
                         // reactions with one educt
@@ -56,14 +56,14 @@ namespace readdy {
                                                 }
                                                 case 1: {
                                                     const auto particle = (*_data)[particleIdx];
-                                                    particle_t outParticle1{};
+                                                    _rdy_particle_t outParticle1{};
                                                     reaction->perform(particle, particle, outParticle1, outParticle1);
                                                     newParticles.push_back(outParticle1);
                                                     break;
                                                 }
                                                 case 2: {
                                                     const auto particle = (*_data)[particleIdx];
-                                                    particle_t outParticle1{}, outParticle2{};
+                                                    _rdy_particle_t outParticle1{}, outParticle2{};
                                                     reaction->perform(particle, particle, outParticle1, outParticle2);
                                                     newParticles.push_back(outParticle1);
                                                     newParticles.push_back(outParticle2);
@@ -110,13 +110,13 @@ namespace readdy {
                                                 const auto inParticle2 = (*_data)[idx2];
                                                 switch (reaction->getNProducts()) {
                                                     case 1: {
-                                                        particle_t out{};
+                                                        _rdy_particle_t out{};
                                                         reaction->perform(inParticle1, inParticle2, out, out);
                                                         newParticles.push_back(out);
                                                         break;
                                                     }
                                                     case 2: {
-                                                        particle_t out1{}, out2{};
+                                                        _rdy_particle_t out1{}, out2{};
                                                         reaction->perform(inParticle1, inParticle2, out1, out2);
                                                         newParticles.push_back(out1);
                                                         newParticles.push_back(out2);
@@ -140,7 +140,7 @@ namespace readdy {
 
                         // reposition particles to respect the periodic b.c.
                         std::for_each(newParticles.begin(), newParticles.end(),
-                                      [&fixPos](particle_t &p) { fixPos(p.getPos()); });
+                                      [&fixPos](_rdy_particle_t &p) { fixPos(p.getPos()); });
 
                         // update data structure
                         data->deactivateMarked();

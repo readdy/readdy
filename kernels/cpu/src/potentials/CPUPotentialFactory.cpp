@@ -21,13 +21,13 @@ namespace readdy {
                     namespace p = readdy::model::potentials;
                     namespace singlecpu_pot = readdy::kernel::singlecpu::potentials;
                     factory[p::getPotentialName<p::CubePotential>()] = [kernel] {
-                        return new singlecpu_pot::SingleCPUCubePotential(kernel);
+                        return new singlecpu_pot::CubePotential(kernel);
                     };
                     factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] {
-                        return new singlecpu_pot::SingleCPUHarmonicRepulsion(kernel);
+                        return new singlecpu_pot::HarmonicRepulsion(kernel);
                     };
                     factory[p::getPotentialName<p::WeakInteractionPiecewiseHarmonic>()] = [kernel] {
-                        return new singlecpu_pot::SingleCPUWeakInteractionPiecewiseHarmonic(kernel);
+                        return new singlecpu_pot::WeakInteractionPiecewiseHarmonic(kernel);
                     };
                 }
             }

@@ -72,7 +72,7 @@ namespace readdy {
                 // update forces and energy order 2 potentials
                 {
                     using nl_it_t = model::NeighborList::container_t::iterator;
-                    using pot2map = std::unordered_map<readdy::model::_internal::ParticleTypePair, std::vector<readdy::model::potentials::PotentialOrder2*>, readdy::model::ParticleTypePairHasher>;
+                    using pot2map = std::unordered_map<readdy::util::ParticleTypePair, std::vector<readdy::model::potentials::PotentialOrder2*>, readdy::util::ParticleTypePairHasher>;
                     using dist_t = std::function<readdy::model::Vec3(const readdy::model::Vec3 &, const readdy::model::Vec3 &)>;
                     std::vector<util::ScopedThread> threads;
                     threads.reserve(util::getNThreads());

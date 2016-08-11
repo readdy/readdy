@@ -27,16 +27,12 @@ namespace readdy {
 
                     virtual void execute() override;
 
-                    void addParticle(const readdy::model::Particle &particle) {
-                        particles.emplace_back(particle);
-                    }
-
-                    void addParticle(readdy::model::Particle &&particle) {
+                    void addParticle(readdy::model::Particle particle) {
                         particles.emplace_back(std::move(particle));
                     }
 
-                    void setParticles(std::vector<readdy::model::Particle> &particles) {
-                        this->particles = particles;
+                    void setParticles(std::vector<readdy::model::Particle> particles) {
+                        this->particles = std::move(particles) ;
                     }
 
                 private:

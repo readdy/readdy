@@ -10,7 +10,6 @@
 
 #include <gtest/gtest.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/model/programs/Programs.h>
 #include <readdy/model/potentials/PotentialsOrder2.h>
 #include <readdy/testing/Timer.h>
 
@@ -63,8 +62,8 @@ namespace {
         kernel.getKernelContext().configure();
 
         auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
-        obs->setCallback([] (const long n) {
-            BOOST_LOG_TRIVIAL(debug) << "have n particles = " << n;
+        obs->setCallback([] (const std::vector<unsigned long> n) {
+            BOOST_LOG_TRIVIAL(debug) << "have n particles = " << n[0];
         });
         auto connection = kernel.connectObservable(obs.get());
 

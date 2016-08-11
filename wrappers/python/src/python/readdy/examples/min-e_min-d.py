@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import print_function
-from readdy._internal.simulation import KernelProvider, Simulation, Vec
+from readdy._internal.api import KernelProvider, Simulation
+from readdy._internal.common import Vec
 
 from readdy.util import platform_utils
 from scipy.optimize import brentq
@@ -151,7 +152,7 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        box_size = Vec(2, 5, 8)
+        box_size = Vec(2, 7, 12)
         simulation.box_size = box_size
         simulation.kbt = 2.437  # room temperature
         simulation.periodic_boundary = [False, False, False]
@@ -166,12 +167,13 @@ class MinEMinDSimulation(object):
         # "The size of the V-ATPase complex is about 15 nm (diameter) x 25 nm (length from lumen side to tip of head)"
 
         membrane_particle_size = .05
-        simulation.register_particle_type("M", 0, membrane_particle_size)  # membrane particle
-        simulation.register_particle_type("D", 2.5, .01)  # MinD-ADP (without phosphor)
-        simulation.register_particle_type("D_P", 2.5, .01)  # MinD-ATP (with phosphor)
-        simulation.register_particle_type("E", 2.5, .01)  # MinE
-        simulation.register_particle_type("D_PB", .01, .01)  # MinD-ATP bound
-        simulation.register_particle_type("DE", .01, .01)  # MinDE
+
+        diffusion_factor = .5
+        simulation.register_particle_type("D", 2.5 * diffusion_factor, .01)  # MinD-ADP (without phosphor)
+        simulation.register_particle_type("D_P", 2.5 * diffusion_factor, .01)  # MinD-ATP (with phosphor)
+        simulation.register_particle_type("E", 2.5 * diffusion_factor, .01)  # MinE
+        simulation.register_particle_type("D_PB", .01 * diffusion_factor, .01)  # MinD-ATP bound
+        simulation.register_particle_type("DE", .01 * diffusion_factor, .01)  # MinDE
 
         ###################################
         #
@@ -179,7 +181,7 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        reaction_radius = (0.01 + 0.01) * 5  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
+        reaction_radius = (0.01 + 0.01)*4  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
         k_fusion = brentq(lambda x: self.erban_chapman(.093, 2.5 + .01, reaction_radius, x), 1, 5000000)
         print("k_fusion=%s" % k_fusion)
         simulation.register_reaction_conversion("Phosphorylation", "D", "D_P", .5)
@@ -192,7 +194,7 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        membrane_size = Vec(.4, 3, 6)
+        membrane_size = Vec(.5, 5, 10)
         layer = Vec(.08, .08, .08)
         extent = membrane_size + 2 * layer
         origin = -.5 * membrane_size - layer
@@ -211,6 +213,7 @@ class MinEMinDSimulation(object):
         ###################################
         using_membrane_particles = False
         if using_membrane_particles:
+            simulation.register_particle_type("M", 0, membrane_particle_size)  # membrane particle
             simulation.register_reaction_enzymatic("Attach to membrane", "M", "D_P", "D_PB", .5, .01 + membrane_particle_size)  # .01 + .025  # todo: rate?
             dx = np.linspace(origin[0] + layer[0], -1 * origin[0] - layer[0], int(float(membrane_size[0]) / membrane_particle_size), endpoint=True)
             dy = np.linspace(origin[1] + layer[1], -1 * origin[1] - layer[1], int(float(membrane_size[1]) / membrane_particle_size), endpoint=True)
@@ -243,7 +246,7 @@ class MinEMinDSimulation(object):
             simulation.register_reaction_conversion("Phosphorylation", "D_P", "D_PB", .5)
             simulation.register_reaction_enzymatic("Enzymatic DP+DPB->DPB + DPB", "D_PB", "D_P", "D_PB", .5, .02)
         using_uniform_distribution = True
-        n_minE_particles = 5000
+        n_minE_particles = 3120
         n_minD_particles = n_minE_particles * 4
         mine_x = np.random.uniform(origin[0] + layer[0], -1 * origin[0] - layer[0], n_minE_particles)
         mine_y = np.random.uniform(origin[1] + layer[1], -1 * origin[1] - layer[1], n_minE_particles)
@@ -267,7 +270,7 @@ class MinEMinDSimulation(object):
         for i in range(int(.5 * n_minD_particles), n_minD_particles):
             simulation.add_particle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
-        self.timestep = simulation.get_recommended_time_step(1)
+        self.timestep = simulation.get_recommended_time_step(5)
 
         ###################################
         #
@@ -284,7 +287,7 @@ class MinEMinDSimulation(object):
         stride = int(1./self.timestep)
         self.stride = stride
         print("using stride=%s" % stride)
-        bins = np.linspace(-5, 5, 80)
+        bins = np.linspace(-7, 7, 80)
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minD, bins, ["D"], 2)
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDP, bins, ["D_P"], 2)
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDPB, bins, ["D_PB"], 2)

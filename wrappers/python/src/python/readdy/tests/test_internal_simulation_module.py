@@ -2,10 +2,11 @@ from __future__ import print_function
 import unittest
 
 import numpy as np
-from readdy._internal.simulation import Vec
-from readdy._internal.simulation import Pot2
-from readdy._internal.simulation import Simulation
-from readdy._internal.simulation import KernelProvider
+from readdy._internal.api import Pot2
+from readdy._internal.api import Simulation
+from readdy._internal.api import KernelProvider
+
+from readdy._internal.common import Vec
 
 from readdy.util import platform_utils
 

@@ -11,20 +11,20 @@
 #include <readdy/kernel/singlecpu/reactions/SingleCPUReactions.h>
 #include <iostream>
 
-using particle_t = readdy::model::Particle;
+using _rdy_particle_t = readdy::model::Particle;
 
 namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace reactions {
-                void SingleCPUConversion::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                void SingleCPUConversion::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out, _rdy_particle_t &p2_out) const {
                     p1_out.setPos(p1_in.getPos());
                     p1_out.setType(getTypeTo());
                     p1_out.setId(p1_in.getId());
                 }
 
 
-                void SingleCPUEnzymatic::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                void SingleCPUEnzymatic::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out, _rdy_particle_t &p2_out) const {
                     if (p1_in.getType() == getCatalyst()) {
                         // p1 is the catalyst
                         p1_out.setType(getCatalyst());
@@ -42,7 +42,7 @@ namespace readdy {
                     }
                 }
 
-                void SingleCPUFission::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                void SingleCPUFission::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out, _rdy_particle_t &p2_out) const {
                     // as long as the orientation is uniform, it does not matter of which type p1_in and p2_in are.
                     auto n3 = rand->getNormal3();
                     n3 /= sqrt(n3 * n3);
@@ -53,7 +53,7 @@ namespace readdy {
                     p2_out.setPos(p1_in.getPos() - getWeight2() * getProductDistance() * n3);
                 }
 
-                void SingleCPUFusion::perform(const particle_t &p1_in, const particle_t &p2_in, particle_t &p1_out, particle_t &p2_out) const {
+                void SingleCPUFusion::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out, _rdy_particle_t &p2_out) const {
                     p1_out.setType(getTo());
                     if (getFrom1() == p1_in.getType()) {
                         p1_out.setPos(p1_in.getPos() + getWeight1() * (p2_in.getPos() - p1_in.getPos()));

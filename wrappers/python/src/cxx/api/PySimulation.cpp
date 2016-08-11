@@ -2,13 +2,13 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h>
-#include "PyConverters.h"
+#include "../PyConverters.h"
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
-#include "PyPotential.h"
-#include "PyFunction.h"
+#include "../PyPotential.h"
+#include "../PyFunction.h"
 
 namespace bpy = boost::python;
 using sim = readdy::Simulation;
@@ -42,8 +42,6 @@ void registerPotentialOrder2(sim& self, pot2& potential, std::string type1, std:
     self.registerPotentialOrder2(ptr.get(), type1, type2);
 }
 
-double pyVec3Bracket(vec& self, const unsigned int i) {return self[i];}
-
 boost::uuids::uuid registerObservable_ParticlePositions(sim& self, unsigned int stride, const boost::python::object &callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
@@ -59,14 +57,10 @@ boost::uuids::uuid registerObservable_RadialDistribution(sim& self, unsigned int
 }
 
 boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int stride, const boost::python::object &callbackFun, boost::python::list types) {
-    std::vector<std::string> typesVec {};
-    const auto len = boost::python::len(types);
-    typesVec.reserve((unsigned long) len);
-    for(auto i = 0; i < len; ++i) {
-        typesVec.push_back(boost::python::extract<std::string>(types[i]));
-    }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::CenterOfMassObservable>(std::move(pyFun), stride, typesVec);
+    return self.registerObservable<readdy::model::CenterOfMassObservable>(
+            std::move(pyFun), stride, readdy::py::sequence_to_vector<std::string>(types)
+    );
 }
 
 boost::uuids::uuid registerObservable_HistogramAlongAxisObservable(sim& self, unsigned int stride, const bpy::object& callbackFun, bpy::numeric::array& binBorders, bpy::list types, unsigned int axis) {
@@ -85,6 +79,17 @@ boost::uuids::uuid registerObservable_HistogramAlongAxisObservable(sim& self, un
     auto pyFun = readdy::py::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec, typesVec, axis);
 
+}
+
+boost::uuids::uuid registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list types, const bpy::object &callbackFun) {
+    const auto sizeTypes = bpy::len(types);
+    std::vector<std::string> typesVec {};
+    typesVec.reserve((unsigned long) sizeTypes);
+    for(auto i = 0; i < sizeTypes; ++i) {
+        typesVec.push_back(bpy::extract<std::string>(types[i]));
+    }
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, typesVec);
 }
 
 boost::uuids::uuid registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun) {
@@ -106,15 +111,12 @@ init_numpy()
 }
 
 // module
-BOOST_PYTHON_MODULE (simulation) {
+BOOST_PYTHON_MODULE (api) {
 
     init_numpy();
     PyEval_InitThreads();
 
     boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
-
-    readdy::py::std_vector_to_python_converter<double>();
-    readdy::py::std_pair_to_python_converter<std::vector<double>, std::vector<double>>();
 
     bpy::docstring_options doc_options;
     doc_options.enable_all();
@@ -138,11 +140,12 @@ BOOST_PYTHON_MODULE (simulation) {
             .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable)
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
-            .def("register_reaction_conversion", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_decay", &sim::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_observable_n_particles_types", &registerObservable_NParticlesTypes)
+            .def("register_reaction_conversion", &sim::registerConversionReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_decay", &sim::registerDeathReaction, bpy::return_internal_reference<>())
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
             .def("run", &sim::run);
@@ -152,29 +155,11 @@ BOOST_PYTHON_MODULE (simulation) {
             .staticmethod("get")
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
 
-    bpy::class_<vec>("Vec", bpy::init<double, double, double>())
-            .def(bpy::self + bpy::self)
-            .def(bpy::self - bpy::self)
-            .def(double() * bpy::self)
-            .def(bpy::self / double())
-            .def(bpy::self += bpy::self)
-            .def(bpy::self *= double())
-            .def(bpy::self == bpy::self)
-            .def(bpy::self != bpy::self)
-            .def(bpy::self * bpy::self)
-            .def(bpy::self_ns::str(bpy::self))
-            .def("__getitem__", &pyVec3Bracket);
-
-    bpy::class_<std::vector<vec>>("Vecvec")
-            .def(boost::python::vector_indexing_suite<std::vector<vec>>());
-
     bpy::class_<pot2>("Pot2", bpy::init<std::string, boost::python::object, boost::python::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);
 
     bpy::class_<kern, boost::noncopyable>("Kernel", bpy::no_init)
-            .def("get_name", &kern::getName, bpy::return_value_policy<bpy::reference_existing_object>());
+            .def("get_name", &kern::getName, bpy::return_internal_reference<>());
 
-    bpy::class_<uuid>("uuid", bpy::no_init)
-            .def("__str__", +[](const uuid& uuid) { return boost::uuids::to_string(uuid);});
 }

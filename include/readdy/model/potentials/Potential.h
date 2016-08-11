@@ -54,15 +54,6 @@ namespace readdy {
                 virtual Potential* replicate() const = 0;
             };
 
-            namespace _internal {
-                template<typename T>
-                struct PotentialName { static const std::string value; };
-            }
-
-            template<typename PotentialType>
-            const std::string& getPotentialName() {
-                return readdy::model::potentials::_internal::PotentialName<PotentialType>::value;
-            }
         }
     }
 }

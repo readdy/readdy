@@ -61,7 +61,7 @@ namespace readdy {
                 pimpl->currentEnergy += increase;
             }
 
-            const model::SingleCPUNeighborList *const SingleCPUKernelStateModel::getNeighborList() const {
+            const model::SingleCPUNeighborList * SingleCPUKernelStateModel::getNeighborList() const {
                 return pimpl->neighborList.get();
             }
 

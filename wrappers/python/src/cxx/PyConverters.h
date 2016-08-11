@@ -10,6 +10,8 @@
 #ifndef READDY_MAIN_PYCONVERTERS_H
 #define READDY_MAIN_PYCONVERTERS_H
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h>
 #include <numpy/ndarrayobject.h>
 #include <boost/python/module.hpp>
@@ -19,9 +21,77 @@
 #include <boost/python.hpp>
 #include <iostream>
 #include <vector>
+#include <list>
 
 namespace readdy {
     namespace py {
+
+        template<typename T, typename C, typename... Args, typename... Args2>
+        boost::python::object adapt_function(const std::function<T(Args2...)>& (C::*fn)(Args...) const) {
+            return boost::python::make_function(
+                    [fn](C& self, Args... args) { return boost::python::make_function(
+                            (self.*fn)(args...),
+                            boost::python::return_value_policy<boost::python::reference_existing_object>(),
+                            boost::mpl::vector<T, Args2...>()
+                    );}, boost::python::default_call_policies(), boost::mpl::vector<boost::python::object, C&>()
+            );
+        };
+
+        template<typename T, typename C, typename... Args, typename... Args2>
+        boost::python::object adapt_function(const std::function<T(Args2...)> (*fn)(C, Args...)) {
+            return boost::python::make_function(
+                    [fn](C& self, Args... args) { return boost::python::make_function(
+                            (*fn)(self, args...),
+                            boost::python::default_call_policies(),
+                            boost::mpl::vector<T, Args2...>()
+                    );}, boost::python::default_call_policies(), boost::mpl::vector<boost::python::object, C&>()
+            );
+        };
+
+        template<typename T, std::size_t N>
+        boost::python::list toList(std::array<T, N> arr) {
+            boost::python::list list;
+            for(T t : arr) {
+                list.append<T>(t);
+            }
+            return list;
+        };
+
+        template<typename T>
+        std::list<T> sequence_to_list(const boost::python::object& o) {
+            boost::python::stl_input_iterator<T> begin(o), end;
+            return std::list<T>(begin, end);
+        }
+
+        template<typename T>
+        std::vector<T> sequence_to_vector(const boost::python::object& o) {
+            boost::python::stl_input_iterator<T> begin(o), end;
+            return std::vector<T>(begin, end);
+        }
+
+        /**
+         * Takes a unique pointer and transfers its ownership to python
+         * @param fn the function
+         * @return a python object holding the unique pointer's contents
+         */
+        template <typename T, typename C, typename ...Args>
+        boost::python::object adapt_unique(std::unique_ptr<T> (C::*fn)(Args...)) {
+            return boost::python::make_function(
+                    [fn](C& self, Args... args) { return (self.*fn)(args...).release(); },
+                    boost::python::return_value_policy<boost::python::manage_new_object>(),
+                    boost::mpl::vector<T*, C&, Args...>()
+            );
+        }
+
+        template <typename T, typename C, typename ...Args>
+        boost::python::object adapt_unique(std::unique_ptr<T> (C::*fn)(Args...) const) {
+            return boost::python::make_function(
+                    [fn](C& self, Args... args) { return (self.*fn)(args...).release(); },
+                    boost::python::return_value_policy<boost::python::manage_new_object>(),
+                    boost::mpl::vector<T*, C&, Args...>()
+            );
+        }
+
         // Converts a std::pair instance to a Python tuple.
         template <typename T1, typename T2>
         struct std_pair_to_tuple

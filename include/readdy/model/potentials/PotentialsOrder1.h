@@ -52,9 +52,11 @@ namespace readdy {
                 bool considerParticleRadius;
             };
 
-            namespace _internal {
-                template <> struct PotentialName<CubePotential> {static const std::string value;};
+            template<typename T>
+            const std::string getPotentialName(typename std::enable_if<std::is_base_of<CubePotential, T>::value>::type* = 0) {
+                return "Cube";
             }
+
         }
     }
 }

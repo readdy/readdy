@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <vector>
 #include <readdy/model/programs/Program.h>
+#include <readdy/model/programs/Programs.h>
 
 namespace readdy {
     namespace model {
@@ -37,6 +38,17 @@ namespace readdy {
                     }
                     throw std::runtime_error("Could not find requested program \""+name+"\" in factory.");
                 }
+
+                template<typename T>
+                std::unique_ptr<T> createProgram() const {
+                    const auto name = getProgramName<T>();
+                    auto&& it = factory.find(name);
+                    if(it != factory.end()) {
+                        return std::unique_ptr<T>(dynamic_cast<T *>(it->second()));
+                    }
+                    throw std::runtime_error("Could not find requested program \""+name+"\" in factory.");
+                }
+
 
                 std::unique_ptr<Program> createProgram(std::string name) const {
                     return createProgramAs<Program>(name);

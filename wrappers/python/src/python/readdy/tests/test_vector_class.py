@@ -1,6 +1,6 @@
 import unittest
 
-from readdy._internal.simulation import Vec
+from readdy._internal.common import Vec
 
 
 class TestVectorClass(unittest.TestCase):

@@ -20,7 +20,7 @@
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionFactory.h>
-#include <readdy/model/_internal/ParticleTypePair.h>
+#include <readdy/common/ParticleTypePair.h>
 
 #if BOOST_OS_MAC
 #include <string>
@@ -28,11 +28,7 @@
 
 namespace readdy {
     namespace model {
-        class ParticleTypePairHasher {
-        public:
-            std::size_t operator()(const _internal::ParticleTypePair &k) const;
-            std::size_t operator()(const std::tuple<unsigned int, unsigned int> &k) const;
-        };
+
 
         class KernelContext {
         public:
@@ -119,7 +115,7 @@ namespace readdy {
 
             const std::vector<potentials::PotentialOrder2*> &getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
 
-            const std::unordered_map<_internal::ParticleTypePair, std::vector<potentials::PotentialOrder2*>, readdy::model::ParticleTypePairHasher> getAllOrder2Potentials() const;
+            const std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2*>, readdy::util::ParticleTypePairHasher> getAllOrder2Potentials() const;
 
             std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 

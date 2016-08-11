@@ -83,15 +83,20 @@ namespace readdy {
         protected:
             std::vector<double> binBorders;
             std::set<unsigned int> typesToCount;
-            std::set<unsigned int> transformTypes(std::vector<std::string> types, const readdy::model::KernelContext &ctx);
+
             unsigned int axis;
         };
 
-        class NParticlesObservable : public Observable<long> {
+        class NParticlesObservable : public Observable<std::vector<unsigned long>> {
 
         public:
             NParticlesObservable(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) { }
+            NParticlesObservable(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
+            NParticlesObservable(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
             virtual void evaluate() = 0;
+
+        protected:
+            std::vector<unsigned int> typesToCount;
         };
 
         class TestCombinerObservable : public CombinerObservable<std::vector<double>, ParticlePositionObservable, ParticlePositionObservable> {

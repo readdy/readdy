@@ -9,7 +9,7 @@
 
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 
-using particle_t = readdy::model::Particle;
+using _rdy_particle_t = readdy::model::Particle;
 
 namespace readdy {
     namespace kernel {
@@ -28,7 +28,7 @@ namespace readdy {
                         const auto &dt = ctx.getTimeStep();
                         auto data = kernel->getKernelStateModel().getParticleData();
                         auto rnd = readdy::model::RandomProvider();
-                        std::vector<particle_t> newParticles{};
+                        std::vector<_rdy_particle_t> newParticles{};
                         std::vector<std::function<void()>> events{};
 
                         // reactions with one educt
@@ -60,7 +60,7 @@ namespace readdy {
                                                         );
                                                     } else {
                                                         const auto particle = (*_data)[particleIdx];
-                                                        particle_t outParticle1{};
+                                                        _rdy_particle_t outParticle1{};
                                                         reaction->perform(particle, particle, outParticle1,
                                                                           outParticle1);
                                                         newParticles.push_back(outParticle1);
@@ -69,7 +69,7 @@ namespace readdy {
                                                 }
                                                 case 2: {
                                                     const auto particle = (*_data)[particleIdx];
-                                                    particle_t outParticle1{}, outParticle2{};
+                                                    _rdy_particle_t outParticle1{}, outParticle2{};
                                                     if (mapping_12.find(reaction->getId()) != mapping_12.end()) {
                                                         mapping_12[reaction->getId()](particle, outParticle1,
                                                                                       outParticle2);
@@ -124,7 +124,7 @@ namespace readdy {
                                                                 mapping_21[reaction->getId()](inParticle1,
                                                                                               inParticle2));
                                                     } else {
-                                                        particle_t outParticle1{};
+                                                        _rdy_particle_t outParticle1{};
                                                         reaction->perform(inParticle1, inParticle2, outParticle1,
                                                                           outParticle1);
                                                         newParticles.push_back(outParticle1);
@@ -132,7 +132,7 @@ namespace readdy {
                                                     break;
                                                 }
                                                 case 2: {
-                                                    particle_t outParticle1{}, outParticle2{};
+                                                    _rdy_particle_t outParticle1{}, outParticle2{};
                                                     if (mapping_22.find(reaction->getId()) != mapping_22.end()) {
                                                         mapping_22[reaction->getId()](inParticle1, inParticle2,
                                                                                       outParticle1, outParticle2);
@@ -161,7 +161,7 @@ namespace readdy {
 
                         // reposition particles to respect the periodic b.c.
                         std::for_each(newParticles.begin(), newParticles.end(),
-                                      [&fixPos](particle_t &p) { fixPos(p.getPos()); });
+                                      [&fixPos](_rdy_particle_t &p) { fixPos(p.getPos()); });
 
                         // update data structure
                         data->deactivateMarked();
