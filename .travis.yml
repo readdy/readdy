@@ -40,12 +40,12 @@ matrix:
 
 cache:
   apt: true
+  ccache: true
   directories:
     - $HOME/readdy_cache/boost_dl_job_1
     - $HOME/readdy_cache/boost_dl_job_2
     - $HOME/readdy_cache/boost_dl_job_3
     - $HOME/readdy_cache/boost_dl_job_4
-cache: ccache
 
 before_install:
 - tools/ci/travis/setup_travis.sh
