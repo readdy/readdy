@@ -103,7 +103,7 @@ class TestModel(unittest.TestCase):
 
         data = self.model.get_particle_data()
         it_forces = data.forces
-        f_vec = it_forces.next()
+        f_vec = next(it_forces)
         np.testing.assert_equal(f_vec, cmn.Vec(.1, .1, .1))
         with np.testing.assert_raises(StopIteration):
             next(it_forces)
@@ -148,13 +148,13 @@ class TestModel(unittest.TestCase):
 
         it_forces = self.model.get_particle_data().forces
         it_types = self.model.get_particle_data().types
-        t = it_types.next()
+        t = next(it_types)
         if t == self.ctx.get_particle_type_id("A"):
-            np.testing.assert_equal(it_forces.next(), cmn.Vec(.5, .5, .5))
-            np.testing.assert_equal(it_forces.next(), cmn.Vec(-.5, -.5, -.5))
+            np.testing.assert_equal(next(it_forces), cmn.Vec(.5, .5, .5))
+            np.testing.assert_equal(next(it_forces), cmn.Vec(-.5, -.5, -.5))
         else:
-            np.testing.assert_equal(it_forces.next(), cmn.Vec(-.5, -.5, -.5))
-            np.testing.assert_equal(it_forces.next(), cmn.Vec(.5, .5, .5))
+            np.testing.assert_equal(next(it_forces), cmn.Vec(-.5, -.5, -.5))
+            np.testing.assert_equal(next(it_forces), cmn.Vec(.5, .5, .5))
 
         with np.testing.assert_raises(StopIteration):
             next(it_forces)
