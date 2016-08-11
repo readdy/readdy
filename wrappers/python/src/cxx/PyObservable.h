@@ -10,8 +10,8 @@
 #ifndef READDY_MAIN_PY_OBSERVABLE_H
 #define READDY_MAIN_PY_OBSERVABLE_H
 
-#include <readdy/model/Kernel.h>
 #include <boost/python/object.hpp>
+#include <readdy/model/Kernel.h>
 
 
 namespace readdy {
