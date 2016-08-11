@@ -31,6 +31,10 @@ using _rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using vec = readdy::model::Vec3;
 using uuid = boost::uuids::uuid;
 
+double vecBracketOperator(vec& self, unsigned int i) {
+    return self[i];
+}
+
 // module
 BOOST_PYTHON_MODULE (common) {
     init_numpy();
@@ -52,7 +56,7 @@ BOOST_PYTHON_MODULE (common) {
             .def(bpy::self != bpy::self)
             .def(bpy::self * bpy::self)
             .def(bpy::self_ns::str(bpy::self))
-            .def("__getitem__", +[](vec& self, const unsigned int i) {return self[i];});
+            .def("__getitem__", &vecBracketOperator);
 
     readdy::py::std_vector_to_python_converter<double>();
     readdy::py::std_pair_to_python_converter<std::vector<double>, std::vector<double>>();

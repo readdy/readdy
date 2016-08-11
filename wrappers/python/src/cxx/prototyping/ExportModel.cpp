@@ -56,7 +56,7 @@ void exportModelClasses() {
             .add_property("pos", +[](_rdy_particle_t &self) { return self.getPos(); }, &_rdy_particle_t::setPos)
             .add_property("type", &_rdy_particle_t::getType, &_rdy_particle_t::setType)
             .add_property("id", bpy::make_function(&_rdy_particle_t::getId,
-                                                   bpy::return_value_policy<bpy::reference_existing_object>()))
+                                                   bpy::return_internal_reference<>()))
             .def(bpy::self == bpy::self)
             .def(bpy::self != bpy::self);
 
@@ -83,11 +83,11 @@ void exportModelClasses() {
             .def("get_dist_squared_fun", rp::adapt_function(&getDistSquaredFunWrap))
             .def("get_particle_radius", +[](_rdy_ctx_t& self, std::string type) {return self.getParticleRadius(type);})
             .def("set_particle_radius", &_rdy_ctx_t::setParticleRadius)
-            .def("register_conversion_reaction", &_rdy_ctx_t::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_enzymatic_reaction", &_rdy_ctx_t::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_fission_reaction", &_rdy_ctx_t::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_fusion_reaction", &_rdy_ctx_t::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_decay_reaction", &_rdy_ctx_t::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_conversion_reaction", &_rdy_ctx_t::registerConversionReaction,  bpy::return_internal_reference<>())
+            .def("register_enzymatic_reaction", &_rdy_ctx_t::registerEnzymaticReaction,  bpy::return_internal_reference<>())
+            .def("register_fission_reaction", &_rdy_ctx_t::registerFissionReaction, bpy::return_internal_reference<>())
+            .def("register_fusion_reaction", &_rdy_ctx_t::registerFusionReaction, bpy::return_internal_reference<>())
+            .def("register_decay_reaction", &_rdy_ctx_t::registerDeathReaction, bpy::return_internal_reference<>())
             .def("register_potential_order_1", +[](_rdy_ctx_t& self, _rdy_pot_1& pot, std::string type) {
                 return self.registerOrder1Potential(&pot, type);
             })
@@ -101,10 +101,10 @@ void exportModelClasses() {
             .def("increase_energy", &_rdy_scpu_model_t::increaseEnergy, &_rdy_scpu_model_wrap_t::default_increaseEnergy)
             .def("get_particle_data", &_rdy_scpu_model_t::getParticleData,
                  &_rdy_scpu_model_wrap_t::default_getParticleData,
-                 bpy::return_value_policy<bpy::reference_existing_object>())
+                 bpy::return_internal_reference<>())
             .def("get_neighbor_list", &_rdy_scpu_model_t::getNeighborList,
                  &_rdy_scpu_model_wrap_t::default_getNeighborList,
-                 bpy::return_value_policy<bpy::reference_existing_object>())
+                 bpy::return_internal_reference<>())
             .def("get_particles", &_rdy_scpu_model_t::getParticles, &_rdy_scpu_model_wrap_t::default_getParticles);
 
     bpy::class_<_rdy_scpu_nl_t, boost::noncopyable>("NeighborList", bpy::init<_rdy_ctx_t *>())

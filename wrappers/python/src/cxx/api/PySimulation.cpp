@@ -141,11 +141,11 @@ BOOST_PYTHON_MODULE (api) {
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
             .def("register_observable_n_particles_types", &registerObservable_NParticlesTypes)
-            .def("register_reaction_conversion", &sim::registerConversionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_value_policy<bpy::reference_existing_object>())
-            .def("register_reaction_decay", &sim::registerDeathReaction, bpy::return_value_policy<bpy::reference_existing_object>())
+            .def("register_reaction_conversion", &sim::registerConversionReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_decay", &sim::registerDeathReaction, bpy::return_internal_reference<>())
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
             .def("run", &sim::run);
@@ -160,6 +160,6 @@ BOOST_PYTHON_MODULE (api) {
             .def("calc_force", &pot2::calculateForce);
 
     bpy::class_<kern, boost::noncopyable>("Kernel", bpy::no_init)
-            .def("get_name", &kern::getName, bpy::return_value_policy<bpy::reference_existing_object>());
+            .def("get_name", &kern::getName, bpy::return_internal_reference<>());
 
 }
