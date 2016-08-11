@@ -35,6 +35,7 @@ using _rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
 using _rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
+using _rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
 
 const std::function<readdy::model::Vec3(readdy::model::Vec3, readdy::model::Vec3)> getShortestDistanceFunWrap(_rdy_ctx_t& self) {
     auto shortestDifference = self.getShortestDifferenceFun();
@@ -88,9 +89,15 @@ void exportModelClasses() {
             .def("register_fission_reaction", &_rdy_ctx_t::registerFissionReaction, bpy::return_internal_reference<>())
             .def("register_fusion_reaction", &_rdy_ctx_t::registerFusionReaction, bpy::return_internal_reference<>())
             .def("register_decay_reaction", &_rdy_ctx_t::registerDeathReaction, bpy::return_internal_reference<>())
-            .def("register_potential_order_1", +[](_rdy_ctx_t& self, _rdy_pot_1& pot, std::string type) {
-                return self.registerOrder1Potential(&pot, type);
-            })
+            .def("register_potential_order_1",
+                 +[](_rdy_ctx_t& self, _rdy_pot_1& pot, std::string type) -> const _rdy_uuid_t& {
+                     return self.registerOrder1Potential(&pot, type);
+                 }, bpy::return_internal_reference<>())
+            .def("register_potential_order_2",
+                 +[](_rdy_ctx_t& self, _rdy_pot_2& p, std::string t1, std::string t2) -> const _rdy_uuid_t& {
+                     return self.registerOrder2Potential(&p, t1, t2);
+                 }, bpy::return_internal_reference<>())
+            .def("get_particle_type_id", &_rdy_ctx_t::getParticleTypeID)
             .def("configure", &_rdy_ctx_t::configure);
 
     bpy::class_<_rdy_scpu_model_wrap_t, boost::noncopyable>("Model", bpy::init<_rdy_ctx_t *>())
