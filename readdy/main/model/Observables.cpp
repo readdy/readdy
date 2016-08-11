@@ -164,6 +164,13 @@ namespace readdy {
                                                    std::vector<unsigned int> typesToCount)
                 : Observable(kernel, stride), typesToCount(typesToCount) {
         }
+
+        ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, std::string particleType)
+                : ForcesObservable(kernel, stride, kernel->getKernelContext().getParticleTypeID(particleType)) { }
+
+        ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, unsigned int particleType)
+                : Observable(kernel, stride), particleType(particleType) { }
+
     }
 
 

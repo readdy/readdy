@@ -47,6 +47,10 @@ namespace readdy {
                     throw std::runtime_error("should be overridden (or todo: provide default impl)");
                 }
 
+                virtual ForcesObservable* createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride) const {
+                    throw std::runtime_error("should be overridden (or todo: provide default impl)");
+                }
+
             protected:
                 Kernel *const kernel;
 
@@ -70,6 +74,8 @@ namespace readdy {
                         return self->createNParticlesObservable(kernel, stride, std::forward<Args>(args)...);
                     }
                 };
+
+                //todo @chrisfroe make dispatcher for ForceObservable
             };
         }
     }

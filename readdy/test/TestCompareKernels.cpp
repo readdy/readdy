@@ -15,6 +15,7 @@
 
 namespace {
     /**
+     * Test that kernels get the deterministic result correct.
      * Small system, partly periodic, different x,y,z boxlength.
      * particle radius 0.9 and harmonic repulsion (kappa=1) -> maxcutoff = 1.8
      * simbox = 2x4x6 -> numberBoxes = 1x2x3, periodic = false x true x true
@@ -29,6 +30,10 @@ namespace {
         auto cpuKernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     }
 
+    /**
+     * Test that has many particles randomly distributed, but same for all kernels. After
+     * calculation of forces and energies, the results should be "almost equal" (see google: floating point comparison).
+     */
     TEST(TestCompareKernels, ForcesLargerSystem) {
         auto singleCpuKernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         auto cpuKernel = readdy::plugin::KernelProvider::getInstance().create("CPU");

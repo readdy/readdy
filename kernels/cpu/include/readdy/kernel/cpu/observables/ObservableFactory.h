@@ -29,6 +29,7 @@ namespace readdy {
                     createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride,
                                                   std::vector<double> binBorders, std::vector<std::string> typesToCount,
                                                   unsigned int axis) const override;
+                    // todo @chrisfroe register ForcesObservable -> use scpu impl
                 };
             }
         }

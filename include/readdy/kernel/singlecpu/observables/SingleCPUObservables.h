@@ -19,6 +19,7 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace observables {
+                // fixme can the preceeding "SingleCPU" be omitted, since its already in the namespace?
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class SingleCPUHistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
 
@@ -95,6 +96,11 @@ namespace readdy {
 
                 protected:
                     kernel_t *const singleCPUKernel;
+                };
+
+                template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
+                class ForcesObservable : public readdy::model::ForcesObservable {
+                    // todo @chrisfroe implement the observable
                 };
 
             }
