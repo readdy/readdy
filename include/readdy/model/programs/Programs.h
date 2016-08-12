@@ -71,6 +71,11 @@ namespace readdy {
                     virtual void registerReactionScheme_22(const std::string& reactionName, reaction_22 fun) = 0;
                 };
 
+                class Gillespie : public Program {
+                public:
+                    Gillespie() : Program() {}
+                };
+
             }
 
             template<typename T>

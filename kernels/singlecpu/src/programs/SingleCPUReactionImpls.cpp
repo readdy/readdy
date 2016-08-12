@@ -229,6 +229,29 @@ namespace readdy {
                     }
 
 
+                    void Gillespie::execute() {
+                        const auto& ctx = kernel->getKernelContext();
+                        auto data = kernel->getKernelStateModel().getParticleData();
+                        auto rnd = readdy::model::RandomProvider();
+
+                        double alpha = 0.0;
+                        /**
+                         * Reactions with one educt
+                         */
+                        {
+                            auto it_type = data->begin_types();
+                            while (it_type != data->end_types()) {
+                                const auto &reactions = ctx.getOrder1Reactions(*it_type);
+                                for (const auto &reaction : reactions) {
+
+                                    alpha += reaction->getRate();
+                                }
+                                ++it_type;
+                            }
+                        }
+                    }
+
+                    Gillespie::Gillespie(SingleCPUKernel const *const kernel) : kernel(kernel) { }
                 }
             }
         }

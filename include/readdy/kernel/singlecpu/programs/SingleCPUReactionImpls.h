@@ -37,6 +37,16 @@ namespace readdy {
                         std::unordered_map<boost::uuids::uuid, reaction_21, boost::hash<boost::uuids::uuid>> mapping_21{};
                         std::unordered_map<boost::uuids::uuid, reaction_22, boost::hash<boost::uuids::uuid>> mapping_22{};
                     };
+
+                    class Gillespie : public readdy::model::programs::reactions::Gillespie {
+                    public:
+                        Gillespie(SingleCPUKernel const *const kernel);
+
+                        virtual void execute() override;
+
+                    protected:
+                        SingleCPUKernel const *const kernel;
+                    };
                 }
             }
         }
