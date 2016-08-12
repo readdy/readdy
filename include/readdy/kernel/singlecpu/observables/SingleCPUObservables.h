@@ -19,7 +19,7 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace observables {
-                // fixme can the preceeding "SingleCPU" be omitted, since its already in the namespace?
+                // todo can the preceeding "SingleCPU" be omitted, since its already in the namespace?
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class SingleCPUHistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
 
@@ -100,7 +100,25 @@ namespace readdy {
 
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class ForcesObservable : public readdy::model::ForcesObservable {
-                    // todo @chrisfroe implement the observable
+                public:
+                    ForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::string particleType = std::string()) :
+                            readdy::model::ForcesObservable(kernel, stride, particleType),
+                            kernel(dynamic_cast<kernel_t*>(kernel)) { }
+
+                    virtual void evaluate() override {
+                        // todo implement properly
+                        if (considerAllParticles) {
+                            // get all particles' forces
+                            result = {readdy::model::Vec3(0,0,0), readdy::model::Vec3(0,0,0), readdy::model::Vec3(0,0,0)};
+                        } else {
+                            // only get forces of particleType
+                            result = {readdy::model::Vec3(0,0,0), readdy::model::Vec3(0,0,0)};
+                        }
+                    }
+
+
+                protected:
+                    kernel_t* const kernel;
                 };
 
             }

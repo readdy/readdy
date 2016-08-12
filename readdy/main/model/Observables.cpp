@@ -165,11 +165,18 @@ namespace readdy {
                 : Observable(kernel, stride), typesToCount(typesToCount) {
         }
 
-        ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, std::string particleType)
-                : ForcesObservable(kernel, stride, kernel->getKernelContext().getParticleTypeID(particleType)) { }
+        ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, std::string inParticleType)
+                : ForcesObservable(kernel, stride) {
+            if (inParticleType.empty()) {
+                considerAllParticles = true;
+            } else {
+                considerAllParticles = false;
+                particleType = kernel->getKernelContext().getParticleTypeID(inParticleType);
+            }
+        }
 
         ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, unsigned int particleType)
-                : Observable(kernel, stride), particleType(particleType) { }
+                : Observable(kernel, stride), particleType(particleType), considerAllParticles(false) { }
 
     }
 

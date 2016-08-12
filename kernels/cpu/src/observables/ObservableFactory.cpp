@@ -31,6 +31,11 @@ namespace readdy {
                                                                  unsigned int axis) const {
                     return new readdy::kernel::singlecpu::observables::SingleCPUHistogramAlongAxisObservable<readdy::kernel::cpu::CPUKernel>(kernel, stride, binBorders, typesToCount, axis);
                 }
+
+                readdy::model::ForcesObservable *
+                ObservableFactory::createForcesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::string particleType) const {
+                    return new readdy::kernel::singlecpu::observables::ForcesObservable<readdy::kernel::cpu::CPUKernel>(kernel, stride, particleType);
+                }
             }
         }
     }

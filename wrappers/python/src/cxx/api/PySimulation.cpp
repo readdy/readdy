@@ -98,6 +98,8 @@ boost::uuids::uuid registerObservable_NParticles(sim &self, unsigned int stride,
     return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride);
 }
 
+// todo @chrisfroe register forces observable
+
 #if PY_MAJOR_VERSION >= 3
 int
 #else

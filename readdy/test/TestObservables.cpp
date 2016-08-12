@@ -80,7 +80,33 @@ namespace {
     }
 
     TEST_P(TestObservables, TestForcesObservable) {
-        // todo @chrisfroe
+        // Setup particles
+        kernel->getKernelContext().setDiffusionConstant("A", 42.);
+        kernel->getKernelContext().setDiffusionConstant("B", 1337.);
+        const auto typeIdA = kernel->getKernelContext().getParticleTypeID("A");
+        const auto typeIdB = kernel->getKernelContext().getParticleTypeID("B");
+        const unsigned int n_particles = 50; // There will be 55 Bs
+        const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0,0,0, typeIdA));
+        const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0,0,0, typeIdB));
+        kernel->getKernelStateModel().addParticles(particlesA);
+        kernel->getKernelStateModel().addParticles(particlesB);
+        {
+            // Check that empty particleType argument gives correct object
+            auto&& obsA = kernel->createObservable<m::ForcesObservable>(1, "A");
+            auto&& obsB = kernel->createObservable<m::ForcesObservable>(1, "B");
+            auto&& obsBoth = kernel->createObservable<m::ForcesObservable>(1);
+            auto&& connectionA = kernel->connectObservable(obsA.get());
+            auto&& connectionB = kernel->connectObservable(obsB.get());
+            auto&& connectionBoth = kernel->connectObservable(obsBoth.get());
+            kernel->evaluateObservables(0);
+            const auto& resA = obsA->getResult();
+            const auto& resB = obsB->getResult();
+            const auto& resBoth = obsBoth->getResult();
+            EXPECT_EQ(resA.size(), 50);
+            EXPECT_EQ(resB.size(), 55);
+            EXPECT_EQ(resBoth.size(), 105);
+        }
+        // todo @chrisfroe test that forces are correct
     }
 
     INSTANTIATE_TEST_CASE_P(TestObservables, TestObservables,

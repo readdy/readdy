@@ -27,7 +27,7 @@ namespace readdy {
                     virtual readdy::model::NParticlesObservable *createNParticlesObservable(readdy::model::Kernel *const kernel,
                                                                                     unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
-                    // todo @chrisfroe register ForcesObservable
+                    virtual readdy::model::ForcesObservable *createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::string particleType = std::string()) const override;
                 };
             }
         }

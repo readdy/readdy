@@ -112,12 +112,13 @@ namespace readdy {
         class ForcesObservable : public Observable<std::vector<readdy::model::Vec3>> {
 
         public:
-            ForcesObservable(Kernel* const kernel, unsigned int stride) : Observable(kernel, stride) { }
+            ForcesObservable(Kernel* const kernel, unsigned int stride) : Observable(kernel, stride), considerAllParticles(true) { }
             ForcesObservable(Kernel* const kernel, unsigned int stride, std::string particleType);
             ForcesObservable(Kernel* const kernel, unsigned int stride, unsigned int particleType);
             virtual void evaluate() = 0;
 
         protected:
+            bool considerAllParticles;
             unsigned int particleType;
         };
     }
