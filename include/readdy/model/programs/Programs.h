@@ -105,6 +105,11 @@ namespace readdy {
             const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type* = 0) {
                 return "Uncontrolled approximation of reactions";
             };
+
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type* = 0) {
+                return "Gillespie";
+            };
         }
     }
 }
