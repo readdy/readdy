@@ -43,7 +43,7 @@ namespace {
             kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "B", "C");
         }
 
-        const unsigned int nParticles = 10000;
+        const unsigned int nParticles = 1000;
         for(unsigned long _ = 0; _ < nParticles; ++_) {
             for(const auto& t : types) {
                 readdy::model::Particle p{stdRand(-7.5, 7.5), stdRand(-7.5, 7.5), stdRand(-7.5, 7.5),
@@ -58,7 +58,7 @@ namespace {
         auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
-        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
+        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::Gillespie>();
         kernel.getKernelContext().configure();
 
         auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);

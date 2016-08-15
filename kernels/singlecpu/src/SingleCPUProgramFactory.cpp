@@ -33,7 +33,7 @@ namespace readdy {
                     factory[core_p::getProgramName<reactions::UncontrolledApproximation>()] = [kernel] {
                         return new reactions::UncontrolledApproximation(kernel);
                     };
-                    factory[core_p::getProgramName<reactions::Gillespie>()] = [kernel] {
+                    factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
                         return new reactions::Gillespie(kernel);
                     };
                 }
