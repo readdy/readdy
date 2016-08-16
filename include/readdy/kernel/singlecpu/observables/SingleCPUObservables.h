@@ -101,18 +101,34 @@ namespace readdy {
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class ForcesObservable : public readdy::model::ForcesObservable {
                 public:
-                    ForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::string particleType = std::string()) :
-                            readdy::model::ForcesObservable(kernel, stride, particleType),
+                    ForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+                            readdy::model::ForcesObservable(kernel, stride, typesToCount),
                             kernel(dynamic_cast<kernel_t*>(kernel)) { }
 
                     virtual void evaluate() override {
-                        // todo implement properly
-                        if (considerAllParticles) {
+                        result.clear();
+                        const auto& pd = kernel->getKernelStateModel().getParticleData();
+                        auto forcesIt = pd->cbegin_forces();
+
+                        if (typesToCount.empty()) {
                             // get all particles' forces
-                            result = {readdy::model::Vec3(0,0,0), readdy::model::Vec3(0,0,0), readdy::model::Vec3(0,0,0)};
+                            while (forcesIt != pd->cend_forces()) {
+                                result.push_back(*forcesIt);
+                                ++forcesIt;
+                            }
                         } else {
-                            // only get forces of particleType
-                            result = {readdy::model::Vec3(0,0,0), readdy::model::Vec3(0,0,0)};
+                            // only get forces of typesToCount
+                            auto typesIt = pd->cbegin_types();
+                            while (forcesIt != pd->cend_forces()) {
+                                for (auto countedParticleType : typesToCount) {
+                                    if (*typesIt == countedParticleType) {
+                                        result.push_back(*forcesIt);
+                                        break;
+                                    }
+                                }
+                                ++forcesIt;
+                                ++typesIt;
+                            }
                         }
                     }
 

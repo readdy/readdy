@@ -33,8 +33,8 @@ namespace readdy {
                 }
 
                 readdy::model::ForcesObservable *
-                ObservableFactory::createForcesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::string particleType) const {
-                    return new readdy::kernel::singlecpu::observables::ForcesObservable<readdy::kernel::cpu::CPUKernel>(kernel, stride, particleType);
+                ObservableFactory::createForcesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) const {
+                    return new readdy::kernel::singlecpu::observables::ForcesObservable<readdy::kernel::cpu::CPUKernel>(kernel, stride, typesToCount);
                 }
             }
         }

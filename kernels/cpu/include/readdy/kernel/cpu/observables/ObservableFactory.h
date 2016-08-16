@@ -31,7 +31,7 @@ namespace readdy {
                                                   unsigned int axis) const override;
 
                     virtual readdy::model::ForcesObservable *
-                    createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::string particleType = std::string()) const override;
+                    createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
                 };
             }
         }

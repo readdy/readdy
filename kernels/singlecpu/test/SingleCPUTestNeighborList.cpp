@@ -28,3 +28,10 @@ TEST(NeighborList, Naive) {
         }
     }
  }
+
+// todo @chrisfroe
+TEST(NeighborList, NotThatNaive) {
+    // Check very small system that only fits one box with many particles
+    // Periodic and not periodic
+
+}
