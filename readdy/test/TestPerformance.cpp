@@ -10,7 +10,6 @@
 
 #include <gtest/gtest.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/model/potentials/PotentialsOrder2.h>
 #include <readdy/testing/Timer.h>
 
 namespace {

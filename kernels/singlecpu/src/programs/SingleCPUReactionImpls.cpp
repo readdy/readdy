@@ -243,6 +243,7 @@ namespace readdy {
                         const auto& ctx = kernel->getKernelContext();
                         auto rnd = readdy::model::RandomProvider();
                         auto data = kernel->getKernelStateModel().getParticleData();
+                        const auto &dt = ctx.getTimeStep();
                         /**
                          * Handle gathered reaction events
                          */
@@ -259,73 +260,90 @@ namespace readdy {
                                         }
                                 );
                                 const auto event = *eventIt;
-                                if (eventIt == events.end()) {
+                                if (eventIt == events.end() - nDeactivated) {
                                     throw std::runtime_error("this should not happen (event not found)");
                                 }
-                                /**
-                                 * Perform reaction
-                                 */
-                                {
-                                    const auto p1 = data->operator[](event.idx1);
-                                    _rdy_particle_t pOut1{}, pOut2{};
-                                    if (event.nEducts == 1) {
-                                        auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                                        if (reaction->getNProducts() == 1) {
-                                            reaction->perform(p1, p1, pOut1, pOut2);
-                                            newParticles.push_back(pOut1);
-                                        } else if (reaction->getNProducts() == 2) {
-                                            reaction->perform(p1, data->operator[](event.idx2), pOut1, pOut2);
-                                            newParticles.push_back(pOut1);
-                                            newParticles.push_back(pOut2);
-                                        }
-                                    } else {
-                                        auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                                        const auto p2 = data->operator[](event.idx2);
-                                        if (reaction->getNProducts() == 1) {
-                                            reaction->perform(p1, p2, pOut1, pOut2);
-                                            newParticles.push_back(pOut1);
-                                        } else if (reaction->getNProducts() == 2) {
-                                            reaction->perform(p1, p2, pOut1, pOut2);
-                                            newParticles.push_back(pOut1);
-                                            newParticles.push_back(pOut2);
+                                if(rnd.getUniform() < event.reactionRate*dt) {
+                                    /**
+                                     * Perform reaction
+                                     */
+                                    {
+                                        const auto p1 = data->operator[](event.idx1);
+                                        _rdy_particle_t pOut1{}, pOut2{};
+                                        if (event.nEducts == 1) {
+                                            auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
+                                            if (reaction->getNProducts() == 1) {
+                                                reaction->perform(p1, p1, pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                            } else if (reaction->getNProducts() == 2) {
+                                                reaction->perform(p1, data->operator[](event.idx2), pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                                newParticles.push_back(pOut2);
+                                            }
+                                        } else {
+                                            auto reaction = ctx.getOrder2Reactions(event.t1,
+                                                                                   event.t2)[event.reactionIdx];
+                                            const auto p2 = data->operator[](event.idx2);
+                                            if (reaction->getNProducts() == 1) {
+                                                reaction->perform(p1, p2, pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                            } else if (reaction->getNProducts() == 2) {
+                                                reaction->perform(p1, p2, pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                                newParticles.push_back(pOut2);
+                                            }
                                         }
                                     }
-                                }
-                                /**
-                                 * deactivate events whose educts have disappeared (including the just handled one)
-                                 */
-                                {
-                                    auto _it = events.begin();
-                                    double cumsum = 0.0;
-                                    const auto idx1 = event.idx1;
-                                    if (event.nEducts == 1) {
-                                        data->markForDeactivation((size_t) idx1);
-                                        while (_it < events.end() - nDeactivated) {
-                                            if ((*_it).idx1 == idx1 || ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
-                                                nDeactivated++;
-                                                std::iter_swap(_it, events.end() - nDeactivated);
+                                    /**
+                                     * deactivate events whose educts have disappeared (including the just handled one)
+                                     */
+                                    {
+                                        auto _it = events.begin();
+                                        double cumsum = 0.0;
+                                        const auto idx1 = event.idx1;
+                                        if (event.nEducts == 1) {
+                                            data->markForDeactivation((size_t) idx1);
+                                            while (_it < events.end() - nDeactivated) {
+                                                if ((*_it).idx1 == idx1 ||
+                                                    ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
+                                                    nDeactivated++;
+                                                    std::iter_swap(_it, events.end() - nDeactivated);
+                                                }
+                                                cumsum += (*_it).reactionRate;
+                                                (*_it).cumulativeRate = cumsum;
+                                                ++_it;
                                             }
-                                            cumsum += (*_it).reactionRate;
-                                            (*_it).cumulativeRate = cumsum;
-                                            ++_it;
-                                        }
-                                    } else {
-                                        const auto idx2 = event.idx2;
-                                        data->markForDeactivation((size_t) event.idx1);
-                                        data->markForDeactivation((size_t) event.idx2);
-                                        while (_it < events.end() - nDeactivated) {
-                                            if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2
-                                                ||
-                                                ((*_it).nEducts == 2 && ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
-                                                nDeactivated++;
-                                                std::iter_swap(_it, events.end() - nDeactivated);
+                                        } else {
+                                            const auto idx2 = event.idx2;
+                                            data->markForDeactivation((size_t) event.idx1);
+                                            data->markForDeactivation((size_t) event.idx2);
+                                            while (_it < events.end() - nDeactivated) {
+                                                if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2
+                                                    ||
+                                                    ((*_it).nEducts == 2 &&
+                                                     ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
+                                                    nDeactivated++;
+                                                    std::iter_swap(_it, events.end() - nDeactivated);
+                                                }
+                                                cumsum += (*_it).reactionRate;
+                                                (*_it).cumulativeRate = cumsum;
+                                                ++_it;
                                             }
-                                            cumsum += (*_it).reactionRate;
-                                            (*_it).cumulativeRate = cumsum;
-                                            ++_it;
                                         }
-                                    }
 
+                                    }
+                                } else {
+                                    nDeactivated++;
+                                    std::iter_swap(eventIt, events.end() - nDeactivated);
+                                    (*eventIt).cumulativeRate = (*eventIt).reactionRate;
+                                    if(eventIt > events.begin()) {
+                                        (*eventIt).cumulativeRate += (*(eventIt-1)).cumulativeRate;
+                                    }
+                                    auto cumsum = (*eventIt).cumulativeRate;
+                                    for(auto _it = eventIt+1; _it < events.end() - nDeactivated; ++_it) {
+                                        cumsum += (*_it).reactionRate;
+                                        (*_it).cumulativeRate = cumsum;
+                                    }
                                 }
                             }
                         }
