@@ -8,7 +8,6 @@
  */
 
 #include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
-#include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/cpu/programs/Reactions.h>
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
 #include <readdy/kernel/cpu/programs/UpdateNeighborList.h>
@@ -32,6 +31,9 @@ namespace readdy {
                     };
                     factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
                         return new CalculateForces(kernel);
+                    };
+                    factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
+                        return new reactions::Gillespie(kernel);
                     };
                 }
             }

@@ -37,6 +37,51 @@ namespace readdy {
                         std::unordered_map<boost::uuids::uuid, reaction_21, boost::hash<boost::uuids::uuid>> mapping_21{};
                         std::unordered_map<boost::uuids::uuid, reaction_22, boost::hash<boost::uuids::uuid>> mapping_22{};
                     };
+
+                    struct ReactionEvent {
+                        using index_type = std::size_t;
+                        unsigned int nEducts;
+                        index_type idx1, idx2;
+                        index_type reactionIdx;
+                        unsigned int t1, t2;
+                        double reactionRate;
+                        double cumulativeRate;
+
+                        ReactionEvent(unsigned int nEducts, index_type idx1, index_type idx2, double reactionRate,
+                                      double cumulativeRate, index_type reactionIdx, unsigned int t1, unsigned int t2);
+
+                    };
+
+                    class Gillespie : public readdy::model::programs::reactions::Gillespie {
+                        using _reaction_idx_t = ReactionEvent::index_type;
+                    public:
+
+                        Gillespie(SingleCPUKernel const *const kernel) : kernel(kernel) {};
+
+                        virtual void execute() override {
+                            const auto& ctx = kernel->getKernelContext();
+                            auto data = kernel->getKernelStateModel().getParticleData();
+                            const auto &dist = ctx.getDistSquaredFun();
+                            const auto &fixPos = ctx.getFixPositionFun();
+
+                            double alpha = 0.0;
+                            auto events = gatherEvents(alpha);
+                            auto newParticles = handleEvents(std::move(events), alpha);
+
+                            // reposition particles to respect the periodic b.c.
+                            std::for_each(newParticles.begin(), newParticles.end(),
+                                          [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
+
+                            // update data structure
+                            data->deactivateMarked();
+                            data->addParticles(newParticles);
+                        }
+
+                    protected:
+                        virtual std::vector<ReactionEvent> gatherEvents(double& alpha);
+                        virtual std::vector<readdy::model::Particle> handleEvents(std::vector<ReactionEvent> events, double alpha);
+                        SingleCPUKernel const *const kernel;
+                    };
                 }
             }
         }

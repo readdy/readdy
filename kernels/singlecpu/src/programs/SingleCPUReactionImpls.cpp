@@ -229,6 +229,186 @@ namespace readdy {
                     }
 
 
+                    ReactionEvent::ReactionEvent(unsigned int nEducts, index_type idx1, index_type idx2,
+                                                            double reactionRate, double cumulativeRate,
+                                                            index_type reactionIdx, unsigned int t1, unsigned int t2)
+                            : nEducts(nEducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
+                              cumulativeRate(cumulativeRate), reactionIdx(reactionIdx), t1(t1), t2(t2) {}
+
+
+                    std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<ReactionEvent> events, double alpha) {
+                        using _rdy_particle_t = readdy::model::Particle;
+                        std::vector<_rdy_particle_t> newParticles{};
+
+                        const auto& ctx = kernel->getKernelContext();
+                        auto rnd = readdy::model::RandomProvider();
+                        auto data = kernel->getKernelStateModel().getParticleData();
+                        const auto &dt = ctx.getTimeStep();
+                        /**
+                         * Handle gathered reaction events
+                         */
+                        {
+                            std::size_t nDeactivated = 0;
+                            const std::size_t nEvents = events.size();
+                            while (nDeactivated < nEvents) {
+                                alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
+                                const auto x = rnd.getUniform(0, alpha);
+                                const auto eventIt = std::lower_bound(
+                                        events.begin(), events.end() - nDeactivated, x,
+                                        [](const ReactionEvent &elem1, double elem2) {
+                                            return elem1.cumulativeRate < elem2;
+                                        }
+                                );
+                                const auto event = *eventIt;
+                                if (eventIt == events.end() - nDeactivated) {
+                                    throw std::runtime_error("this should not happen (event not found)");
+                                }
+                                if(rnd.getUniform() < event.reactionRate*dt) {
+                                    /**
+                                     * Perform reaction
+                                     */
+                                    {
+                                        const auto p1 = data->operator[](event.idx1);
+                                        _rdy_particle_t pOut1{}, pOut2{};
+                                        if (event.nEducts == 1) {
+                                            auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
+                                            if (reaction->getNProducts() == 1) {
+                                                reaction->perform(p1, p1, pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                            } else if (reaction->getNProducts() == 2) {
+                                                reaction->perform(p1, data->operator[](event.idx2), pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                                newParticles.push_back(pOut2);
+                                            }
+                                        } else {
+                                            auto reaction = ctx.getOrder2Reactions(event.t1,
+                                                                                   event.t2)[event.reactionIdx];
+                                            const auto p2 = data->operator[](event.idx2);
+                                            if (reaction->getNProducts() == 1) {
+                                                reaction->perform(p1, p2, pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                            } else if (reaction->getNProducts() == 2) {
+                                                reaction->perform(p1, p2, pOut1, pOut2);
+                                                newParticles.push_back(pOut1);
+                                                newParticles.push_back(pOut2);
+                                            }
+                                        }
+                                    }
+                                    /**
+                                     * deactivate events whose educts have disappeared (including the just handled one)
+                                     */
+                                    {
+                                        auto _it = events.begin();
+                                        double cumsum = 0.0;
+                                        const auto idx1 = event.idx1;
+                                        if (event.nEducts == 1) {
+                                            data->markForDeactivation((size_t) idx1);
+                                            while (_it < events.end() - nDeactivated) {
+                                                if ((*_it).idx1 == idx1 ||
+                                                    ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
+                                                    nDeactivated++;
+                                                    std::iter_swap(_it, events.end() - nDeactivated);
+                                                }
+                                                cumsum += (*_it).reactionRate;
+                                                (*_it).cumulativeRate = cumsum;
+                                                ++_it;
+                                            }
+                                        } else {
+                                            const auto idx2 = event.idx2;
+                                            data->markForDeactivation((size_t) event.idx1);
+                                            data->markForDeactivation((size_t) event.idx2);
+                                            while (_it < events.end() - nDeactivated) {
+                                                if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2
+                                                    ||
+                                                    ((*_it).nEducts == 2 &&
+                                                     ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
+                                                    nDeactivated++;
+                                                    std::iter_swap(_it, events.end() - nDeactivated);
+                                                }
+                                                cumsum += (*_it).reactionRate;
+                                                (*_it).cumulativeRate = cumsum;
+                                                ++_it;
+                                            }
+                                        }
+
+                                    }
+                                } else {
+                                    nDeactivated++;
+                                    std::iter_swap(eventIt, events.end() - nDeactivated);
+                                    (*eventIt).cumulativeRate = (*eventIt).reactionRate;
+                                    if(eventIt > events.begin()) {
+                                        (*eventIt).cumulativeRate += (*(eventIt-1)).cumulativeRate;
+                                    }
+                                    auto cumsum = (*eventIt).cumulativeRate;
+                                    for(auto _it = eventIt+1; _it < events.end() - nDeactivated; ++_it) {
+                                        cumsum += (*_it).reactionRate;
+                                        (*_it).cumulativeRate = cumsum;
+                                    }
+                                }
+                            }
+                        }
+                        return newParticles;
+                    }
+
+                    std::vector<ReactionEvent> Gillespie::gatherEvents(double &alpha)  {
+                        std::vector<ReactionEvent> events;
+                        const auto& ctx = kernel->getKernelContext();
+                        auto data = kernel->getKernelStateModel().getParticleData();
+                        const auto &dist = ctx.getDistSquaredFun();
+                        /**
+                        * Reactions with one educt
+                        */
+                        {
+                            auto it_type = data->begin_types();
+                            const auto end = data->end_types();
+                            while (it_type != end) {
+                                const auto &reactions = ctx.getOrder1Reactions(*it_type);
+                                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
+                                    const auto rate = (*it)->getRate();
+                                    if(rate > 0) {
+                                        alpha += rate;
+                                        events.push_back({1, (_reaction_idx_t) (end - it_type), 0, rate, alpha,
+                                                          (_reaction_idx_t) (it - reactions.begin()), *it_type, 0});
+                                    }
+                                }
+                                ++it_type;
+                            }
+                        }
+
+                        /**
+                         * Reactions with two educts
+                         */
+                        {
+                            const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
+                            auto typesBegin = data->begin_types();
+                            for (auto &&nl_it = neighborList->begin(); nl_it != neighborList->end(); ++nl_it) {
+                                const _reaction_idx_t idx1 = nl_it->idx1, idx2 = nl_it->idx2;
+                                const auto &reactions = ctx.getOrder2Reactions(
+                                        *(data->begin_types() + idx1), *(data->begin_types() + idx2)
+                                );
+
+                                const auto distSquared = dist(
+                                        *(data->begin_positions() + idx1), *(data->begin_positions() + idx2)
+                                );
+
+                                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
+                                    // if close enough
+                                    const auto reaction = *it;
+                                    if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
+                                        const auto rate = reaction->getRate();
+                                        if(rate > 0) {
+                                            alpha += rate;
+                                            events.push_back(
+                                                    {2, idx1, idx2, rate, alpha,
+                                                     (_reaction_idx_t) (it - reactions.begin()),
+                                                     *(typesBegin+idx1), *(typesBegin+idx2)});
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return events;
+                    }
                 }
             }
         }
