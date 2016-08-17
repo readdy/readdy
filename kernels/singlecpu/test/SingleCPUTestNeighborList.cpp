@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
+#include <readdy/testing/KernelContextMock.h>
 
 using namespace readdy::kernel::singlecpu::model;
 
@@ -29,9 +30,11 @@ TEST(NeighborList, Naive) {
     }
  }
 
-// todo @chrisfroe
 TEST(NeighborList, NotThatNaive) {
     // Check very small system that only fits one box with many particles
     // Periodic and not periodic
-
+    // Test that potentials are considered correctly w.r.t. cutoff via context mock
+    readdy::testing::KernelContextMock ctx;
+    readdy::testing::KernelContextMock const * const ctxPtr = &ctx;
+    NotThatNaiveSingleCPUNeighborList<std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>,readdy::testing::KernelContextMock> list(ctxPtr);
 }

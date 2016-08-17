@@ -153,6 +153,11 @@ namespace readdy {
 
             std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 
+            /**
+             * Get an unstructured list of all second order potentials. Useful in neighborlists, where maxcutoff is required.
+             */
+            const std::vector<potentials::PotentialOrder2*> getVectorAllOrder2Potentials() const;
+
             std::vector<unsigned int> getAllRegisteredParticleTypes() const;
             std::string getParticleName(unsigned int id) const;
 
