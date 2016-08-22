@@ -117,15 +117,10 @@ namespace readdy {
                     }
                 };
 
-                /**
-                 * The _context_t template parameter is necessary for testing/mocking. Since the context has only non-virtual
-                 * methods, conventionally mocking the context does not work. Instead the neighborlist must be able to accept also
-                 * a KernelContextMock class. This is achieved via templating.
-                 * See https://github.com/google/googletest/blob/master/googlemock/docs/CookBook.md#mocking-nonvirtual-methods
-                 */
-                template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>, typename _context_t=readdy::model::KernelContext>
+                template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
                 class NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<container> {
                     using super = readdy::kernel::singlecpu::model::SingleCPUNeighborListContainer<container>;
+                    using _context_t = readdy::model::KernelContext;
                 public:
                     NotThatNaiveSingleCPUNeighborList(const _context_t *const context) : ctx(context) {
                     }
@@ -177,8 +172,7 @@ namespace readdy {
                                 for (long i = 0; i < nBoxes[0]; ++i) {
                                     for (long j = 0; j < nBoxes[1]; ++j) {
                                         for (long k = 0; k < nBoxes[2]; ++k) {
-                                            boxes.push_back({i, j, k, k + j * nBoxes[2] +
-                                                                      i * nBoxes[2] * nBoxes[1]});
+                                            boxes.push_back({i, j, k, k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]});
                                         }
                                     }
                                 }
@@ -236,6 +230,20 @@ namespace readdy {
                         }
                     }
 
+                    Box *getBox(long i, long j, long k) {
+                        const auto &periodic = ctx->getPeriodicBoundary();
+                        if (periodic[0]) i = positive_modulo(i, nBoxes[0]);
+                        else if (i < 0 || i >= nBoxes[0]) return nullptr;
+                        if (periodic[1]) j = positive_modulo(j, nBoxes[1]);
+                        else if (j < 0 || j >= nBoxes[1]) return nullptr;
+                        if (periodic[2]) k = positive_modulo(k, nBoxes[2]);
+                        else if (k < 0 || k >= nBoxes[2]) return nullptr;
+                        return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
+                    }
+
+                    const std::vector<Box> &getBoxes() const {
+                        return boxes;
+                    }
 
                 protected:
                     std::vector<Box> boxes{};
@@ -247,16 +255,6 @@ namespace readdy {
                         return (i % n + n) % n;
                     }
 
-                    Box *getBox(long i, long j, long k) {
-                        const auto &periodic = ctx->getPeriodicBoundary();
-                        if (periodic[0]) i = positive_modulo(i, nBoxes[0]);
-                        else if (i < 0 || i >= nBoxes[0]) return nullptr;
-                        if (periodic[1]) j = positive_modulo(j, nBoxes[1]);
-                        else if (j < 0 || j >= nBoxes[1]) return nullptr;
-                        if (periodic[2]) k = positive_modulo(k, nBoxes[2]);
-                        else if (k < 0 || k >= nBoxes[2]) return nullptr;
-                        return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
-                    }
 
                     const _context_t *const ctx;
                 };

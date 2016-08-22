@@ -1,5 +1,7 @@
 /**
- * todo
+ * The context is part of the simulation model. It contains all time-independent parameters, e.g. the size
+ * and periodicity of the simulation box, definitions of particle species and the potentials
+ * and reactions affecting them.
  *
  * @file KernelContext.h
  * @brief Container class for time independent information of the KernelContext.
