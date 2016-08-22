@@ -124,6 +124,10 @@ namespace readdy {
                         fillBoxes(data);
                     }
 
+                    void clear() {
+                        boxes.clear();
+                    }
+
                     virtual void setupNeighboringBoxes(unsigned long i, unsigned long j, unsigned long k) {
                         auto me = getBox(i, j, k);
                         me->addNeighbor(getBox(i + 0, j + 0, k + 1));

@@ -174,6 +174,10 @@ namespace readdy {
                 return pimpl->neighborList.get();
             }
 
+            void CPUStateModel::clearNeighborList() {
+                pimpl->neighborList->clear();
+            }
+
 
             CPUStateModel::~CPUStateModel() = default;
 

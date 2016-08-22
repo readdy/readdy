@@ -37,6 +37,9 @@ namespace readdy {
                 readdy::kernel::singlecpu::model::SingleCPUParticleData *const getParticleData() const;
 
                 const model::NeighborList*const getNeighborList() const;
+
+                virtual void clearNeighborList() override;
+
             private:
                 struct Impl;
                 std::unique_ptr<Impl> pimpl;

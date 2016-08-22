@@ -80,6 +80,10 @@ namespace readdy {
                         }
                     }
 
+                    void clear() {
+                        boxes.clear();
+                    }
+
                     virtual void fillBoxes(const singlecpu::model::SingleCPUParticleData &data) {
                         const auto simBoxSize = ctx->getBoxSize();
                         if (maxCutoff > 0) {

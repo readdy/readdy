@@ -24,7 +24,15 @@ namespace readdy {
                     UpdateNeighborList(CPUKernel *kernel) : kernel(kernel){
                     }
                     virtual void execute() override {
-                        kernel->getKernelStateModel().updateNeighborList();
+                        switch(action) {
+                            case create:
+                                kernel->getKernelStateModel().updateNeighborList();
+                                break;
+                            case clear:
+                                kernel->getKernelStateModel().getNeighborList();
+                                break;
+                        }
+
                     }
 
                 private:

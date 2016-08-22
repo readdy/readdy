@@ -120,6 +120,10 @@ namespace readdy {
                 pimpl->neighborList.swap(ptr);
             }
 
+            void SingleCPUKernelStateModel::clearNeighborList() {
+                pimpl->neighborList->clear();
+            }
+
 
             SingleCPUKernelStateModel &SingleCPUKernelStateModel::operator=(SingleCPUKernelStateModel &&rhs) = default;
 

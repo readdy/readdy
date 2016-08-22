@@ -73,6 +73,9 @@ namespace readdy {
                 forces->execute();
                 pimpl->kernel->evaluateObservables(t + 1);
             }
+
+            neighborList->setAction(rmp::UpdateNeighborList::Action::clear);
+            neighborList->execute();
         }
     }
 
