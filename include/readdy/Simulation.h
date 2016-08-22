@@ -280,8 +280,8 @@ namespace readdy {
          * @param from the type of A
          * @param to1 the type of B
          * @param to2 the type of C
-         * @param productDistance the distance at which the products are placed
          * @param rate the rate at which this reaction is to be performed
+         * @param productDistance the distance at which the products are placed
          * @param weight1 the weight for particle B with respect to the product distance
          * @param weight2 the weight for particle C with respect to the product distance
          * @return a uuid with which this reaction can be removed again
@@ -289,7 +289,7 @@ namespace readdy {
          */
         const boost::uuids::uuid &registerFissionReaction(const std::string &name, const std::string &from,
                                                           const std::string &to1, const std::string &to2,
-                                                          const double productDistance, const double &rate,
+                                                          const double &rate, const double productDistance,
                                                           const double &weight1 = 0.5, const double &weight2 = 0.5);
 
         /**

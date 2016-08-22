@@ -210,8 +210,8 @@ const boost::uuids::uuid &Simulation::registerEnzymaticReaction(const std::strin
     return pimpl->kernel->getKernelContext().registerEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
 }
 
-const boost::uuids::uuid &Simulation::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance,
-                                                              const double &rate, const double &weight1, const double &weight2) {
+const boost::uuids::uuid &Simulation::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2,
+                                                              const double &rate, const double productDistance, const double &weight1, const double &weight2) {
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().registerFissionReaction(name, from, to1, to2, productDistance, rate, weight1, weight2);
 }

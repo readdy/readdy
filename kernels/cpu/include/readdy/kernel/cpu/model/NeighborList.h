@@ -108,7 +108,7 @@ namespace readdy {
                             }
 
 
-                            {/*
+                            {
                                 const auto size = boxes.size();
                                 const std::size_t grainSize = size / util::getNThreads();
 
@@ -137,9 +137,9 @@ namespace readdy {
                                     threads.push_back(util::ScopedThread(std::thread(worker, i*grainSize, (i+1)*grainSize)));
                                 }
                                 threads.push_back(util::ScopedThread(std::thread(worker, (util::getNThreads()-1)*grainSize, boxes.size())));
-                            */}
+                            }
 
-                            for (auto &&box : boxes) {
+                            /*for (auto &&box : boxes) {
                                 for (long i = 0; i < box.particleIndices.size(); ++i) {
                                     const auto pI = box.particleIndices[i];
                                     for (long j = 0; j < box.particleIndices.size(); ++j) {
@@ -152,7 +152,7 @@ namespace readdy {
                                         }
                                     }
                                 }
-                            }
+                            }*/
                         }
                     }
 

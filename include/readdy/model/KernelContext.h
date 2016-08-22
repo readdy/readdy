@@ -32,6 +32,14 @@ namespace readdy {
 
         class KernelContext {
         public:
+            
+            using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
+            using rdy_pot_1_registry = std::unordered_map<unsigned int, std::vector<rdy_pot_1*>>;
+            
+            using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
+            using rdy_pot_2_registry = std::unordered_map<readdy::util::ParticleTypePair, 
+                    std::vector<rdy_pot_2*>, readdy::util::ParticleTypePairHasher>;
+            
             double getKBT() const;
 
             void setKBT(double kBT);
@@ -80,42 +88,52 @@ namespace readdy {
 
             const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string &name) const;
 
-            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const std::string &type1, const std::string &type2) const;
+            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const std::string &type1,
+                                                                           const std::string &type2) const;
 
-            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const unsigned int &type1, const unsigned int &type2) const;
+            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const unsigned int &type1,
+                                                                           const unsigned int &type2) const;
 
-            const boost::uuids::uuid &registerConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double &rate);
+            const boost::uuids::uuid &registerConversionReaction(const std::string &name, const std::string &from,
+                                                                 const std::string &to, const double &rate);
 
-            const boost::uuids::uuid &registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double &rate,
-                                                                const double &eductDistance);
+            const boost::uuids::uuid &registerEnzymaticReaction(const std::string &name, const std::string &catalyst,
+                                                                const std::string &from, const std::string &to,
+                                                                const double &rate, const double &eductDistance);
 
-            const boost::uuids::uuid &registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1, const std::string &to2, const double productDistance,
-                                                              const double &rate, const double &weight1 = 0.5, const double &weight2 = 0.5);
+            const boost::uuids::uuid &registerFissionReaction(const std::string &name, const std::string &from,
+                                                              const std::string &to1, const std::string &to2,
+                                                              const double &rate, const double productDistance,
+                                                              const double &weight1 = 0.5, const double &weight2 = 0.5);
 
-            const boost::uuids::uuid &registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2, const std::string &to, const double &rate,
-                                                             const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5);
+            const boost::uuids::uuid &registerFusionReaction(const std::string &name, const std::string &from1,
+                                                             const std::string &from2, const std::string &to,
+                                                             const double &rate, const double &eductDistance,
+                                                             const double &weight1 = 0.5, const double &weight2 = 0.5);
 
-            const boost::uuids::uuid &registerDeathReaction(const std::string &name, const std::string &particleType, const double &rate);
+            const boost::uuids::uuid &registerDeathReaction(const std::string &name,
+                                                            const std::string &particleType, const double &rate);
 
             void deregisterPotential(const boost::uuids::uuid &potential);
 
-            const boost::uuids::uuid &registerOrder1Potential(potentials::PotentialOrder1 const *const potential, const std::string &type);
+            const boost::uuids::uuid &registerOrder1Potential(rdy_pot_1 const *const, const std::string&);
 
-            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const std::string &type) const;
+            std::vector<rdy_pot_1*> getOrder1Potentials(const std::string &type) const;
 
-            std::vector<potentials::PotentialOrder1*> getOrder1Potentials(const unsigned int type) const;
+            std::vector<rdy_pot_1*> getOrder1Potentials(const unsigned int type) const;
 
-            const std::unordered_map<unsigned int, std::vector<potentials::PotentialOrder1*>> getAllOrder1Potentials() const;
+            const rdy_pot_1_registry getAllOrder1Potentials() const;
 
             std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
 
-            const boost::uuids::uuid &registerOrder2Potential(potentials::PotentialOrder2 const *const potential, const std::string &type1, const std::string &type2);
+            const boost::uuids::uuid &registerOrder2Potential(rdy_pot_2 const *const potential,
+                                                              const std::string &type1, const std::string &type2);
 
-            const std::vector<potentials::PotentialOrder2*> &getOrder2Potentials(const std::string &type1, const std::string &type2) const;
+            const std::vector<rdy_pot_2*> &getOrder2Potentials(const std::string&, const std::string&) const;
 
-            const std::vector<potentials::PotentialOrder2*> &getOrder2Potentials(const unsigned int type1, const unsigned int type2) const;
+            const std::vector<rdy_pot_2*> &getOrder2Potentials(const unsigned int, const unsigned int) const;
 
-            const std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2*>, readdy::util::ParticleTypePairHasher> getAllOrder2Potentials() const;
+            const rdy_pot_2_registry getAllOrder2Potentials() const;
 
             std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 

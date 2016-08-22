@@ -64,7 +64,7 @@ class TwoParticlesMiniExample(object):
         self.simulation.register_potential_piecewise_weak_interaction("A", "B", force_constant, desired_dist, depth,
                                                                           no_interaction_dist)  # (force constant, desired dist, depth, no interaction dist)
         self.simulation.register_reaction_fusion("fusion", "A", "B", "C", 100., .3, .5, .5)
-        self.simulation.register_reaction_fission("fission", "C", "A", "B", .25, 100., .5, .5)
+        self.simulation.register_reaction_fission("fission", "C", "A", "B", 100., .25, .5, .5)
         self.simulation.register_potential_box("A", 100., Vec(-.75, -.75, -.75), Vec(1.5, 1.5, 1.5), False)
         self.simulation.register_potential_box("B", 100., Vec(-.75, -.75, -.75), Vec(1.5, 1.5, 1.5), False)
         self.simulation.register_potential_box("C", 100., Vec(-.75, -.75, -.75), Vec(1.5, 1.5, 1.5), False)

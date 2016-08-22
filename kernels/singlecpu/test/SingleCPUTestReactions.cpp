@@ -130,7 +130,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setDiffusionConstant("X", .25);
     kernel->getKernelContext().registerDeathReaction("X decay", "X", 1);
-    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .3, .5);
+    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .5, .3);
 
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();

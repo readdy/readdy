@@ -22,7 +22,7 @@ namespace {
         kernel->getKernelContext().setTimeStep(1);
         kernel->getKernelContext().setDiffusionConstant("X", .55);
         kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
-        kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .5, .00);
+        kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .00, .5);
 
         auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();

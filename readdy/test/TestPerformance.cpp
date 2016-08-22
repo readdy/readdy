@@ -52,7 +52,7 @@ namespace {
         }
 
         kernel.getKernelContext().registerFusionReaction("A+B->C", "A", "B", "C", .5, 2.0);
-        kernel.getKernelContext().registerFissionReaction("C->A+B", "C", "A", "B", 2.0, .5);
+        kernel.getKernelContext().registerFissionReaction("C->A+B", "C", "A", "B", .5, 2.0);
 
         auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();

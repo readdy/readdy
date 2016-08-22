@@ -342,7 +342,7 @@ namespace readdy {
         const boost::uuids::uuid &
         KernelContext::registerFissionReaction(const std::string &name, const std::string &from,
                                                const std::string &to1, const std::string &to2,
-                                               const double productDistance, const double &rate,
+                                               const double &rate, const double productDistance,
                                                const double &weight1, const double &weight2) {
             const auto &idFrom = pimpl->typeMapping[from];
             const auto &idTo1 = pimpl->typeMapping[to1];
