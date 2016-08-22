@@ -38,7 +38,7 @@ namespace readdy {
 
             CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()){
                 pimpl->reactionFactory = std::make_unique<reactions::CPUReactionFactory>(this);
-                pimpl->context = std::make_unique<readdy::model::KernelContext>(pimpl->reactionFactory.get());
+                pimpl->context = std::make_unique<readdy::model::KernelContext>();
                 pimpl->programFactory = std::make_unique<programs::CPUProgramFactory>(this);
                 pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get());
                 pimpl->potentialFactory = std::make_unique<potentials::CPUPotentialFactory>(this);

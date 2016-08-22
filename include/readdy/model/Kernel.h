@@ -31,6 +31,10 @@
 
 namespace readdy {
     namespace model {
+        namespace detail {
+            template<typename T, typename... Args> struct get_reaction_dispatcher;
+        }
+
         /**
          * Base class of kernels.
          * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
@@ -173,16 +177,59 @@ namespace readdy {
                 return getPotentialFactory().createPotentialAs<T>(name);
             }
 
+            template<typename T, typename... Args>
+            const boost::uuids::uuid& registerReaction(Args&&... args) {
+                return getKernelContext().registerReaction(detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
+            };
+
+            std::unique_ptr<reactions::Conversion> createConversionReaction(const std::string &name, const std::string &from, const std::string &to, const double rate) const;
+            std::unique_ptr<reactions::Enzymatic> createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from, const std::string &to, const double rate, const double eductDistance) const;
+            std::unique_ptr<reactions::Fission> createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
+                                           const std::string &to2, const double rate, const double productDistance,
+                                           const double weight1 = 0.5, const double weight2 = 0.5) const;
+            std::unique_ptr<reactions::Fusion> createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
+                                         const std::string &to, const double rate, const double eductDistance,
+                                         const double weight1 = 0.5, const double weight2 = 0.5) const;
+            std::unique_ptr<reactions::Decay> createDecayReaction(const std::string &name, const std::string &type, const double rate) const;
+
             virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const = 0;
 
             virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const = 0;
 
             virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const;
+
+            unsigned int getTypeId(const std::string&) const;
         protected:
             struct Impl;
             std::unique_ptr<Impl> pimpl;
         };
-
+        namespace detail {
+            template<typename... Args> struct get_reaction_dispatcher<readdy::model::reactions::Conversion, Args...> {
+                static std::unique_ptr<readdy::model::reactions::Conversion> impl(const readdy::model::Kernel*const self, Args&&... args) {
+                    return self->createConversionReaction(std::forward<Args>(args)...);
+                }
+            };
+            template<typename... Args> struct get_reaction_dispatcher<readdy::model::reactions::Enzymatic, Args...> {
+                static std::unique_ptr<readdy::model::reactions::Enzymatic> impl(const readdy::model::Kernel*const self, Args&&... args) {
+                    return self->createEnzymaticReaction(std::forward<Args>(args)...);
+                }
+            };
+            template<typename... Args> struct get_reaction_dispatcher<readdy::model::reactions::Fission, Args...> {
+                static std::unique_ptr<readdy::model::reactions::Fission> impl(const readdy::model::Kernel*const self, Args&&... args) {
+                    return self->createFissionReaction(std::forward<Args>(args)...);
+                }
+            };
+            template<typename... Args> struct get_reaction_dispatcher<readdy::model::reactions::Fusion, Args...> {
+                static std::unique_ptr<readdy::model::reactions::Fusion> impl(const readdy::model::Kernel*const self, Args&&... args) {
+                    return self->createFusionReaction(std::forward<Args>(args)...);
+                }
+            };
+            template<typename... Args> struct get_reaction_dispatcher<readdy::model::reactions::Decay, Args...> {
+                static std::unique_ptr<readdy::model::reactions::Decay> impl(const readdy::model::Kernel*const self, Args&&... args) {
+                    return self->createDecayReaction(std::forward<Args>(args)...);
+                }
+            };
+        }
 
     }
 }

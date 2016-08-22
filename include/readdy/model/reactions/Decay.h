@@ -16,10 +16,10 @@
 namespace readdy {
     namespace model {
         namespace reactions {
-            class Death : public Reaction<1> {
+            class Decay : public Reaction<1> {
 
             public:
-                Death(const std::string &name, unsigned int typeFrom, const double &rate) : Reaction(name, rate, 0, 0, 0) {
+                Decay(const std::string &name, unsigned int typeFrom, const double &rate) : Reaction(name, rate, 0, 0, 0) {
                     educts[0] = typeFrom;
                 }
 
@@ -29,6 +29,9 @@ namespace readdy {
 
                 virtual void perform(const Particle &p1_in, const Particle &p2_in, Particle &p1_out, Particle &p2_out) const override { };
 
+                virtual Decay *replicate() const override {
+                    return new Decay(*this);
+                }
             };
         }
     }

@@ -30,6 +30,10 @@ namespace readdy {
                         p1_out.setType(getTypeTo());
                         p1_out.setId(p1_in.getId());
                     }
+
+                    virtual Conversion *replicate() const override {
+                        return new Conversion(*this);
+                    }
                 };
 
                 struct Enzymatic : public readdy::model::reactions::Enzymatic {
@@ -58,14 +62,18 @@ namespace readdy {
                             p2_out.setPos(p1_in.getPos());
                         }
                     }
+
+                    virtual Enzymatic *replicate() const override {
+                        return new Enzymatic(*this);
+                    }
                 };
 
                 struct Fission : public readdy::model::reactions::Fission {
 
                     Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2,
-                            const double productDistance, const double &rate, const double &weight1,
+                            const double &rate, const double productDistance, const double &weight1,
                             const double &weight2) : readdy::model::reactions::Fission(name, from, to1, to2,
-                                                                                       productDistance, rate, weight1,
+                                                                                       rate, productDistance, weight1,
                                                                                        weight2) { }
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
@@ -80,8 +88,12 @@ namespace readdy {
                         p2_out.setPos(p1_in.getPos() - getWeight2() * getProductDistance() * n3);
                     }
 
+                    virtual Fission *replicate() const override {
+                        return new Fission(*this);
+                    }
+
                 protected:
-                    std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
+                    std::shared_ptr<readdy::model::RandomProvider> rand = std::make_shared<readdy::model::RandomProvider>();
 
                 };
 
@@ -101,6 +113,10 @@ namespace readdy {
                         } else {
                             p1_out.setPos(p2_in.getPos() + getWeight1() * (p1_in.getPos() - p2_in.getPos()));
                         }
+                    }
+
+                    virtual Fusion *replicate() const override {
+                        return new Fusion(*this);
                     }
 
 
@@ -130,11 +146,11 @@ namespace readdy {
 
                     virtual readdy::model::reactions::Fission *createFission(const std::string &name, unsigned int from,
                                                                              unsigned int to1, unsigned int to2,
-                                                                             const double productDistance,
                                                                              const double &rate,
+                                                                             const double productDistance,
                                                                              const double &weight1,
                                                                              const double &weight2) const override {
-                        return new Fission(name, from, to1, to2, productDistance, rate, weight1, weight2);
+                        return new Fission(name, from, to1, to2, rate, productDistance, weight1, weight2);
                     }
 
                     virtual readdy::model::reactions::Fusion *createFusion(const std::string &name, unsigned int from1,

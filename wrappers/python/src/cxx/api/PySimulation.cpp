@@ -145,7 +145,7 @@ BOOST_PYTHON_MODULE (api) {
             .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_internal_reference<>())
             .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_internal_reference<>())
             .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_internal_reference<>())
-            .def("register_reaction_decay", &sim::registerDeathReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_decay", &sim::registerDecayReaction, bpy::return_internal_reference<>())
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
             .def("run", &sim::run);

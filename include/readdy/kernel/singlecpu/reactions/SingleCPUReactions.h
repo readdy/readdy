@@ -22,42 +22,64 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace reactions {
-                class SingleCPUConversion : public readdy::model::reactions::Conversion {
+                class Conversion : public readdy::model::reactions::Conversion {
 
                 public:
-                    SingleCPUConversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double &rate) : Conversion(name, typeFrom, typeTo, rate) { }
+                    Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double &rate)
+                            : readdy::model::reactions::Conversion(name, typeFrom, typeTo, rate) {}
 
-                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in, readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override;
+                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
+                                         readdy::model::Particle &p1_out,
+                                         readdy::model::Particle &p2_out) const override;
+
+                    virtual Conversion *replicate() const override;
                 };
 
-                class SingleCPUEnzymatic : public readdy::model::reactions::Enzymatic {
+                class Enzymatic : public readdy::model::reactions::Enzymatic {
 
                 public:
-                    SingleCPUEnzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double &rate, const double &eductDistance)
-                            : Enzymatic(name, catalyst, from, to, rate, eductDistance) { }
+                    Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to,
+                              const double &rate, const double &eductDistance)
+                            : readdy::model::reactions::Enzymatic(name, catalyst, from, to, rate, eductDistance) {}
 
-                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in, readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override;
+                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
+                                         readdy::model::Particle &p1_out,
+                                         readdy::model::Particle &p2_out) const override;
+
+                    virtual Enzymatic *replicate() const override;
                 };
 
-                class SingleCPUFission : public readdy::model::reactions::Fission {
+                class Fission : public readdy::model::reactions::Fission {
 
                 public:
-                    SingleCPUFission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2, const double productDistance, const double &rate, const double& weight1, const double &weight2)
-                            : Fission(name, from, to1, to2, productDistance, rate, weight1, weight2) { }
+                    Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2,
+                            const double &rate, const double productDistance, const double &weight1 = .5,
+                            const double &weight2 = .5)
+                            : readdy::model::reactions::Fission(name, from, to1, to2, rate, productDistance, weight1, weight2) {}
 
-                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in, readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override;
+                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
+                                         readdy::model::Particle &p1_out,
+                                         readdy::model::Particle &p2_out) const override;
+
+                    virtual Fission *replicate() const override;
 
                 protected:
-                    std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
+                    std::shared_ptr<readdy::model::RandomProvider> rand = std::make_shared<readdy::model::RandomProvider>();
                 };
 
-                class SingleCPUFusion : public readdy::model::reactions::Fusion {
+                class Fusion : public readdy::model::reactions::Fusion {
 
                 public:
-                    SingleCPUFusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to, const double &rate, const double &eductDistance, const double &weight1 = 0.5, const double &weight2 = 0.5)
-                            : Fusion(name, from1, from2, to, rate, eductDistance, weight1, weight2) { }
+                    Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to,
+                           const double &rate, const double &eductDistance, const double &weight1 = 0.5,
+                           const double &weight2 = 0.5)
+                            : readdy::model::reactions::Fusion(name, from1, from2, to, rate, eductDistance, weight1, weight2) {}
 
-                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in, readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override;
+                    virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
+                                         readdy::model::Particle &p1_out,
+                                         readdy::model::Particle &p2_out) const override;
+
+                    virtual Fusion *replicate() const override;
 
                 };
 

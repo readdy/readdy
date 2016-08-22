@@ -21,8 +21,8 @@ namespace {
         kernel->getKernelContext().setBoxSize(10, 10, 10);
         kernel->getKernelContext().setTimeStep(1);
         kernel->getKernelContext().setDiffusionConstant("X", .55);
-        kernel->getKernelContext().registerDeathReaction("X decay", "X", .5);
-        kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .00, .5);
+        kernel->registerReaction<readdy::model::reactions::Decay>("X decay", "X", .5);
+        kernel->registerReaction<readdy::model::reactions::Fission>("X fission", "X", "X", "X", .00, .5);
 
         auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
@@ -37,6 +37,8 @@ namespace {
         std::vector<readdy::model::Particle> particlesToBeginWith {n_particles, {0,0,0,typeId}};
         BOOST_LOG_TRIVIAL(debug) << "n_particles="<<particlesToBeginWith.size();
         kernel->getKernelStateModel().addParticles(particlesToBeginWith);
+
+        kernel->getKernelContext().configure();
 
         neighborList->execute();
         for(size_t t = 0; t < 1000; t++) {

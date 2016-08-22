@@ -87,11 +87,11 @@ void exportModelClasses() {
             .def("get_dist_squared_fun", rpy::adapt_function(&getDistSquaredFunWrap))
             .def("get_particle_radius", +[](_rdy_ctx_t& self, std::string type) {return self.getParticleRadius(type);})
             .def("set_particle_radius", &_rdy_ctx_t::setParticleRadius)
-            .def("register_conversion_reaction", &_rdy_ctx_t::registerConversionReaction,  internal_ref<>())
-            .def("register_enzymatic_reaction", &_rdy_ctx_t::registerEnzymaticReaction,  internal_ref<>())
-            .def("register_fission_reaction", &_rdy_ctx_t::registerFissionReaction, internal_ref<>())
-            .def("register_fusion_reaction", &_rdy_ctx_t::registerFusionReaction, internal_ref<>())
-            .def("register_decay_reaction", &_rdy_ctx_t::registerDeathReaction, internal_ref<>())
+            .def("register_conversion_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Conversion& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);},  internal_ref<>())
+            .def("register_enzymatic_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Enzymatic& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);},  internal_ref<>())
+            .def("register_fission_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Fission& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);}, internal_ref<>())
+            .def("register_fusion_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Fusion& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);}, internal_ref<>())
+            .def("register_decay_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Decay& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);}, internal_ref<>())
             .def("register_potential_order_1",
                  +[](_rdy_ctx_t& self, _rdy_pot_1& pot, std::string type) -> const _rdy_uuid_t& {
                      return self.registerOrder1Potential(&pot, type);

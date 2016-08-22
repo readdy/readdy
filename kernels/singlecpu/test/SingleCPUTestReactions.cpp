@@ -19,7 +19,7 @@ TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;
     using conversion_t = readdy::model::reactions::Conversion;
-    using death_t = readdy::model::reactions::Death;
+    using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
@@ -62,7 +62,7 @@ TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     {
         double productDistance = .4;
         double weight1 = .3, weight2 = .7;
-        auto fission = kernel->getReactionFactory().createReaction<fission_t>("C->A+B", 2, 0, 1, productDistance, 1, weight1, weight2);
+        auto fission = kernel->getReactionFactory().createReaction<fission_t>("C->A+B", 2, 0, 1, 1, productDistance, weight1, weight2);
         particle_t p_C{0, 0, 0, 2};
         particle_t p_out1{50, 50, 50, 70};
         particle_t p_out2{50, 50, 50, 70};
@@ -123,14 +123,14 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;
     using conversion_t = readdy::model::reactions::Conversion;
-    using death_t = readdy::model::reactions::Death;
+    using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setDiffusionConstant("X", .25);
-    kernel->getKernelContext().registerDeathReaction("X decay", "X", 1);
-    kernel->getKernelContext().registerFissionReaction("X fission", "X", "X", "X", .5, .3);
+    kernel->registerReaction<death_t>("X decay", "X", 1);
+    kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
 
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
@@ -196,7 +196,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;
     using conversion_t = readdy::model::reactions::Conversion;
-    using death_t = readdy::model::reactions::Death;
+    using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
@@ -208,11 +208,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->getKernelContext().setDiffusionConstant("D", .25);
     kernel->getKernelContext().setDiffusionConstant("E", .25);
 
-    kernel->getKernelContext().registerDeathReaction("A decay", "A", 1);
-    kernel->getKernelContext().registerFusionReaction("B+C->E", "B", "C", "E", 1, 17);
-    kernel->getKernelContext().registerFusionReaction("B+D->A", "B", "D", "A", 1, 17);
-    kernel->getKernelContext().registerConversionReaction("E->A", "E", "A", 1);
-    kernel->getKernelContext().registerConversionReaction("C->D", "C", "D", 1);
+    kernel->registerReaction<death_t>("A decay", "A", 1);
+    kernel->registerReaction<fusion_t>("B+C->E", "B", "C", "E", 1, 17);
+    kernel->registerReaction<fusion_t>("B+D->A", "B", "D", "A", 1, 17);
+    kernel->registerReaction<conversion_t>("E->A", "E", "A", 1);
+    kernel->registerReaction<conversion_t>("C->D", "C", "D", 1);
 
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();

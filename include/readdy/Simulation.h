@@ -318,7 +318,7 @@ namespace readdy {
          * @return a uuid with which this reaction can be removed again
          * @todo implement removal of reactions
          */
-        const boost::uuids::uuid &registerDeathReaction(const std::string &name, const std::string &particleType,
+        const boost::uuids::uuid &registerDecayReaction(const std::string &name, const std::string &particleType,
                                                         const double &rate);
 
         virtual void run(const readdy::model::time_step_type steps, const double timeStep);
@@ -328,7 +328,6 @@ namespace readdy {
     private:
         struct Impl;
         std::unique_ptr<readdy::Simulation::Impl> pimpl;
-
         void ensureKernelSelected() const;
     };
 

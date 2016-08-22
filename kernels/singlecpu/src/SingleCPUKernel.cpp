@@ -28,7 +28,7 @@ namespace readdy {
                 pimpl->programs = std::make_unique<programs::SingleCPUProgramFactory>(this);
                 pimpl->potentials = std::make_unique<potentials::SingleCPUPotentialFactory>(this);
                 pimpl->reactions = std::make_unique<reactions::SingleCPUReactionFactory>(this);
-                pimpl->context = std::make_unique<readdy::model::KernelContext>(pimpl->reactions.get());
+                pimpl->context = std::make_unique<readdy::model::KernelContext>();
                 pimpl->model = std::make_unique<SingleCPUKernelStateModel>(pimpl->context.get());
                 pimpl->observables = std::make_unique<observables::SingleCPUObservableFactory>(this);
             }

@@ -21,7 +21,7 @@
 #include "Enzymatic.h"
 #include "Fission.h"
 #include "Fusion.h"
-#include "Death.h"
+#include "Decay.h"
 
 namespace readdy {
     namespace model {
@@ -47,9 +47,9 @@ namespace readdy {
                     return new Enzymatic(name, catalyst, from, to, rate, eductDistance);
                 };
                 virtual Fission* createFission(const std::string &name, unsigned int from, unsigned int to1,
-                                               unsigned int to2, const double productDistance, const double &rate,
+                                               unsigned int to2, const double &rate, const double productDistance,
                                                const double &weight1 = 0.5, const double &weight2 = 0.5) const {
-                    return new Fission(name, from, to1, to2, productDistance, rate, weight1, weight2);
+                    return new Fission(name, from, to1, to2, rate, productDistance, weight1, weight2);
                 };
                 virtual Fusion* createFusion(const std::string &name, unsigned int from1, unsigned int from2,
                                              unsigned int to, const double &rate, const double &eductDistance,
@@ -69,25 +69,25 @@ namespace readdy {
 
 
             template<typename... Args> struct ReactionFactory::get_dispatcher<Conversion, Args...> {
-                static Conversion *impl(const ReactionFactory * self, Args... args) {
+                static Conversion *impl(const ReactionFactory * self, Args&&... args) {
                     return self->createConversion(std::forward<Args>(args)...);
                 }
             };
 
             template<typename... Args> struct ReactionFactory::get_dispatcher<Enzymatic, Args...> {
-                static Enzymatic *impl(const ReactionFactory *self, Args... args) {
+                static Enzymatic *impl(const ReactionFactory *self, Args&&... args) {
                     return self->createEnzymatic(std::forward<Args>(args)...);
                 }
             };
 
             template<typename... Args> struct ReactionFactory::get_dispatcher<Fission, Args...> {
-                static Fission *impl(const ReactionFactory *self, Args... args) {
+                static Fission *impl(const ReactionFactory *self, Args&&... args) {
                     return self->createFission(std::forward<Args>(args)...);
                 }
             };
 
             template<typename... Args> struct ReactionFactory::get_dispatcher<Fusion, Args...> {
-                static Fusion *impl(const ReactionFactory *self, Args... args) {
+                static Fusion *impl(const ReactionFactory *self, Args&&... args) {
                     return self->createFusion(std::forward<Args>(args)...);
                 }
             };

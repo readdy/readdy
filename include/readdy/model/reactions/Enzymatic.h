@@ -38,6 +38,10 @@ namespace readdy {
                     return products[0];
                 }
 
+                virtual Enzymatic *replicate() const override {
+                    return new Enzymatic(*this);
+                }
+
             };
         }
     }

@@ -17,6 +17,12 @@ namespace {
         auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         kernel->getKernelContext().setDiffusionConstant("A", 1.0);
         kernel->getKernelContext().setDiffusionConstant("B", 2.0);
-        kernel->getKernelContext().registerConversionReaction("A to B", "A", "B", 0.55);
+        kernel->registerReaction<readdy::model::reactions::Conversion>("A to B", "A", "B", 0.55);
+
+        {
+            // sanity check of operator<< for reactions
+            const auto r = kernel->getReactionFactory().createReaction<readdy::model::reactions::Decay>("decay", 0, .1);
+            BOOST_LOG_TRIVIAL(debug) << "decay reaction: " << *r;
+        }
     }
 }
