@@ -21,8 +21,8 @@ namespace readdy {
 
             public:
                 Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to,
-                       const double &rate, const double &eductDistance, const double &weight1 = 0.5,
-                       const double &weight2 = 0.5) :
+                       const double rate, const double eductDistance, const double weight1 = 0.5,
+                       const double weight2 = 0.5) :
                         Reaction(name, rate, eductDistance, 0, 1), weight1(weight1), weight2(weight2) {
                     educts = {from1, from2};
                     products = {to};
@@ -36,24 +36,28 @@ namespace readdy {
                     }
                 }
 
-                const unsigned int &getFrom1() const {
+                const unsigned int getFrom1() const {
                     return educts[0];
                 }
 
-                const unsigned int &getFrom2() const {
+                const unsigned int getFrom2() const {
                     return educts[1];
                 }
 
-                const unsigned int &getTo() const {
+                const unsigned int getTo() const {
                     return products[0];
                 }
 
-                const double &getWeight1() const {
+                const double getWeight1() const {
                     return weight1;
                 }
 
-                const double &getWeight2() const {
+                const double getWeight2() const {
                     return weight2;
+                }
+
+                virtual Fusion *replicate() const override {
+                    return new Fusion(*this);
                 }
 
             protected:

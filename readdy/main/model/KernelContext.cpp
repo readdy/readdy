@@ -15,7 +15,7 @@ namespace readdy {
     namespace model {
         struct KernelContext::Impl {
             uint typeCounter;
-            std::unordered_map<std::string, uint> typeMapping;
+            std::unordered_map<std::string, unsigned int> typeMapping;
             double kBT = 1;
             std::array<double, 3> box_size{{1, 1, 1}};
             std::array<bool, 3> periodic_boundary{{true, true, true}};
@@ -27,14 +27,7 @@ namespace readdy {
             std::unordered_map<unsigned int, std::vector<std::unique_ptr<potentials::PotentialOrder1>>> internalPotentialO1Registry{};
             std::unordered_map<readdy::util::ParticleTypePair, std::vector<std::unique_ptr<potentials::PotentialOrder2>>, readdy::util::ParticleTypePairHasher> internalPotentialO2Registry{};
 
-            std::unordered_map<unsigned int, std::vector<reactions::Reaction<1> *>> reactionOneEductRegistry{};
-            std::unordered_map<readdy::util::ParticleTypePair, std::vector<reactions::Reaction<2> *>, readdy::util::ParticleTypePairHasher> reactionTwoEductsRegistry{};
-            std::unordered_map<unsigned int, std::vector<std::unique_ptr<reactions::Reaction<1>>>> internalReactionOneEductRegistry{};
-            std::unordered_map<readdy::util::ParticleTypePair, std::vector<std::unique_ptr<reactions::Reaction<2>>>, readdy::util::ParticleTypePairHasher> internalReactionTwoEductsRegistry{};
-
             double timeStep;
-
-            reactions::ReactionFactory const *reactionFactory;
 
             std::function<void(Vec3 &)> fixPositionFun = [](
                     Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, 1., 1., 1.); };
@@ -46,6 +39,11 @@ namespace readdy {
                 auto dv = diffFun(lhs, rhs);
                 return dv * dv;
             };
+
+            std::vector<reactions::Reaction<1> *> defaultReactionsO1 {};
+            std::vector<reactions::Reaction<2> *> defaultReactionsO2 {};
+            std::vector<potentials::PotentialOrder1 *> defaultPotentialsO1 {};
+            std::vector<potentials::PotentialOrder2 *> defaultPotentialsO2 {};
 
             void updateDistAndFixPositionFun() {
                 if (periodic_boundary[0]) {
@@ -155,9 +153,7 @@ namespace readdy {
             pimpl->updateDistAndFixPositionFun();
         }
 
-        KernelContext::KernelContext(reactions::ReactionFactory const *const reactionFactory) : pimpl(
-                std::make_unique<KernelContext::Impl>()) {
-            pimpl->reactionFactory = reactionFactory;
+        KernelContext::KernelContext() : pimpl(std::make_unique<KernelContext::Impl>()) {
         }
 
         std::array<double, 3> &KernelContext::getBoxSize() const {
@@ -196,7 +192,7 @@ namespace readdy {
             return getParticleRadius(pimpl->typeMapping[type]);
         }
 
-        double KernelContext::getParticleRadius(const unsigned int &type) const {
+        double KernelContext::getParticleRadius(const unsigned int type) const {
             if (pimpl->particleRadii.find(type) == pimpl->particleRadii.end()) {
                 BOOST_LOG_TRIVIAL(warning) << "No particle radius was set for the particle type id " << type
                                            << ", setting r=1";
@@ -244,7 +240,7 @@ namespace readdy {
 
         const std::vector<potentials::PotentialOrder2 *> &
         KernelContext::getOrder2Potentials(const unsigned int type1, const unsigned int type2) const {
-            return pimpl->potentialO2Registry[{type1, type2}];
+            return readdy::utils::collections::getOrDefault(pimpl->potentialO2Registry, {type1, type2}, pimpl->defaultPotentialsO2);
         }
 
         std::vector<std::tuple<unsigned int, unsigned int>>
@@ -276,7 +272,7 @@ namespace readdy {
         }
 
         std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(const unsigned int type) const {
-            return pimpl->potentialO1Registry[type];
+            return readdy::utils::collections::getOrDefault(pimpl->potentialO1Registry, type, pimpl->defaultPotentialsO1);
         }
 
         std::unordered_set<unsigned int> KernelContext::getAllOrder1RegisteredPotentialTypes() const {
@@ -305,87 +301,12 @@ namespace readdy {
             }
         }
 
-        const boost::uuids::uuid &
-        KernelContext::registerConversionReaction(const std::string &name, const std::string &from,
-                                                  const std::string &to, const double &rate) {
-            const auto &idFrom = pimpl->typeMapping[from];
-            const auto &idTo = pimpl->typeMapping[to];
-            if (pimpl->internalReactionOneEductRegistry.find(idFrom) == pimpl->internalReactionOneEductRegistry.end()) {
-                pimpl->internalReactionOneEductRegistry.emplace(idFrom,
-                                                                std::vector<std::unique_ptr<reactions::Reaction<1>>>());
-            }
-            pimpl->internalReactionOneEductRegistry[idFrom].push_back(
-                    pimpl->reactionFactory->createReaction<reactions::Conversion>(name, idFrom, idTo, rate)
-            );
-            return pimpl->internalReactionOneEductRegistry[idFrom].back()->getId();
-        }
-
-        const boost::uuids::uuid &
-        KernelContext::registerEnzymaticReaction(const std::string &name, const std::string &catalyst,
-                                                 const std::string &from, const std::string &to,
-                                                 const double &rate, const double &eductDistance) {
-            const auto &idFrom = pimpl->typeMapping[from];
-            const auto &idTo = pimpl->typeMapping[to];
-            const auto &idCat = pimpl->typeMapping[catalyst];
-            const readdy::util::ParticleTypePair pp{idFrom, idCat};
-            if (pimpl->internalReactionTwoEductsRegistry.find(pp) == pimpl->internalReactionTwoEductsRegistry.end()) {
-                pimpl->internalReactionTwoEductsRegistry.emplace(pp,
-                                                                 std::vector<std::unique_ptr<reactions::Reaction<2>>>());
-            }
-            pimpl->internalReactionTwoEductsRegistry[pp].push_back(
-                    pimpl->reactionFactory->createReaction<reactions::Enzymatic>(name, idCat, idFrom, idTo, rate,
-                                                                                 eductDistance)
-            );
-            return pimpl->internalReactionTwoEductsRegistry[pp].back()->getId();
-        }
-
-        const boost::uuids::uuid &
-        KernelContext::registerFissionReaction(const std::string &name, const std::string &from,
-                                               const std::string &to1, const std::string &to2,
-                                               const double productDistance, const double &rate,
-                                               const double &weight1, const double &weight2) {
-            const auto &idFrom = pimpl->typeMapping[from];
-            const auto &idTo1 = pimpl->typeMapping[to1];
-            const auto &idTo2 = pimpl->typeMapping[to2];
-            if (pimpl->internalReactionOneEductRegistry.find(idFrom) == pimpl->internalReactionOneEductRegistry.end()) {
-                pimpl->internalReactionOneEductRegistry.emplace(idFrom,
-                                                                std::vector<std::unique_ptr<reactions::Reaction<1>>>());
-            }
-            pimpl->internalReactionOneEductRegistry[idFrom].push_back(
-                    pimpl->reactionFactory->createReaction<reactions::Fission>(
-                            name, idFrom, idTo1, idTo2, productDistance, rate, weight1, weight2
-                    )
-            );
-            return pimpl->internalReactionOneEductRegistry[idFrom].back()->getId();
-        }
-
-        const boost::uuids::uuid &
-        KernelContext::registerFusionReaction(const std::string &name, const std::string &from1,
-                                              const std::string &from2, const std::string &to,
-                                              const double &rate, const double &eductDistance,
-                                              const double &weight1, const double &weight2) {
-            const auto &idFrom1 = pimpl->typeMapping[from1];
-            const auto &idFrom2 = pimpl->typeMapping[from2];
-            const auto &idTo = pimpl->typeMapping[to];
-            const readdy::util::ParticleTypePair pp{idFrom1, idFrom2};
-            if (pimpl->internalReactionTwoEductsRegistry.find(pp) == pimpl->internalReactionTwoEductsRegistry.end()) {
-                pimpl->internalReactionTwoEductsRegistry.emplace(pp,
-                                                                 std::vector<std::unique_ptr<reactions::Reaction<2>>>());
-            }
-            pimpl->internalReactionTwoEductsRegistry[pp].push_back(
-                    pimpl->reactionFactory->createReaction<reactions::Fusion>(
-                            name, idFrom1, idFrom2, idTo, rate, eductDistance, weight1, weight2
-                    )
-            );
-            return pimpl->internalReactionTwoEductsRegistry[pp].back()->getId();
-        }
-
         const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const std::string &type) const {
             return getOrder1Reactions(pimpl->typeMapping[type]);
         }
 
-        const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const unsigned int &type) const {
-            return pimpl->reactionOneEductRegistry[type];
+        const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const unsigned int type) const {
+            return readdy::utils::collections::getOrDefault(*reactionOneEductRegistry, type, pimpl->defaultReactionsO1);
         }
 
         const std::vector<reactions::Reaction<2> *> &
@@ -394,13 +315,13 @@ namespace readdy {
         }
 
         const std::vector<reactions::Reaction<2> *> &
-        KernelContext::getOrder2Reactions(const unsigned int &type1, const unsigned int &type2) const {
-            return pimpl->reactionTwoEductsRegistry[{type1, type2}];
+        KernelContext::getOrder2Reactions(const unsigned int type1, const unsigned int type2) const {
+            return readdy::utils::collections::getOrDefault(*reactionTwoEductsRegistry, {type1, type2}, pimpl->defaultReactionsO2);
         }
 
         const std::vector<const reactions::Reaction<1> *> KernelContext::getAllOrder1Reactions() const {
             auto result = std::vector<const reactions::Reaction<1> *>();
-            for (const auto &mapEntry : pimpl->internalReactionOneEductRegistry) {
+            for (const auto &mapEntry : *internalReactionOneEductRegistry) {
                 for (const auto &reaction : mapEntry.second) {
                     result.push_back(reaction.get());
                 }
@@ -409,7 +330,7 @@ namespace readdy {
         }
 
         const reactions::Reaction<1> *const KernelContext::getReactionOrder1WithName(const std::string &name) const {
-            for (const auto &mapEntry : pimpl->internalReactionOneEductRegistry) {
+            for (const auto &mapEntry : *internalReactionOneEductRegistry) {
                 for (const auto &reaction : mapEntry.second) {
                     if (reaction->getName() == name) return reaction.get();
                 }
@@ -420,7 +341,7 @@ namespace readdy {
 
         const std::vector<const reactions::Reaction<2> *> KernelContext::getAllOrder2Reactions() const {
             auto result = std::vector<const reactions::Reaction<2> *>();
-            for (const auto &mapEntry : pimpl->internalReactionTwoEductsRegistry) {
+            for (const auto &mapEntry : *internalReactionTwoEductsRegistry) {
                 for (const auto &reaction : mapEntry.second) {
                     result.push_back(reaction.get());
                 }
@@ -429,7 +350,7 @@ namespace readdy {
         }
 
         const reactions::Reaction<2> *const KernelContext::getReactionOrder2WithName(const std::string &name) const {
-            for (const auto &mapEntry : pimpl->internalReactionTwoEductsRegistry) {
+            for (const auto &mapEntry : *internalReactionTwoEductsRegistry) {
                 for (const auto &reaction : mapEntry.second) {
                     if (reaction->getName() == name) return reaction.get();
                 }
@@ -449,25 +370,14 @@ namespace readdy {
             return pimpl->diffFun;
         }
 
-        const boost::uuids::uuid &KernelContext::registerDeathReaction(const std::string &name,
-                                                                       const std::string &particleType,
-                                                                       const double &rate) {
-            const auto &typeId = pimpl->typeMapping[particleType];
-            if (pimpl->internalReactionOneEductRegistry.find(typeId) == pimpl->internalReactionOneEductRegistry.end()) {
-                pimpl->internalReactionOneEductRegistry.emplace(typeId,
-                                                                std::vector<std::unique_ptr<reactions::Reaction<1>>>());
-            }
-            pimpl->internalReactionOneEductRegistry[typeId].push_back(
-                    pimpl->reactionFactory->createReaction<readdy::model::reactions::Death>(name, typeId, rate)
-            );
-            return pimpl->internalReactionOneEductRegistry[typeId].back()->getId();
-        }
-
         void KernelContext::configure() {
             pimpl->potentialO1Registry.clear();
             pimpl->potentialO2Registry.clear();
-            pimpl->reactionOneEductRegistry.clear();
-            pimpl->reactionTwoEductsRegistry.clear();
+            reactionOneEductRegistry->clear();
+            reactionTwoEductsRegistry->clear();
+            for(auto typeIt : pimpl->typeMapping) {
+
+            }
             for (auto &&e : pimpl->internalPotentialO1Registry) {
                 pimpl->potentialO1Registry[e.first] = std::vector<readdy::model::potentials::PotentialOrder1 *>();
                 pimpl->potentialO1Registry[e.first].reserve(e.second.size());
@@ -484,21 +394,21 @@ namespace readdy {
                     pimpl->potentialO2Registry[e.first].push_back(pot.get());
                 }
             }
-            for (auto &&e : pimpl->internalReactionOneEductRegistry) {
-                pimpl->reactionOneEductRegistry[e.first] = std::vector<reactions::Reaction<1> *>();
-                pimpl->reactionOneEductRegistry[e.first].reserve(e.second.size());
+            for (auto &&e : *internalReactionOneEductRegistry) {
+                (*reactionOneEductRegistry)[e.first] = std::vector<reactions::Reaction<1> *>();
+                (*reactionOneEductRegistry)[e.first].reserve(e.second.size());
                 std::for_each(e.second.begin(), e.second.end(),
                               [this, &e](const std::unique_ptr<reactions::Reaction<1>> &ptr) {
-                                  pimpl->reactionOneEductRegistry[e.first].push_back(ptr.get());
+                                  (*reactionOneEductRegistry)[e.first].push_back(ptr.get());
                               }
                 );
             }
-            for (auto &&e : pimpl->internalReactionTwoEductsRegistry) {
-                pimpl->reactionTwoEductsRegistry[e.first] = std::vector<reactions::Reaction<2> *>();
-                pimpl->reactionTwoEductsRegistry[e.first].reserve(e.second.size());
+            for (auto &&e : *internalReactionTwoEductsRegistry) {
+                (*reactionTwoEductsRegistry)[e.first] = std::vector<reactions::Reaction<2> *>();
+                (*reactionTwoEductsRegistry)[e.first].reserve(e.second.size());
                 std::for_each(e.second.begin(), e.second.end(),
                               [this, &e](const std::unique_ptr<reactions::Reaction<2>> &ptr) {
-                                  pimpl->reactionTwoEductsRegistry[e.first].push_back(ptr.get());
+                                  (*reactionTwoEductsRegistry)[e.first].push_back(ptr.get());
                               }
                 );
             }
@@ -527,6 +437,10 @@ namespace readdy {
         const std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher>
         KernelContext::getAllOrder2Potentials() const {
             return pimpl->potentialO2Registry;
+        }
+
+        const KernelContext::rdy_type_mapping &KernelContext::getTypeMapping() const {
+            return pimpl->typeMapping;
         }
 
         KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;

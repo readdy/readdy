@@ -26,7 +26,10 @@ namespace readdy {
             class Reaction {
 
             public:
-                Reaction(const std::string &name, const double &rate, const double &eductDistance, const double &productDistance, const unsigned int n_products) :
+                static constexpr unsigned int n_educts = N_EDUCTS;
+
+                Reaction(const std::string &name, const double rate, const double eductDistance,
+                         const double productDistance, const unsigned int n_products) :
                         name(name),
                         id(boost::uuids::random_generator()()),
                         rate(rate),
@@ -45,30 +48,55 @@ namespace readdy {
                     return id;
                 }
 
-                const double &getRate() const {
+                const double getRate() const {
                     return rate;
                 }
 
-                const unsigned int &getNEducts() const {
+                const unsigned int getNEducts() const {
                     return _n_educts;
                 }
 
-                const unsigned int &getNProducts() const {
+                const unsigned int getNProducts() const {
                     return _n_products;
                 }
 
-                const double &getEductDistance() const {
+                const double getEductDistance() const {
                     return eductDistance;
                 }
 
-                const double &getProductDistance() const {
+                const double getProductDistance() const {
                     return productDistance;
                 }
 
-                virtual void perform(const Particle &p1_in, const Particle &p2_in, Particle &p1_out, Particle &p2_out) const { };
+                virtual void perform(const Particle &p1_in, const Particle &p2_in,
+                                     Particle &p1_out, Particle &p2_out) const { };
 
-                /*template<unsigned int _N>
-                friend std::ostream &operator<<(std::ostream& os, const Reaction& reaction);*/
+                virtual Reaction<N_EDUCTS>* replicate() const = 0;
+
+                friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
+                    os << "Reaction(\"" << reaction.name << "\", N_Educts=" << reaction._n_educts << ", N_Products="
+                       << reaction._n_products << ", (";
+                    for (int i = 0; i < reaction._n_educts; i++) {
+                        if (i > 0) os << ",";
+                        os << reaction.educts[i];
+                    }
+                    os << ") -> (";
+                    for (int i = 0; i < reaction._n_products; i++) {
+                        if (i > 0) os << ",";
+                        os << reaction.products[i];
+                    }
+                    os << "), rate=" << reaction.rate << ", eductDist=" << reaction.eductDistance << ", prodDist="
+                       << reaction.productDistance << ")";
+                    return os;
+                }
+
+                const std::array<unsigned int, N_EDUCTS> &getEducts() const {
+                    return educts;
+                }
+
+                const std::array<unsigned int, 2> &getProducts() const {
+                    return products;
+                }
 
             protected:
                 const unsigned int _n_educts = N_EDUCTS;
@@ -81,22 +109,6 @@ namespace readdy {
                 const double eductDistance;
                 const double productDistance;
             };
-
-            /*template<unsigned int _N>
-            inline std::ostream& operator<<(std::ostream& os, const Reaction<_N>& reaction) {
-                os << "Reaction(\"" << reaction.name <<"\", N_Educts="<<_N<<", N_Products="<<reaction._n_products<<", (";
-                for(int i = 0; i < _N; i++) {
-                    if(i > 0) os << ",";
-                    os << reaction.educts[i];
-                }
-                os <<") -> (";
-                for(int i = 0; i < reaction._n_products; i++) {
-                    if(i > 0) os << ",";
-                    os << reaction.products[i];
-                }
-                os <<"), rate="<<reaction.rate<<", eductDist="<<reaction.eductDistance<<", prodDist="<<reaction.productDistance<<")";
-                return os;
-            }*/
 
         }
     }

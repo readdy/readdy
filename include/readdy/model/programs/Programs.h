@@ -52,7 +52,11 @@ namespace readdy {
 
             class UpdateNeighborList : public Program {
             public:
+                enum Action { create, clear };
                 UpdateNeighborList() : Program() {}
+                void setAction(Action action) { UpdateNeighborList::action = action; }
+            protected:
+                Action action = Action::create;
             };
 
             namespace reactions {

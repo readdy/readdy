@@ -86,7 +86,7 @@ namespace readdy {
             return {lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2]};
         }
 
-        Vec3 operator/(const Vec3 &lhs, const double &rhs) {
+        Vec3 operator/(const Vec3 &lhs, const double rhs) {
             return {lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs};
         }
 

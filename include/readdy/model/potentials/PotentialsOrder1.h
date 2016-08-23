@@ -24,7 +24,7 @@ namespace readdy {
 
                 virtual CubePotential *replicate() const override = 0;
 
-                virtual void configureForType(const unsigned int &type) override;
+                virtual void configureForType(const unsigned int type) override;
 
                 const Vec3 &getOrigin() const;
                 void setOrigin(const Vec3 &origin);

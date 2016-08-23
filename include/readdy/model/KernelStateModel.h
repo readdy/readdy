@@ -29,6 +29,7 @@ namespace readdy {
             virtual const std::vector<Particle> getParticles() const = 0;
 
             virtual void updateNeighborList() = 0;
+            virtual void clearNeighborList() = 0;
             virtual void calculateForces() = 0;
 
             virtual void addParticle(const Particle &p) = 0;

@@ -49,13 +49,13 @@ namespace {
     };
 
     TEST_F(TestKernelContext, SetGetKBT) {
-        m::KernelContext ctx {reactionFactory.get()};
+        m::KernelContext ctx;
         ctx.setKBT(42);
         EXPECT_EQ(42, ctx.getKBT());
     }
 
     TEST_F(TestKernelContext, PeriodicBoundary) {
-        m::KernelContext ctx {reactionFactory.get()};
+        m::KernelContext ctx;
         ctx.setPeriodicBoundary(true, false, true);
         auto boundary = ctx.getPeriodicBoundary();
         EXPECT_TRUE(boundary[0]);
@@ -64,7 +64,7 @@ namespace {
     }
 
     TEST_F(TestKernelContext, BoxSize) {
-        m::KernelContext ctx {reactionFactory.get()};
+        m::KernelContext ctx;
         ctx.setBoxSize(10, 11, 12);
         auto box_size = ctx.getBoxSize();
         EXPECT_EQ(box_size[0], 10);
@@ -73,7 +73,7 @@ namespace {
     }
 
     TEST_F(TestKernelContext, PotentialOrder2Map) {
-        m::KernelContext ctx {reactionFactory.get()};
+        m::KernelContext ctx;
         auto p1 = std::make_unique<NOOPPotential>();
         ctx.registerOrder2Potential(p1.get(), "a", "b");
         ctx.registerOrder2Potential(p1.get(), "b", "a");

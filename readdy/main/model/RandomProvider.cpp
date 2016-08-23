@@ -21,7 +21,7 @@ namespace readdy {
             std::unique_ptr<boost::random::uniform_01<>> uniform01 = std::make_unique<boost::random::uniform_01<>>();
         };
 
-        double RandomProvider::getNormal(const double &mean, const double &variance) {
+        double RandomProvider::getNormal(const double mean, const double variance) {
             if(mean == 0 && variance == 1) return (*pimpl->normal01)(*pimpl->gen);
             boost::random::normal_distribution<> n(mean, variance);
             return n(*pimpl->gen);
@@ -30,7 +30,7 @@ namespace readdy {
         RandomProvider::RandomProvider() : pimpl(std::make_unique<Impl>()) {
         }
 
-        Vec3 RandomProvider::getNormal3(const double &mean, const double &variance) {
+        Vec3 RandomProvider::getNormal3(const double mean, const double variance) {
             return {getNormal(mean, variance), getNormal(mean, variance), getNormal(mean, variance)};
         }
 

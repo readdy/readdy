@@ -96,9 +96,9 @@ class SchnakenbergSimulation(object):
         simulation.register_reaction_decay("2A -> 0", "2A", k3 * k3 * tau)
         simulation.register_reaction_fusion("A + A -> 2A", "A", "A", "2A", 1.0 / tau, reaction_radius, .5, .5)
         simulation.register_reaction_enzymatic("2A + B -> 2A + A", "2A", "B", "A", k_enzymatic, reaction_radius)
-        simulation.register_reaction_fission("GA -> GA + A", "GA", "GA", "A", reaction_radius, k2 * V / N_GA, .5, .5)
+        simulation.register_reaction_fission("GA -> GA + A", "GA", "GA", "A", k2 * V / N_GA, reaction_radius, .5, .5)
         simulation.register_reaction_decay("A -> 0", "A", k3)
-        simulation.register_reaction_fission("GB -> GB + B", "GB", "GB", "B", reaction_radius, k4 * V / N_GB, .5, .5)
+        simulation.register_reaction_fission("GB -> GB + B", "GB", "GB", "B", k4 * V / N_GB, reaction_radius, .5, .5)
 
         simulation.add_particle("A", Vec(0, 0, 0))
 

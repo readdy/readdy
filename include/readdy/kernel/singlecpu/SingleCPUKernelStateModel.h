@@ -27,6 +27,7 @@ namespace readdy {
 
 
                 virtual void updateNeighborList() override;
+                virtual void clearNeighborList() override;
                 virtual void calculateForces() override;
 
                 virtual void addParticle(const readdy::model::Particle &p) override;
