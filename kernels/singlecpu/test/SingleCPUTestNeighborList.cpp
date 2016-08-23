@@ -10,7 +10,6 @@
 #include <gtest/gtest.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
-#include <readdy/kernel/singlecpu/reactions/SingleCPUReactionFactory.h>
 #include <readdy/testing/NOOPPotential.h>
 
 namespace scpu = readdy::kernel::singlecpu;
@@ -36,11 +35,10 @@ TEST(NeighborList, Naive) {
 
 TEST(NeighborList, NotThatNaive) {
     scpu::SingleCPUKernel kernel;
-    scpu::reactions::SingleCPUReactionFactory reactionFactory(&kernel);
-    readdy::model::KernelContext ctx(&reactionFactory);
+    readdy::model::KernelContext &ctx = kernel.getKernelContext();
     ctx.setDiffusionConstant("A", 1.0);
     double eductDistance = 1.2;
-    ctx.registerFusionReaction("test", "A", "A", "A", 0., eductDistance);
+    ctx.registerReaction(kernel.createFusionReaction("test", "A", "A", "A", 0., eductDistance));
     readdy::testing::NOOPPotentialOrder2 pot(1.1, 0., 0.);
     ctx.registerOrder2Potential(&pot, "A", "A");
     const auto typeIdA = ctx.getParticleTypeID("A");

@@ -444,13 +444,14 @@ namespace readdy {
         }
 
         const std::vector<potentials::PotentialOrder2 *> KernelContext::getVectorAllOrder2Potentials() const {
-            std::vector<potentials::PotentialOrder2*> result;
+            std::vector<potentials::PotentialOrder2 *> result;
             for (auto &&e : getAllOrder2RegisteredPotentialTypes()) {
                 for (auto &&p : getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
                     result.push_back(p);
                 }
             }
             return result;
+        }
 
         KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 

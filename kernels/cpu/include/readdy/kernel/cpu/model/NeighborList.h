@@ -27,6 +27,19 @@ namespace readdy {
                     using container_t = std::unordered_map<unsigned long, std::vector<unsigned long>>;
                     NeighborList(const readdy::model::KernelContext *const context) : ctx(context) { }
 
+                    struct Box {
+                        std::vector<Box *> neighboringBoxes{};
+                        std::vector<unsigned long> particleIndices{};
+                        long i, j, k;
+                        long id = 0;
+
+                        Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
+                        }
+                        void addNeighbor(Box *box) {
+                            if (box && box->id != id) neighboringBoxes.push_back(box);
+                        }
+                    };
+
                     virtual void setupBoxes() {
                         const auto simBoxSize = ctx->getBoxSize();
                         if (boxes.empty()) {
@@ -167,21 +180,12 @@ namespace readdy {
 
                     std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
 
+                    const std::vector<Box> &getBoxes() const {
+                        return boxes;
+                    }
+
                 protected:
 
-
-                    struct Box {
-                        std::vector<Box *> neighboringBoxes{};
-                        std::vector<unsigned long> particleIndices{};
-                        long i, j, k;
-                        long id = 0;
-
-                        Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
-                        }
-                        void addNeighbor(Box *box) {
-                            if (box && box->id != id) neighboringBoxes.push_back(box);
-                        }
-                    };
                     std::vector<Box> boxes{};
                     std::array<int, 3> nBoxes{{0, 0, 0}};
                     readdy::model::Vec3 boxSize{0, 0, 0};
