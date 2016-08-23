@@ -21,7 +21,7 @@ namespace readdy {
 
                 struct Conversion : public readdy::model::reactions::Conversion {
 
-                    Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double &rate)
+                    Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double rate)
                             : readdy::model::reactions::Conversion(name, typeFrom, typeTo, rate) { }
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
@@ -39,7 +39,7 @@ namespace readdy {
                 struct Enzymatic : public readdy::model::reactions::Enzymatic {
 
                     Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to,
-                              const double &rate, const double &eductDistance) : readdy::model::reactions::Enzymatic(
+                              const double rate, const double eductDistance) : readdy::model::reactions::Enzymatic(
                             name, catalyst, from, to, rate, eductDistance) {
 
                     }
@@ -71,8 +71,8 @@ namespace readdy {
                 struct Fission : public readdy::model::reactions::Fission {
 
                     Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2,
-                            const double &rate, const double productDistance, const double &weight1,
-                            const double &weight2) : readdy::model::reactions::Fission(name, from, to1, to2,
+                            const double rate, const double productDistance, const double weight1,
+                            const double weight2) : readdy::model::reactions::Fission(name, from, to1, to2,
                                                                                        rate, productDistance, weight1,
                                                                                        weight2) { }
 
@@ -100,8 +100,8 @@ namespace readdy {
                 struct Fusion : public readdy::model::reactions::Fusion {
 
                     Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to,
-                           const double &rate, const double &eductDistance, const double &weight1,
-                           const double &weight2) : readdy::model::reactions::Fusion(name, from1, from2, to, rate,
+                           const double rate, const double eductDistance, const double weight1,
+                           const double weight2) : readdy::model::reactions::Fusion(name, from1, from2, to, rate,
                                                                                      eductDistance, weight1,
                                                                                      weight2) { }
 
@@ -132,33 +132,33 @@ namespace readdy {
                     virtual readdy::model::reactions::Conversion *createConversion(const std::string &name,
                                                                                    unsigned int from,
                                                                                    unsigned int to,
-                                                                                   const double &rate) const override {
+                                                                                   const double rate) const override {
                         return new Conversion(name, from, to, rate);
                     }
 
                     virtual readdy::model::reactions::Enzymatic *createEnzymatic(const std::string &name,
                                                                                  unsigned int catalyst,
                                                                                  unsigned int from, unsigned int to,
-                                                                                 const double &rate,
-                                                                                 const double &eductDistance) const override {
+                                                                                 const double rate,
+                                                                                 const double eductDistance) const override {
                         return new Enzymatic(name, catalyst, from, to, rate, eductDistance);
                     }
 
                     virtual readdy::model::reactions::Fission *createFission(const std::string &name, unsigned int from,
                                                                              unsigned int to1, unsigned int to2,
-                                                                             const double &rate,
+                                                                             const double rate,
                                                                              const double productDistance,
-                                                                             const double &weight1,
-                                                                             const double &weight2) const override {
+                                                                             const double weight1,
+                                                                             const double weight2) const override {
                         return new Fission(name, from, to1, to2, rate, productDistance, weight1, weight2);
                     }
 
                     virtual readdy::model::reactions::Fusion *createFusion(const std::string &name, unsigned int from1,
                                                                            unsigned int from2, unsigned int to,
-                                                                           const double &rate,
-                                                                           const double &eductDistance,
-                                                                           const double &weight1,
-                                                                           const double &weight2) const override {
+                                                                           const double rate,
+                                                                           const double eductDistance,
+                                                                           const double weight1,
+                                                                           const double weight2) const override {
                         return new Fusion(name, from1, from2, to, rate, eductDistance, weight1,
                                           weight2);
                     }

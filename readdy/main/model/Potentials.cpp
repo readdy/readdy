@@ -27,7 +27,7 @@ namespace readdy {
 
             CubePotential::CubePotential(const Kernel *const kernel) : PotentialOrder1(getPotentialName<CubePotential>()), kernel(kernel) { }
 
-            void CubePotential::configureForType(const unsigned int &type) {
+            void CubePotential::configureForType(const unsigned int type) {
                 particleRadius = kernel->getKernelContext().getParticleRadius(type);
                 for (auto i = 0; i < 3; i++) {
                     if (extent[i] > 0) {

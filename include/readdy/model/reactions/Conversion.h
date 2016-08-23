@@ -19,18 +19,18 @@ namespace readdy {
             class Conversion : public Reaction<1> {
 
             public:
-                Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double &rate) :
+                Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double rate) :
                         Reaction(name, rate, 0 ,0, 1)
                 {
                     educts = {typeFrom};
                     products = {typeTo};
                 }
 
-                const unsigned int& getTypeFrom() const {
+                const unsigned int getTypeFrom() const {
                     return educts[0];
                 }
 
-                const unsigned int& getTypeTo() const {
+                const unsigned int getTypeTo() const {
                     return products[0];
                 }
 

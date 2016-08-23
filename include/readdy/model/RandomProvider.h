@@ -22,9 +22,9 @@ namespace readdy {
             ~RandomProvider();
             RandomProvider(RandomProvider&& rhs);
             RandomProvider& operator=(RandomProvider&& rhs);
-            virtual double getNormal(const double &mean = 0.0, const double &variance = 1.0);
+            virtual double getNormal(const double mean = 0.0, const double variance = 1.0);
             virtual double getUniform(double a = 0.0, double b = 1.0);
-            virtual Vec3 getNormal3 (const double &mean = 0.0, const double &variance = 1.0);
+            virtual Vec3 getNormal3 (const double mean = 0.0, const double variance = 1.0);
         private:
             struct Impl;
             std::unique_ptr<Impl> pimpl;

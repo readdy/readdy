@@ -38,22 +38,22 @@ namespace readdy {
 
             protected:
                 virtual Conversion* createConversion(const std::string &name, unsigned int from, unsigned int to,
-                                                     const double& rate) const {
+                                                     const double rate) const {
                     return new Conversion(name, from, to, rate);
                 };
                 virtual Enzymatic* createEnzymatic(const std::string &name, unsigned int catalyst, unsigned int from,
-                                                   unsigned int to, const double &rate,
-                                                   const double &eductDistance) const {
+                                                   unsigned int to, const double rate,
+                                                   const double eductDistance) const {
                     return new Enzymatic(name, catalyst, from, to, rate, eductDistance);
                 };
                 virtual Fission* createFission(const std::string &name, unsigned int from, unsigned int to1,
-                                               unsigned int to2, const double &rate, const double productDistance,
-                                               const double &weight1 = 0.5, const double &weight2 = 0.5) const {
+                                               unsigned int to2, const double rate, const double productDistance,
+                                               const double weight1 = 0.5, const double weight2 = 0.5) const {
                     return new Fission(name, from, to1, to2, rate, productDistance, weight1, weight2);
                 };
                 virtual Fusion* createFusion(const std::string &name, unsigned int from1, unsigned int from2,
-                                             unsigned int to, const double &rate, const double &eductDistance,
-                                             const double &weight1 = 0.5, const double &weight2 = 0.5) const {
+                                             unsigned int to, const double rate, const double eductDistance,
+                                             const double weight1 = 0.5, const double weight2 = 0.5) const {
                     return new Fusion(name, from1, from2, to, rate, eductDistance, weight1, weight2);
                 };
 

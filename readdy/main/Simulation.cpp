@@ -213,7 +213,7 @@ namespace readdy {
 
     const boost::uuids::uuid &
     Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                                           const double &rate) {
+                                           const double rate) {
         ensureKernelSelected();
         namespace rmr = readdy::model::reactions;
         auto reaction = pimpl->kernel->createConversionReaction(name, from, to, rate);
@@ -222,8 +222,8 @@ namespace readdy {
 
     const boost::uuids::uuid &
     Simulation::registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                                          const std::string &to, const double &rate,
-                                          const double &eductDistance) {
+                                          const std::string &to, const double rate,
+                                          const double eductDistance) {
         ensureKernelSelected();
         namespace rmr = readdy::model::reactions;
         auto reaction = pimpl->kernel->createEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
@@ -233,8 +233,8 @@ namespace readdy {
     const boost::uuids::uuid &
     Simulation::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                                         const std::string &to2,
-                                        const double &rate, const double productDistance, const double &weight1,
-                                        const double &weight2) {
+                                        const double rate, const double productDistance, const double weight1,
+                                        const double weight2) {
         ensureKernelSelected();
         auto reaction = pimpl->kernel->createFissionReaction(name, from, to1, to2, rate, productDistance, weight1, weight2);
         return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
@@ -242,15 +242,15 @@ namespace readdy {
 
     const boost::uuids::uuid &
     Simulation::registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                                       const std::string &to, const double &rate,
-                                       const double &eductDistance, const double &weight1, const double &weight2) {
+                                       const std::string &to, const double rate,
+                                       const double eductDistance, const double weight1, const double weight2) {
         ensureKernelSelected();
         auto reaction = pimpl->kernel->createFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
         return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
     }
 
     const boost::uuids::uuid &
-    Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const double &rate) {
+    Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const double rate) {
         ensureKernelSelected();
         auto reaction = pimpl->kernel->createDecayReaction(name, particleType, rate);
         return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));

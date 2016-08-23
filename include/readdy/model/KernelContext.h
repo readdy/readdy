@@ -74,7 +74,7 @@ namespace readdy {
 
             double getParticleRadius(const std::string &type) const;
 
-            double getParticleRadius(const unsigned int &type) const;
+            double getParticleRadius(const unsigned int type) const;
 
             void setParticleRadius(const std::string &type, const double r);
 
@@ -88,7 +88,7 @@ namespace readdy {
 
             const std::vector<reactions::Reaction<1>*> &getOrder1Reactions(const std::string &type) const;
 
-            const std::vector<reactions::Reaction<1>*> &getOrder1Reactions(const unsigned int &type) const;
+            const std::vector<reactions::Reaction<1>*> &getOrder1Reactions(const unsigned int type) const;
 
             const std::vector<const reactions::Reaction<2> *> getAllOrder2Reactions() const;
 
@@ -97,8 +97,8 @@ namespace readdy {
             const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const std::string &type1,
                                                                            const std::string &type2) const;
 
-            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const unsigned int &type1,
-                                                                           const unsigned int &type2) const;
+            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const unsigned int type1,
+                                                                           const unsigned int type2) const;
 
             template<typename R, unsigned int N = R::n_educts>
             const boost::uuids::uuid &registerReaction(const R* const r, typename std::enable_if<std::is_base_of<reactions::Reaction<N>, R>::value>::type* = 0) {
@@ -107,7 +107,7 @@ namespace readdy {
 
             template<typename R>
             const boost::uuids::uuid &registerReaction(std::unique_ptr<R> r, typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type* = 0) {
-                BOOST_LOG_TRIVIAL(debug) << "registering reaction " << *r;
+                BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
                 const auto type = r->getEducts()[0];
                 if (internalReactionOneEductRegistry->find(type) == internalReactionOneEductRegistry->end()) {
                     internalReactionOneEductRegistry->emplace(type,std::vector<std::unique_ptr<reactions::Reaction<1>>>());
@@ -118,7 +118,7 @@ namespace readdy {
 
             template<typename R>
             const boost::uuids::uuid &registerReaction(std::unique_ptr<R> r, typename std::enable_if<std::is_base_of<reactions::Reaction<2>, R>::value>::type* = 0) {
-                BOOST_LOG_TRIVIAL(debug) << "registering reaction " << *r;
+                BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
                 const auto t1 = r->getEducts()[0];
                 const auto t2 = r->getEducts()[1];
 

@@ -43,7 +43,7 @@ namespace readdy {
 
             friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
 
-            friend Vec3 operator/(const Vec3& lhs, const double &rhs);
+            friend Vec3 operator/(const Vec3& lhs, const double rhs);
 
             friend bool operator>=(const Vec3 &lhs, const Vec3 &rhs);
             friend bool operator<=(const Vec3 &lhs, const Vec3 &rhs);
@@ -67,7 +67,7 @@ namespace readdy {
         }
 
         template<bool PX, bool PY, bool PZ>
-        inline void fixPosition(Vec3 &vec, const double &dx, const double &dy, const double &dz) {
+        inline void fixPosition(Vec3 &vec, const double dx, const double dy, const double dz) {
             if (PX) {
                 vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
             }
@@ -82,7 +82,7 @@ namespace readdy {
         void fixPosition(Vec3 &vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize);
 
         template<bool PX, bool PY, bool PZ>
-        inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const double &dx, const double &dy, const double &dz) {
+        inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const double dx, const double dy, const double dz) {
             auto dv = rhs - lhs;
             if (PX) {
                 if (dv[0] > dx * .5) dv[0] -= dx;
@@ -100,7 +100,7 @@ namespace readdy {
         };
 
         template<bool PX, bool PY, bool PZ>
-        inline double distSquared(const Vec3 &lhs, const Vec3 &rhs, const double &dx, const double &dy, const double &dz) {
+        inline double distSquared(const Vec3 &lhs, const Vec3 &rhs, const double dx, const double dy, const double dz) {
             auto dv = shortestDifference<PX, PY, PZ>(lhs, rhs, dx, dy, dz);
             return dv * dv;
         };

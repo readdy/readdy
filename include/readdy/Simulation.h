@@ -257,7 +257,7 @@ namespace readdy {
          * @todo implement removal of reactions
          */
         const boost::uuids::uuid &registerConversionReaction(const std::string &name, const std::string &from,
-                                                             const std::string &to, const double &rate);
+                                                             const std::string &to, const double rate);
 
         /**
          * Method to register an enzymatic reaction "A+C->B+C".
@@ -272,7 +272,7 @@ namespace readdy {
          */
         const boost::uuids::uuid &registerEnzymaticReaction(const std::string &name, const std::string &catalyst,
                                                             const std::string &from, const std::string &to,
-                                                            const double &rate, const double &eductDistance);
+                                                            const double rate, const double eductDistance);
 
         /**
          * Method to register a fission reaction "A->B+C".
@@ -289,8 +289,8 @@ namespace readdy {
          */
         const boost::uuids::uuid &registerFissionReaction(const std::string &name, const std::string &from,
                                                           const std::string &to1, const std::string &to2,
-                                                          const double &rate, const double productDistance,
-                                                          const double &weight1 = 0.5, const double &weight2 = 0.5);
+                                                          const double rate, const double productDistance,
+                                                          const double weight1 = 0.5, const double weight2 = 0.5);
 
         /**
          * Method to register a fusion reaction "A+B->C".
@@ -307,8 +307,8 @@ namespace readdy {
          */
         const boost::uuids::uuid &registerFusionReaction(const std::string &name, const std::string &from1,
                                                          const std::string &from2, const std::string &to,
-                                                         const double &rate, const double &eductDistance,
-                                                         const double &weight1 = 0.5, const double &weight2 = 0.5);
+                                                         const double rate, const double eductDistance,
+                                                         const double weight1 = 0.5, const double weight2 = 0.5);
 
         /**
          * Method to register a decay reaction.
@@ -319,7 +319,7 @@ namespace readdy {
          * @todo implement removal of reactions
          */
         const boost::uuids::uuid &registerDecayReaction(const std::string &name, const std::string &particleType,
-                                                        const double &rate);
+                                                        const double rate);
 
         virtual void run(const readdy::model::time_step_type steps, const double timeStep);
 

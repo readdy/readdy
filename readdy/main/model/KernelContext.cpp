@@ -192,7 +192,7 @@ namespace readdy {
             return getParticleRadius(pimpl->typeMapping[type]);
         }
 
-        double KernelContext::getParticleRadius(const unsigned int &type) const {
+        double KernelContext::getParticleRadius(const unsigned int type) const {
             if (pimpl->particleRadii.find(type) == pimpl->particleRadii.end()) {
                 BOOST_LOG_TRIVIAL(warning) << "No particle radius was set for the particle type id " << type
                                            << ", setting r=1";
@@ -305,7 +305,7 @@ namespace readdy {
             return getOrder1Reactions(pimpl->typeMapping[type]);
         }
 
-        const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const unsigned int &type) const {
+        const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const unsigned int type) const {
             return readdy::utils::collections::getOrDefault(*reactionOneEductRegistry, type, pimpl->defaultReactionsO1);
         }
 
@@ -315,7 +315,7 @@ namespace readdy {
         }
 
         const std::vector<reactions::Reaction<2> *> &
-        KernelContext::getOrder2Reactions(const unsigned int &type1, const unsigned int &type2) const {
+        KernelContext::getOrder2Reactions(const unsigned int type1, const unsigned int type2) const {
             return readdy::utils::collections::getOrDefault(*reactionTwoEductsRegistry, {type1, type2}, pimpl->defaultReactionsO2);
         }
 

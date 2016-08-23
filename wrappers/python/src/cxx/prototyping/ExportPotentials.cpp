@@ -44,7 +44,7 @@ struct PyPotentialO1 : public _rdy_pot1, bpy::wrapper<_rdy_pot1> {
         energy += calculateEnergy(position);
     }
 
-    virtual void configureForType(const unsigned int &type) override {
+    virtual void configureForType(const unsigned int type) override {
         this->get_override("configure_for_type")(type);
     }
 

@@ -26,7 +26,7 @@ namespace readdy {
                 virtual void calculateForce(Vec3 &force, const Vec3& position) const = 0;
                 virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3& position) const = 0;
 
-                virtual void configureForType(const unsigned int &type) {}
+                virtual void configureForType(const unsigned int type) {}
 
                 virtual double getRelevantLengthScale() const noexcept = 0;
 

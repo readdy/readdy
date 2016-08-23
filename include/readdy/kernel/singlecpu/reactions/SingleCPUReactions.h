@@ -25,7 +25,7 @@ namespace readdy {
                 class Conversion : public readdy::model::reactions::Conversion {
 
                 public:
-                    Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double &rate)
+                    Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double rate)
                             : readdy::model::reactions::Conversion(name, typeFrom, typeTo, rate) {}
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
@@ -39,7 +39,7 @@ namespace readdy {
 
                 public:
                     Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to,
-                              const double &rate, const double &eductDistance)
+                              const double rate, const double eductDistance)
                             : readdy::model::reactions::Enzymatic(name, catalyst, from, to, rate, eductDistance) {}
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
@@ -53,8 +53,8 @@ namespace readdy {
 
                 public:
                     Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2,
-                            const double &rate, const double productDistance, const double &weight1 = .5,
-                            const double &weight2 = .5)
+                            const double &rate, const double productDistance, const double weight1 = .5,
+                            const double weight2 = .5)
                             : readdy::model::reactions::Fission(name, from, to1, to2, rate, productDistance, weight1, weight2) {}
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
@@ -71,8 +71,8 @@ namespace readdy {
 
                 public:
                     Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to,
-                           const double &rate, const double &eductDistance, const double &weight1 = 0.5,
-                           const double &weight2 = 0.5)
+                           const double rate, const double eductDistance, const double weight1 = 0.5,
+                           const double weight2 = 0.5)
                             : readdy::model::reactions::Fusion(name, from1, from2, to, rate, eductDistance, weight1, weight2) {}
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,

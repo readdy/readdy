@@ -19,11 +19,11 @@ namespace readdy {
             class Decay : public Reaction<1> {
 
             public:
-                Decay(const std::string &name, unsigned int typeFrom, const double &rate) : Reaction(name, rate, 0, 0, 0) {
+                Decay(const std::string &name, unsigned int typeFrom, const double rate) : Reaction(name, rate, 0, 0, 0) {
                     educts[0] = typeFrom;
                 }
 
-                const unsigned int &getTypeFrom() const {
+                const unsigned int getTypeFrom() const {
                     return educts[0];
                 }
 
