@@ -28,3 +28,10 @@ boost::uuids::uuid Simulation::registerObservable(const std::function<void(typen
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return uuid;
 }
+
+
+template<typename SchemeType>
+readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool useDefaults) {
+    ensureKernelSelected();
+    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
+}
