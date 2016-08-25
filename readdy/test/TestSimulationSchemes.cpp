@@ -18,10 +18,10 @@ namespace {
     TEST(TestSchemes, Sanity) {
         auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
         api::SchemeConfigurator<api::ReaDDyScheme> c(kernel.get());
-        api::ReaDDyScheme scheme = c.evaluateObservables(false)
-                .includeForces()
+        c.evaluateObservables(false)
+                .includeForces(false)
                 .withIntegrator(kernel->createProgram<readdy::model::programs::EulerBDIntegrator>())
-                .configure();
+                .configure().run(10);
     }
 
     TEST(TestSchemes, SimulationObject) {

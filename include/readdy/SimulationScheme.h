@@ -91,8 +91,13 @@ namespace readdy {
                     return *this;
                 }
 
-                SchemeConfigurator &includeForces() {
-                    scheme.forces = scheme.kernel->template createProgram<readdy::model::programs::CalculateForces>();
+                SchemeConfigurator &includeForces(bool include) {
+                    if(include) {
+                        scheme.forces = scheme.kernel->template createProgram<readdy::model::programs::CalculateForces>();
+                    } else {
+                        scheme.forces = nullptr;
+                    }
+                    includeForcesSet = true;
                     return *this;
                 }
 
@@ -111,8 +116,8 @@ namespace readdy {
                         if (!evaluateObservablesSet) {
                             evaluateObservables(true);
                         }
-                        if (!scheme.forces) {
-                            includeForces();
+                        if (!scheme.forces && !includeForcesSet) {
+                            includeForces(true);
                         }
                     }
                     if (scheme.forces || scheme.reactionScheduler) {
@@ -129,6 +134,7 @@ namespace readdy {
             private:
                 const bool useDefaults;
                 bool evaluateObservablesSet = false;
+                bool includeForcesSet = false;
                 SchemeType scheme;
             };
         }
