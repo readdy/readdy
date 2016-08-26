@@ -180,6 +180,7 @@ namespace readdy {
             pimpl->timeStep = dt;
         }
 
+        // todo respect const correctness, dont create new entries, thx
         unsigned int KernelContext::getParticleTypeID(const std::string &name) const {
             return pimpl->typeMapping[name];
         }

@@ -152,8 +152,8 @@ namespace readdy {
                     }
 
                     virtual void setupBoxes() {
-                        const auto simBoxSize = ctx->getBoxSize();
                         if (boxes.empty()) {
+                            const auto simBoxSize = ctx->getBoxSize();
                             double maxCutoff = 0;
                             for (auto &&p : ctx->getVectorAllOrder2Potentials()) {
                                 maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
