@@ -80,18 +80,28 @@ namespace readdy {
                     return *this;
                 }
 
+                SchemeConfigurator &withIntegrator(const std::string& integratorName) {
+                    scheme.integrator = scheme.kernel->createProgram(integratorName);
+                    return *this;
+                }
+
                 SchemeConfigurator &withReactionScheduler(std::unique_ptr<model::programs::Program> reactionScheduler) {
                     scheme.reactionScheduler = std::move(reactionScheduler);
                     return *this;
                 }
 
-                SchemeConfigurator &evaluateObservables(bool evaluate) {
+                SchemeConfigurator &withReactionScheduler(const std::string& schedulerName) {
+                    scheme.reactionScheduler = scheme.kernel->createProgram(schedulerName);
+                    return*this;
+                }
+
+                SchemeConfigurator &evaluateObservables(bool evaluate = true) {
                     scheme.evaluateObservables = evaluate;
                     evaluateObservablesSet = true;
                     return *this;
                 }
 
-                SchemeConfigurator &includeForces(bool include) {
+                SchemeConfigurator &includeForces(bool include = true) {
                     if(include) {
                         scheme.forces = scheme.kernel->template createProgram<readdy::model::programs::CalculateForces>();
                     } else {
