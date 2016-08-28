@@ -109,20 +109,20 @@ namespace readdy {
 
             std::unique_ptr<SchemeType> configure() {
                 if (useDefaults) {
-                    if (!(*scheme).integrator) {
+                    if (scheme->integrator) {
                         scheme->integrator = scheme->kernel->template createProgram<readdy::model::programs::EulerBDIntegrator>();
                     }
-                    if (!(*scheme).reactionScheduler) {
+                    if (!scheme->reactionScheduler) {
                         scheme->reactionScheduler = scheme->kernel->template createProgram<readdy::model::programs::reactions::Gillespie>();
                     }
                     if (!evaluateObservablesSet) {
                         scheme->evaluateObservables = true;
                     }
-                    if (!(*scheme).forces && !includeForcesSet) {
+                    if (!scheme->forces && !includeForcesSet) {
                         scheme->forces = scheme->kernel->template createProgram<readdy::model::programs::CalculateForces>();
                     }
                 }
-                if ((*scheme).forces || (*scheme).reactionScheduler) {
+                if (scheme->forces || scheme->reactionScheduler) {
                     scheme->neighborList = scheme->kernel
                             ->template createProgram<readdy::model::programs::UpdateNeighborList>();
                 }
