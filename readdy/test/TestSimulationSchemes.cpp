@@ -21,7 +21,7 @@ namespace {
         c.evaluateObservables(false)
                 .includeForces(false)
                 .withIntegrator(kernel->createProgram<readdy::model::programs::EulerBDIntegrator>())
-                .configure().run(10);
+                .configure()->run(10);
     }
 
     TEST(TestSchemes, SimulationObject) {

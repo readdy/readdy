@@ -53,7 +53,7 @@ namespace readdy {
             }
         }
         pimpl->kernel->getKernelContext().setTimeStep(timeStep);
-        runScheme().configure().run(steps);
+        runScheme().configure()->run(steps);
     }
 
     void Simulation::setKernel(const std::string &kernel) {

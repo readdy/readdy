@@ -27,8 +27,7 @@ namespace readdy {
 
         protected:
             template<typename SchemeType>
-            friend
-            class SchemeConfigurator;
+            friend class SchemeConfigurator;
 
             model::Kernel *const kernel;
             std::unique_ptr<model::programs::Program> integrator = nullptr;
@@ -70,80 +69,77 @@ namespace readdy {
                           "SchemeType must inherit from readdy::api::SimulationScheme");
         public:
 
-            SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(SchemeType(kernel)),
+            SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<SchemeType>(kernel)),
                                                                                        useDefaults(useDefaults) {}
-
             SchemeConfigurator withIntegrator(std::unique_ptr<model::programs::Program> integrator) {
-                scheme.integrator = std::move(integrator);
+                scheme->integrator = std::move(integrator);
                 return std::move(*this);
             }
 
             SchemeConfigurator withIntegrator(const std::string &integratorName) {
-                scheme.integrator = scheme.kernel->createProgram(integratorName);
+                scheme->integrator = scheme->kernel->createProgram(integratorName);
                 return std::move(*this);
             }
 
             SchemeConfigurator withReactionScheduler(std::unique_ptr<model::programs::Program> reactionScheduler) {
-                scheme.reactionScheduler = std::move(reactionScheduler);
+                scheme->reactionScheduler = std::move(reactionScheduler);
                 return std::move(*this);
             }
 
             SchemeConfigurator withReactionScheduler(const std::string &schedulerName) {
-                scheme.reactionScheduler = scheme.kernel->createProgram(schedulerName);
+                scheme->reactionScheduler = scheme->kernel->createProgram(schedulerName);
                 return std::move(*this);
             }
 
             SchemeConfigurator evaluateObservables(bool evaluate = true) {
-                scheme.evaluateObservables = evaluate;
+                scheme->evaluateObservables = evaluate;
                 evaluateObservablesSet = true;
                 return std::move(*this);
             }
 
             SchemeConfigurator includeForces(bool include = true) {
                 if (include) {
-                    scheme.forces = scheme.kernel->template createProgram<readdy::model::programs::CalculateForces>();
+                    scheme->forces = scheme->kernel->template createProgram<readdy::model::programs::CalculateForces>();
                 } else {
-                    scheme.forces = nullptr;
+                    scheme->forces = nullptr;
                 }
                 includeForcesSet = true;
                 return std::move(*this);
             }
 
-            SchemeType configure() {
+            std::unique_ptr<SchemeType> configure() {
                 if (useDefaults) {
-                    if (!scheme.integrator) {
-                        withIntegrator(
-                                scheme.kernel->template createProgram<readdy::model::programs::EulerBDIntegrator>()
-                        );
+                    if (!(*scheme).integrator) {
+                        scheme->integrator = scheme->kernel->template createProgram<readdy::model::programs::EulerBDIntegrator>();
                     }
-                    if (!scheme.reactionScheduler) {
-                        withReactionScheduler(
-                                scheme.kernel->template createProgram<readdy::model::programs::reactions::Gillespie>()
-                        );
+                    if (!(*scheme).reactionScheduler) {
+                        scheme->reactionScheduler = scheme->kernel->template createProgram<readdy::model::programs::reactions::Gillespie>();
                     }
                     if (!evaluateObservablesSet) {
-                        evaluateObservables(true);
+                        scheme->evaluateObservables = true;
                     }
-                    if (!scheme.forces && !includeForcesSet) {
-                        includeForces(true);
+                    if (!(*scheme).forces && !includeForcesSet) {
+                        scheme->forces = scheme->kernel->template createProgram<readdy::model::programs::CalculateForces>();
                     }
                 }
-                if (scheme.forces || scheme.reactionScheduler) {
-                    scheme.neighborList = scheme.kernel
+                if ((*scheme).forces || (*scheme).reactionScheduler) {
+                    scheme->neighborList = scheme->kernel
                             ->template createProgram<readdy::model::programs::UpdateNeighborList>();
                 }
-                return std::move(scheme);
+                std::unique_ptr<SchemeType> ptr = std::move(scheme);
+                scheme = nullptr;
+                return ptr;
             }
 
             void configureAndRun(const model::time_step_type steps) {
-                configure().run(steps);
+                configure()->run(steps);
             }
 
         private:
             const bool useDefaults;
             bool evaluateObservablesSet = false;
             bool includeForcesSet = false;
-            SchemeType scheme;
+            std::unique_ptr<SchemeType> scheme = nullptr;
         };
     }
 }
