@@ -94,8 +94,20 @@ namespace readdy {
                 return *this;
             }
 
+            template<typename IntegratorType>
+            SchemeConfigurator& withIntegrator() {
+                scheme->integrator = scheme->kernel->template createProgram<IntegratorType>();
+                return *this;
+            }
+
             SchemeConfigurator& withIntegrator(const std::string &integratorName) {
                 scheme->integrator = scheme->kernel->createProgram(integratorName);
+                return *this;
+            }
+
+            template<typename ReactionSchedulerType>
+            SchemeConfigurator& withReactionScheduler() {
+                scheme->reactionScheduler = scheme->kernel->template createProgram<ReactionSchedulerType>();
                 return *this;
             }
 

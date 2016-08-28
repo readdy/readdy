@@ -30,6 +30,22 @@ namespace {
         sim.setTimeStep(.5);
         sim.setBoxSize(1, 1, 1);
         sim.runScheme().configureAndRun(5);
+
+        /**
+         * use ReaDDyScheme without defaults
+         */
+        sim.runScheme<readdy::api::ReaDDyScheme>(false)
+                .withIntegrator<readdy::model::programs::EulerBDIntegrator>()
+                .withReactionScheduler<readdy::model::programs::reactions::UncontrolledApproximation>()
+                .configureAndRun(100);
+
+        /**
+         * default: readdy scheme, use defaults = true
+         */
+        sim.runScheme()
+                .withIntegrator<readdy::model::programs::EulerBDIntegrator>()
+                .withReactionScheduler<readdy::model::programs::reactions::UncontrolledApproximation>()
+                .configureAndRun(100);
     }
 
 }
