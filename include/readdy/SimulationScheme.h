@@ -1,8 +1,26 @@
 /**
- * << detailed description >>
+ * Vital parts of the scheme api are defined in this header. First of all, there is the SimulationScheme. Its task is
+ * to execute an integrator(program), a force(program), a reaction scheduler(program) and a neighborList (program)
+ * in a certain way. One example would be the ReaDDyScheme, which will configure the context, then:
+ *
+ * - create neighbor list
+ * - calcualte forces
+ * - evaluate observables (0)
+ * - for i in range(steps):
+ *      - evaluate integrator
+ *      - update neighbor list
+ *      - calculate forces
+ *      - evaluate reactions
+ *      - update the neighbor list
+ *      - calcualte forces
+ *      - evaluate observables (i+1)
+ *  - clear neighbor list
+ *
+ *  The configurator makes use of the builder pattern and either sets default values or not, depending on
+ *  its constructor argument.
  *
  * @file SimulationScheme.h
- * @brief << brief description >>
+ * @brief Header file containing the SchemeConfigurator<T> and a corresponding SimulationScheme superclass definition.
  * @author clonker
  * @date 23.08.16
  */
