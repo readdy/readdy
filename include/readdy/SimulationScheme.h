@@ -71,40 +71,40 @@ namespace readdy {
 
             SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<SchemeType>(kernel)),
                                                                                        useDefaults(useDefaults) {}
-            SchemeConfigurator withIntegrator(std::unique_ptr<model::programs::Program> integrator) {
+            SchemeConfigurator& withIntegrator(std::unique_ptr<model::programs::Program> integrator) {
                 scheme->integrator = std::move(integrator);
-                return std::move(*this);
+                return *this;
             }
 
-            SchemeConfigurator withIntegrator(const std::string &integratorName) {
+            SchemeConfigurator& withIntegrator(const std::string &integratorName) {
                 scheme->integrator = scheme->kernel->createProgram(integratorName);
-                return std::move(*this);
+                return *this;
             }
 
-            SchemeConfigurator withReactionScheduler(std::unique_ptr<model::programs::Program> reactionScheduler) {
+            SchemeConfigurator& withReactionScheduler(std::unique_ptr<model::programs::Program> reactionScheduler) {
                 scheme->reactionScheduler = std::move(reactionScheduler);
-                return std::move(*this);
+                return *this;
             }
 
-            SchemeConfigurator withReactionScheduler(const std::string &schedulerName) {
+            SchemeConfigurator& withReactionScheduler(const std::string &schedulerName) {
                 scheme->reactionScheduler = scheme->kernel->createProgram(schedulerName);
-                return std::move(*this);
+                return *this;
             }
 
-            SchemeConfigurator evaluateObservables(bool evaluate = true) {
+            SchemeConfigurator& evaluateObservables(bool evaluate = true) {
                 scheme->evaluateObservables = evaluate;
                 evaluateObservablesSet = true;
-                return std::move(*this);
+                return *this;
             }
 
-            SchemeConfigurator includeForces(bool include = true) {
+            SchemeConfigurator& includeForces(bool include = true) {
                 if (include) {
                     scheme->forces = scheme->kernel->template createProgram<readdy::model::programs::CalculateForces>();
                 } else {
                     scheme->forces = nullptr;
                 }
                 includeForcesSet = true;
-                return std::move(*this);
+                return *this;
             }
 
             std::unique_ptr<SchemeType> configure() {

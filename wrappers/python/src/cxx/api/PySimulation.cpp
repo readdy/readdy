@@ -152,7 +152,7 @@ BOOST_PYTHON_MODULE (api) {
             .def("register_reaction_decay", &sim::registerDecayReaction, bpy::return_internal_reference<>())
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
-            .def("runReaDDyScheme", +[](sim& self, bool defaults) {
+            .def("run_scheme_readdy", +[](sim& self, bool defaults) {
                 return std::make_shared<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                         self.runScheme<readdy::api::ReaDDyScheme>(defaults)
                 );}
