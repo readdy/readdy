@@ -1,3 +1,5 @@
+os: Visual Studio 2015
+
 environment:
   global:
     CONDA_NPY: "110"
@@ -5,15 +7,9 @@ environment:
     BOOST_DOWNLOAD_CACHE_DIR: "C:\\boost_cache"
 
   matrix:
-    - MINICONDA_PYTHON: "C:\\Miniconda"
-      CONDA_PY: "27"
-
     - MINICONDA_PYTHON: "C:\\Miniconda-x64"
       CONDA_PY: "27"
       ARCH: "64"
-
-    - MINICONDA_PYTHON: "C:\\Miniconda3"
-      CONDA_PY: "35"
 
     - MINICONDA_PYTHON: "C:\\Miniconda3-x64"
       CONDA_PY: "34"
