@@ -53,30 +53,7 @@ namespace readdy {
             }
         }
         pimpl->kernel->getKernelContext().setTimeStep(timeStep);
-        {
-            auto &&integrator = pimpl->kernel->createProgram<rmp::EulerBDIntegrator>();
-            auto &&forces = pimpl->kernel->createProgram<rmp::CalculateForces>();
-            auto &&neighborList = pimpl->kernel->createProgram<rmp::UpdateNeighborList>();
-            auto &&reactionsProgram = pimpl->kernel->createProgram<rmp::reactions::UncontrolledApproximation>();
-            pimpl->kernel->getKernelContext().configure();
-
-            neighborList->execute();
-            forces->execute();
-            pimpl->kernel->evaluateObservables(0);
-            for (readdy::model::time_step_type &&t = 0; t < steps; ++t) {
-                integrator->execute();
-                neighborList->execute();
-                forces->execute();
-
-                reactionsProgram->execute();
-                neighborList->execute();
-                forces->execute();
-                pimpl->kernel->evaluateObservables(t + 1);
-            }
-
-            neighborList->setAction(rmp::UpdateNeighborList::Action::clear);
-            neighborList->execute();
-        }
+        runScheme().configure()->run(steps);
     }
 
     void Simulation::setKernel(const std::string &kernel) {
@@ -360,6 +337,15 @@ namespace readdy {
         tau /= (double) N;
         BOOST_LOG_TRIVIAL(debug) << "Estimated time step: " << tau;
         return tau;
+    }
+
+    void Simulation::setTimeStep(const double timeStep) {
+        ensureKernelSelected();
+        pimpl->kernel->getKernelContext().setTimeStep(timeStep);
+    }
+
+    readdy::model::Kernel *const Simulation::getSelectedKernel() const {
+        return pimpl->kernel.get();
     }
 
     NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};

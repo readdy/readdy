@@ -9,6 +9,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include "../PyPotential.h"
 #include "../PyFunction.h"
+#include "ExportSchemeApi.h"
 
 namespace bpy = boost::python;
 using sim = readdy::Simulation;
@@ -120,6 +121,9 @@ BOOST_PYTHON_MODULE (api) {
 
     bpy::docstring_options doc_options;
     doc_options.enable_all();
+
+    exportSchemeApi<readdy::api::ReaDDyScheme>("ReaDDyScheme");
+
     bpy::class_<sim, boost::noncopyable>("Simulation")
             .add_property("kbt", &sim::getKBT, &sim::setKBT)
             .add_property("periodic_boundary", &getPeriodicBoundarySimulationWrapper,
@@ -148,6 +152,11 @@ BOOST_PYTHON_MODULE (api) {
             .def("register_reaction_decay", &sim::registerDecayReaction, bpy::return_internal_reference<>())
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
+            .def("run_scheme_readdy", +[](sim& self, bool defaults) {
+                return std::make_shared<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
+                        self.runScheme<readdy::api::ReaDDyScheme>(defaults)
+                );}
+            )
             .def("run", &sim::run);
 
     bpy::class_<kp, boost::noncopyable>("KernelProvider", bpy::no_init)
@@ -161,5 +170,6 @@ BOOST_PYTHON_MODULE (api) {
 
     bpy::class_<kern, boost::noncopyable>("Kernel", bpy::no_init)
             .def("get_name", &kern::getName, bpy::return_internal_reference<>());
+
 
 }

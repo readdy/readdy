@@ -13,6 +13,7 @@
 #define READDY_SIMULATION_H
 
 #include <readdy/model/Kernel.h>
+#include <readdy/SimulationScheme.h>
 
 #if BOOST_OS_MACOS
 #include <array>
@@ -321,14 +322,20 @@ namespace readdy {
         const boost::uuids::uuid &registerDecayReaction(const std::string &name, const std::string &particleType,
                                                         const double rate);
 
+        void setTimeStep(const double);
+
         virtual void run(const readdy::model::time_step_type steps, const double timeStep);
 
         double getRecommendedTimeStep(unsigned int N) const;
+
+        template<typename SchemeType=readdy::api::ReaDDyScheme>
+        readdy::api::SchemeConfigurator<SchemeType> runScheme(bool useDefaults = true);
 
     private:
         struct Impl;
         std::unique_ptr<readdy::Simulation::Impl> pimpl;
         void ensureKernelSelected() const;
+        readdy::model::Kernel *const getSelectedKernel() const;
     };
 
     class NoKernelSelectedException : public std::runtime_error {
@@ -336,7 +343,7 @@ namespace readdy {
         NoKernelSelectedException(const std::string &__arg);
     };
 
-    #include <readdy/_internal/SimulationImpl.tpp>
+    #include "readdy/_internal/SimulationImpl.hpp"
 
 }
 

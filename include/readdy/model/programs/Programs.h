@@ -93,7 +93,7 @@ namespace readdy {
 
             template<typename T>
             const std::string getProgramName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type* = 0) {
-                return "Eulerian Brownian dynamics integrator";
+                return "EulerBDIntegrator";
             };
 
             template<typename T>
@@ -107,7 +107,7 @@ namespace readdy {
 
             template<typename T>
             const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type* = 0) {
-                return "Uncontrolled approximation of reactions";
+                return "UncontrolledApproximation";
             };
 
             template<typename T>
