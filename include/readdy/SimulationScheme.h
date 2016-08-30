@@ -139,7 +139,7 @@ namespace readdy {
 
             std::unique_ptr<SchemeType> configure() {
                 if (useDefaults) {
-                    if (scheme->integrator) {
+                    if (!scheme->integrator) {
                         scheme->integrator = scheme->kernel->template createProgram<readdy::model::programs::EulerBDIntegrator>();
                     }
                     if (!scheme->reactionScheduler) {
