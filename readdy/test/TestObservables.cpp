@@ -138,8 +138,6 @@ namespace {
             const auto& resC = obsC->getResult();
             m::Vec3 force0 = m::Vec3(0.,1.,0.);
             m::Vec3 force1 = m::Vec3(0.,-1.,0.);
-            std::cout << force0 << " == " << resC[0] << std::endl;
-            std::cout << force1 << " == " << resC[1] << std::endl;
             EXPECT_EQ(resC.size(), 2);
             EXPECT_TRUE(resC[0] == force0);
             EXPECT_TRUE(resC[1] == force1);

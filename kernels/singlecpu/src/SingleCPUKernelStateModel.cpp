@@ -78,6 +78,7 @@ namespace readdy {
             }
 
             void SingleCPUKernelStateModel::calculateForces() {
+                pimpl->currentEnergy = 0;
                 // update forces and energy order 1 potentials
                 {
                     const readdy::model::Vec3 zero{0, 0, 0};
@@ -122,6 +123,10 @@ namespace readdy {
 
             void SingleCPUKernelStateModel::clearNeighborList() {
                 pimpl->neighborList->clear();
+            }
+
+            void SingleCPUKernelStateModel::removeAllParticles() {
+                pimpl->particleData->clear();
             }
 
 

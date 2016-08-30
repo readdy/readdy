@@ -80,6 +80,10 @@ namespace readdy {
                     void addParticle(const readdy::model::Particle &particle);
                     void addParticles(const std::vector<readdy::model::Particle> &particles);
 
+                    /**
+                     * Remove a particle via its unique id.
+                     * @param particle the particle to be removed
+                     */
                     void removeParticle(const readdy::model::Particle &particle);
 
                     void removeParticle(const size_t index);

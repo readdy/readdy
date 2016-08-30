@@ -15,6 +15,9 @@
 #include <boost/log/trivial.hpp>
 #include <readdy/common/Utils.h>
 
+// use this to check floating point equality of readdy's Vec3 object
+#define EXPECT_VEC3_EQ(u, v) EXPECT_DOUBLE_EQ((u)[0], (v)[0]); EXPECT_DOUBLE_EQ((u)[1], (v)[1]); EXPECT_DOUBLE_EQ((u)[2], (v)[2])
+
 namespace readdy {
     namespace testing {
 

@@ -22,7 +22,7 @@ namespace readdy {
             };
 
             void CPUStateModel::calculateForces() {
-
+                pimpl->currentEnergy = 0;
                 // update forces and energy order 1 potentials
                 std::vector<double> energyUpdate;
                 energyUpdate.reserve(util::getNThreads());
@@ -51,9 +51,10 @@ namespace readdy {
                     };
 
                     const auto size = pimpl->particleData->size();
-                    const std::size_t grainSize = size / util::getNThreads();
+                    const std::size_t grainSize = (size >= util::getNThreads()) ? size / util::getNThreads() : 1;
+                    const std::size_t grainNumber = (size / grainSize) > 0 ? size / grainSize : 1;
                     auto it = pimpl->particleData->cbegin_types();
-                    for (auto i = 0; i < util::getNThreads() - 1; ++i) {
+                    for (auto i = 0; i < grainNumber - 1; ++i) {
                         energyUpdate.push_back(0);
                         threads.push_back(util::ScopedThread(
                                 std::thread(worker, it, it + grainSize, std::ref(energyUpdate.back()),
@@ -77,13 +78,13 @@ namespace readdy {
                     std::vector<util::ScopedThread> threads;
                     threads.reserve(util::getNThreads());
                     auto worker = [](nl_it_t begin, const unsigned long n, double& energy, data_t *data, pot2map pot2Map, dist_t dist) -> void {
-                        readdy::model::Vec3 forceVec{0, 0, 0};
 
                         auto it = begin;
                         for (unsigned long _i = 0; _i < n; ++_i) {
                             auto i = it->first;
 
                             for (auto &&j : it->second) {
+                                readdy::model::Vec3 forceVec{0, 0, 0};
                                 const auto type_i = *(data->cbegin_types() + i);
                                 const auto type_j = *(data->cbegin_types() + j);
                                 const auto &pos_i = *(data->cbegin_positions() + i);
@@ -103,10 +104,11 @@ namespace readdy {
                     };
 
                     const auto size = pimpl->neighborList->pairs->size();
-                    const std::size_t grainSize = size / util::getNThreads();
+                    const std::size_t grainSize = (size >= util::getNThreads()) ? size / util::getNThreads() : 1;
+                    const std::size_t grainNumber = (size / grainSize) > 0 ? size / grainSize : 1;
 
                     auto it = pimpl->neighborList->pairs->begin();
-                    for (auto i = 0; i < util::getNThreads() - 1; ++i) {
+                    for (auto i = 0; i < grainNumber - 1; ++i) {
                         threads.push_back(util::ScopedThread(std::thread(worker, it, grainSize, std::ref(energyUpdate[i]), pimpl->particleData.get(), pimpl->context->getAllOrder2Potentials(), pimpl->context->getShortestDifferenceFun())));
                         std::advance(it, grainSize);
                     }
@@ -176,6 +178,10 @@ namespace readdy {
 
             void CPUStateModel::clearNeighborList() {
                 pimpl->neighborList->clear();
+            }
+
+            void CPUStateModel::removeAllParticles() {
+                pimpl->particleData->clear();
             }
 
 

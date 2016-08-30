@@ -1,20 +1,21 @@
 /**
  * << detailed description >>
  *
- * @file SingleCPUTestKernelStateModel.cpp
- * @brief Test the methods that manipulate time-dependent simulation data for the SingleCPU kernel.
+ * @file CPUTestKernelStateModel.cpp
+ * @brief Test the methods that manipulate time-dependent simulation data for the CPU kernel.
  * @author chrisfroe
- * @date 25.08.16
+ * @date 30.08.16
  */
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
 #include <readdy/testing/Utils.h>
 
 namespace scpu = readdy::kernel::singlecpu;
-namespace scpum = scpu::model;
+namespace cpu = readdy::kernel::cpu;
+namespace cpum = cpu::model;
 namespace m = readdy::model;
 
 namespace {
@@ -22,9 +23,10 @@ namespace {
         // need context, setup particle types and potential
         // add particles, update neighborlist, calcforces and check!
         // Thus this depends on particleData, context and neighborlist functioning correct
-        scpu::SingleCPUKernel kernel;
+        cpu::CPUKernel kernel;
         m::KernelContext &ctx = kernel.getKernelContext();
-        scpu::SingleCPUKernelStateModel &stateModel = kernel.getKernelStateModel();
+        cpu::CPUStateModel &stateModel = kernel.getKernelStateModel();
+
         {
             // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
             ctx.setDiffusionConstant("A", 1.0);
@@ -103,11 +105,9 @@ namespace {
             ctx.configure();
             auto typeIdA = ctx.getParticleTypeID("A");
             auto typeIdB = ctx.getParticleTypeID("B");
-            /**
-             * There are 6 particles. 0-2 are A particles. 3-5 are B particles.
-             * The second B particle is a bit further away
-             * -> There are forces between all AB pairs except with the second B particle, namely particle 4
-             */
+            // There are 6 particles. 0-2 are A particles. 3-5 are B particles.
+            // The second B particle is a bit further away
+            // -> There are forces between all AB pairs except with the second B particle, namely particle 4
             auto particlesA = std::vector<m::Particle> {
                     m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0.8, 0, typeIdA), m::Particle(0.2, 0, -0.2, typeIdA)
             };
@@ -152,7 +152,5 @@ namespace {
             stateModel.removeAllParticles();
             stateModel.clearNeighborList();
         }
-
-        // todo check force calculation through periodic boundary
     }
 }
