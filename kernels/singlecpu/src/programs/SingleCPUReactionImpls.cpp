@@ -367,7 +367,7 @@ namespace readdy {
                                     const auto rate = (*it)->getRate();
                                     if(rate > 0) {
                                         alpha += rate;
-                                        events.push_back({1, (_reaction_idx_t) (end - it_type), 0, rate, alpha,
+                                        events.push_back({1, (_reaction_idx_t) (it_type - data->begin_types()), 0, rate, alpha,
                                                           (_reaction_idx_t) (it - reactions.begin()), *it_type, 0});
                                     }
                                 }

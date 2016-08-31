@@ -112,10 +112,8 @@ namespace readdy {
 
                         if (typesToCount.empty()) {
                             // get all particles' forces
-                            while (forcesIt != pd->cend_forces()) {
-                                result.push_back(*forcesIt);
-                                ++forcesIt;
-                            }
+                            result.reserve(pd->size());
+                            std::copy(forcesIt, pd->cend_forces(), std::back_inserter(result));
                         } else {
                             // only get forces of typesToCount
                             auto typesIt = pd->cbegin_types();

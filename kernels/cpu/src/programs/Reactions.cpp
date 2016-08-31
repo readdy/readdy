@@ -149,7 +149,7 @@ namespace readdy {
                     Gillespie::Gillespie(const CPUKernel *const kernel) : kernel(kernel) {}
 
                     std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEvents(double &alpha) {
-                        using _reaction_idx_t = singlecpu::programs::reactions::ReactionEvent::index_type;
+                        using index_t = singlecpu::programs::reactions::ReactionEvent::index_type;
                         std::vector<singlecpu::programs::reactions::ReactionEvent> events;
                         const auto& ctx = kernel->getKernelContext();
                         auto data = kernel->getKernelStateModel().getParticleData();
@@ -166,8 +166,8 @@ namespace readdy {
                                     const auto rate = (*it)->getRate();
                                     if(rate > 0) {
                                         alpha += rate;
-                                        events.push_back({1, (_reaction_idx_t) (end - it_type), 0, rate, alpha,
-                                                          (_reaction_idx_t) (it - reactions.begin()), *it_type, 0});
+                                        events.push_back({1, (index_t) (it_type - data->begin_types()), 0, rate, alpha,
+                                                          (index_t) (it - reactions.begin()), *it_type, 0});
                                     }
                                 }
                                 ++it_type;
@@ -181,7 +181,7 @@ namespace readdy {
                             const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
                             auto typesBegin = data->begin_types();
                             for (auto &&nl_it = neighborList->pairs->begin(); nl_it != neighborList->pairs->end(); ++nl_it) {
-                                const _reaction_idx_t idx1 = nl_it->first;
+                                const index_t idx1 = nl_it->first;
                                 auto neighbors = nl_it->second;
                                 for (const auto idx2 : neighbors) {
                                     if (idx1 > idx2) continue;
@@ -202,7 +202,7 @@ namespace readdy {
                                                 alpha += rate;
                                                 events.push_back(
                                                         {2, idx1, idx2, rate, alpha,
-                                                         (_reaction_idx_t) (it - reactions.begin()),
+                                                         (index_t) (it - reactions.begin()),
                                                          *(typesBegin + idx1), *(typesBegin + idx2)});
                                             }
                                         }

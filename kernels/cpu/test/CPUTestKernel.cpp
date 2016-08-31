@@ -21,6 +21,7 @@ namespace {
         kernel->getKernelContext().setBoxSize(10, 10, 10);
         kernel->getKernelContext().setTimeStep(1);
         kernel->getKernelContext().setDiffusionConstant("X", .55);
+        kernel->getKernelContext().setPeriodicBoundary(true, true, true);
         kernel->registerReaction<readdy::model::reactions::Decay>("X decay", "X", .5);
         kernel->registerReaction<readdy::model::reactions::Fission>("X fission", "X", "X", "X", .00, .5);
 
