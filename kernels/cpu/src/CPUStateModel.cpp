@@ -51,10 +51,10 @@ namespace readdy {
                     };
 
                     const auto size = pimpl->particleData->size();
-                    const std::size_t grainSize = (size >= util::getNThreads()) ? size / util::getNThreads() : 1;
-                    const std::size_t grainNumber = (size / grainSize) > 0 ? size / grainSize : 1;
+                    const std::size_t grainSize = size / util::getNThreads();
+
                     auto it = pimpl->particleData->cbegin_types();
-                    for (auto i = 0; i < grainNumber - 1; ++i) {
+                    for (auto i = 0; i < util::getNThreads() - 1; ++i) {
                         energyUpdate.push_back(0);
                         threads.push_back(util::ScopedThread(
                                 std::thread(worker, it, it + grainSize, std::ref(energyUpdate.back()),
@@ -104,11 +104,10 @@ namespace readdy {
                     };
 
                     const auto size = pimpl->neighborList->pairs->size();
-                    const std::size_t grainSize = (size >= util::getNThreads()) ? size / util::getNThreads() : 1;
-                    const std::size_t grainNumber = (size / grainSize) > 0 ? size / grainSize : 1;
+                    const std::size_t grainSize = size / util::getNThreads();
 
                     auto it = pimpl->neighborList->pairs->begin();
-                    for (auto i = 0; i < grainNumber - 1; ++i) {
+                    for (auto i = 0; i < util::getNThreads() - 1; ++i) {
                         threads.push_back(util::ScopedThread(std::thread(worker, it, grainSize, std::ref(energyUpdate[i]), pimpl->particleData.get(), pimpl->context->getAllOrder2Potentials(), pimpl->context->getShortestDifferenceFun())));
                         std::advance(it, grainSize);
                     }
