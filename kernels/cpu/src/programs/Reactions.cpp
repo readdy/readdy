@@ -221,7 +221,7 @@ namespace readdy {
                         const auto& ctx = kernel->getKernelContext();
                         auto rnd = readdy::model::RandomProvider();
                         auto data = kernel->getKernelStateModel().getParticleData();
-                        const auto &dt = ctx.getTimeStep();
+                        const auto dt = ctx.getTimeStep();
                         /**
                          * Handle gathered reaction events
                          */
