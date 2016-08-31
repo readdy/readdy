@@ -21,6 +21,7 @@ namespace {
         kernel->getKernelContext().setBoxSize(10, 10, 10);
         kernel->getKernelContext().setTimeStep(1);
         kernel->getKernelContext().setDiffusionConstant("X", .55);
+        kernel->getKernelContext().setPeriodicBoundary(true, true, true);
         kernel->registerReaction<readdy::model::reactions::Decay>("X decay", "X", .5);
         kernel->registerReaction<readdy::model::reactions::Fission>("X fission", "X", "X", "X", .00, .5);
 
@@ -32,7 +33,7 @@ namespace {
         auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
         auto connection = kernel->connectObservable(pp_obs.get());
 
-        const int n_particles = 2000;
+        const int n_particles = 500;
         const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
         std::vector<readdy::model::Particle> particlesToBeginWith {n_particles, {0,0,0,typeId}};
         BOOST_LOG_TRIVIAL(debug) << "n_particles="<<particlesToBeginWith.size();
@@ -41,7 +42,7 @@ namespace {
         kernel->getKernelContext().configure();
 
         neighborList->execute();
-        for(size_t t = 0; t < 1000; t++) {
+        for(size_t t = 0; t < 20; t++) {
 
             forces->execute();
             integrator->execute();

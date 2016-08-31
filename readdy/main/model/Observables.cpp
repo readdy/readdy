@@ -164,6 +164,13 @@ namespace readdy {
                                                    std::vector<unsigned int> typesToCount)
                 : Observable(kernel, stride), typesToCount(typesToCount) {
         }
+
+        ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
+                : ForcesObservable(kernel, stride, _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) { }
+
+        ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
+                : Observable(kernel, stride), typesToCount(typesToCount) { }
+
     }
 
 

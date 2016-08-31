@@ -65,6 +65,8 @@ namespace readdy {
                 return *pimpl->observableFactory;
             }
 
+            CPUKernel::~CPUKernel() = default;
+
 
         }
     }

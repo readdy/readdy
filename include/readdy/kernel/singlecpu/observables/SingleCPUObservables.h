@@ -19,6 +19,7 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace observables {
+                // todo can the preceeding "SingleCPU" be omitted, since its already in the namespace?
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class SingleCPUHistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
 
@@ -95,6 +96,43 @@ namespace readdy {
 
                 protected:
                     kernel_t *const singleCPUKernel;
+                };
+
+                template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
+                class ForcesObservable : public readdy::model::ForcesObservable {
+                public:
+                    ForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+                            readdy::model::ForcesObservable(kernel, stride, typesToCount),
+                            kernel(dynamic_cast<kernel_t*>(kernel)) { }
+
+                    virtual void evaluate() override {
+                        result.clear();
+                        const auto& pd = kernel->getKernelStateModel().getParticleData();
+                        auto forcesIt = pd->cbegin_forces();
+
+                        if (typesToCount.empty()) {
+                            // get all particles' forces
+                            result.reserve(pd->size());
+                            std::copy(forcesIt, pd->cend_forces(), std::back_inserter(result));
+                        } else {
+                            // only get forces of typesToCount
+                            auto typesIt = pd->cbegin_types();
+                            while (forcesIt != pd->cend_forces()) {
+                                for (auto countedParticleType : typesToCount) {
+                                    if (*typesIt == countedParticleType) {
+                                        result.push_back(*forcesIt);
+                                        break;
+                                    }
+                                }
+                                ++forcesIt;
+                                ++typesIt;
+                            }
+                        }
+                    }
+
+
+                protected:
+                    kernel_t* const kernel;
                 };
 
             }

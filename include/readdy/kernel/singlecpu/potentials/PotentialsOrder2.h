@@ -1,8 +1,8 @@
 /**
- * << detailed description >>
+ * SingleCPU declarations of potentials of second order (particle-particle interactions).
  *
- * @file PotentialsOrder2.h.h
- * @brief << brief description >>
+ * @file PotentialsOrder2.h
+ * @brief Declare potentials of second order.
  * @author clonker
  * @date 09.06.16
  */

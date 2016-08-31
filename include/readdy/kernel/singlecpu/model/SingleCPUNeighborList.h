@@ -21,11 +21,12 @@ namespace readdy {
             namespace model {
                 struct ParticleIndexPair {
                     size_t idx1, idx2;
-                    ParticleIndexPair(size_t idx1, size_t idx2){
-                        if(idx1 < idx2) {
+
+                    ParticleIndexPair(size_t idx1, size_t idx2) {
+                        if (idx1 < idx2) {
                             ParticleIndexPair::idx1 = idx1;
                             ParticleIndexPair::idx2 = idx2;
-                        } else if(idx1 > idx2){
+                        } else if (idx1 > idx2) {
                             ParticleIndexPair::idx1 = idx2;
                             ParticleIndexPair::idx2 = idx1;
                         } else {
@@ -44,8 +45,8 @@ namespace readdy {
                         return pip1.idx1 == pip2.idx1 && pip1.idx2 == pip2.idx2;
                     }
 
-                    friend std::ostream& operator<<(std::ostream& os, const ParticleIndexPair &pip) {
-                        os << "ParticleIndexPair(" << pip.idx1 << ", " << pip.idx2 <<")";
+                    friend std::ostream &operator<<(std::ostream &os, const ParticleIndexPair &pip) {
+                        os << "ParticleIndexPair(" << pip.idx1 << ", " << pip.idx2 << ")";
                         return os;
                     }
                 };
@@ -69,11 +70,12 @@ namespace readdy {
                     virtual const_iter_type cend() const { return pairs->cend(); };
 
                     virtual void create(const SingleCPUParticleData &data) = 0;
+
                 protected:
                     std::unique_ptr<container> pairs = std::make_unique<container>();
                 };
 
-                struct NaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<>{
+                struct NaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<> {
                     virtual void create(const SingleCPUParticleData &data) override;
 
                     // ctor and dtor
@@ -83,10 +85,12 @@ namespace readdy {
 
                     // move
                     NaiveSingleCPUNeighborList(NaiveSingleCPUNeighborList &&rhs);
+
                     NaiveSingleCPUNeighborList &operator=(NaiveSingleCPUNeighborList &&rhs);
 
                     // copy
                     NaiveSingleCPUNeighborList(const NaiveSingleCPUNeighborList &rhs) = delete;
+
                     NaiveSingleCPUNeighborList &operator=(const NaiveSingleCPUNeighborList &rhs) = delete;
 
                 };
@@ -99,15 +103,16 @@ namespace readdy {
 
                     Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
                     }
+
                     void addNeighbor(Box *box) {
                         if (box && box->id != id) neighboringBoxes.push_back(box);
                     }
 
-                    friend bool operator==(const Box& lhs, const Box& rhs) {
+                    friend bool operator==(const Box &lhs, const Box &rhs) {
                         return lhs.id == rhs.id;
                     }
 
-                    friend bool operator!=(const Box& lhs, const Box& rhs) {
+                    friend bool operator!=(const Box &lhs, const Box &rhs) {
                         return !(lhs == rhs);
                     }
                 };
@@ -115,8 +120,9 @@ namespace readdy {
                 template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
                 class NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<container> {
                     using super = readdy::kernel::singlecpu::model::SingleCPUNeighborListContainer<container>;
+                    using _context_t = readdy::model::KernelContext;
                 public:
-                    NotThatNaiveSingleCPUNeighborList(const readdy::model::KernelContext *const context) : ctx(context) {
+                    NotThatNaiveSingleCPUNeighborList(const _context_t *const context) : ctx(context) {
                     }
 
                     virtual void create(const SingleCPUParticleData &data) override {
@@ -146,13 +152,11 @@ namespace readdy {
                     }
 
                     virtual void setupBoxes() {
-                        const auto simBoxSize = ctx->getBoxSize();
                         if (boxes.empty()) {
+                            const auto simBoxSize = ctx->getBoxSize();
                             double maxCutoff = 0;
-                            for (auto &&e : ctx->getAllOrder2RegisteredPotentialTypes()) {
-                                for (auto &&p : ctx->getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
-                                    maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
-                                }
+                            for (auto &&p : ctx->getVectorAllOrder2Potentials()) {
+                                maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
                             }
                             for (auto &&e : ctx->getAllOrder2Reactions()) {
                                 maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
@@ -168,21 +172,21 @@ namespace readdy {
                                 for (long i = 0; i < nBoxes[0]; ++i) {
                                     for (long j = 0; j < nBoxes[1]; ++j) {
                                         for (long k = 0; k < nBoxes[2]; ++k) {
-                                            boxes.push_back({i, j, k, k + j * nBoxes[2] +
-                                                                      i * nBoxes[2] * nBoxes[1]});
+                                            boxes.push_back({i, j, k, k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]});
                                         }
                                     }
                                 }
                                 for (unsigned long i = 0; i < nBoxes[0]; ++i) {
                                     for (unsigned long j = 0; j < nBoxes[1]; ++j) {
                                         for (unsigned long k = 0; k < nBoxes[2]; ++k) {
-                                            setupNeighboringBoxes(i,j,k);
+                                            setupNeighboringBoxes(i, j, k);
                                         }
                                     }
                                 }
                             }
                         }
                     }
+
                     virtual void fillBoxes(const SingleCPUParticleData &data) {
                         const auto simBoxSize = ctx->getBoxSize();
                         if (maxCutoff > 0) {
@@ -226,16 +230,6 @@ namespace readdy {
                         }
                     }
 
-
-                protected:
-                    std::vector<Box> boxes{};
-                    std::array<int, 3> nBoxes{{0, 0, 0}};
-                    readdy::model::Vec3 boxSize{0, 0, 0};
-                    double maxCutoff = 0;
-
-                    long positive_modulo(long i, long n) const {
-                        return (i % n + n) % n;
-                    }
                     Box *getBox(long i, long j, long k) {
                         const auto &periodic = ctx->getPeriodicBoundary();
                         if (periodic[0]) i = positive_modulo(i, nBoxes[0]);
@@ -246,12 +240,28 @@ namespace readdy {
                         else if (k < 0 || k >= nBoxes[2]) return nullptr;
                         return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
                     }
-                    const readdy::model::KernelContext *const ctx;
+
+                    const std::vector<Box> &getBoxes() const {
+                        return boxes;
+                    }
+
+                protected:
+                    std::vector<Box> boxes{};
+                    std::array<int, 3> nBoxes{{0, 0, 0}};
+                    readdy::model::Vec3 boxSize{0, 0, 0};
+                    double maxCutoff = 0;
+
+                    long positive_modulo(long i, long n) const {
+                        return (i % n + n) % n;
+                    }
+
+
+                    const _context_t *const ctx;
                 };
 
                 struct SingleCPUNeighborList : public NotThatNaiveSingleCPUNeighborList<std::vector<ParticleIndexPair>> {
                     SingleCPUNeighborList(const readdy::model::KernelContext *const ctx)
-                             : NotThatNaiveSingleCPUNeighborList(ctx) { }
+                            : NotThatNaiveSingleCPUNeighborList(ctx) {}
                 };
 
             }

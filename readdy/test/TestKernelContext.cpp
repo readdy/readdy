@@ -17,6 +17,7 @@
 #include <readdy/model/potentials/PotentialsOrder2.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
+#include <readdy/testing/NOOPPotential.h>
 
 namespace m = readdy::model;
 
@@ -31,21 +32,6 @@ namespace {
 
     class TestKernelContextWithKernels : public KernelTest {
 
-    };
-
-    struct NOOPPotential : public m::potentials::PotentialOrder2 {
-        NOOPPotential() : PotentialOrder2("no op") { }
-
-        virtual double getCutoffRadius() const override {
-            return 0;
-        }
-
-
-        virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override {return 0;}
-        virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const override {}
-        virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const override {}
-        virtual double getMaximalForce(double kbt) const noexcept override { return 0; }
-        virtual NOOPPotential *replicate() const override { return new NOOPPotential(*this); }
     };
 
     TEST_F(TestKernelContext, SetGetKBT) {
@@ -74,7 +60,7 @@ namespace {
 
     TEST_F(TestKernelContext, PotentialOrder2Map) {
         m::KernelContext ctx;
-        auto p1 = std::make_unique<NOOPPotential>();
+        auto p1 = std::make_unique<readdy::testing::NOOPPotentialOrder2>();
         ctx.registerOrder2Potential(p1.get(), "a", "b");
         ctx.registerOrder2Potential(p1.get(), "b", "a");
         ctx.configure();

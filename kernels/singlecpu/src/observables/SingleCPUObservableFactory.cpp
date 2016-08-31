@@ -29,6 +29,11 @@ namespace readdy {
                     return new NParticlesObservable<>(kernel, stride, typesToCount);
                 }
 
+                readdy::model::ForcesObservable *
+                SingleCPUObservableFactory::createForcesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) const {
+                    return new ForcesObservable<>(kernel, stride, typesToCount);
+                }
+
 
             }
         }

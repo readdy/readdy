@@ -1,5 +1,7 @@
 /**
- * todo
+ * The context is part of the simulation model. It contains all time-independent parameters, e.g. the size
+ * and periodicity of the simulation box, definitions of particle species and the potentials
+ * and reactions affecting them.
  *
  * @file KernelContext.h
  * @brief Container class for time independent information of the KernelContext.
@@ -152,6 +154,11 @@ namespace readdy {
             const rdy_pot_2_registry getAllOrder2Potentials() const;
 
             std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
+
+            /**
+             * Get an unstructured list of all second order potentials. Useful in neighborlists, where maxcutoff is required.
+             */
+            const std::vector<potentials::PotentialOrder2*> getVectorAllOrder2Potentials() const;
 
             std::vector<unsigned int> getAllRegisteredParticleTypes() const;
             std::string getParticleName(unsigned int id) const;

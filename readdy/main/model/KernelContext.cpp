@@ -180,6 +180,7 @@ namespace readdy {
             pimpl->timeStep = dt;
         }
 
+        // todo respect const correctness, dont create new entries, thx
         unsigned int KernelContext::getParticleTypeID(const std::string &name) const {
             return pimpl->typeMapping[name];
         }
@@ -441,6 +442,16 @@ namespace readdy {
 
         const KernelContext::rdy_type_mapping &KernelContext::getTypeMapping() const {
             return pimpl->typeMapping;
+        }
+
+        const std::vector<potentials::PotentialOrder2 *> KernelContext::getVectorAllOrder2Potentials() const {
+            std::vector<potentials::PotentialOrder2 *> result;
+            for (auto &&e : getAllOrder2RegisteredPotentialTypes()) {
+                for (auto &&p : getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
+                    result.push_back(p);
+                }
+            }
+            return result;
         }
 
         KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;

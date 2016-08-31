@@ -34,6 +34,7 @@ namespace readdy {
                 virtual void addParticles(const std::vector<readdy::model::Particle> &p) override;
 
                 virtual void removeParticle(const readdy::model::Particle &p) override;
+                virtual void removeAllParticles() override;
                 virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
                 virtual double getEnergy() const override;

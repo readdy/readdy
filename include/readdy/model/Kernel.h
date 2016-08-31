@@ -105,7 +105,7 @@ namespace readdy {
             std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection> createAndConnectObservable(unsigned int stride) {
                 auto &&obs = createObservable<T>(stride);
                 auto &&connection = connectObservable(obs.get());
-                return std::make_tuple(std::move(obs), connection);
+                return std::make_tuple(std::move(obs), std::move(connection));
             };
 
             /**

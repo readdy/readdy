@@ -25,6 +25,7 @@ namespace readdy {
                 static const std::string name;
 
                 CPUKernel();
+                ~CPUKernel();
 
                 // factory method
                 static std::unique_ptr<CPUKernel> create();

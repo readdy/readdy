@@ -37,6 +37,7 @@ namespace readdy {
             virtual void addParticles(const std::vector<Particle> &p) = 0;
 
             virtual void removeParticle(const Particle &p) = 0;
+            virtual void removeAllParticles() = 0;
 
             virtual double getEnergy() const = 0;
 

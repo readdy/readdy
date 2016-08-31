@@ -33,6 +33,7 @@ namespace readdy {
 
             double &operator[](const unsigned int i);
 
+            // todo test this operator
             bool operator==(const Vec3 &rhs) const;
 
             bool operator!=(const Vec3 &rhs) const;

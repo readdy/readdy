@@ -47,6 +47,10 @@ namespace readdy {
                     throw std::runtime_error("should be overridden (or todo: provide default impl)");
                 }
 
+                virtual ForcesObservable* createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const {
+                    throw std::runtime_error("should be overridden (or todo: provide default impl)");
+                }
+
             protected:
                 Kernel *const kernel;
 
@@ -68,6 +72,12 @@ namespace readdy {
                 template<typename... Args> struct get_dispatcher<readdy::model::NParticlesObservable, Args...> {
                     static NParticlesObservable* impl(const ObservableFactory* self, Kernel*const kernel, unsigned int stride, Args... args) {
                         return self->createNParticlesObservable(kernel, stride, std::forward<Args>(args)...);
+                    }
+                };
+
+                template<typename... Args> struct get_dispatcher<readdy::model::ForcesObservable, Args...> {
+                    static ForcesObservable* impl(const ObservableFactory* self, Kernel*const kernel, unsigned int stride, Args... args) {
+                        return self->createForcesObservable(kernel, stride, std::forward<Args>(args)...);
                     }
                 };
             };

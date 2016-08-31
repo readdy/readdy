@@ -23,6 +23,8 @@ namespace readdy {
         namespace cpu {
             namespace model {
                 class NeighborList {
+                    using box_t = readdy::kernel::singlecpu::model::Box;
+
                 public:
                     using container_t = std::unordered_map<unsigned long, std::vector<unsigned long>>;
                     NeighborList(const readdy::model::KernelContext *const context) : ctx(context) { }
@@ -167,22 +169,13 @@ namespace readdy {
 
                     std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
 
+                    const std::vector<box_t> &getBoxes() const {
+                        return boxes;
+                    }
+
                 protected:
 
-
-                    struct Box {
-                        std::vector<Box *> neighboringBoxes{};
-                        std::vector<unsigned long> particleIndices{};
-                        long i, j, k;
-                        long id = 0;
-
-                        Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
-                        }
-                        void addNeighbor(Box *box) {
-                            if (box && box->id != id) neighboringBoxes.push_back(box);
-                        }
-                    };
-                    std::vector<Box> boxes{};
+                    std::vector<box_t> boxes{};
                     std::array<int, 3> nBoxes{{0, 0, 0}};
                     readdy::model::Vec3 boxSize{0, 0, 0};
                     double maxCutoff = 0;
@@ -190,7 +183,7 @@ namespace readdy {
                     long positive_modulo(long i, long n) const {
                         return (i % n + n) % n;
                     }
-                    Box *getBox(long i, long j, long k) {
+                    box_t *getBox(long i, long j, long k) {
                         const auto &periodic = ctx->getPeriodicBoundary();
                         if (periodic[0]) i = positive_modulo(i, nBoxes[0]);
                         else if (i < 0 || i >= nBoxes[0]) return nullptr;
