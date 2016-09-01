@@ -327,6 +327,147 @@ namespace readdy {
                         }
                         return newParticles;
                     }
+
+                    struct GillespieParallel::HaloBox  {
+                        std::vector<HaloBox *> neighboringBoxes{};
+                        std::vector<unsigned long> particleIndices{};
+                        unsigned int id = 0;
+                        vec_t lowerLeftVertex, upperRightVertex;
+                        vec_t lowerLeftVertexHalo, upperRightVertexHalo;
+
+
+                        HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis) :
+                                id(id), lowerLeftVertexHalo(lowerLeftBdry), upperRightVertexHalo(upperRightBdry) {
+                            lowerLeftVertex = lowerLeftVertexHalo;
+                            lowerLeftVertex[longestAxis] += haloWidth;
+                            upperRightVertex = upperRightVertexHalo;
+                            upperRightVertex[longestAxis] -= haloWidth;
+                        }
+
+                        void addNeighbor(HaloBox *box) {
+                            if (box && box->id != id) neighboringBoxes.push_back(box);
+                        }
+
+                        friend bool operator==(const HaloBox &lhs, const HaloBox &rhs) {
+                            return lhs.id == rhs.id;
+                        }
+
+                        friend bool operator!=(const HaloBox &lhs, const HaloBox &rhs) {
+                            return !(lhs == rhs);
+                        }
+
+                        bool isInBox(const vec_t& particle) {
+                            return particle >= lowerLeftVertex && particle <= upperRightVertex;
+                        }
+                    };
+
+                    long positive_modulo(long i, long n) {
+                        return (i % n + n) % n;
+                    }
+
+                    void GillespieParallel::execute() {
+                        setupBoxes();
+                        fillBoxes();
+                    }
+
+                    GillespieParallel::GillespieParallel(const kernel_t *const kernel) : kernel(kernel), boxes({}) { }
+
+                    void GillespieParallel::setupBoxes() {
+                        if(boxes.empty()) {
+                            double maxReactionRadius = 0.0;
+                            for(auto&& e : kernel->getKernelContext().getAllOrder2Reactions()) {
+                                maxReactionRadius = std::max(maxReactionRadius, e->getEductDistance());
+                            }
+
+                            const auto& simBoxSize = kernel->getKernelContext().getBoxSize();
+                            unsigned int longestAxis {
+                                    static_cast<unsigned int>(
+                                            std::max_element(simBoxSize.begin(), simBoxSize.end()) - simBoxSize.begin()
+                                    )
+                            };
+                            unsigned int otherAxis1 = [longestAxis] () -> unsigned int {
+                               switch(longestAxis) {
+                                   case 0: return 1;
+                                   case 1: return 2;
+                                   default: return 0;
+                               }
+                            }();
+                            unsigned int otherAxis2 = [longestAxis] () ->unsigned int {
+                                switch(longestAxis) {
+                                    case 0: return 2;
+                                    case 1: return 0;
+                                    default: return 1;
+                                }
+                            }();
+                            unsigned int nBoxes = static_cast<unsigned int>(util::getNThreads());
+                            auto boxBoundingVertices = kernel->getKernelContext().getBoxBoundingVertices();
+                            auto lowerLeft = std::get<0>(boxBoundingVertices);
+                            const auto boxWidth = simBoxSize[longestAxis] / util::getNThreads();
+                            auto upperRight = lowerLeft;
+                            {
+                                upperRight[otherAxis1] = std::get<1>(boxBoundingVertices)[otherAxis1];
+                                upperRight[otherAxis2] = std::get<1>(boxBoundingVertices)[otherAxis2];
+                                upperRight[longestAxis] = lowerLeft[longestAxis] + boxWidth;
+                            }
+                            boxes.reserve(nBoxes);
+                            for(unsigned int i = 0; i < nBoxes; ++i) {
+                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis};
+                                boxes.push_back(std::move(box));
+                                lowerLeft[longestAxis] += boxWidth;
+                                upperRight[longestAxis] += boxWidth;
+                            }
+
+                            for(unsigned int i = 1; i < nBoxes-1; ++i) {
+                                boxes[i].addNeighbor(&boxes[positive_modulo(i-1, nBoxes)]);
+                                boxes[i].addNeighbor(&boxes[positive_modulo(i+1, nBoxes)]);
+                            }
+                            if(nBoxes > 1) {
+                                boxes[0].addNeighbor(&boxes[1]);
+                                boxes[nBoxes-1].addNeighbor(&boxes[nBoxes-2]);
+                                if(kernel->getKernelContext().getPeriodicBoundary()[longestAxis]) {
+                                    boxes[0].addNeighbor(&boxes[nBoxes-1]);
+                                    boxes[nBoxes-1].addNeighbor(&boxes[0]);
+                                }
+                            }
+
+                            GillespieParallel::maxReactionRadius = maxReactionRadius;
+                            GillespieParallel::longestAxis = longestAxis;
+                            GillespieParallel::otherAxis1 = otherAxis1;
+                            GillespieParallel::otherAxis2 = otherAxis2;
+                            GillespieParallel::boxWidth = boxWidth;
+
+                        }
+                    }
+
+                    void GillespieParallel::fillBoxes() {
+                        std::for_each(boxes.begin(), boxes.end(), [](HaloBox& box) {box.particleIndices.clear();});
+                        const auto particleData = kernel->getKernelStateModel().getParticleData();
+                        const auto simBoxSize = kernel->getKernelContext().getBoxSize();
+                        const auto nBoxes = boxes.size();
+                        std::size_t idx = 0;
+                        for(auto it = particleData->begin_positions(); it < particleData->end_positions(); ++it) {
+                            unsigned int boxIndex = static_cast<unsigned int>(
+                                    floor(((*it)[longestAxis] + .5 * simBoxSize[longestAxis])/boxWidth)
+                            );
+                            if(boxIndex < nBoxes) {
+                                auto& box = boxes[boxIndex];
+                                if(box.isInBox(*it)) {
+                                    box.particleIndices.push_back(idx);
+                                } else {
+                                    problematicParticles.push_back(idx);
+                                }
+                            }
+                            ++idx;
+                        }
+                    }
+
+                    void GillespieParallel::clear() {
+                        maxReactionRadius = 0;
+                        problematicParticles.clear();
+                        boxes.clear();
+                    }
+
+                    GillespieParallel::~GillespieParallel() = default;
                 }
 
             }

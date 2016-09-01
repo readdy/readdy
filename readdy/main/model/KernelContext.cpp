@@ -454,6 +454,13 @@ namespace readdy {
             return result;
         }
 
+        std::tuple<readdy::model::Vec3, readdy::model::Vec3> KernelContext::getBoxBoundingVertices() const {
+            const auto& boxSize = getBoxSize();
+            readdy::model::Vec3 lowerLeft {-0.5 * boxSize[0], -0.5 * boxSize[1], -0.5*boxSize[2]};
+            readdy::model::Vec3 upperRight = lowerLeft + readdy::model::Vec3(boxSize);
+            return std::make_tuple(std::move(lowerLeft), std::move(upperRight));
+        }
+
         KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 
         KernelContext::KernelContext(KernelContext &&rhs) = default;

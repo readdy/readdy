@@ -36,6 +36,11 @@ namespace readdy {
                     factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
                         return new reactions::Gillespie(kernel);
                     };
+                    factory[core_p::getProgramName<core_p::reactions::GillespieParallel>()] = [kernel] {
+                        BOOST_LOG_TRIVIAL(warning) << "Trying to create a parallel gillespie program on the single "
+                                    "cpu kernel, falling back to the sequential gillespie!";
+                        return new reactions::Gillespie(kernel);
+                    };
                 }
             }
         }

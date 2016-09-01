@@ -41,8 +41,10 @@ namespace readdy {
             friend std::ostream &operator<<(std::ostream &, const Vec3 &);
 
             friend Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs);
+            friend Vec3 operator+(const Vec3 &lhs, const double rhs);
 
             friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
+            friend Vec3 operator-(const Vec3 &lhs, const double rhs);
 
             friend Vec3 operator/(const Vec3& lhs, const double rhs);
 
