@@ -67,7 +67,7 @@ namespace {
         auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
-        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::GillespieParallel>();
+        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::Gillespie>();
         kernel.getKernelContext().configure();
 
         auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
@@ -117,7 +117,7 @@ namespace {
     TEST(TestPerformance, SingleCPU) {
         {
             auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-            //runPerformanceTest(*kernel);
+            runPerformanceTest(*kernel);
         }
     }
 
