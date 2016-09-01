@@ -21,9 +21,10 @@ namespace {
             return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
         };
 
-        kernel.getKernelContext().setBoxSize(15.0, 15.0, 15.0);
+        kernel.getKernelContext().setBoxSize(30.0, 30.0, 30.0);
         kernel.getKernelContext().setKBT(1.0);
         kernel.getKernelContext().setTimeStep(1.);
+        kernel.getKernelContext().setPeriodicBoundary(false, false, false);
 
         std::string types [] {"A", "B", "C"};
         {
@@ -41,11 +42,20 @@ namespace {
             kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "A", "C");
             kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "B", "C");
         }
+        {
+            auto box = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
+            box->setForceConstant(1.0);
+            box->setOrigin({-14, -14, -14});
+            box->setExtent({28, 28, 28});
+            kernel.getKernelContext().registerOrder1Potential(box.get(), "A");
+            kernel.getKernelContext().registerOrder1Potential(box.get(), "B");
+            kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
+        }
 
         const unsigned int nParticles = 5000;
         for(unsigned long _ = 0; _ < nParticles; ++_) {
             for(const auto& t : types) {
-                readdy::model::Particle p{stdRand(-7.5, 7.5), stdRand(-7.5, 7.5), stdRand(-7.5, 7.5),
+                readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),
                                           kernel.getKernelContext().getParticleTypeID(t)};
                 kernel.getKernelStateModel().addParticle(p);
             }
@@ -57,7 +67,7 @@ namespace {
         auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
-        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::Gillespie>();
+        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::GillespieParallel>();
         kernel.getKernelContext().configure();
 
         auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
@@ -107,7 +117,7 @@ namespace {
     TEST(TestPerformance, SingleCPU) {
         {
             auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-            runPerformanceTest(*kernel);
+            //runPerformanceTest(*kernel);
         }
     }
 

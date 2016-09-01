@@ -143,7 +143,7 @@ namespace readdy {
                         scheme->integrator = scheme->kernel->template createProgram<readdy::model::programs::EulerBDIntegrator>();
                     }
                     if (!scheme->reactionScheduler) {
-                        scheme->reactionScheduler = scheme->kernel->template createProgram<readdy::model::programs::reactions::Gillespie>();
+                        scheme->reactionScheduler = scheme->kernel->template createProgram<readdy::model::programs::reactions::GillespieParallel>();
                     }
                     if (!evaluateObservablesSet) {
                         scheme->evaluateObservables = true;

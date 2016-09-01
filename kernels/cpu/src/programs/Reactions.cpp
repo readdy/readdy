@@ -9,6 +9,7 @@
 
 #include <readdy/kernel/cpu/programs/Reactions.h>
 #include <future>
+#include <queue>
 
 using _rdy_particle_t = readdy::model::Particle;
 
@@ -215,7 +216,8 @@ namespace readdy {
                     }
 
                     std::vector<readdy::model::Particle>
-                    Gillespie::handleEvents(std::vector<Gillespie::_event_t> events, double alpha) {
+                    handleEventsGillespie(CPUKernel const*const kernel, std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events, double alpha) {
+                        using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
                         using _rdy_particle_t = readdy::model::Particle;
                         std::vector<_rdy_particle_t> newParticles{};
 
@@ -330,7 +332,6 @@ namespace readdy {
                     }
 
                     struct GillespieParallel::HaloBox  {
-                        std::vector<HaloBox *> neighboringBoxes{};
                         std::vector<unsigned long> particleIndices{};
                         unsigned int id = 0;
                         vec_t lowerLeftVertex, upperRightVertex;
@@ -339,14 +340,10 @@ namespace readdy {
 
                         HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis, bool periodicInLongestAx) :
                                 id(id), lowerLeftVertexHalo(lowerLeftBdry), upperRightVertexHalo(upperRightBdry) {
-                            lowerLeftVertex = lowerLeftVertexHalo;
+                            lowerLeftVertex = lowerLeftBdry;
                             if(periodicInLongestAx && id == 0) lowerLeftVertex[longestAxis] += haloWidth;
-                            upperRightVertex = upperRightVertexHalo;
+                            upperRightVertex = upperRightBdry;
                             if(periodicInLongestAx && id == util::getNThreads()-1) upperRightVertex[longestAxis] -= haloWidth;
-                        }
-
-                        void addNeighbor(HaloBox *box) {
-                            if (box && box->id != id) neighboringBoxes.push_back(box);
                         }
 
                         friend bool operator==(const HaloBox &lhs, const HaloBox &rhs) {
@@ -363,6 +360,10 @@ namespace readdy {
 
                         bool isInBox(const unsigned long particleIdx) const {
                             return std::find(particleIndices.begin(), particleIndices.end(), particleIdx) != particleIndices.end();
+                        }
+
+                        bool isInHaloBox(const vec_t& particle) const {
+                            return particle >= lowerLeftVertexHalo && particle <= upperRightVertexHalo;
                         }
                     };
 
@@ -409,7 +410,7 @@ namespace readdy {
                             auto boxBoundingVertices = kernel->getKernelContext().getBoxBoundingVertices();
                             auto lowerLeft = std::get<0>(boxBoundingVertices);
                             const bool periodicInLongestAx = kernel->getKernelContext().getPeriodicBoundary()[longestAxis];
-                            const auto boxWidth = simBoxSize[longestAxis] / util::getNThreads();
+                            const auto boxWidth = simBoxSize[longestAxis] / nBoxes;
                             auto upperRight = lowerLeft;
                             {
                                 upperRight[otherAxis1] = std::get<1>(boxBoundingVertices)[otherAxis1];
@@ -422,19 +423,6 @@ namespace readdy {
                                 boxes.push_back(std::move(box));
                                 lowerLeft[longestAxis] += boxWidth;
                                 upperRight[longestAxis] += boxWidth;
-                            }
-
-                            for(unsigned int i = 1; i < nBoxes-1; ++i) {
-                                boxes[i].addNeighbor(&boxes[positive_modulo(i-1, nBoxes)]);
-                                boxes[i].addNeighbor(&boxes[positive_modulo(i+1, nBoxes)]);
-                            }
-                            if(nBoxes > 1) {
-                                boxes[0].addNeighbor(&boxes[1]);
-                                boxes[nBoxes-1].addNeighbor(&boxes[nBoxes-2]);
-                                if(kernel->getKernelContext().getPeriodicBoundary()[longestAxis]) {
-                                    boxes[0].addNeighbor(&boxes[nBoxes-1]);
-                                    boxes[nBoxes-1].addNeighbor(&boxes[0]);
-                                }
                             }
 
                             GillespieParallel::maxReactionRadius = maxReactionRadius;
@@ -474,11 +462,13 @@ namespace readdy {
                     }
 
                     void GillespieParallel::handleBoxReactions() {
-                        using promise_t = std::promise<std::vector<unsigned long>>;
+                        using promise_t = std::promise<std::set<unsigned long>>;
+                        using promise_new_particles_t = std::promise<std::vector<particle_t>>;
 
-                        auto worker = [](const HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, promise_t update) {
-                            std::vector<unsigned long> problematic;
-                            const auto &dist = ctx.getDistSquaredFun();
+                        auto worker = [this](HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
+                            std::set<unsigned long> problematic {};
+                            double localAlpha = 0.0;
+                            std::vector<event_t> localEvents {};
                             // step 1: find all problematic particles (ie the ones, that have (also transitively)
                             // a reaction with a particle in the halo region
                             {
@@ -488,57 +478,100 @@ namespace readdy {
                                     ++it;
                                 }
                             }
+                            // step 2: remove the problematic ones out of the box and gather remaining events
+                            {
+                                box.particleIndices.erase(
+                                        std::remove_if(box.particleIndices.begin(), box.particleIndices.end(), [problematic](const unsigned long x) {
+                                            return problematic.find(x) != problematic.end();
+                                        }), box.particleIndices.end()
+                                );
+                                gatherEvents(box.particleIndices, nl, data, localAlpha, localEvents);
+                                // handle events
+                                {
+                                    newParticles.set_value(
+                                            handleEventsGillespie(kernel, std::move(localEvents), localAlpha)
+                                    );
+                                }
+
+                            }
                             update.set_value(std::move(problematic));
                         };
 
-                        std::vector<std::future<std::vector<unsigned long>>> updates;
+                        std::vector<std::future<std::set<unsigned long>>> updates;
+                        std::vector<std::future<std::vector<particle_t>>> newParticles;
                         {
                             std::vector<util::ScopedThread> threads;
                             for (unsigned int i = 0; i < util::getNThreads(); ++i) {
                                 promise_t promise;
                                 updates.push_back(promise.get_future());
+                                promise_new_particles_t promiseParticles;
+                                newParticles.push_back(promiseParticles.get_future());
                                 threads.push_back(
                                         util::ScopedThread(std::thread(
                                                 worker, std::ref(boxes[i]),
                                                 std::ref(kernel->getKernelContext()),
                                                 kernel->getKernelStateModel().getParticleData(),
                                                 kernel->getKernelStateModel().getNeighborList(),
-                                                std::move(promise)
+                                                std::move(promise),
+                                                std::move(promiseParticles)
                                         ))
                                 );
                             }
                         }
+                        std::vector<event_t> evilEvents {};
+                        double alpha = 0;
                         for(auto&& update : updates) {
-                            BOOST_LOG_TRIVIAL(debug) << "got update: " << update.get()[0];
+                            gatherEvents(update.get(), kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         }
+                        gatherEvents(problematicParticles, kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
+                        auto newEvilParticles = handleEventsGillespie(kernel, std::move(evilEvents), alpha);
+
+                        kernel->getKernelStateModel().getParticleData()->deactivateMarked();
+
+                        const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
+                        for(auto&& future : newParticles) {
+                            auto particles = future.get();
+                            // reposition particles to respect the periodic b.c.
+                            std::for_each(particles.begin(), particles.end(),
+                                          [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
+                            kernel->getKernelStateModel().getParticleData()->addParticles(particles);
+                        }
+
+                        std::for_each(newEvilParticles.begin(), newEvilParticles.end(), [&fixPos](readdy::model::Particle &p) {fixPos(p.getPos()); });
+                        kernel->getKernelStateModel().getParticleData()->addParticles(newEvilParticles);
+
 
                     }
 
                     void GillespieParallel::handleProblematic(
                             const unsigned long idx, const HaloBox &box, const ctx_t ctx,
-                            data_t data, nl_t nl, std::vector<unsigned long> &update
+                            data_t data, nl_t nl, std::set<unsigned long> &update
                     ) const {
-                        if(std::find(update.begin(), update.end(), idx) != update.end()) return;
+                        if (update.find(idx) != update.end()) return;
+
+                        std::queue<unsigned long> newHaloParticles{};
 
                         const auto &dist = ctx.getDistSquaredFun();
-                        const auto pType = *(data->begin_types() + idx);
                         const auto pPos = *(data->begin_positions() + idx);
                         auto nlIt = nl->pairs->find(idx);
                         if (nlIt != nl->pairs->end()) {
+                            const auto pType = *(data->begin_types() + idx);
                             for (const auto neighborIdx : nlIt->second) {
                                 const auto neighborType = *(data->begin_types() + neighborIdx);
                                 const auto neighborPos = *(data->begin_positions() + neighborIdx);
-                                const auto& reactions = ctx.getOrder2Reactions(pType, neighborType);
-                                if(!reactions.empty()) {
+                                const auto &reactions = ctx.getOrder2Reactions(pType, neighborType);
+                                if (!reactions.empty()) {
                                     const auto distSquared = dist(pPos, neighborPos);
-                                    for (auto itReactions = reactions.begin(); itReactions != reactions.end(); ++itReactions) {
+                                    for (auto itReactions = reactions.begin();
+                                         itReactions != reactions.end(); ++itReactions) {
                                         const auto reaction = *itReactions;
                                         if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
-                                            if(reaction->getRate() > 0) {
-                                                const bool alreadyProblematic = std::find(update.begin(), update.end(), neighborIdx) != update.end();
-                                                if (alreadyProblematic || !box.isInBox(neighborPos)) {
+                                            if (reaction->getRate() > 0) {
+                                                const bool neighborProblematic = update.find(neighborIdx) != update.end();
+                                                if (neighborProblematic || (!box.isInBox(neighborPos) && box.isInHaloBox(neighborPos))) {
                                                     // we have a problematic particle!
-                                                    update.push_back(idx);
+                                                    update.insert(idx);
+                                                    newHaloParticles.push(idx);
                                                 }
                                             }
                                         }
@@ -546,7 +579,97 @@ namespace readdy {
                                 }
                             }
                         }
+
+                        while (!newHaloParticles.empty()) {
+                            const auto x = newHaloParticles.front();
+                            newHaloParticles.pop();
+                            auto neighIt = nl->pairs->find(x);
+                            if (neighIt != nl->pairs->end()) {
+                                const auto x_type = *(data->begin_types() + idx);
+                                for (const auto x_neighbor : neighIt->second) {
+                                    const auto neighborType = *(data->begin_types() + x_neighbor);
+                                    const auto neighborPos = *(data->begin_positions() + x_neighbor);
+                                    const auto &reactions = ctx.getOrder2Reactions(x_type, neighborType);
+                                    if (!reactions.empty() && box.isInBox(neighborPos)) {
+                                        const bool alreadyProblematic = update.find(x_neighbor) != update.end();
+                                        if (alreadyProblematic) continue;
+                                        const auto distSquared = dist(pPos, neighborPos);
+                                        for (auto itReactions = reactions.begin();
+                                             itReactions != reactions.end(); ++itReactions) {
+                                            const auto reaction = *itReactions;
+                                            if (distSquared <
+                                                reaction->getEductDistance() * reaction->getEductDistance()) {
+                                                if (reaction->getRate() > 0) {
+                                                    // we have a problematic particle!
+                                                    update.insert(x_neighbor);
+                                                    newHaloParticles.push(x_neighbor);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                     }
+
+                    template<typename ParticleCollection>
+                    void GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
+                                                         std::vector<GillespieParallel::event_t> &events) const {
+                        const auto &dist = kernel->getKernelContext().getDistSquaredFun();
+                        for(const auto idx : particles) {
+                            const auto particleType = *(data->begin_types() + idx);
+                            // order 1
+                            {
+                                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
+                                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
+                                    const auto rate = (*it)->getRate();
+                                    if (rate > 0) {
+                                        alpha += rate;
+                                        events.push_back(
+                                                {1, idx, 0, rate, alpha, static_cast<index_t>(it - reactions.begin()),
+                                                 particleType, 0});
+                                    }
+                                }
+                            }
+                            // order 2
+                            {
+                                auto nl_it = nl->pairs->find(idx);
+                                if(nl_it != nl->pairs->end()) {
+                                    for(const auto idx_neighbor : nl_it->second) {
+                                        if(idx > idx_neighbor) continue;
+                                        const auto neighborType = *(data->begin_types() + idx_neighbor);
+                                        const auto& reactions = kernel->getKernelContext().getOrder2Reactions(particleType, neighborType);
+                                        if(!reactions.empty()) {
+                                            const auto distSquared = dist(
+                                                    *(data->begin_positions() + idx), *(data->begin_positions() + idx_neighbor)
+                                            );
+                                            for(auto it = reactions.begin(); it < reactions.end(); ++it) {
+                                                const auto& react = *it;
+                                                if(distSquared < react->getEductDistance() * react->getEductDistance()) {
+                                                    const auto rate = react->getRate();
+                                                    if(rate > 0) {
+                                                        events.push_back({2, idx, idx_neighbor, rate, alpha,
+                                                                               static_cast<index_t>(it - reactions.begin()),
+                                                                               particleType, neighborType});
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
+                    template void GillespieParallel::gatherEvents<std::vector<unsigned long>>(
+                            const std::vector<unsigned long> &particles, const nl_t nl, const data_t data, double &alpha,
+                            std::vector<GillespieParallel::event_t> &events) const;
+
+                    template void GillespieParallel::gatherEvents<std::set<unsigned long>>(
+                            const std::set<unsigned long> &particles, const nl_t nl, const data_t data, double &alpha,
+                            std::vector<GillespieParallel::event_t> &events) const;
 
                     GillespieParallel::~GillespieParallel() = default;
                 }

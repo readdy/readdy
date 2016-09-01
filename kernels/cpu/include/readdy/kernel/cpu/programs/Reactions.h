@@ -40,6 +40,9 @@ namespace readdy {
                     protected:
                         CPUKernel const *const kernel;
                     };
+                    std::vector<readdy::model::Particle> handleEventsGillespie(CPUKernel const*const kernel,
+                                                                               std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events,
+                                                                               double alpha);
 
                     class Gillespie : public readdy::model::programs::reactions::Gillespie {
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
@@ -57,7 +60,7 @@ namespace readdy {
 
                             double alpha = 0.0;
                             auto events = gatherEvents(alpha);
-                            auto newParticles = handleEvents(std::move(events), alpha);
+                            auto newParticles = handleEventsGillespie(kernel, std::move(events), alpha);
 
                             // reposition particles to respect the periodic b.c.
                             std::for_each(newParticles.begin(), newParticles.end(),
@@ -70,7 +73,6 @@ namespace readdy {
 
                     protected:
                         virtual std::vector<_event_t> gatherEvents(double& alpha);
-                        virtual std::vector<readdy::model::Particle> handleEvents(std::vector<_event_t> events, double alpha);
                         CPUKernel const *const kernel;
                     };
 
@@ -80,6 +82,9 @@ namespace readdy {
                         using data_t = decltype(std::declval<kernel_t>().getKernelStateModel().getParticleData());
                         using nl_t = decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
                         using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
+                        using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
+                        using index_t = event_t::index_type;
+                        using particle_t = readdy::model::Particle;
                     public:
                         GillespieParallel(kernel_t const *const kernel);
                         ~GillespieParallel();
@@ -109,7 +114,11 @@ namespace readdy {
                          */
                         void handleBoxReactions();
 
-                        void handleProblematic(const unsigned long idx, const HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, std::vector<unsigned long>& update) const;
+                        template<typename ParticleCollection>
+                        void gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
+                                          std::vector<GillespieParallel::event_t> &events) const;
+
+                        void handleProblematic(const unsigned long idx, const HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, std::set<unsigned long>& update) const;
 
                     };
                 }
