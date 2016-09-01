@@ -457,7 +457,7 @@ namespace readdy {
                         using promise_t = std::promise<std::set<unsigned long>>;
                         using promise_new_particles_t = std::promise<std::vector<particle_t>>;
 
-                        auto worker = [this](HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
+                        auto worker = [this](HaloBox &box, ctx_t ctx, data_t data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
                             std::set<unsigned long> problematic {};
                             double localAlpha = 0.0;
                             std::vector<event_t> localEvents {};
@@ -536,7 +536,7 @@ namespace readdy {
                     }
 
                     void GillespieParallel::handleProblematic(
-                            const unsigned long idx, const HaloBox &box, const ctx_t ctx,
+                            const unsigned long idx, const HaloBox &box, ctx_t ctx,
                             data_t data, nl_t nl, std::set<unsigned long> &update
                     ) const {
                         if (update.find(idx) != update.end()) return;

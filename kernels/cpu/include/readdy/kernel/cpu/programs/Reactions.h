@@ -118,7 +118,7 @@ namespace readdy {
                         void gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
                                           std::vector<GillespieParallel::event_t> &events) const;
 
-                        void handleProblematic(const unsigned long idx, const HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, std::set<unsigned long>& update) const;
+                        void handleProblematic(const unsigned long idx, const HaloBox &box, ctx_t ctx, data_t data, nl_t nl, std::set<unsigned long>& update) const;
 
                     };
                 }
