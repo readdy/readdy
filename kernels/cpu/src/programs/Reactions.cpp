@@ -358,18 +358,10 @@ namespace readdy {
                             return particle >= lowerLeftVertex && particle <= upperRightVertex;
                         }
 
-                        bool isInBox(const unsigned long particleIdx) const {
-                            return std::find(particleIndices.begin(), particleIndices.end(), particleIdx) != particleIndices.end();
-                        }
-
                         bool isInHaloBox(const vec_t& particle) const {
                             return particle >= lowerLeftVertexHalo && particle <= upperRightVertexHalo;
                         }
                     };
-
-                    long positive_modulo(long i, long n) {
-                        return (i % n + n) % n;
-                    }
 
                     void GillespieParallel::execute() {
                         setupBoxes();
