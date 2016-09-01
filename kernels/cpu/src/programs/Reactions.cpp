@@ -8,6 +8,7 @@
  */
 
 #include <readdy/kernel/cpu/programs/Reactions.h>
+#include <future>
 
 using _rdy_particle_t = readdy::model::Particle;
 
@@ -336,12 +337,12 @@ namespace readdy {
                         vec_t lowerLeftVertexHalo, upperRightVertexHalo;
 
 
-                        HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis) :
+                        HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis, bool periodicInLongestAx) :
                                 id(id), lowerLeftVertexHalo(lowerLeftBdry), upperRightVertexHalo(upperRightBdry) {
                             lowerLeftVertex = lowerLeftVertexHalo;
-                            lowerLeftVertex[longestAxis] += haloWidth;
+                            if(periodicInLongestAx && id == 0) lowerLeftVertex[longestAxis] += haloWidth;
                             upperRightVertex = upperRightVertexHalo;
-                            upperRightVertex[longestAxis] -= haloWidth;
+                            if(periodicInLongestAx && id == util::getNThreads()-1) upperRightVertex[longestAxis] -= haloWidth;
                         }
 
                         void addNeighbor(HaloBox *box) {
@@ -356,8 +357,12 @@ namespace readdy {
                             return !(lhs == rhs);
                         }
 
-                        bool isInBox(const vec_t& particle) {
+                        bool isInBox(const vec_t& particle) const {
                             return particle >= lowerLeftVertex && particle <= upperRightVertex;
+                        }
+
+                        bool isInBox(const unsigned long particleIdx) const {
+                            return std::find(particleIndices.begin(), particleIndices.end(), particleIdx) != particleIndices.end();
                         }
                     };
 
@@ -368,6 +373,7 @@ namespace readdy {
                     void GillespieParallel::execute() {
                         setupBoxes();
                         fillBoxes();
+                        handleBoxReactions();
                     }
 
                     GillespieParallel::GillespieParallel(const kernel_t *const kernel) : kernel(kernel), boxes({}) { }
@@ -402,6 +408,7 @@ namespace readdy {
                             unsigned int nBoxes = static_cast<unsigned int>(util::getNThreads());
                             auto boxBoundingVertices = kernel->getKernelContext().getBoxBoundingVertices();
                             auto lowerLeft = std::get<0>(boxBoundingVertices);
+                            const bool periodicInLongestAx = kernel->getKernelContext().getPeriodicBoundary()[longestAxis];
                             const auto boxWidth = simBoxSize[longestAxis] / util::getNThreads();
                             auto upperRight = lowerLeft;
                             {
@@ -411,7 +418,7 @@ namespace readdy {
                             }
                             boxes.reserve(nBoxes);
                             for(unsigned int i = 0; i < nBoxes; ++i) {
-                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis};
+                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis, periodicInLongestAx};
                                 boxes.push_back(std::move(box));
                                 lowerLeft[longestAxis] += boxWidth;
                                 upperRight[longestAxis] += boxWidth;
@@ -435,7 +442,6 @@ namespace readdy {
                             GillespieParallel::otherAxis1 = otherAxis1;
                             GillespieParallel::otherAxis2 = otherAxis2;
                             GillespieParallel::boxWidth = boxWidth;
-
                         }
                     }
 
@@ -465,6 +471,81 @@ namespace readdy {
                         maxReactionRadius = 0;
                         problematicParticles.clear();
                         boxes.clear();
+                    }
+
+                    void GillespieParallel::handleBoxReactions() {
+                        using promise_t = std::promise<std::vector<unsigned long>>;
+
+                        auto worker = [](const HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, promise_t update) {
+                            std::vector<unsigned long> problematic;
+                            const auto &dist = ctx.getDistSquaredFun();
+                            // step 1: find all problematic particles (ie the ones, that have (also transitively)
+                            // a reaction with a particle in the halo region
+                            {
+                                auto it = box.particleIndices.begin();
+                                while (it < box.particleIndices.end()) {
+                                    handleProblematic(*it, box, ctx, data, nl, problematic);
+                                    ++it;
+                                }
+                            }
+                            update.set_value(std::move(problematic));
+                        };
+
+                        std::vector<std::future<std::vector<unsigned long>>> updates;
+                        {
+                            std::vector<util::ScopedThread> threads;
+                            for (unsigned int i = 0; i < util::getNThreads(); ++i) {
+                                promise_t promise;
+                                updates.push_back(promise.get_future());
+                                threads.push_back(
+                                        util::ScopedThread(std::thread(
+                                                worker, std::ref(boxes[i]),
+                                                std::ref(kernel->getKernelContext()),
+                                                kernel->getKernelStateModel().getParticleData(),
+                                                kernel->getKernelStateModel().getNeighborList(),
+                                                std::move(promise)
+                                        ))
+                                );
+                            }
+                        }
+                        for(auto&& update : updates) {
+                            BOOST_LOG_TRIVIAL(debug) << "got update: " << update.get()[0];
+                        }
+
+                    }
+
+                    void GillespieParallel::handleProblematic(
+                            const unsigned long idx, const HaloBox &box, const ctx_t ctx,
+                            data_t data, nl_t nl, std::vector<unsigned long> &update
+                    ) const {
+                        if(std::find(update.begin(), update.end(), idx) != update.end()) return;
+
+                        const auto &dist = ctx.getDistSquaredFun();
+                        const auto pType = *(data->begin_types() + idx);
+                        const auto pPos = *(data->begin_positions() + idx);
+                        auto nlIt = nl->pairs->find(idx);
+                        if (nlIt != nl->pairs->end()) {
+                            for (const auto neighborIdx : nlIt->second) {
+                                const auto neighborType = *(data->begin_types() + neighborIdx);
+                                const auto neighborPos = *(data->begin_positions() + neighborIdx);
+                                const auto& reactions = ctx.getOrder2Reactions(pType, neighborType);
+                                if(!reactions.empty()) {
+                                    const auto distSquared = dist(pPos, neighborPos);
+                                    for (auto itReactions = reactions.begin(); itReactions != reactions.end(); ++itReactions) {
+                                        const auto reaction = *itReactions;
+                                        if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
+                                            if(reaction->getRate() > 0) {
+                                                const bool alreadyProblematic = std::find(update.begin(), update.end(), neighborIdx) != update.end();
+                                                if (alreadyProblematic || !box.isInBox(neighborPos)) {
+                                                    // we have a problematic particle!
+                                                    update.push_back(idx);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     GillespieParallel::~GillespieParallel() = default;

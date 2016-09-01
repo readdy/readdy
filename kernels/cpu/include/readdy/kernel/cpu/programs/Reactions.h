@@ -43,7 +43,8 @@ namespace readdy {
 
                     class Gillespie : public readdy::model::programs::reactions::Gillespie {
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
-                        using _reaction_idx_t = _event_t ::index_type;
+                        using _reaction_idx_t = _event_t::index_type;
+
                     public:
 
                         Gillespie(CPUKernel const *const kernel);
@@ -76,7 +77,9 @@ namespace readdy {
                     class GillespieParallel : public readdy::model::programs::reactions::GillespieParallel {
                         using kernel_t = readdy::kernel::cpu::CPUKernel;
                         using vec_t = readdy::model::Vec3;
-
+                        using data_t = decltype(std::declval<kernel_t>().getKernelStateModel().getParticleData());
+                        using nl_t = decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
+                        using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
                     public:
                         GillespieParallel(kernel_t const *const kernel);
                         ~GillespieParallel();
@@ -101,6 +104,12 @@ namespace readdy {
                          * a halo region
                          */
                         void fillBoxes();
+                        /**
+                         * Executes the gillespie algorithm for each box and gives an update on problematic particles
+                         */
+                        void handleBoxReactions();
+
+                        void handleProblematic(const unsigned long idx, const HaloBox &box, const ctx_t ctx, data_t data, nl_t nl, std::vector<unsigned long>& update) const;
 
                     };
                 }
