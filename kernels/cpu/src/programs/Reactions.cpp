@@ -341,9 +341,9 @@ namespace readdy {
                         HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis, bool periodicInLongestAx) :
                                 id(id), lowerLeftVertexHalo(lowerLeftBdry), upperRightVertexHalo(upperRightBdry) {
                             lowerLeftVertex = lowerLeftBdry;
-                            if(periodicInLongestAx && id == 0) lowerLeftVertex[longestAxis] += haloWidth;
+                            if(periodicInLongestAx || (!periodicInLongestAx && id != 0)) lowerLeftVertex[longestAxis] += haloWidth;
                             upperRightVertex = upperRightBdry;
-                            if(periodicInLongestAx && id == util::getNThreads()-1) upperRightVertex[longestAxis] -= haloWidth;
+                            if(periodicInLongestAx  || (!periodicInLongestAx && id != util::getNThreads()-1)) upperRightVertex[longestAxis] -= haloWidth;
                         }
 
                         friend bool operator==(const HaloBox &lhs, const HaloBox &rhs) {
@@ -367,6 +367,7 @@ namespace readdy {
                         setupBoxes();
                         fillBoxes();
                         handleBoxReactions();
+                        problematicParticles.clear();
                     }
 
                     GillespieParallel::GillespieParallel(const kernel_t *const kernel) : kernel(kernel), boxes({}) { }
@@ -512,9 +513,14 @@ namespace readdy {
                         }
                         std::vector<event_t> evilEvents {};
                         double alpha = 0;
+                        long n_evil_particles = 0;
                         for(auto&& update : updates) {
-                            gatherEvents(update.get(), kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
+                            auto&& local_problematic = update.get();
+                            n_evil_particles += local_problematic.size();
+                            gatherEvents(std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         }
+                        BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_evil_particles;
+                        BOOST_LOG_TRIVIAL(trace) << "got problematic particles because they were in the halo region: " << problematicParticles.size();
                         gatherEvents(problematicParticles, kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         auto newEvilParticles = handleEventsGillespie(kernel, std::move(evilEvents), alpha);
 
@@ -545,6 +551,8 @@ namespace readdy {
 
                         const auto &dist = ctx.getDistSquaredFun();
                         const auto pPos = *(data->begin_positions() + idx);
+                        // todo dont need neighbor list here, just need to check that particle is within the first
+                        // shell of the box
                         auto nlIt = nl->pairs->find(idx);
                         if (nlIt != nl->pairs->end()) {
                             const auto pType = *(data->begin_types() + idx);
