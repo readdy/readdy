@@ -41,8 +41,7 @@ namespace readdy {
                         CPUKernel const *const kernel;
                     };
                     std::vector<readdy::model::Particle> handleEventsGillespie(CPUKernel const*const kernel,
-                                                                               std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events,
-                                                                               double alpha);
+                                                                               std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events);
 
                     class Gillespie : public readdy::model::programs::reactions::Gillespie {
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
@@ -60,7 +59,7 @@ namespace readdy {
 
                             double alpha = 0.0;
                             auto events = gatherEvents(alpha);
-                            auto newParticles = handleEventsGillespie(kernel, std::move(events), alpha);
+                            auto newParticles = handleEventsGillespie(kernel, std::move(events));
 
                             // reposition particles to respect the periodic b.c.
                             std::for_each(newParticles.begin(), newParticles.end(),

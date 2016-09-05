@@ -318,10 +318,11 @@ namespace readdy {
                                                     ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
                                                     nDeactivated++;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
+                                                    cumsum += (*_it).reactionRate;
+                                                    (*_it).cumulativeRate = cumsum;
+                                                } else {
+                                                    ++_it;
                                                 }
-                                                cumsum += (*_it).reactionRate;
-                                                (*_it).cumulativeRate = cumsum;
-                                                ++_it;
                                             }
                                         } else {
                                             const auto idx2 = event.idx2;
@@ -334,10 +335,11 @@ namespace readdy {
                                                      ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
                                                     nDeactivated++;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
+                                                    cumsum += (*_it).reactionRate;
+                                                    (*_it).cumulativeRate = cumsum;
+                                                } else {
+                                                    ++_it;
                                                 }
-                                                cumsum += (*_it).reactionRate;
-                                                (*_it).cumulativeRate = cumsum;
-                                                ++_it;
                                             }
                                         }
 

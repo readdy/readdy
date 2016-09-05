@@ -216,10 +216,10 @@ namespace readdy {
                     }
 
                     std::vector<readdy::model::Particle>
-                    handleEventsGillespie(CPUKernel const*const kernel, std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events, double alpha) {
-                        BOOST_LOG_TRIVIAL(debug) << "handling events: ";
+                    handleEventsGillespie(CPUKernel const*const kernel, std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events) {
+                        BOOST_LOG_TRIVIAL(trace) << "handling events: ";
                         for(const auto& event : events) {
-                            BOOST_LOG_TRIVIAL(debug) << "\t " << event;
+                            BOOST_LOG_TRIVIAL(trace) << "\t " << event;
                         }
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
                         using _rdy_particle_t = readdy::model::Particle;
@@ -237,7 +237,7 @@ namespace readdy {
                             std::size_t nDeactivated = 0;
                             const std::size_t nEvents = events.size();
                             while (nDeactivated < nEvents) {
-                                alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
+                                const auto alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
                                 const auto x = rnd.getUniform(0, alpha);
                                 const auto eventIt = std::lower_bound(
                                         events.begin(), events.end() - nDeactivated, x,
@@ -249,7 +249,9 @@ namespace readdy {
                                 if (eventIt == events.end() - nDeactivated) {
                                     throw std::runtime_error("this should not happen (event not found)");
                                 }
+                                BOOST_LOG_TRIVIAL(trace) << "--> handling event " << event;
                                 if(rnd.getUniform() < event.reactionRate*dt) {
+                                    BOOST_LOG_TRIVIAL(debug) << "\t --> event got accepted";
                                     /**
                                      * Perform reaction
                                      */
@@ -295,10 +297,11 @@ namespace readdy {
                                                     ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
                                                     nDeactivated++;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
+                                                    cumsum += (*_it).reactionRate;
+                                                    (*_it).cumulativeRate = cumsum;
+                                                } else {
+                                                    ++_it;
                                                 }
-                                                cumsum += (*_it).reactionRate;
-                                                (*_it).cumulativeRate = cumsum;
-                                                ++_it;
                                             }
                                         } else {
                                             const auto idx2 = event.idx2;
@@ -307,16 +310,18 @@ namespace readdy {
                                             updateDeactivated.push_back(event.idx1);
                                             updateDeactivated.push_back(event.idx2);
                                             while (_it < events.end() - nDeactivated) {
-                                                if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2
-                                                    ||
-                                                    ((*_it).nEducts == 2 &&
-                                                     ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
+                                                BOOST_LOG_TRIVIAL(trace) << "\t\t checking for conflict: " << *_it;
+                                                if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2 ||
+                                                        ((*_it).nEducts == 2 &&
+                                                                ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
+                                                    BOOST_LOG_TRIVIAL(trace) << "\t\t thus deactivating event " << *_it;
                                                     nDeactivated++;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
+                                                    cumsum += (*_it).reactionRate;
+                                                    (*_it).cumulativeRate = cumsum;
+                                                } else {
+                                                    ++_it;
                                                 }
-                                                cumsum += (*_it).reactionRate;
-                                                (*_it).cumulativeRate = cumsum;
-                                                ++_it;
                                             }
                                         }
 
@@ -337,6 +342,10 @@ namespace readdy {
                             }
                         }
                         data->updateDeactivated(updateDeactivated);
+                        BOOST_LOG_TRIVIAL(trace) << "got new particles: ";
+                        for(const auto& p : newParticles) {
+                            BOOST_LOG_TRIVIAL(trace) << "\t " << p;
+                        }
                         return newParticles;
                     }
 
@@ -495,7 +504,7 @@ namespace readdy {
                                 // handle events
                                 {
                                     newParticles.set_value(
-                                            handleEventsGillespie(kernel, std::move(localEvents), localAlpha)
+                                            handleEventsGillespie(kernel, std::move(localEvents))
                                     );
                                 }
 
@@ -535,7 +544,7 @@ namespace readdy {
                         BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
                         BOOST_LOG_TRIVIAL(trace) << "got problematic particles because they were in the halo region: " << problematicParticles.size();
                         gatherEvents(problematicParticles, kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
-                        auto newEvilParticles = handleEventsGillespie(kernel, std::move(evilEvents), alpha);
+                        auto newEvilParticles = handleEventsGillespie(kernel, std::move(evilEvents));
 
                         kernel->getKernelStateModel().getParticleData()->deactivateMarked();
 
@@ -665,6 +674,7 @@ namespace readdy {
                                                 if(distSquared < react->getEductDistance() * react->getEductDistance()) {
                                                     const auto rate = react->getRate();
                                                     if(rate > 0) {
+                                                        alpha += rate;
                                                         events.push_back({2, idx, idx_neighbor, rate, alpha,
                                                                                static_cast<index_t>(it - reactions.begin()),
                                                                                particleType, neighborType});

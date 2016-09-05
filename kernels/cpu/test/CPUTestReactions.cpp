@@ -207,27 +207,26 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     const auto typeC = kernel->getKernelContext().getParticleTypeID("C");
 
     // this particle goes right into the middle, i.e., into the halo region
-    kernel->getKernelStateModel().addParticle({0, 0, 0, typeA});
+    kernel->getKernelStateModel().addParticle({0, 0, 0, typeA});            // 0
     // these particles go left and right of this particle into the boxes as problematic ones
-    kernel->getKernelStateModel().addParticle({0, 0, -.7, typeA});
-    kernel->getKernelStateModel().addParticle({0, 0, .7, typeC});
+    kernel->getKernelStateModel().addParticle({0, 0, -.7, typeA});          // 1
+    kernel->getKernelStateModel().addParticle({0, 0, .7, typeC});           // 2
     // these particles are far enough away from the halo region but still conflict (transitively) with the 1st layer
-    kernel->getKernelStateModel().addParticle({0, 0, -1.6, typeC});
-    kernel->getKernelStateModel().addParticle({0, 0, 1.6, typeA});
-    kernel->getKernelStateModel().addParticle({0, 0, 1.7, typeA});
+    kernel->getKernelStateModel().addParticle({0, 0, -1.6, typeC});         // 3
+    kernel->getKernelStateModel().addParticle({0, 0, 1.6, typeA});          // 4
+    kernel->getKernelStateModel().addParticle({0, 0, 1.7, typeA});          // 5
     // this particle are conflicting but should not appear as their reaction rate is 0
-    kernel->getKernelStateModel().addParticle({0, 0, -1.7, typeB});
+    kernel->getKernelStateModel().addParticle({0, 0, -1.7, typeB});         // 6
     // these particles are well inside the boxes and should not be considered problematic
-    kernel->getKernelStateModel().addParticle({0, 0, -5, typeA});
-    kernel->getKernelStateModel().addParticle({0, 0, -5.5, typeA});
-    kernel->getKernelStateModel().addParticle({0, 0, 5, typeA});
-    kernel->getKernelStateModel().addParticle({0, 0, 5.5, typeA});
+    kernel->getKernelStateModel().addParticle({0, 0, -5, typeA});           // 7
+    kernel->getKernelStateModel().addParticle({0, 0, -5.5, typeA});         // 8
+    kernel->getKernelStateModel().addParticle({0, 0, 5, typeA});            // 9
+    kernel->getKernelStateModel().addParticle({0, 0, 5.5, typeA});          // 10
 
     kernel->getKernelContext().configure();
     // a box width in z direction of 12 should divide into two boxes of 5x5x6 minus the halo region of width 1.0.
     {
         fix_n_threads n_threads {kernel.get(), 2};
-        // todo what follows works for gillespie as well -> parametrize
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu::programs::reactions::GillespieParallel>();
         neighborList->execute();

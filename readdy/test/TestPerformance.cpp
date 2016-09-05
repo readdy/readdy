@@ -52,7 +52,7 @@ namespace {
             kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
         }
 
-        const unsigned int nParticles = 5000;
+        const unsigned int nParticles = 15000;
         for(unsigned long _ = 0; _ < nParticles; ++_) {
             for(const auto& t : types) {
                 readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),
@@ -61,13 +61,13 @@ namespace {
             }
         }
 
-        kernel.registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", .5, 2.0);
-        kernel.registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", .5, 2.0);
+        kernel.registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", .5, .5);
+        kernel.registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", .5, .5);
 
         auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
-        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::Gillespie>();
+        auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::GillespieParallel>();
         kernel.getKernelContext().configure();
 
         auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
@@ -106,26 +106,32 @@ namespace {
             }
         }
 
-        BOOST_LOG_TRIVIAL(debug) << "--------------------------------------------------------------";
-        BOOST_LOG_TRIVIAL(debug) << "Average time for calculating forces: " << t_forces / steps;
-        BOOST_LOG_TRIVIAL(debug) << "Average time for the integrator:     " << t_integrator / steps;
-        BOOST_LOG_TRIVIAL(debug) << "Average time for the neighbor list:  " << t_nl / steps;
-        BOOST_LOG_TRIVIAL(debug) << "Average time for handling reactions: " << t_reactions / steps;
-        BOOST_LOG_TRIVIAL(debug) << "--------------------------------------------------------------";
+        std::cout << "--------------------------------------------------------------" << std::endl;
+        std::cout << "Average time for calculating forces: " << t_forces / steps << std::endl;
+        std::cout << "Average time for the integrator:     " << t_integrator / steps << std::endl;
+        std::cout << "Average time for the neighbor list:  " << t_nl / steps << std::endl;;
+        std::cout << "Average time for handling reactions: " << t_reactions / steps << std::endl;;
+        std::cout << "--------------------------------------------------------------" << std::endl;;
     }
 
     TEST(TestPerformance, SingleCPU) {
+        auto coreLogger = boost::log::core::get();
+        coreLogger->set_logging_enabled(false);
         {
             auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
             runPerformanceTest(*kernel);
         }
+        coreLogger->set_logging_enabled(true);
     }
 
     TEST(TestPerformance, CPU) {
+        auto coreLogger = boost::log::core::get();
+        coreLogger->set_logging_enabled(false);
         {
             auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
             runPerformanceTest(*kernel);
         }
+        coreLogger->set_logging_enabled(true);
     }
 
 }
