@@ -34,20 +34,19 @@ namespace readdy {
 
                 template<typename R, typename... Args>
                 inline std::unique_ptr<R> create(unsigned int stride, Args... args) const {
-                    return std::unique_ptr<R>(ObservableFactory::get_dispatcher<R, Args...>::impl(this, kernel, stride, std::forward<Args>(args)...));
+                    return std::unique_ptr<R>(ObservableFactory::get_dispatcher<R, Args...>::impl(this, stride, std::forward<Args>(args)...));
                 }
 
-                virtual HistogramAlongAxisObservable* createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride,
-                                                                                    std::vector<double> binBorders, std::vector<std::string> typesToCount, unsigned int axis) const {
+                virtual HistogramAlongAxisObservable* createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typesToCount, unsigned int axis) const {
                     // todo: provide default impl
                     throw std::runtime_error("Should be overridden (or todo: provide default impl)");
                 }
 
-                virtual NParticlesObservable* createNParticlesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const {
+                virtual NParticlesObservable* createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
                     throw std::runtime_error("should be overridden (or todo: provide default impl)");
                 }
 
-                virtual ForcesObservable* createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const {
+                virtual ForcesObservable* createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
                     throw std::runtime_error("should be overridden (or todo: provide default impl)");
                 }
 
@@ -57,27 +56,27 @@ namespace readdy {
                 template<typename T, typename... Args> struct get_dispatcher;
 
                 template<typename T, typename... Args> struct get_dispatcher {
-                    static T *impl(const ObservableFactory * self, Kernel *const kernel, unsigned int stride, Args... args) {
+                    static T *impl(const ObservableFactory * self, unsigned int stride, Args... args) {
                         // this only invokes the normal constructor
-                        return new T(kernel, stride, std::forward<Args>(args)...);
+                        return new T(self->kernel, stride, std::forward<Args>(args)...);
                     };
                 };
 
                 template<typename... Args> struct get_dispatcher<readdy::model::HistogramAlongAxisObservable, Args...> {
-                    static HistogramAlongAxisObservable *impl(const ObservableFactory * self, Kernel *const kernel, unsigned int stride, Args... args) {
-                        return self->createAxisHistogramObservable(kernel, stride, std::forward<Args>(args)...);
+                    static HistogramAlongAxisObservable *impl(const ObservableFactory * self, unsigned int stride, Args... args) {
+                        return self->createAxisHistogramObservable(stride, std::forward<Args>(args)...);
                     }
                 };
 
                 template<typename... Args> struct get_dispatcher<readdy::model::NParticlesObservable, Args...> {
-                    static NParticlesObservable* impl(const ObservableFactory* self, Kernel*const kernel, unsigned int stride, Args... args) {
-                        return self->createNParticlesObservable(kernel, stride, std::forward<Args>(args)...);
+                    static NParticlesObservable* impl(const ObservableFactory* self, unsigned int stride, Args... args) {
+                        return self->createNParticlesObservable(stride, std::forward<Args>(args)...);
                     }
                 };
 
                 template<typename... Args> struct get_dispatcher<readdy::model::ForcesObservable, Args...> {
-                    static ForcesObservable* impl(const ObservableFactory* self, Kernel*const kernel, unsigned int stride, Args... args) {
-                        return self->createForcesObservable(kernel, stride, std::forward<Args>(args)...);
+                    static ForcesObservable* impl(const ObservableFactory* self, unsigned int stride, Args... args) {
+                        return self->createForcesObservable(stride, std::forward<Args>(args)...);
                     }
                 };
             };

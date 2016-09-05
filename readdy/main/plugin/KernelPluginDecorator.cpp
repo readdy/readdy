@@ -40,7 +40,7 @@ readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
 }
 
 readdy::model::KernelContext& readdy::plugin::_internal::KernelPluginDecorator::getKernelContext() const {
-    return (*reference).getKernelContext();
+    return reference->getKernelContext();
 }
 
 std::unique_ptr<readdy::model::potentials::Potential> readdy::plugin::_internal::KernelPluginDecorator::createPotential(std::string &name) const {
@@ -65,6 +65,48 @@ readdy::model::reactions::ReactionFactory &readdy::plugin::_internal::KernelPlug
 
 readdy::model::_internal::ObservableFactory &readdy::plugin::_internal::KernelPluginDecorator::getObservableFactory() const {
     return reference->getObservableFactory();
+}
+
+boost::signals2::scoped_connection
+readdy::plugin::_internal::KernelPluginDecorator::connectObservable(readdy::model::ObservableBase *const observable) {
+    return reference->connectObservable(observable);
+}
+
+void readdy::plugin::_internal::KernelPluginDecorator::disconnectObservable(
+        readdy::model::ObservableBase *const observable) {
+    reference->disconnectObservable(observable);
+}
+
+std::unique_ptr<readdy::model::programs::Program>
+readdy::plugin::_internal::KernelPluginDecorator::createProgram(const std::string &name) const {
+    return reference->createProgram(name);
+}
+
+void readdy::plugin::_internal::KernelPluginDecorator::evaluateObservables(readdy::model::time_step_type t) {
+    reference->evaluateObservables(t);
+}
+
+void readdy::plugin::_internal::KernelPluginDecorator::evaluateAllObservables(readdy::model::time_step_type t) {
+    reference->evaluateAllObservables(t);
+}
+
+std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, boost::signals2::scoped_connection>
+readdy::plugin::_internal::KernelPluginDecorator::registerObservable(const readdy::model::ObservableType &observable,
+                                                                     unsigned int stride) {
+    return reference->registerObservable(observable, stride);
+}
+
+std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAvailablePrograms() const {
+    return reference->getAvailablePrograms();
+}
+
+void
+readdy::plugin::_internal::KernelPluginDecorator::addParticle(const std::string &type, const readdy::model::Vec3 &pos) {
+    reference->addParticle(type, pos);
+}
+
+unsigned int readdy::plugin::_internal::KernelPluginDecorator::getTypeId(const std::string &string) const {
+    return reference->getTypeId(string);
 }
 
 

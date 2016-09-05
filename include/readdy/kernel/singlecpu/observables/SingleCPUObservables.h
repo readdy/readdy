@@ -19,18 +19,16 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace observables {
-                // todo can the preceeding "SingleCPU" be omitted, since its already in the namespace?
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
-                class SingleCPUHistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
+                class HistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
 
                 public:
-                    SingleCPUHistogramAlongAxisObservable(readdy::model::Kernel *const kernel, unsigned int stride,
+                    HistogramAlongAxisObservable(kernel_t *const kernel, unsigned int stride,
                                                           const std::vector<double> &binBorders,
                                                           const std::vector<std::string> &typesToCount,
                                                           unsigned int axis)
-                            : readdy::model::HistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount,
-                                                                          axis),
-                              kernel(dynamic_cast<kernel_t *>(kernel)) {
+                            : readdy::model::HistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount, axis),
+                              kernel(kernel) {
                         size = result.size();
                     }
 
@@ -67,9 +65,9 @@ namespace readdy {
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class NParticlesObservable : public readdy::model::NParticlesObservable {
                 public:
-                    NParticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+                    NParticlesObservable(kernel_t *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
                             readdy::model::NParticlesObservable(kernel, stride, typesToCount),
-                            singleCPUKernel(dynamic_cast<kernel_t *>(kernel)) {}
+                            singleCPUKernel(kernel) {}
 
                     virtual void evaluate() override {
                         std::vector<unsigned long> resultVec = {};
@@ -101,9 +99,10 @@ namespace readdy {
                 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
                 class ForcesObservable : public readdy::model::ForcesObservable {
                 public:
-                    ForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+                    ForcesObservable(kernel_t* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
                             readdy::model::ForcesObservable(kernel, stride, typesToCount),
-                            kernel(dynamic_cast<kernel_t*>(kernel)) { }
+                            kernel(kernel) { }
+                    virtual ~ForcesObservable() {}
 
                     virtual void evaluate() override {
                         result.clear();

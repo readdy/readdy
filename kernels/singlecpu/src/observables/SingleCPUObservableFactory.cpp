@@ -16,25 +16,24 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace observables {
-                SingleCPUObservableFactory::SingleCPUObservableFactory(readdy::model::Kernel *const kernel) : ObservableFactory(kernel) {
+                SingleCPUObservableFactory::SingleCPUObservableFactory(readdy::kernel::singlecpu::SingleCPUKernel *const kernel) : ObservableFactory(kernel), kernel(kernel) {
+                    BOOST_LOG_TRIVIAL(debug) << "created scpu obs fac w kernel " << kernel;
                 }
 
-                readdy::model::HistogramAlongAxisObservable *SingleCPUObservableFactory::createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
+                readdy::model::HistogramAlongAxisObservable *SingleCPUObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                                                                                                std::vector<std::string> typesToCount, unsigned int axis) const {
-                    return new SingleCPUHistogramAlongAxisObservable<>(kernel, stride, binBorders, typesToCount, axis);
+                    return new HistogramAlongAxisObservable<>(kernel, stride, binBorders, typesToCount, axis);
                 }
 
                 readdy::model::NParticlesObservable *SingleCPUObservableFactory::createNParticlesObservable(
-                        readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) const {
+                        unsigned int stride, std::vector<std::string> typesToCount) const {
                     return new NParticlesObservable<>(kernel, stride, typesToCount);
                 }
 
                 readdy::model::ForcesObservable *
-                SingleCPUObservableFactory::createForcesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) const {
+                SingleCPUObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
                     return new ForcesObservable<>(kernel, stride, typesToCount);
                 }
-
-
             }
         }
     }

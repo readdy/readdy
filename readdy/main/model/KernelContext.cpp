@@ -376,9 +376,6 @@ namespace readdy {
             pimpl->potentialO2Registry.clear();
             reactionOneEductRegistry->clear();
             reactionTwoEductsRegistry->clear();
-            for(auto typeIt : pimpl->typeMapping) {
-
-            }
             for (auto &&e : pimpl->internalPotentialO1Registry) {
                 pimpl->potentialO1Registry[e.first] = std::vector<readdy::model::potentials::PotentialOrder1 *>();
                 pimpl->potentialO1Registry[e.first].reserve(e.second.size());

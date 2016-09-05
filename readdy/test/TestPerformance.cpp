@@ -52,7 +52,7 @@ namespace {
             kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
         }
 
-        const unsigned int nParticles = 15000;
+        const unsigned int nParticles = 150;
         for(unsigned long _ = 0; _ < nParticles; ++_) {
             for(const auto& t : types) {
                 readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),
@@ -68,7 +68,6 @@ namespace {
         auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
         auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::GillespieParallel>();
-        kernel.getKernelContext().configure();
 
         auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
         obs->setCallback([] (const std::vector<unsigned long> n) {
@@ -77,6 +76,8 @@ namespace {
         auto connection = kernel.connectObservable(obs.get());
 
         double t_forces=0, t_integrator=0, t_nl=0, t_reactions = 0;
+
+        kernel.getKernelContext().configure();
 
         neighborList->execute();
         for(readdy::model::time_step_type t = 0; t < steps; ++t) {

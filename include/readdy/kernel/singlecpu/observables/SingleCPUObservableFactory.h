@@ -11,6 +11,7 @@
 #define READDY_MAIN_SINGLECPUOBSERVABLEFACTORY_H
 
 #include <readdy/model/_internal/ObservableFactory.h>
+#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
     namespace kernel {
@@ -19,15 +20,17 @@ namespace readdy {
                 class SingleCPUObservableFactory : public readdy::model::_internal::ObservableFactory{
 
                 public:
-                    SingleCPUObservableFactory(readdy::model::Kernel *const kernel);
+                    SingleCPUObservableFactory(readdy::kernel::singlecpu::SingleCPUKernel *const kernel);
 
-                    virtual readdy::model::HistogramAlongAxisObservable *createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
+                    virtual readdy::model::HistogramAlongAxisObservable *createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                                                                                std::vector<std::string> typesToCount, unsigned int axis) const override;
 
-                    virtual readdy::model::NParticlesObservable *createNParticlesObservable(readdy::model::Kernel *const kernel,
-                                                                                    unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+                    virtual readdy::model::NParticlesObservable *createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
-                    virtual readdy::model::ForcesObservable *createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+                    virtual readdy::model::ForcesObservable *createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+
+                private:
+                    readdy::kernel::singlecpu::SingleCPUKernel *const kernel;
                 };
             }
         }

@@ -92,8 +92,13 @@ namespace readdy {
                         return new Fission(*this);
                     }
 
+                    Fission(const Fission& rhs)
+                            : Fission(rhs.name, rhs.educts[0], rhs.products[0], rhs.products[1],
+                                      rhs.rate, rhs.productDistance, rhs.weight1, rhs.weight2)
+                    { }
+
                 protected:
-                    std::shared_ptr<readdy::model::RandomProvider> rand = std::make_shared<readdy::model::RandomProvider>();
+                    std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
 
                 };
 
