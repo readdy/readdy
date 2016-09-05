@@ -25,11 +25,11 @@ namespace readdy {
                 pimpl->currentEnergy = 0;
                 // update forces and energy order 1 potentials
                 std::vector<double> energyUpdate;
-                energyUpdate.reserve(util::getNThreads());
+                energyUpdate.reserve(config->nThreads);
                 using data_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
                 {
                     std::vector<util::ScopedThread> threads;
-                    threads.reserve(util::getNThreads());
+                    threads.reserve(config->nThreads);
                     using _it_t = std::vector<unsigned int>::const_iterator;
                     using pot1map = std::unordered_map<unsigned int, std::vector<readdy::model::potentials::PotentialOrder1 *>>;
 
@@ -51,10 +51,10 @@ namespace readdy {
                     };
 
                     const auto size = pimpl->particleData->size();
-                    const std::size_t grainSize = size / util::getNThreads();
+                    const std::size_t grainSize = size / config->nThreads;
 
                     auto it = pimpl->particleData->cbegin_types();
-                    for (auto i = 0; i < util::getNThreads() - 1; ++i) {
+                    for (auto i = 0; i < config->nThreads - 1; ++i) {
                         energyUpdate.push_back(0);
                         threads.push_back(util::ScopedThread(
                                 std::thread(worker, it, it + grainSize, std::ref(energyUpdate.back()),
@@ -76,7 +76,7 @@ namespace readdy {
                     using pot2map = std::unordered_map<readdy::util::ParticleTypePair, std::vector<readdy::model::potentials::PotentialOrder2*>, readdy::util::ParticleTypePairHasher>;
                     using dist_t = std::function<readdy::model::Vec3(const readdy::model::Vec3 &, const readdy::model::Vec3 &)>;
                     std::vector<util::ScopedThread> threads;
-                    threads.reserve(util::getNThreads());
+                    threads.reserve(config->nThreads);
                     auto worker = [](nl_it_t begin, const unsigned long n, double& energy, data_t *data, pot2map pot2Map, dist_t dist) -> void {
 
                         auto it = begin;
@@ -104,10 +104,10 @@ namespace readdy {
                     };
 
                     const auto size = pimpl->neighborList->pairs->size();
-                    const std::size_t grainSize = size / util::getNThreads();
+                    const std::size_t grainSize = size / config->nThreads;
 
                     auto it = pimpl->neighborList->pairs->begin();
-                    for (auto i = 0; i < util::getNThreads() - 1; ++i) {
+                    for (auto i = 0; i < config->nThreads - 1; ++i) {
                         threads.push_back(util::ScopedThread(std::thread(worker, it, grainSize, std::ref(energyUpdate[i]), pimpl->particleData.get(), pimpl->context->getAllOrder2Potentials(), pimpl->context->getShortestDifferenceFun())));
                         std::advance(it, grainSize);
                     }
@@ -160,11 +160,11 @@ namespace readdy {
                 return pimpl->currentEnergy;
             }
 
-            CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context) : pimpl(
-                    std::make_unique<Impl>()) {
+            CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config)
+                    : pimpl(std::make_unique<Impl>()), config(config) {
                 pimpl->context = context;
                 pimpl->particleData = std::make_unique<readdy::kernel::singlecpu::model::SingleCPUParticleData>(0);
-                pimpl->neighborList = std::make_unique<model::NeighborList>(context);
+                pimpl->neighborList = std::make_unique<model::NeighborList>(context, config);
             }
 
             readdy::kernel::singlecpu::model::SingleCPUParticleData *const CPUStateModel::getParticleData() const {
@@ -182,7 +182,6 @@ namespace readdy {
             void CPUStateModel::removeAllParticles() {
                 pimpl->particleData->clear();
             }
-
 
             CPUStateModel::~CPUStateModel() = default;
 

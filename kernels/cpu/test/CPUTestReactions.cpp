@@ -11,7 +11,21 @@
 #include <readdy/model/Kernel.h>
 #include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/cpu/util/ConfigUtils.h>
+#include <readdy/kernel/cpu/programs/Reactions.h>
+
+struct fix_n_threads {
+    fix_n_threads(readdy::kernel::cpu::CPUKernel *const kernel, unsigned int n)
+            : oldValue(static_cast<unsigned int>(kernel->getNThreads())), kernel(kernel) {
+        kernel->setNThreads(n);
+    }
+
+    ~fix_n_threads() {
+        kernel->setNThreads(oldValue);
+    }
+private:
+    const unsigned int oldValue;
+    readdy::kernel::cpu::CPUKernel *const kernel;
+};
 
 TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using fusion_t = readdy::model::reactions::Fusion;
@@ -166,35 +180,7 @@ TEST(CPUTestReactions, TestDecay) {
     connection.disconnect();
 }
 
-/**
- * Setting:
- *  - Five particle types A,B,C,D,E.
- *  - They are instantiated such that there is one A particle, one B and one C particle.
- *  - B and C particle are within the reaction radius of their assigned reaction.
- * Reactions (all with rate 1, dt = 1):
- *  - A has no interaction with the other particles and dies after one time step (death rate 1)
- *  - B + C -> E
- *  - B + D -> A
- *  - E -> A
- *  - C -> D
- * Expected:
- *  - After one time step, the A particle dies and either C -> D or B + C -> E
- *  - After two time steps:
- *      - If previously C -> D, one is left with one B and one D particle,
- *        which will react to one A particle
- *      - If previously B + C -> E, one is left with one E particle,
- *        which will convert to one A particle
- *  - After three time steps, one is left with one A particle which then will
- *    decay within the next timestep, leaving no particles.
- * Assert:
- *   - t = 0: n_particles == 3 with 1x A, 1x B, 1x C
- *   - t = 1: n_particles == 2 || n_particles == 1 with (1x B, 1x D) || 1x E
- *   - t = 2: n_particles == 1 with 1x A
- *   - t > 2: n_particles == 0
- */
-TEST(CPUTestReactions, TestMultipleReactionTypes) {
-
-    readdy::kernel::cpu::util::setNThreads(1);
+TEST(CPUTestReactions, TestGillespieParallel) {
 
     using fusion_t = readdy::model::reactions::Fusion;
     using fission_t = readdy::model::reactions::Fission;
@@ -202,96 +188,35 @@ TEST(CPUTestReactions, TestMultipleReactionTypes) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
+    kernel->getKernelContext().setBoxSize(10, 10, 12);
     kernel->getKernelContext().setTimeStep(1);
+    kernel->getKernelContext().setPeriodicBoundary(true, true, false);
 
     kernel->getKernelContext().setDiffusionConstant("A", .25);
-    kernel->getKernelContext().setDiffusionConstant("B", .25);
-    kernel->getKernelContext().setDiffusionConstant("C", .25);
-    kernel->getKernelContext().setDiffusionConstant("D", .25);
-    kernel->getKernelContext().setDiffusionConstant("E", .25);
+    double reactionRadius = 1.0;
+    kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, reactionRadius);
 
-    kernel->registerReaction<death_t>("A decay", "A", 1);
-    kernel->registerReaction<fusion_t>("B+C->E", "B", "C", "E", 1, 17);
-    kernel->registerReaction<fusion_t>("B+D->A", "B", "D", "A", 1, 17);
-    kernel->registerReaction<conversion_t>("E->A", "E", "A", 1);
-    kernel->registerReaction<conversion_t>("C->D", "C", "D", 1);
+    auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu::programs::reactions::GillespieParallel>();
 
-    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
-    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::GillespieParallel>();
+    const auto typeId = kernel->getKernelContext().getParticleTypeID("A");
 
-    const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
-    const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
-    const auto typeId_C = kernel->getKernelContext().getParticleTypeID("C");
-    const auto typeId_D = kernel->getKernelContext().getParticleTypeID("D");
-    const auto typeId_E = kernel->getKernelContext().getParticleTypeID("E");
-
-    kernel->getKernelStateModel().addParticle({4, 4, 4, typeId_A});
-    kernel->getKernelStateModel().addParticle({-2, 0, 0, typeId_B});
-    kernel->getKernelStateModel().addParticle({2, 0, 0, typeId_C});
-
-    auto pred_contains_A = [=](const readdy::model::Particle &p) { return p.getType() == typeId_A; };
-    auto pred_contains_B = [=](const readdy::model::Particle &p) { return p.getType() == typeId_B; };
-    auto pred_contains_C = [=](const readdy::model::Particle &p) { return p.getType() == typeId_C; };
-    auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
-    auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
+    // this particle goes right into the middle, i.e., into the halo region
+    kernel->getKernelStateModel().addParticle({0, 0, 0, typeId});
+    // these particles go left and right of this particle into the boxes as problematic ones
+    kernel->getKernelStateModel().addParticle({0, 0, -.7, typeId});
+    kernel->getKernelStateModel().addParticle({0, 0, .7, typeId});
+    // these particles are well inside the boxes and should not be considered problematic
+    kernel->getKernelStateModel().addParticle({0, 0, -5, typeId});
+    kernel->getKernelStateModel().addParticle({0, 0, 5, typeId});
 
     kernel->getKernelContext().configure();
-
-    for (unsigned int t = 0; t < 4; t++) {
-
-        const auto particles = kernel->getKernelStateModel().getParticles();
-
-        bool containsA = std::find_if(particles.begin(), particles.end(), pred_contains_A) != particles.end();
-        bool containsB = std::find_if(particles.begin(), particles.end(), pred_contains_B) != particles.end();
-        bool containsC = std::find_if(particles.begin(), particles.end(), pred_contains_C) != particles.end();
-        bool containsD = std::find_if(particles.begin(), particles.end(), pred_contains_D) != particles.end();
-        bool containsE = std::find_if(particles.begin(), particles.end(), pred_contains_E) != particles.end();
-
-        switch (t) {
-            case 0: {
-                EXPECT_EQ(3, particles.size());
-                EXPECT_TRUE(containsA);
-                EXPECT_TRUE(containsB);
-                EXPECT_TRUE(containsC);
-                break;
-            }
-            case 1: {
-                EXPECT_TRUE(particles.size() == 2 || particles.size() == 1);
-                if (particles.size() == 2) {
-                    BOOST_LOG_TRIVIAL(debug) << "------> conversion happened";
-                    EXPECT_TRUE(containsB);
-                    EXPECT_TRUE(containsD);
-                } else {
-                    BOOST_LOG_TRIVIAL(debug) << "------> fusion happened";
-                    EXPECT_TRUE(containsE);
-                }
-                break;
-            }
-            case 2: {
-                EXPECT_EQ(1, particles.size());
-                EXPECT_TRUE(containsA);
-                break;
-            }
-            case 3: {
-                EXPECT_EQ(0, particles.size());
-                break;
-            }
-            default: {
-                FAIL();
-            }
-        }
-
-        // propagate
-        neighborList->execute();
-        forces->execute();
-        integrator->execute();
-
-        neighborList->execute();
+    // a box width in z direction of 12 should divide into two boxes of 5x5x6 minus the halo region of width 1.0.
+    {
+        fix_n_threads n_threads {kernel.get(), 2};
         reactionsProgram->execute();
-        kernel->evaluateObservables(t);
+        EXPECT_EQ(1.0, reactionsProgram->getMaxReactionRadius());
+        EXPECT_EQ(6.0, reactionsProgram->getBoxWidth());
+
     }
 }

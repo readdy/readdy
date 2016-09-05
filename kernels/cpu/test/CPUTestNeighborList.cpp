@@ -60,7 +60,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(3.6, 2, 2);
         ctx.setPeriodicBoundary(true, false, false);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 3);
@@ -92,7 +93,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(1.5, 4, 1.5);
         ctx.setPeriodicBoundary(false, false, false);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 3);
@@ -114,7 +116,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(4.8, 5, 5.1);
         ctx.setPeriodicBoundary(true, true, true);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 64);
@@ -141,7 +144,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(4, 4, 4);
         ctx.setPeriodicBoundary(true, true, true);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 27);

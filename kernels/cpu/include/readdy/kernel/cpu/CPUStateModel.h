@@ -16,6 +16,7 @@
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
 #include <readdy/kernel/cpu/model/NeighborList.h>
+#include <readdy/kernel/cpu/util/Config.h>
 
 namespace readdy {
     namespace kernel {
@@ -23,7 +24,7 @@ namespace readdy {
             class CPUStateModel : public readdy::model::KernelStateModel {
 
             public:
-                CPUStateModel(readdy::model::KernelContext *const context);
+                CPUStateModel(readdy::model::KernelContext *const context, util::Config const*const config);
                 ~CPUStateModel();
                 virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
                 virtual const std::vector<readdy::model::Particle> getParticles() const override;
@@ -44,6 +45,7 @@ namespace readdy {
             private:
                 struct Impl;
                 std::unique_ptr<Impl> pimpl;
+                util::Config const*const config;
             };
         }
     }

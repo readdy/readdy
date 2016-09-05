@@ -332,18 +332,19 @@ namespace readdy {
                     }
 
                     struct GillespieParallel::HaloBox  {
+                        // todo stage this (by "rings" of width "max(reaction radii)".
                         std::vector<unsigned long> particleIndices{};
                         unsigned int id = 0;
                         vec_t lowerLeftVertex, upperRightVertex;
                         vec_t lowerLeftVertexHalo, upperRightVertexHalo;
 
 
-                        HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis, bool periodicInLongestAx) :
+                        HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis, bool periodicInLongestAx, bool lastBox) :
                                 id(id), lowerLeftVertexHalo(lowerLeftBdry), upperRightVertexHalo(upperRightBdry) {
                             lowerLeftVertex = lowerLeftBdry;
                             if(periodicInLongestAx || (!periodicInLongestAx && id != 0)) lowerLeftVertex[longestAxis] += haloWidth;
                             upperRightVertex = upperRightBdry;
-                            if(periodicInLongestAx  || (!periodicInLongestAx && id != util::getNThreads()-1)) upperRightVertex[longestAxis] -= haloWidth;
+                            if(periodicInLongestAx  || (!periodicInLongestAx && !lastBox)) upperRightVertex[longestAxis] -= haloWidth;
                         }
 
                         friend bool operator==(const HaloBox &lhs, const HaloBox &rhs) {
@@ -399,7 +400,7 @@ namespace readdy {
                                     default: return 1;
                                 }
                             }();
-                            unsigned int nBoxes = static_cast<unsigned int>(util::getNThreads());
+                            unsigned int nBoxes = static_cast<unsigned int>(kernel->getNThreads());
                             auto boxBoundingVertices = kernel->getKernelContext().getBoxBoundingVertices();
                             auto lowerLeft = std::get<0>(boxBoundingVertices);
                             const bool periodicInLongestAx = kernel->getKernelContext().getPeriodicBoundary()[longestAxis];
@@ -412,7 +413,7 @@ namespace readdy {
                             }
                             boxes.reserve(nBoxes);
                             for(unsigned int i = 0; i < nBoxes; ++i) {
-                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis, periodicInLongestAx};
+                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis, periodicInLongestAx, i != nBoxes-1};
                                 boxes.push_back(std::move(box));
                                 lowerLeft[longestAxis] += boxWidth;
                                 upperRight[longestAxis] += boxWidth;
@@ -494,7 +495,7 @@ namespace readdy {
                         std::vector<std::future<std::vector<particle_t>>> newParticles;
                         {
                             std::vector<util::ScopedThread> threads;
-                            for (unsigned int i = 0; i < util::getNThreads(); ++i) {
+                            for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
                                 promise_t promise;
                                 updates.push_back(promise.get_future());
                                 promise_new_particles_t promiseParticles;
@@ -661,6 +662,30 @@ namespace readdy {
                             }
                         }
 
+                    }
+
+                    double GillespieParallel::getMaxReactionRadius() const {
+                        return maxReactionRadius;
+                    }
+
+                    double GillespieParallel::getBoxWidth() const {
+                        return boxWidth;
+                    }
+
+                    unsigned int GillespieParallel::getLongestAxis() const {
+                        return longestAxis;
+                    }
+
+                    unsigned int GillespieParallel::getOtherAxis1() const {
+                        return otherAxis1;
+                    }
+
+                    unsigned int GillespieParallel::getOtherAxis2() const {
+                        return otherAxis2;
+                    }
+
+                    const std::vector<unsigned long> &GillespieParallel::getProblematicParticles() const {
+                        return problematicParticles;
                     }
 
                     template void GillespieParallel::gatherEvents<std::vector<unsigned long>>(

@@ -42,12 +42,11 @@ namespace readdy {
 
                 virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
 
-
+                unsigned long getNThreads() const;
+                void setNThreads(unsigned long n);
             private:
                 struct Impl;
-                std::unique_ptr<readdy::kernel::cpu::CPUKernel::Impl> pimpl;
-
-
+                std::unique_ptr<Impl> pimpl;
             };
 
 

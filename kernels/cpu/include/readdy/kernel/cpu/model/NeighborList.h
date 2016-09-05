@@ -15,8 +15,8 @@
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <readdy/kernel/cpu/util/ConfigUtils.h>
 #include <readdy/kernel/cpu/util/ScopedThread.h>
+#include <readdy/kernel/cpu/util/Config.h>
 
 namespace readdy {
     namespace kernel {
@@ -27,7 +27,8 @@ namespace readdy {
 
                 public:
                     using container_t = std::unordered_map<unsigned long, std::vector<unsigned long>>;
-                    NeighborList(const readdy::model::KernelContext *const context) : ctx(context) { }
+                    NeighborList(const readdy::model::KernelContext *const context, util::Config const*const config)
+                            : ctx(context), config(config) { }
 
                     virtual void setupBoxes() {
                         const auto simBoxSize = ctx->getBoxSize();
@@ -116,7 +117,7 @@ namespace readdy {
 
                             {
                                 const auto size = boxes.size();
-                                const std::size_t grainSize = size / util::getNThreads();
+                                const std::size_t grainSize = size / config->nThreads;
 
                                 auto worker = [this](unsigned long begin, unsigned long end) {
                                     for(auto _b = begin; _b < end; ++_b) {
@@ -137,28 +138,13 @@ namespace readdy {
                                 };
 
                                 std::vector<util::ScopedThread> threads;
-                                threads.reserve(util::getNThreads());
+                                threads.reserve(config->nThreads);
 
-                                for(auto i = 0; i < util::getNThreads()-1; ++i) {
+                                for(auto i = 0; i < config->nThreads-1; ++i) {
                                     threads.push_back(util::ScopedThread(std::thread(worker, i*grainSize, (i+1)*grainSize)));
                                 }
-                                threads.push_back(util::ScopedThread(std::thread(worker, (util::getNThreads()-1)*grainSize, boxes.size())));
+                                threads.push_back(util::ScopedThread(std::thread(worker, (config->nThreads-1)*grainSize, boxes.size())));
                             }
-
-                            /*for (auto &&box : boxes) {
-                                for (long i = 0; i < box.particleIndices.size(); ++i) {
-                                    const auto pI = box.particleIndices[i];
-                                    for (long j = 0; j < box.particleIndices.size(); ++j) {
-                                        if(i != j) (*pairs)[pI].push_back(box.particleIndices[j]);
-                                    }
-
-                                    for (auto &&neighboringBox : box.neighboringBoxes) {
-                                        for (const auto &pJ : neighboringBox->particleIndices) {
-                                            (*pairs)[pI].push_back(pJ);
-                                        }
-                                    }
-                                }
-                            }*/
                         }
                     }
 
@@ -179,6 +165,7 @@ namespace readdy {
                     std::array<int, 3> nBoxes{{0, 0, 0}};
                     readdy::model::Vec3 boxSize{0, 0, 0};
                     double maxCutoff = 0;
+                    util::Config const*const config;
 
                     long positive_modulo(long i, long n) const {
                         return (i % n + n) % n;
