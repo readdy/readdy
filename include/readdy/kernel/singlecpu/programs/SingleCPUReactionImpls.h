@@ -49,6 +49,7 @@ namespace readdy {
 
                         ReactionEvent(unsigned int nEducts, index_type idx1, index_type idx2, double reactionRate,
                                       double cumulativeRate, index_type reactionIdx, unsigned int t1, unsigned int t2);
+                        friend std::ostream &operator<<(std::ostream&, const ReactionEvent&);
 
                     };
 

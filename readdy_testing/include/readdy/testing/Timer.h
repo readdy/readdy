@@ -12,7 +12,6 @@
 
 #include <memory>
 #include <chrono>
-#include <boost/log/trivial.hpp>
 
 namespace readdy {
     namespace testing {
@@ -22,7 +21,7 @@ namespace readdy {
 
             ~Timer() {
                 if(print) {
-                    BOOST_LOG_TRIVIAL(debug) << "Elapsed (" << label << "): " << getSeconds() << " seconds";
+                    std::cout << "Elapsed (" << label << "): " << getSeconds() << " seconds" << std::endl;
                 }
             }
 

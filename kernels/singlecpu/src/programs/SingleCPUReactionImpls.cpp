@@ -235,6 +235,16 @@ namespace readdy {
                             : nEducts(nEducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
                               cumulativeRate(cumulativeRate), reactionIdx(reactionIdx), t1(t1), t2(t2) {}
 
+                    std::ostream &operator<<(std::ostream &os, const ReactionEvent &evt) {
+                        os << "ReactionEvent(" << evt.idx1 << "[type=" << evt.t1 << "]";
+                        if (evt.nEducts == 2) {
+                            os << " + " << evt.idx2 << "[type=" << evt.t2 << "]";
+                        }
+                        os << ", rate=" << evt.reactionRate << ", cumulativeRate=" << evt.cumulativeRate
+                           << ", reactionIdx=" << evt.reactionIdx;
+                        return os;
+                    }
+
 
                     std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<ReactionEvent> events, double alpha) {
                         using _rdy_particle_t = readdy::model::Particle;

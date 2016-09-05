@@ -14,6 +14,7 @@
 #include <vector>
 #include <readdy/model/Particle.h>
 #include <set>
+#include <mutex>
 
 namespace readdy {
     namespace kernel {
@@ -40,33 +41,36 @@ namespace readdy {
 
                     SingleCPUParticleData &operator=(const SingleCPUParticleData &rhs) = delete;
 
-                     std::vector<boost::uuids::uuid>::iterator begin_ids();
-                     std::vector<boost::uuids::uuid>::const_iterator begin_ids() const;
-                     std::vector<boost::uuids::uuid>::const_iterator cbegin_ids() const;
-                     std::vector<boost::uuids::uuid>::iterator end_ids();
-                     std::vector<boost::uuids::uuid>::const_iterator end_ids() const;
-                     std::vector<boost::uuids::uuid>::const_iterator cend_ids() const;
-
-                     std::vector<readdy::model::Vec3>::iterator begin_positions();
-                     std::vector<readdy::model::Vec3>::const_iterator begin_positions() const;
-                     std::vector<readdy::model::Vec3>::const_iterator cbegin_positions() const;
-                     std::vector<readdy::model::Vec3>::iterator end_positions();
-                     std::vector<readdy::model::Vec3>::const_iterator end_positions() const;
-                     std::vector<readdy::model::Vec3>::const_iterator cend_positions() const;
-
-                     std::vector<readdy::model::Vec3>::iterator begin_forces();
-                     std::vector<readdy::model::Vec3>::const_iterator begin_forces() const;
-                     std::vector<readdy::model::Vec3>::const_iterator cbegin_forces() const;
-                     std::vector<readdy::model::Vec3>::iterator end_forces();
-                     std::vector<readdy::model::Vec3>::const_iterator end_forces() const;
-                     std::vector<readdy::model::Vec3>::const_iterator cend_forces() const;
-
-                     std::vector<unsigned int>::iterator begin_types();
-                     std::vector<unsigned int>::const_iterator begin_types() const;
-                     std::vector<unsigned int>::const_iterator cbegin_types() const;
-                     std::vector<unsigned int>::iterator end_types();
-                     std::vector<unsigned int>::const_iterator end_types() const;
-                     std::vector<unsigned int>::const_iterator cend_types() const;
+                    std::vector<boost::uuids::uuid>::iterator begin_ids();
+                    std::vector<boost::uuids::uuid>::const_iterator begin_ids() const;
+                    std::vector<boost::uuids::uuid>::const_iterator cbegin_ids() const;
+                    std::vector<boost::uuids::uuid>::iterator end_ids();
+                    std::vector<boost::uuids::uuid>::const_iterator end_ids() const;
+                    std::vector<boost::uuids::uuid>::const_iterator cend_ids() const;
+                    std::vector<readdy::model::Vec3>::iterator begin_positions();
+                    std::vector<readdy::model::Vec3>::const_iterator begin_positions() const;
+                    std::vector<readdy::model::Vec3>::const_iterator cbegin_positions() const;
+                    std::vector<readdy::model::Vec3>::iterator end_positions();
+                    std::vector<readdy::model::Vec3>::const_iterator end_positions() const;
+                    std::vector<readdy::model::Vec3>::const_iterator cend_positions() const;
+                    std::vector<readdy::model::Vec3>::iterator begin_forces();
+                    std::vector<readdy::model::Vec3>::const_iterator begin_forces() const;
+                    std::vector<readdy::model::Vec3>::const_iterator cbegin_forces() const;
+                    std::vector<readdy::model::Vec3>::iterator end_forces();
+                    std::vector<readdy::model::Vec3>::const_iterator end_forces() const;
+                    std::vector<readdy::model::Vec3>::const_iterator cend_forces() const;
+                    std::vector<unsigned int>::iterator begin_types();
+                    std::vector<unsigned int>::const_iterator begin_types() const;
+                    std::vector<unsigned int>::const_iterator cbegin_types() const;
+                    std::vector<unsigned int>::iterator end_types();
+                    std::vector<unsigned int>::const_iterator end_types() const;
+                    std::vector<unsigned int>::const_iterator cend_types() const;
+                    std::vector<char>::iterator begin_deactivated();
+                    std::vector<char>::const_iterator begin_deactivated() const;
+                    std::vector<char>::const_iterator cbegin_deactivated() const;
+                    std::vector<char>::iterator end_deactivated();
+                    std::vector<char>::const_iterator end_deactivated() const;
+                    std::vector<char>::const_iterator cend_deactivated() const;
 
                     void swap(SingleCPUParticleData &rhs);
 
@@ -98,6 +102,12 @@ namespace readdy {
 
                     void markForDeactivation(size_t index);
 
+                    template<typename T>
+                    void updateDeactivated(const T& update) const {
+                        std::lock_guard<std::mutex> lock(markedForDeactivationMutex);
+                        markedForDeactivation->insert(std::begin(update), std::end(update));
+                    }
+
                     /**
                      * This method is the counterpart to markForDeactivation.
                      * The particles that were marked are now deactivated, i.e.,
@@ -115,10 +125,11 @@ namespace readdy {
                     std::unique_ptr<std::vector<readdy::model::Vec3>> positions;
                     std::unique_ptr<std::vector<readdy::model::Vec3>> forces;
                     std::unique_ptr<std::vector<unsigned int>> type;
-                    std::unique_ptr<std::vector<bool>> deactivated;
-                    std::unique_ptr<std::set<size_t>> markedForDeactivation;
+                    std::unique_ptr<std::vector<char>> deactivated;
                     size_t deactivated_index;
                     size_t n_deactivated;
+                    mutable std::unique_ptr<std::set<size_t>> markedForDeactivation;
+                    mutable std::mutex markedForDeactivationMutex;
                 };
 
             }

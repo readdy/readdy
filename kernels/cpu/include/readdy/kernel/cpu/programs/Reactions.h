@@ -96,7 +96,6 @@ namespace readdy {
                         unsigned int getLongestAxis() const;
                         unsigned int getOtherAxis1() const;
                         unsigned int getOtherAxis2() const;
-                        const std::vector<unsigned long> &getProblematicParticles() const;
 
                     private:
                         kernel_t const *const kernel;

@@ -1,5 +1,6 @@
 #include <readdy/model/Particle.h>
 #include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 /**
  * << detailed description >>
@@ -60,6 +61,11 @@ namespace readdy {
 
 
         Particle::~Particle() = default;
+
+        std::ostream &operator<<(std::ostream &os, const Particle &p) {
+            os << "Particle(id=" << boost::uuids::to_string(p.id) << "type=" << p.type << ", pos=" << p.pos << ")";
+            return os;
+        }
 
     }
 }

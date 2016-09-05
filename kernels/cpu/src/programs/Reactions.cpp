@@ -217,6 +217,10 @@ namespace readdy {
 
                     std::vector<readdy::model::Particle>
                     handleEventsGillespie(CPUKernel const*const kernel, std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events, double alpha) {
+                        BOOST_LOG_TRIVIAL(debug) << "handling events: ";
+                        for(const auto& event : events) {
+                            BOOST_LOG_TRIVIAL(debug) << "\t " << event;
+                        }
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
                         using _rdy_particle_t = readdy::model::Particle;
                         std::vector<_rdy_particle_t> newParticles{};
@@ -228,6 +232,7 @@ namespace readdy {
                         /**
                          * Handle gathered reaction events
                          */
+                        std::vector<unsigned long> updateDeactivated {};
                         {
                             std::size_t nDeactivated = 0;
                             const std::size_t nEvents = events.size();
@@ -283,7 +288,8 @@ namespace readdy {
                                         double cumsum = 0.0;
                                         const auto idx1 = event.idx1;
                                         if (event.nEducts == 1) {
-                                            data->markForDeactivation((size_t) idx1);
+                                            *(data->begin_deactivated() + idx1) = true;
+                                            updateDeactivated.push_back(idx1);
                                             while (_it < events.end() - nDeactivated) {
                                                 if ((*_it).idx1 == idx1 ||
                                                     ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
@@ -296,8 +302,10 @@ namespace readdy {
                                             }
                                         } else {
                                             const auto idx2 = event.idx2;
-                                            data->markForDeactivation((size_t) event.idx1);
-                                            data->markForDeactivation((size_t) event.idx2);
+                                            *(data->begin_deactivated() + event.idx1) = true;
+                                            *(data->begin_deactivated() + event.idx2) = true;
+                                            updateDeactivated.push_back(event.idx1);
+                                            updateDeactivated.push_back(event.idx2);
                                             while (_it < events.end() - nDeactivated) {
                                                 if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2
                                                     ||
@@ -328,6 +336,7 @@ namespace readdy {
                                 }
                             }
                         }
+                        data->updateDeactivated(updateDeactivated);
                         return newParticles;
                     }
 
@@ -337,14 +346,17 @@ namespace readdy {
                         unsigned int id = 0;
                         vec_t lowerLeftVertex, upperRightVertex;
                         vec_t lowerLeftVertexHalo, upperRightVertexHalo;
+                        vec_t overlapLowerLeftVertex, overlapUpperRightHalo;
 
 
                         HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis, bool periodicInLongestAx, bool lastBox) :
                                 id(id), lowerLeftVertexHalo(lowerLeftBdry), upperRightVertexHalo(upperRightBdry) {
                             lowerLeftVertex = lowerLeftBdry;
-                            if(periodicInLongestAx || (!periodicInLongestAx && id != 0)) lowerLeftVertex[longestAxis] += haloWidth;
+                            if(periodicInLongestAx || id != 0) lowerLeftVertex[longestAxis] += haloWidth;
                             upperRightVertex = upperRightBdry;
-                            if(periodicInLongestAx  || (!periodicInLongestAx && !lastBox)) upperRightVertex[longestAxis] -= haloWidth;
+                            if(periodicInLongestAx  || !lastBox) upperRightVertex[longestAxis] -= haloWidth;
+                            overlapLowerLeftVertex = lowerLeftBdry - haloWidth;
+                            overlapUpperRightHalo = upperRightBdry + haloWidth;
                         }
 
                         friend bool operator==(const HaloBox &lhs, const HaloBox &rhs) {
@@ -359,8 +371,8 @@ namespace readdy {
                             return particle >= lowerLeftVertex && particle <= upperRightVertex;
                         }
 
-                        bool isInHaloBox(const vec_t& particle) const {
-                            return particle >= lowerLeftVertexHalo && particle <= upperRightVertexHalo;
+                        bool isInOverlapBox(const vec_t &particle) const {
+                            return particle >= overlapLowerLeftVertex && particle <= overlapUpperRightHalo;
                         }
                     };
 
@@ -413,7 +425,7 @@ namespace readdy {
                             }
                             boxes.reserve(nBoxes);
                             for(unsigned int i = 0; i < nBoxes; ++i) {
-                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis, periodicInLongestAx, i != nBoxes-1};
+                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis, periodicInLongestAx, i == nBoxes-1};
                                 boxes.push_back(std::move(box));
                                 lowerLeft[longestAxis] += boxWidth;
                                 upperRight[longestAxis] += boxWidth;
@@ -514,13 +526,13 @@ namespace readdy {
                         }
                         std::vector<event_t> evilEvents {};
                         double alpha = 0;
-                        long n_evil_particles = 0;
+                        long n_local_problematic = 0;
                         for(auto&& update : updates) {
                             auto&& local_problematic = update.get();
-                            n_evil_particles += local_problematic.size();
+                            n_local_problematic += local_problematic.size();
                             gatherEvents(std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         }
-                        BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_evil_particles;
+                        BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
                         BOOST_LOG_TRIVIAL(trace) << "got problematic particles because they were in the halo region: " << problematicParticles.size();
                         gatherEvents(problematicParticles, kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         auto newEvilParticles = handleEventsGillespie(kernel, std::move(evilEvents), alpha);
@@ -546,7 +558,9 @@ namespace readdy {
                             const unsigned long idx, const HaloBox &box, ctx_t ctx,
                             data_t data, nl_t nl, std::set<unsigned long> &update
                     ) const {
-                        if (update.find(idx) != update.end()) return;
+                        if (update.find(idx) != update.end()) {
+                            return;
+                        }
 
                         std::queue<unsigned long> newHaloParticles{};
 
@@ -569,7 +583,8 @@ namespace readdy {
                                         if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
                                             if (reaction->getRate() > 0) {
                                                 const bool neighborProblematic = update.find(neighborIdx) != update.end();
-                                                if (neighborProblematic || (!box.isInBox(neighborPos) && box.isInHaloBox(neighborPos))) {
+                                                if (neighborProblematic || (!box.isInBox(neighborPos) &&
+                                                        box.isInOverlapBox(neighborPos))) {
                                                     // we have a problematic particle!
                                                     update.insert(idx);
                                                     newHaloParticles.push(idx);
@@ -682,10 +697,6 @@ namespace readdy {
 
                     unsigned int GillespieParallel::getOtherAxis2() const {
                         return otherAxis2;
-                    }
-
-                    const std::vector<unsigned long> &GillespieParallel::getProblematicParticles() const {
-                        return problematicParticles;
                     }
 
                     template void GillespieParallel::gatherEvents<std::vector<unsigned long>>(

@@ -25,7 +25,7 @@ namespace readdy {
                     forces = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
                     type = std::make_unique<std::vector<unsigned int>>(capacity);
                     markedForDeactivation = std::make_unique<std::set<size_t>>();
-                    deactivated = std::make_unique<std::vector<bool>>(capacity);
+                    deactivated = std::make_unique<std::vector<char>>(capacity);
                     std::fill(deactivated->begin(), deactivated->end(), true);
                     n_deactivated = capacity;
                     deactivated_index = 0;
@@ -107,7 +107,7 @@ namespace readdy {
 
                 void SingleCPUParticleData::markForDeactivation(size_t index) {
                     (*deactivated)[index] = true;
-                    markedForDeactivation->emplace(index);
+                    markedForDeactivation->insert(index);
                 }
 
                 void SingleCPUParticleData::deactivateMarked() {
@@ -205,9 +205,34 @@ namespace readdy {
                 }
 
 
-                SingleCPUParticleData &SingleCPUParticleData::operator=(SingleCPUParticleData &&rhs) = default;
+                SingleCPUParticleData &SingleCPUParticleData::operator=(SingleCPUParticleData &&rhs) {
+                    if(this != &rhs) {
+                        std::unique_lock<std::mutex> lhs_lock(markedForDeactivationMutex, std::defer_lock);
+                        std::unique_lock<std::mutex> rhs_lock(rhs.markedForDeactivationMutex, std::defer_lock);
+                        std::lock(lhs_lock, rhs_lock);
+                        ids = std::move(rhs.ids);
+                        positions = std::move(rhs.positions);
+                        forces = std::move(rhs.forces);
+                        type = std::move(rhs.type);
+                        deactivated = std::move(rhs.deactivated);
+                        deactivated_index = std::move(rhs.deactivated_index);
+                        n_deactivated = std::move(rhs.n_deactivated);
+                        markedForDeactivation = std::move(rhs.markedForDeactivation);
+                    }
+                    return *this;
+                };
 
-                SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) = default;
+                SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) {
+                    std::unique_lock<std::mutex> rhs_lock(rhs.markedForDeactivationMutex);
+                    ids = std::move(rhs.ids);
+                    positions = std::move(rhs.positions);
+                    forces = std::move(rhs.forces);
+                    type = std::move(rhs.type);
+                    deactivated = std::move(rhs.deactivated);
+                    deactivated_index = std::move(rhs.deactivated_index);
+                    n_deactivated = std::move(rhs.n_deactivated);
+                    markedForDeactivation = std::move(rhs.markedForDeactivation);
+                };
 
                 SingleCPUParticleData::~SingleCPUParticleData() {
                 }
@@ -299,7 +324,29 @@ namespace readdy {
                     n_deactivated = ids->size();
                 }
 
+                std::vector<char>::iterator SingleCPUParticleData::begin_deactivated() {
+                    return deactivated->begin();
+                }
 
+                std::vector<char>::const_iterator SingleCPUParticleData::begin_deactivated() const {
+                    return cbegin_deactivated();
+                }
+
+                std::vector<char>::iterator SingleCPUParticleData::end_deactivated() {
+                    return deactivated->end();
+                }
+
+                std::vector<char>::const_iterator SingleCPUParticleData::end_deactivated() const {
+                    return cend_deactivated();
+                }
+
+                std::vector<char>::const_iterator SingleCPUParticleData::cend_deactivated() const {
+                    return deactivated->cend();
+                }
+
+                std::vector<char>::const_iterator SingleCPUParticleData::cbegin_deactivated() const {
+                    return deactivated->cbegin();
+                }
             }
         }
     }
