@@ -337,7 +337,7 @@ namespace readdy {
                         return newParticles;
                     }
 
-                    struct GillespieParallel::HaloBox  {
+                    struct GillespieParallel::SlicedBox  {
                         // shellIdx -> particles, outmost shell has idx 0
                         using particle_indices_t = std::vector<unsigned long>;
                         particle_indices_t particleIndices{};
@@ -358,7 +358,7 @@ namespace readdy {
                             return static_cast<long>(std::floor(mindist/shellWidth));
                         }
 
-                        HaloBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
+                        SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
                                 unsigned int longestAxis)
                                 : id(id), lowerLeftVertex(lowerLeftVertex), upperRightVertex(upperRightVertex), longestAxis(longestAxis) {
                             leftBoundary = lowerLeftVertex[longestAxis];
@@ -371,11 +371,11 @@ namespace readdy {
                             particleIndices.resize(n_shells);
                         }
 
-                        friend bool operator==(const HaloBox &lhs, const HaloBox &rhs) {
+                        friend bool operator==(const SlicedBox &lhs, const SlicedBox &rhs) {
                             return lhs.id == rhs.id;
                         }
 
-                        friend bool operator!=(const HaloBox &lhs, const HaloBox &rhs) {
+                        friend bool operator!=(const SlicedBox &lhs, const SlicedBox &rhs) {
                             return !(lhs == rhs);
                         }
 
@@ -431,7 +431,7 @@ namespace readdy {
                             }
                             boxes.reserve(nBoxes);
                             for(unsigned int i = 0; i < nBoxes; ++i) {
-                                HaloBox box {i, lowerLeft, upperRight, maxReactionRadius, longestAxis};
+                                SlicedBox box {i, lowerLeft, upperRight, maxReactionRadius, longestAxis};
                                 boxes.push_back(std::move(box));
                                 lowerLeft[longestAxis] += boxWidth;
                                 upperRight[longestAxis] += boxWidth;
@@ -446,7 +446,7 @@ namespace readdy {
                     }
 
                     void GillespieParallel::fillBoxes() {
-                        std::for_each(boxes.begin(), boxes.end(), [](HaloBox& box) {box.particleIndices.clear();});
+                        std::for_each(boxes.begin(), boxes.end(), [](SlicedBox& box) {box.particleIndices.clear();});
                         const auto particleData = kernel->getKernelStateModel().getParticleData();
                         const auto simBoxSize = kernel->getKernelContext().getBoxSize();
                         const auto nBoxes = boxes.size();
@@ -472,7 +472,7 @@ namespace readdy {
                         using promise_t = std::promise<std::set<unsigned long>>;
                         using promise_new_particles_t = std::promise<std::vector<particle_t>>;
 
-                        auto worker = [this](HaloBox &box, ctx_t ctx, data_t data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
+                        auto worker = [this](SlicedBox &box, ctx_t ctx, data_t data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
                             std::set<unsigned long> problematic {};
                             double localAlpha = 0.0;
                             std::vector<event_t> localEvents {};
@@ -549,7 +549,7 @@ namespace readdy {
                     }
 
                     void GillespieParallel::handleProblematic(
-                            const unsigned long idx, const HaloBox &box, ctx_t ctx,
+                            const unsigned long idx, const SlicedBox &box, ctx_t ctx,
                             data_t data, nl_t nl, std::set<unsigned long> &update
                     ) const {
                         if (update.find(idx) != update.end()) {

@@ -102,8 +102,8 @@ namespace readdy {
                         double boxWidth = 0.0;
                         unsigned int longestAxis;
                         unsigned int otherAxis1, otherAxis2;
-                        struct HaloBox;
-                        std::vector<HaloBox> boxes;
+                        struct SlicedBox;
+                        std::vector<SlicedBox> boxes;
 
                         /**
                          * look for the longest axis and divide it into n_threads parts, yielding halo boxes.
@@ -123,7 +123,7 @@ namespace readdy {
                         void gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
                                           std::vector<GillespieParallel::event_t> &events) const;
 
-                        void handleProblematic(const unsigned long idx, const HaloBox &box, ctx_t ctx, data_t data, nl_t nl, std::set<unsigned long>& update) const;
+                        void handleProblematic(const unsigned long idx, const SlicedBox &box, ctx_t ctx, data_t data, nl_t nl, std::set<unsigned long>& update) const;
 
                     };
                 }
