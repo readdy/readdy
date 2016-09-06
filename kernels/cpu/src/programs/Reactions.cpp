@@ -533,6 +533,7 @@ namespace readdy {
                             n_local_problematic += local_problematic.size();
                             gatherEvents(std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         }
+                        auto newProblemParticles = handleEventsGillespie(kernel, std::move(evilEvents));
                         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
                         kernel->getKernelStateModel().getParticleData()->deactivateMarked();
@@ -545,6 +546,9 @@ namespace readdy {
                                           [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
                             kernel->getKernelStateModel().getParticleData()->addParticles(particles);
                         }
+                        std::for_each(newProblemParticles.begin(), newProblemParticles.end(),
+                                      [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
+                        kernel->getKernelStateModel().getParticleData()->addParticles(newProblemParticles);
 
                     }
 
