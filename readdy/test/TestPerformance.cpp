@@ -52,7 +52,7 @@ namespace {
             kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
         }
 
-        const unsigned int nParticles = 150;
+        const unsigned int nParticles = 15000;
         for(unsigned long _ = 0; _ < nParticles; ++_) {
             for(const auto& t : types) {
                 readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),
@@ -116,23 +116,13 @@ namespace {
     }
 
     TEST(TestPerformance, SingleCPU) {
-        auto coreLogger = boost::log::core::get();
-        coreLogger->set_logging_enabled(false);
-        {
-            auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-            runPerformanceTest(*kernel);
-        }
-        coreLogger->set_logging_enabled(true);
+        //auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+        //runPerformanceTest(*kernel);
     }
 
     TEST(TestPerformance, CPU) {
-        auto coreLogger = boost::log::core::get();
-        coreLogger->set_logging_enabled(false);
-        {
-            auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-            runPerformanceTest(*kernel);
-        }
-        coreLogger->set_logging_enabled(true);
+        auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+        runPerformanceTest(*kernel);
     }
 
 }

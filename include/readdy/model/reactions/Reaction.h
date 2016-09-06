@@ -18,12 +18,16 @@
 #include <string>
 #include <boost/uuid/random_generator.hpp>
 #include <readdy/model/Particle.h>
+#include <readdy/model/RandomProvider.h>
+#include <readdy/common/make_unique.h>
 
 namespace readdy {
     namespace model {
         namespace reactions {
             template<unsigned int N_EDUCTS>
             class Reaction {
+            protected:
+                using rnd_ptr = std::unique_ptr<readdy::model::RandomProvider>;
 
             public:
                 static constexpr unsigned int n_educts = N_EDUCTS;
@@ -69,8 +73,14 @@ namespace readdy {
                 }
 
                 virtual void perform(const Particle &p1_in, const Particle &p2_in,
-                                     Particle &p1_out, Particle &p2_out) const { };
+                                     Particle &p1_out, Particle &p2_out,
+                                     const rnd_ptr& rnd) const {
+                }
 
+                virtual void perform(const Particle &p1_in, const Particle &p2_in,
+                                     Particle &p1_out, Particle &p2_out) const {
+                    perform(p1_in, p2_in, p1_out, p2_out, rand);
+                }
                 virtual Reaction<N_EDUCTS>* replicate() const = 0;
 
                 friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
@@ -98,6 +108,12 @@ namespace readdy {
                     return products;
                 }
 
+                Reaction(const Reaction& rhs)
+                        : _n_educts(rhs._n_educts), _n_products(rhs._n_products), educts(rhs.educts),
+                          products(rhs.products), name(rhs.name), id(rhs.id), rate(rhs.rate),
+                          eductDistance(rhs.eductDistance), productDistance(rhs.productDistance) {
+                }
+
             protected:
                 const unsigned int _n_educts = N_EDUCTS;
                 const unsigned int _n_products;
@@ -108,6 +124,7 @@ namespace readdy {
                 const double rate;
                 const double eductDistance;
                 const double productDistance;
+                std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
             };
 
         }

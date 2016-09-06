@@ -25,7 +25,7 @@ namespace readdy {
                             : readdy::model::reactions::Conversion(name, typeFrom, typeTo, rate) { }
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
-                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override {
+                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override {
                         p1_out.setPos(p1_in.getPos());
                         p1_out.setType(getTypeTo());
                         p1_out.setId(p1_in.getId());
@@ -45,7 +45,7 @@ namespace readdy {
                     }
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
-                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override {
+                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override {
                         if (p1_in.getType() == getCatalyst()) {
                             // p1 is the catalyst
                             p1_out.setType(getCatalyst());
@@ -77,9 +77,9 @@ namespace readdy {
                                                                                        weight2) { }
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
-                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override {
+                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override {
                         // as long as the orientation is uniform, it does not matter of which type p1_in and p2_in are.
-                        auto n3 = rand->getNormal3();
+                        auto n3 = rnd ? rnd->getNormal3() : rand->getNormal3();
                         n3 /= sqrt(n3 * n3);
                         p1_out.setType(getTo1());
                         p1_out.setPos(p1_in.getPos() + getWeight1() * getProductDistance() * n3);
@@ -111,7 +111,7 @@ namespace readdy {
                                                                                      weight2) { }
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
-                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out) const override {
+                                         readdy::model::Particle &p1_out, readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override {
                         p1_out.setType(getTo());
                         if (getFrom1() == p1_in.getType()) {
                             p1_out.setPos(p1_in.getPos() + getWeight1() * (p2_in.getPos() - p1_in.getPos()));

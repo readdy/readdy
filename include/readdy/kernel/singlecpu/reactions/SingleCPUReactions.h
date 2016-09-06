@@ -30,7 +30,7 @@ namespace readdy {
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                                          readdy::model::Particle &p1_out,
-                                         readdy::model::Particle &p2_out) const override;
+                                         readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override;
 
                     virtual Conversion *replicate() const override;
                 };
@@ -44,7 +44,7 @@ namespace readdy {
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                                          readdy::model::Particle &p1_out,
-                                         readdy::model::Particle &p2_out) const override;
+                                         readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override;
 
                     virtual Enzymatic *replicate() const override;
                 };
@@ -59,12 +59,17 @@ namespace readdy {
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                                          readdy::model::Particle &p1_out,
-                                         readdy::model::Particle &p2_out) const override;
+                                         readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override;
 
                     virtual Fission *replicate() const override;
 
+                    Fission(const Fission& rhs)
+                            : Fission(rhs.name, rhs.educts[0], rhs.products[0], rhs.products[1],
+                                      rhs.rate, rhs.productDistance, rhs.weight1, rhs.weight2)
+                    { }
+
                 protected:
-                    std::shared_ptr<readdy::model::RandomProvider> rand = std::make_shared<readdy::model::RandomProvider>();
+
                 };
 
                 class Fusion : public readdy::model::reactions::Fusion {
@@ -77,7 +82,7 @@ namespace readdy {
 
                     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                                          readdy::model::Particle &p1_out,
-                                         readdy::model::Particle &p2_out) const override;
+                                         readdy::model::Particle &p2_out, const rnd_ptr& rnd) const override;
 
                     virtual Fusion *replicate() const override;
 

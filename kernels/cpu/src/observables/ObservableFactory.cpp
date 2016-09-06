@@ -16,7 +16,6 @@ namespace readdy {
         namespace cpu {
             namespace observables {
                 ObservableFactory::ObservableFactory(CPUKernel *const kernel) : readdy::model::_internal::ObservableFactory(kernel), kernel(kernel){
-                    BOOST_LOG_TRIVIAL(debug) << "created cpu obs factory w kernel " << kernel;
                 }
 
                 readdy::model::NParticlesObservable *

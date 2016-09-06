@@ -217,16 +217,12 @@ namespace readdy {
 
                     std::vector<readdy::model::Particle>
                     handleEventsGillespie(CPUKernel const*const kernel, std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events) {
-                        BOOST_LOG_TRIVIAL(trace) << "handling events: ";
-                        for(const auto& event : events) {
-                            BOOST_LOG_TRIVIAL(trace) << "\t " << event;
-                        }
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
                         using _rdy_particle_t = readdy::model::Particle;
                         std::vector<_rdy_particle_t> newParticles{};
 
                         const auto& ctx = kernel->getKernelContext();
-                        auto rnd = readdy::model::RandomProvider();
+                        auto rnd = std::make_unique<readdy::model::RandomProvider>();
                         auto data = kernel->getKernelStateModel().getParticleData();
                         const auto dt = ctx.getTimeStep();
                         /**
@@ -238,7 +234,7 @@ namespace readdy {
                             const std::size_t nEvents = events.size();
                             while (nDeactivated < nEvents) {
                                 const auto alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-                                const auto x = rnd.getUniform(0, alpha);
+                                const auto x = rnd->getUniform(0, alpha);
                                 const auto eventIt = std::lower_bound(
                                         events.begin(), events.end() - nDeactivated, x,
                                         [](const _event_t &elem1, double elem2) {
@@ -249,9 +245,7 @@ namespace readdy {
                                 if (eventIt == events.end() - nDeactivated) {
                                     throw std::runtime_error("this should not happen (event not found)");
                                 }
-                                BOOST_LOG_TRIVIAL(trace) << "--> handling event " << event;
-                                if(rnd.getUniform() < event.reactionRate*dt) {
-                                    BOOST_LOG_TRIVIAL(debug) << "\t --> event got accepted";
+                                if(rnd->getUniform() < event.reactionRate*dt) {
                                     /**
                                      * Perform reaction
                                      */
@@ -261,10 +255,10 @@ namespace readdy {
                                         if (event.nEducts == 1) {
                                             auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
                                             if (reaction->getNProducts() == 1) {
-                                                reaction->perform(p1, p1, pOut1, pOut2);
+                                                reaction->perform(p1, p1, pOut1, pOut2, rnd);
                                                 newParticles.push_back(pOut1);
                                             } else if (reaction->getNProducts() == 2) {
-                                                reaction->perform(p1, data->operator[](event.idx2), pOut1, pOut2);
+                                                reaction->perform(p1, data->operator[](event.idx2), pOut1, pOut2, rnd);
                                                 newParticles.push_back(pOut1);
                                                 newParticles.push_back(pOut2);
                                             }
@@ -273,10 +267,10 @@ namespace readdy {
                                                                                    event.t2)[event.reactionIdx];
                                             const auto p2 = data->operator[](event.idx2);
                                             if (reaction->getNProducts() == 1) {
-                                                reaction->perform(p1, p2, pOut1, pOut2);
+                                                reaction->perform(p1, p2, pOut1, pOut2, rnd);
                                                 newParticles.push_back(pOut1);
                                             } else if (reaction->getNProducts() == 2) {
-                                                reaction->perform(p1, p2, pOut1, pOut2);
+                                                reaction->perform(p1, p2, pOut1, pOut2, rnd);
                                                 newParticles.push_back(pOut1);
                                                 newParticles.push_back(pOut2);
                                             }
@@ -310,11 +304,9 @@ namespace readdy {
                                             updateDeactivated.push_back(event.idx1);
                                             updateDeactivated.push_back(event.idx2);
                                             while (_it < events.end() - nDeactivated) {
-                                                BOOST_LOG_TRIVIAL(trace) << "\t\t checking for conflict: " << *_it;
                                                 if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2 ||
                                                         ((*_it).nEducts == 2 &&
                                                                 ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
-                                                    BOOST_LOG_TRIVIAL(trace) << "\t\t thus deactivating event " << *_it;
                                                     nDeactivated++;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
                                                     cumsum += (*_it).reactionRate;
@@ -342,10 +334,6 @@ namespace readdy {
                             }
                         }
                         data->updateDeactivated(updateDeactivated);
-                        BOOST_LOG_TRIVIAL(trace) << "got new particles: ";
-                        for(const auto& p : newParticles) {
-                            BOOST_LOG_TRIVIAL(trace) << "\t " << p;
-                        }
                         return newParticles;
                     }
 
@@ -576,7 +564,7 @@ namespace readdy {
                         const auto &dist = ctx.getDistSquaredFun();
                         const auto pPos = *(data->begin_positions() + idx);
                         // todo dont need neighbor list here, just need to check that particle is within the first
-                        // shell of the box
+                        // "shell" of the box
                         auto nlIt = nl->pairs->find(idx);
                         if (nlIt != nl->pairs->end()) {
                             const auto pType = *(data->begin_types() + idx);
