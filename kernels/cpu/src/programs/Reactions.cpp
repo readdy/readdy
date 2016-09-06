@@ -338,22 +338,37 @@ namespace readdy {
                     }
 
                     struct GillespieParallel::HaloBox  {
-                        // todo stage this (by "rings" of width "max(reaction radii)".
-                        std::vector<unsigned long> particleIndices{};
+                        // shellIdx -> particles, outmost shell has idx 0
+                        using particle_indices_t = std::vector<unsigned long>;
+                        particle_indices_t particleIndices{};
                         unsigned int id = 0;
                         vec_t lowerLeftVertex, upperRightVertex;
-                        vec_t lowerLeftVertexHalo, upperRightVertexHalo;
-                        vec_t overlapLowerLeftVertex, overlapUpperRightHalo;
+                        double leftBoundary = 0;
+                        double rightBoundary = 0;
+                        particle_indices_t::size_type n_shells;
+                        unsigned int longestAxis;
+                        double boxWidth;
+                        double shellWidth = 0.0;
 
+                        long getShellIndex(const vec_t& pos) const {
+                            const auto mindist = std::min(
+                                    std::abs(pos[longestAxis] - leftBoundary),
+                                    std::abs(pos[longestAxis] - rightBoundary)
+                            );
+                            return static_cast<long>(std::floor(mindist/shellWidth));
+                        }
 
-                        HaloBox(unsigned int id, vec_t lowerLeftBdry, vec_t upperRightBdry, double haloWidth, unsigned int longestAxis, bool periodicInLongestAx, bool lastBox) :
-                                id(id), lowerLeftVertexHalo(lowerLeftBdry), upperRightVertexHalo(upperRightBdry) {
-                            lowerLeftVertex = lowerLeftBdry;
-                            if(periodicInLongestAx || id != 0) lowerLeftVertex[longestAxis] += haloWidth;
-                            upperRightVertex = upperRightBdry;
-                            if(periodicInLongestAx  || !lastBox) upperRightVertex[longestAxis] -= haloWidth;
-                            overlapLowerLeftVertex = lowerLeftBdry - haloWidth;
-                            overlapUpperRightHalo = upperRightBdry + haloWidth;
+                        HaloBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
+                                unsigned int longestAxis)
+                                : id(id), lowerLeftVertex(lowerLeftVertex), upperRightVertex(upperRightVertex), longestAxis(longestAxis) {
+                            leftBoundary = lowerLeftVertex[longestAxis];
+                            rightBoundary = upperRightVertex[longestAxis];
+                            boxWidth = rightBoundary - leftBoundary;
+                            n_shells = static_cast<particle_indices_t::size_type>(
+                                    std::floor(.5*boxWidth/maxReactionRadius)
+                            );
+                            shellWidth = .5*boxWidth / static_cast<double>(n_shells);
+                            particleIndices.resize(n_shells);
                         }
 
                         friend bool operator==(const HaloBox &lhs, const HaloBox &rhs) {
@@ -365,11 +380,7 @@ namespace readdy {
                         }
 
                         bool isInBox(const vec_t& particle) const {
-                            return particle >= lowerLeftVertex && particle <= upperRightVertex;
-                        }
-
-                        bool isInOverlapBox(const vec_t &particle) const {
-                            return particle >= overlapLowerLeftVertex && particle <= overlapUpperRightHalo;
+                            return particle[longestAxis] >= leftBoundary && particle[longestAxis] < rightBoundary;
                         }
                     };
 
@@ -377,7 +388,6 @@ namespace readdy {
                         setupBoxes();
                         fillBoxes();
                         handleBoxReactions();
-                        problematicParticles.clear();
                     }
 
                     GillespieParallel::GillespieParallel(const kernel_t *const kernel) : kernel(kernel), boxes({}) { }
@@ -412,7 +422,6 @@ namespace readdy {
                             unsigned int nBoxes = static_cast<unsigned int>(kernel->getNThreads());
                             auto boxBoundingVertices = kernel->getKernelContext().getBoxBoundingVertices();
                             auto lowerLeft = std::get<0>(boxBoundingVertices);
-                            const bool periodicInLongestAx = kernel->getKernelContext().getPeriodicBoundary()[longestAxis];
                             const auto boxWidth = simBoxSize[longestAxis] / nBoxes;
                             auto upperRight = lowerLeft;
                             {
@@ -422,7 +431,7 @@ namespace readdy {
                             }
                             boxes.reserve(nBoxes);
                             for(unsigned int i = 0; i < nBoxes; ++i) {
-                                HaloBox box {i, lowerLeft, upperRight, .5*maxReactionRadius, longestAxis, periodicInLongestAx, i == nBoxes-1};
+                                HaloBox box {i, lowerLeft, upperRight, maxReactionRadius, longestAxis};
                                 boxes.push_back(std::move(box));
                                 lowerLeft[longestAxis] += boxWidth;
                                 upperRight[longestAxis] += boxWidth;
@@ -448,11 +457,7 @@ namespace readdy {
                             );
                             if(boxIndex < nBoxes) {
                                 auto& box = boxes[boxIndex];
-                                if(box.isInBox(*it)) {
-                                    box.particleIndices.push_back(idx);
-                                } else {
-                                    problematicParticles.push_back(idx);
-                                }
+                                box.particleIndices.push_back(idx);
                             }
                             ++idx;
                         }
@@ -460,7 +465,6 @@ namespace readdy {
 
                     void GillespieParallel::clear() {
                         maxReactionRadius = 0;
-                        problematicParticles.clear();
                         boxes.clear();
                     }
 
@@ -473,7 +477,7 @@ namespace readdy {
                             double localAlpha = 0.0;
                             std::vector<event_t> localEvents {};
                             // step 1: find all problematic particles (ie the ones, that have (also transitively)
-                            // a reaction with a particle in the halo region
+                            // a reaction with a particle in another box)
                             {
                                 auto it = box.particleIndices.begin();
                                 while (it < box.particleIndices.end()) {
@@ -484,7 +488,7 @@ namespace readdy {
                             // step 2: remove the problematic ones out of the box and gather remaining events
                             {
                                 box.particleIndices.erase(
-                                        std::remove_if(box.particleIndices.begin(), box.particleIndices.end(), [problematic](const unsigned long x) {
+                                        std::remove_if(box.particleIndices.begin(), box.particleIndices.end(), [&problematic](const unsigned long x) {
                                             return problematic.find(x) != problematic.end();
                                         }), box.particleIndices.end()
                                 );
@@ -529,10 +533,7 @@ namespace readdy {
                             n_local_problematic += local_problematic.size();
                             gatherEvents(std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         }
-                        BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
-                        BOOST_LOG_TRIVIAL(trace) << "got problematic particles because they were in the halo region: " << problematicParticles.size();
-                        gatherEvents(problematicParticles, kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
-                        auto newEvilParticles = handleEventsGillespie(kernel, std::move(evilEvents));
+                        // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
                         kernel->getKernelStateModel().getParticleData()->deactivateMarked();
 
@@ -545,10 +546,6 @@ namespace readdy {
                             kernel->getKernelStateModel().getParticleData()->addParticles(particles);
                         }
 
-                        std::for_each(newEvilParticles.begin(), newEvilParticles.end(), [&fixPos](readdy::model::Particle &p) {fixPos(p.getPos()); });
-                        kernel->getKernelStateModel().getParticleData()->addParticles(newEvilParticles);
-
-
                     }
 
                     void GillespieParallel::handleProblematic(
@@ -558,13 +555,18 @@ namespace readdy {
                         if (update.find(idx) != update.end()) {
                             return;
                         }
+                        const auto pPos = *(data->begin_positions() + idx);
+                        // we only want out most particles here, since the transitively dependent particles
+                        // are resolved within this method and therefore have no significance as input parameter
+                        if(box.getShellIndex(pPos) > 0) {
+                            //BOOST_LOG_TRIVIAL(debug) << "--> ignoring particle " << (*data)[idx] << " with shell idx " << box.getShellIndex(pPos);
+                            return;
+                        }
 
-                        std::queue<unsigned long> newHaloParticles{};
+                        std::queue<unsigned long> bfs{};
 
                         const auto &dist = ctx.getDistSquaredFun();
-                        const auto pPos = *(data->begin_positions() + idx);
-                        // todo dont need neighbor list here, just need to check that particle is within the first
-                        // "shell" of the box
+
                         auto nlIt = nl->pairs->find(idx);
                         if (nlIt != nl->pairs->end()) {
                             const auto pType = *(data->begin_types() + idx);
@@ -574,17 +576,16 @@ namespace readdy {
                                 const auto &reactions = ctx.getOrder2Reactions(pType, neighborType);
                                 if (!reactions.empty()) {
                                     const auto distSquared = dist(pPos, neighborPos);
-                                    for (auto itReactions = reactions.begin();
-                                         itReactions != reactions.end(); ++itReactions) {
-                                        const auto reaction = *itReactions;
-                                        if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
-                                            if (reaction->getRate() > 0) {
+                                    for (const auto& r : reactions) {
+                                        if (r->getRate() > 0) {
+                                            if (distSquared < r->getEductDistance() * r->getEductDistance()) {
                                                 const bool neighborProblematic = update.find(neighborIdx) != update.end();
-                                                if (neighborProblematic || (!box.isInBox(neighborPos) &&
-                                                        box.isInOverlapBox(neighborPos))) {
+                                                if (neighborProblematic || !box.isInBox(neighborPos)) {
+                                                    //BOOST_LOG_TRIVIAL(debug) << " ----> found (outer) problematic particle " << (*data)[idx];
                                                     // we have a problematic particle!
                                                     update.insert(idx);
-                                                    newHaloParticles.push(idx);
+                                                    bfs.push(idx);
+                                                    break;
                                                 }
                                             }
                                         }
@@ -592,30 +593,47 @@ namespace readdy {
                                 }
                             }
                         }
-
-                        while (!newHaloParticles.empty()) {
-                            const auto x = newHaloParticles.front();
-                            newHaloParticles.pop();
+                        //BOOST_LOG_TRIVIAL(debug) << "------------------ BFS -----------------";
+                        while (!bfs.empty()) {
+                            const auto x = bfs.front();
+                            const auto xPos = *(data->begin_positions() + x);
+                            const auto x_shell_idx = box.getShellIndex(xPos);
+                            bfs.pop();
                             auto neighIt = nl->pairs->find(x);
                             if (neighIt != nl->pairs->end()) {
+                                //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
                                 const auto x_type = *(data->begin_types() + idx);
                                 for (const auto x_neighbor : neighIt->second) {
+                                    //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
                                     const auto neighborType = *(data->begin_types() + x_neighbor);
                                     const auto neighborPos = *(data->begin_positions() + x_neighbor);
-                                    const auto &reactions = ctx.getOrder2Reactions(x_type, neighborType);
-                                    if (!reactions.empty() && box.isInBox(neighborPos)) {
-                                        const bool alreadyProblematic = update.find(x_neighbor) != update.end();
-                                        if (alreadyProblematic) continue;
-                                        const auto distSquared = dist(pPos, neighborPos);
-                                        for (auto itReactions = reactions.begin();
-                                             itReactions != reactions.end(); ++itReactions) {
-                                            const auto reaction = *itReactions;
-                                            if (distSquared <
-                                                reaction->getEductDistance() * reaction->getEductDistance()) {
-                                                if (reaction->getRate() > 0) {
-                                                    // we have a problematic particle!
-                                                    update.insert(x_neighbor);
-                                                    newHaloParticles.push(x_neighbor);
+                                    const auto neighbor_shell_idx = box.getShellIndex(neighborPos);
+                                    if(neighbor_shell_idx == 0) {
+                                        //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor was in outer shell, ignore";
+                                        continue;
+                                    } else {
+                                        //BOOST_LOG_TRIVIAL(debug) << "\t ----> got neighbor with shell index " << neighbor_shell_idx;
+                                    }
+                                    //BOOST_LOG_TRIVIAL(debug) << "\t\t inBox=" <<box.isInBox(neighborPos) <<", shellabsdiff=" <<std::abs(x_shell_idx - neighbor_shell_idx);
+                                    if(box.isInBox(neighborPos) && std::abs(x_shell_idx - neighbor_shell_idx) <= 1) {
+                                        //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was in box and adjacent shell";
+                                        const auto &reactions = ctx.getOrder2Reactions(x_type, neighborType);
+                                        if (!reactions.empty()) {
+                                            //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor had potentially conflicting reactions";
+                                            const bool alreadyProblematic = update.find(x_neighbor) != update.end();
+                                            if (alreadyProblematic){
+                                                //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was already found, ignore";
+                                                continue;
+                                            }
+                                            const auto distSquared = dist(xPos, neighborPos);
+                                            for (const auto& reaction : reactions) {
+                                                if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
+                                                    if (reaction->getRate() > 0) {
+                                                        // we have a problematic particle!
+                                                        //BOOST_LOG_TRIVIAL(debug) << "\t ----> added neighbor " << x_neighbor<< " to problematic particles";
+                                                        update.insert(x_neighbor);
+                                                        bfs.push(x_neighbor);
+                                                    }
                                                 }
                                             }
                                         }

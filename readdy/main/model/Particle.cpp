@@ -63,7 +63,7 @@ namespace readdy {
         Particle::~Particle() = default;
 
         std::ostream &operator<<(std::ostream &os, const Particle &p) {
-            os << "Particle(id=" << boost::uuids::to_string(p.id) << "type=" << p.type << ", pos=" << p.pos << ")";
+            os << "Particle(id=" << boost::uuids::to_string(p.id) << ", type=" << p.type << ", pos=" << p.pos << ")";
             return os;
         }
 

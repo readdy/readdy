@@ -190,7 +190,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-    kernel->getKernelContext().setBoxSize(10, 10, 12);
+    kernel->getKernelContext().setBoxSize(10, 10, 30);
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);
 
@@ -232,7 +232,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         neighborList->execute();
         reactionsProgram->execute();
         EXPECT_EQ(1.0, reactionsProgram->getMaxReactionRadius());
-        EXPECT_EQ(6.0, reactionsProgram->getBoxWidth());
+        EXPECT_EQ(15.0, reactionsProgram->getBoxWidth());
         EXPECT_EQ(2, reactionsProgram->getLongestAxis());
         EXPECT_TRUE(reactionsProgram->getOtherAxis1() == 0 || reactionsProgram->getOtherAxis1() == 1);
         if(reactionsProgram->getOtherAxis1() == 0) {

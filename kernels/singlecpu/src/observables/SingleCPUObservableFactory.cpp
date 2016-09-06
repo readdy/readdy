@@ -17,7 +17,6 @@ namespace readdy {
         namespace singlecpu {
             namespace observables {
                 SingleCPUObservableFactory::SingleCPUObservableFactory(readdy::kernel::singlecpu::SingleCPUKernel *const kernel) : ObservableFactory(kernel), kernel(kernel) {
-                    BOOST_LOG_TRIVIAL(debug) << "created scpu obs fac w kernel " << kernel;
                 }
 
                 readdy::model::HistogramAlongAxisObservable *SingleCPUObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,

@@ -104,7 +104,6 @@ namespace readdy {
                         unsigned int otherAxis1, otherAxis2;
                         struct HaloBox;
                         std::vector<HaloBox> boxes;
-                        std::vector<unsigned long> problematicParticles {};
 
                         /**
                          * look for the longest axis and divide it into n_threads parts, yielding halo boxes.

@@ -7,6 +7,7 @@ from readdy.util import platform_utils
 from scipy.optimize import brentq
 
 import numpy as np
+from time import clock, time
 import matplotlib
 
 # matplotlib.use('Qt4Agg')
@@ -31,6 +32,7 @@ class MinEMinDSimulation(object):
         self.stride = 2000
         self.timestep = .0005
         self.n_timesteps = 3000000
+        self.time = None
         if self._generate_plots:
             self.fig = plt.figure()
             if(self._result_fname is not None):
@@ -54,6 +56,10 @@ class MinEMinDSimulation(object):
 
     def callback_histogram(self, data, idx):
 
+        if idx == 0:
+            if self.time is not None:
+                print("elapsed: {0}".format(time() - self.time))
+            self.time = time()
         if self._hist_data[idx] is None:
             self._hist_data[idx] = np.array(data)
         else:
@@ -300,7 +306,8 @@ class MinEMinDSimulation(object):
         self.n_timesteps = int(600./self.timestep)
 
         print("starting simulation for effectively %s sec" % (self.timestep * self.n_timesteps))
-        simulation.run(self.n_timesteps, self.timestep)
+        simulation.set_time_step(self.timestep)
+        simulation.run_scheme_readdy(True).with_reaction_scheduler("Gillespie").configure().run(self.n_timesteps)
 
         if self._result_fname is not None:
             with open(self._result_fname, 'w') as f:
