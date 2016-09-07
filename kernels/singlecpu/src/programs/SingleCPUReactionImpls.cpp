@@ -229,10 +229,11 @@ namespace readdy {
                     }
 
 
-                    ReactionEvent::ReactionEvent(unsigned int nEducts, index_type idx1, index_type idx2,
-                                                            double reactionRate, double cumulativeRate,
-                                                            index_type reactionIdx, unsigned int t1, unsigned int t2)
-                            : nEducts(nEducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
+                    ReactionEvent::ReactionEvent(unsigned int nEducts, unsigned int nProducts,
+                                                 index_type idx1, index_type idx2,
+                                                 double reactionRate, double cumulativeRate,
+                                                 index_type reactionIdx, unsigned int t1, unsigned int t2)
+                            : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
                               cumulativeRate(cumulativeRate), reactionIdx(reactionIdx), t1(t1), t2(t2) {}
 
                     std::ostream &operator<<(std::ostream &os, const ReactionEvent &evt) {
@@ -379,7 +380,7 @@ namespace readdy {
                                     const auto rate = (*it)->getRate();
                                     if(rate > 0) {
                                         alpha += rate;
-                                        events.push_back({1, (_reaction_idx_t) (it_type - data->begin_types()), 0, rate, alpha,
+                                        events.push_back({1, (*it)->getNProducts(), (_reaction_idx_t) (it_type - data->begin_types()), 0, rate, alpha,
                                                           (_reaction_idx_t) (it - reactions.begin()), *it_type, 0});
                                     }
                                 }
@@ -411,7 +412,7 @@ namespace readdy {
                                         if(rate > 0) {
                                             alpha += rate;
                                             events.push_back(
-                                                    {2, idx1, idx2, rate, alpha,
+                                                    {2, reaction->getNProducts(), idx1, idx2, rate, alpha,
                                                      (_reaction_idx_t) (it - reactions.begin()),
                                                      *(typesBegin+idx1), *(typesBegin+idx2)});
                                         }

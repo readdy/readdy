@@ -166,7 +166,7 @@ namespace readdy {
             }
 
         private:
-            const bool useDefaults;
+            bool useDefaults;
             bool evaluateObservablesSet = false;
             bool includeForcesSet = false;
             std::unique_ptr<SchemeType> scheme = nullptr;

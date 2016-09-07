@@ -163,7 +163,7 @@ namespace readdy {
             CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config)
                     : pimpl(std::make_unique<Impl>()), config(config) {
                 pimpl->context = context;
-                pimpl->particleData = std::make_unique<readdy::kernel::singlecpu::model::SingleCPUParticleData>(0);
+                pimpl->particleData = std::make_unique<readdy::kernel::singlecpu::model::SingleCPUParticleData>(0, false);
                 pimpl->neighborList = std::make_unique<model::NeighborList>(context, config);
             }
 

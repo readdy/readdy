@@ -87,7 +87,7 @@ namespace readdy {
             }
 
             template<typename T, typename... Args>
-            std::unique_ptr<T> createObservable(unsigned int stride, Args... args) {
+            std::unique_ptr<T> createObservable(unsigned int stride, Args&&... args) {
                 return getObservableFactory().create<T>(stride, std::forward<Args>(args)...);
             }
 
@@ -101,9 +101,9 @@ namespace readdy {
              *
              * @return a tuple of the created observable and a scoped_connection object.
              */
-            template<typename T>
-            std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection> createAndConnectObservable(unsigned int stride) {
-                auto &&obs = createObservable<T>(stride);
+            template<typename T, typename... Args>
+            std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection> createAndConnectObservable(unsigned int stride, Args&&... args) {
+                auto &&obs = createObservable<T>(stride, std::forward<Args>(args)...);
                 auto &&connection = connectObservable(obs.get());
                 return std::make_tuple(std::move(obs), std::move(connection));
             };

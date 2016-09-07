@@ -41,7 +41,7 @@ namespace readdy {
                         CPUKernel const *const kernel;
                     };
                     std::vector<readdy::model::Particle> handleEventsGillespie(CPUKernel const*const kernel,
-                                                                               std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events);
+                                                                               std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent>&& events);
 
                     class Gillespie : public readdy::model::programs::reactions::Gillespie {
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
@@ -79,7 +79,7 @@ namespace readdy {
                         using kernel_t = readdy::kernel::cpu::CPUKernel;
                         using vec_t = readdy::model::Vec3;
                         using data_t = decltype(std::declval<kernel_t>().getKernelStateModel().getParticleData());
-                        using nl_t = decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
+                        using nl_t = const decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
                         using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
                         using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
                         using index_t = event_t::index_type;
@@ -123,7 +123,8 @@ namespace readdy {
                         void gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
                                           std::vector<GillespieParallel::event_t> &events) const;
 
-                        void handleProblematic(const unsigned long idx, const SlicedBox &box, ctx_t ctx, data_t data, nl_t nl, std::set<unsigned long>& update) const;
+                        void findProblematicParticles(const unsigned long idx, const SlicedBox &box, ctx_t ctx,
+                                                      data_t data, nl_t nl, std::set<unsigned long> &problematic) const;
 
                     };
                 }

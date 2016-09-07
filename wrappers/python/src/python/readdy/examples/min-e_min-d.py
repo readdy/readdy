@@ -90,7 +90,8 @@ class MinEMinDSimulation(object):
         self.callback_histogram(histogramTuple, 5)
 
     def n_particles_callback(self, n_particles):
-        print("n_particles(minE)=%s"%n_particles[0])
+        # ["D", "D_P", "D_PB", "E", "DE"]
+        print("n_minD={0}, n_minDP={1}, n_minDPB={2}, n_minE={3}, n_minDE={4}, total={5}".format(n_particles[0], n_particles[1], n_particles[2], n_particles[3], n_particles[4], sum(n_particles)))
 
     def histrogram_callback_bound(self, histogramTuple):
         counts = histogramTuple[:]
@@ -276,7 +277,7 @@ class MinEMinDSimulation(object):
         for i in range(int(.5 * n_minD_particles), n_minD_particles):
             simulation.add_particle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
-        self.timestep = simulation.get_recommended_time_step(5)
+        self.timestep = simulation.get_recommended_time_step(10)
 
         ###################################
         #
@@ -300,10 +301,10 @@ class MinEMinDSimulation(object):
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minE, bins, ["E"], 2)
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDE, bins, ["DE"], 2)
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_M, bins, ["D", "D_P", "D_PB", "DE"], 2)
-        simulation.register_observable_n_particles_types(stride, ["E"], self.n_particles_callback)
+        simulation.register_observable_n_particles_types(stride, ["D", "D_P", "D_PB", "E", "DE"], self.n_particles_callback)
         print("histogram end")
 
-        self.n_timesteps = int(600./self.timestep)
+        self.n_timesteps = int(1200./self.timestep)
 
         print("starting simulation for effectively %s sec" % (self.timestep * self.n_timesteps))
         simulation.set_time_step(self.timestep)
@@ -315,7 +316,7 @@ class MinEMinDSimulation(object):
 
 
 if __name__ == '__main__':
-    sim = MinEMinDSimulation(None, True)
+    sim = MinEMinDSimulation('test_mind_mine.npy', False)
     sim.execute()
 
     #X = np.load('test_mind_mine_no_membrane6.npy')

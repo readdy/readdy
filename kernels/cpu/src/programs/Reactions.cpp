@@ -161,18 +161,23 @@ namespace readdy {
                         */
                         {
                             auto it_type = data->begin_types();
+                            auto it_deactivated = data->begin_deactivated();
                             const auto end = data->end_types();
                             while (it_type != end) {
-                                const auto &reactions = ctx.getOrder1Reactions(*it_type);
-                                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                                    const auto rate = (*it)->getRate();
-                                    if(rate > 0) {
-                                        alpha += rate;
-                                        events.push_back({1, (index_t) (it_type - data->begin_types()), 0, rate, alpha,
-                                                          (index_t) (it - reactions.begin()), *it_type, 0});
+                                if(!*it_deactivated) {
+                                    const auto &reactions = ctx.getOrder1Reactions(*it_type);
+                                    for (auto it = reactions.begin(); it != reactions.end(); ++it) {
+                                        const auto rate = (*it)->getRate();
+                                        if (rate > 0) {
+                                            alpha += rate;
+                                            events.push_back({1, (*it)->getNProducts(),
+                                                              (index_t) (it_type - data->begin_types()), 0, rate, alpha,
+                                                              (index_t) (it - reactions.begin()), *it_type, 0});
+                                        }
                                     }
                                 }
                                 ++it_type;
+                                ++it_deactivated;
                             }
                         }
 
@@ -184,9 +189,11 @@ namespace readdy {
                             auto typesBegin = data->begin_types();
                             for (auto &&nl_it = neighborList->pairs->begin(); nl_it != neighborList->pairs->end(); ++nl_it) {
                                 const index_t idx1 = nl_it->first;
+                                if(*(data->begin_deactivated() + idx1)) continue;
                                 auto neighbors = nl_it->second;
                                 for (const auto idx2 : neighbors) {
                                     if (idx1 > idx2) continue;
+                                    if(*(data->begin_deactivated() + idx2)) continue;
                                     const auto &reactions = ctx.getOrder2Reactions(
                                             *(data->begin_types() + idx1), *(data->begin_types() + idx2)
                                     );
@@ -203,7 +210,7 @@ namespace readdy {
                                             if (rate > 0) {
                                                 alpha += rate;
                                                 events.push_back(
-                                                        {2, idx1, idx2, rate, alpha,
+                                                        {2, reaction->getNProducts(), idx1, idx2, rate, alpha,
                                                          (index_t) (it - reactions.begin()),
                                                          *(typesBegin + idx1), *(typesBegin + idx2)});
                                             }
@@ -216,19 +223,18 @@ namespace readdy {
                     }
 
                     std::vector<readdy::model::Particle>
-                    handleEventsGillespie(CPUKernel const*const kernel, std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> events) {
+                    handleEventsGillespie(CPUKernel const*const kernel, std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent>&& events) {
                         using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
                         using _rdy_particle_t = readdy::model::Particle;
                         std::vector<_rdy_particle_t> newParticles{};
 
                         const auto& ctx = kernel->getKernelContext();
                         auto rnd = std::make_unique<readdy::model::RandomProvider>();
-                        auto data = kernel->getKernelStateModel().getParticleData();
+                        const auto data = kernel->getKernelStateModel().getParticleData();
                         const auto dt = ctx.getTimeStep();
                         /**
                          * Handle gathered reaction events
                          */
-                        std::vector<unsigned long> updateDeactivated {};
                         {
                             std::size_t nDeactivated = 0;
                             const std::size_t nEvents = events.size();
@@ -254,25 +260,33 @@ namespace readdy {
                                         _rdy_particle_t pOut1{}, pOut2{};
                                         if (event.nEducts == 1) {
                                             auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                                            if (reaction->getNProducts() == 1) {
-                                                reaction->perform(p1, p1, pOut1, pOut2, rnd);
-                                                newParticles.push_back(pOut1);
-                                            } else if (reaction->getNProducts() == 2) {
-                                                reaction->perform(p1, data->operator[](event.idx2), pOut1, pOut2, rnd);
-                                                newParticles.push_back(pOut1);
-                                                newParticles.push_back(pOut2);
+                                            reaction->perform(p1, p1, pOut1, pOut2, rnd);
+                                            if(reaction->getNProducts() > 0) {
+                                                *(data->begin_positions()+event.idx1) = pOut1.getPos();
+                                                *(data->begin_types()+event.idx1) = pOut1.getType();
+                                                *(data->begin_ids()+event.idx1) = pOut1.getId();
+                                                if (reaction->getNProducts() == 2) {
+                                                    newParticles.push_back(pOut2);
+                                                }
+                                            } else {
+                                                data->markForDeactivation(event.idx1);
                                             }
                                         } else {
-                                            auto reaction = ctx.getOrder2Reactions(event.t1,
-                                                                                   event.t2)[event.reactionIdx];
+                                            auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
                                             const auto p2 = data->operator[](event.idx2);
-                                            if (reaction->getNProducts() == 1) {
-                                                reaction->perform(p1, p2, pOut1, pOut2, rnd);
-                                                newParticles.push_back(pOut1);
-                                            } else if (reaction->getNProducts() == 2) {
-                                                reaction->perform(p1, p2, pOut1, pOut2, rnd);
-                                                newParticles.push_back(pOut1);
-                                                newParticles.push_back(pOut2);
+                                            reaction->perform(p1, p2, pOut1, pOut2, rnd);
+                                            *(data->begin_positions()+event.idx1) = pOut1.getPos();
+                                            *(data->begin_types()+event.idx1) = pOut1.getType();
+                                            *(data->begin_ids()+event.idx1) = pOut1.getId();
+                                            if (reaction->getNProducts() == 2) {
+                                                *(data->begin_positions()+event.idx2) = pOut2.getPos();
+                                                *(data->begin_types()+event.idx2) = pOut2.getType();
+                                                *(data->begin_ids()+event.idx2) = pOut2.getId();
+                                            } else if(reaction->getNProducts() == 1) {
+                                                data->markForDeactivation(event.idx2);
+                                            } else {
+                                                data->markForDeactivation(event.idx1);
+                                                data->markForDeactivation(event.idx2);
                                             }
                                         }
                                     }
@@ -284,34 +298,28 @@ namespace readdy {
                                         double cumsum = 0.0;
                                         const auto idx1 = event.idx1;
                                         if (event.nEducts == 1) {
-                                            *(data->begin_deactivated() + idx1) = true;
-                                            updateDeactivated.push_back(idx1);
                                             while (_it < events.end() - nDeactivated) {
                                                 if ((*_it).idx1 == idx1 ||
                                                     ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
-                                                    nDeactivated++;
+                                                    ++nDeactivated;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
+                                                } else {
                                                     cumsum += (*_it).reactionRate;
                                                     (*_it).cumulativeRate = cumsum;
-                                                } else {
                                                     ++_it;
                                                 }
                                             }
                                         } else {
                                             const auto idx2 = event.idx2;
-                                            *(data->begin_deactivated() + event.idx1) = true;
-                                            *(data->begin_deactivated() + event.idx2) = true;
-                                            updateDeactivated.push_back(event.idx1);
-                                            updateDeactivated.push_back(event.idx2);
                                             while (_it < events.end() - nDeactivated) {
                                                 if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2 ||
                                                         ((*_it).nEducts == 2 &&
                                                                 ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
-                                                    nDeactivated++;
+                                                    ++nDeactivated;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
-                                                    cumsum += (*_it).reactionRate;
-                                                    (*_it).cumulativeRate = cumsum;
                                                 } else {
+                                                    (*_it).cumulativeRate = cumsum;
+                                                    cumsum += (*_it).reactionRate;
                                                     ++_it;
                                                 }
                                             }
@@ -333,7 +341,6 @@ namespace readdy {
                                 }
                             }
                         }
-                        data->updateDeactivated(updateDeactivated);
                         return newParticles;
                     }
 
@@ -351,11 +358,15 @@ namespace readdy {
                         double shellWidth = 0.0;
 
                         long getShellIndex(const vec_t& pos) const {
-                            const auto mindist = std::min(
-                                    std::abs(pos[longestAxis] - leftBoundary),
-                                    std::abs(pos[longestAxis] - rightBoundary)
-                            );
-                            return static_cast<long>(std::floor(mindist/shellWidth));
+                            if(shellWidth > 0) {
+                                const auto mindist = std::min(
+                                        std::abs(pos[longestAxis] - leftBoundary),
+                                        std::abs(rightBoundary - pos[longestAxis])
+                                );
+                                return static_cast<long>(std::floor(mindist / shellWidth));
+                            } else {
+                                return 0;
+                            }
                         }
 
                         SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
@@ -479,10 +490,8 @@ namespace readdy {
                             // step 1: find all problematic particles (ie the ones, that have (also transitively)
                             // a reaction with a particle in another box)
                             {
-                                auto it = box.particleIndices.begin();
-                                while (it < box.particleIndices.end()) {
-                                    handleProblematic(*it, box, ctx, data, nl, problematic);
-                                    ++it;
+                                for(const auto pIdx : box.particleIndices) {
+                                    findProblematicParticles(pIdx, box, ctx, data, nl, problematic);
                                 }
                             }
                             // step 2: remove the problematic ones out of the box and gather remaining events
@@ -531,8 +540,10 @@ namespace readdy {
                         for(auto&& update : updates) {
                             auto&& local_problematic = update.get();
                             n_local_problematic += local_problematic.size();
-                            gatherEvents(std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(), kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
+                            gatherEvents(std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
+                                         kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
                         }
+                        //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
                         auto newProblemParticles = handleEventsGillespie(kernel, std::move(evilEvents));
                         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
@@ -552,13 +563,14 @@ namespace readdy {
 
                     }
 
-                    void GillespieParallel::handleProblematic(
+                    void GillespieParallel::findProblematicParticles(
                             const unsigned long idx, const SlicedBox &box, ctx_t ctx,
-                            data_t data, nl_t nl, std::set<unsigned long> &update
+                            data_t data, nl_t nl, std::set<unsigned long> &problematic
                     ) const {
-                        if (update.find(idx) != update.end()) {
+                        if (problematic.find(idx) != problematic.end()) {
                             return;
                         }
+
                         const auto pPos = *(data->begin_positions() + idx);
                         // we only want out most particles here, since the transitively dependent particles
                         // are resolved within this method and therefore have no significance as input parameter
@@ -576,21 +588,18 @@ namespace readdy {
                             const auto pType = *(data->begin_types() + idx);
                             for (const auto neighborIdx : nlIt->second) {
                                 const auto neighborType = *(data->begin_types() + neighborIdx);
-                                const auto neighborPos = *(data->begin_positions() + neighborIdx);
                                 const auto &reactions = ctx.getOrder2Reactions(pType, neighborType);
                                 if (!reactions.empty()) {
+                                    const auto neighborPos = *(data->begin_positions() + neighborIdx);
                                     const auto distSquared = dist(pPos, neighborPos);
                                     for (const auto& r : reactions) {
-                                        if (r->getRate() > 0) {
-                                            if (distSquared < r->getEductDistance() * r->getEductDistance()) {
-                                                const bool neighborProblematic = update.find(neighborIdx) != update.end();
-                                                if (neighborProblematic || !box.isInBox(neighborPos)) {
-                                                    //BOOST_LOG_TRIVIAL(debug) << " ----> found (outer) problematic particle " << (*data)[idx];
-                                                    // we have a problematic particle!
-                                                    update.insert(idx);
-                                                    bfs.push(idx);
-                                                    break;
-                                                }
+                                        if (r->getRate() > 0 && distSquared < std::pow(r->getEductDistance(), 2)) {
+                                            const bool neighborProblematic = problematic.find(neighborIdx) != problematic.end();
+                                            if (neighborProblematic || !box.isInBox(neighborPos)) {
+                                                // we have a problematic particle!
+                                                problematic.insert(idx);
+                                                bfs.push(idx);
+                                                break;
                                             }
                                         }
                                     }
@@ -600,44 +609,42 @@ namespace readdy {
                         //BOOST_LOG_TRIVIAL(debug) << "------------------ BFS -----------------";
                         while (!bfs.empty()) {
                             const auto x = bfs.front();
+                            bfs.pop();
                             const auto xPos = *(data->begin_positions() + x);
                             const auto x_shell_idx = box.getShellIndex(xPos);
-                            bfs.pop();
                             auto neighIt = nl->pairs->find(x);
                             if (neighIt != nl->pairs->end()) {
                                 //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
-                                const auto x_type = *(data->begin_types() + idx);
+                                const auto x_type = *(data->begin_types() + x);
                                 for (const auto x_neighbor : neighIt->second) {
                                     //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
                                     const auto neighborType = *(data->begin_types() + x_neighbor);
                                     const auto neighborPos = *(data->begin_positions() + x_neighbor);
                                     const auto neighbor_shell_idx = box.getShellIndex(neighborPos);
-                                    if(neighbor_shell_idx == 0) {
+                                    /*if(neighbor_shell_idx == 0) {
                                         //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor was in outer shell, ignore";
                                         continue;
                                     } else {
                                         //BOOST_LOG_TRIVIAL(debug) << "\t ----> got neighbor with shell index " << neighbor_shell_idx;
-                                    }
+                                    }*/
                                     //BOOST_LOG_TRIVIAL(debug) << "\t\t inBox=" <<box.isInBox(neighborPos) <<", shellabsdiff=" <<std::abs(x_shell_idx - neighbor_shell_idx);
-                                    if(box.isInBox(neighborPos) && std::abs(x_shell_idx - neighbor_shell_idx) <= 1) {
+                                    if(box.isInBox(neighborPos) && std::abs(x_shell_idx - neighbor_shell_idx) <= 1.0) {
                                         //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was in box and adjacent shell";
                                         const auto &reactions = ctx.getOrder2Reactions(x_type, neighborType);
                                         if (!reactions.empty()) {
                                             //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor had potentially conflicting reactions";
-                                            const bool alreadyProblematic = update.find(x_neighbor) != update.end();
+                                            const bool alreadyProblematic = problematic.find(x_neighbor) != problematic.end();
                                             if (alreadyProblematic){
                                                 //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was already found, ignore";
                                                 continue;
                                             }
                                             const auto distSquared = dist(xPos, neighborPos);
                                             for (const auto& reaction : reactions) {
-                                                if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
-                                                    if (reaction->getRate() > 0) {
-                                                        // we have a problematic particle!
-                                                        //BOOST_LOG_TRIVIAL(debug) << "\t ----> added neighbor " << x_neighbor<< " to problematic particles";
-                                                        update.insert(x_neighbor);
-                                                        bfs.push(x_neighbor);
-                                                    }
+                                                if (reaction->getRate() > 0 && distSquared < std::pow(reaction->getEductDistance(), 2)) {
+                                                    // we have a problematic particle!
+                                                    problematic.insert(x_neighbor);
+                                                    bfs.push(x_neighbor);
+                                                    break;
                                                 }
                                             }
                                         }
@@ -653,47 +660,74 @@ namespace readdy {
                                                          std::vector<GillespieParallel::event_t> &events) const {
                         const auto &dist = kernel->getKernelContext().getDistSquaredFun();
                         for(const auto idx : particles) {
-                            const auto particleType = *(data->begin_types() + idx);
-                            // order 1
-                            {
-                                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
-                                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                                    const auto rate = (*it)->getRate();
-                                    if (rate > 0) {
-                                        alpha += rate;
-                                        events.push_back(
-                                                {1, idx, 0, rate, alpha, static_cast<index_t>(it - reactions.begin()),
-                                                 particleType, 0});
+                            // this being false should really not happen, though
+                            if (!*(data->begin_deactivated() + idx)) {
+                                const auto particleType = *(data->begin_types() + idx);
+                                // order 1
+                                {
+                                    const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
+                                    for (auto it = reactions.begin(); it != reactions.end(); ++it) {
+                                        const auto rate = (*it)->getRate();
+                                        if (rate > 0) {
+                                            alpha += rate;
+                                            events.push_back(
+                                                    {1, (*it)->getNProducts(), idx, 0, rate, alpha,
+                                                     static_cast<index_t>(it - reactions.begin()),
+                                                     particleType, 0});
+                                        }
                                     }
                                 }
-                            }
-                            // order 2
-                            {
-                                auto nl_it = nl->pairs->find(idx);
-                                if(nl_it != nl->pairs->end()) {
-                                    for(const auto idx_neighbor : nl_it->second) {
-                                        if(idx > idx_neighbor) continue;
-                                        const auto neighborType = *(data->begin_types() + idx_neighbor);
-                                        const auto& reactions = kernel->getKernelContext().getOrder2Reactions(particleType, neighborType);
-                                        if(!reactions.empty()) {
-                                            const auto distSquared = dist(
-                                                    *(data->begin_positions() + idx), *(data->begin_positions() + idx_neighbor)
+                                // order 2
+                                {
+                                    auto nl_it = nl->pairs->find(idx);
+                                    if (nl_it != nl->pairs->end()) {
+                                        for (const auto idx_neighbor : nl_it->second) {
+                                            if (idx > idx_neighbor) continue;
+                                            const auto neighborType = *(data->begin_types() + idx_neighbor);
+                                            const auto &reactions = kernel->getKernelContext().getOrder2Reactions(
+                                                    particleType, neighborType
                                             );
-                                            for(auto it = reactions.begin(); it < reactions.end(); ++it) {
-                                                const auto& react = *it;
-                                                if(distSquared < react->getEductDistance() * react->getEductDistance()) {
+                                            if (!reactions.empty()) {
+                                                const auto distSquared = dist(
+                                                        *(data->begin_positions() + idx),
+                                                        *(data->begin_positions() + idx_neighbor)
+                                                );
+                                                for (auto it = reactions.begin(); it < reactions.end(); ++it) {
+                                                    const auto &react = *it;
                                                     const auto rate = react->getRate();
-                                                    if(rate > 0) {
+                                                    if (rate > 0 &&
+                                                        distSquared < std::pow(react->getEductDistance(), 2)) {
+                                                        if(*(data->begin_deactivated()+idx_neighbor)) {
+                                                            auto get_box_idx = [&](unsigned long _idx) { return static_cast<unsigned int>( floor(((*(data->begin_positions() + _idx))[longestAxis] + .5 * kernel->getKernelContext().getBoxSize()[longestAxis])/boxWidth) ); };
+                                                            const auto nBoxIdx = get_box_idx(idx_neighbor);
+                                                            const auto nPos = *(data->begin_positions()+idx_neighbor);
+                                                            const auto nShellIdx = boxes[nBoxIdx].getShellIndex(nPos);
+                                                            const auto myBoxIdx = get_box_idx(idx);
+                                                            const auto myPos = *(data->begin_positions()+idx);
+                                                            BOOST_LOG_TRIVIAL(error)
+                                                                << "Got neighbor that was deactivated (ie conflicting "
+                                                                        "reaction) in shell index "
+                                                                << nShellIdx << ", was in box["<<nBoxIdx<<"]="
+                                                                << boxes[nBoxIdx].isInBox(nPos);
+                                                            BOOST_LOG_TRIVIAL(error)
+                                                                << "The neighbor is neighbor of a particle in box["
+                                                                << myBoxIdx << "]=" << boxes[myBoxIdx].isInBox(myPos)
+                                                                << ", shell="<<boxes[myBoxIdx].getShellIndex(myPos);
+                                                        }
                                                         alpha += rate;
-                                                        events.push_back({2, idx, idx_neighbor, rate, alpha,
-                                                                               static_cast<index_t>(it - reactions.begin()),
-                                                                               particleType, neighborType});
+                                                        events.push_back({2, react->getNProducts(), idx, idx_neighbor,
+                                                                          rate, alpha,
+                                                                          static_cast<index_t>(it - reactions.begin()),
+                                                                          particleType, neighborType});
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
+                            } else {
+                                BOOST_LOG_TRIVIAL(error) << "The particles list which was given to gather events "
+                                            "contained a particle that was already deactivated. This should not happen!";
                             }
                         }
 

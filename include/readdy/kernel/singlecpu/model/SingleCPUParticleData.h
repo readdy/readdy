@@ -15,6 +15,7 @@
 #include <readdy/model/Particle.h>
 #include <set>
 #include <mutex>
+#include <atomic>
 
 namespace readdy {
     namespace kernel {
@@ -23,11 +24,16 @@ namespace readdy {
 
                 class SingleCPUParticleData {
                 public:
+                    using marked_count_t = std::atomic<std::size_t>;
 
                     // ctor / dtor
                     SingleCPUParticleData();
 
+                    SingleCPUParticleData(bool useMarkedSet);
+
                     SingleCPUParticleData(unsigned int capacity);
+
+                    SingleCPUParticleData(unsigned int capacity, bool useMarkedSet);
 
                     ~SingleCPUParticleData();
 
@@ -128,8 +134,13 @@ namespace readdy {
                     std::unique_ptr<std::vector<char>> deactivated;
                     size_t deactivated_index;
                     size_t n_deactivated;
+                    mutable marked_count_t n_marked;
                     mutable std::unique_ptr<std::set<size_t>> markedForDeactivation;
                     mutable std::mutex markedForDeactivationMutex;
+                    bool useMarkedSet = true;
+
+                    void deactivateMarkedSet();
+                    void deactivateMarkedNoSet();
                 };
 
             }
