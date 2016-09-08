@@ -36,7 +36,7 @@ namespace readdy {
             };
             std::function<double(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs,
                                                                             const Vec3 &rhs) -> double {
-                auto dv = diffFun(lhs, rhs);
+                const auto dv = diffFun(lhs, rhs);
                 return dv * dv;
             };
 

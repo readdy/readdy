@@ -10,7 +10,6 @@
 #include <readdy/kernel/cpu/programs/Reactions.h>
 #include <future>
 #include <queue>
-#include <readdy/common/Timer.h>
 
 using _rdy_particle_t = readdy::model::Particle;
 
@@ -26,7 +25,6 @@ UncontrolledApproximation::UncontrolledApproximation(const CPUKernel *const kern
 
 void UncontrolledApproximation::execute() {
     const auto &ctx = kernel->getKernelContext();
-    const auto &dist = ctx.getDistSquaredFun();
     const auto &fixPos = ctx.getFixPositionFun();
     const auto &dt = ctx.getTimeStep();
     auto data = kernel->getKernelStateModel().getParticleData();
@@ -88,28 +86,25 @@ void UncontrolledApproximation::execute() {
         const auto cend = kernel->getKernelStateModel().getNeighborList()->pairs->cend();
         for (auto &it = cbegin; it != cend; ++it) {
             const auto idx1 = it->first;
-            for (const auto &idx2 : it->second) {
-                if (idx1 > idx2) continue;
+            for (const auto &neighbor : it->second) {
+                if (idx1 > neighbor.idx) continue;
                 const auto &reactions = ctx.getOrder2Reactions(
-                        *(data->begin_types() + idx1), *(data->begin_types() + idx2)
+                        *(data->begin_types() + idx1), *(data->begin_types() + neighbor.idx)
                 );
 
-                const auto distSquared = dist(
-                        *(data->begin_positions() + idx1), *(data->begin_positions() + idx2)
-                );
-
+                const auto distSquared = neighbor.d2;
                 for (const auto &reaction : reactions) {
                     // if close enough and coin flip successful
                     if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
                         && rnd.getUniform() < reaction->getRate() * dt) {
-                        events.push_back([idx1, idx2, this, &newParticles, &reaction] {
+                        events.push_back([idx1, neighbor, this, &newParticles, &reaction] {
                             auto &&_data = kernel->getKernelStateModel().getParticleData();
                             if (_data->isMarkedForDeactivation(idx1)) return;
-                            if (_data->isMarkedForDeactivation(idx2)) return;
+                            if (_data->isMarkedForDeactivation(neighbor.idx)) return;
                             _data->markForDeactivation(idx1);
-                            _data->markForDeactivation(idx2);
+                            _data->markForDeactivation(neighbor.idx);
                             const auto inParticle1 = (*_data)[idx1];
-                            const auto inParticle2 = (*_data)[idx2];
+                            const auto inParticle2 = (*_data)[neighbor.idx];
                             switch (reaction->getNProducts()) {
                                 case 1: {
                                     _rdy_particle_t out{};
@@ -156,7 +151,6 @@ std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEven
     std::vector<singlecpu::programs::reactions::ReactionEvent> events;
     const auto &ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
-    const auto &dist = ctx.getDistSquaredFun();
     /**
     * Reactions with one educt
     */
@@ -192,16 +186,15 @@ std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEven
             const index_t idx1 = nl_it->first;
             if (*(data->begin_deactivated() + idx1)) continue;
             auto neighbors = nl_it->second;
-            for (const auto idx2 : neighbors) {
-                if (idx1 > idx2) continue;
-                if (*(data->begin_deactivated() + idx2)) continue;
+            // todo?
+            for (const auto& neighbor : neighbors) {
+                if (idx1 > neighbor.idx) continue;
+                if (*(data->begin_deactivated() + neighbor.idx)) continue;
                 const auto &reactions = ctx.getOrder2Reactions(
-                        *(data->begin_types() + idx1), *(data->begin_types() + idx2)
+                        *(data->begin_types() + idx1), *(data->begin_types() + neighbor.idx)
                 );
 
-                const auto distSquared = dist(
-                        *(data->begin_positions() + idx1), *(data->begin_positions() + idx2)
-                );
+                const auto distSquared = neighbor.d2;
 
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     // if close enough
@@ -211,9 +204,9 @@ std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEven
                         if (rate > 0) {
                             alpha += rate;
                             events.push_back(
-                                    {2, reaction->getNProducts(), idx1, idx2, rate, alpha,
+                                    {2, reaction->getNProducts(), idx1, neighbor.idx, rate, alpha,
                                      (index_t) (it - reactions.begin()),
-                                     *(typesBegin + idx1), *(typesBegin + idx2)});
+                                     *(typesBegin + idx1), *(typesBegin + neighbor.idx)});
                         }
                     }
                 }
@@ -399,15 +392,15 @@ struct GillespieParallel::SlicedBox {
 
 void GillespieParallel::execute() {
     {
-        readdy::util::Timer t ("gillespie parallel: setup boxes");
+        //readdy::util::Timer t ("gillespie parallel: setup boxes");
         setupBoxes();
     }
     {
-        readdy::util::Timer t ("gillespie parallel: fill boxes");
+        //readdy::util::Timer t ("gillespie parallel: fill boxes");
         fillBoxes();
     }
     {
-        readdy::util::Timer t ("gillespie parallel: handle reactions");
+        //readdy::util::Timer t ("gillespie parallel: handle reactions");
         handleBoxReactions();
     }
 }
@@ -535,7 +528,7 @@ void GillespieParallel::handleBoxReactions() {
     std::vector<std::future<std::set<unsigned long>>> updates;
     std::vector<std::future<std::vector<particle_t>>> newParticles;
     {
-        readdy::util::Timer t ("\t run threads");
+        //readdy::util::Timer t ("\t run threads");
         std::vector<util::ScopedThread> threads;
         for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
             promise_t promise;
@@ -555,7 +548,7 @@ void GillespieParallel::handleBoxReactions() {
         }
     }
     {
-        readdy::util::Timer t ("\t fix marked");
+        //readdy::util::Timer t ("\t fix marked");
         std::vector<event_t> evilEvents{};
         double alpha = 0;
         long n_local_problematic = 0;
@@ -604,20 +597,19 @@ void GillespieParallel::findProblematicParticles(
 
     std::queue<unsigned long> bfs{};
 
-    const auto &dist = ctx.getDistSquaredFun();
-
     auto nlIt = nl->pairs->find(idx);
     if (nlIt != nl->pairs->end()) {
         const auto pType = *(data->begin_types() + idx);
-        for (const auto neighborIdx : nlIt->second) {
-            const auto neighborType = *(data->begin_types() + neighborIdx);
+        // todo?
+        for (const auto& neighbor : nlIt->second) {
+            const auto neighborType = *(data->begin_types() + neighbor.idx);
             const auto &reactions = ctx.getOrder2Reactions(pType, neighborType);
             if (!reactions.empty()) {
-                const auto neighborPos = *(data->begin_positions() + neighborIdx);
-                const auto distSquared = dist(pPos, neighborPos);
+                const auto neighborPos = *(data->begin_positions() + neighbor.idx);
+                const auto distSquared = neighbor.d2;
                 for (const auto &r : reactions) {
                     if (r->getRate() > 0 && distSquared < std::pow(r->getEductDistance(), 2)) {
-                        const bool neighborProblematic = problematic.find(neighborIdx) != problematic.end();
+                        const bool neighborProblematic = problematic.find(neighbor.idx) != problematic.end();
                         if (neighborProblematic || !box.isInBox(neighborPos)) {
                             // we have a problematic particle!
                             problematic.insert(idx);
@@ -639,10 +631,11 @@ void GillespieParallel::findProblematicParticles(
         if (neighIt != nl->pairs->end()) {
             //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
             const auto x_type = *(data->begin_types() + x);
-            for (const auto x_neighbor : neighIt->second) {
+            // todo?
+            for (const auto& x_neighbor : neighIt->second) {
                 //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
-                const auto neighborType = *(data->begin_types() + x_neighbor);
-                const auto neighborPos = *(data->begin_positions() + x_neighbor);
+                const auto neighborType = *(data->begin_types() + x_neighbor.idx);
+                const auto neighborPos = *(data->begin_positions() + x_neighbor.idx);
                 const auto neighbor_shell_idx = box.getShellIndex(neighborPos);
                 /*if(neighbor_shell_idx == 0) {
                     //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor was in outer shell, ignore";
@@ -656,17 +649,17 @@ void GillespieParallel::findProblematicParticles(
                     const auto &reactions = ctx.getOrder2Reactions(x_type, neighborType);
                     if (!reactions.empty()) {
                         //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor had potentially conflicting reactions";
-                        const bool alreadyProblematic = problematic.find(x_neighbor) != problematic.end();
+                        const bool alreadyProblematic = problematic.find(x_neighbor.idx) != problematic.end();
                         if (alreadyProblematic) {
                             //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was already found, ignore";
                             continue;
                         }
-                        const auto distSquared = dist(xPos, neighborPos);
+                        const auto distSquared = x_neighbor.d2;
                         for (const auto &reaction : reactions) {
                             if (reaction->getRate() > 0 && distSquared < std::pow(reaction->getEductDistance(), 2)) {
                                 // we have a problematic particle!
-                                problematic.insert(x_neighbor);
-                                bfs.push(x_neighbor);
+                                problematic.insert(x_neighbor.idx);
+                                bfs.push(x_neighbor.idx);
                                 break;
                             }
                         }
@@ -682,7 +675,6 @@ template<typename ParticleCollection>
 void
 GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
                                 std::vector<GillespieParallel::event_t> &events) const {
-    const auto &dist = kernel->getKernelContext().getDistSquaredFun();
     for (const auto idx : particles) {
         // this being false should really not happen, though
         if (!*(data->begin_deactivated() + idx)) {
@@ -705,31 +697,29 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
             {
                 auto nl_it = nl->pairs->find(idx);
                 if (nl_it != nl->pairs->end()) {
-                    for (const auto idx_neighbor : nl_it->second) {
-                        if (idx > idx_neighbor) continue;
-                        const auto neighborType = *(data->begin_types() + idx_neighbor);
+                    // todo ?
+                    for (const auto& idx_neighbor : nl_it->second) {
+                        if (idx > idx_neighbor.idx) continue;
+                        const auto neighborType = *(data->begin_types() + idx_neighbor.idx);
                         const auto &reactions = kernel->getKernelContext().getOrder2Reactions(
                                 particleType, neighborType
                         );
                         if (!reactions.empty()) {
-                            const auto distSquared = dist(
-                                    *(data->begin_positions() + idx),
-                                    *(data->begin_positions() + idx_neighbor)
-                            );
+                            const auto distSquared = idx_neighbor.d2;
                             for (auto it = reactions.begin(); it < reactions.end(); ++it) {
                                 const auto &react = *it;
                                 const auto rate = react->getRate();
                                 if (rate > 0 &&
                                     distSquared < std::pow(react->getEductDistance(), 2)) {
-                                    if (*(data->begin_deactivated() + idx_neighbor)) {
+                                    if (*(data->begin_deactivated() + idx_neighbor.idx)) {
                                         auto get_box_idx = [&](
                                                 unsigned long _idx) { return static_cast<unsigned int>( floor(
                                                 ((*(data->begin_positions() + _idx))[longestAxis] +
                                                  .5 * kernel->getKernelContext().getBoxSize()[longestAxis]) /
                                                 boxWidth));
                                         };
-                                        const auto nBoxIdx = get_box_idx(idx_neighbor);
-                                        const auto nPos = *(data->begin_positions() + idx_neighbor);
+                                        const auto nBoxIdx = get_box_idx(idx_neighbor.idx);
+                                        const auto nPos = *(data->begin_positions() + idx_neighbor.idx);
                                         const auto nShellIdx = boxes[nBoxIdx].getShellIndex(nPos);
                                         const auto myBoxIdx = get_box_idx(idx);
                                         const auto myPos = *(data->begin_positions() + idx);
@@ -744,7 +734,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                                             << ", shell=" << boxes[myBoxIdx].getShellIndex(myPos);
                                     }
                                     alpha += rate;
-                                    events.push_back({2, react->getNProducts(), idx, idx_neighbor,
+                                    events.push_back({2, react->getNProducts(), idx, idx_neighbor.idx,
                                                       rate, alpha,
                                                       static_cast<index_t>(it - reactions.begin()),
                                                       particleType, neighborType});
