@@ -241,7 +241,7 @@ namespace readdy {
 
         const std::vector<potentials::PotentialOrder2 *> &
         KernelContext::getOrder2Potentials(const unsigned int type1, const unsigned int type2) const {
-            return readdy::utils::collections::getOrDefault(pimpl->potentialO2Registry, {type1, type2}, pimpl->defaultPotentialsO2);
+            return readdy::util::collections::getOrDefault(pimpl->potentialO2Registry, {type1, type2}, pimpl->defaultPotentialsO2);
         }
 
         std::vector<std::tuple<unsigned int, unsigned int>>
@@ -273,7 +273,7 @@ namespace readdy {
         }
 
         std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(const unsigned int type) const {
-            return readdy::utils::collections::getOrDefault(pimpl->potentialO1Registry, type, pimpl->defaultPotentialsO1);
+            return readdy::util::collections::getOrDefault(pimpl->potentialO1Registry, type, pimpl->defaultPotentialsO1);
         }
 
         std::unordered_set<unsigned int> KernelContext::getAllOrder1RegisteredPotentialTypes() const {
@@ -307,7 +307,7 @@ namespace readdy {
         }
 
         const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const unsigned int type) const {
-            return readdy::utils::collections::getOrDefault(*reactionOneEductRegistry, type, pimpl->defaultReactionsO1);
+            return readdy::util::collections::getOrDefault(*reactionOneEductRegistry, type, pimpl->defaultReactionsO1);
         }
 
         const std::vector<reactions::Reaction<2> *> &
@@ -317,7 +317,7 @@ namespace readdy {
 
         const std::vector<reactions::Reaction<2> *> &
         KernelContext::getOrder2Reactions(const unsigned int type1, const unsigned int type2) const {
-            return readdy::utils::collections::getOrDefault(*reactionTwoEductsRegistry, {type1, type2}, pimpl->defaultReactionsO2);
+            return readdy::util::collections::getOrDefault(*reactionTwoEductsRegistry, {type1, type2}, pimpl->defaultReactionsO2);
         }
 
         const std::vector<const reactions::Reaction<1> *> KernelContext::getAllOrder1Reactions() const {

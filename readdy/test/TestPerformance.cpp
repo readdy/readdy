@@ -10,12 +10,12 @@
 
 #include <gtest/gtest.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/testing/Timer.h>
+#include <readdy/common/Timer.h>
 
 namespace {
 
     void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_type steps = 3) {
-        using timer = readdy::testing::Timer;
+        using timer = readdy::util::Timer;
 
         auto stdRand = [] (double lower = 0.0, double upper = 1.0) -> double {
             return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;

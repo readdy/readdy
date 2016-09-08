@@ -23,7 +23,7 @@ namespace readdy {
 
         inline std::vector<std::string> getKernelsToTest() {
             #ifdef READDY_KERNELS_TO_TEST
-            std::vector<std::string> kernels = readdy::utils::split(std::string(READDY_KERNELS_TO_TEST), ',');
+            std::vector<std::string> kernels = readdy::util::split(std::string(READDY_KERNELS_TO_TEST), ',');
             #else
             std::vector<std::string> kernels {"SingleCPU"};
             #endif
