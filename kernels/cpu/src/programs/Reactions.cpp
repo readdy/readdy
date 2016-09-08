@@ -186,7 +186,6 @@ std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEven
             const index_t idx1 = nl_it->first;
             if (*(data->begin_deactivated() + idx1)) continue;
             auto neighbors = nl_it->second;
-            // todo?
             for (const auto& neighbor : neighbors) {
                 if (idx1 > neighbor.idx) continue;
                 if (*(data->begin_deactivated() + neighbor.idx)) continue;
@@ -600,7 +599,6 @@ void GillespieParallel::findProblematicParticles(
     auto nlIt = nl->pairs->find(idx);
     if (nlIt != nl->pairs->end()) {
         const auto pType = *(data->begin_types() + idx);
-        // todo?
         for (const auto& neighbor : nlIt->second) {
             const auto neighborType = *(data->begin_types() + neighbor.idx);
             const auto &reactions = ctx.getOrder2Reactions(pType, neighborType);
@@ -697,7 +695,6 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
             {
                 auto nl_it = nl->pairs->find(idx);
                 if (nl_it != nl->pairs->end()) {
-                    // todo ?
                     for (const auto& idx_neighbor : nl_it->second) {
                         if (idx > idx_neighbor.idx) continue;
                         const auto neighborType = *(data->begin_types() + idx_neighbor.idx);

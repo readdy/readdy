@@ -52,7 +52,7 @@ namespace {
             kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
         }
 
-        const unsigned int nParticles = 15000;
+        const unsigned int nParticles = 25000;
         for(unsigned long _ = 0; _ < nParticles; ++_) {
             for(const auto& t : types) {
                 readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),

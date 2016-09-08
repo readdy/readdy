@@ -32,7 +32,8 @@ class NeighborList {
     using box_t = readdy::kernel::singlecpu::model::Box;
 
 public:
-    using container_t = std::unordered_map<unsigned long, std::vector<NeighborListElement>>;
+    using neighbor_t = NeighborListElement;
+    using container_t = std::unordered_map<unsigned long, std::vector<neighbor_t>>;
 
     std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
 

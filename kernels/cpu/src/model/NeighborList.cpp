@@ -94,7 +94,7 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
             if (box) {
                 box->particleIndices.push_back(idx);
             }
-            pairs->emplace(idx, std::vector<NeighborListElement>());
+            pairs->emplace(idx, std::vector<neighbor_t>());
             ++idx;
             ++it_pos;
         }

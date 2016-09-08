@@ -42,10 +42,10 @@ namespace {
     };
 
     auto isPairInList = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs, unsigned long idx1, unsigned long idx2) {
+        using neighbor_t = readdy::kernel::cpu::model::NeighborList::neighbor_t;
         const auto neighborsIt = pairs->find(idx1);
         if(neighborsIt != pairs->end()) {
             const auto neighbors = neighborsIt->second;
-            using neighbor_t = readdy::kernel::cpu::model::NeighborListElement;
             return std::find_if(neighbors.begin(), neighbors.end(), [idx2](const neighbor_t &neighbor) {
                 return neighbor.idx == idx2;
             }) != neighbors.end();
@@ -62,28 +62,6 @@ namespace {
         }
         return numberPairs;
     };
-
-    TEST_F(TestNeighborList, DistSquared) {
-        auto stdRand = [] (double lower = 0.0, double upper = 1.0) -> double {
-            return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
-        };
-        const unsigned long n_particles = 100;
-        kernel->getKernelContext().setBoxSize(10, 10, 10);
-        const auto d2 = kernel->getKernelContext().getDistSquaredFun();
-        for(auto i = 0; i < n_particles; ++i) {
-            kernel->addParticle("A", {stdRand(-5, 5), stdRand(-5,5), stdRand(-5,5)});
-        }
-        kernel->getKernelContext().configure();
-        kernel->createProgram<readdy::model::programs::UpdateNeighborList>()->execute();
-        const auto& particleData = kernel->getKernelStateModel().getParticleData();
-        for(const auto it : *kernel->getKernelStateModel().getNeighborList()->pairs) {
-            const auto myPos = *(particleData->begin_positions() + it.first);
-            for(const auto& neighbor : it.second) {
-                const auto neighborPos = *(particleData->begin_positions() + neighbor.idx);
-                EXPECT_DOUBLE_EQ(d2(myPos, neighborPos), neighbor.d2);
-            }
-        }
-    }
 
     TEST_F(TestNeighborList, ThreeBoxesPeriodicAxis) {
         // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three boxes along the periodic axis

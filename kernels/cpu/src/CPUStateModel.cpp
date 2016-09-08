@@ -86,7 +86,7 @@ void CPUStateModel::calculateForces() {
                 const auto type_i = *(data->cbegin_types() + i);
                 const auto &pos_i = *(data->cbegin_positions() + i);
 
-                for (auto &&neighbor : it->second) {
+                for (const auto& neighbor : it->second) {
                     readdy::model::Vec3 forceVec{0, 0, 0};
                     const auto type_j = *(data->cbegin_types() + neighbor.idx);
                     const auto &pos_j = *(data->cbegin_positions() + neighbor.idx);
