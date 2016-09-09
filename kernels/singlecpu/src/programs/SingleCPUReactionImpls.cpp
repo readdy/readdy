@@ -229,11 +229,22 @@ namespace readdy {
                     }
 
 
-                    ReactionEvent::ReactionEvent(unsigned int nEducts, index_type idx1, index_type idx2,
-                                                            double reactionRate, double cumulativeRate,
-                                                            index_type reactionIdx, unsigned int t1, unsigned int t2)
-                            : nEducts(nEducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
+                    ReactionEvent::ReactionEvent(unsigned int nEducts, unsigned int nProducts,
+                                                 index_type idx1, index_type idx2,
+                                                 double reactionRate, double cumulativeRate,
+                                                 index_type reactionIdx, unsigned int t1, unsigned int t2)
+                            : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
                               cumulativeRate(cumulativeRate), reactionIdx(reactionIdx), t1(t1), t2(t2) {}
+
+                    std::ostream &operator<<(std::ostream &os, const ReactionEvent &evt) {
+                        os << "ReactionEvent(" << evt.idx1 << "[type=" << evt.t1 << "]";
+                        if (evt.nEducts == 2) {
+                            os << " + " << evt.idx2 << "[type=" << evt.t2 << "]";
+                        }
+                        os << ", rate=" << evt.reactionRate << ", cumulativeRate=" << evt.cumulativeRate
+                           << ", reactionIdx=" << evt.reactionIdx;
+                        return os;
+                    }
 
 
                     std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<ReactionEvent> events, double alpha) {
@@ -308,10 +319,11 @@ namespace readdy {
                                                     ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
                                                     nDeactivated++;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
+                                                    cumsum += (*_it).reactionRate;
+                                                    (*_it).cumulativeRate = cumsum;
+                                                } else {
+                                                    ++_it;
                                                 }
-                                                cumsum += (*_it).reactionRate;
-                                                (*_it).cumulativeRate = cumsum;
-                                                ++_it;
                                             }
                                         } else {
                                             const auto idx2 = event.idx2;
@@ -324,10 +336,11 @@ namespace readdy {
                                                      ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
                                                     nDeactivated++;
                                                     std::iter_swap(_it, events.end() - nDeactivated);
+                                                    cumsum += (*_it).reactionRate;
+                                                    (*_it).cumulativeRate = cumsum;
+                                                } else {
+                                                    ++_it;
                                                 }
-                                                cumsum += (*_it).reactionRate;
-                                                (*_it).cumulativeRate = cumsum;
-                                                ++_it;
                                             }
                                         }
 
@@ -367,7 +380,7 @@ namespace readdy {
                                     const auto rate = (*it)->getRate();
                                     if(rate > 0) {
                                         alpha += rate;
-                                        events.push_back({1, (_reaction_idx_t) (it_type - data->begin_types()), 0, rate, alpha,
+                                        events.push_back({1, (*it)->getNProducts(), (_reaction_idx_t) (it_type - data->begin_types()), 0, rate, alpha,
                                                           (_reaction_idx_t) (it - reactions.begin()), *it_type, 0});
                                     }
                                 }
@@ -399,7 +412,7 @@ namespace readdy {
                                         if(rate > 0) {
                                             alpha += rate;
                                             events.push_back(
-                                                    {2, idx1, idx2, rate, alpha,
+                                                    {2, reaction->getNProducts(), idx1, idx2, rate, alpha,
                                                      (_reaction_idx_t) (it - reactions.begin()),
                                                      *(typesBegin+idx1), *(typesBegin+idx2)});
                                         }

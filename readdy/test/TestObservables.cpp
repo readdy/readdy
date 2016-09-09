@@ -10,7 +10,6 @@
 #include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/Simulation.h>
-#include <readdy/model/programs/Programs.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 
@@ -23,7 +22,7 @@ namespace {
 
     TEST_P(TestObservables, Foo) {
         readdy::model::_internal::ObservableFactory obsf(kernel.get());
-        auto x = obsf.create<m::ParticlePositionObservable>(1);
+        obsf.create<m::ParticlePositionObservable>(1);
     }
 
     TEST_P(TestObservables, TestParticlePositions) {

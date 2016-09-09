@@ -80,8 +80,11 @@ namespace readdy {
             (*pimpl->signal)(t);
         }
 
-        void Kernel::deconnectObservable(ObservableBase *const observable) {
-            pimpl->observableBlocks.erase(observable);
+        void Kernel::disconnectObservable(ObservableBase *const observable) {
+            const auto obs_it = pimpl->observableBlocks.find(observable);
+            if(obs_it != pimpl->observableBlocks.end()) {
+                pimpl->observableBlocks.erase(obs_it);
+            }
         }
 
         std::vector<std::string> Kernel::getAvailablePotentials() const {

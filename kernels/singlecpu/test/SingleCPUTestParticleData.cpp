@@ -15,18 +15,25 @@
 
 using namespace readdy::kernel::singlecpu::model;
 
-TEST(ParticleData, initialization) {
+struct ParticleDataTest : public ::testing::TestWithParam<bool> {
+
+    std::unique_ptr<SingleCPUParticleData> createDataObject(std::size_t capacity) {
+        return std::make_unique<SingleCPUParticleData>(capacity, GetParam());
+    }
+};
+
+TEST_P(ParticleDataTest, initialization) {
     // everything should be deactivated
-    auto data = std::make_unique<SingleCPUParticleData>(10);
+    auto data = createDataObject(10);
 
     for (size_t i = 0; i < 10; i++) {
         EXPECT_TRUE(data->isMarkedForDeactivation(i));
     }
 }
 
-TEST(ParticleData, additionOfParticles) {
+TEST_P(ParticleDataTest, additionOfParticles) {
     // initial capacity of 3
-    auto data = std::make_unique<SingleCPUParticleData>(3);
+    auto data = createDataObject(3);
     EXPECT_TRUE(data->getNDeactivated() == 3);
 
     data->addParticle({1, 1, 1, 5});
@@ -54,9 +61,9 @@ TEST(ParticleData, additionOfParticles) {
     }
 }
 
-TEST(ParticleData, removalOfParticles) {
+TEST_P(ParticleDataTest, removalOfParticles) {
     unsigned int n_particles = 15;
-    auto data = std::make_unique<SingleCPUParticleData>(5);
+    auto data = createDataObject(5);
     EXPECT_TRUE(data->getNDeactivated() == 5);
     for (auto &&i = 0; i < n_particles; i++) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
@@ -90,9 +97,9 @@ TEST(ParticleData, removalOfParticles) {
     EXPECT_EQ(*(data->end_positions() - 1), readdy::model::Vec3(.5, .5, .5));
 }
 
-TEST(ParticleData, markingForRemoval) {
+TEST_P(ParticleDataTest, markingForRemoval) {
     unsigned int n_particles = 100;
-    auto &&data = std::make_unique<SingleCPUParticleData>(n_particles);
+    auto &&data = createDataObject(n_particles);
     EXPECT_EQ(0, data->size());
     for (auto &&i = 0; i < n_particles; i++) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
@@ -120,9 +127,9 @@ TEST(ParticleData, markingForRemoval) {
     EXPECT_EQ(n_particles - n_deactivated, data->size());
 }
 
-TEST(ParticleData, markingForRemoval2) {
+TEST_P(ParticleDataTest, markingForRemoval2) {
     unsigned int n_particles = 11;
-    auto &&data = std::make_unique<SingleCPUParticleData>(15);
+    auto &&data = createDataObject(15);
     for (auto &&i = 0; i < n_particles; i++) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
     }
@@ -172,9 +179,11 @@ TEST(ParticleData, markingForRemoval2) {
     EXPECT_EQ(data->size(), 0);
 }
 
-TEST(ParticleData, empty) {
-    auto data = std::make_unique<SingleCPUParticleData>(3);
+TEST_P(ParticleDataTest, empty) {
+    auto data = createDataObject(3);
     EXPECT_TRUE(data->empty());
     data->addParticle({4, 4, 4, 4});
     EXPECT_FALSE(data->empty());
 }
+
+INSTANTIATE_TEST_CASE_P(ParticleDataTests, ParticleDataTest, ::testing::Bool());

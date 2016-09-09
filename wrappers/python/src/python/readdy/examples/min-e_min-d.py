@@ -7,6 +7,7 @@ from readdy.util import platform_utils
 from scipy.optimize import brentq
 
 import numpy as np
+from time import clock, time
 import matplotlib
 
 # matplotlib.use('Qt4Agg')
@@ -31,6 +32,7 @@ class MinEMinDSimulation(object):
         self.stride = 2000
         self.timestep = .0005
         self.n_timesteps = 3000000
+        self.time = None
         if self._generate_plots:
             self.fig = plt.figure()
             if(self._result_fname is not None):
@@ -54,6 +56,10 @@ class MinEMinDSimulation(object):
 
     def callback_histogram(self, data, idx):
 
+        if idx == 0:
+            if self.time is not None:
+                print("elapsed: {0}".format(time() - self.time))
+            self.time = time()
         if self._hist_data[idx] is None:
             self._hist_data[idx] = np.array(data)
         else:
@@ -84,8 +90,8 @@ class MinEMinDSimulation(object):
         self.callback_histogram(histogramTuple, 5)
 
     def n_particles_callback(self, n_particles):
-        # print("n_particles_total=%s"%n_particles)
-        pass
+        # ["D", "D_P", "D_PB", "E", "DE"]
+        print("n_minD={0}, n_minDP={1}, n_minDPB={2}, n_minE={3}, n_minDE={4}, total={5}".format(n_particles[0], n_particles[1], n_particles[2], n_particles[3], n_particles[4], sum(n_particles)))
 
     def histrogram_callback_bound(self, histogramTuple):
         counts = histogramTuple[:]
@@ -181,8 +187,9 @@ class MinEMinDSimulation(object):
         #
         ###################################
 
-        reaction_radius = (0.01 + 0.01)*4  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
+        reaction_radius = 4*(0.01 + 0.01)  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
         k_fusion = brentq(lambda x: self.erban_chapman(.093, 2.5 + .01, reaction_radius, x), 1, 5000000)
+        k_fusion = 1.0
         print("k_fusion=%s" % k_fusion)
         simulation.register_reaction_conversion("Phosphorylation", "D", "D_P", .5)
         simulation.register_reaction_fusion("bound MinD+MinE->MinDE", "D_PB", "E", "DE", k_fusion, reaction_radius*3.5, .5, .5)
@@ -270,7 +277,7 @@ class MinEMinDSimulation(object):
         for i in range(int(.5 * n_minD_particles), n_minD_particles):
             simulation.add_particle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
-        self.timestep = simulation.get_recommended_time_step(5)
+        self.timestep = simulation.get_recommended_time_step(10)
 
         ###################################
         #
@@ -284,7 +291,7 @@ class MinEMinDSimulation(object):
         print("histogram start")
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
-        stride = int(1./self.timestep)
+        stride = int(10./self.timestep)
         self.stride = stride
         print("using stride=%s" % stride)
         bins = np.linspace(-7, 7, 80)
@@ -294,13 +301,14 @@ class MinEMinDSimulation(object):
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minE, bins, ["E"], 2)
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDE, bins, ["DE"], 2)
         simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_M, bins, ["D", "D_P", "D_PB", "DE"], 2)
-        simulation.register_observable_n_particles(stride, self.n_particles_callback)
+        simulation.register_observable_n_particles_types(stride, ["D", "D_P", "D_PB", "E", "DE"], self.n_particles_callback)
         print("histogram end")
 
-        self.n_timesteps = int(600./self.timestep)
+        self.n_timesteps = int(1200./self.timestep)
 
         print("starting simulation for effectively %s sec" % (self.timestep * self.n_timesteps))
-        simulation.run(self.n_timesteps, self.timestep)
+        simulation.set_time_step(self.timestep)
+        simulation.run_scheme_readdy(True).with_reaction_scheduler("GillespieParallel").configure().run(self.n_timesteps)
 
         if self._result_fname is not None:
             with open(self._result_fname, 'w') as f:
@@ -308,7 +316,7 @@ class MinEMinDSimulation(object):
 
 
 if __name__ == '__main__':
-    sim = MinEMinDSimulation(None, True)
+    sim = MinEMinDSimulation('test_mind_mine.npy', False)
     sim.execute()
 
     #X = np.load('test_mind_mine_no_membrane6.npy')

@@ -49,7 +49,7 @@ namespace readdy {
                 Vec3 min {0,0,0}, max {0,0,0};
                 double particleRadius = 0;
                 double forceConstant = 1;
-                bool considerParticleRadius;
+                bool considerParticleRadius = true;
             };
 
             template<typename T>

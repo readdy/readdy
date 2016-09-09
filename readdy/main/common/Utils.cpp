@@ -6,7 +6,7 @@
 #include <readdy/common/Utils.h>
 
 namespace readdy {
-    namespace utils {
+    namespace util {
         bool isWindows() {
             #if BOOST_OS_WINDOWS
             return true;

@@ -54,6 +54,8 @@ namespace readdy {
 
             std::array<double, 3> &getBoxSize() const;
 
+            std::tuple<readdy::model::Vec3, readdy::model::Vec3> getBoxBoundingVertices() const;
+
             void setBoxSize(double dx, double dy, double dz);
 
             const std::array<bool, 3> &getPeriodicBoundary() const;

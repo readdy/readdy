@@ -41,6 +41,25 @@ namespace readdy {
 
                 virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
+                virtual boost::signals2::scoped_connection
+                connectObservable(model::ObservableBase *const observable) override;
+
+                virtual void disconnectObservable(model::ObservableBase *const observable) override;
+
+                virtual std::unique_ptr<model::programs::Program> createProgram(const std::string &name) const override;
+
+                virtual void evaluateObservables(readdy::model::time_step_type t) override;
+
+                virtual void evaluateAllObservables(readdy::model::time_step_type t) override;
+
+                virtual std::tuple<std::unique_ptr<model::ObservableWrapper>, boost::signals2::scoped_connection>
+                registerObservable(const model::ObservableType &observable, unsigned int stride) override;
+
+                virtual std::vector<std::string> getAvailablePrograms() const override;
+
+                virtual void addParticle(const std::string &type, const model::Vec3 &pos) override;
+
+                virtual unsigned int getTypeId(const std::string &string) const override;
 
 
             protected:

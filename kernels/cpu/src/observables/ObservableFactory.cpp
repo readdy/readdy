@@ -15,26 +15,24 @@ namespace readdy {
     namespace kernel {
         namespace cpu {
             namespace observables {
-                ObservableFactory::ObservableFactory(CPUKernel *const kernel) : readdy::model::_internal::ObservableFactory(kernel){
+                ObservableFactory::ObservableFactory(CPUKernel *const kernel) : readdy::model::_internal::ObservableFactory(kernel), kernel(kernel){
                 }
 
                 readdy::model::NParticlesObservable *
-                ObservableFactory::createNParticlesObservable(readdy::model::Kernel *const kernel,
-                                                              unsigned int stride, std::vector<std::string> typesToCount) const {
+                ObservableFactory::createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
                     return new readdy::kernel::singlecpu::observables::NParticlesObservable<CPUKernel>(kernel, stride, typesToCount);
                 }
 
                 readdy::model::HistogramAlongAxisObservable *
-                ObservableFactory::createAxisHistogramObservable(readdy::model::Kernel *const kernel,
-                                                                 unsigned int stride, std::vector<double> binBorders,
+                ObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                                                  std::vector<std::string> typesToCount,
                                                                  unsigned int axis) const {
-                    return new readdy::kernel::singlecpu::observables::SingleCPUHistogramAlongAxisObservable<readdy::kernel::cpu::CPUKernel>(kernel, stride, binBorders, typesToCount, axis);
+                    return new readdy::kernel::singlecpu::observables::HistogramAlongAxisObservable<CPUKernel>(kernel, stride, binBorders, typesToCount, axis);
                 }
 
                 readdy::model::ForcesObservable *
-                ObservableFactory::createForcesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) const {
-                    return new readdy::kernel::singlecpu::observables::ForcesObservable<readdy::kernel::cpu::CPUKernel>(kernel, stride, typesToCount);
+                ObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
+                    return new readdy::kernel::singlecpu::observables::ForcesObservable<CPUKernel>(kernel, stride, typesToCount);
                 }
             }
         }

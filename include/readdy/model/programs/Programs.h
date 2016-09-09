@@ -80,6 +80,11 @@ namespace readdy {
                     Gillespie() : Program() {}
                 };
 
+                class GillespieParallel : public Program {
+                public:
+                    GillespieParallel() : Program() {}
+                };
+
             }
 
             template<typename T>
@@ -113,6 +118,11 @@ namespace readdy {
             template<typename T>
             const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type* = 0) {
                 return "Gillespie";
+            };
+
+            template<typename T>
+            const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type* = 0) {
+                return "GillespieParallel";
             };
         }
     }

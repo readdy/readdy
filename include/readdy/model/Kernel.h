@@ -87,7 +87,7 @@ namespace readdy {
             }
 
             template<typename T, typename... Args>
-            std::unique_ptr<T> createObservable(unsigned int stride, Args... args) {
+            std::unique_ptr<T> createObservable(unsigned int stride, Args&&... args) {
                 return getObservableFactory().create<T>(stride, std::forward<Args>(args)...);
             }
 
@@ -101,9 +101,9 @@ namespace readdy {
              *
              * @return a tuple of the created observable and a scoped_connection object.
              */
-            template<typename T>
-            std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection> createAndConnectObservable(unsigned int stride) {
-                auto &&obs = createObservable<T>(stride);
+            template<typename T, typename... Args>
+            std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection> createAndConnectObservable(unsigned int stride, Args&&... args) {
+                auto &&obs = createObservable<T>(stride, std::forward<Args>(args)...);
                 auto &&connection = connectObservable(obs.get());
                 return std::make_tuple(std::move(obs), std::move(connection));
             };
@@ -113,28 +113,28 @@ namespace readdy {
              *
              * @return A scoped_connection object that, once deleted, releases the connection of the observable.
              */
-            boost::signals2::scoped_connection connectObservable(ObservableBase *const observable);
+            virtual boost::signals2::scoped_connection connectObservable(ObservableBase *const observable);
 
             /**
              * Evaluates all unblocked observables.
              */
-            void evaluateObservables(readdy::model::time_step_type t);
+            virtual void evaluateObservables(readdy::model::time_step_type t);
 
             /**
              * Evaluates all observables, regardless if they are blocked or not.
              */
-            void evaluateAllObservables(readdy::model::time_step_type t);
+            virtual void evaluateAllObservables(readdy::model::time_step_type t);
 
             /**
              * Deconnects the observable of the signal, deletes the
              * corresponding connection block object.
              */
-            void deconnectObservable(ObservableBase *const observable);
+            virtual void disconnectObservable(ObservableBase *const observable);
 
             /**
              * Registers an observable to the kernel signal.
              */
-            std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::scoped_connection> registerObservable(const ObservableType &observable, unsigned int stride);
+            virtual std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::scoped_connection> registerObservable(const ObservableType &observable, unsigned int stride);
 
             virtual readdy::model::programs::ProgramFactory &getProgramFactory() const = 0;
 
@@ -144,14 +144,14 @@ namespace readdy {
              * @see createProgram(name)
              * @return The program names.
              */
-            std::vector<std::string> getAvailablePrograms() const {
+            virtual std::vector<std::string> getAvailablePrograms() const {
                 return getProgramFactory().getAvailablePrograms();
             }
 
             /**
              * Adds a particle of the type "type" at position "pos".
              */
-            void addParticle(const std::string& type, const Vec3 &pos);
+            virtual void addParticle(const std::string& type, const Vec3 &pos);
 
             /**
              * @todo implement this properly
@@ -198,7 +198,7 @@ namespace readdy {
 
             virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const;
 
-            unsigned int getTypeId(const std::string&) const;
+            virtual unsigned int getTypeId(const std::string&) const;
         protected:
             struct Impl;
             std::unique_ptr<Impl> pimpl;

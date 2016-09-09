@@ -112,7 +112,7 @@ namespace readdy {
         class ForcesObservable : public Observable<std::vector<readdy::model::Vec3>> {
 
         public:
-            ForcesObservable(Kernel* const kernel, unsigned int stride) : Observable(kernel, stride) { }
+            ForcesObservable(Kernel* const kernel, unsigned int stride) : Observable(kernel, stride), typesToCount({}) { }
             ForcesObservable(Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount);
             ForcesObservable(Kernel* const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
             virtual void evaluate() = 0;

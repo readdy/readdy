@@ -16,16 +16,28 @@ namespace readdy {
     namespace kernel {
         namespace singlecpu {
             namespace model {
-                SingleCPUParticleData::SingleCPUParticleData() : SingleCPUParticleData(0) {
+
+                SingleCPUParticleData::SingleCPUParticleData(bool useMarkedSet)
+                        : SingleCPUParticleData(0, useMarkedSet) { }
+
+                SingleCPUParticleData::SingleCPUParticleData(unsigned int capacity)
+                        : SingleCPUParticleData(capacity, true) { }
+
+                SingleCPUParticleData::SingleCPUParticleData() : SingleCPUParticleData(0, true) {
                 }
 
-                SingleCPUParticleData::SingleCPUParticleData(unsigned int capacity) {
+                SingleCPUParticleData::SingleCPUParticleData(unsigned int capacity, bool useMarkedSet)
+                        : useMarkedSet(useMarkedSet) {
                     ids = std::make_unique<std::vector<boost::uuids::uuid>>(capacity);
                     positions = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
                     forces = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
                     type = std::make_unique<std::vector<unsigned int>>(capacity);
-                    markedForDeactivation = std::make_unique<std::set<size_t>>();
-                    deactivated = std::make_unique<std::vector<bool>>(capacity);
+                    if(useMarkedSet) {
+                        markedForDeactivation = std::make_unique<std::set<size_t>>();
+                    } else {
+                        n_marked = 0;
+                    }
+                    deactivated = std::make_unique<std::vector<char>>(capacity);
                     std::fill(deactivated->begin(), deactivated->end(), true);
                     n_deactivated = capacity;
                     deactivated_index = 0;
@@ -39,11 +51,16 @@ namespace readdy {
                     std::swap(deactivated, rhs.deactivated);
                     std::swap(deactivated_index, rhs.deactivated_index);
                     std::swap(n_deactivated, rhs.n_deactivated);
-                    std::swap(markedForDeactivation, rhs.markedForDeactivation);
+                    if(useMarkedSet) {
+                        std::swap(markedForDeactivation, rhs.markedForDeactivation);
+                    } else {
+                        n_marked = rhs.n_marked.exchange(n_marked);
+                    }
+                    std::swap(useMarkedSet, rhs.useMarkedSet);
                 }
 
                 size_t SingleCPUParticleData::size() const {
-                    auto s = markedForDeactivation->size();
+                    auto s = useMarkedSet ? markedForDeactivation->size() : n_marked.load();
                     return s <= deactivated_index ? deactivated_index - s : 0;
                 }
 
@@ -106,55 +123,26 @@ namespace readdy {
                 }
 
                 void SingleCPUParticleData::markForDeactivation(size_t index) {
-                    (*deactivated)[index] = true;
-                    markedForDeactivation->emplace(index);
+                    auto it = begin_deactivated() + index;
+                    if(useMarkedSet) {
+                        std::lock_guard<std::mutex> lock(markedForDeactivationMutex);
+                        markedForDeactivation->insert(index);
+                    } else {
+                        if(*it == false) {
+                            ++n_marked;
+                        } else {
+                            BOOST_LOG_TRIVIAL(error) << "this should not have happened! (idx=" << index << ")";
+                        }
+                    }
+                    *it = true;
                 }
 
                 void SingleCPUParticleData::deactivateMarked() {
-                    // if we havent marked anything, return
-                    if(markedForDeactivation->size() == 0) return;
-                    // sanity check: the deactivated_index is pointing to the
-                    // first (real) deactivated particle, i.e., marks the end of the
-                    // active data structure. "deactivated" is a vector<bool>
-                    // that is as long as the data, thus the deactivated_index
-                    // can be at most deactivated->begin() - deactivated->end().
-                    if(deactivated->size() < deactivated_index-1) {
-                        throw std::runtime_error("this should not happen");
-                    }
-                    // if we have active particles
-                    if (deactivated_index > 0) {
-                        // we now are going backwards through the active part of the data structure,
-                        // starting with the first _active_ (but possible marked) particle
-                        auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
-                        // for each index in the markedForDeactivation data structure
-                        // (which is a set and thus sorted)
-                        for (auto &&idx : *markedForDeactivation) {
-                            // if there are marked particles at the very end,
-                            // just shift the deactivated_index and increase n_deactivated
-                            while (*deactivatedIt && deactivatedIt != deactivated->begin()) {
-                                --deactivated_index;
-                                ++n_deactivated;
-                                --deactivatedIt;
-                            }
-                            // since the deactivated_index might have decreased
-                            // so that we already have deactivated "idx", we check
-                            // if it has been deactivated already (by the above loop)
-                            if (idx < deactivated_index) {
-                                // performs swapping of this particle with the last active
-                                // particle
-                                removeParticle(idx);
-                                // if we are not at the begin already,
-                                // we want to decrease the current particle considered in
-                                // deactivatedIt
-                                if(deactivatedIt != deactivated->begin()) --deactivatedIt;
-                            } else {
-                                // since the set is sorted and we start with the smallest idx,
-                                // we can stop here
-                                break;
-                            }
-                        }
-                    }
-                    markedForDeactivation->clear();
+                   if(useMarkedSet) {
+                       deactivateMarkedSet();
+                   } else {
+                       deactivateMarkedNoSet();
+                   }
                 }
 
                 void SingleCPUParticleData::removeParticle(const readdy::model::Particle &particle) {
@@ -205,9 +193,44 @@ namespace readdy {
                 }
 
 
-                SingleCPUParticleData &SingleCPUParticleData::operator=(SingleCPUParticleData &&rhs) = default;
+                SingleCPUParticleData &SingleCPUParticleData::operator=(SingleCPUParticleData &&rhs) {
+                    if(this != &rhs) {
+                        std::unique_lock<std::mutex> lhs_lock(markedForDeactivationMutex, std::defer_lock);
+                        std::unique_lock<std::mutex> rhs_lock(rhs.markedForDeactivationMutex, std::defer_lock);
+                        std::lock(lhs_lock, rhs_lock);
+                        ids = std::move(rhs.ids);
+                        positions = std::move(rhs.positions);
+                        forces = std::move(rhs.forces);
+                        type = std::move(rhs.type);
+                        deactivated = std::move(rhs.deactivated);
+                        deactivated_index = std::move(rhs.deactivated_index);
+                        n_deactivated = std::move(rhs.n_deactivated);
+                        if(useMarkedSet) {
+                            markedForDeactivation = std::move(rhs.markedForDeactivation);
+                        } else {
+                            n_marked = rhs.n_marked.load();
+                        }
+                        useMarkedSet = std::move(rhs.useMarkedSet);
+                    }
+                    return *this;
+                };
 
-                SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) = default;
+                SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) {
+                    std::unique_lock<std::mutex> rhs_lock(rhs.markedForDeactivationMutex);
+                    ids = std::move(rhs.ids);
+                    positions = std::move(rhs.positions);
+                    forces = std::move(rhs.forces);
+                    type = std::move(rhs.type);
+                    deactivated = std::move(rhs.deactivated);
+                    deactivated_index = std::move(rhs.deactivated_index);
+                    n_deactivated = std::move(rhs.n_deactivated);
+                    if(useMarkedSet) {
+                        markedForDeactivation = std::move(rhs.markedForDeactivation);
+                    } else {
+                        n_marked = rhs.n_marked.load();
+                    }
+                    useMarkedSet = std::move(rhs.useMarkedSet);
+                };
 
                 SingleCPUParticleData::~SingleCPUParticleData() {
                 }
@@ -299,7 +322,122 @@ namespace readdy {
                     n_deactivated = ids->size();
                 }
 
+                std::vector<char>::iterator SingleCPUParticleData::begin_deactivated() {
+                    return deactivated->begin();
+                }
 
+                std::vector<char>::const_iterator SingleCPUParticleData::begin_deactivated() const {
+                    return cbegin_deactivated();
+                }
+
+                std::vector<char>::iterator SingleCPUParticleData::end_deactivated() {
+                    return deactivated->begin() + deactivated_index;
+                }
+
+                std::vector<char>::const_iterator SingleCPUParticleData::end_deactivated() const {
+                    return cend_deactivated();
+                }
+
+                std::vector<char>::const_iterator SingleCPUParticleData::cend_deactivated() const {
+                    return deactivated->cbegin() + deactivated_index;
+                }
+
+                std::vector<char>::const_iterator SingleCPUParticleData::cbegin_deactivated() const {
+                    return deactivated->cbegin();
+                }
+
+                void SingleCPUParticleData::deactivateMarkedNoSet() {
+                    if(n_marked == 0) return;
+                    // sanity check: the deactivated_index is pointing to the
+                    // first (real) deactivated particle, i.e., marks the end of the
+                    // active data structure. "deactivated" is a vector<bool>
+                    // that is as long as the data, thus the deactivated_index
+                    // can be at most deactivated->begin() - deactivated->end().
+                    if(deactivated->size() < deactivated_index-1) {
+                        throw std::runtime_error("this should not happen");
+                    }
+                    // we now are going backwards through the active part of the data structure,
+                    // starting with the first _active_ (but possible marked) particle
+                    auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
+                    // for each index in the markedForDeactivation data structure
+                    // (which is a set and thus sorted)
+                    for(auto it = begin_deactivated(); it < end_deactivated(); ++it) {
+                        if(*it) {
+                            const auto idx = it - begin_deactivated();
+                            // if there are marked particles at the very end,
+                            // just shift the deactivated_index and increase n_deactivated
+                            while (*deactivatedIt && deactivatedIt != deactivated->begin()) {
+                                --deactivated_index;
+                                ++n_deactivated;
+                                --deactivatedIt;
+                            }
+                            // since the deactivated_index might have decreased
+                            // so that we already have deactivated "idx", we check
+                            // if it has been deactivated already (by the above loop)
+                            if (idx < deactivated_index) {
+                                // performs swapping of this particle with the last active
+                                // particle
+                                removeParticle(idx);
+                                // if we are not at the begin already,
+                                // we want to decrease the current particle considered in
+                                // deactivatedIt
+                                if(deactivatedIt != deactivated->begin()) --deactivatedIt;
+                            } else {
+                                // since the set is sorted and we start with the smallest idx,
+                                // we can stop here
+                                break;
+                            }
+                        }
+                    }
+                    n_marked = 0;
+                }
+
+                void SingleCPUParticleData::deactivateMarkedSet() {
+                    // if we havent marked anything, return
+                    if(markedForDeactivation->size() == 0) return;
+                    // sanity check: the deactivated_index is pointing to the
+                    // first (real) deactivated particle, i.e., marks the end of the
+                    // active data structure. "deactivated" is a vector<bool>
+                    // that is as long as the data, thus the deactivated_index
+                    // can be at most deactivated->begin() - deactivated->end().
+                    if(deactivated->size() < deactivated_index-1) {
+                        throw std::runtime_error("this should not happen");
+                    }
+                    // if we have active particles
+                    if (deactivated_index > 0) {
+                        // we now are going backwards through the active part of the data structure,
+                        // starting with the first _active_ (but possible marked) particle
+                        auto deactivatedIt = deactivated->begin() + deactivated_index - 1;
+                        // for each index in the markedForDeactivation data structure
+                        // (which is a set and thus sorted)
+                        for (auto &&idx : *markedForDeactivation) {
+                            // if there are marked particles at the very end,
+                            // just shift the deactivated_index and increase n_deactivated
+                            while (*deactivatedIt && deactivatedIt != deactivated->begin()) {
+                                --deactivated_index;
+                                ++n_deactivated;
+                                --deactivatedIt;
+                            }
+                            // since the deactivated_index might have decreased
+                            // so that we already have deactivated "idx", we check
+                            // if it has been deactivated already (by the above loop)
+                            if (idx < deactivated_index) {
+                                // performs swapping of this particle with the last active
+                                // particle
+                                removeParticle(idx);
+                                // if we are not at the begin already,
+                                // we want to decrease the current particle considered in
+                                // deactivatedIt
+                                if(deactivatedIt != deactivated->begin()) --deactivatedIt;
+                            } else {
+                                // since the set is sorted and we start with the smallest idx,
+                                // we can stop here
+                                break;
+                            }
+                        }
+                    }
+                    markedForDeactivation->clear();
+                }
             }
         }
     }

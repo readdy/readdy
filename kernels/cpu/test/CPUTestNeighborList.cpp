@@ -41,11 +41,19 @@ namespace {
 
     };
 
-    auto isPairInList = [](std::unordered_map<unsigned long, std::vector<unsigned long>> *pairs, unsigned long idx1, unsigned long idx2) {
-        return (std::find(pairs->operator[](idx1).cbegin(), pairs->operator[](idx1).cend(), idx2) != pairs->operator[](idx1).cend());
+    auto isPairInList = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs, unsigned long idx1, unsigned long idx2) {
+        using neighbor_t = readdy::kernel::cpu::model::NeighborList::neighbor_t;
+        const auto neighborsIt = pairs->find(idx1);
+        if(neighborsIt != pairs->end()) {
+            const auto neighbors = neighborsIt->second;
+            return std::find_if(neighbors.begin(), neighbors.end(), [idx2](const neighbor_t &neighbor) {
+                return neighbor.idx == idx2;
+            }) != neighbors.end();
+        }
+        return false;
     };
 
-    auto getNumberPairs = [](std::unordered_map<unsigned long, std::vector<unsigned long>> *pairs) {
+    auto getNumberPairs = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs) {
         auto pairsIt = pairs->cbegin();
         size_t numberPairs = 0;
         while (pairsIt != pairs->cend()) {
@@ -60,7 +68,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(3.6, 2, 2);
         ctx.setPeriodicBoundary(true, false, false);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 3);
@@ -92,7 +101,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(1.5, 4, 1.5);
         ctx.setPeriodicBoundary(false, false, false);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 3);
@@ -114,7 +124,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(4.8, 5, 5.1);
         ctx.setPeriodicBoundary(true, true, true);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 64);
@@ -141,7 +152,8 @@ namespace {
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(4, 4, 4);
         ctx.setPeriodicBoundary(true, true, true);
-        cpum::NeighborList list(&ctx);
+        readdy::kernel::cpu::util::Config conf;
+        cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
         auto boxes = list.getBoxes();
         EXPECT_EQ(boxes.size(), 27);

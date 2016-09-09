@@ -15,7 +15,7 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace fs = boost::filesystem;
-namespace utl = readdy::utils;
+namespace utl = readdy::util;
 namespace readdy {
     namespace plugin {
 

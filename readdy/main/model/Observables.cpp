@@ -15,7 +15,7 @@ namespace readdy {
     namespace model {
 
         ObservableBase::~ObservableBase() {
-            kernel->deconnectObservable(this);
+            kernel->disconnectObservable(this);
         }
 
         void ParticlePositionObservable::evaluate() {

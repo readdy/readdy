@@ -23,15 +23,18 @@ namespace readdy {
                 public:
                     ObservableFactory(CPUKernel *const kernel);
                     virtual readdy::model::NParticlesObservable *
-                    createNParticlesObservable(readdy::model::Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+                    createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
                     virtual readdy::model::HistogramAlongAxisObservable *
-                    createAxisHistogramObservable(readdy::model::Kernel *const kernel, unsigned int stride,
+                    createAxisHistogramObservable(unsigned int stride,
                                                   std::vector<double> binBorders, std::vector<std::string> typesToCount,
                                                   unsigned int axis) const override;
 
                     virtual readdy::model::ForcesObservable *
-                    createForcesObservable(readdy::model::Kernel* const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+                    createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+
+                private:
+                    CPUKernel *const kernel;
                 };
             }
         }

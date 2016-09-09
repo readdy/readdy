@@ -15,7 +15,7 @@
 #include <condition_variable>
 
 namespace readdy {
-    namespace utils {
+    namespace util {
         template<typename E>
         class SynchronizedQueue {
         public:

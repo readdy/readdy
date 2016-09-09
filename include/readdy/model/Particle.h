@@ -46,6 +46,8 @@ namespace readdy {
 
             bool operator!=(const Particle &rhs);
 
+            friend std::ostream &operator<<(std::ostream &, const Particle &);
+
 
         private:
             Vec3 pos;

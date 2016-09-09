@@ -35,6 +35,9 @@ namespace readdy {
                     factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
                         return new reactions::Gillespie(kernel);
                     };
+                    factory[core_p::getProgramName<core_p::reactions::GillespieParallel>()] = [kernel] {
+                        return new reactions::GillespieParallel(kernel);
+                    };
                 }
             }
         }
