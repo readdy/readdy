@@ -99,7 +99,9 @@ class GillespieParallel : public Program {
 public:
     GillespieParallel() : Program() {}
 };
-
+struct NextSubvolumes : Program {
+    NextSubvolumes() : Program() {}
+};
 }
 
 class Compartments : public Program {
@@ -152,6 +154,13 @@ const std::string
 getProgramName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type * = 0) {
     return "GillespieParallel";
 };
+
+template<typename T>
+const std::string
+getProgramName(typename std::enable_if<std::is_base_of<reactions::NextSubvolumes, T>::value>::type * = 0) {
+    return "NextSubvolumes";
+};
+
 
 template<typename T>
 const std::string getProgramName(typename std::enable_if<std::is_base_of<Compartments, T>::value>::type * = 0) {

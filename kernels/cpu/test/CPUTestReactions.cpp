@@ -10,6 +10,8 @@
 #include <gtest/gtest.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
+#include <readdy/kernel/cpu/programs/Reactions.h>
+#include <readdy/kernel/cpu/programs/NextSubvolumesReactionScheduler.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
 
@@ -278,4 +280,23 @@ TEST(CPUTestReactions, TestGillespieParallel) {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, 5.25);
         }) != particles.end()) << "This particle should be placed between the particles 9 and 10 (see above).";
     }
+}
+
+
+TEST(TestNextSubvolumes, ReactionRadii) {
+    using fusion_t = readdy::model::reactions::Fusion;
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    kernel->getKernelContext().setDiffusionConstant("A", 1.0);
+
+    auto nextSubvolumes = kernel->createProgram<readdy::kernel::cpu::programs::reactions::NextSubvolumes>();
+    EXPECT_EQ(0, nextSubvolumes->getMaxReactionRadius()) << "no reactions present, expect max radius to be 0";
+
+    kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, 6.0);
+    EXPECT_EQ(6.0, nextSubvolumes->getMaxReactionRadius()) << "one reaction with radius 6.0";
+
+    kernel->registerReaction<fusion_t>("annihilation2", "A", "A", "A", 1.0, 5.0);
+    EXPECT_EQ(6.0, nextSubvolumes->getMaxReactionRadius()) << "max(5.0, 6.0) = 6.0";
+
+    kernel->registerReaction<fusion_t>("annihilation3", "A", "A", "A", 1.0, 7.0);
+    EXPECT_EQ(7.0, nextSubvolumes->getMaxReactionRadius()) << "max(5.0, 6.0, 7.0) = 7.0";
 }

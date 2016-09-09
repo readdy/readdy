@@ -41,6 +41,9 @@ CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
     factory[core_p::getProgramName<core_p::reactions::GillespieParallel>()] = [kernel] {
         return new reactions::GillespieParallel(kernel);
     };
+    factory[core_p::getProgramName<core_p::reactions::NextSubvolumes>()] = [kernel] {
+        return new reactions::NextSubvolumes(kernel);
+    };
     factory[core_p::getProgramName<core_p::Compartments>()] = [kernel] {
         return new Compartments(kernel);
     };

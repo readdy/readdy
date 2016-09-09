@@ -8,6 +8,7 @@
  */
 
 #include <readdy/kernel/cpu/model/NeighborList.h>
+#include <readdy/common/numeric.h>
 
 namespace readdy {
 namespace kernel {
@@ -186,17 +187,13 @@ void NeighborList::create(const readdy::kernel::singlecpu::model::SingleCPUParti
     fillBoxes(data);
 }
 
-long NeighborList::positive_modulo(long i, long n) const {
-    return (i % n + n) % n;
-}
-
-NeighborList::box_t *NeighborList::getBox(long i, long j, long k) {
+NeighborList::Box *NeighborList::getBox(long i, long j, long k) {
     const auto &periodic = ctx->getPeriodicBoundary();
-    if (periodic[0]) i = positive_modulo(i, nBoxes[0]);
+    if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nBoxes[0]);
     else if (i < 0 || i >= nBoxes[0]) return nullptr;
-    if (periodic[1]) j = positive_modulo(j, nBoxes[1]);
+    if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nBoxes[1]);
     else if (j < 0 || j >= nBoxes[1]) return nullptr;
-    if (periodic[2]) k = positive_modulo(k, nBoxes[2]);
+    if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nBoxes[2]);
     else if (k < 0 || k >= nBoxes[2]) return nullptr;
     return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
 }

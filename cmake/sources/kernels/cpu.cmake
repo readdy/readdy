@@ -12,6 +12,8 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/util/Config.cpp")
 # --- programs ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/CPUProgramFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/CPUEulerBDIntegrator.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/Reactions.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/NextSubvolumesReactionScheduler.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/Compartments.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/ReactionUtils.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/UncontrolledApproximation.cpp")

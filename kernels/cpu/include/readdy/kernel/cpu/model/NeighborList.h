@@ -31,7 +31,6 @@ struct NeighborListElement {
 
 class NeighborList {
     struct Box;
-    using box_t = Box;
 
 public:
     using neighbor_t = NeighborListElement;
@@ -60,8 +59,6 @@ protected:
     readdy::model::Vec3 boxSize{0, 0, 0};
     double maxCutoff = 0;
     util::Config const *const config;
-
-    long positive_modulo(long i, long n) const;
 
     Box *getBox(long i, long j, long k);
 
