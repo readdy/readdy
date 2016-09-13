@@ -43,6 +43,13 @@ ObservableFactory::createParticlePositionObservable(unsigned int stride, std::ve
     return new readdy::kernel::singlecpu::observables::ParticlePositionObservable<CPUKernel>(kernel, stride, typesToCount);
 }
 
+readdy::model::RadialDistributionObservable *
+ObservableFactory::createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
+                                                      std::string typeCountTo, double particleToDensity) const {
+    return new readdy::kernel::singlecpu::observables::RadialDistributionObservable<CPUKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
+                                                                                               particleToDensity);
+}
+
 }
 }
 }

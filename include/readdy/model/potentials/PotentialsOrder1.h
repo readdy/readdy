@@ -1,10 +1,12 @@
 /**
  * This header file contains the declarations of all possibly available order 1 potentials. Currently:
  *   - Cube potential
+ *   - Sphere potential
  *
  * @file PotentialsOrder1.h
  * @brief This header file contains the declarations of all possibly available order 1 potentials.
  * @author clonker
+ * @author chrisfroe
  * @date 15.06.16
  */
 
@@ -46,9 +48,7 @@ public:
 
     virtual double getRelevantLengthScale() const noexcept override;
 
-
     virtual double getMaximalForce(double kbt) const noexcept override;
-
 
 protected:
     const Kernel *const kernel;
@@ -60,11 +60,38 @@ protected:
     bool considerParticleRadius = true;
 };
 
+class SpherePotential : public PotentialOrder1 {
+public:
+    SpherePotential(const Kernel * kernel);
+
+    virtual void configureForType(const unsigned int type) override;
+
+    const Vec3 &getOrigin() const;
+    void setOrigin(const Vec3 &origin);
+    double getRadius() const;
+    void setRadius(double radius);
+    double getForceConstant() const;
+    void setForceConstant(double forceConstant);
+
+    virtual double getRelevantLengthScale() const noexcept override;
+
+    virtual double getMaximalForce(double kbt) const noexcept override;
+
+protected:
+    const Kernel * const kernel;
+    Vec3 origin;
+    double radius = 1;
+    double forceConstant = 1;
+};
+
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<CubePotential, T>::value>::type * = 0) {
     return "Cube";
 }
-
+template<typename T>
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<SpherePotential, T>::value>::type* = 0) {
+    return "Sphere";
+}
 }
 }
 }

@@ -28,9 +28,9 @@ double CubePotential::calculateEnergy(const readdy::model::Vec3 &position) const
     for (auto i = 0; i < 3; ++i) {
         if (position[i] - r < min[i] || position[i] + r > max[i]) {
             if (position[i] - r < min[i]) {
-                energy += forceConstant * (position[i] - r - min[i]) * (position[i] - r - min[i]);
+                energy += 0.5 * forceConstant * (position[i] - r - min[i]) * (position[i] - r - min[i]);
             } else {
-                energy += forceConstant * (position[i] + r - max[i]) * (position[i] + r - max[i]);
+                energy += 0.5 * forceConstant * (position[i] + r - max[i]) * (position[i] + r - max[i]);
             }
         }
     }
@@ -62,10 +62,41 @@ void CubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &
 
 }
 
+SpherePotential::SpherePotential(const readdy::model::Kernel *const kernel) : readdy::model::potentials::SpherePotential(kernel) { }
+
+double SpherePotential::calculateEnergy(const readdy::model::Vec3 &position) const {
+    auto difference = position - origin;
+    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromSphere = distanceFromOrigin - radius;
+    double energy = 0;
+    if (distanceFromSphere > 0) {
+        energy = 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
+    }
+    return energy;
+}
+
+void SpherePotential::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const {
+    auto difference = position - origin;
+    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromSphere = distanceFromOrigin - radius;
+    if (distanceFromSphere > 0) {
+        force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
+    }
+}
+
+void SpherePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) const {
+    auto difference = position - origin;
+    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromSphere = distanceFromOrigin - radius;
+    if (distanceFromSphere > 0) {
+        energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
+        force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
+    }
+}
+
+
 }
 }
 }
 
 }
-
-

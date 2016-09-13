@@ -61,6 +61,12 @@ public:
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
+    virtual RadialDistributionObservable *
+    createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom, std::string typeCountTo,
+                                       double particleDensity) const {
+        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+    }
+
 protected:
     Kernel *const kernel;
 
@@ -100,6 +106,13 @@ protected:
     struct get_dispatcher<readdy::model::ParticlePositionObservable, Args...> {
         static ParticlePositionObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
             return self->createParticlePositionObservable(stride, std::forward<Args>(args)...);
+        }
+    };
+
+    template<typename... Args>
+    struct get_dispatcher<readdy::model::RadialDistributionObservable, Args...> {
+        static RadialDistributionObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+            return self->createRadialDistributionObservable(stride, std::forward<Args>(args)...);
         }
     };
 };

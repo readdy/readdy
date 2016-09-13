@@ -36,6 +36,10 @@ public:
     virtual readdy::model::ParticlePositionObservable *
     createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
+    virtual readdy::model::RadialDistributionObservable *
+    createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
+                                        std::string typeCountTo, double particleToDensity) const override;
+
 private:
     readdy::kernel::singlecpu::SingleCPUKernel *const kernel;
 };

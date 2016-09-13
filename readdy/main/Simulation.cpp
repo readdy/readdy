@@ -139,6 +139,15 @@ Simulation::registerBoxPotential(std::string particleType, double forceConstant,
     return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
 }
 
+const short Simulation::registerSpherePotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, double radius) {
+    ensureKernelSelected();
+    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::SpherePotential>();
+    ptr->setOrigin(origin);
+    ptr->setRadius(radius);
+    ptr->setForceConstant(forceConstant);
+    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
+}
+
 void Simulation::ensureKernelSelected() const {
     if (!isKernelSelected()) {
         throw NoKernelSelectedException("No kernel was selected!");

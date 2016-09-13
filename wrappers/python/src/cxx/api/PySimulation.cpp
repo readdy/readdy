@@ -122,6 +122,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_potential_piecewise_weak_interaction",
                  &sim::registerWeakInteractionPiecewiseHarmonicPotential)
             .def("register_potential_box", &sim::registerBoxPotential)
+            .def("register_potential_sphere", &sim::registerSpherePotential)
             .def("get_particle_positions", &sim::getParticlePositions)
             .def("register_observable_particle_positions", &registerObservable_ParticlePositions)
             .def("register_observable_radial_distribution", &registerObservable_RadialDistribution)
@@ -129,6 +130,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
             .def("register_observable_forces", &registerObservable_ForcesObservable)
+            .def("deregister_observable", &sim::deregisterObservable)
             .def("register_reaction_conversion", &sim::registerConversionReaction, rvp::reference_internal)
             .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, rvp::reference_internal)
             .def("register_reaction_fission", &sim::registerFissionReaction, rvp::reference_internal)

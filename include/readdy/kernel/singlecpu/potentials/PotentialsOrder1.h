@@ -34,6 +34,18 @@ public:
 
 };
 
+class SpherePotential : public readdy::model::potentials::SpherePotential {
+public:
+    SpherePotential(const readdy::model::Kernel * const kernel);
+
+    virtual double calculateEnergy(const readdy::model::Vec3 &position) const override;
+
+    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const override;
+
+    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) const override;
+
+};
+
 }
 }
 }
