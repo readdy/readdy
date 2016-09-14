@@ -49,7 +49,7 @@ function setup_docs_repo {
     git init
     git config user.name "Moritz Hoffmann"
     git config user.email "clonker@users.noreply.github.com"
-    git remote add upstream "https://$GH_TOKEN@github.com/readdy/readdy.git"
+    git remote add upstream "https://$GH_TOKEN@github.com/readdy/readdy_documentation.git"
     git fetch upstream
     git checkout --orphan workbranch
     git reset --hard
@@ -58,8 +58,6 @@ function setup_docs_repo {
 
 function deploy {
     # revision tag
-    cd ${TRAVIS_BUILD_DIR}
-    rev=$(git rev-parse --short HEAD)
     cd $HOME/_readdy_docs/docs/html
     touch .
     git add -A .
