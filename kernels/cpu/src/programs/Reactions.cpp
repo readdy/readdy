@@ -217,6 +217,7 @@ std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEven
 
 std::vector<readdy::model::Particle> handleEventsGillespie(
         CPUKernel const *const kernel,
+        bool filterEventsInAdvance,
         std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events) {
     using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
     using _rdy_particle_t = readdy::model::Particle;
@@ -245,7 +246,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
             if (eventIt == events.end() - nDeactivated) {
                 throw std::runtime_error("this should not happen (event not found)");
             }
-            if (rnd->getUniform() < event.reactionRate * dt) {
+            if (filterEventsInAdvance || rnd->getUniform() < event.reactionRate * dt) {
                 /**
                  * Perform reaction
                  */
@@ -516,7 +517,7 @@ void GillespieParallel::handleBoxReactions() {
             // handle events
             {
                 newParticles.set_value(
-                        handleEventsGillespie(kernel, std::move(localEvents))
+                        handleEventsGillespie(kernel, filterEventsInAdvance, std::move(localEvents))
                 );
             }
 
@@ -558,7 +559,7 @@ void GillespieParallel::handleBoxReactions() {
                          kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
-        auto newProblemParticles = handleEventsGillespie(kernel, std::move(evilEvents));
+        auto newProblemParticles = handleEventsGillespie(kernel, filterEventsInAdvance, std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
         kernel->getKernelStateModel().getParticleData()->deactivateMarked();
@@ -629,7 +630,6 @@ void GillespieParallel::findProblematicParticles(
         if (neighIt != nl->pairs->end()) {
             //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
             const auto x_type = *(data->begin_types() + x);
-            // todo?
             for (const auto& x_neighbor : neighIt->second) {
                 //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
                 const auto neighborType = *(data->begin_types() + x_neighbor.idx);
@@ -673,6 +673,8 @@ template<typename ParticleCollection>
 void
 GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
                                 std::vector<GillespieParallel::event_t> &events) const {
+    readdy::model::RandomProvider rnd;
+    const auto dt = kernel->getKernelContext().getTimeStep();
     for (const auto idx : particles) {
         // this being false should really not happen, though
         if (!*(data->begin_deactivated() + idx)) {
@@ -682,7 +684,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                 const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
-                    if (rate > 0) {
+                    if (rate > 0 && (!filterEventsInAdvance || rnd.getUniform() < rate * dt)) {
                         alpha += rate;
                         events.push_back(
                                 {1, (*it)->getNProducts(), idx, 0, rate, alpha,
@@ -706,8 +708,9 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                             for (auto it = reactions.begin(); it < reactions.end(); ++it) {
                                 const auto &react = *it;
                                 const auto rate = react->getRate();
-                                if (rate > 0 &&
-                                    distSquared < react->getEductDistanceSquared()) {
+                                if (rate > 0
+                                    && distSquared < react->getEductDistanceSquared()
+                                    && (!filterEventsInAdvance || rnd.getUniform() < rate * dt)) {
                                     if (*(data->begin_deactivated() + idx_neighbor.idx)) {
                                         auto get_box_idx = [&](
                                                 unsigned long _idx) { return static_cast<unsigned int>( floor(
@@ -767,6 +770,10 @@ unsigned int GillespieParallel::getOtherAxis1() const {
 
 unsigned int GillespieParallel::getOtherAxis2() const {
     return otherAxis2;
+}
+
+void GillespieParallel::setFilterEventsInAdvance(bool filterEventsInAdvance) {
+    GillespieParallel::filterEventsInAdvance = filterEventsInAdvance;
 }
 
 template void GillespieParallel::gatherEvents<std::vector<unsigned long>>(
