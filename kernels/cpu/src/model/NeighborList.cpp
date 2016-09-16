@@ -30,9 +30,10 @@ void NeighborList::setupBoxes() {
         }
         NeighborList::maxCutoff = maxCutoff;
         if (maxCutoff > 0) {
+            const auto desiredBoxWidth = .5*maxCutoff;
 
             for (unsigned int i = 0; i < 3; ++i) {
-                nBoxes[i] = (int) floor(simBoxSize[i] / maxCutoff);
+                nBoxes[i] = (int) floor(simBoxSize[i] / desiredBoxWidth);
                 if (nBoxes[i] == 0) nBoxes[i] = 1;
                 boxSize[i] = simBoxSize[i] / nBoxes[i];
             }
@@ -56,9 +57,9 @@ void NeighborList::setupBoxes() {
 
 void NeighborList::setupNeighboringBoxes(unsigned long i, unsigned long j, unsigned long k) {
     auto me = getBox(i, j, k);
-    for (int _i = -1; _i < 2; ++_i) {
-        for (int _j = -1; _j < 2; ++_j) {
-            for (int _k = -1; _k < 2; ++_k) {
+    for (int _i = -2; _i < 3; ++_i) {
+        for (int _j = -2; _j < 3; ++_j) {
+            for (int _k = -2; _k < 3; ++_k) {
                 // don't add me as neighbor to myself
                 if (!(_i == 0 && _j == 0 && _k == 0)) {
                     me->addNeighbor(getBox(i + _i, j + _j, k + _k));
