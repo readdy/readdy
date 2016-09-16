@@ -85,6 +85,11 @@ struct PyPotentialO2 : public _rdy_pot2, bpy::wrapper<_rdy_pot2> {
         energy += calculateEnergy(x_ij);
     }
 
+    virtual double getCutoffRadiusSquared() const override {
+        const auto cutoff = getCutoffRadius();
+        return cutoff * cutoff;
+    }
+
     virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
         this->get_override("configure_for_types")(type1, type2);
     }

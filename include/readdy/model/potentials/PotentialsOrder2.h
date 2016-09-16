@@ -65,7 +65,7 @@ namespace readdy {
                 double desiredParticleDistance;
                 double forceConstant;
                 double depthAtDesiredDistance;
-                double noInteractionDistance;
+                double noInteractionDistance, noInteractionDistanceSquared;
             };
 
             template<typename T>

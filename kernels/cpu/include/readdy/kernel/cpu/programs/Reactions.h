@@ -49,6 +49,7 @@ protected:
 
 std::vector<readdy::model::Particle> handleEventsGillespie(
         CPUKernel const *const kernel,
+        bool filterEventsInAdvance,
         std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events
 );
 
@@ -68,7 +69,7 @@ public:
 
         double alpha = 0.0;
         auto events = gatherEvents(alpha);
-        auto newParticles = handleEventsGillespie(kernel, std::move(events));
+        auto newParticles = handleEventsGillespie(kernel, false, std::move(events));
 
         // reposition particles to respect the periodic b.c.
         std::for_each(newParticles.begin(), newParticles.end(),
@@ -113,12 +114,15 @@ public:
 
     unsigned int getOtherAxis2() const;
 
+    void setFilterEventsInAdvance(bool filterEventsInAdvance);
+
 private:
     kernel_t const *const kernel;
     double maxReactionRadius = 0.0;
     double boxWidth = 0.0;
     unsigned int longestAxis;
     unsigned int otherAxis1, otherAxis2;
+    bool filterEventsInAdvance = true;
     struct SlicedBox;
     std::vector<SlicedBox> boxes;
 

@@ -21,7 +21,7 @@ namespace {
             return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
         };
 
-        kernel.getKernelContext().setBoxSize(30.0, 30.0, 30.0);
+        kernel.getKernelContext().setBoxSize(30.0, 80.0, 30.0);
         kernel.getKernelContext().setKBT(1.0);
         kernel.getKernelContext().setTimeStep(1.);
         kernel.getKernelContext().setPeriodicBoundary(false, false, false);
@@ -45,8 +45,9 @@ namespace {
         {
             auto box = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
             box->setForceConstant(1.0);
-            box->setOrigin({-14, -14, -14});
-            box->setExtent({28, 28, 28});
+            const auto verts = kernel.getKernelContext().getBoxBoundingVertices();
+            box->setOrigin(std::get<0>(verts) + readdy::model::Vec3(1,1,1));
+            box->setExtent((std::get<1>(verts) - std::get<0>(verts)) - 2);
             kernel.getKernelContext().registerOrder1Potential(box.get(), "A");
             kernel.getKernelContext().registerOrder1Potential(box.get(), "B");
             kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
@@ -61,8 +62,8 @@ namespace {
             }
         }
 
-        kernel.registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", .5, .5);
-        kernel.registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", .5, .5);
+        kernel.registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", .05, .05);
+        kernel.registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", .05, .05);
 
         auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
         auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
@@ -122,7 +123,7 @@ namespace {
 
     TEST(TestPerformance, CPU) {
         auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-        runPerformanceTest(*kernel);
+        runPerformanceTest(*kernel, 20);
     }
 
 }

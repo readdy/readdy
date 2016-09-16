@@ -92,9 +92,11 @@ void CPUStateModel::calculateForces() {
                     const auto &pos_j = *(data->cbegin_positions() + neighbor.idx);
                     const auto &potentials = pot2Map[{type_i, type_j}];
                     for (const auto &potential : potentials) {
-                        readdy::model::Vec3 updateVec{0, 0, 0};
-                        potential->calculateForceAndEnergy(updateVec, energy, dist(pos_i, pos_j));
-                        forceVec += updateVec;
+                        if(neighbor.d2 < potential->getCutoffRadiusSquared()) {
+                            readdy::model::Vec3 updateVec{0, 0, 0};
+                            potential->calculateForceAndEnergy(updateVec, energy, dist(pos_i, pos_j));
+                            forceVec += updateVec;
+                        }
                     }
                     *(data->begin_forces() + i) += forceVec;
                 }

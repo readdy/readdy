@@ -24,6 +24,14 @@ if [ ${err_code} -ne 0 ]; then
     echo "singlecpu unit tests failed with ${ret_code}"
 fi
 
+echo "calling c++ cpu unit tests"
+runUnitTests_cpu
+err_code=$?
+if [ ${err_code} -ne 0 ]; then
+    ret_code=${err_code}
+    echo "cpu unit tests failed with ${ret_code}"
+fi
+
 
 echo "calling python unit tests"
 nosetests readdy -vv --with-doctest --doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS

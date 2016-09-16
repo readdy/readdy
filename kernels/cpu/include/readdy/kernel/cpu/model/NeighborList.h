@@ -29,7 +29,8 @@ struct NeighborListElement {
 };
 
 class NeighborList {
-    using box_t = readdy::kernel::singlecpu::model::Box;
+    struct Box;
+    using box_t = Box;
 
 public:
     using neighbor_t = NeighborListElement;
@@ -38,6 +39,7 @@ public:
     std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
 
     NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config);
+    virtual ~NeighborList();
 
     virtual void setupBoxes();
 
@@ -49,19 +51,17 @@ public:
 
     virtual void create(const readdy::kernel::singlecpu::model::SingleCPUParticleData &data);
 
-    const std::vector<box_t> &getBoxes() const;
-
 protected:
 
-    std::vector<box_t> boxes{};
-    std::array<int, 3> nBoxes{{0, 0, 0}};
+    std::vector<Box> boxes;
+    std::array<unsigned int, 3> nBoxes{{0, 0, 0}};
     readdy::model::Vec3 boxSize{0, 0, 0};
     double maxCutoff = 0;
     util::Config const *const config;
 
     long positive_modulo(long i, long n) const;
 
-    box_t *getBox(long i, long j, long k);
+    Box *getBox(long i, long j, long k);
 
     const readdy::model::KernelContext *const ctx;
 };
