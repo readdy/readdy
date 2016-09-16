@@ -85,6 +85,7 @@ make install &> /dev/null
 
 if [ $(uname) = "Darwin" ]; then
     install_name_tool -add_rpath @loader_path/../lib/readdy_plugins/ $PREFIX/bin/runUnitTests_singlecpu
+    install_name_tool -add_rpath @loader_path/../lib/readdy_plugins/ $PREFIX/bin/runUnitTests_cpu
     # install_name_tool -add_rpath @loader_path/./ $PREFIX/lib/readdy_plugins/libReaDDy_kernel_singlecpu.dylib
     # install_name_tool -add_rpath @loader_path/../ $PREFIX/lib/readdy_plugins/libReaDDy_kernel_singlecpu.dylib
 fi
