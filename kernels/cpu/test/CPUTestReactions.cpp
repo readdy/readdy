@@ -154,7 +154,7 @@ TEST(CPUTestReactions, TestDecay) {
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
     pp_obs->setCallback([](const readdy::model::ParticlePositionObservable::result_t &t) {
-        BOOST_LOG_TRIVIAL(trace) << "got n particles=" << t.size();
+        //BOOST_LOG_TRIVIAL(trace) << "got n particles=" << t.size();
     });
     auto connection = kernel->connectObservable(pp_obs.get());
 

@@ -63,39 +63,6 @@ namespace {
         return numberPairs;
     };
 
-    TEST_F(TestNeighborList, ThreeBoxesPeriodicAxis) {
-        // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three boxes along the periodic axis
-        auto& ctx = kernel->getKernelContext();
-        ctx.setBoxSize(3.6, 2, 2);
-        ctx.setPeriodicBoundary(true, false, false);
-        readdy::kernel::cpu::util::Config conf;
-        cpum::NeighborList list(&ctx, &conf);
-        list.setupBoxes();
-        auto boxes = list.getBoxes();
-        EXPECT_EQ(boxes.size(), 3);
-        for (size_t b = 0; b < 3; ++b) {
-            EXPECT_EQ(boxes[b].j, 0);
-            EXPECT_EQ(boxes[b].k, 0);
-            EXPECT_EQ(boxes[b].neighboringBoxes.size(), 2);
-            EXPECT_TRUE((*boxes[b].neighboringBoxes[0]).id != boxes[b].id) << "A Box should not have itself as a neighbor.";
-        }
-        // now create three particles. The resulting neighborlist should contain six pairs
-        const auto threeParticles = std::vector<m::Particle>{
-                m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA)};
-        scpum::SingleCPUParticleData data;
-        data.addParticles(threeParticles);
-        list.fillBoxes(data);
-        // check result
-        auto pairs = list.pairs.get();
-        EXPECT_EQ(getNumberPairs(pairs), 6);
-        EXPECT_TRUE(isPairInList(pairs, 0, 1));
-        EXPECT_TRUE(isPairInList(pairs, 1, 0));
-        EXPECT_TRUE(isPairInList(pairs, 0, 2));
-        EXPECT_TRUE(isPairInList(pairs, 2, 0));
-        EXPECT_TRUE(isPairInList(pairs, 1, 2));
-        EXPECT_TRUE(isPairInList(pairs, 2, 1));
-    }
-
     TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
         // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three boxes
         auto& ctx = kernel->getKernelContext();
@@ -104,8 +71,6 @@ namespace {
         readdy::kernel::cpu::util::Config conf;
         cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
-        auto boxes = list.getBoxes();
-        EXPECT_EQ(boxes.size(), 3);
         // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
         const auto particles = std::vector<m::Particle>{
                 m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
@@ -119,22 +84,17 @@ namespace {
         EXPECT_TRUE(isPairInList(pairs, 1, 0));
     }
 
-    TEST_F(TestNeighborList, 64BoxesAllPeriodic) {
-        // maxcutoff is 1.2, system is 4.8 x 5 x 5.1, all periodic, i.e. 64 boxes each with 26 neighbors
+    TEST_F(TestNeighborList, OneDirection) {
+        // maxcutoff is 1.2, system is 4.8 x 5 x 5.1
         auto& ctx = kernel->getKernelContext();
-        ctx.setBoxSize(4.8, 5, 5.1);
-        ctx.setPeriodicBoundary(true, true, true);
+        ctx.setBoxSize(1.2, 1.1, 2.8);
+        ctx.setPeriodicBoundary(false, false, true);
         readdy::kernel::cpu::util::Config conf;
         cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
-        auto boxes = list.getBoxes();
-        EXPECT_EQ(boxes.size(), 64);
-        for (auto &&box : boxes) {
-            EXPECT_EQ(box.neighboringBoxes.size(), 26);
-        }
         // Add three particles, one of which is in the neighborhood of the other two
         const auto particles = std::vector<m::Particle>{
-                m::Particle(-2.1, -2.4, -2.4, typeIdA), m::Particle(1, 1, 1, typeIdA), m::Particle(2.1, 2.4, 2.4, typeIdA)
+                m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
         };
         scpum::SingleCPUParticleData data;
         data.addParticles(particles);
@@ -145,25 +105,22 @@ namespace {
         EXPECT_TRUE(isPairInList(pairs, 2, 0));
         EXPECT_TRUE(isPairInList(pairs, 1, 2));
         EXPECT_TRUE(isPairInList(pairs, 2, 1));
+        EXPECT_FALSE(isPairInList(pairs, 0, 1));
+        EXPECT_FALSE(isPairInList(pairs, 1, 0));
     }
 
-    TEST_F(TestNeighborList, 27BoxesAllPeriodic) {
-        // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic, i.e. 27 boxes each with 26 neighbors
+    TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
+        // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic
         auto& ctx = kernel->getKernelContext();
         ctx.setBoxSize(4, 4, 4);
         ctx.setPeriodicBoundary(true, true, true);
         readdy::kernel::cpu::util::Config conf;
         cpum::NeighborList list(&ctx, &conf);
         list.setupBoxes();
-        auto boxes = list.getBoxes();
-        EXPECT_EQ(boxes.size(), 27);
-        for (auto &&box :boxes) {
-            EXPECT_EQ(box.neighboringBoxes.size(), 26);
-        }
         // Create a few particles. In this box setup, all particles are neighbors.
         const auto particles = std::vector<m::Particle>{
-                m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA),
-                m::Particle(0, 1.6, -1.6, typeIdA), m::Particle(-1.6, 0, 1.6, typeIdA), m::Particle(1.6, -1.6, 0, typeIdA)
+                m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
+                m::Particle(0, .3, -.3, typeIdA), m::Particle(-.3, 0, .3, typeIdA), m::Particle(.3, -.3, 0, typeIdA)
         };
         scpum::SingleCPUParticleData data;
         data.addParticles(particles);
@@ -172,8 +129,8 @@ namespace {
         EXPECT_EQ(getNumberPairs(pairs), 30);
         for (size_t i = 0; i < 6; ++i) {
             for (size_t j = i + 1; j < 6; ++j) {
-                EXPECT_TRUE(isPairInList(pairs, i, j));
-                EXPECT_TRUE(isPairInList(pairs, j, i));
+                EXPECT_TRUE(isPairInList(pairs, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
+                EXPECT_TRUE(isPairInList(pairs, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
             }
         }
     }

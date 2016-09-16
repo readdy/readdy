@@ -67,8 +67,8 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     for (size_t b = 0; b < 3; ++b) {
         EXPECT_EQ(boxes[b].j, 0);
         EXPECT_EQ(boxes[b].k, 0);
-        EXPECT_EQ(boxes[b].neighboringBoxes.size(), 1);
-        EXPECT_TRUE(*boxes[b].neighboringBoxes[0] != boxes[b]) << "This compares ids. A Box should not have itself as a neighbor.";
+        EXPECT_EQ(boxes[b].neighbors.size(), 1);
+        EXPECT_TRUE(*boxes[b].neighbors[0] != boxes[b]) << "This compares ids. A Box should not have itself as a neighbor.";
     }
     // now create three particles. The resulting neighborlist should contain three pairs
     const auto threeParticles = std::vector<m::Particle>{
@@ -94,7 +94,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 27);
     for (auto &&box : boxes) {
-        EXPECT_EQ(box.neighboringBoxes.size(), 13);
+        EXPECT_EQ(box.neighbors.size(), 13);
     }
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
@@ -122,7 +122,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 64);
     for (auto &&box : boxes) {
-        EXPECT_EQ(box.neighboringBoxes.size(), 13);
+        EXPECT_EQ(box.neighbors.size(), 13);
     }
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{

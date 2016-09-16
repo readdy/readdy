@@ -129,7 +129,7 @@ void exportModelClasses() {
             .def_readonly("k", &_rdy_scpu_nl_box_t::k)
             .def_readonly("id", &_rdy_scpu_nl_box_t::id)
             .def_readwrite("particle_indices", &_rdy_scpu_nl_box_t::particleIndices)
-            .def_readwrite("neighboring_boxes", &_rdy_scpu_nl_box_t::neighboringBoxes);
+            .def_readwrite("neighboring_boxes", &_rdy_scpu_nl_box_t::neighbors);
 
     bpy::class_<_rdy_scpu_pd_t, boost::noncopyable>("ParticleData")
             .def("swap", &_rdy_scpu_pd_t::swap)

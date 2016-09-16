@@ -96,7 +96,7 @@ namespace readdy {
                 };
 
                 struct Box {
-                    std::vector<Box *> neighboringBoxes{};
+                    std::vector<Box *> neighbors{};
                     std::vector<unsigned long> particleIndices{};
                     long i, j, k;
                     long id = 0;
@@ -105,7 +105,10 @@ namespace readdy {
                     }
 
                     void addNeighbor(Box *box) {
-                        if (box && box->id != id) neighboringBoxes.push_back(box);
+                        if (box && box->id != id
+                            && std::find(neighbors.begin(), neighbors.end(), box) == neighbors.end()) {
+                            neighbors.push_back(box);
+                        }
                     }
 
                     friend bool operator==(const Box &lhs, const Box &rhs) {
@@ -220,7 +223,7 @@ namespace readdy {
                                         super::pairs->insert((*super::pairs).end(), {pI, box.particleIndices[j]});
                                     }
 
-                                    for (auto &&neighboringBox : box.neighboringBoxes) {
+                                    for (auto &&neighboringBox : box.neighbors) {
                                         for (const auto &pJ : neighboringBox->particleIndices) {
                                             super::pairs->insert((*super::pairs).end(), {pI, pJ});
                                         }
