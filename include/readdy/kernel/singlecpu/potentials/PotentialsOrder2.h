@@ -15,46 +15,54 @@
 
 namespace readdy {
 
-    namespace kernel {
-        namespace singlecpu {
+namespace kernel {
+namespace singlecpu {
 
-            namespace potentials {
-                class HarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion{
-                    using vec_t = readdy::model::Vec3;
+namespace potentials {
+class HarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion {
+    using vec_t = readdy::model::Vec3;
 
-                public:
-                    HarmonicRepulsion(const readdy::model::Kernel *const kernel);
+public:
+    HarmonicRepulsion(const readdy::model::Kernel *const kernel);
 
-                    virtual double calculateEnergy(const vec_t& x_ij) const override;
-                    virtual void calculateForce(vec_t &force, const vec_t &x_ij) const override;
-                    virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const override;
+    virtual double calculateEnergy(const vec_t &x_ij) const override;
 
-                    virtual double getCutoffRadius() const override;
+    virtual void calculateForce(vec_t &force, const vec_t &x_ij) const override;
 
+    virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const override;
 
-                    virtual potentials::HarmonicRepulsion *replicate() const override;
-
-
-                };
-
-                class WeakInteractionPiecewiseHarmonic : public readdy::model::potentials::WeakInteractionPiecewiseHarmonic {
-                    using vec_t = readdy::model::Vec3;
-                public:
-                    WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel);
-
-                    virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override;
-                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const override;
-                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const override;
-
-                    virtual potentials::WeakInteractionPiecewiseHarmonic *replicate() const override;
-
-                    virtual double getCutoffRadius() const override;
+    virtual double getCutoffRadius() const override;
+    virtual double getCutoffRadiusSquared() const override;
 
 
-                };
+    virtual potentials::HarmonicRepulsion *replicate() const override;
 
-            }
-        }
-    }
+
+};
+
+class WeakInteractionPiecewiseHarmonic : public readdy::model::potentials::WeakInteractionPiecewiseHarmonic {
+    using vec_t = readdy::model::Vec3;
+public:
+    WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel);
+
+    virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override;
+
+    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const override;
+
+    virtual void
+    calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const override;
+
+    virtual potentials::WeakInteractionPiecewiseHarmonic *replicate() const override;
+
+    virtual double getCutoffRadius() const override;
+
+    virtual double getCutoffRadiusSquared() const override;
+
+
+};
+
+}
+}
+}
 }
 #endif //READDY_MAIN_POTENTIALSORDER2_H_H

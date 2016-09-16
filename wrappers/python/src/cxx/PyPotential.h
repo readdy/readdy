@@ -15,36 +15,38 @@
 #include <boost/python/object.hpp>
 
 namespace readdy {
-    namespace py {
-        class PotentialOrder2Wrapper : public readdy::model::potentials::PotentialOrder2 {
+namespace py {
+class PotentialOrder2Wrapper : public readdy::model::potentials::PotentialOrder2 {
 
-        public:
-            PotentialOrder2Wrapper(const std::string &name, boost::python::object o1, boost::python::object o2);
+public:
+    PotentialOrder2Wrapper(const std::string &name, boost::python::object o1, boost::python::object o2);
 
-            virtual double calculateEnergy(const model::Vec3 &x_ij) const override;
+    virtual double calculateEnergy(const model::Vec3 &x_ij) const override;
 
-            virtual void calculateForce(model::Vec3 &force, const model::Vec3 &x_ij) const override;
+    virtual void calculateForce(model::Vec3 &force, const model::Vec3 &x_ij) const override;
 
-            virtual void calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_ij) const override;
+    virtual void calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_ij) const override;
 
-            virtual PotentialOrder2Wrapper *replicate() const override;
+    virtual PotentialOrder2Wrapper *replicate() const override;
 
-            virtual double getCutoffRadius() const override {
-                // todo!
-                return 50;
-            }
-
-            virtual double getMaximalForce(double kbt) const noexcept override {
-                // todo!
-                return 0;
-            }
-
-
-        protected:
-            std::shared_ptr<boost::python::object> calcEnergyFun;
-            std::shared_ptr<boost::python::object> calcForceFun;
-        };
+    virtual double getCutoffRadius() const override {
+        // todo!
+        return 50;
     }
+
+    virtual double getMaximalForce(double kbt) const noexcept override {
+        // todo!
+        return 0;
+    }
+
+    virtual double getCutoffRadiusSquared() const override;
+
+
+protected:
+    std::shared_ptr<boost::python::object> calcEnergyFun;
+    std::shared_ptr<boost::python::object> calcForceFun;
+};
+}
 }
 
 #endif //READDY_MAIN_POTENTIALWRAPPER_H

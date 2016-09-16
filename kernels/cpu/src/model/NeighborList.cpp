@@ -103,14 +103,14 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
         {
             const auto size = boxes.size();
             const std::size_t grainSize = size / config->nThreads;
-
-            auto worker = [this, &data](unsigned long begin, unsigned long end) {
+            const auto cutoffSquared = maxCutoff*maxCutoff;
+            auto worker = [this, &data, cutoffSquared](unsigned long begin, unsigned long end) {
                 const auto d2 = ctx->getDistSquaredFun();
                 for (auto _b = begin; _b < end; ++_b) {
                     const auto &box = boxes[_b];
                     for (long i = 0; i < box.particleIndices.size(); ++i) {
                         const auto pI = box.particleIndices[i];
-                        if(pairs->find(pI) != pairs->end()) {
+                        if (pairs->find(pI) != pairs->end()) {
                             const auto pos = *(data.begin_positions() + pI);
                             for (long j = 0; j < box.particleIndices.size(); ++j) {
                                 if (i != j) {
@@ -120,7 +120,10 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
                             }
                             for (auto &&neighboringBox : box.neighboringBoxes) {
                                 for (const auto &pJ : neighboringBox->particleIndices) {
-                                    (*pairs)[pI].push_back({pJ, d2(pos, *(data.begin_positions()+pJ))});
+                                    const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
+                                    if(distSquared < cutoffSquared) {
+                                        (*pairs)[pI].push_back({pJ, distSquared});
+                                    }
                                 }
                             }
                         } else {

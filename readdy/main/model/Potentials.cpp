@@ -121,6 +121,7 @@ namespace readdy {
 
             void WeakInteractionPiecewiseHarmonic::setNoInteractionDistance(double noInteractionDistance) {
                 WeakInteractionPiecewiseHarmonic::noInteractionDistance = noInteractionDistance;
+                WeakInteractionPiecewiseHarmonic::noInteractionDistanceSquared = std::pow(noInteractionDistance, 2);
             }
 
             void WeakInteractionPiecewiseHarmonic::configureForTypes(unsigned int type1, unsigned int type2) {

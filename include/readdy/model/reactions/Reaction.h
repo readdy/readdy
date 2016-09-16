@@ -38,6 +38,7 @@ namespace readdy {
                         id(boost::uuids::random_generator()()),
                         rate(rate),
                         eductDistance(eductDistance),
+                        eductDistanceSquared(eductDistance*eductDistance),
                         productDistance(productDistance),
                         _n_products(n_products) { }
 
@@ -66,6 +67,10 @@ namespace readdy {
 
                 const double getEductDistance() const {
                     return eductDistance;
+                }
+
+                const double getEductDistanceSquared() const {
+                    return eductDistanceSquared;
                 }
 
                 const double getProductDistance() const {
@@ -111,7 +116,8 @@ namespace readdy {
                 Reaction(const Reaction& rhs)
                         : _n_educts(rhs._n_educts), _n_products(rhs._n_products), educts(rhs.educts),
                           products(rhs.products), name(rhs.name), id(rhs.id), rate(rhs.rate),
-                          eductDistance(rhs.eductDistance), productDistance(rhs.productDistance) {
+                          eductDistance(rhs.eductDistance), productDistance(rhs.productDistance),
+                          eductDistanceSquared(rhs.eductDistanceSquared){
                 }
 
             protected:
@@ -122,7 +128,7 @@ namespace readdy {
                 const std::string name;
                 const boost::uuids::uuid id;
                 const double rate;
-                const double eductDistance;
+                const double eductDistance, eductDistanceSquared;
                 const double productDistance;
                 std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
             };

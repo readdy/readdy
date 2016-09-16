@@ -95,7 +95,7 @@ void UncontrolledApproximation::execute() {
                 const auto distSquared = neighbor.d2;
                 for (const auto &reaction : reactions) {
                     // if close enough and coin flip successful
-                    if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
+                    if (distSquared < reaction->getEductDistanceSquared()
                         && rnd.getUniform() < reaction->getRate() * dt) {
                         events.push_back([idx1, neighbor, this, &newParticles, &reaction] {
                             auto &&_data = kernel->getKernelStateModel().getParticleData();
@@ -198,7 +198,7 @@ std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEven
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     // if close enough
                     const auto reaction = *it;
-                    if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()) {
+                    if (distSquared < reaction->getEductDistanceSquared()) {
                         const auto rate = reaction->getRate();
                         if (rate > 0) {
                             alpha += rate;
@@ -606,7 +606,7 @@ void GillespieParallel::findProblematicParticles(
                 const auto neighborPos = *(data->begin_positions() + neighbor.idx);
                 const auto distSquared = neighbor.d2;
                 for (const auto &r : reactions) {
-                    if (r->getRate() > 0 && distSquared < std::pow(r->getEductDistance(), 2)) {
+                    if (r->getRate() > 0 && distSquared < r->getEductDistanceSquared()) {
                         const bool neighborProblematic = problematic.find(neighbor.idx) != problematic.end();
                         if (neighborProblematic || !box.isInBox(neighborPos)) {
                             // we have a problematic particle!
@@ -654,7 +654,7 @@ void GillespieParallel::findProblematicParticles(
                         }
                         const auto distSquared = x_neighbor.d2;
                         for (const auto &reaction : reactions) {
-                            if (reaction->getRate() > 0 && distSquared < std::pow(reaction->getEductDistance(), 2)) {
+                            if (reaction->getRate() > 0 && distSquared < reaction->getEductDistanceSquared()) {
                                 // we have a problematic particle!
                                 problematic.insert(x_neighbor.idx);
                                 bfs.push(x_neighbor.idx);
@@ -707,7 +707,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                                 const auto &react = *it;
                                 const auto rate = react->getRate();
                                 if (rate > 0 &&
-                                    distSquared < std::pow(react->getEductDistance(), 2)) {
+                                    distSquared < react->getEductDistanceSquared()) {
                                     if (*(data->begin_deactivated() + idx_neighbor.idx)) {
                                         auto get_box_idx = [&](
                                                 unsigned long _idx) { return static_cast<unsigned int>( floor(
