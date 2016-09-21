@@ -30,12 +30,15 @@ function set_this_up {
       exit 0
     fi
 
+    # install ruby packages
+    gem install jekyll bundler
     # install doxypypy
     yes | pip install doxypypy
 }
-function make_doc {
-    mkdir $HOME/_readdy_docs || true
-    cd $HOME/_readdy_docs
+
+function make_reference_doc {
+    mkdir -p $HOME/_readdy_docs/reference || true
+    cd $HOME/_readdy_docs/reference
     # cant reliably determine cpu count in a docker container,
     # therefore fix this value.
     if [ "$TRAVIS" == "true" ]; then CPU_COUNT=2; fi
@@ -44,11 +47,30 @@ function make_doc {
     cd -
 }
 
+function make_website_doc {
+    cd $HOME
+    # get the jekyll source code and setup jekyll via bundler
+    git clone "https://github.com/readdy/readdy_documentation.git"
+    cd readdy_documentation/readdy_documentation
+    bundle install
+    # insert the reference documentation
+    cp -r $HOME/_readdy_docs/reference/docs/html/* reference_manual/
+    # insert the content/pages and move the index.md to the jekyll root
+    mkdir _pages || true
+    cp -r ${TRAVIS_BUILD_DIR}/docs/documentation/* _pages/
+    mv _pages/index.md ./index.md
+    # build
+    bundle exec jekyll build
+    cd _site
+    rm Gemfile Gemfile.lock
+    cd -
+}
+
 function setup_docs_repo {
-    cd $HOME/_readdy_docs/docs/html
+    cd $HOME/readdy_documentation/readdy_documentation/_site
     git init
-    git config user.name "Moritz Hoffmann"
-    git config user.email "clonker@users.noreply.github.com"
+    git config user.name "Christoph Froehner"
+    git config user.email "chrisfroe@users.noreply.github.com"
     git remote add upstream "https://$GH_TOKEN@github.com/readdy/readdy_documentation.git"
     git fetch upstream
     git checkout --orphan workbranch
@@ -58,7 +80,7 @@ function setup_docs_repo {
 
 function deploy {
     # revision tag
-    cd $HOME/_readdy_docs/docs/html
+    cd $HOME/readdy_documentation/readdy_documentation/_site/
     touch .
     git add -A .
     git commit -m "github pages"
@@ -67,7 +89,8 @@ function deploy {
 
 set_this_up
 
-make_doc
+make_reference_doc
+make_website_doc
 setup_docs_repo
 
 deploy

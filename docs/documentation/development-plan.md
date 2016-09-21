@@ -1,3 +1,8 @@
+---
+layout: page
+title: Development
+---
+
 ### Todos:
 
 - [ ] update API as below (and create top level python api):
