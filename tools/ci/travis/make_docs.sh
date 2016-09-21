@@ -9,12 +9,11 @@ function set_this_up {
         echo "This was a pull request, thus dont build docs. Exit."
         exit 0
     fi
-    # testing stuff -> uncomment this before PR
-    #if [ "$TRAVIS_BRANCH" != "master" ]
-    #then
-    #    echo "This commit was made against the $TRAVIS_BRANCH branch and not the master branch. Exit."
-    #    exit 0
-    #fi
+    if [ "$TRAVIS_BRANCH" != "master" ]
+    then
+        echo "This commit was made against the $TRAVIS_BRANCH branch and not the master branch. Exit."
+        exit 0
+    fi
     if [ "$CONDA_PY" != "27" ]
     then
         echo "Only build documentation for python version 2.7. Exit."
@@ -38,7 +37,7 @@ function set_this_up {
 }
 
 function make_reference_doc {
-    mkdir $HOME/_readdy_docs/reference || true
+    mkdir -p $HOME/_readdy_docs/reference || true
     cd $HOME/_readdy_docs/reference
     # cant reliably determine cpu count in a docker container,
     # therefore fix this value.
@@ -62,6 +61,9 @@ function make_website_doc {
     mv _pages/index.md ./index.md
     # build
     bundle exec jekyll build
+    cd _site
+    rm Gemfile Gemfile.lock
+    cd -
 }
 
 function setup_docs_repo {
