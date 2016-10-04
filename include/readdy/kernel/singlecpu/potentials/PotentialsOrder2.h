@@ -32,6 +32,7 @@ public:
     virtual void calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const override;
 
     virtual double getCutoffRadius() const override;
+
     virtual double getCutoffRadiusSquared() const override;
 
 

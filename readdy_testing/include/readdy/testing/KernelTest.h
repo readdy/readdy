@@ -19,7 +19,7 @@ class KernelTest : public ::testing::TestWithParam<std::string> {
 public:
     const std::unique_ptr<readdy::model::Kernel> kernel;
 
-    explicit KernelTest() : kernel(readdy::plugin::KernelProvider::getInstance().create(GetParam())){
+    explicit KernelTest() : kernel(readdy::plugin::KernelProvider::getInstance().create(GetParam())) {
     }
 };
 

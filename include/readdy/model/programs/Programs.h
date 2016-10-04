@@ -26,106 +26,121 @@
 #include <type_traits>
 
 namespace readdy {
-    namespace model {
-        namespace programs {
-            class Test : public Program {
+namespace model {
+namespace programs {
 
-            public:
-                Test() : Program() { }
-            };
+class Test : public Program {
 
-            class AddParticle : public Program {
+public:
+    Test() : Program() {}
+};
 
-            public:
-                AddParticle() : Program() { }
-            };
+class AddParticle : public Program {
 
-            class EulerBDIntegrator : public Program {
-            public:
-                EulerBDIntegrator() : Program() { }
-            };
+public:
+    AddParticle() : Program() {}
+};
 
-            class CalculateForces : public Program {
-            public:
-                CalculateForces() : Program() {}
-            };
+class EulerBDIntegrator : public Program {
+public:
+    EulerBDIntegrator() : Program() {}
+};
 
-            class UpdateNeighborList : public Program {
-            public:
-                enum Action { create, clear };
-                UpdateNeighborList() : Program() {}
-                void setAction(Action action) { UpdateNeighborList::action = action; }
-            protected:
-                Action action = Action::create;
-            };
+class CalculateForces : public Program {
+public:
+    CalculateForces() : Program() {}
+};
 
-            namespace reactions {
-                class UncontrolledApproximation : public Program {
+class UpdateNeighborList : public Program {
+public:
+    enum Action {
+        create, clear
+    };
 
-                public:
-                    using reaction_11 = std::function<model::Particle(const model::Particle&)>;
-                    using reaction_12 = std::function<void(const model::Particle&, model::Particle&, model::Particle&)>;
-                    using reaction_21 = std::function<model::Particle(const model::Particle&, const model::Particle&)>;
-                    using reaction_22 = std::function<void(const model::Particle&, const model::Particle&, model::Particle&, model::Particle&)>;
+    UpdateNeighborList() : Program() {}
 
-                    UncontrolledApproximation() : Program() { }
-                    virtual void registerReactionScheme_11(const std::string& reactionName, reaction_11 fun) = 0;
-                    virtual void registerReactionScheme_12(const std::string& reactionName, reaction_12 fun) = 0;
-                    virtual void registerReactionScheme_21(const std::string& reactionName, reaction_21 fun) = 0;
-                    virtual void registerReactionScheme_22(const std::string& reactionName, reaction_22 fun) = 0;
-                };
+    void setAction(Action action) { UpdateNeighborList::action = action; }
 
-                class Gillespie : public Program {
-                public:
-                    Gillespie() : Program() {}
-                };
+protected:
+    Action action = Action::create;
+};
 
-                class GillespieParallel : public Program {
-                public:
-                    GillespieParallel() : Program() {}
-                };
+namespace reactions {
+class UncontrolledApproximation : public Program {
 
-            }
+public:
+    using reaction_11 = std::function<model::Particle(const model::Particle &)>;
+    using reaction_12 = std::function<void(const model::Particle &, model::Particle &, model::Particle &)>;
+    using reaction_21 = std::function<model::Particle(const model::Particle &, const model::Particle &)>;
+    using reaction_22 = std::function<void(const model::Particle &, const model::Particle &, model::Particle &,
+                                           model::Particle &)>;
 
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<Test, T>::value>::type* = 0) {
-                return "Test";
-            };
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<AddParticle, T>::value>::type* = 0) {
-                return "AddParticle";
-            };
+    UncontrolledApproximation() : Program() {}
 
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type* = 0) {
-                return "EulerBDIntegrator";
-            };
+    virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) = 0;
 
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type* = 0) {
-                return "Calculate forces";
-            };
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type* = 0) {
-                return "Update neighbor list";
-            };
+    virtual void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) = 0;
 
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type* = 0) {
-                return "UncontrolledApproximation";
-            };
+    virtual void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) = 0;
 
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type* = 0) {
-                return "Gillespie";
-            };
+    virtual void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) = 0;
+};
 
-            template<typename T>
-            const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type* = 0) {
-                return "GillespieParallel";
-            };
-        }
-    }
+class Gillespie : public Program {
+public:
+    Gillespie() : Program() {}
+};
+
+class GillespieParallel : public Program {
+public:
+    GillespieParallel() : Program() {}
+};
+
+}
+
+template<typename T>
+const std::string getProgramName(typename std::enable_if<std::is_base_of<Test, T>::value>::type * = 0) {
+    return "Test";
+};
+
+template<typename T>
+const std::string getProgramName(typename std::enable_if<std::is_base_of<AddParticle, T>::value>::type * = 0) {
+    return "AddParticle";
+};
+
+template<typename T>
+const std::string getProgramName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type * = 0) {
+    return "EulerBDIntegrator";
+};
+
+template<typename T>
+const std::string getProgramName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type * = 0) {
+    return "Calculate forces";
+};
+
+template<typename T>
+const std::string getProgramName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type * = 0) {
+    return "Update neighbor list";
+};
+
+template<typename T>
+const std::string
+getProgramName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type * = 0) {
+    return "UncontrolledApproximation";
+};
+
+template<typename T>
+const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
+    return "Gillespie";
+};
+
+template<typename T>
+const std::string
+getProgramName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type * = 0) {
+    return "GillespieParallel";
+};
+}
+}
 }
 
 #endif //READDY_MAIN_PROGRAMS_H_H

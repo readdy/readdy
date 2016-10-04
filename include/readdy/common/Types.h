@@ -16,11 +16,13 @@
 #include <boost/signals2/signal.hpp>
 
 namespace readdy {
-    namespace model {
-        typedef unsigned long int time_step_type;
+namespace model {
 
-        typedef boost::signals2::signal<void(readdy::model::time_step_type)> signal_t;
-        typedef signal_t::slot_type ObservableType;
-    }
+typedef unsigned long int time_step_type;
+
+typedef boost::signals2::signal<void(readdy::model::time_step_type)> signal_t;
+typedef signal_t::slot_type ObservableType;
+
+}
 }
 #endif //READDY_MAIN_TYPES_H

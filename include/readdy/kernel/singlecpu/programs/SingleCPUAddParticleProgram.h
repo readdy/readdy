@@ -16,32 +16,32 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            namespace programs {
-                class SingleCPUAddParticleProgram : public readdy::model::programs::AddParticle {
-                public:
-                    SingleCPUAddParticleProgram(SingleCPUKernel* kernel);
+namespace kernel {
+namespace singlecpu {
+namespace programs {
+class SingleCPUAddParticleProgram : public readdy::model::programs::AddParticle {
+public:
+    SingleCPUAddParticleProgram(SingleCPUKernel *kernel);
 
-                    virtual ~SingleCPUAddParticleProgram() override;
+    virtual ~SingleCPUAddParticleProgram() override;
 
-                    virtual void execute() override;
+    virtual void execute() override;
 
-                    void addParticle(readdy::model::Particle particle) {
-                        particles.emplace_back(std::move(particle));
-                    }
-
-                    void setParticles(std::vector<readdy::model::Particle> particles) {
-                        this->particles = std::move(particles) ;
-                    }
-
-                private:
-                    std::vector<readdy::model::Particle> particles;
-                    SingleCPUKernel *kernel;
-                };
-            }
-        }
+    void addParticle(readdy::model::Particle particle) {
+        particles.emplace_back(std::move(particle));
     }
+
+    void setParticles(std::vector<readdy::model::Particle> particles) {
+        this->particles = std::move(particles);
+    }
+
+private:
+    std::vector<readdy::model::Particle> particles;
+    SingleCPUKernel *kernel;
+};
+}
+}
+}
 }
 
 

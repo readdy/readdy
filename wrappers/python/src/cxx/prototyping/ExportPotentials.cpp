@@ -113,7 +113,8 @@ void exportPotentials() {
     bpy::class_<spot::HarmonicRepulsion>("HarmonicRepulsion", bpy::no_init)
             .def("get_name", &spot::HarmonicRepulsion::getName, bpy::return_value_policy<bpy::copy_const_reference>());
     bpy::class_<spot::WeakInteractionPiecewiseHarmonic>("WeakInteractionPiecewiseHarmonic", bpy::no_init)
-            .def("get_name", &spot::WeakInteractionPiecewiseHarmonic::getName, bpy::return_value_policy<bpy::copy_const_reference>());
+            .def("get_name", &spot::WeakInteractionPiecewiseHarmonic::getName,
+                 bpy::return_value_policy<bpy::copy_const_reference>());
 
     bpy::class_<PyPotentialO1, boost::noncopyable>("PotentialOrder1", bpy::init<std::string>())
             .def("calculate_energy", bpy::pure_virtual(&_rdy_pot1::calculateEnergy))
@@ -127,7 +128,7 @@ void exportPotentials() {
             .def("configure_for_types", bpy::pure_virtual(&_rdy_pot2::configureForTypes))
             .def("get_cutoff_radius", bpy::pure_virtual(&_rdy_pot2::getCutoffRadius))
             .def("get_maximal_force", bpy::pure_virtual(&_rdy_pot2::getMaximalForce));
-    
+
     auto f_create_cube_pot = &_rdy_pot_factory::createPotential<spot::CubePotential>;
     auto f_create_harmonic_pot = &_rdy_pot_factory::createPotential<spot::HarmonicRepulsion>;
     auto f_create_weak_inter_pot = &_rdy_pot_factory::createPotential<spot::WeakInteractionPiecewiseHarmonic>;

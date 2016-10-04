@@ -31,7 +31,9 @@ init_numpy() {
 }
 
 void exportPrograms();
+
 void exportModelClasses();
+
 void exportPotentials();
 
 namespace bpy = boost::python;
@@ -68,6 +70,7 @@ BOOST_PYTHON_MODULE (prototyping) {
             .def("get_available_potentials", &scpu_kernel_wrap_t::getAvailablePotentials)
             .def("get_potential_factory", &scpu_kernel_wrap_t::getPotentialFactory, bpy::return_internal_reference<>())
             .def("get_reaction_factory", &scpu_kernel_wrap_t::getReactionFactory, bpy::return_internal_reference<>())
-            .def("get_observable_factory", &scpu_kernel_wrap_t::getObservableFactory, bpy::return_internal_reference<>())
+            .def("get_observable_factory", &scpu_kernel_wrap_t::getObservableFactory,
+                 bpy::return_internal_reference<>())
             .def("get_program_factory", &scpu_kernel_wrap_t::getProgramFactory, bpy::return_internal_reference<>());
 }

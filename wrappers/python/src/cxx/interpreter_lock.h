@@ -14,15 +14,17 @@
 #include <pystate.h>
 
 namespace readdy {
-    namespace py {
-        class interpreter_lock {
-        public:
-            interpreter_lock();
-            ~interpreter_lock();
-        private:
-            PyGILState_STATE gilState;
-        };
-    }
+namespace py {
+class interpreter_lock {
+public:
+    interpreter_lock();
+
+    ~interpreter_lock();
+
+private:
+    PyGILState_STATE gilState;
+};
+}
 }
 
 

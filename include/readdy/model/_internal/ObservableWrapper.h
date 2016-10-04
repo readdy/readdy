@@ -11,23 +11,25 @@
 
 #ifndef READDY_MAIN_OBSERVABLEWRAPPER_H
 #define READDY_MAIN_OBSERVABLEWRAPPER_H
+
 #include <readdy/model/Observable.h>
 
 namespace readdy {
-    namespace model {
-        class ObservableWrapper : public ObservableBase {
-        public:
-            ObservableWrapper(readdy::model::Kernel *const kernel,
-                              const readdy::model::ObservableType &observable, unsigned int stride = 1);
+namespace model {
 
-            void operator()(readdy::model::time_step_type t);
+class ObservableWrapper : public ObservableBase {
+public:
+    ObservableWrapper(readdy::model::Kernel *const kernel,
+                      const readdy::model::ObservableType &observable, unsigned int stride = 1);
 
-            virtual void evaluate() override;
+    void operator()(readdy::model::time_step_type t);
 
-        protected:
-            const readdy::model::ObservableType observable;
-        };
+    virtual void evaluate() override;
 
-    }
+protected:
+    const readdy::model::ObservableType observable;
+};
+
+}
 }
 #endif //READDY_MAIN_OBSERVABLEWRAPPER_H

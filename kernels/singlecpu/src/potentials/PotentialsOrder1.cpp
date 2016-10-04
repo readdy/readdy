@@ -12,62 +12,64 @@
 
 namespace readdy {
 
-    namespace kernel {
-        namespace singlecpu {
-            namespace potentials {
-                CubePotential::CubePotential(const readdy::model::Kernel *const kernel) : readdy::model::potentials::CubePotential(kernel) { }
+namespace kernel {
+namespace singlecpu {
+namespace potentials {
+CubePotential::CubePotential(const readdy::model::Kernel *const kernel) : readdy::model::potentials::CubePotential(
+        kernel) {}
 
-                double CubePotential::calculateEnergy(const readdy::model::Vec3 &position) const {
+double CubePotential::calculateEnergy(const readdy::model::Vec3 &position) const {
 
-                    auto r = particleRadius;
-                    if (!isConsiderParticleRadius()) r = 0;
+    auto r = particleRadius;
+    if (!isConsiderParticleRadius()) r = 0;
 
-                    double energy = 0;
+    double energy = 0;
 
-                    for (auto i = 0; i < 3; ++i) {
-                        if (position[i] - r < min[i] || position[i] + r > max[i]) {
-                            if (position[i] - r < min[i]) {
-                                energy += forceConstant * (position[i] - r - min[i]) * (position[i] - r - min[i]);
-                            } else {
-                                energy += forceConstant * (position[i] + r - max[i]) * (position[i] + r - max[i]);
-                            }
-                        }
-                    }
-
-                    return energy;
-                }
-
-                void CubePotential::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const {
-
-                    auto r = particleRadius;
-                    if (!isConsiderParticleRadius()) r = 0;
-                    for (auto i = 0; i < 3; i++) {
-                        if (position[i] - r < min[i] || position[i] + r > max[i]) {
-                            if (position[i] - r < min[i]) {
-                                force[i] += -1 * forceConstant * (position[i] - r - min[i]);
-                            } else {
-                                force[i] += -1 * forceConstant * (position[i] + r - max[i]);
-                            }
-                        }
-                    }
-
-                }
-
-                void CubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) const {
-
-                    energy += calculateEnergy(position);
-                    calculateForce(force, position);
-
-                }
-
-                potentials::CubePotential *CubePotential::replicate() const {
-                    return new CubePotential(*this);
-                }
-
-
+    for (auto i = 0; i < 3; ++i) {
+        if (position[i] - r < min[i] || position[i] + r > max[i]) {
+            if (position[i] - r < min[i]) {
+                energy += forceConstant * (position[i] - r - min[i]) * (position[i] - r - min[i]);
+            } else {
+                energy += forceConstant * (position[i] + r - max[i]) * (position[i] + r - max[i]);
             }
         }
     }
+
+    return energy;
+}
+
+void CubePotential::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const {
+
+    auto r = particleRadius;
+    if (!isConsiderParticleRadius()) r = 0;
+    for (auto i = 0; i < 3; i++) {
+        if (position[i] - r < min[i] || position[i] + r > max[i]) {
+            if (position[i] - r < min[i]) {
+                force[i] += -1 * forceConstant * (position[i] - r - min[i]);
+            } else {
+                force[i] += -1 * forceConstant * (position[i] + r - max[i]);
+            }
+        }
+    }
+
+}
+
+void CubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy,
+                                            const readdy::model::Vec3 &position) const {
+
+    energy += calculateEnergy(position);
+    calculateForce(force, position);
+
+}
+
+potentials::CubePotential *CubePotential::replicate() const {
+    return new CubePotential(*this);
+}
+
+
+}
+}
+}
 
 }
 

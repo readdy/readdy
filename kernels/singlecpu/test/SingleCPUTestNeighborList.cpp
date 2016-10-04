@@ -68,7 +68,8 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
         EXPECT_EQ(boxes[b].j, 0);
         EXPECT_EQ(boxes[b].k, 0);
         EXPECT_EQ(boxes[b].neighbors.size(), 1);
-        EXPECT_TRUE(*boxes[b].neighbors[0] != boxes[b]) << "This compares ids. A Box should not have itself as a neighbor.";
+        EXPECT_TRUE(*boxes[b].neighbors[0] != boxes[b])
+                            << "This compares ids. A Box should not have itself as a neighbor.";
     }
     // now create three particles. The resulting neighborlist should contain three pairs
     const auto threeParticles = std::vector<m::Particle>{
@@ -77,9 +78,12 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     data.addParticles(threeParticles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 3);
-    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 1)) != list.cend()) << "neighborlist should contain (0,1)";
-    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 2)) != list.cend()) << "neighborlist should contain (0,2)";
-    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(1, 2)) != list.cend()) << "neighborlist should contain (1,2)";
+    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 1)) != list.cend())
+                        << "neighborlist should contain (0,1)";
+    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 2)) != list.cend())
+                        << "neighborlist should contain (0,2)";
+    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(1, 2)) != list.cend())
+                        << "neighborlist should contain (1,2)";
 
 
 }
@@ -132,8 +136,10 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 2);
-    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 2)) != list.cend()) << "0 is neighbor of 2";
-    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(1, 2)) != list.cend()) << "1 is neighbor of 2";
+    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 2)) != list.cend())
+                        << "0 is neighbor of 2";
+    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(1, 2)) != list.cend())
+                        << "1 is neighbor of 2";
 }
 
 
@@ -154,7 +160,8 @@ TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 1);
-    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 1)) != list.cend()) << "only 0 and 1 are neighbors";
+    EXPECT_TRUE(std::find(list.cbegin(), list.cend(), scpum::ParticleIndexPair(0, 1)) != list.cend())
+                        << "only 0 and 1 are neighbors";
 }
 
 

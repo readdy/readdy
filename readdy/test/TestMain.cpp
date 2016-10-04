@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
     coreLogger->add_global_attribute(dam::timestamp(), attr::local_clock());
     coreLogger->add_global_attribute(dam::thread_id(), attr::current_thread_id());
     auto loggingStream = expr::stream
-                         << "[          ] "
-                         << "[" << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S") << "] "
-                         << "[" << expr::attr<attr::current_thread_id::value_type>("ThreadID") << "] "
-                         << "[" << boost::log::trivial::severity << "] "
-                         << expr::smessage;
+            << "[          ] "
+            << "[" << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S") << "] "
+            << "[" << expr::attr<attr::current_thread_id::value_type>("ThreadID") << "] "
+            << "[" << boost::log::trivial::severity << "] "
+            << expr::smessage;
     boost::log::add_console_log(std::cout, keywords::format = loggingStream);
 
     int result = perform_tests(argc, argv);

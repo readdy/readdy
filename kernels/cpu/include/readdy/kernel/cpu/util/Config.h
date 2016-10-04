@@ -11,15 +11,16 @@
 #define READDY_MAIN_CONFIG_H
 
 namespace readdy {
-    namespace kernel {
-        namespace cpu {
-            namespace util {
-                struct Config {
-                    Config();
-                    unsigned long nThreads;
-                };
-            }
-        }
-    }
+namespace kernel {
+namespace cpu {
+namespace util {
+struct Config {
+    Config();
+
+    unsigned long nThreads;
+};
+}
+}
+}
 }
 #endif //READDY_MAIN_CONFIG_H

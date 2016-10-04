@@ -16,7 +16,9 @@ void readdy::model::ObservableWrapper::operator()(readdy::model::time_step_type 
     callback(t);
 }
 
-readdy::model::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel, const readdy::model::ObservableType &observable, unsigned int stride)
+readdy::model::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel,
+                                                    const readdy::model::ObservableType &observable,
+                                                    unsigned int stride)
         : ObservableBase(kernel, stride), observable(observable) {
 }
 

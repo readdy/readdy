@@ -14,20 +14,21 @@
 #include <readdy/model/programs/Programs.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace cpu {
-            namespace programs {
-                class CPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
+namespace kernel {
+namespace cpu {
+namespace programs {
+class CPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
 
-                public:
-                    CPUEulerBDIntegrator(CPUKernel * kernel);
-                    virtual void execute() override;
+public:
+    CPUEulerBDIntegrator(CPUKernel *kernel);
 
-                private:
-                    CPUKernel* kernel;
-                };
-            }
-        }
-    }
+    virtual void execute() override;
+
+private:
+    CPUKernel *kernel;
+};
+}
+}
+}
 }
 #endif //READDY_MAIN_CPUEULERBDINTEGRATOR_H

@@ -10,43 +10,49 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            class SingleCPUKernel : public readdy::model::Kernel{
-            public:
+namespace kernel {
+namespace singlecpu {
 
-                static const std::string name;
+class SingleCPUKernel : public readdy::model::Kernel {
+public:
 
-                SingleCPUKernel();
-                ~SingleCPUKernel();
-                // move
-                SingleCPUKernel(SingleCPUKernel &&rhs);
-                SingleCPUKernel& operator=(SingleCPUKernel&& rhs);
-                // factory method
-                static std::unique_ptr<SingleCPUKernel> create();
+    static const std::string name;
 
-                virtual SingleCPUKernelStateModel& getKernelStateModel() const override;
+    SingleCPUKernel();
 
-                virtual readdy::model::KernelContext& getKernelContext() const override;
+    ~SingleCPUKernel();
 
-                virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+    // move
+    SingleCPUKernel(SingleCPUKernel &&rhs);
 
-                virtual std::vector<std::string> getAvailablePotentials() const override;
+    SingleCPUKernel &operator=(SingleCPUKernel &&rhs);
 
-                virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
+    // factory method
+    static std::unique_ptr<SingleCPUKernel> create();
 
-                virtual readdy::model::potentials::PotentialFactory& getPotentialFactory() const override;
+    virtual SingleCPUKernelStateModel &getKernelStateModel() const override;
 
-                virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+    virtual readdy::model::KernelContext &getKernelContext() const override;
 
-                virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
-            private:
-                struct Impl;
-                std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;
-            };
-        }
-    }
+    virtual std::vector<std::string> getAvailablePotentials() const override;
+
+    virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
+
+    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
+
+    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+
+    virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+
+private:
+    struct Impl;
+    std::unique_ptr<readdy::kernel::singlecpu::SingleCPUKernel::Impl> pimpl;
+};
+
+}
+}
 }
 
 #endif //READDY_MAIN_SINGLECPUKERNEL_H

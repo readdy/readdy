@@ -14,31 +14,31 @@
 #include "Reaction.h"
 
 namespace readdy {
-    namespace model {
-        namespace reactions {
-            class Conversion : public Reaction<1> {
+namespace model {
+namespace reactions {
 
-            public:
-                Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double rate) :
-                        Reaction(name, rate, 0 ,0, 1)
-                {
-                    educts = {typeFrom};
-                    products = {typeTo};
-                }
+class Conversion : public Reaction<1> {
 
-                const unsigned int getTypeFrom() const {
-                    return educts[0];
-                }
-
-                const unsigned int getTypeTo() const {
-                    return products[0];
-                }
-
-                virtual Conversion *replicate() const override {
-                    return new Conversion(*this);
-                }
-            };
-        }
+public:
+    Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double rate) :
+            Reaction(name, rate, 0, 0, 1) {
+        educts = {typeFrom};
+        products = {typeTo};
     }
+
+    const unsigned int getTypeFrom() const {
+        return educts[0];
+    }
+
+    const unsigned int getTypeTo() const {
+        return products[0];
+    }
+
+    virtual Conversion *replicate() const override {
+        return new Conversion(*this);
+    }
+};
+}
+}
 }
 #endif //READDY_MAIN_CONVERSION_H

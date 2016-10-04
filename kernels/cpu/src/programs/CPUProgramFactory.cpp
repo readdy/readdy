@@ -16,30 +16,30 @@
 namespace core_p = readdy::model::programs;
 
 namespace readdy {
-    namespace kernel {
-        namespace cpu {
-            namespace programs {
-                CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
-                    factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
-                        return new reactions::UncontrolledApproximation(kernel);
-                    };
-                    factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
-                        return new CPUEulerBDIntegrator(kernel);
-                    };
-                    factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
-                        return new UpdateNeighborList(kernel);
-                    };
-                    factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
-                        return new CalculateForces(kernel);
-                    };
-                    factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
-                        return new reactions::Gillespie(kernel);
-                    };
-                    factory[core_p::getProgramName<core_p::reactions::GillespieParallel>()] = [kernel] {
-                        return new reactions::GillespieParallel(kernel);
-                    };
-                }
-            }
-        }
-    }
+namespace kernel {
+namespace cpu {
+namespace programs {
+CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
+    factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
+        return new reactions::UncontrolledApproximation(kernel);
+    };
+    factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
+        return new CPUEulerBDIntegrator(kernel);
+    };
+    factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
+        return new UpdateNeighborList(kernel);
+    };
+    factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
+        return new CalculateForces(kernel);
+    };
+    factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
+        return new reactions::Gillespie(kernel);
+    };
+    factory[core_p::getProgramName<core_p::reactions::GillespieParallel>()] = [kernel] {
+        return new reactions::GillespieParallel(kernel);
+    };
+}
+}
+}
+}
 }

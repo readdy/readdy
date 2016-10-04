@@ -16,29 +16,30 @@
 #include <readdy/model/Kernel.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
+namespace kernel {
+namespace singlecpu {
 
-            namespace potentials {
+namespace potentials {
 
-                class CubePotential : public readdy::model::potentials::CubePotential {
-                public:
-                    CubePotential(const readdy::model::Kernel *const kernel);
+class CubePotential : public readdy::model::potentials::CubePotential {
+public:
+    CubePotential(const readdy::model::Kernel *const kernel);
 
-                    virtual double calculateEnergy(const readdy::model::Vec3 &position) const override;
+    virtual double calculateEnergy(const readdy::model::Vec3 &position) const override;
 
-                    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const override;
+    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &position) const override;
 
-                    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &position) const override;
+    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy,
+                                         const readdy::model::Vec3 &position) const override;
 
-                    virtual potentials::CubePotential *replicate() const override;
+    virtual potentials::CubePotential *replicate() const override;
 
 
-                };
+};
 
-            }
-        }
-    }
+}
+}
+}
 
 }
 

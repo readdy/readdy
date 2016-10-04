@@ -13,37 +13,38 @@
 #include "Reaction.h"
 
 namespace readdy {
-    namespace model {
-        namespace reactions {
-            class Enzymatic : public Reaction<2> {
+namespace model {
+namespace reactions {
 
-            public:
-                Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double rate, const double eductDistance) :
-                        Reaction(name, rate, eductDistance, 0, 2)
-                {
-                    educts = {from, catalyst};
-                    products = {to, catalyst};
-                }
+class Enzymatic : public Reaction<2> {
 
-
-                const unsigned int getCatalyst() const {
-                    return educts[1];
-                }
-
-                const unsigned int getFrom() const {
-                    return educts[0];
-                }
-
-                const unsigned int getTo() const {
-                    return products[0];
-                }
-
-                virtual Enzymatic *replicate() const override {
-                    return new Enzymatic(*this);
-                }
-
-            };
-        }
+public:
+    Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double rate,
+              const double eductDistance) :
+            Reaction(name, rate, eductDistance, 0, 2) {
+        educts = {from, catalyst};
+        products = {to, catalyst};
     }
+
+
+    const unsigned int getCatalyst() const {
+        return educts[1];
+    }
+
+    const unsigned int getFrom() const {
+        return educts[0];
+    }
+
+    const unsigned int getTo() const {
+        return products[0];
+    }
+
+    virtual Enzymatic *replicate() const override {
+        return new Enzymatic(*this);
+    }
+
+};
+}
+}
 }
 #endif //READDY_MAIN_ENZYMATIC_H

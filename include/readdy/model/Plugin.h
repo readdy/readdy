@@ -17,14 +17,15 @@
 #include <unordered_map>
 
 namespace readdy {
-    namespace model {
-        class Plugin {
-        public:
-            virtual const std::string& getName() const = 0;
-            virtual ~Plugin() {};
-        };
+namespace model {
 
+class Plugin {
+public:
+    virtual const std::string &getName() const = 0;
 
-    }
+    virtual ~Plugin() {};
+};
+
+}
 }
 #endif //READDY_MAIN_PLUGIN_H

@@ -134,11 +134,11 @@ TEST_P(ParticleDataTest, markingForRemoval2) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
     }
     std::vector<boost::uuids::uuid> deactivatedIds = {
-            *(data->begin_ids()+10),
-            *(data->begin_ids()+7),
-            *(data->begin_ids()+8),
-            *(data->begin_ids()+0),
-            *(data->begin_ids()+4)
+            *(data->begin_ids() + 10),
+            *(data->begin_ids() + 7),
+            *(data->begin_ids() + 8),
+            *(data->begin_ids() + 0),
+            *(data->begin_ids() + 4)
     };
     data->markForDeactivation(10);
     data->markForDeactivation(7);
@@ -149,17 +149,17 @@ TEST_P(ParticleDataTest, markingForRemoval2) {
     EXPECT_EQ(data->size(), 6);
 
     bool noDeactivatedIds = true;
-    for(auto it = deactivatedIds.begin(); it != deactivatedIds.end(); ++it) {
+    for (auto it = deactivatedIds.begin(); it != deactivatedIds.end(); ++it) {
         noDeactivatedIds &= std::find(data->begin_ids(), data->end_ids(), *it) == data->end_ids();
     }
     EXPECT_TRUE(noDeactivatedIds);
 
     deactivatedIds = {
-            *(data->begin_ids()+4),
-            *(data->begin_ids()+2),
-            *(data->begin_ids()+0),
-            *(data->begin_ids()+3),
-            *(data->begin_ids()+1)
+            *(data->begin_ids() + 4),
+            *(data->begin_ids() + 2),
+            *(data->begin_ids() + 0),
+            *(data->begin_ids() + 3),
+            *(data->begin_ids() + 1)
     };
     data->markForDeactivation(4);
     data->markForDeactivation(2);
@@ -168,7 +168,7 @@ TEST_P(ParticleDataTest, markingForRemoval2) {
     data->markForDeactivation(1);
     data->deactivateMarked();
     noDeactivatedIds = true;
-    for(auto it = deactivatedIds.begin(); it != deactivatedIds.end(); ++it) {
+    for (auto it = deactivatedIds.begin(); it != deactivatedIds.end(); ++it) {
         noDeactivatedIds &= std::find(data->begin_ids(), data->end_ids(), *it) == data->end_ids();
     }
     EXPECT_TRUE(noDeactivatedIds);

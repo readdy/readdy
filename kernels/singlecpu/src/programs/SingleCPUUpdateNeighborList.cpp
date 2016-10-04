@@ -9,22 +9,22 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            namespace programs {
-                SingleCPUUpdateNeighborList::SingleCPUUpdateNeighborList(SingleCPUKernel *kernel) : kernel(kernel) { }
+namespace kernel {
+namespace singlecpu {
+namespace programs {
+SingleCPUUpdateNeighborList::SingleCPUUpdateNeighborList(SingleCPUKernel *kernel) : kernel(kernel) {}
 
-                void SingleCPUUpdateNeighborList::execute() {
-                    switch(action) {
-                        case create:
-                            kernel->getKernelStateModel().updateNeighborList();
-                            break;
-                        case clear:
-                            kernel->getKernelStateModel().clearNeighborList();
-                            break;
-                    }
-                }
-            }
-        }
+void SingleCPUUpdateNeighborList::execute() {
+    switch (action) {
+        case create:
+            kernel->getKernelStateModel().updateNeighborList();
+            break;
+        case clear:
+            kernel->getKernelStateModel().clearNeighborList();
+            break;
     }
+}
+}
+}
+}
 }

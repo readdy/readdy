@@ -16,25 +16,28 @@
 #include <readdy/model/potentials/Potential.h>
 
 namespace readdy {
-    namespace model {
-        namespace potentials {
-            class PotentialOrder1 : public Potential {
+namespace model {
+namespace potentials {
+class PotentialOrder1 : public Potential {
 
-            public:
-                PotentialOrder1(const std::string &name) : Potential(name, 1) { }
-                virtual double calculateEnergy(const Vec3& position) const = 0;
-                virtual void calculateForce(Vec3 &force, const Vec3& position) const = 0;
-                virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3& position) const = 0;
+public:
+    PotentialOrder1(const std::string &name) : Potential(name, 1) {}
 
-                virtual void configureForType(const unsigned int type) {}
+    virtual double calculateEnergy(const Vec3 &position) const = 0;
 
-                virtual double getRelevantLengthScale() const noexcept = 0;
+    virtual void calculateForce(Vec3 &force, const Vec3 &position) const = 0;
 
-                virtual PotentialOrder1 *replicate() const override = 0;
+    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const = 0;
+
+    virtual void configureForType(const unsigned int type) {}
+
+    virtual double getRelevantLengthScale() const noexcept = 0;
+
+    virtual PotentialOrder1 *replicate() const override = 0;
 
 
-            };
-        }
-    }
+};
+}
+}
 }
 #endif //READDY_MAIN_POTENTIALORDER1_H

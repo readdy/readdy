@@ -31,7 +31,7 @@ using _rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using vec = readdy::model::Vec3;
 using uuid = boost::uuids::uuid;
 
-double vecBracketOperator(vec& self, unsigned int i) {
+double vecBracketOperator(vec &self, unsigned int i) {
     return self[i];
 }
 
@@ -61,7 +61,9 @@ BOOST_PYTHON_MODULE (common) {
     readdy::py::std_vector_to_python_converter<double>();
     readdy::py::std_pair_to_python_converter<std::vector<double>, std::vector<double>>();
     bpy::class_<std::vector<unsigned long>>("Vec_ulong").def(bpy::vector_indexing_suite<std::vector<unsigned long>>());
-    bpy::class_<std::vector<_rdy_scpu_nl_box_t>>("Vec_box").def(bpy::vector_indexing_suite<std::vector<_rdy_scpu_nl_box_t>>());
+    bpy::class_<std::vector<_rdy_scpu_nl_box_t>>("Vec_box").def(
+            bpy::vector_indexing_suite<std::vector<_rdy_scpu_nl_box_t>>());
     bpy::class_<std::vector<vec>>("Vecvec").def(boost::python::vector_indexing_suite<std::vector<vec>>());
-    bpy::class_<uuid>("uuid", bpy::no_init).def("__str__", +[](const uuid& uuid) { return boost::uuids::to_string(uuid);});
+    bpy::class_<uuid>("uuid", bpy::no_init).def("__str__",
+                                                +[](const uuid &uuid) { return boost::uuids::to_string(uuid); });
 }

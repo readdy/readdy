@@ -18,49 +18,52 @@
 // #define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
 
 namespace readdy {
-    namespace kernel {
-        namespace cpu {
-            class CPUKernel : public readdy::model::Kernel {
-            public:
-                static const std::string name;
+namespace kernel {
+namespace cpu {
+class CPUKernel : public readdy::model::Kernel {
+public:
+    static const std::string name;
 
-                CPUKernel();
-                ~CPUKernel();
+    CPUKernel();
 
-                // factory method
-                static std::unique_ptr<CPUKernel> create();
+    ~CPUKernel();
 
-                virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+    // factory method
+    static std::unique_ptr<CPUKernel> create();
 
-                virtual CPUStateModel &getKernelStateModel() const override;
+    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
-                virtual readdy::model::KernelContext &getKernelContext() const override;
+    virtual CPUStateModel &getKernelStateModel() const override;
 
-                virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
+    virtual readdy::model::KernelContext &getKernelContext() const override;
 
-                virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
 
-                virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
-                unsigned long getNThreads() const;
-                void setNThreads(unsigned long n);
-            private:
-                struct Impl;
-                std::unique_ptr<Impl> pimpl;
-            };
+    virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+
+    unsigned long getNThreads() const;
+
+    void setNThreads(unsigned long n);
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+};
 
 
-            BOOST_DLL_ALIAS(
-                    readdy::kernel::cpu::CPUKernel::name,
-                    name
-            );
-            // export factory method as "create_kernel"
-            BOOST_DLL_ALIAS(
-                    readdy::kernel::cpu::CPUKernel::create,
-                    createKernel
-            );
-        }
-    }
+BOOST_DLL_ALIAS(
+        readdy::kernel::cpu::CPUKernel::name,
+        name
+);
+// export factory method as "create_kernel"
+BOOST_DLL_ALIAS(
+        readdy::kernel::cpu::CPUKernel::create,
+        createKernel
+);
+}
+}
 }
 
 #endif //READDY_MAIN_CPUKERNEL_H

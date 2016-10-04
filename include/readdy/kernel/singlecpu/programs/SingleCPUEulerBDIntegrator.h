@@ -14,23 +14,23 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
+namespace kernel {
+namespace singlecpu {
 
-            namespace programs {
-                class SingleCPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
+namespace programs {
+class SingleCPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
 
-                public:
-                    SingleCPUEulerBDIntegrator(SingleCPUKernel *kernel);
+public:
+    SingleCPUEulerBDIntegrator(SingleCPUKernel *kernel);
 
-                    virtual void execute() override;
+    virtual void execute() override;
 
-                private:
-                    SingleCPUKernel *kernel;
-                };
-            }
-        }
-    }
+private:
+    SingleCPUKernel *kernel;
+};
+}
+}
+}
 }
 
 

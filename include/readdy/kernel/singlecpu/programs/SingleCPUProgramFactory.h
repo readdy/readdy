@@ -9,20 +9,20 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            class SingleCPUKernel;
-            namespace programs {
-                class SingleCPUProgramFactory : public readdy::model::programs::ProgramFactory {
-                public:
-                    SingleCPUProgramFactory(SingleCPUKernel *kernel);
+namespace kernel {
+namespace singlecpu {
+class SingleCPUKernel;
+namespace programs {
+class SingleCPUProgramFactory : public readdy::model::programs::ProgramFactory {
+public:
+    SingleCPUProgramFactory(SingleCPUKernel *kernel);
 
-                private:
-                    SingleCPUKernel *kernel;
-                };
-            }
-        }
-    }
+private:
+    SingleCPUKernel *kernel;
+};
+}
+}
+}
 }
 
 

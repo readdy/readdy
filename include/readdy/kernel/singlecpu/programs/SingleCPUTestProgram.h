@@ -8,19 +8,20 @@
 #include <readdy/model/programs/Programs.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            namespace programs {
-                class SingleCPUTestProgram : public readdy::model::programs::Test {
-                public:
-                    SingleCPUTestProgram();
-                    ~SingleCPUTestProgram();
+namespace kernel {
+namespace singlecpu {
+namespace programs {
+class SingleCPUTestProgram : public readdy::model::programs::Test {
+public:
+    SingleCPUTestProgram();
 
-                    virtual void execute() override;
-                };
-            }
-        }
-    }
+    ~SingleCPUTestProgram();
+
+    virtual void execute() override;
+};
+}
+}
+}
 }
 
 #endif //READDY_MAIN_SINGLECPUTESTPROGRAM_H

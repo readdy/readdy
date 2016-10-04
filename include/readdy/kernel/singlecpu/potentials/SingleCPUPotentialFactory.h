@@ -15,19 +15,19 @@
 class SingleCPUKernel;
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            namespace potentials {
-                class SingleCPUPotentialFactory : public readdy::model::potentials::PotentialFactory {
+namespace kernel {
+namespace singlecpu {
+namespace potentials {
+class SingleCPUPotentialFactory : public readdy::model::potentials::PotentialFactory {
 
-                public:
-                    SingleCPUPotentialFactory(SingleCPUKernel *const kernel);
+public:
+    SingleCPUPotentialFactory(SingleCPUKernel *const kernel);
 
-                protected:
-                    SingleCPUKernel const* kernel;
-                };
-            }
-        }
-    }
+protected:
+    SingleCPUKernel const *kernel;
+};
+}
+}
+}
 }
 #endif //READDY_MAIN_SINGLECPUPOTENTIALFACTORY_H

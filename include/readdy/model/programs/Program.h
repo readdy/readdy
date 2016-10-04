@@ -14,30 +14,35 @@
 #include <memory>
 
 #include <boost/predef.h>
+
 #if BOOST_OS_MACOS
 #include <string>
 #endif
 
 namespace readdy {
-    namespace model {
-        namespace programs {
-            class Program {
-            public:
-                Program() { };
+namespace model {
+namespace programs {
 
-                virtual void execute() = 0;
+class Program {
+public:
+    Program() {};
 
-                virtual ~Program() = default;
+    virtual void execute() = 0;
 
-            };
-            namespace _internal {
-                template<typename T>
-                struct ProgramName {
-                    static const std::string value;
-                };
-            }
-        }
-    }
+    virtual ~Program() = default;
+
+};
+
+namespace _internal {
+
+template<typename T>
+struct ProgramName {
+    static const std::string value;
+};
+}
+
+}
+}
 }
 
 
