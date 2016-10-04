@@ -11,18 +11,18 @@
  */
 
 namespace readdy {
-    namespace model {
-        KernelStateModel::~KernelStateModel() = default;
+namespace model {
+KernelStateModel::~KernelStateModel() = default;
 
-        KernelStateModel::KernelStateModel() {
-        }
-
-
-        KernelStateModel &KernelStateModel::operator=(KernelStateModel &&rhs) = default;
-
-        KernelStateModel::KernelStateModel(KernelStateModel &&rhs) = default;
+KernelStateModel::KernelStateModel() {
+}
 
 
-    }
+KernelStateModel &KernelStateModel::operator=(KernelStateModel &&rhs) = default;
+
+KernelStateModel::KernelStateModel(KernelStateModel &&rhs) = default;
+
+
+}
 }
 

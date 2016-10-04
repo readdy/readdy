@@ -15,17 +15,18 @@
 
 
 namespace readdy {
-    namespace py {
-        class PyObservable : public readdy::model::ObservableBase{
+namespace py {
+class PyObservable : public readdy::model::ObservableBase {
 
-        public:
-            PyObservable(readdy::model::Kernel *const kernel, unsigned int stride, const boost::python::object &observableFun);
-            virtual void evaluate() override;
+public:
+    PyObservable(readdy::model::Kernel *const kernel, unsigned int stride, const boost::python::object &observableFun);
 
-        private:
-            std::shared_ptr<boost::python::object> py_ptr;
-        };
-    }
+    virtual void evaluate() override;
+
+private:
+    std::shared_ptr<boost::python::object> py_ptr;
+};
+}
 }
 
 

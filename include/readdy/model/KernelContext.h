@@ -29,177 +29,180 @@
 #endif
 
 namespace readdy {
-    namespace model {
+namespace model {
 
+class KernelContext {
+public:
 
-        class KernelContext {
-        public:
+    using rdy_type_mapping = std::unordered_map<std::string, uint>;
 
-            using rdy_type_mapping = std::unordered_map<std::string, uint>;
+    using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
+    using rdy_pot_1_registry = std::unordered_map<unsigned int, std::vector<rdy_pot_1 *>>;
 
-            using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
-            using rdy_pot_1_registry = std::unordered_map<unsigned int, std::vector<rdy_pot_1*>>;
-            
-            using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
-            using rdy_pot_2_registry = std::unordered_map<readdy::util::ParticleTypePair, 
-                    std::vector<rdy_pot_2*>, readdy::util::ParticleTypePairHasher>;
+    using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
+    using rdy_pot_2_registry = std::unordered_map<readdy::util::ParticleTypePair,
+            std::vector<rdy_pot_2 *>, readdy::util::ParticleTypePairHasher>;
 
-            using reaction_o1_registry = std::unordered_map<unsigned int, std::vector<reactions::Reaction<1> *>>;
-            using reaction_o2_registry = std::unordered_map<readdy::util::ParticleTypePair,
-                    std::vector<reactions::Reaction<2> *>, readdy::util::ParticleTypePairHasher>;
-            
-            double getKBT() const;
+    using reaction_o1_registry = std::unordered_map<unsigned int, std::vector<reactions::Reaction<1> *>>;
+    using reaction_o2_registry = std::unordered_map<readdy::util::ParticleTypePair,
+            std::vector<reactions::Reaction<2> *>, readdy::util::ParticleTypePairHasher>;
 
-            void setKBT(double kBT);
+    double getKBT() const;
 
-            std::array<double, 3> &getBoxSize() const;
+    void setKBT(double kBT);
 
-            std::tuple<readdy::model::Vec3, readdy::model::Vec3> getBoxBoundingVertices() const;
+    std::array<double, 3> &getBoxSize() const;
 
-            void setBoxSize(double dx, double dy, double dz);
+    std::tuple<readdy::model::Vec3, readdy::model::Vec3> getBoxBoundingVertices() const;
 
-            const std::array<bool, 3> &getPeriodicBoundary() const;
+    void setBoxSize(double dx, double dy, double dz);
 
-            unsigned int getParticleTypeID(const std::string &name) const;
+    const std::array<bool, 3> &getPeriodicBoundary() const;
 
-            void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
+    unsigned int getParticleTypeID(const std::string &name) const;
 
-            const std::function<void(Vec3 &)> &getFixPositionFun() const;
+    void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
-            const std::function<double(const Vec3 &, const Vec3 &)> &getDistSquaredFun() const;
+    const std::function<void(Vec3 &)> &getFixPositionFun() const;
 
-            const std::function<Vec3(const Vec3 &, const Vec3 &)> &getShortestDifferenceFun() const;
+    const std::function<double(const Vec3 &, const Vec3 &)> &getDistSquaredFun() const;
 
-            double getDiffusionConstant(const std::string &particleType) const;
+    const std::function<Vec3(const Vec3 &, const Vec3 &)> &getShortestDifferenceFun() const;
 
-            double getDiffusionConstant(const unsigned int particleType) const;
+    double getDiffusionConstant(const std::string &particleType) const;
 
-            void setDiffusionConstant(const std::string &particleType, double D);
+    double getDiffusionConstant(const unsigned int particleType) const;
 
-            double getParticleRadius(const std::string &type) const;
+    void setDiffusionConstant(const std::string &particleType, double D);
 
-            double getParticleRadius(const unsigned int type) const;
+    double getParticleRadius(const std::string &type) const;
 
-            void setParticleRadius(const std::string &type, const double r);
+    double getParticleRadius(const unsigned int type) const;
 
-            double getTimeStep() const;
+    void setParticleRadius(const std::string &type, const double r);
 
-            void setTimeStep(double dt);
+    double getTimeStep() const;
 
-            const std::vector<const reactions::Reaction<1> *> getAllOrder1Reactions() const;
+    void setTimeStep(double dt);
 
-            const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string &name) const;
+    const std::vector<const reactions::Reaction<1> *> getAllOrder1Reactions() const;
 
-            const std::vector<reactions::Reaction<1>*> &getOrder1Reactions(const std::string &type) const;
+    const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string &name) const;
 
-            const std::vector<reactions::Reaction<1>*> &getOrder1Reactions(const unsigned int type) const;
+    const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const std::string &type) const;
 
-            const std::vector<const reactions::Reaction<2> *> getAllOrder2Reactions() const;
+    const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const unsigned int type) const;
 
-            const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string &name) const;
+    const std::vector<const reactions::Reaction<2> *> getAllOrder2Reactions() const;
 
-            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const std::string &type1,
-                                                                           const std::string &type2) const;
+    const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string &name) const;
 
-            const std::vector<reactions::Reaction<2>*> &getOrder2Reactions(const unsigned int type1,
-                                                                           const unsigned int type2) const;
+    const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const std::string &type1,
+                                                                    const std::string &type2) const;
 
-            template<typename R, unsigned int N = R::n_educts>
-            const boost::uuids::uuid &registerReaction(const R* const r, typename std::enable_if<std::is_base_of<reactions::Reaction<N>, R>::value>::type* = 0) {
-                return registerReaction(std::unique_ptr<reactions::Reaction<N>>(r->replicate()));
-            };
+    const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const unsigned int type1,
+                                                                    const unsigned int type2) const;
 
-            template<typename R>
-            const boost::uuids::uuid &registerReaction(std::unique_ptr<R> r, typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type* = 0) {
-                BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
-                const auto type = r->getEducts()[0];
-                if (internalReactionOneEductRegistry->find(type) == internalReactionOneEductRegistry->end()) {
-                    internalReactionOneEductRegistry->emplace(type,std::vector<std::unique_ptr<reactions::Reaction<1>>>());
-                }
-                (*internalReactionOneEductRegistry)[type].push_back(std::move(r));
-                return (*internalReactionOneEductRegistry)[type].back()->getId();
-            };
+    template<typename R, unsigned int N = R::n_educts>
+    const boost::uuids::uuid &registerReaction(const R *const r,
+                                               typename std::enable_if<std::is_base_of<reactions::Reaction<N>, R>::value>::type * = 0) {
+        return registerReaction(std::unique_ptr<reactions::Reaction<N>>(r->replicate()));
+    };
 
-            template<typename R>
-            const boost::uuids::uuid &registerReaction(std::unique_ptr<R> r, typename std::enable_if<std::is_base_of<reactions::Reaction<2>, R>::value>::type* = 0) {
-                BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
-                const auto t1 = r->getEducts()[0];
-                const auto t2 = r->getEducts()[1];
+    template<typename R>
+    const boost::uuids::uuid &registerReaction(std::unique_ptr<R> r,
+                                               typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type * = 0) {
+        BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
+        const auto type = r->getEducts()[0];
+        if (internalReactionOneEductRegistry->find(type) == internalReactionOneEductRegistry->end()) {
+            internalReactionOneEductRegistry->emplace(type, std::vector<std::unique_ptr<reactions::Reaction<1>>>());
+        }
+        (*internalReactionOneEductRegistry)[type].push_back(std::move(r));
+        return (*internalReactionOneEductRegistry)[type].back()->getId();
+    };
 
-                const readdy::util::ParticleTypePair pp{t1, t2};
-                if (internalReactionTwoEductsRegistry->find(pp) == internalReactionTwoEductsRegistry->end()) {
-                    internalReactionTwoEductsRegistry->emplace(pp,std::vector<std::unique_ptr<reactions::Reaction<2>>>());
-                }
-                (*internalReactionTwoEductsRegistry)[pp].push_back(std::move(r));
-                return (*internalReactionTwoEductsRegistry)[pp].back()->getId();
-            };
+    template<typename R>
+    const boost::uuids::uuid &registerReaction(std::unique_ptr<R> r,
+                                               typename std::enable_if<std::is_base_of<reactions::Reaction<2>, R>::value>::type * = 0) {
+        BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
+        const auto t1 = r->getEducts()[0];
+        const auto t2 = r->getEducts()[1];
 
-            void deregisterPotential(const boost::uuids::uuid &potential);
+        const readdy::util::ParticleTypePair pp{t1, t2};
+        if (internalReactionTwoEductsRegistry->find(pp) == internalReactionTwoEductsRegistry->end()) {
+            internalReactionTwoEductsRegistry->emplace(pp, std::vector<std::unique_ptr<reactions::Reaction<2>>>());
+        }
+        (*internalReactionTwoEductsRegistry)[pp].push_back(std::move(r));
+        return (*internalReactionTwoEductsRegistry)[pp].back()->getId();
+    };
 
-            const boost::uuids::uuid &registerOrder1Potential(rdy_pot_1 const *const, const std::string&);
+    void deregisterPotential(const boost::uuids::uuid &potential);
 
-            std::vector<rdy_pot_1*> getOrder1Potentials(const std::string &type) const;
+    const boost::uuids::uuid &registerOrder1Potential(rdy_pot_1 const *const, const std::string &);
 
-            std::vector<rdy_pot_1*> getOrder1Potentials(const unsigned int type) const;
+    std::vector<rdy_pot_1 *> getOrder1Potentials(const std::string &type) const;
 
-            const rdy_pot_1_registry getAllOrder1Potentials() const;
+    std::vector<rdy_pot_1 *> getOrder1Potentials(const unsigned int type) const;
 
-            std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
+    const rdy_pot_1_registry getAllOrder1Potentials() const;
 
-            const boost::uuids::uuid &registerOrder2Potential(rdy_pot_2 const *const potential,
-                                                              const std::string &type1, const std::string &type2);
+    std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
 
-            const std::vector<rdy_pot_2*> &getOrder2Potentials(const std::string&, const std::string&) const;
+    const boost::uuids::uuid &registerOrder2Potential(rdy_pot_2 const *const potential,
+                                                      const std::string &type1, const std::string &type2);
 
-            const std::vector<rdy_pot_2*> &getOrder2Potentials(const unsigned int, const unsigned int) const;
+    const std::vector<rdy_pot_2 *> &getOrder2Potentials(const std::string &, const std::string &) const;
 
-            const rdy_pot_2_registry getAllOrder2Potentials() const;
+    const std::vector<rdy_pot_2 *> &getOrder2Potentials(const unsigned int, const unsigned int) const;
 
-            std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
+    const rdy_pot_2_registry getAllOrder2Potentials() const;
 
-            /**
-             * Get an unstructured list of all second order potentials. Useful in neighborlists, where maxcutoff is required.
-             */
-            const std::vector<potentials::PotentialOrder2*> getVectorAllOrder2Potentials() const;
+    std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
 
-            std::vector<unsigned int> getAllRegisteredParticleTypes() const;
-            std::string getParticleName(unsigned int id) const;
+    /**
+     * Get an unstructured list of all second order potentials. Useful in neighborlists, where maxcutoff is required.
+     */
+    const std::vector<potentials::PotentialOrder2 *> getVectorAllOrder2Potentials() const;
 
-            void configure();
+    std::vector<unsigned int> getAllRegisteredParticleTypes() const;
 
-            const rdy_type_mapping& getTypeMapping() const;
+    std::string getParticleName(unsigned int id) const;
 
-            // ctor and dtor
-            KernelContext();
+    void configure();
 
-            ~KernelContext();
+    const rdy_type_mapping &getTypeMapping() const;
 
-            // move
-            KernelContext(KernelContext &&rhs);
+    // ctor and dtor
+    KernelContext();
 
-            KernelContext &operator=(KernelContext &&rhs);
+    ~KernelContext();
 
-            // copy
-            KernelContext(const KernelContext &rhs) = delete;
+    // move
+    KernelContext(KernelContext &&rhs);
 
-            KernelContext &operator=(const KernelContext &rhs) = delete;
+    KernelContext &operator=(KernelContext &&rhs);
 
-        private:
-            using reaction_o1_registry_internal = std::unordered_map<unsigned int, std::vector<std::unique_ptr<reactions::Reaction<1>>>>;
-            using reaction_o2_registry_internal = std::unordered_map<readdy::util::ParticleTypePair, std::vector<std::unique_ptr<reactions::Reaction<2>>>, readdy::util::ParticleTypePairHasher>;
+    // copy
+    KernelContext(const KernelContext &rhs) = delete;
 
-            struct Impl;
-            std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
+    KernelContext &operator=(const KernelContext &rhs) = delete;
 
-            unsigned int getOrCreateTypeId(const std::string &name);
+private:
+    using reaction_o1_registry_internal = std::unordered_map<unsigned int, std::vector<std::unique_ptr<reactions::Reaction<1>>>>;
+    using reaction_o2_registry_internal = std::unordered_map<readdy::util::ParticleTypePair, std::vector<std::unique_ptr<reactions::Reaction<2>>>, readdy::util::ParticleTypePairHasher>;
 
-            std::unique_ptr<reaction_o1_registry> reactionOneEductRegistry = std::make_unique<reaction_o1_registry>();
-            std::unique_ptr<reaction_o2_registry> reactionTwoEductsRegistry = std::make_unique<reaction_o2_registry>();
+    struct Impl;
+    std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
 
-            std::unique_ptr<reaction_o1_registry_internal> internalReactionOneEductRegistry = std::make_unique<reaction_o1_registry_internal>();
-            std::unique_ptr<reaction_o2_registry_internal> internalReactionTwoEductsRegistry = std::make_unique<reaction_o2_registry_internal>();
-        };
+    unsigned int getOrCreateTypeId(const std::string &name);
 
-    }
+    std::unique_ptr<reaction_o1_registry> reactionOneEductRegistry = std::make_unique<reaction_o1_registry>();
+    std::unique_ptr<reaction_o2_registry> reactionTwoEductsRegistry = std::make_unique<reaction_o2_registry>();
+
+    std::unique_ptr<reaction_o1_registry_internal> internalReactionOneEductRegistry = std::make_unique<reaction_o1_registry_internal>();
+    std::unique_ptr<reaction_o2_registry_internal> internalReactionTwoEductsRegistry = std::make_unique<reaction_o2_registry_internal>();
+};
+
+}
 }
 #endif //READDY_MAIN_KERNELCONTEXT_H

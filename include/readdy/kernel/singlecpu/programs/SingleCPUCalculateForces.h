@@ -14,20 +14,21 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            namespace programs {
-                class SingleCPUCalculateForces : public readdy::model::programs::CalculateForces {
-                public:
-                    SingleCPUCalculateForces(SingleCPUKernel *kernel);
-                    virtual void execute() override;
+namespace kernel {
+namespace singlecpu {
+namespace programs {
+class SingleCPUCalculateForces : public readdy::model::programs::CalculateForces {
+public:
+    SingleCPUCalculateForces(SingleCPUKernel *kernel);
 
-                private:
-                    SingleCPUKernel *kernel;
-                };
-            }
-        }
-    }
+    virtual void execute() override;
+
+private:
+    SingleCPUKernel *kernel;
+};
+}
+}
+}
 }
 
 #endif //READDY_MAIN_SINGLECPUCALCULATEFORCES_H

@@ -22,6 +22,7 @@ struct fix_n_threads {
     ~fix_n_threads() {
         kernel->setNThreads(oldValue);
     }
+
 private:
     const unsigned int oldValue;
     readdy::kernel::cpu::CPUKernel *const kernel;
@@ -199,7 +200,8 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->getKernelContext().setDiffusionConstant("C", .25);
     double reactionRadius = 1.0;
     kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, reactionRadius);
-    kernel->registerReaction<fusion_t>("very unlikely", "A", "C", "A", std::numeric_limits<double>::min(), reactionRadius);
+    kernel->registerReaction<fusion_t>("very unlikely", "A", "C", "A", std::numeric_limits<double>::min(),
+                                       reactionRadius);
     kernel->registerReaction<fusion_t>("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
     const auto typeA = kernel->getKernelContext().getParticleTypeID("A");
@@ -226,7 +228,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->getKernelContext().configure();
     // a box width in z direction of 12 should divide into two boxes of 5x5x6 minus the halo region of width 1.0.
     {
-        fix_n_threads n_threads {kernel.get(), 2};
+        fix_n_threads n_threads{kernel.get(), 2};
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu::programs::reactions::GillespieParallel>();
         neighborList->execute();
@@ -235,7 +237,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         EXPECT_EQ(15.0, reactionsProgram->getBoxWidth());
         EXPECT_EQ(2, reactionsProgram->getLongestAxis());
         EXPECT_TRUE(reactionsProgram->getOtherAxis1() == 0 || reactionsProgram->getOtherAxis1() == 1);
-        if(reactionsProgram->getOtherAxis1() == 0) {
+        if (reactionsProgram->getOtherAxis1() == 0) {
             EXPECT_EQ(1, reactionsProgram->getOtherAxis2());
         } else {
             EXPECT_EQ(0, reactionsProgram->getOtherAxis2());
@@ -252,28 +254,28 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     //   9 and 10, resulting in a particle A at {0,0,5.25}
     {
         const auto particles = kernel->getKernelStateModel().getParticles();
-        for(auto p : particles) BOOST_LOG_TRIVIAL(debug) << "particle " << p;
+        for (auto p : particles) BOOST_LOG_TRIVIAL(debug) << "particle " << p;
         EXPECT_EQ(7, particles.size());
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t& p) {
-            return p.getType() == typeB && p.getPos() == vec_t(0,0,-1.7);
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+            return p.getType() == typeB && p.getPos() == vec_t(0, 0, -1.7);
         }) != particles.end()) << "Particle with type B should not interact with the others and thus stay where it is";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t& p) {
-            return p.getType() == typeC && p.getPos() == vec_t(0,0,.7);
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+            return p.getType() == typeC && p.getPos() == vec_t(0, 0, .7);
         }) != particles.end()) << "The particle of type C is -very- unlikely to react, thus it should stay where it is";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t& p) {
-            return p.getType() == typeC && p.getPos() == vec_t(0,0,-1.6);
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+            return p.getType() == typeC && p.getPos() == vec_t(0, 0, -1.6);
         }) != particles.end()) << "The particle of type C is -very- unlikely to react, thus it should stay where it is";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t& p) {
-            return p.getType() == typeA && p.getPos() == vec_t(0,0,-5.25);
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+            return p.getType() == typeA && p.getPos() == vec_t(0, 0, -5.25);
         }) != particles.end()) << "This particle should be placed between the particles 7 and 8 (see above).";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t& p) {
-            return p.getType() == typeA && p.getPos() == vec_t(0,0,-.35);
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+            return p.getType() == typeA && p.getPos() == vec_t(0, 0, -.35);
         }) != particles.end()) << "This particle should be placed between the particles 1 and 0 (see above).";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t& p) {
-            return p.getType() == typeA && p.getPos() == vec_t(0,0,1.65);
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+            return p.getType() == typeA && p.getPos() == vec_t(0, 0, 1.65);
         }) != particles.end()) << "This particle should be placed between the particles 4 and 5 (see above).";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t& p) {
-            return p.getType() == typeA && p.getPos() == vec_t(0,0,5.25);
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+            return p.getType() == typeA && p.getPos() == vec_t(0, 0, 5.25);
         }) != particles.end()) << "This particle should be placed between the particles 9 and 10 (see above).";
     }
 }

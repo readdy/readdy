@@ -18,6 +18,7 @@
 namespace readdy {
 namespace model {
 namespace potentials {
+
 class PotentialOrder2 : public Potential {
 
 public:
@@ -38,6 +39,7 @@ public:
     virtual double getCutoffRadiusSquared() const = 0;
 
 };
+
 }
 }
 }

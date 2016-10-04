@@ -17,43 +17,45 @@
 #include "Vec3.h"
 
 namespace readdy {
-    namespace model {
-        class Particle {
-        public:
-            const Vec3 &getPos() const;
+namespace model {
 
-            Vec3 &getPos();
+class Particle {
+public:
+    const Vec3 &getPos() const;
 
-            void setPos(const Vec3 &pos);
+    Vec3 &getPos();
 
-            unsigned int getType() const;
+    void setPos(const Vec3 &pos);
 
-            void setType(const unsigned int type);
+    unsigned int getType() const;
 
-            const boost::uuids::uuid &getId() const;
+    void setType(const unsigned int type);
 
-            void setId(const boost::uuids::uuid &id);
+    const boost::uuids::uuid &getId() const;
 
-            Particle();
+    void setId(const boost::uuids::uuid &id);
 
-            Particle(double x, double y, double z, unsigned int type);
+    Particle();
 
-            Particle(Vec3 pos, unsigned int type, boost::uuids::uuid id);
+    Particle(double x, double y, double z, unsigned int type);
 
-            virtual ~Particle();
+    Particle(Vec3 pos, unsigned int type, boost::uuids::uuid id);
 
-            bool operator==(const Particle &rhs);
+    virtual ~Particle();
 
-            bool operator!=(const Particle &rhs);
+    bool operator==(const Particle &rhs);
 
-            friend std::ostream &operator<<(std::ostream &, const Particle &);
+    bool operator!=(const Particle &rhs);
+
+    friend std::ostream &operator<<(std::ostream &, const Particle &);
 
 
-        private:
-            Vec3 pos;
-            unsigned int type;
-            boost::uuids::uuid id;
-        };
-    }
+private:
+    Vec3 pos;
+    unsigned int type;
+    boost::uuids::uuid id;
+};
+
+}
 }
 #endif //READDY_MAIN_PARTICLE_H

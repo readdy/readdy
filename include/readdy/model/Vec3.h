@@ -14,102 +14,109 @@
 #include <math.h>
 
 namespace readdy {
-    namespace model {
-        class Vec3 {
-        public:
-            Vec3();
+namespace model {
 
-            Vec3(double x, double y, double z);
+class Vec3 {
+public:
+    Vec3();
 
-            Vec3(const std::array<double, 3> &xyz);
+    Vec3(double x, double y, double z);
 
-            Vec3 &operator+=(const Vec3 &rhs);
+    Vec3(const std::array<double, 3> &xyz);
 
-            Vec3 &operator*=(const double a);
+    Vec3 &operator+=(const Vec3 &rhs);
 
-            Vec3 &operator/=(const double a);
+    Vec3 &operator*=(const double a);
 
-            double operator[](const unsigned int i) const;
+    Vec3 &operator/=(const double a);
 
-            double &operator[](const unsigned int i);
+    double operator[](const unsigned int i) const;
 
-            // todo test this operator
-            bool operator==(const Vec3 &rhs) const;
+    double &operator[](const unsigned int i);
 
-            bool operator!=(const Vec3 &rhs) const;
+    // todo test this operator
+    bool operator==(const Vec3 &rhs) const;
 
-            friend std::ostream &operator<<(std::ostream &, const Vec3 &);
+    bool operator!=(const Vec3 &rhs) const;
 
-            friend Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs);
-            friend Vec3 operator+(const Vec3 &lhs, const double rhs);
+    friend std::ostream &operator<<(std::ostream &, const Vec3 &);
 
-            friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
-            friend Vec3 operator-(const Vec3 &lhs, const double rhs);
+    friend Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs);
 
-            friend Vec3 operator/(const Vec3& lhs, const double rhs);
+    friend Vec3 operator+(const Vec3 &lhs, const double rhs);
 
-            friend bool operator>=(const Vec3 &lhs, const Vec3 &rhs);
-            friend bool operator<=(const Vec3 &lhs, const Vec3 &rhs);
-            friend bool operator>(const Vec3 &lhs, const Vec3 &rhs);
-            friend bool operator<(const Vec3 &lhs, const Vec3 &rhs);
+    friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
 
-        private:
-            std::array<double, 3> data;
-        };
+    friend Vec3 operator-(const Vec3 &lhs, const double rhs);
 
-        inline double operator*(const Vec3 &lhs, const Vec3 &rhs) {
-            return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
-        }
+    friend Vec3 operator/(const Vec3 &lhs, const double rhs);
 
-        inline Vec3 operator*(const Vec3 &lhs, const double rhs) {
-            return Vec3(rhs * lhs[0], rhs * lhs[1], rhs * lhs[2]);
-        }
+    friend bool operator>=(const Vec3 &lhs, const Vec3 &rhs);
 
-        inline Vec3 operator*(const double rhs, const Vec3 &lhs) {
-            return lhs * rhs;
-        }
+    friend bool operator<=(const Vec3 &lhs, const Vec3 &rhs);
 
-        template<bool PX, bool PY, bool PZ>
-        inline void fixPosition(Vec3 &vec, const double dx, const double dy, const double dz) {
-            if (PX) {
-                vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
-            }
-            if (PY) {
-                vec[1] -= floor((vec[1] + .5 * dx) / dx) * dx;
-            }
-            if (PZ) {
-                vec[2] -= floor((vec[2] + .5 * dx) / dx) * dx;
-            }
-        };
+    friend bool operator>(const Vec3 &lhs, const Vec3 &rhs);
 
-        void fixPosition(Vec3 &vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize);
+    friend bool operator<(const Vec3 &lhs, const Vec3 &rhs);
 
-        template<bool PX, bool PY, bool PZ>
-        inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const double dx, const double dy, const double dz) {
-            auto dv = rhs - lhs;
-            if (PX) {
-                if (dv[0] > dx * .5) dv[0] -= dx;
-                else if (dv[0] <= -dx * .5) dv[0] += dx;
-            }
-            if (PY) {
-                if (dv[1] > dy * .5) dv[1] -= dy;
-                else if (dv[1] <= -dy * .5) dv[1] += dy;
-            }
-            if (PZ) {
-                if (dv[2] > dz * .5) dv[2] -= dz;
-                else if (dv[2] <= -dz * .5) dv[2] += dz;
-            }
-            return dv;
-        };
+private:
+    std::array<double, 3> data;
+};
 
-        template<bool PX, bool PY, bool PZ>
-        inline double distSquared(const Vec3 &lhs, const Vec3 &rhs, const double dx, const double dy, const double dz) {
-            auto dv = shortestDifference<PX, PY, PZ>(lhs, rhs, dx, dy, dz);
-            return dv * dv;
-        };
+inline double operator*(const Vec3 &lhs, const Vec3 &rhs) {
+    return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
+}
 
-        double distSquared(const Vec3 &lhs, const Vec3 &rhs, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize);
+inline Vec3 operator*(const Vec3 &lhs, const double rhs) {
+    return Vec3(rhs * lhs[0], rhs * lhs[1], rhs * lhs[2]);
+}
+
+inline Vec3 operator*(const double rhs, const Vec3 &lhs) {
+    return lhs * rhs;
+}
+
+template<bool PX, bool PY, bool PZ>
+inline void fixPosition(Vec3 &vec, const double dx, const double dy, const double dz) {
+    if (PX) {
+        vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
     }
+    if (PY) {
+        vec[1] -= floor((vec[1] + .5 * dx) / dx) * dx;
+    }
+    if (PZ) {
+        vec[2] -= floor((vec[2] + .5 * dx) / dx) * dx;
+    }
+};
+
+void fixPosition(Vec3 &vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize);
+
+template<bool PX, bool PY, bool PZ>
+inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const double dx, const double dy, const double dz) {
+    auto dv = rhs - lhs;
+    if (PX) {
+        if (dv[0] > dx * .5) dv[0] -= dx;
+        else if (dv[0] <= -dx * .5) dv[0] += dx;
+    }
+    if (PY) {
+        if (dv[1] > dy * .5) dv[1] -= dy;
+        else if (dv[1] <= -dy * .5) dv[1] += dy;
+    }
+    if (PZ) {
+        if (dv[2] > dz * .5) dv[2] -= dz;
+        else if (dv[2] <= -dz * .5) dv[2] += dz;
+    }
+    return dv;
+};
+
+template<bool PX, bool PY, bool PZ>
+inline double distSquared(const Vec3 &lhs, const Vec3 &rhs, const double dx, const double dy, const double dz) {
+    auto dv = shortestDifference<PX, PY, PZ>(lhs, rhs, dx, dy, dz);
+    return dv * dv;
+};
+
+double distSquared(const Vec3 &lhs, const Vec3 &rhs, const std::array<bool, 3> &periodic,
+                   const std::array<double, 3> &boxSize);
+}
 }
 
 #endif //READDY_MAIN_VEC3_H

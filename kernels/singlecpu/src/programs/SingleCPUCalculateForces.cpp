@@ -10,16 +10,16 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            namespace programs {
-                SingleCPUCalculateForces::SingleCPUCalculateForces(SingleCPUKernel *kernel) : kernel(kernel) {}
+namespace kernel {
+namespace singlecpu {
+namespace programs {
+SingleCPUCalculateForces::SingleCPUCalculateForces(SingleCPUKernel *kernel) : kernel(kernel) {}
 
-                void SingleCPUCalculateForces::execute() {
-                    kernel->getKernelStateModel().calculateForces();
-                }
+void SingleCPUCalculateForces::execute() {
+    kernel->getKernelStateModel().calculateForces();
+}
 
-            }
-        }
-    }
+}
+}
+}
 }

@@ -35,58 +35,73 @@ void setPeriodicBoundarySimulationWrapper(sim &self, bpy::list list) {
 }
 
 // thin wrappers
-void setBoxSize(sim &self, const vec& size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
+void setBoxSize(sim &self, const vec &size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
+
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.getSelectedKernelType(); }
-void addParticle(sim& self, const std::string& type, const vec& pos) { self.addParticle(pos[0], pos[1], pos[2], type); }
-void registerPotentialOrder2(sim& self, pot2& potential, std::string type1, std::string type2) {
-    std::unique_ptr<pot2> ptr {potential.replicate()};
+
+void addParticle(sim &self, const std::string &type, const vec &pos) { self.addParticle(pos[0], pos[1], pos[2], type); }
+
+void registerPotentialOrder2(sim &self, pot2 &potential, std::string type1, std::string type2) {
+    std::unique_ptr<pot2> ptr{potential.replicate()};
     self.registerPotentialOrder2(ptr.get(), type1, type2);
 }
 
-boost::uuids::uuid registerObservable_ParticlePositions(sim& self, unsigned int stride, const boost::python::object &callbackFun) {
+boost::uuids::uuid
+registerObservable_ParticlePositions(sim &self, unsigned int stride, const boost::python::object &callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
 }
 
-boost::uuids::uuid registerObservable_RadialDistribution(sim& self, unsigned int stride, const boost::python::object &callbackFun, boost::python::numeric::array& binBorders, std::string typeCountFrom, std::string typeCountTo, double particleDensity) {
+boost::uuids::uuid
+registerObservable_RadialDistribution(sim &self, unsigned int stride, const boost::python::object &callbackFun,
+                                      boost::python::numeric::array &binBorders, std::string typeCountFrom,
+                                      std::string typeCountTo, double particleDensity) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::RadialDistributionObservable::result_t)>(callbackFun);
     const auto size = boost::python::len(binBorders);
-    std::vector<double> binBordersVec {};
+    std::vector<double> binBordersVec{};
     binBordersVec.reserve((unsigned long) size);
-    for(auto i = 0; i < size; ++i) binBordersVec.push_back(boost::python::extract<double>(binBorders[i]));
-    return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), stride, binBordersVec, typeCountFrom, typeCountTo, particleDensity);
+    for (auto i = 0; i < size; ++i) binBordersVec.push_back(boost::python::extract<double>(binBorders[i]));
+    return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), stride, binBordersVec,
+                                                                                typeCountFrom, typeCountTo,
+                                                                                particleDensity);
 }
 
-boost::uuids::uuid registerObservable_CenterOfMass(sim& self, unsigned int stride, const boost::python::object &callbackFun, boost::python::list types) {
+boost::uuids::uuid
+registerObservable_CenterOfMass(sim &self, unsigned int stride, const boost::python::object &callbackFun,
+                                boost::python::list types) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::CenterOfMassObservable>(
             std::move(pyFun), stride, readdy::py::sequence_to_vector<std::string>(types)
     );
 }
 
-boost::uuids::uuid registerObservable_HistogramAlongAxisObservable(sim& self, unsigned int stride, const bpy::object& callbackFun, bpy::numeric::array& binBorders, bpy::list types, unsigned int axis) {
+boost::uuids::uuid
+registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const bpy::object &callbackFun,
+                                                bpy::numeric::array &binBorders, bpy::list types, unsigned int axis) {
     const auto sizeBorders = bpy::len(binBorders);
     const auto sizeTypes = bpy::len(types);
-    std::vector<std::string> typesVec {};
+    std::vector<std::string> typesVec{};
     typesVec.reserve((unsigned long) sizeTypes);
-    std::vector<double> binBordersVec {};
+    std::vector<double> binBordersVec{};
     binBordersVec.reserve((unsigned long) sizeBorders);
-    for(auto i = 0; i < sizeBorders; ++i) {
+    for (auto i = 0; i < sizeBorders; ++i) {
         binBordersVec.push_back(bpy::extract<double>(binBorders[i]));
     }
-    for(auto i = 0; i < sizeTypes; ++i) {
+    for (auto i = 0; i < sizeTypes; ++i) {
         typesVec.push_back(bpy::extract<std::string>(types[i]));
     }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec, typesVec, axis);
+    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec,
+                                                                                typesVec, axis);
 
 }
 
-boost::uuids::uuid registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list types, const bpy::object &callbackFun) {
+boost::uuids::uuid
+registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list types, const bpy::object &callbackFun) {
     const auto sizeTypes = bpy::len(types);
-    std::vector<std::string> typesVec {};
+    std::vector<std::string> typesVec{};
     typesVec.reserve((unsigned long) sizeTypes);
-    for(auto i = 0; i < sizeTypes; ++i) {
+    for (auto i = 0; i < sizeTypes; ++i) {
         typesVec.push_back(bpy::extract<std::string>(types[i]));
     }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
@@ -103,12 +118,11 @@ boost::uuids::uuid registerObservable_NParticles(sim &self, unsigned int stride,
 #if PY_MAJOR_VERSION >= 3
 int
 #else
+
 void
 #endif
-init_numpy()
-{
-    if(PyArray_API == NULL)
-    {
+init_numpy() {
+    if (PyArray_API == NULL) {
         import_array();
     }
 }
@@ -155,10 +169,11 @@ BOOST_PYTHON_MODULE (api) {
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
             .def("set_time_step", &sim::setTimeStep)
-            .def("run_scheme_readdy", +[](sim& self, bool defaults) {
-                return std::make_shared<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
-                        self.runScheme<readdy::api::ReaDDyScheme>(defaults)
-                );}
+            .def("run_scheme_readdy", +[](sim &self, bool defaults) {
+                     return std::make_shared<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
+                             self.runScheme<readdy::api::ReaDDyScheme>(defaults)
+                     );
+                 }
             )
             .def("run", &sim::run);
 

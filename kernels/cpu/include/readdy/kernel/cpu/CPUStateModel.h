@@ -19,36 +19,46 @@
 #include <readdy/kernel/cpu/util/Config.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace cpu {
-            class CPUStateModel : public readdy::model::KernelStateModel {
+namespace kernel {
+namespace cpu {
+class CPUStateModel : public readdy::model::KernelStateModel {
 
-            public:
-                CPUStateModel(readdy::model::KernelContext *const context, util::Config const*const config);
-                ~CPUStateModel();
-                virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
-                virtual const std::vector<readdy::model::Particle> getParticles() const override;
-                virtual void updateNeighborList() override;
-                virtual void calculateForces() override;
-                virtual void addParticle(const readdy::model::Particle &p) override;
-                virtual void addParticles(const std::vector<readdy::model::Particle> &p) override;
-                virtual void removeParticle(const readdy::model::Particle &p) override;
-                virtual void removeAllParticles() override;
-                virtual double getEnergy() const override;
+public:
+    CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config);
 
-                readdy::kernel::singlecpu::model::SingleCPUParticleData *const getParticleData() const;
+    ~CPUStateModel();
 
-                const model::NeighborList*const getNeighborList() const;
+    virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
-                virtual void clearNeighborList() override;
+    virtual const std::vector<readdy::model::Particle> getParticles() const override;
 
-            private:
-                struct Impl;
-                std::unique_ptr<Impl> pimpl;
-                util::Config const*const config;
-            };
-        }
-    }
+    virtual void updateNeighborList() override;
+
+    virtual void calculateForces() override;
+
+    virtual void addParticle(const readdy::model::Particle &p) override;
+
+    virtual void addParticles(const std::vector<readdy::model::Particle> &p) override;
+
+    virtual void removeParticle(const readdy::model::Particle &p) override;
+
+    virtual void removeAllParticles() override;
+
+    virtual double getEnergy() const override;
+
+    readdy::kernel::singlecpu::model::SingleCPUParticleData *const getParticleData() const;
+
+    const model::NeighborList *const getNeighborList() const;
+
+    virtual void clearNeighborList() override;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+    util::Config const *const config;
+};
+}
+}
 }
 
 #endif //READDY_MAIN_CPUSTATEMODEL_H

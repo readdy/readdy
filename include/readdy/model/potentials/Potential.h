@@ -18,44 +18,45 @@
 #include <boost/uuid/random_generator.hpp>
 
 namespace readdy {
-    namespace model {
-        namespace potentials {
+namespace model {
+namespace potentials {
 
-            class Potential {
-                const std::string name;
-                const int order;
-                boost::uuids::uuid id;
+class Potential {
+    const std::string name;
+    const int order;
+    boost::uuids::uuid id;
 
-            public:
-                Potential(const std::string &name, const int order) : name(name), order(order),
-                                                                      id(boost::uuids::random_generator()()) {
-                }
-                virtual ~Potential() = default;
-
-                const std::string &getName() const {
-                    return name;
-                }
-
-                const int getOrder() const {
-                    return order;
-                }
-
-
-                const boost::uuids::uuid &getId() const {
-                    return id;
-                }
-
-                void setId(const boost::uuids::uuid id) {
-                    Potential::id = id;
-                }
-
-                virtual double getMaximalForce(double kbt) const noexcept = 0;
-
-                virtual Potential* replicate() const = 0;
-            };
-
-        }
+public:
+    Potential(const std::string &name, const int order) : name(name), order(order),
+                                                          id(boost::uuids::random_generator()()) {
     }
+
+    virtual ~Potential() = default;
+
+    const std::string &getName() const {
+        return name;
+    }
+
+    const int getOrder() const {
+        return order;
+    }
+
+
+    const boost::uuids::uuid &getId() const {
+        return id;
+    }
+
+    void setId(const boost::uuids::uuid id) {
+        Potential::id = id;
+    }
+
+    virtual double getMaximalForce(double kbt) const noexcept = 0;
+
+    virtual Potential *replicate() const = 0;
+};
+
+}
+}
 }
 
 #endif //READDY_MAIN_POTENTIAL_H

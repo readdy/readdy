@@ -16,13 +16,13 @@
 namespace bpy = boost::python;
 
 namespace readdy {
-    namespace py {
-        struct Program : public readdy::model::programs::Program, bpy::wrapper<readdy::model::programs::Program> {
-            virtual void execute() override {
-                this->get_override("execute");
-            }
-        };
+namespace py {
+struct Program : public readdy::model::programs::Program, bpy::wrapper<readdy::model::programs::Program> {
+    virtual void execute() override {
+        this->get_override("execute");
     }
+};
+}
 }
 
 #endif //READDY_MAIN_PROGRAMWRAP_H

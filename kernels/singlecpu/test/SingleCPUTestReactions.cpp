@@ -43,7 +43,8 @@ TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     {
         double eductDistance = .4;
         double weight1 = .3, weight2 = .7;
-        auto fusion = kernel->getReactionFactory().createReaction<fusion_t>("A+B->C", 0, 1, 2, 1, eductDistance, weight1, weight2);
+        auto fusion = kernel->getReactionFactory().createReaction<fusion_t>("A+B->C", 0, 1, 2, 1, eductDistance,
+                                                                            weight1, weight2);
         particle_t p_out1{50, 50, 50, 70};
         particle_t p_out2{50, 50, 50, 70};
         particle_t p_A{1, 0, 0, 0};
@@ -62,7 +63,8 @@ TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     {
         double productDistance = .4;
         double weight1 = .3, weight2 = .7;
-        auto fission = kernel->getReactionFactory().createReaction<fission_t>("C->A+B", 2, 0, 1, 1, productDistance, weight1, weight2);
+        auto fission = kernel->getReactionFactory().createReaction<fission_t>("C->A+B", 2, 0, 1, 1, productDistance,
+                                                                              weight1, weight2);
         particle_t p_C{0, 0, 0, 2};
         particle_t p_out1{50, 50, 50, 70};
         particle_t p_out2{50, 50, 50, 70};

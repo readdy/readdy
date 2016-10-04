@@ -37,14 +37,15 @@ using _rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 using _rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
 using _rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
 
-const std::function<readdy::model::Vec3(readdy::model::Vec3, readdy::model::Vec3)> getShortestDistanceFunWrap(_rdy_ctx_t& self) {
+const std::function<readdy::model::Vec3(readdy::model::Vec3, readdy::model::Vec3)>
+getShortestDistanceFunWrap(_rdy_ctx_t &self) {
     auto shortestDifference = self.getShortestDifferenceFun();
     return [shortestDifference](readdy::model::Vec3 v1, readdy::model::Vec3 v2) {
         return shortestDifference(v1, v2);
     };
 }
 
-const std::function<double(readdy::model::Vec3, readdy::model::Vec3)> getDistSquaredFunWrap(_rdy_ctx_t& self) {
+const std::function<double(readdy::model::Vec3, readdy::model::Vec3)> getDistSquaredFunWrap(_rdy_ctx_t &self) {
     auto dist = self.getDistSquaredFun();
     return [dist](readdy::model::Vec3 v1, readdy::model::Vec3 v2) {
         return dist(v1, v2);
@@ -85,19 +86,35 @@ void exportModelClasses() {
             .def("get_fix_position_fun", rpy::adapt_function(&_rdy_ctx_t::getFixPositionFun))
             .def("get_shortest_difference_fun", rpy::adapt_function(&getShortestDistanceFunWrap))
             .def("get_dist_squared_fun", rpy::adapt_function(&getDistSquaredFunWrap))
-            .def("get_particle_radius", +[](_rdy_ctx_t& self, std::string type) {return self.getParticleRadius(type);})
+            .def("get_particle_radius",
+                 +[](_rdy_ctx_t &self, std::string type) { return self.getParticleRadius(type); })
             .def("set_particle_radius", &_rdy_ctx_t::setParticleRadius)
-            .def("register_conversion_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Conversion& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);},  internal_ref<>())
-            .def("register_enzymatic_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Enzymatic& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);},  internal_ref<>())
-            .def("register_fission_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Fission& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);}, internal_ref<>())
-            .def("register_fusion_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Fusion& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);}, internal_ref<>())
-            .def("register_decay_reaction", +[](_rdy_ctx_t &self, readdy::model::reactions::Decay& r) -> const boost::uuids::uuid& {return self.registerReaction(&r);}, internal_ref<>())
+            .def("register_conversion_reaction", +[](_rdy_ctx_t &self,
+                                                     readdy::model::reactions::Conversion &r) -> const boost::uuids::uuid & {
+                return self.registerReaction(&r);
+            }, internal_ref<>())
+            .def("register_enzymatic_reaction", +[](_rdy_ctx_t &self,
+                                                    readdy::model::reactions::Enzymatic &r) -> const boost::uuids::uuid & {
+                return self.registerReaction(&r);
+            }, internal_ref<>())
+            .def("register_fission_reaction", +[](_rdy_ctx_t &self,
+                                                  readdy::model::reactions::Fission &r) -> const boost::uuids::uuid & {
+                return self.registerReaction(&r);
+            }, internal_ref<>())
+            .def("register_fusion_reaction", +[](_rdy_ctx_t &self,
+                                                 readdy::model::reactions::Fusion &r) -> const boost::uuids::uuid & {
+                return self.registerReaction(&r);
+            }, internal_ref<>())
+            .def("register_decay_reaction", +[](_rdy_ctx_t &self,
+                                                readdy::model::reactions::Decay &r) -> const boost::uuids::uuid & {
+                return self.registerReaction(&r);
+            }, internal_ref<>())
             .def("register_potential_order_1",
-                 +[](_rdy_ctx_t& self, _rdy_pot_1& pot, std::string type) -> const _rdy_uuid_t& {
+                 +[](_rdy_ctx_t &self, _rdy_pot_1 &pot, std::string type) -> const _rdy_uuid_t & {
                      return self.registerOrder1Potential(&pot, type);
                  }, internal_ref<>())
             .def("register_potential_order_2",
-                 +[](_rdy_ctx_t& self, _rdy_pot_2& p, std::string t1, std::string t2) -> const _rdy_uuid_t& {
+                 +[](_rdy_ctx_t &self, _rdy_pot_2 &p, std::string t1, std::string t2) -> const _rdy_uuid_t & {
                      return self.registerOrder2Potential(&p, t1, t2);
                  }, internal_ref<>())
             .def("get_particle_type_id", &_rdy_ctx_t::getParticleTypeID)

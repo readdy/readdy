@@ -18,32 +18,39 @@
 #include "Vec3.h"
 
 namespace readdy {
-    namespace model {
-        class KernelStateModel {
-        public:
-            KernelStateModel();
-            virtual ~KernelStateModel();
+namespace model {
 
-            // const accessor methods
-            virtual const std::vector<Vec3> getParticlePositions() const = 0;
-            virtual const std::vector<Particle> getParticles() const = 0;
+class KernelStateModel {
+public:
+    KernelStateModel();
 
-            virtual void updateNeighborList() = 0;
-            virtual void clearNeighborList() = 0;
-            virtual void calculateForces() = 0;
+    virtual ~KernelStateModel();
 
-            virtual void addParticle(const Particle &p) = 0;
+    // const accessor methods
+    virtual const std::vector<Vec3> getParticlePositions() const = 0;
 
-            virtual void addParticles(const std::vector<Particle> &p) = 0;
+    virtual const std::vector<Particle> getParticles() const = 0;
 
-            virtual void removeParticle(const Particle &p) = 0;
-            virtual void removeAllParticles() = 0;
+    virtual void updateNeighborList() = 0;
 
-            virtual double getEnergy() const = 0;
+    virtual void clearNeighborList() = 0;
 
-            KernelStateModel(KernelStateModel&& rhs);
-            KernelStateModel& operator=(KernelStateModel&& rhs);
-        };
-    }
+    virtual void calculateForces() = 0;
+
+    virtual void addParticle(const Particle &p) = 0;
+
+    virtual void addParticles(const std::vector<Particle> &p) = 0;
+
+    virtual void removeParticle(const Particle &p) = 0;
+
+    virtual void removeAllParticles() = 0;
+
+    virtual double getEnergy() const = 0;
+
+    KernelStateModel(KernelStateModel &&rhs);
+
+    KernelStateModel &operator=(KernelStateModel &&rhs);
+};
+}
 }
 #endif //READDY_MAIN_KERNELSTATEMODEL_H

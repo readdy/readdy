@@ -14,23 +14,24 @@
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace readdy {
-    namespace kernel {
-        namespace singlecpu {
-            namespace programs {
+namespace kernel {
+namespace singlecpu {
+namespace programs {
 
-                class SingleCPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
-                    
-                public:
-                    SingleCPUUpdateNeighborList(SingleCPUKernel* kernel);
-                    virtual void execute() override;
+class SingleCPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
 
-                private:
-                    SingleCPUKernel * kernel;
-                };
+public:
+    SingleCPUUpdateNeighborList(SingleCPUKernel *kernel);
 
-            }
-        }
-    }
+    virtual void execute() override;
+
+private:
+    SingleCPUKernel *kernel;
+};
+
+}
+}
+}
 }
 
 #endif //READDY_MAIN_SINGLECPUUPDATENEIGHBORLIST_H

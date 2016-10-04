@@ -186,7 +186,7 @@ std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEven
             const index_t idx1 = nl_it->first;
             if (*(data->begin_deactivated() + idx1)) continue;
             auto neighbors = nl_it->second;
-            for (const auto& neighbor : neighbors) {
+            for (const auto &neighbor : neighbors) {
                 if (idx1 > neighbor.idx) continue;
                 if (*(data->begin_deactivated() + neighbor.idx)) continue;
                 const auto &reactions = ctx.getOrder2Reactions(
@@ -600,7 +600,7 @@ void GillespieParallel::findProblematicParticles(
     auto nlIt = nl->pairs->find(idx);
     if (nlIt != nl->pairs->end()) {
         const auto pType = *(data->begin_types() + idx);
-        for (const auto& neighbor : nlIt->second) {
+        for (const auto &neighbor : nlIt->second) {
             const auto neighborType = *(data->begin_types() + neighbor.idx);
             const auto &reactions = ctx.getOrder2Reactions(pType, neighborType);
             if (!reactions.empty()) {
@@ -630,7 +630,7 @@ void GillespieParallel::findProblematicParticles(
         if (neighIt != nl->pairs->end()) {
             //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
             const auto x_type = *(data->begin_types() + x);
-            for (const auto& x_neighbor : neighIt->second) {
+            for (const auto &x_neighbor : neighIt->second) {
                 //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
                 const auto neighborType = *(data->begin_types() + x_neighbor.idx);
                 const auto neighborPos = *(data->begin_positions() + x_neighbor.idx);
@@ -697,7 +697,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
             {
                 auto nl_it = nl->pairs->find(idx);
                 if (nl_it != nl->pairs->end()) {
-                    for (const auto& idx_neighbor : nl_it->second) {
+                    for (const auto &idx_neighbor : nl_it->second) {
                         if (idx > idx_neighbor.idx) continue;
                         const auto neighborType = *(data->begin_types() + idx_neighbor.idx);
                         const auto &reactions = kernel->getKernelContext().getOrder2Reactions(
@@ -713,10 +713,11 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                                     && (!filterEventsInAdvance || rnd.getUniform() < rate * dt)) {
                                     if (*(data->begin_deactivated() + idx_neighbor.idx)) {
                                         auto get_box_idx = [&](
-                                                unsigned long _idx) { return static_cast<unsigned int>( floor(
-                                                ((*(data->begin_positions() + _idx))[longestAxis] +
-                                                 .5 * kernel->getKernelContext().getBoxSize()[longestAxis]) /
-                                                boxWidth));
+                                                unsigned long _idx) {
+                                            return static_cast<unsigned int>( floor(
+                                                    ((*(data->begin_positions() + _idx))[longestAxis] +
+                                                     .5 * kernel->getKernelContext().getBoxSize()[longestAxis]) /
+                                                    boxWidth));
                                         };
                                         const auto nBoxIdx = get_box_idx(idx_neighbor.idx);
                                         const auto nPos = *(data->begin_positions() + idx_neighbor.idx);

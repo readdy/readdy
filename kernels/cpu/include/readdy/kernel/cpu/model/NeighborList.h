@@ -25,6 +25,7 @@ namespace model {
 struct NeighborListElement {
     const unsigned long idx;
     const double d2;
+
     NeighborListElement(const unsigned long idx, const double d2);
 };
 
@@ -39,6 +40,7 @@ public:
     std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
 
     NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config);
+
     virtual ~NeighborList();
 
     virtual void setupBoxes();

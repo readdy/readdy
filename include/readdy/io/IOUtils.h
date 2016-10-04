@@ -11,12 +11,12 @@
 #define READDY_IO_H
 
 namespace readdy {
-    namespace io {
-        class IOUtils {
-        public:
-            IOUtils();
-        };
-    }
+namespace io {
+class IOUtils {
+public:
+    IOUtils();
+};
+}
 }
 
 

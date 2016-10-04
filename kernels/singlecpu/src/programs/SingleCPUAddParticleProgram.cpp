@@ -15,7 +15,8 @@ void kern::SingleCPUAddParticleProgram::execute() {
     kernel->getKernelStateModel().addParticles(particles);
 }
 
-readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram::SingleCPUAddParticleProgram(SingleCPUKernel* kernel) : kernel(kernel){
+readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram::SingleCPUAddParticleProgram(SingleCPUKernel *kernel)
+        : kernel(kernel) {
 }
 
 

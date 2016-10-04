@@ -11,21 +11,21 @@
 #include "interpreter_lock.h"
 
 namespace readdy {
-    namespace py {
-        PyObservable::PyObservable(readdy::model::Kernel *const kernel, unsigned int stride, const boost::python::object &observableFun)
-                : readdy::model::ObservableBase(kernel, stride),
-                  py_ptr(new boost::python::object(observableFun),
-                         [](boost::python::object *o) {
-                             interpreter_lock lock;
-                             delete o;
-                         })
-        {
+namespace py {
+PyObservable::PyObservable(readdy::model::Kernel *const kernel, unsigned int stride,
+                           const boost::python::object &observableFun)
+        : readdy::model::ObservableBase(kernel, stride),
+          py_ptr(new boost::python::object(observableFun),
+                 [](boost::python::object *o) {
+                     interpreter_lock lock;
+                     delete o;
+                 }) {
 
-        }
+}
 
-        void PyObservable::evaluate() {
-            interpreter_lock lock;
-            (*py_ptr)(*kernel);
-        }
-    }
+void PyObservable::evaluate() {
+    interpreter_lock lock;
+    (*py_ptr)(*kernel);
+}
+}
 }
