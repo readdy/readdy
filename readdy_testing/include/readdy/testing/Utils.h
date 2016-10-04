@@ -41,7 +41,7 @@ inline std::string getPluginsDirectory() {
             break;
         }
     }
-    std::string pluginDir = "lib/readdy_plugins";
+    std::string pluginDir = "readdy/readdy_plugins";
     if (env) {
         auto _env = std::string(env);
         if (!boost::algorithm::ends_with(env, "/")) {
