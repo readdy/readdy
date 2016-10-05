@@ -8,41 +8,36 @@
  */
 
 #include "PyPotential.h"
-#include "interpreter_lock.h"
-#include <readdy/model/Vec3.h>
-#include <iostream>
-#include <boost/python/extract.hpp>
 
 namespace readdy {
 
 namespace py {
-PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &name, boost::python::object o1,
-                                               boost::python::object o2)
+PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &name, pybind11::object o1, pybind11::object o2)
         : PotentialOrder2(name),
-          calcEnergyFun(new boost::python::object(o1), [](boost::python::object *o) {
-              interpreter_lock lock;
+          calcEnergyFun(new pybind11::object(o1), [](pybind11::object *o) {
+              pybind11::gil_scoped_acquire lock;
               delete o;
           }),
-          calcForceFun(new boost::python::object(o2), [](boost::python::object *o) {
-              interpreter_lock lock;
+          calcForceFun(new pybind11::object(o2), [](pybind11::object *o) {
+              pybind11::gil_scoped_acquire lock;
               delete o;
           }) {};
 
 double PotentialOrder2Wrapper::calculateEnergy(const model::Vec3 &x_ij) const {
-    interpreter_lock lock;
-    return boost::python::extract<double>((*calcEnergyFun)(x_ij));
+    pybind11::gil_scoped_acquire lock;
+    return ((*calcEnergyFun)(x_ij)).cast<double>();
 }
 
 void PotentialOrder2Wrapper::calculateForce(model::Vec3 &force, const model::Vec3 &x_ij) const {
-    interpreter_lock lock;
-    force += boost::python::extract<readdy::model::Vec3>((*calcForceFun)(x_ij));
+    pybind11::gil_scoped_acquire lock;
+    force += ((*calcForceFun)(x_ij)).cast<readdy::model::Vec3>();
 }
 
 void
 PotentialOrder2Wrapper::calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_ij) const {
-    interpreter_lock lock;
-    energy += boost::python::extract<double>((*calcEnergyFun)(x_ij));
-    force += boost::python::extract<readdy::model::Vec3>((*calcForceFun)(x_ij));
+    pybind11::gil_scoped_acquire lock;
+    energy += ((*calcEnergyFun)(x_ij)).cast<double>();
+    force += ((*calcForceFun)(x_ij)).cast<readdy::model::Vec3>();
 }
 
 PotentialOrder2Wrapper *PotentialOrder2Wrapper::replicate() const {

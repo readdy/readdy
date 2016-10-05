@@ -29,6 +29,7 @@ requirements:
     - numpy
     - hdf5 ==1.8.15.1 # [osx]
     - hdf5 >=1.8.15.1 # [not osx]
+    - vs2015_runtime  # [win]
 
 test:
   requires:

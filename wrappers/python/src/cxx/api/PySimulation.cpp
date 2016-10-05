@@ -1,17 +1,20 @@
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-#include <Python.h>
-#include "../PyConverters.h"
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+
 #include <boost/uuid/uuid_io.hpp>
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
+#include "ExportSchemeApi.h"
 #include "../PyPotential.h"
 #include "../PyFunction.h"
-#include "ExportSchemeApi.h"
 
-namespace bpy = boost::python;
+namespace bpy = pybind11;
+
+using rvp = bpy::return_value_policy;
 using sim = readdy::Simulation;
 using kp = readdy::plugin::KernelProvider;
 using vec = readdy::model::Vec3;
@@ -21,18 +24,10 @@ using ctx = readdy::model::KernelContext;
 using kern = readdy::model::Kernel;
 using uuid = boost::uuids::uuid;
 
-boost::python::list getPeriodicBoundarySimulationWrapper(const sim &simulation) {
-    auto p = simulation.getPeriodicBoundary();
-    bpy::list result;
-    result.append<bool>(p[0]);
-    result.append<bool>(p[1]);
-    result.append<bool>(p[2]);
-    return result;
-}
-
-void setPeriodicBoundarySimulationWrapper(sim &self, bpy::list list) {
-    self.setPeriodicBoundary({bpy::extract<bool>(list[0]), bpy::extract<bool>(list[1]), bpy::extract<bool>(list[2])});
-}
+struct nodelete {
+    template<typename T>
+    void operator()(T *) {}
+};
 
 // thin wrappers
 void setBoxSize(sim &self, const vec &size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
@@ -47,48 +42,51 @@ void registerPotentialOrder2(sim &self, pot2 &potential, std::string type1, std:
 }
 
 boost::uuids::uuid
-registerObservable_ParticlePositions(sim &self, unsigned int stride, const boost::python::object &callbackFun) {
+registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
 }
 
 boost::uuids::uuid
-registerObservable_RadialDistribution(sim &self, unsigned int stride, const boost::python::object &callbackFun,
-                                      boost::python::numeric::array &binBorders, std::string typeCountFrom,
+registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::object callbackFun,
+                                      bpy::array_t<double> &binBorders, std::string typeCountFrom,
                                       std::string typeCountTo, double particleDensity) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::RadialDistributionObservable::result_t)>(callbackFun);
-    const auto size = boost::python::len(binBorders);
+    const auto info = binBorders.request();
     std::vector<double> binBordersVec{};
-    binBordersVec.reserve((unsigned long) size);
-    for (auto i = 0; i < size; ++i) binBordersVec.push_back(boost::python::extract<double>(binBorders[i]));
+    binBordersVec.reserve(info.shape[0]);
+    const auto data = static_cast<double *>(info.ptr);
+    for (auto i = 0; i < info.shape[0]; ++i) binBordersVec.push_back(data[i]);
     return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), stride, binBordersVec,
                                                                                 typeCountFrom, typeCountTo,
                                                                                 particleDensity);
 }
 
 boost::uuids::uuid
-registerObservable_CenterOfMass(sim &self, unsigned int stride, const boost::python::object &callbackFun,
-                                boost::python::list types) {
+registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::object &callbackFun,
+                                std::vector<std::string> types) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::CenterOfMassObservable>(
-            std::move(pyFun), stride, readdy::py::sequence_to_vector<std::string>(types)
+            std::move(pyFun), stride, types
     );
 }
 
 boost::uuids::uuid
 registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const bpy::object &callbackFun,
-                                                bpy::numeric::array &binBorders, bpy::list types, unsigned int axis) {
-    const auto sizeBorders = bpy::len(binBorders);
+                                                bpy::array_t<double> &binBorders, bpy::list types, unsigned int axis) {
+    const auto info = binBorders.request();
+    const auto sizeBorders = info.shape[0];
+    auto binBordersData = static_cast<double *>(info.ptr);
     const auto sizeTypes = bpy::len(types);
     std::vector<std::string> typesVec{};
     typesVec.reserve((unsigned long) sizeTypes);
     std::vector<double> binBordersVec{};
-    binBordersVec.reserve((unsigned long) sizeBorders);
+    binBordersVec.reserve(sizeBorders);
     for (auto i = 0; i < sizeBorders; ++i) {
-        binBordersVec.push_back(bpy::extract<double>(binBorders[i]));
+        binBordersVec.push_back(binBordersData[i]);
     }
     for (auto i = 0; i < sizeTypes; ++i) {
-        typesVec.push_back(bpy::extract<std::string>(types[i]));
+        typesVec.push_back(types[i].cast<std::string>());
     }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec,
@@ -102,7 +100,7 @@ registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list typ
     std::vector<std::string> typesVec{};
     typesVec.reserve((unsigned long) sizeTypes);
     for (auto i = 0; i < sizeTypes; ++i) {
-        typesVec.push_back(bpy::extract<std::string>(types[i]));
+        typesVec.push_back(types[i].cast<std::string>());
     }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, typesVec);
@@ -115,38 +113,22 @@ boost::uuids::uuid registerObservable_NParticles(sim &self, unsigned int stride,
 
 // todo @chrisfroe register forces observable
 
-#if PY_MAJOR_VERSION >= 3
-int
-#else
-
-void
-#endif
-init_numpy() {
-    if (PyArray_API == NULL) {
-        import_array();
-    }
-}
-
 // module
-BOOST_PYTHON_MODULE (api) {
+PYBIND11_PLUGIN (api) {
 
-    init_numpy();
-    PyEval_InitThreads();
+    bpy::module api("api", "ReaDDy c++-api python module");
 
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+    exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
 
-    bpy::docstring_options doc_options;
-    doc_options.enable_all();
-
-    exportSchemeApi<readdy::api::ReaDDyScheme>("ReaDDyScheme");
-
-    bpy::class_<sim, boost::noncopyable>("Simulation")
-            .add_property("kbt", &sim::getKBT, &sim::setKBT)
-            .add_property("periodic_boundary", &getPeriodicBoundarySimulationWrapper,
-                          &setPeriodicBoundarySimulationWrapper)
-            .add_property("box_size", &sim::getBoxSize, &setBoxSize)
+    bpy::class_<sim>(api, "Simulation")
+            .def(bpy::init<>())
+            .def_property("kbt", &sim::getKBT, &sim::setKBT)
+            .def_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
+            .def_property("box_size", &sim::getBoxSize, &setBoxSize)
             .def("register_particle_type", &sim::registerParticleType)
-            .def("add_particle", &addParticle)
+            .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
+                self.addParticle(pos[0], pos[1], pos[2], type);
+            })
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
             .def("register_potential_order_2", &registerPotentialOrder2)
@@ -161,33 +143,33 @@ BOOST_PYTHON_MODULE (api) {
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
             .def("register_observable_n_particles_types", &registerObservable_NParticlesTypes)
-            .def("register_reaction_conversion", &sim::registerConversionReaction, bpy::return_internal_reference<>())
-            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, bpy::return_internal_reference<>())
-            .def("register_reaction_fission", &sim::registerFissionReaction, bpy::return_internal_reference<>())
-            .def("register_reaction_fusion", &sim::registerFusionReaction, bpy::return_internal_reference<>())
-            .def("register_reaction_decay", &sim::registerDecayReaction, bpy::return_internal_reference<>())
+            .def("register_reaction_conversion", &sim::registerConversionReaction, rvp::reference_internal)
+            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, rvp::reference_internal)
+            .def("register_reaction_fission", &sim::registerFissionReaction, rvp::reference_internal)
+            .def("register_reaction_fusion", &sim::registerFusionReaction, rvp::reference_internal)
+            .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal)
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
             .def("set_time_step", &sim::setTimeStep)
-            .def("run_scheme_readdy", +[](sim &self, bool defaults) {
-                     return std::make_shared<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
+            .def("run_scheme_readdy", [](sim &self, bool defaults) {
+                     return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)
                      );
                  }
             )
             .def("run", &sim::run);
 
-    bpy::class_<kp, boost::noncopyable>("KernelProvider", bpy::no_init)
-            .def("get", &kp::getInstance, bpy::return_value_policy<bpy::reference_existing_object>())
-            .staticmethod("get")
+    bpy::class_<kp, std::unique_ptr<kp, nodelete>>(api, "KernelProvider")
+            .def_static("get", &kp::getInstance, rvp::reference)
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
 
-    bpy::class_<pot2>("Pot2", bpy::init<std::string, boost::python::object, boost::python::object>())
+    bpy::class_<pot2>(api, "Pot2")
+            .def(bpy::init<std::string, bpy::object, bpy::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);
 
-    bpy::class_<kern, boost::noncopyable>("Kernel", bpy::no_init)
-            .def("get_name", &kern::getName, bpy::return_internal_reference<>());
+    bpy::class_<kern>(api, "Kernel").def("get_name", &kern::getName, rvp::reference);
 
+    return api.ptr();
 
 }

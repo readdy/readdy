@@ -10,28 +10,29 @@
 #ifndef READDY_MAIN_EXPORTSCHEMEAPI_H
 #define READDY_MAIN_EXPORTSCHEMEAPI_H
 
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
 #include <readdy/SimulationScheme.h>
 
 
 template<typename SchemeType>
-void exportSchemeApi(std::string schemeName) {
-    namespace bpy = boost::python;
-    using configurator = readdy::api::SchemeConfigurator<SchemeType>;
-    bpy::class_<SchemeType, boost::noncopyable, SchemeType *>(schemeName.c_str(), bpy::no_init).def("run",
-                                                                                                    &SchemeType::run);
+void exportSchemeApi(pybind11::module &module, std::string schemeName) {
+    namespace bpy = pybind11;
+    using conf = readdy::api::SchemeConfigurator<SchemeType>;
+    bpy::class_<SchemeType>(module, schemeName.c_str()).def("run", &SchemeType::run);
     std::string configuratorName = "SchemeConfigurator" + schemeName;
-    bpy::class_<configurator, boost::noncopyable, std::shared_ptr<configurator>>(configuratorName.c_str(), bpy::no_init)
+    bpy::class_<conf, std::shared_ptr<conf>>(module, configuratorName.c_str())
             .def("with_integrator",
-                 +[](configurator &self, std::string name) -> configurator & { return self.withIntegrator(name); },
-                 bpy::return_internal_reference<>())
-            .def("include_forces", &configurator::includeForces, bpy::return_internal_reference<>())
-            .def("with_reaction_scheduler", +[](configurator &self, std::string name) -> configurator & {
-                return (self.withReactionScheduler(name));
-            }, bpy::return_internal_reference<>())
-            .def("evaluate_observables", &configurator::evaluateObservables, bpy::return_internal_reference<>())
-            .def("configure", readdy::py::adapt_unique(&configurator::configure))
-            .def("configure_and_run", &configurator::configureAndRun);
+                 [](conf &self, std::string name) -> conf & { return self.withIntegrator(name); },
+                 bpy::return_value_policy::reference_internal)
+            .def("include_forces", &conf::includeForces, bpy::return_value_policy::reference_internal)
+            .def("with_reaction_scheduler",
+                 [](conf &self, std::string name) -> conf & {
+                     return (self.withReactionScheduler(name));
+                 },
+                 bpy::return_value_policy::reference_internal)
+            .def("evaluate_observables", &conf::evaluateObservables, bpy::return_value_policy::reference_internal)
+            .def("configure", &conf::configure)
+            .def("configure_and_run", &conf::configureAndRun);
 }
 
 #endif //READDY_MAIN_EXPORTSCHEMEAPI_H
