@@ -34,23 +34,38 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
             kernel.getKernelContext().setParticleRadius(t, 1.0);
         }
     }
-
+    auto repulsion1 = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
+    auto repulsion2 = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
+    auto repulsion3 = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
+    auto box1 = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
+    auto box2 = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
+    auto box3 = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
+    std::array<readdy::model::potentials::CubePotential*, 3> boxes {{box1.get(), box2.get(), box3.get()}};
     {
-        auto repulsion = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-        repulsion->setForceConstant(1.0);
-        kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "A", "B");
-        kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "A", "C");
-        kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "B", "C");
+        {
+
+            repulsion1->setForceConstant(1.0);
+            kernel.getKernelContext().registerPotential(repulsion1.get(), "A", "B");
+        }
+        {
+            repulsion2->setForceConstant(1.0);
+            kernel.getKernelContext().registerPotential(repulsion2.get(), "A", "C");
+        }
+        {
+            repulsion3->setForceConstant(1.0);
+            kernel.getKernelContext().registerPotential(repulsion3.get(), "B", "C");
+        }
     }
     {
-        auto box = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
-        box->setForceConstant(1.0);
         const auto verts = kernel.getKernelContext().getBoxBoundingVertices();
-        box->setOrigin(std::get<0>(verts) + readdy::model::Vec3(1, 1, 1));
-        box->setExtent((std::get<1>(verts) - std::get<0>(verts)) - 2);
-        kernel.getKernelContext().registerOrder1Potential(box.get(), "A");
-        kernel.getKernelContext().registerOrder1Potential(box.get(), "B");
-        kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
+        int i = 0;
+        for(auto type : types) {
+            auto box = boxes[i++];
+            box->setForceConstant(1.0);
+            box->setOrigin(std::get<0>(verts) + readdy::model::Vec3(1, 1, 1));
+            box->setExtent((std::get<1>(verts) - std::get<0>(verts)) - 2);
+            kernel.getKernelContext().registerPotential(std::move(box), type);
+        }
     }
 
     const unsigned int nParticles = 25000;

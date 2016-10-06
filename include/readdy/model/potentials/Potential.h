@@ -31,7 +31,9 @@ public:
                                                           id(boost::uuids::random_generator()()) {
     }
 
-    virtual ~Potential() = default;
+    virtual ~Potential() {
+        // todo remove from context if its there
+    };
 
     const std::string &getName() const {
         return name;
@@ -52,7 +54,6 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept = 0;
 
-    virtual Potential *replicate() const = 0;
 };
 
 }

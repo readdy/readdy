@@ -28,8 +28,6 @@ public:
 
     virtual void calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_ij) const override;
 
-    virtual PotentialOrder2Wrapper *replicate() const override;
-
     virtual double getCutoffRadius() const override {
         // todo!
         return 50;

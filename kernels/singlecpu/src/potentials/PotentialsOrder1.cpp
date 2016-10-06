@@ -62,11 +62,6 @@ void CubePotential::calculateForceAndEnergy(readdy::model::Vec3 &force, double &
 
 }
 
-potentials::CubePotential *CubePotential::replicate() const {
-    return new CubePotential(*this);
-}
-
-
 }
 }
 }

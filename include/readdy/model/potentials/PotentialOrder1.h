@@ -1,6 +1,6 @@
 /**
  * Declaration of the base class of all order 1 potentials.
- * Subclasses have to implement calculateEnergy, calculateForce calculateForceAndEnergy, and replicate.
+ * Subclasses have to implement calculateEnergy, calculateForce and calculateForceAndEnergy.
  * The first three methods take a modifiable reference and a particle's position. The last method is for replication
  * of the potential, so that it can be assigned to multiple particle types.
  *
@@ -32,9 +32,6 @@ public:
     virtual void configureForType(const unsigned int type) {}
 
     virtual double getRelevantLengthScale() const noexcept = 0;
-
-    virtual PotentialOrder1 *replicate() const override = 0;
-
 
 };
 }

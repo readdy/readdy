@@ -23,11 +23,6 @@ void Conversion::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_i
     p1_out.setId(p1_in.getId());
 }
 
-Conversion *Conversion::replicate() const {
-    return new Conversion(*this);
-}
-
-
 void Enzymatic::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, rdy_particle_t &p1_out,
                         rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
     if (p1_in.getType() == getCatalyst()) {
@@ -47,10 +42,6 @@ void Enzymatic::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in
     }
 }
 
-Enzymatic *Enzymatic::replicate() const {
-    return new Enzymatic(*this);
-}
-
 void Fission::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, rdy_particle_t &p1_out,
                       rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
     // as long as the orientation is uniform, it does not matter of which type p1_in and p2_in are.
@@ -63,10 +54,6 @@ void Fission::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, 
     p2_out.setPos(p1_in.getPos() - getWeight2() * getProductDistance() * n3);
 }
 
-Fission *Fission::replicate() const {
-    return new Fission(*this);
-}
-
 void Fusion::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, rdy_particle_t &p1_out,
                      rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
     p1_out.setType(getTo());
@@ -77,9 +64,6 @@ void Fusion::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, r
     }
 }
 
-Fusion *Fusion::replicate() const {
-    return new Fusion(*this);
-}
 }
 }
 }

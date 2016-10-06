@@ -84,32 +84,32 @@ void exportModelClasses(bpy::module &proto) {
                  (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)
             .def("set_particle_radius", &rdy_ctx_t::setParticleRadius)
             .def("register_conversion_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Conversion &r) -> const rdy_uuid_t & {
-                     return self.registerReaction(&r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Conversion* r) -> const rdy_uuid_t & {
+                     return self.registerReaction(r);
                  }, rvp::reference_internal)
             .def("register_enzymatic_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Enzymatic &r) -> const rdy_uuid_t & {
-                     return self.registerReaction(&r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Enzymatic* r) -> const rdy_uuid_t & {
+                     return self.registerReaction(r);
                  }, rvp::reference_internal)
             .def("register_fission_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Fission &r) -> const rdy_uuid_t & {
-                     return self.registerReaction(&r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Fission* r) -> const rdy_uuid_t & {
+                     return self.registerReaction(r);
                  }, rvp::reference_internal)
             .def("register_fusion_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Fusion &r) -> const rdy_uuid_t & {
-                     return self.registerReaction(&r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Fusion *r) -> const rdy_uuid_t & {
+                     return self.registerReaction(r);
                  }, rvp::reference_internal)
             .def("register_decay_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Decay &r) -> const rdy_uuid_t & {
-                     return self.registerReaction(&r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Decay *r) -> const rdy_uuid_t & {
+                     return self.registerReaction(r);
                  }, rvp::reference_internal)
             .def("register_potential_order_1",
                  [](rdy_ctx_t &self, _rdy_pot_1 *pot, std::string type) -> const rdy_uuid_t & {
-                     return self.registerOrder1Potential(pot, type);
+                     return self.registerPotential(pot, type);
                  }, rvp::reference_internal)
             .def("register_potential_order_2",
                  [](rdy_ctx_t &self, _rdy_pot_2 *p, std::string t1, std::string t2) -> const rdy_uuid_t & {
-                     return self.registerOrder2Potential(p, t1, t2);
+                     return self.registerPotential(p, t1, t2);
                  }, rvp::reference_internal)
             .def("get_particle_type_id", &rdy_ctx_t::getParticleTypeID)
             .def("configure", &rdy_ctx_t::configure);

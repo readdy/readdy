@@ -32,9 +32,6 @@ struct Conversion : public readdy::model::reactions::Conversion {
         p1_out.setId(p1_in.getId());
     }
 
-    virtual Conversion *replicate() const override {
-        return new Conversion(*this);
-    }
 };
 
 struct Enzymatic : public readdy::model::reactions::Enzymatic {
@@ -65,9 +62,6 @@ struct Enzymatic : public readdy::model::reactions::Enzymatic {
         }
     }
 
-    virtual Enzymatic *replicate() const override {
-        return new Enzymatic(*this);
-    }
 };
 
 struct Fission : public readdy::model::reactions::Fission {
@@ -91,9 +85,6 @@ struct Fission : public readdy::model::reactions::Fission {
         p2_out.setPos(p1_in.getPos() - getWeight2() * getProductDistance() * n3);
     }
 
-    virtual Fission *replicate() const override {
-        return new Fission(*this);
-    }
 };
 
 struct Fusion : public readdy::model::reactions::Fusion {
@@ -114,11 +105,6 @@ struct Fusion : public readdy::model::reactions::Fusion {
             p1_out.setPos(p2_in.getPos() + getWeight1() * (p1_in.getPos() - p2_in.getPos()));
         }
     }
-
-    virtual Fusion *replicate() const override {
-        return new Fusion(*this);
-    }
-
 
 };
 

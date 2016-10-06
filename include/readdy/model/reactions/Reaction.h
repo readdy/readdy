@@ -88,8 +88,6 @@ public:
         perform(p1_in, p2_in, p1_out, p2_out, rand);
     }
 
-    virtual Reaction<N_EDUCTS> *replicate() const = 0;
-
     friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
         os << "Reaction(\"" << reaction.name << "\", N_Educts=" << reaction._n_educts << ", N_Products="
            << reaction._n_products << ", (";

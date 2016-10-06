@@ -30,7 +30,8 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
 
     auto pot = kernel->createPotentialAs<m::potentials::HarmonicRepulsion>();
     pot->setForceConstant(1.);
-    ctx.registerOrder2Potential(pot.get(), "A", "A");
+    ctx.registerPotential(pot.get(), "A", "A");
+
     ctx.configure();
     auto typeIdA = ctx.getParticleTypeID("A");
     auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
@@ -60,8 +61,10 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     ctx.setBoxSize(10., 10., 10.);
     ctx.setPeriodicBoundary(true, true, false);
     auto pot = kernel->createPotentialAs<m::potentials::HarmonicRepulsion>();
-    pot->setForceConstant(1.);
-    ctx.registerOrder2Potential(pot.get(), "A", "B");
+    {
+        pot->setForceConstant(1.);
+        ctx.registerPotential(pot.get(), "A", "B");
+    }
     ctx.configure();
     auto typeIdA = ctx.getParticleTypeID("A");
     auto typeIdB = ctx.getParticleTypeID("B");

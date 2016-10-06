@@ -40,10 +40,6 @@ PotentialOrder2Wrapper::calculateForceAndEnergy(model::Vec3 &force, double &ener
     force += ((*calcForceFun)(x_ij)).cast<readdy::model::Vec3>();
 }
 
-PotentialOrder2Wrapper *PotentialOrder2Wrapper::replicate() const {
-    return new PotentialOrder2Wrapper(*this);
-}
-
 double PotentialOrder2Wrapper::getCutoffRadiusSquared() const {
     return getCutoffRadius() * getCutoffRadius();
 }

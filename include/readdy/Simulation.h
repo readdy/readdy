@@ -169,7 +169,7 @@ namespace readdy {
          * @param type the type for which the potential should be registered
          * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
          */
-        void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 const* const ptr, const std::string &type);
+        void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1*, const std::string &);
 
         //----------------------
         // Order 2 potentials
@@ -207,8 +207,12 @@ namespace readdy {
          * @param type2 one of the two types for which this potential should be registered
          * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
          */
-        void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 const* const ptr,
-                                     const std::string &type1, const std::string &type2);
+        template<typename R, typename deleter = std::default_delete<R>>
+        void registerPotentialOrder2(R* ptr,
+                                     const std::string &type1, const std::string &type2) {
+            ensureKernelSelected();
+            getSelectedKernel()->getKernelContext().registerPotential(ptr, type1, type2);
+        };
 
         //void registerReaction(const Reaction& reaction);
         //void registerReactionByDescriptor(const std::string descriptor);

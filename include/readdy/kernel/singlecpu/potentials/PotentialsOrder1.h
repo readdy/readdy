@@ -32,9 +32,6 @@ public:
     virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy,
                                          const readdy::model::Vec3 &position) const override;
 
-    virtual potentials::CubePotential *replicate() const override;
-
-
 };
 
 }

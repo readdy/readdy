@@ -61,9 +61,10 @@ TEST_F(TestKernelContext, BoxSize) {
 
 TEST_F(TestKernelContext, PotentialOrder2Map) {
     m::KernelContext ctx;
-    auto p1 = std::make_unique<readdy::testing::NOOPPotentialOrder2>();
-    ctx.registerOrder2Potential(p1.get(), "a", "b");
-    ctx.registerOrder2Potential(p1.get(), "b", "a");
+    auto noop1 = std::make_unique<readdy::testing::NOOPPotentialOrder2>();
+    auto noop2 = std::make_unique<readdy::testing::NOOPPotentialOrder2>();
+    ctx.registerPotential(noop1.get(), "a", "b");
+    ctx.registerPotential(noop2.get(), "b", "a");
     ctx.configure();
     auto vector = ctx.getOrder2Potentials("b", "a");
     EXPECT_EQ(vector.size(), 2);
@@ -86,24 +87,24 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
     boost::uuids::uuid uuid1_1, uuid1_11;
     boost::uuids::uuid uuid2_1, uuid2_2;
+    auto pot11 = kernel->createPotentialAs<rmp::CubePotential>();
+    auto pot12 = kernel->createPotentialAs<rmp::CubePotential>();
+    auto pot13 = kernel->createPotentialAs<rmp::CubePotential>();
+    auto pot14 = kernel->createPotentialAs<rmp::CubePotential>();
+    auto pot21 = kernel->createPotentialAs<rmp::CubePotential>();
+    auto repulsion1 = kernel->createPotentialAs<rmp::HarmonicRepulsion>();
+    auto repulsion2 = kernel->createPotentialAs<rmp::HarmonicRepulsion>();
     {
-        auto pot1 = kernel->createPotentialAs<rmp::CubePotential>();
-        auto pot11 = kernel->createPotentialAs<rmp::CubePotential>();
-        auto pot2 = kernel->createPotentialAs<rmp::HarmonicRepulsion>();
-        uuid1_1 = pot1->getId();
+        kernel->getKernelContext().registerPotential(pot11.get(), "A");
+        kernel->getKernelContext().registerPotential(pot12.get(), "C");
+        kernel->getKernelContext().registerPotential(pot13.get(), "D");
+        kernel->getKernelContext().registerPotential(pot14.get(), "C");
 
-        kernel->getKernelContext().registerOrder1Potential(pot1.get(), "A");
-        kernel->getKernelContext().registerOrder1Potential(pot1.get(), "C");
-        kernel->getKernelContext().registerOrder1Potential(pot1.get(), "D");
-        kernel->getKernelContext().registerOrder1Potential(pot1.get(), "C");
+        uuid1_11 = kernel->getKernelContext().registerPotential(pot21.get(), "B");
 
-        uuid1_11 = kernel->getKernelContext().registerOrder1Potential(pot11.get(), "B");
-
-        uuid2_1 = kernel->getKernelContext().registerOrder2Potential(pot2.get(), "A", "C");
-        uuid2_2 = kernel->getKernelContext().registerOrder2Potential(pot2.get(), "B", "C");
+        uuid2_1 = kernel->getKernelContext().registerPotential(repulsion1.get(), "A", "C");
+        uuid2_2 = kernel->getKernelContext().registerPotential(repulsion2.get(), "B", "C");
         kernel->getKernelContext().configure();
-        EXPECT_EQ(pot2->getId(), uuid2_1);
-        EXPECT_EQ(pot2->getId(), uuid2_2);
     }
     // test that order 1 potentials are set up correctly
     {

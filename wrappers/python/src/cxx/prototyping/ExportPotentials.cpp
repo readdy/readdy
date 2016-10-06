@@ -61,11 +61,6 @@ public:
         PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_maximal_force", getMaximalForce, kbt);
     }
 
-    virtual PyPotentialO1 *replicate() const override {
-        return const_cast<PyPotentialO1*>(this);
-        // todo remove this whole replicate business!
-        //return new PyPotentialO1(*this);
-    }
 };
 
 class PyPotentialO2 : public rdy_pot2 {
@@ -102,11 +97,6 @@ public:
 
     virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
         PYBIND11_OVERLOAD_PURE_NAME(void, super, "configure_for_types", configureForType, type1, type2);
-    }
-
-    virtual PyPotentialO2 *replicate() const override {
-        return const_cast<PyPotentialO2*>(this);
-        //return new PyPotentialO2(*this);
     }
 
     virtual double getCutoffRadius() const override {

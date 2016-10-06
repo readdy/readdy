@@ -97,10 +97,10 @@ const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() con
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
 
-void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 const *const ptr,
+void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1* ptr,
                                          const std::string &type) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().registerOrder1Potential(ptr, type);
+    pimpl->kernel->getKernelContext().registerPotential(ptr, type);
 }
 
 void Simulation::deregisterPotential(const boost::uuids::uuid &uuid) {
@@ -113,7 +113,9 @@ Simulation::registerHarmonicRepulsionPotential(std::string particleTypeA, std::s
     ensureKernelSelected();
     auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
     ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+    auto p = ptr.get();
+    pimpl->potentials.push_back(std::move(ptr));
+    return pimpl->kernel->getKernelContext().registerPotential(p, particleTypeA, particleTypeB);
 }
 
 boost::uuids::uuid
@@ -126,7 +128,9 @@ Simulation::registerWeakInteractionPiecewiseHarmonicPotential(std::string partic
     ptr->setDesiredParticleDistance(desiredParticleDistance);
     ptr->setDepthAtDesiredDistance(depth);
     ptr->setNoInteractionDistance(noInteractionDistance);
-    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+    auto p = ptr.get();
+    pimpl->potentials.push_back(std::move(ptr));
+    return pimpl->kernel->getKernelContext().registerPotential(p, particleTypeA, particleTypeB);
 }
 
 boost::uuids::uuid
@@ -138,14 +142,9 @@ Simulation::registerBoxPotential(std::string particleType, double forceConstant,
     ptr->setExtent(extent);
     ptr->setConsiderParticleRadius(considerParticleRadius);
     ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerOrder1Potential(ptr.get(), particleType);
-}
-
-void
-Simulation::registerPotentialOrder2(model::potentials::PotentialOrder2 const *const ptr, const std::string &type1,
-                                    const std::string &type2) {
-    ensureKernelSelected();
-    pimpl->kernel->getKernelContext().registerOrder2Potential(ptr, type1, type2);
+    auto p = ptr.get();
+    pimpl->potentials.push_back(std::move(ptr));
+    return pimpl->kernel->getKernelContext().registerPotential(p, particleType);
 }
 
 void Simulation::ensureKernelSelected() const {
@@ -194,7 +193,9 @@ Simulation::registerConversionReaction(const std::string &name, const std::strin
     ensureKernelSelected();
     namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createConversionReaction(name, from, to, rate);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    auto p = reaction.get();
+    pimpl->reactionsO1.push_back(std::move(reaction));
+    return pimpl->kernel->getKernelContext().registerReaction(p);
 }
 
 const boost::uuids::uuid &
@@ -204,7 +205,9 @@ Simulation::registerEnzymaticReaction(const std::string &name, const std::string
     ensureKernelSelected();
     namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    auto p = reaction.get();
+    pimpl->reactionsO2.push_back(std::move(reaction));
+    return pimpl->kernel->getKernelContext().registerReaction(p);
 }
 
 const boost::uuids::uuid &
@@ -214,7 +217,9 @@ Simulation::registerFissionReaction(const std::string &name, const std::string &
                                     const double weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFissionReaction(name, from, to1, to2, rate, productDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    auto p = reaction.get();
+    pimpl->reactionsO1.push_back(std::move(reaction));
+    return pimpl->kernel->getKernelContext().registerReaction(p);
 }
 
 const boost::uuids::uuid &
@@ -223,14 +228,18 @@ Simulation::registerFusionReaction(const std::string &name, const std::string &f
                                    const double eductDistance, const double weight1, const double weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    auto p = reaction.get();
+    pimpl->reactionsO2.push_back(std::move(reaction));
+    return pimpl->kernel->getKernelContext().registerReaction(p);
 }
 
 const boost::uuids::uuid &
 Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const double rate) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createDecayReaction(name, particleType, rate);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    auto p = reaction.get();
+    pimpl->reactionsO1.push_back(std::move(reaction));
+    return pimpl->kernel->getKernelContext().registerReaction(p);
 }
 
 std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string type) {

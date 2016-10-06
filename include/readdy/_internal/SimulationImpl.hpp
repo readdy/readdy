@@ -1,3 +1,6 @@
+#include <readdy/model/reactions/Reaction.h>
+#include <readdy/model/potentials/Potential.h>
+
 /**
  * This file contains the gory implementation details of the Simulation.h template code and thus is separated
  * from the rest.
@@ -13,6 +16,9 @@ struct Simulation::Impl {
     std::vector<std::unique_ptr<readdy::model::ObservableBase>> foo {};
     std::unordered_map<boost::uuids::uuid, std::unique_ptr<readdy::model::ObservableBase>, boost::hash<boost::uuids::uuid>> observables {};
     std::unordered_map<boost::uuids::uuid, boost::signals2::scoped_connection, boost::hash<boost::uuids::uuid>> observableConnections {};
+    std::vector<std::unique_ptr<readdy::model::reactions::Reaction<1>>> reactionsO1 {};
+    std::vector<std::unique_ptr<readdy::model::reactions::Reaction<2>>> reactionsO2 {};
+    std::vector<std::unique_ptr<readdy::model::potentials::Potential>> potentials {};
 };
 
 

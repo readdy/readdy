@@ -46,8 +46,6 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
         return getCutoffRadius() * getCutoffRadius();
     }
 
-    virtual NOOPPotentialOrder2 *replicate() const override { return new NOOPPotentialOrder2(*this); }
-
     double cutoff, force, energy;
 };
 }
