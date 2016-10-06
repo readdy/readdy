@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 import readdy._internal.prototyping as pr
@@ -97,7 +98,8 @@ class TestModel(unittest.TestCase):
         add_particles_program.add_particle(pr.Particle(0, 0, .5, 1))
         add_particles_program.execute()
         self.ctx.configure()
-        self.progs.create_update_forces().execute()
+        updforces = self.progs.create_update_forces()
+        updforces.execute()
 
         np.testing.assert_equal(self.model.get_energy(), 5.0, err_msg="the user defined potential returns energy=5.0")
 

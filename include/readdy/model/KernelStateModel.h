@@ -22,9 +22,7 @@ namespace model {
 
 class KernelStateModel {
 public:
-    KernelStateModel();
-
-    virtual ~KernelStateModel();
+    virtual ~KernelStateModel() = default;
 
     // const accessor methods
     virtual const std::vector<Vec3> getParticlePositions() const = 0;
@@ -47,9 +45,6 @@ public:
 
     virtual double getEnergy() const = 0;
 
-    KernelStateModel(KernelStateModel &&rhs);
-
-    KernelStateModel &operator=(KernelStateModel &&rhs);
 };
 }
 }

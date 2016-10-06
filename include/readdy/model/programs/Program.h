@@ -25,12 +25,9 @@ namespace programs {
 
 class Program {
 public:
-    Program() {};
-
-    virtual void execute() = 0;
-
     virtual ~Program() = default;
 
+    virtual void execute() = 0;
 };
 
 namespace _internal {

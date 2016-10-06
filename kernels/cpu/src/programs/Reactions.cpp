@@ -11,7 +11,7 @@
 #include <future>
 #include <queue>
 
-using _rdy_particle_t = readdy::model::Particle;
+using rdy_particle_t = readdy::model::Particle;
 
 namespace readdy {
 namespace kernel {
@@ -29,7 +29,7 @@ void UncontrolledApproximation::execute() {
     const auto &dt = ctx.getTimeStep();
     auto data = kernel->getKernelStateModel().getParticleData();
     auto rnd = readdy::model::RandomProvider();
-    std::vector<_rdy_particle_t> newParticles{};
+    std::vector<rdy_particle_t> newParticles{};
     std::vector<std::function<void()>> events{};
 
     // reactions with one educt
@@ -56,14 +56,14 @@ void UncontrolledApproximation::execute() {
                             }
                             case 1: {
                                 const auto particle = (*_data)[particleIdx];
-                                _rdy_particle_t outParticle1{};
+                                rdy_particle_t outParticle1{};
                                 reaction->perform(particle, particle, outParticle1, outParticle1);
                                 newParticles.push_back(outParticle1);
                                 break;
                             }
                             case 2: {
                                 const auto particle = (*_data)[particleIdx];
-                                _rdy_particle_t outParticle1{}, outParticle2{};
+                                rdy_particle_t outParticle1{}, outParticle2{};
                                 reaction->perform(particle, particle, outParticle1, outParticle2);
                                 newParticles.push_back(outParticle1);
                                 newParticles.push_back(outParticle2);
@@ -107,13 +107,13 @@ void UncontrolledApproximation::execute() {
                             const auto inParticle2 = (*_data)[neighbor.idx];
                             switch (reaction->getNProducts()) {
                                 case 1: {
-                                    _rdy_particle_t out{};
+                                    rdy_particle_t out{};
                                     reaction->perform(inParticle1, inParticle2, out, out);
                                     newParticles.push_back(out);
                                     break;
                                 }
                                 case 2: {
-                                    _rdy_particle_t out1{}, out2{};
+                                    rdy_particle_t out1{}, out2{};
                                     reaction->perform(inParticle1, inParticle2, out1, out2);
                                     newParticles.push_back(out1);
                                     newParticles.push_back(out2);
@@ -137,7 +137,7 @@ void UncontrolledApproximation::execute() {
 
     // reposition particles to respect the periodic b.c.
     std::for_each(newParticles.begin(), newParticles.end(),
-                  [&fixPos](_rdy_particle_t &p) { fixPos(p.getPos()); });
+                  [&fixPos](rdy_particle_t &p) { fixPos(p.getPos()); });
 
     // update data structure
     data->deactivateMarked();

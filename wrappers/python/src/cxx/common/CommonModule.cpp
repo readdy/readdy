@@ -14,7 +14,7 @@
 
 namespace bpy = pybind11;
 
-using _rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
+using rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using vec = readdy::model::Vec3;
 using uuid = boost::uuids::uuid;
 

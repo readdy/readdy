@@ -9,37 +9,25 @@
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-#include <Python.h>
-#include <numpy/ndarrayobject.h>
-#include <boost/python.hpp>
-// singlecpu includes
+#include <pybind11/pybind11.h>
+
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include "KernelWrap.h"
 #include "../PyFunction.h"
 
+namespace bpy = pybind11;
 
-#if PY_MAJOR_VERSION >= 3
-int
-#else
+using rvp = bpy::return_value_policy;
 
-void
-#endif
-init_numpy() {
-    if (PyArray_API == NULL) {
-        import_array();
-    }
-}
+void exportPrograms(bpy::module &);
 
-void exportPrograms();
+void exportModelClasses(bpy::module &);
 
-void exportModelClasses();
+void exportPotentials(bpy::module &);
 
-void exportPotentials();
-
-namespace bpy = boost::python;
 namespace scpu = readdy::kernel::singlecpu;
 
-using _rdy_scpu_model_t = scpu::SingleCPUKernelStateModel;
+using rdy_scpu_model_t = scpu::SingleCPUKernelStateModel;
 using scpu_kernel_t = scpu::SingleCPUKernel;
 
 using scpu_kernel_wrap_t = scpu_kernel_t; // todo: do i need readdy::py::SingleCPUKernelWrap here?
@@ -51,26 +39,23 @@ using core_program_t = readdy::model::programs::Program;
 
 
 // module
-BOOST_PYTHON_MODULE (prototyping) {
-    init_numpy();
-    PyEval_InitThreads();
+PYBIND11_PLUGIN (prototyping) {
 
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+    bpy::module proto("prototyping", "ReaDDy prototyping python module");
 
-    bpy::docstring_options doc_options;
-    doc_options.enable_all();
+    exportPrograms(proto);
+    exportModelClasses(proto);
+    exportPotentials(proto);
 
-    exportPrograms();
-    exportModelClasses();
-    exportPotentials();
-
-    bpy::class_<scpu_kernel_wrap_t, boost::noncopyable>("SingleCPUKernel")
-            .def("get_kernel_state_model", &scpu_kernel_wrap_t::getKernelStateModel, bpy::return_internal_reference<>())
-            .def("get_kernel_context", &scpu_kernel_wrap_t::getKernelContext, bpy::return_internal_reference<>())
+    bpy::class_<scpu_kernel_wrap_t>(proto, "SingleCPUKernel")
+            .def(bpy::init<>())
+            .def("get_kernel_state_model", &scpu_kernel_wrap_t::getKernelStateModel, rvp::reference_internal)
+            .def("get_kernel_context", &scpu_kernel_wrap_t::getKernelContext, rvp::reference_internal)
             .def("get_available_potentials", &scpu_kernel_wrap_t::getAvailablePotentials)
-            .def("get_potential_factory", &scpu_kernel_wrap_t::getPotentialFactory, bpy::return_internal_reference<>())
-            .def("get_reaction_factory", &scpu_kernel_wrap_t::getReactionFactory, bpy::return_internal_reference<>())
-            .def("get_observable_factory", &scpu_kernel_wrap_t::getObservableFactory,
-                 bpy::return_internal_reference<>())
-            .def("get_program_factory", &scpu_kernel_wrap_t::getProgramFactory, bpy::return_internal_reference<>());
+            .def("get_potential_factory", &scpu_kernel_wrap_t::getPotentialFactory, rvp::reference_internal)
+            .def("get_reaction_factory", &scpu_kernel_wrap_t::getReactionFactory, rvp::reference_internal)
+            .def("get_observable_factory", &scpu_kernel_wrap_t::getObservableFactory, rvp::reference_internal)
+            .def("get_program_factory", &scpu_kernel_wrap_t::getProgramFactory, rvp::reference_internal);
+
+    return proto.ptr();
 }

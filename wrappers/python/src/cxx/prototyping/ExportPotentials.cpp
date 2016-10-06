@@ -1,7 +1,7 @@
 //
 // Created by mho on 10/08/16.
 //
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/potentials/PotentialFactory.h>
@@ -9,79 +9,89 @@
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
 #include "../PyConverters.h"
 
-namespace bpy = boost::python;
+namespace bpy = pybind11;
 namespace mpl = boost::mpl;
 namespace rpy = readdy::py;
 namespace pot = readdy::model::potentials;
 namespace spot = readdy::kernel::singlecpu::potentials;
 
-using _rdy_vec = readdy::model::Vec3;
+using rvp = bpy::return_value_policy;
 
-using _rdy_pot = pot::Potential;
-using _rdy_pot1 = pot::PotentialOrder1;
-using _rdy_pot2 = pot::PotentialOrder2;
+using rdy_vec = readdy::model::Vec3;
 
-using _rdy_pot_factory = pot::PotentialFactory;
+using rdy_pot = pot::Potential;
+using rdy_pot1 = pot::PotentialOrder1;
+using rdy_pot2 = pot::PotentialOrder2;
 
-struct PyPotentialO1 : public _rdy_pot1, bpy::wrapper<_rdy_pot1> {
-    PyPotentialO1(std::string name) : _rdy_pot1(name) {}
+using rdy_pot_factory = pot::PotentialFactory;
 
-    virtual double calculateEnergy(const _rdy_vec &position) const override {
-        return this->get_override("calculate_energy")(position);
+class PyPotentialO1 : public rdy_pot1 {
+private:
+    using super = rdy_pot1;
+public:
+
+    using super::PotentialOrder1;
+
+    virtual double calculateEnergy(const rdy_vec &position) const override {
+        PYBIND11_OVERLOAD_PURE_NAME(double, super, "calculate_energy", calculateEnergy, position);
     }
 
-    _rdy_vec internalCalculateForce(const _rdy_vec &position) const {
-        return this->get_override("calculate_force")(position);
+    virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
+        PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO1, "calculate_force", calculateForce, pos);
     }
 
-    virtual void calculateForce(_rdy_vec &force, const _rdy_vec &position) const override {
-        force += internalCalculateForce(position);
+    virtual void calculateForce(rdy_vec &force, const rdy_vec &position) const override {
+        force += calculateForceInternal(position);
     }
 
-    virtual void calculateForceAndEnergy(_rdy_vec &force, double &energy,
-                                         const _rdy_vec &position) const override {
+    virtual void calculateForceAndEnergy(rdy_vec &force, double &energy, const rdy_vec &position) const override {
         calculateForce(force, position);
         energy += calculateEnergy(position);
     }
 
     virtual void configureForType(const unsigned int type) override {
-        this->get_override("configure_for_type")(type);
+        PYBIND11_OVERLOAD_PURE_NAME(void, PyPotentialO1, "configure_for_type", configureForType, type);
     }
 
     virtual double getRelevantLengthScale() const noexcept override {
-        return this->get_override("get_relevant_length_scale")();
+        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_relevant_length_scale", getRelevantLengthScale,);
     }
 
     virtual double getMaximalForce(double kbt) const noexcept override {
-        return this->get_override("get_maximal_force")(kbt);
+        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_maximal_force", getMaximalForce, kbt);
     }
 
     virtual PyPotentialO1 *replicate() const override {
-        return new PyPotentialO1(*this);
+        return const_cast<PyPotentialO1*>(this);
+        // todo remove this whole replicate business!
+        //return new PyPotentialO1(*this);
     }
 };
 
-struct PyPotentialO2 : public _rdy_pot2, bpy::wrapper<_rdy_pot2> {
-    PyPotentialO2(std::string name) : PotentialOrder2(name) {}
+class PyPotentialO2 : public rdy_pot2 {
+    using super = rdy_pot2;
+public:
+
+    using super::PotentialOrder2;
 
     virtual double getMaximalForce(double kbt) const noexcept override {
-        return this->get_override("get_maximal_force")(kbt);
+        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_maximal_force", getMaximalForce, kbt);
     }
 
-    virtual double calculateEnergy(const _rdy_vec &x_ij) const override {
-        return this->get_override("calculate_energy")(x_ij);
+    virtual double calculateEnergy(const rdy_vec &x_ij) const override {
+        PYBIND11_OVERLOAD_PURE_NAME(double, super, "calculate_energy", calculateEnergy, x_ij);
     }
 
-    _rdy_vec internalCalculateForce(const _rdy_vec &x_ij) const {
-        return this->get_override("calculate_force")(x_ij);
+    virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
+        PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO2, "calculate_force", calculateForce, pos);
     }
 
-    virtual void calculateForce(_rdy_vec &force, const _rdy_vec &x_ij) const override {
-        force += internalCalculateForce(x_ij);
+    virtual void calculateForce(rdy_vec &force, const rdy_vec &x_ij) const override {
+        force += calculateForceInternal(x_ij);
     }
 
-    virtual void calculateForceAndEnergy(_rdy_vec &force, double &energy, const _rdy_vec &x_ij) const override {
-        force += internalCalculateForce(x_ij);
+    virtual void calculateForceAndEnergy(rdy_vec &force, double &energy, const rdy_vec &x_ij) const override {
+        calculateForce(force, x_ij);
         energy += calculateEnergy(x_ij);
     }
 
@@ -91,49 +101,49 @@ struct PyPotentialO2 : public _rdy_pot2, bpy::wrapper<_rdy_pot2> {
     }
 
     virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
-        this->get_override("configure_for_types")(type1, type2);
+        PYBIND11_OVERLOAD_PURE_NAME(void, super, "configure_for_types", configureForType, type1, type2);
     }
 
-    virtual pot::PotentialOrder2 *replicate() const override {
-        return new PyPotentialO2(*this);
+    virtual PyPotentialO2 *replicate() const override {
+        return const_cast<PyPotentialO2*>(this);
+        //return new PyPotentialO2(*this);
     }
 
     virtual double getCutoffRadius() const override {
-        return this->get_override("get_cutoff_radius")();
+        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_cutoff_radius", getCutoffRadius);
     }
 };
 
-template<std::size_t owner = 1, class bp = bpy::default_call_policies>
-using internal_ref = bpy::return_internal_reference<owner, bp>;
+void exportPotentials(bpy::module &proto) {
 
-void exportPotentials() {
+    bpy::class_<rdy_pot>(proto, "Potential");
+    bpy::class_<spot::CubePotential, rdy_pot>(proto, "CubePotential")
+            .def("get_name", &spot::CubePotential::getName);
+    bpy::class_<spot::HarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
+            .def("get_name", &spot::HarmonicRepulsion::getName);
+    bpy::class_<spot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
+            .def("get_name", &spot::WeakInteractionPiecewiseHarmonic::getName);
 
-    bpy::class_<spot::CubePotential, boost::noncopyable>("CubePotential", bpy::no_init)
-            .def("get_name", &spot::CubePotential::getName, bpy::return_value_policy<bpy::copy_const_reference>());
-    bpy::class_<spot::HarmonicRepulsion>("HarmonicRepulsion", bpy::no_init)
-            .def("get_name", &spot::HarmonicRepulsion::getName, bpy::return_value_policy<bpy::copy_const_reference>());
-    bpy::class_<spot::WeakInteractionPiecewiseHarmonic>("WeakInteractionPiecewiseHarmonic", bpy::no_init)
-            .def("get_name", &spot::WeakInteractionPiecewiseHarmonic::getName,
-                 bpy::return_value_policy<bpy::copy_const_reference>());
+    bpy::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
+            .def(bpy::init<std::string>())
+            .def("calculate_energy", &rdy_pot1::calculateEnergy)
+            .def("calculate_force", &rdy_pot1::calculateForce)
+            .def("configure_for_type", &rdy_pot1::configureForType)
+            .def("get_relevant_length_scale", &rdy_pot1::getRelevantLengthScale)
+            .def("get_maximal_force", &rdy_pot1::getMaximalForce);
+    bpy::class_<rdy_pot2, PyPotentialO2>(proto, "PotentialOrder2")
+            .def(bpy::init<std::string>())
+            .def("calculate_energy", &rdy_pot2::calculateEnergy)
+            .def("calculate_force", &rdy_pot2::calculateForce)
+            .def("configure_for_types", &rdy_pot2::configureForTypes)
+            .def("get_cutoff_radius", &rdy_pot2::getCutoffRadius)
+            .def("get_maximal_force", &rdy_pot2::getMaximalForce);
 
-    bpy::class_<PyPotentialO1, boost::noncopyable>("PotentialOrder1", bpy::init<std::string>())
-            .def("calculate_energy", bpy::pure_virtual(&_rdy_pot1::calculateEnergy))
-            .def("calculate_force", bpy::pure_virtual(&PyPotentialO1::internalCalculateForce))
-            .def("configure_for_type", bpy::pure_virtual(&_rdy_pot1::configureForType))
-            .def("get_relevant_length_scale", bpy::pure_virtual(&_rdy_pot1::getRelevantLengthScale))
-            .def("get_maximal_force", bpy::pure_virtual(&_rdy_pot1::getMaximalForce));
-    bpy::class_<PyPotentialO2, boost::noncopyable>("PotentialOrder2", bpy::init<std::string>())
-            .def("calculate_energy", bpy::pure_virtual(&_rdy_pot2::calculateEnergy))
-            .def("calculate_force", bpy::pure_virtual(&PyPotentialO2::internalCalculateForce))
-            .def("configure_for_types", bpy::pure_virtual(&_rdy_pot2::configureForTypes))
-            .def("get_cutoff_radius", bpy::pure_virtual(&_rdy_pot2::getCutoffRadius))
-            .def("get_maximal_force", bpy::pure_virtual(&_rdy_pot2::getMaximalForce));
-
-    auto f_create_cube_pot = &_rdy_pot_factory::createPotential<spot::CubePotential>;
-    auto f_create_harmonic_pot = &_rdy_pot_factory::createPotential<spot::HarmonicRepulsion>;
-    auto f_create_weak_inter_pot = &_rdy_pot_factory::createPotential<spot::WeakInteractionPiecewiseHarmonic>;
-    bpy::class_<_rdy_pot_factory>("PotentialFactory", bpy::no_init)
-            .def("create_cube_potential", rpy::adapt_unique(f_create_cube_pot))
-            .def("create_harmonic_repulsion", rpy::adapt_unique(f_create_harmonic_pot))
-            .def("create_weak_interaction", rpy::adapt_unique(f_create_weak_inter_pot));
+    auto f_create_cube_pot = &rdy_pot_factory::createPotential<spot::CubePotential>;
+    auto f_create_harmonic_pot = &rdy_pot_factory::createPotential<spot::HarmonicRepulsion>;
+    auto f_create_weak_inter_pot = &rdy_pot_factory::createPotential<spot::WeakInteractionPiecewiseHarmonic>;
+    bpy::class_<rdy_pot_factory>(proto, "PotentialFactory")
+            .def("create_cube_potential", f_create_cube_pot)
+            .def("create_harmonic_repulsion", f_create_harmonic_pot)
+            .def("create_weak_interaction", f_create_weak_inter_pot);
 }

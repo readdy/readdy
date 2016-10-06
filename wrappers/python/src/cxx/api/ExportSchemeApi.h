@@ -20,7 +20,7 @@ void exportSchemeApi(pybind11::module &module, std::string schemeName) {
     using conf = readdy::api::SchemeConfigurator<SchemeType>;
     bpy::class_<SchemeType>(module, schemeName.c_str()).def("run", &SchemeType::run);
     std::string configuratorName = "SchemeConfigurator" + schemeName;
-    bpy::class_<conf, std::shared_ptr<conf>>(module, configuratorName.c_str())
+    bpy::class_<conf>(module, configuratorName.c_str())
             .def("with_integrator",
                  [](conf &self, std::string name) -> conf & { return self.withIntegrator(name); },
                  bpy::return_value_policy::reference_internal)

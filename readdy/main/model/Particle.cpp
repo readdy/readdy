@@ -16,11 +16,11 @@ namespace model {
 Particle::Particle() : id(boost::uuids::random_generator()()), pos(0, 0, 0) {
 }
 
-bool Particle::operator==(const Particle &rhs) {
+bool Particle::operator==(const Particle &rhs) const{
     return rhs.id == id;
 }
 
-bool Particle::operator!=(const Particle &rhs) {
+bool Particle::operator!=(const Particle &rhs) const{
     return !(*this == rhs);
 }
 
