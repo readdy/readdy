@@ -123,7 +123,7 @@ TEST_P(TestObservables, TestForcesObservable) {
 
     auto harmonicRepulsion = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
     harmonicRepulsion->setForceConstant(2.);
-    kernel->getKernelContext().registerPotential(harmonicRepulsion.get(), "C", "C");
+    kernel->getKernelContext().registerPotential(std::move(harmonicRepulsion), "C", "C");
 
     auto &&nl = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();

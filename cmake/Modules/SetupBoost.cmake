@@ -59,32 +59,6 @@ IF(NOT EXISTS "${BOOST_UNZIP_OUT}/include/")
 ENDIF()
 FILE(COPY "${BOOST_UNZIP_OUT}/boost" DESTINATION "${BOOST_UNZIP_OUT}/include/boost")
 
-#[[IF (READDY_BUILD_PYTHON_WRAPPER)
-    EXECUTE_PROCESS(
-            COMMAND python "${READDY_GLOBAL_DIR}/libraries/boost/python_include_dir.py"
-            RESULT_VARIABLE Result
-            OUTPUT_VARIABLE Output
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    IF (NOT Result EQUAL "0")
-        MESSAGE(FATAL_ERROR "Failed running python_include_dir script:\n${Output}")
-    ENDIF (NOT Result EQUAL "0")
-    # set python include dir as environment variable
-    SET(ENV{PYTHON_INCLUDE_DIR} "${Output}")
-    MESSAGE(STATUS "Found python include dir \"$ENV{PYTHON_INCLUDE_DIR}\"")
-    EXECUTE_PROCESS(
-            COMMAND which python
-            RESULT_VARIABLE Result
-            OUTPUT_VARIABLE Output
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    IF (NOT Result EQUAL "0")
-        MESSAGE(FATAL_ERROR "Failed to determine the python executable's location!")
-    ENDIF(NOT Result EQUAL "0")
-    MESSAGE(STATUS "Found python executable ${Output}")
-    LIST(APPEND BOOTSTRAP_ARGS "--with-python=${Output}")
-ENDIF (READDY_BUILD_PYTHON_WRAPPER)]]
-
 # boostrap
 UNSET(b2Path CACHE)
 FIND_PROGRAM(b2Path NAMES bjam b2 PATHS ${BOOST_UNZIP_OUT} NO_DEFAULT_PATH)
@@ -96,11 +70,6 @@ IF (NOT b2Path)
     ENDIF ()
     MESSAGE(STATUS "Building b2 (bjam) with ${b2Bootstrap}")
     LIST(APPEND BOOTSTRAP_ARGS "--prefix=${CMAKE_BINARY_DIR}/out/boost")
-   #[[ IF(PYTHON_LIBRARY)
-        GET_FILENAME_COMPONENT(PYTHON_LIBRARY_PATH ${PYTHON_LIBRARY} PATH)
-        MESSAGE(STATUS "Appending libdir \"${PYTHON_LIBRARY_PATH}\" for bootstrap.")
-        LIST(APPEND BOOTSTRAP_ARGS "--libdir=${PYTHON_LIBRARY}")
-    ENDIF()]]
     IF (NOT MSVC)
         IF (CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
             LIST(APPEND BOOTSTRAP_ARGS "--with-toolset=clang")
@@ -178,9 +147,6 @@ IF (BOOST_LINK_FLAGS)
 ENDIF (BOOST_LINK_FLAGS)
 
 LIST(APPEND BOOST_MODULES "system" "filesystem" "thread" "log")
-#[[IF (READDY_BUILD_PYTHON_WRAPPER)
-    LIST(APPEND BOOST_MODULES "python")
-ENDIF (READDY_BUILD_PYTHON_WRAPPER)]]
 FOREACH (component ${BOOST_MODULES})
     LIST(APPEND B2ARGS "--with-${component}")
 ENDFOREACH (component ${BOOST_MODULES})

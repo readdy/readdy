@@ -22,18 +22,20 @@ namespace model {
 namespace potentials {
 
 class Potential {
+    static short counter;
+
     const std::string name;
     const int order;
-    boost::uuids::uuid id;
+    const short id;
 
 public:
-    Potential(const std::string &name, const int order) : name(name), order(order),
-                                                          id(boost::uuids::random_generator()()) {
-    }
+    Potential(const std::string &name, const int order) : name(name), order(order), id(counter++) { }
 
-    virtual ~Potential() {
-        // todo remove from context if its there
-    };
+    virtual ~Potential() = default;
+
+    const short getId() const {
+        return id;
+    }
 
     const std::string &getName() const {
         return name;
@@ -41,15 +43,6 @@ public:
 
     const int getOrder() const {
         return order;
-    }
-
-
-    const boost::uuids::uuid &getId() const {
-        return id;
-    }
-
-    void setId(const boost::uuids::uuid id) {
-        Potential::id = id;
     }
 
     virtual double getMaximalForce(double kbt) const noexcept = 0;

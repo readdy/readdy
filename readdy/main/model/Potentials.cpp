@@ -15,6 +15,8 @@ namespace readdy {
 namespace model {
 namespace potentials {
 
+short Potential::counter = 0;
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Potentials order 1

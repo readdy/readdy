@@ -141,10 +141,10 @@ namespace readdy {
 
         /**
          * A method that allows to remove a certain potential type.
-         * @param uuid the id of this potential
+         * @param id the id of this potential
          * @todo test this thoroughly and see if the context can handle it with its internal maps
          */
-        void deregisterPotential(const boost::uuids::uuid& uuid);
+        void deregisterPotential(const short id);
 
         //----------------------
         // Order 1 potentials
@@ -160,7 +160,7 @@ namespace readdy {
          * @return a uuid with which the potential can be removed again
          * @todo document this more thoroughly
          */
-        boost::uuids::uuid registerBoxPotential(std::string particleType, double forceConstant,
+        const short registerBoxPotential(std::string particleType, double forceConstant,
                                                 readdy::model::Vec3 origin, readdy::model::Vec3 extent,
                                                 bool considerParticleRadius);
         /**
@@ -169,7 +169,7 @@ namespace readdy {
          * @param type the type for which the potential should be registered
          * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
          */
-        void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1*, const std::string &);
+        void registerExternalPotentialOrder1(readdy::model::potentials::PotentialOrder1 *, const std::string &);
 
         //----------------------
         // Order 2 potentials
@@ -182,7 +182,7 @@ namespace readdy {
          * @return a uuid with which the potential can be removed again
          * @todo document this more thoroughly
          */
-        boost::uuids::uuid registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB,
+        const short registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB,
                                                               double forceConstant);
 
         /**
@@ -197,7 +197,7 @@ namespace readdy {
          * @return a uuid with which the potential can be removed again
          * @todo document this more thoroughly, maybe make it available as a method of only two-three of the four: forceConstant, desiredDistance, depth, noInteractionDistance?
          */
-        boost::uuids::uuid registerWeakInteractionPiecewiseHarmonicPotential(
+        const short  registerWeakInteractionPiecewiseHarmonicPotential(
                 std::string particleTypeA, std::string particleTypeB, double forceConstant,
                 double desiredParticleDistance, double depth, double noInteractionDistance);
         /**
@@ -207,11 +207,10 @@ namespace readdy {
          * @param type2 one of the two types for which this potential should be registered
          * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
          */
-        template<typename R, typename deleter = std::default_delete<R>>
-        void registerPotentialOrder2(R* ptr,
+        void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2* ptr,
                                      const std::string &type1, const std::string &type2) {
             ensureKernelSelected();
-            getSelectedKernel()->getKernelContext().registerPotential(ptr, type1, type2);
+            getSelectedKernel()->getKernelContext().registerExternalPotential(ptr, type1, type2);
         };
 
         //void registerReaction(const Reaction& reaction);
@@ -261,7 +260,7 @@ namespace readdy {
          * @return a uuid with which this reaction can be removed again
          * @todo implement removal of reactions
          */
-        const boost::uuids::uuid &registerConversionReaction(const std::string &name, const std::string &from,
+        const short registerConversionReaction(const std::string &name, const std::string &from,
                                                              const std::string &to, const double rate);
 
         /**
@@ -275,7 +274,7 @@ namespace readdy {
          * @return a uuid with which this reaction can be removed again
          * @todo implement removal of reactions
          */
-        const boost::uuids::uuid &registerEnzymaticReaction(const std::string &name, const std::string &catalyst,
+        const short registerEnzymaticReaction(const std::string &name, const std::string &catalyst,
                                                             const std::string &from, const std::string &to,
                                                             const double rate, const double eductDistance);
 
@@ -292,7 +291,7 @@ namespace readdy {
          * @return a uuid with which this reaction can be removed again
          * @todo implement removal of reactions, explain the weights better
          */
-        const boost::uuids::uuid &registerFissionReaction(const std::string &name, const std::string &from,
+        const short registerFissionReaction(const std::string &name, const std::string &from,
                                                           const std::string &to1, const std::string &to2,
                                                           const double rate, const double productDistance,
                                                           const double weight1 = 0.5, const double weight2 = 0.5);
@@ -310,7 +309,7 @@ namespace readdy {
          * @return a uuid with which this reaction can be removed again
          * @todo implement removal of reactions, explain weights better
          */
-        const boost::uuids::uuid &registerFusionReaction(const std::string &name, const std::string &from1,
+        const short registerFusionReaction(const std::string &name, const std::string &from1,
                                                          const std::string &from2, const std::string &to,
                                                          const double rate, const double eductDistance,
                                                          const double weight1 = 0.5, const double weight2 = 0.5);
@@ -323,7 +322,7 @@ namespace readdy {
          * @return a uuid with which this reaction can be removed again
          * @todo implement removal of reactions
          */
-        const boost::uuids::uuid &registerDecayReaction(const std::string &name, const std::string &particleType,
+        const short registerDecayReaction(const std::string &name, const std::string &particleType,
                                                         const double rate);
 
         void setTimeStep(const double);

@@ -22,8 +22,6 @@ namespace rpy = readdy::py;
 
 using rvp = bpy::return_value_policy;
 
-using rdy_uuid_t = boost::uuids::uuid;
-
 using rdy_ctx_t = readdy::model::KernelContext;
 using rdy_particle_t = readdy::model::Particle;
 using _rdy_vec_t = readdy::model::Vec3;
@@ -35,8 +33,8 @@ using rdy_scpu_nl_t = readdy::kernel::singlecpu::model::SingleCPUNeighborList;
 using rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
 using rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
-using _rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
-using _rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
+using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
+using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
 
 const std::function<readdy::model::Vec3(readdy::model::Vec3, readdy::model::Vec3)>
 getShortestDistanceFunWrap(rdy_ctx_t &self) {
@@ -84,32 +82,32 @@ void exportModelClasses(bpy::module &proto) {
                  (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)
             .def("set_particle_radius", &rdy_ctx_t::setParticleRadius)
             .def("register_conversion_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Conversion* r) -> const rdy_uuid_t & {
-                     return self.registerReaction(r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Conversion* r) -> const short {
+                     return self.registerExternalReaction(r);
                  }, rvp::reference_internal)
             .def("register_enzymatic_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Enzymatic* r) -> const rdy_uuid_t & {
-                     return self.registerReaction(r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Enzymatic* r) -> const short {
+                     return self.registerExternalReaction(r);
                  }, rvp::reference_internal)
             .def("register_fission_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Fission* r) -> const rdy_uuid_t & {
-                     return self.registerReaction(r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Fission* r) -> const short {
+                     return self.registerExternalReaction(r);
                  }, rvp::reference_internal)
             .def("register_fusion_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Fusion *r) -> const rdy_uuid_t & {
-                     return self.registerReaction(r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Fusion *r) -> const short {
+                     return self.registerExternalReaction(r);
                  }, rvp::reference_internal)
             .def("register_decay_reaction",
-                 [](rdy_ctx_t &self, readdy::model::reactions::Decay *r) -> const rdy_uuid_t & {
-                     return self.registerReaction(r);
+                 [](rdy_ctx_t &self, readdy::model::reactions::Decay *r) -> const short {
+                     return self.registerExternalReaction(r);
                  }, rvp::reference_internal)
             .def("register_potential_order_1",
-                 [](rdy_ctx_t &self, _rdy_pot_1 *pot, std::string type) -> const rdy_uuid_t & {
-                     return self.registerPotential(pot, type);
+                 [](rdy_ctx_t &self, rdy_pot_1 &pot, std::string type) -> const short {
+                     return self.registerExternalPotential(&pot, type);
                  }, rvp::reference_internal)
             .def("register_potential_order_2",
-                 [](rdy_ctx_t &self, _rdy_pot_2 *p, std::string t1, std::string t2) -> const rdy_uuid_t & {
-                     return self.registerPotential(p, t1, t2);
+                 [](rdy_ctx_t &self, rdy_pot_2 *p, std::string t1, std::string t2) -> const short {
+                     return self.registerExternalPotential(p, t1, t2);
                  }, rvp::reference_internal)
             .def("get_particle_type_id", &rdy_ctx_t::getParticleTypeID)
             .def("configure", &rdy_ctx_t::configure);

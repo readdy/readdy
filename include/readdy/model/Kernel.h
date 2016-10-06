@@ -182,7 +182,7 @@ public:
     }
 
     template<typename T, typename... Args>
-    const boost::uuids::uuid &registerReaction(Args &&... args) {
+    const short registerReaction(Args &&... args) {
         return getKernelContext().registerReaction(
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
     };

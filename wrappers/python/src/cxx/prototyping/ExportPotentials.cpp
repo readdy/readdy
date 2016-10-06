@@ -27,13 +27,11 @@ using rdy_pot_factory = pot::PotentialFactory;
 
 class PyPotentialO1 : public rdy_pot1 {
 private:
-    using super = rdy_pot1;
 public:
-
-    using super::PotentialOrder1;
+    using rdy_pot1::PotentialOrder1;
 
     virtual double calculateEnergy(const rdy_vec &position) const override {
-        PYBIND11_OVERLOAD_PURE_NAME(double, super, "calculate_energy", calculateEnergy, position);
+        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "calculate_energy", calculateEnergy, position);
     }
 
     virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
@@ -54,27 +52,26 @@ public:
     }
 
     virtual double getRelevantLengthScale() const noexcept override {
-        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_relevant_length_scale", getRelevantLengthScale,);
+        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_relevant_length_scale", getRelevantLengthScale,);
     }
 
     virtual double getMaximalForce(double kbt) const noexcept override {
-        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_maximal_force", getMaximalForce, kbt);
+        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
     }
 
 };
 
 class PyPotentialO2 : public rdy_pot2 {
-    using super = rdy_pot2;
 public:
 
-    using super::PotentialOrder2;
+    using rdy_pot2::PotentialOrder2;
 
     virtual double getMaximalForce(double kbt) const noexcept override {
-        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_maximal_force", getMaximalForce, kbt);
+        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "get_maximal_force", getMaximalForce, kbt);
     }
 
     virtual double calculateEnergy(const rdy_vec &x_ij) const override {
-        PYBIND11_OVERLOAD_PURE_NAME(double, super, "calculate_energy", calculateEnergy, x_ij);
+        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "calculate_energy", calculateEnergy, x_ij);
     }
 
     virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
@@ -96,11 +93,11 @@ public:
     }
 
     virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
-        PYBIND11_OVERLOAD_PURE_NAME(void, super, "configure_for_types", configureForType, type1, type2);
+        PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot2, "configure_for_types", configureForType, type1, type2);
     }
 
     virtual double getCutoffRadius() const override {
-        PYBIND11_OVERLOAD_PURE_NAME(double, super, "get_cutoff_radius", getCutoffRadius);
+        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
     }
 };
 

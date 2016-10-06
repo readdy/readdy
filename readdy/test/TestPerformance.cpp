@@ -27,6 +27,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
     kernel.getKernelContext().setPeriodicBoundary(false, false, false);
 
     std::string types[]{"A", "B", "C"};
+    std::string tup[3][2] = {{"A", "B"}, {"A", "C"}, {"B", "C"}};
     {
         double x = 1.0;
         for (auto &&t : types) {
@@ -34,33 +35,19 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
             kernel.getKernelContext().setParticleRadius(t, 1.0);
         }
     }
-    auto repulsion1 = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    auto repulsion2 = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    auto repulsion3 = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    auto box1 = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
-    auto box2 = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
-    auto box3 = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
-    std::array<readdy::model::potentials::CubePotential*, 3> boxes {{box1.get(), box2.get(), box3.get()}};
-    {
-        {
 
-            repulsion1->setForceConstant(1.0);
-            kernel.getKernelContext().registerPotential(repulsion1.get(), "A", "B");
-        }
-        {
-            repulsion2->setForceConstant(1.0);
-            kernel.getKernelContext().registerPotential(repulsion2.get(), "A", "C");
-        }
-        {
-            repulsion3->setForceConstant(1.0);
-            kernel.getKernelContext().registerPotential(repulsion3.get(), "B", "C");
-        }
+
+    for(auto i = 0; i < 3; ++i){
+        auto t = tup[i];
+        auto repulsion = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
+        repulsion->setForceConstant(1.0);
+        kernel.getKernelContext().registerPotential(std::move(repulsion), t[0], t[1]);
     }
     {
         const auto verts = kernel.getKernelContext().getBoxBoundingVertices();
         int i = 0;
         for(auto type : types) {
-            auto box = boxes[i++];
+            auto box = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
             box->setForceConstant(1.0);
             box->setOrigin(std::get<0>(verts) + readdy::model::Vec3(1, 1, 1));
             box->setExtent((std::get<1>(verts) - std::get<0>(verts)) - 2);
@@ -68,7 +55,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
         }
     }
 
-    const unsigned int nParticles = 25000;
+    const unsigned int nParticles = 50000;
     for (unsigned long _ = 0; _ < nParticles; ++_) {
         for (const auto &t : types) {
             readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),

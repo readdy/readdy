@@ -36,25 +36,18 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 
     auto harmonicRepulsion = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
     harmonicRepulsion->setForceConstant(.01);
-    kernel->getKernelContext().registerPotential(harmonicRepulsion.get(), "A", "B");
+    kernel->getKernelContext().registerPotential(std::move(harmonicRepulsion), "A", "B");
+    std::array<std::string, 2> types {{"A", "B"}};
+    for(auto t : types) {
+        auto cubePot = kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
+        cubePot->setOrigin({-1, -1, -1});
+        cubePot->setConsiderParticleRadius(true);
+        cubePot->setExtent({2, 2, 2});
+        cubePot->setForceConstant(10);
+        // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
+        kernel->getKernelContext().registerPotential(std::move(cubePot), t);
+    }
 
-    // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
-    {
-        auto cubePot = kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
-        cubePot->setOrigin({-1, -1, -1});
-        cubePot->setConsiderParticleRadius(true);
-        cubePot->setExtent({2, 2, 2});
-        cubePot->setForceConstant(10);
-        kernel->getKernelContext().registerPotential(cubePot.get(), "A");
-    }
-    {
-        auto cubePot = kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
-        cubePot->setOrigin({-1, -1, -1});
-        cubePot->setConsiderParticleRadius(true);
-        cubePot->setExtent({2, 2, 2});
-        cubePot->setForceConstant(10);
-        kernel->getKernelContext().registerPotential(cubePot.get(), "B");
-    }
     auto ppObs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
     readdy::model::Vec3 lowerBound{-2.5, -2.5, -2.5}, upperBound{2.5, 2.5, 2.5};
     ppObs->setCallback([lowerBound, upperBound](readdy::model::ParticlePositionObservable::result_t currentResult) {

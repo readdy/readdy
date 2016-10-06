@@ -29,14 +29,14 @@ template<unsigned int N_EDUCTS>
 class Reaction {
 protected:
     using rnd_ptr = std::unique_ptr<readdy::model::RandomProvider>;
-
+    static short counter;
 public:
     static constexpr unsigned int n_educts = N_EDUCTS;
 
     Reaction(const std::string &name, const double rate, const double eductDistance,
              const double productDistance, const unsigned int n_products) :
             name(name),
-            id(boost::uuids::random_generator()()),
+            id(counter++),
             rate(rate),
             eductDistance(eductDistance),
             eductDistanceSquared(eductDistance * eductDistance),
@@ -50,7 +50,7 @@ public:
         return name;
     }
 
-    const boost::uuids::uuid &getId() const {
+    const short getId() const {
         return id;
     }
 
@@ -126,7 +126,7 @@ protected:
     std::array<unsigned int, N_EDUCTS> educts;
     std::array<unsigned int, 2> products;
     const std::string name;
-    const boost::uuids::uuid id;
+    const short id;
     const double rate;
     const double eductDistance, eductDistanceSquared;
     const double productDistance;
