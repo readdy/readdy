@@ -219,9 +219,9 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
         CPUKernel const *const kernel,
         bool filterEventsInAdvance,
         std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events) {
-    using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
-    using _rdy_particle_t = readdy::model::Particle;
-    std::vector<_rdy_particle_t> newParticles{};
+    using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
+    using rdy_particle_t = readdy::model::Particle;
+    std::vector<rdy_particle_t> newParticles{};
 
     const auto &ctx = kernel->getKernelContext();
     auto rnd = std::make_unique<readdy::model::RandomProvider>();
@@ -238,7 +238,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
             const auto x = rnd->getUniform(0, alpha);
             const auto eventIt = std::lower_bound(
                     events.begin(), events.end() - nDeactivated, x,
-                    [](const _event_t &elem1, double elem2) {
+                    [](const event_t &elem1, double elem2) {
                         return elem1.cumulativeRate < elem2;
                     }
             );
@@ -252,7 +252,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
                  */
                 {
                     const auto p1 = data->operator[](event.idx1);
-                    _rdy_particle_t pOut1{}, pOut2{};
+                    rdy_particle_t pOut1{}, pOut2{};
                     if (event.nEducts == 1) {
                         auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
                         reaction->perform(p1, p1, pOut1, pOut2, rnd);

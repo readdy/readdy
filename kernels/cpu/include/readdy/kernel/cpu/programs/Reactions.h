@@ -54,8 +54,8 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
 );
 
 class Gillespie : public readdy::model::programs::reactions::Gillespie {
-    using _event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
-    using _reaction_idx_t = _event_t::index_type;
+    using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
+    using reaction_idx_t = event_t::index_type;
 
 public:
 
@@ -81,7 +81,7 @@ public:
     }
 
 protected:
-    virtual std::vector<_event_t> gatherEvents(double &alpha);
+    virtual std::vector<event_t> gatherEvents(double &alpha);
 
     CPUKernel const *const kernel;
 };

@@ -59,7 +59,7 @@ struct ReactionEvent {
 };
 
 class Gillespie : public readdy::model::programs::reactions::Gillespie {
-    using _reaction_idx_t = ReactionEvent::index_type;
+    using reaction_idx_t = ReactionEvent::index_type;
 public:
 
     Gillespie(SingleCPUKernel const *const kernel) : kernel(kernel) {};

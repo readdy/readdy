@@ -248,8 +248,8 @@ std::ostream &operator<<(std::ostream &os, const ReactionEvent &evt) {
 
 
 std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<ReactionEvent> events, double alpha) {
-    using _rdy_particle_t = readdy::model::Particle;
-    std::vector<_rdy_particle_t> newParticles{};
+    using rdy_particle_t = readdy::model::Particle;
+    std::vector<rdy_particle_t> newParticles{};
 
     const auto &ctx = kernel->getKernelContext();
     auto rnd = readdy::model::RandomProvider();
@@ -280,7 +280,7 @@ std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<Reactio
                  */
                 {
                     const auto p1 = data->operator[](event.idx1);
-                    _rdy_particle_t pOut1{}, pOut2{};
+                    rdy_particle_t pOut1{}, pOut2{};
                     if (event.nEducts == 1) {
                         auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
                         if (reaction->getNProducts() == 1) {
@@ -381,9 +381,9 @@ std::vector<ReactionEvent> Gillespie::gatherEvents(double &alpha) {
                 if (rate > 0) {
                     alpha += rate;
                     events.push_back(
-                            {1, (*it)->getNProducts(), (_reaction_idx_t) (it_type - data->begin_types()), 0, rate,
+                            {1, (*it)->getNProducts(), (reaction_idx_t) (it_type - data->begin_types()), 0, rate,
                              alpha,
-                             (_reaction_idx_t) (it - reactions.begin()), *it_type, 0});
+                             (reaction_idx_t) (it - reactions.begin()), *it_type, 0});
                 }
             }
             ++it_type;
@@ -397,7 +397,7 @@ std::vector<ReactionEvent> Gillespie::gatherEvents(double &alpha) {
         const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
         auto typesBegin = data->begin_types();
         for (auto &&nl_it = neighborList->begin(); nl_it != neighborList->end(); ++nl_it) {
-            const _reaction_idx_t idx1 = nl_it->idx1, idx2 = nl_it->idx2;
+            const reaction_idx_t idx1 = nl_it->idx1, idx2 = nl_it->idx2;
             const auto &reactions = ctx.getOrder2Reactions(
                     *(data->begin_types() + idx1), *(data->begin_types() + idx2)
             );
@@ -415,7 +415,7 @@ std::vector<ReactionEvent> Gillespie::gatherEvents(double &alpha) {
                         alpha += rate;
                         events.push_back(
                                 {2, reaction->getNProducts(), idx1, idx2, rate, alpha,
-                                 (_reaction_idx_t) (it - reactions.begin()),
+                                 (reaction_idx_t) (it - reactions.begin()),
                                  *(typesBegin + idx1), *(typesBegin + idx2)});
                     }
                 }

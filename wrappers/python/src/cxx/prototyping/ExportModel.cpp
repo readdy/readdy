@@ -24,7 +24,6 @@ using rvp = bpy::return_value_policy;
 
 using rdy_ctx_t = readdy::model::KernelContext;
 using rdy_particle_t = readdy::model::Particle;
-using _rdy_vec_t = readdy::model::Vec3;
 
 using rdy_scpu_model_t = readdy::kernel::singlecpu::SingleCPUKernelStateModel;
 using rdy_scpu_model_wrap_t = readdy::py::Model;
@@ -66,8 +65,8 @@ void exportModelClasses(bpy::module &proto) {
     bpy::class_<rdy_ctx_t>(proto, "Context")
             .def_property("kbt", &rdy_ctx_t::getKBT, &rdy_ctx_t::setKBT)
             .def_property("timestep", &rdy_ctx_t::getTimeStep, &rdy_ctx_t::setTimeStep)
-            .def_property("box_size", [](rdy_ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); },
-                          [](rdy_ctx_t &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
+            .def("get_box_size", [](rdy_ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); })
+            .def("set_box_size", [](rdy_ctx_t &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
             .def_property("periodic_boundary", &rdy_ctx_t::getPeriodicBoundary,
                           [](rdy_ctx_t &self, std::array<bool, 3> periodic) {
                               self.setPeriodicBoundary(periodic[0], periodic[1], periodic[2]);
