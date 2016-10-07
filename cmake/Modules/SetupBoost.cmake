@@ -93,14 +93,12 @@ LIST(APPEND B2ARGS
         "link=shared"
         "threading=multi"
         "runtime-link=shared"
-        "include=$ENV{PYTHON_INCLUDE_DIR}"
         "dll-path=${BOOST_UNZIP_OUT}/stage/lib"
         "--build-dir=Build"
         "-sBZIP2_LIBPATH=${BZIP2_LIBRARY_DIR}"
         "-sBZIP2_INCLUDE=${BZIP2_INCLUDE_DIR}"
         "-sZLIB_LIBPATH=${ZLIB_LIBRARY_DIR}"
         "-sZLIB_INCLUDE=${ZLIB_INCLUDE_DIRS}"
-        "--user-config=${READDY_GLOBAL_DIR}/libraries/boost/user-config.jam"
         "stage")
 
 IF (APPLE)
@@ -156,9 +154,10 @@ EXECUTE_PROCESS(
         COMMAND ${b2Path} ${B2ARGS}
         WORKING_DIRECTORY ${BOOST_UNZIP_OUT}
         RESULT_VARIABLE Result
+        OUTPUT_VARIABLE Output
 )
 IF (NOT "${Result}" EQUAL "0")
-    MESSAGE(FATAL_ERROR "Could not build boost!")
+    MESSAGE(FATAL_ERROR "Could not build boost: ${Output}")
 ENDIF (NOT "${Result}" EQUAL "0")
 SET(BOOST_INCLUDEDIR "${BOOST_UNZIP_OUT}")
 SET(BOOST_LIBRARYDIR "${BOOST_UNZIP_OUT}/stage/lib")
