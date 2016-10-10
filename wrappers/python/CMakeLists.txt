@@ -1,14 +1,5 @@
 # import python
 MESSAGE(STATUS "Python library set: ${PYTHON_LIBRARY}")
-FIND_PACKAGE(PythonInterp REQUIRED)
-FIND_PACKAGE(PythonLibs REQUIRED)
-FIND_PACKAGE(NumPy REQUIRED)
-
-IF (${PYTHON_VERSION_STRING} GREATER 3.0)
-    MESSAGE(STATUS "--------------------- Building with python 3 ---------------------")
-ELSE ()
-    MESSAGE(STATUS "--------------------- Building with python 2 ---------------------")
-ENDIF ()
 
 # set output directory variable for modules
 IF(READDY_DEBUG_PYTHON_MODULES)
