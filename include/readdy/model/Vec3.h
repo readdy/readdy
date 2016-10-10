@@ -12,11 +12,12 @@
 
 #include <array>
 #include <math.h>
+#include <readdy/common/macros.h>
 
 namespace readdy {
 namespace model {
 
-class Vec3 {
+class READDY_EXPORT Vec3 {
 public:
     Vec3();
 

@@ -13,6 +13,11 @@ namespace bpy = pybind11;
 
 using uuid = boost::uuids::uuid;
 
+/**
+ * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
+ * class to use be exported (preferably by the READDY_EXPORT macro defined in common/macros.h).
+ */
+
 // module
 PYBIND11_PLUGIN (common) {
 
