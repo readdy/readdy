@@ -182,30 +182,30 @@ public:
     }
 
     template<typename T, typename... Args>
-    const boost::uuids::uuid &registerReaction(Args &&... args) {
+    const short registerReaction(Args &&... args) {
         return getKernelContext().registerReaction(
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
     };
 
-    std::unique_ptr<reactions::Conversion>
+    std::unique_ptr<reactions::Reaction<1>>
     createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                              const double rate) const;
 
-    std::unique_ptr<reactions::Enzymatic>
+    std::unique_ptr<reactions::Reaction<2>>
     createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                             const std::string &to, const double rate, const double eductDistance) const;
 
-    std::unique_ptr<reactions::Fission>
+    std::unique_ptr<reactions::Reaction<1>>
     createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                           const std::string &to2, const double rate, const double productDistance,
                           const double weight1 = 0.5, const double weight2 = 0.5) const;
 
-    std::unique_ptr<reactions::Fusion>
+    std::unique_ptr<reactions::Reaction<2>>
     createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
                          const std::string &to, const double rate, const double eductDistance,
                          const double weight1 = 0.5, const double weight2 = 0.5) const;
 
-    std::unique_ptr<reactions::Decay>
+    std::unique_ptr<reactions::Reaction<1>>
     createDecayReaction(const std::string &name, const std::string &type, const double rate) const;
 
     virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const = 0;
@@ -223,7 +223,7 @@ protected:
 namespace detail {
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Conversion, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Conversion>
+    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createConversionReaction(std::forward<Args>(args)...);
     }
@@ -231,7 +231,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Conversion, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Enzymatic, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Enzymatic>
+    static std::unique_ptr<readdy::model::reactions::Reaction<2>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createEnzymaticReaction(std::forward<Args>(args)...);
     }
@@ -239,7 +239,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Enzymatic, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Fission, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Fission>
+    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createFissionReaction(std::forward<Args>(args)...);
     }
@@ -247,7 +247,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Fission, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Fusion, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Fusion>
+    static std::unique_ptr<readdy::model::reactions::Reaction<2>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createFusionReaction(std::forward<Args>(args)...);
     }
@@ -255,7 +255,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Fusion, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Decay, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Decay>
+    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createDecayReaction(std::forward<Args>(args)...);
     }

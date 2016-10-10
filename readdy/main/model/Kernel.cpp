@@ -105,13 +105,13 @@ unsigned int Kernel::getTypeId(const std::string &name) const {
     return getKernelContext().getTypeMapping().find(name)->second;
 }
 
-std::unique_ptr<reactions::Conversion>
+std::unique_ptr<reactions::Reaction<1>>
 Kernel::createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                  const double rate) const {
     return getReactionFactory().createReaction<reactions::Conversion>(name, getTypeId(from), getTypeId(to), rate);
 }
 
-std::unique_ptr<reactions::Fusion>
+std::unique_ptr<reactions::Reaction<2>>
 Kernel::createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
                              const std::string &to, const double rate, const double eductDistance,
                              const double weight1, const double weight2) const {
@@ -119,14 +119,14 @@ Kernel::createFusionReaction(const std::string &name, const std::string &from1, 
                                                                   getTypeId(to), rate, eductDistance, weight1, weight2);
 }
 
-std::unique_ptr<reactions::Enzymatic>
+std::unique_ptr<reactions::Reaction<2>>
 Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                                 const std::string &to, const double rate, const double eductDistance) const {
     return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeId(catalyst), getTypeId(from),
                                                                      getTypeId(to), rate, eductDistance);
 }
 
-std::unique_ptr<reactions::Fission>
+std::unique_ptr<reactions::Reaction<1>>
 Kernel::createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                               const std::string &to2, const double rate, const double productDistance,
                               const double weight1, const double weight2) const {
@@ -135,7 +135,7 @@ Kernel::createFissionReaction(const std::string &name, const std::string &from, 
                                                                    weight2);
 }
 
-std::unique_ptr<reactions::Decay>
+std::unique_ptr<reactions::Reaction<1>>
 Kernel::createDecayReaction(const std::string &name, const std::string &type, const double rate) const {
     return getReactionFactory().createReaction<reactions::Decay>(name, getTypeId(type), rate);
 }

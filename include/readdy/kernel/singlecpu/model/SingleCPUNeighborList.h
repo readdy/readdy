@@ -128,9 +128,9 @@ struct Box {
 template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
 class NotThatNaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<container> {
     using super = readdy::kernel::singlecpu::model::SingleCPUNeighborListContainer<container>;
-    using _context_t = readdy::model::KernelContext;
+    using context_t = readdy::model::KernelContext;
 public:
-    NotThatNaiveSingleCPUNeighborList(const _context_t *const context) : ctx(context) {
+    NotThatNaiveSingleCPUNeighborList(const context_t *const context) : ctx(context) {
     }
 
     virtual void create(const SingleCPUParticleData &data) override {
@@ -264,7 +264,7 @@ protected:
     }
 
 
-    const _context_t *const ctx;
+    const context_t *const ctx;
 };
 
 struct SingleCPUNeighborList : public NotThatNaiveSingleCPUNeighborList<std::vector<ParticleIndexPair>> {

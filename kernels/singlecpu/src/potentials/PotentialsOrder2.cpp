@@ -52,10 +52,6 @@ void HarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, co
 HarmonicRepulsion::HarmonicRepulsion(const readdy::model::Kernel *const kernel)
         : readdy::model::potentials::HarmonicRepulsion(kernel) {}
 
-potentials::HarmonicRepulsion *HarmonicRepulsion::replicate() const {
-    return new HarmonicRepulsion(*this);
-}
-
 double HarmonicRepulsion::getCutoffRadius() const {
     return sumOfParticleRadii;
 }
@@ -67,10 +63,6 @@ double HarmonicRepulsion::getCutoffRadiusSquared() const {
 
 WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel)
         : readdy::model::potentials::WeakInteractionPiecewiseHarmonic(kernel) {}
-
-potentials::WeakInteractionPiecewiseHarmonic *WeakInteractionPiecewiseHarmonic::replicate() const {
-    return new WeakInteractionPiecewiseHarmonic(*this);
-}
 
 double WeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Vec3 &x_ij) const {
     const auto dist = sqrt(x_ij * x_ij);

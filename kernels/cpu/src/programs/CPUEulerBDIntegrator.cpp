@@ -24,11 +24,11 @@ void CPUEulerBDIntegrator::execute() {
     const std::size_t grainSize = size / kernel->getNThreads();
 
     const auto &context = kernel->getKernelContext();
-    using _it_vec3_t = std::vector<readdy::model::Vec3>::iterator;
-    using _it_uint_t = std::vector<unsigned int>::iterator;
+    using it_vec3_t = std::vector<readdy::model::Vec3>::iterator;
+    using it_uint_t = std::vector<unsigned int>::iterator;
 
-    auto worker = [&context](_it_vec3_t pos0, _it_vec3_t posEnd, _it_vec3_t forces0,
-                             _it_uint_t types0) {
+    auto worker = [&context](it_vec3_t pos0, it_vec3_t posEnd, it_vec3_t forces0,
+                             it_uint_t types0) {
         readdy::model::RandomProvider provider;
         const auto &fixPos = context.getFixPositionFun();
         const auto &kbt = context.getKBT();

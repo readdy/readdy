@@ -25,7 +25,6 @@ namespace singlecpu {
 class SingleCPUKernelStateModel : public readdy::model::KernelStateModel {
 public:
 
-
     virtual void updateNeighborList() override;
 
     virtual void clearNeighborList() override;

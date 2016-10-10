@@ -1,51 +1,30 @@
 //
 // Created by mho on 10/08/16.
 //
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-#include <Python.h>
-#include <numpy/ndarrayobject.h>
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/operators.h>
+#include <pybind11/stl_bind.h>
 
-#include <vector>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
+#include <readdy/model/Vec3.h>
 #include <boost/uuid/uuid_io.hpp>
-#include "../PyConverters.h"
 
-#if PY_MAJOR_VERSION >= 3
-int
-#else
+namespace bpy = pybind11;
 
-void
-#endif
-init_numpy() {
-    if (PyArray_API == NULL) {
-        import_array();
-    }
-}
-
-namespace bpy = boost::python;
-
-using _rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
-using vec = readdy::model::Vec3;
 using uuid = boost::uuids::uuid;
 
-double vecBracketOperator(vec &self, unsigned int i) {
-    return self[i];
-}
+/**
+ * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
+ * class to use be exported (preferably by the READDY_EXPORT macro defined in common/macros.h).
+ */
 
 // module
-BOOST_PYTHON_MODULE (common) {
-    init_numpy();
-    PyEval_InitThreads();
+PYBIND11_PLUGIN (common) {
 
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+    bpy::module common("common", "ReaDDy common python module");
 
-    bpy::docstring_options doc_options;
-    doc_options.enable_all();
-
-    bpy::class_<vec>("Vec", bpy::init<double, double, double>())
+    bpy::class_<readdy::model::Vec3>(common, "Vec")
+            .def(bpy::init<double, double, double>())
             .def(bpy::self + bpy::self)
             .def(bpy::self - bpy::self)
             .def(double() * bpy::self)
@@ -55,15 +34,16 @@ BOOST_PYTHON_MODULE (common) {
             .def(bpy::self == bpy::self)
             .def(bpy::self != bpy::self)
             .def(bpy::self * bpy::self)
-            .def(bpy::self_ns::str(bpy::self))
-            .def("__getitem__", &vecBracketOperator);
+            .def("__repr__", [](const readdy::model::Vec3 &self) {
+                std::ostringstream stream;
+                stream << self;
+                return stream.str();
+            })
+            .def("__getitem__", [](const readdy::model::Vec3 &self, unsigned int i) {
+                return self[i];
+            });
 
-    readdy::py::std_vector_to_python_converter<double>();
-    readdy::py::std_pair_to_python_converter<std::vector<double>, std::vector<double>>();
-    bpy::class_<std::vector<unsigned long>>("Vec_ulong").def(bpy::vector_indexing_suite<std::vector<unsigned long>>());
-    bpy::class_<std::vector<_rdy_scpu_nl_box_t>>("Vec_box").def(
-            bpy::vector_indexing_suite<std::vector<_rdy_scpu_nl_box_t>>());
-    bpy::class_<std::vector<vec>>("Vecvec").def(boost::python::vector_indexing_suite<std::vector<vec>>());
-    bpy::class_<uuid>("uuid", bpy::no_init).def("__str__",
-                                                +[](const uuid &uuid) { return boost::uuids::to_string(uuid); });
+    bpy::class_<uuid>(common, "uuid").def("__str__", [](const uuid &uuid) { return boost::uuids::to_string(uuid); });
+
+    return common.ptr();
 }

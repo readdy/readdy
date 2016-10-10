@@ -10,82 +10,47 @@
 #ifndef READDY_MAIN_MODELWRAP_H
 #define READDY_MAIN_MODELWRAP_H
 
-#include <boost/python.hpp>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
-namespace bpy = boost::python;
+namespace bpy = pybind11;
 
 namespace readdy {
 namespace py {
-struct Model
-        : public readdy::kernel::singlecpu::SingleCPUKernelStateModel,
-          bpy::wrapper<readdy::kernel::singlecpu::SingleCPUKernelStateModel> {
+class Model : public readdy::kernel::singlecpu::SingleCPUKernelStateModel {
 
     using super = readdy::kernel::singlecpu::SingleCPUKernelStateModel;
+public:
 
-    Model(const model::KernelContext *context) : SingleCPUKernelStateModel(context) {}
+    using super::SingleCPUKernelStateModel;
 
     virtual void removeParticle(const readdy::model::Particle &p) override {
-        if (auto f = this->get_override("remove_particle")) f(p);
-        else super::removeParticle(p);
+        PYBIND11_OVERLOAD_NAME(void, super, "remove_particle", removeParticle, p);
     }
 
     virtual const std::vector<model::Vec3> getParticlePositions() const override {
-        if (auto f = this->get_override("get_particle_positions")) return f();
-        return super::getParticlePositions();
+        PYBIND11_OVERLOAD_NAME(const std::vector<model::Vec3>, super, "get_particle_positions", getParticlePositions,);
     }
 
     virtual double getEnergy() const override {
-        if (auto f = this->get_override("get_energy")) return f();
-        return super::getEnergy();
+        PYBIND11_OVERLOAD_NAME(double, super, "get_energy", getEnergy,);
     }
 
     virtual void increaseEnergy(double increase) override {
-        if (auto f = this->get_override("increase_energy")) f(increase);
-        else super::increaseEnergy(increase);
+        PYBIND11_OVERLOAD_NAME(void, super, "increase_energy", increaseEnergy, increase);
     }
 
     virtual kernel::singlecpu::model::SingleCPUParticleData *getParticleData() const override {
-        if (auto f = this->get_override("get_particle_data")) return f();
-        return super::getParticleData();
+        PYBIND11_OVERLOAD_NAME(kernel::singlecpu::model::SingleCPUParticleData*, super, "get_particle_data",
+                               getParticleData,);
     }
 
     virtual const readdy::kernel::singlecpu::model::SingleCPUNeighborList *getNeighborList() const override {
-        if (auto f = this->get_override("get_neighbor_list")) return f();
-        return super::getNeighborList();
+        PYBIND11_OVERLOAD_NAME(const kernel::singlecpu::model::SingleCPUNeighborList*, super, "get_neighbor_list",
+                               getNeighborList,);
     }
 
     virtual const std::vector<model::Particle> getParticles() const override {
-        if (auto f = this->get_override("get_particles")) return f();
-        return super::getParticles();
-    }
-
-    virtual void default_removeParticle(const readdy::model::Particle &p) {
-        super::removeParticle(p);
-    }
-
-    virtual const std::vector<model::Vec3> default_getParticlePositions() const {
-        return super::getParticlePositions();
-    }
-
-    virtual double default_getEnergy() const {
-        return super::getEnergy();
-    }
-
-    virtual void default_increaseEnergy(double increase) {
-        super::increaseEnergy(increase);
-    }
-
-    virtual kernel::singlecpu::model::SingleCPUParticleData *default_getParticleData() const {
-        return super::getParticleData();
-    }
-
-    virtual const kernel::singlecpu::model::SingleCPUNeighborList *default_getNeighborList() const {
-        return super::getNeighborList();
-    }
-
-    virtual const std::vector<model::Particle> default_getParticles() const {
-        return super::getParticles();
+        PYBIND11_OVERLOAD_NAME(const std::vector<model::Particle>, super, "get_particles", getParticles,);
     }
 };
 }

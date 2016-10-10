@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 import readdy._internal.prototyping as pr
@@ -19,8 +20,8 @@ class TestModel(unittest.TestCase):
         np.testing.assert_equal(self.ctx.kbt, 5.0)
 
     def test_kernel_context_box_size(self):
-        self.ctx.box_size = cmn.Vec(5, 5, 5)
-        np.testing.assert_equal(self.ctx.box_size, cmn.Vec(5, 5, 5))
+        self.ctx.set_box_size(cmn.Vec(5, 5, 5))
+        np.testing.assert_equal(self.ctx.get_box_size(), cmn.Vec(5, 5, 5))
 
     def test_kernel_context_periodic_boundary(self):
         self.ctx.periodic_boundary = [True, False, True]
@@ -31,7 +32,7 @@ class TestModel(unittest.TestCase):
         np.testing.assert_equal(self.ctx.get_diffusion_constant("A"), 13.0)
 
     def test_kernel_context_fix_position_fun(self):
-        self.ctx.box_size = cmn.Vec(1, 1, 1)
+        self.ctx.set_box_size(cmn.Vec(1, 1, 1))
         self.ctx.periodic_boundary = [True, True, True]
         fix_pos = self.ctx.get_fix_position_fun()
         v_outside = cmn.Vec(4, 4, 4)
@@ -42,7 +43,7 @@ class TestModel(unittest.TestCase):
         np.testing.assert_equal(v_inside, cmn.Vec(.1, .1, .1))
 
     def test_kernel_context_shortest_difference(self):
-        self.ctx.box_size = cmn.Vec(2, 2, 2)
+        self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
         diff = self.ctx.get_shortest_difference_fun()
         np.testing.assert_equal(diff(cmn.Vec(0, 0, 0), cmn.Vec(1, 0, 0)), cmn.Vec(1, 0, 0),
@@ -52,7 +53,7 @@ class TestModel(unittest.TestCase):
                                   "position update to (.5, 0, 0)")
 
     def test_kernel_context_dist_squared_fun(self):
-        self.ctx.box_size = cmn.Vec(2, 2, 2)
+        self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
         dist = self.ctx.get_dist_squared_fun()
         np.testing.assert_equal(dist(cmn.Vec(0, 0, 0), cmn.Vec(1, 0, 0)), 1.0)
@@ -68,7 +69,7 @@ class TestModel(unittest.TestCase):
         np.testing.assert_equal(self.ctx.timestep, 111.0)
 
     def test_potential_order_1(self):
-        self.ctx.box_size = cmn.Vec(2, 2, 2)
+        self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
         self.model.get_particle_data().clear()
         class MyPot1(pr.PotentialOrder1):
@@ -97,7 +98,8 @@ class TestModel(unittest.TestCase):
         add_particles_program.add_particle(pr.Particle(0, 0, .5, 1))
         add_particles_program.execute()
         self.ctx.configure()
-        self.progs.create_update_forces().execute()
+        updforces = self.progs.create_update_forces()
+        updforces.execute()
 
         np.testing.assert_equal(self.model.get_energy(), 5.0, err_msg="the user defined potential returns energy=5.0")
 
@@ -109,7 +111,7 @@ class TestModel(unittest.TestCase):
             next(it_forces)
 
     def test_potential_order_2(self):
-        self.ctx.box_size = cmn.Vec(2, 2, 2)
+        self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
         self.model.get_particle_data().clear()
 

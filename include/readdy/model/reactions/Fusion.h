@@ -57,10 +57,6 @@ public:
         return weight2;
     }
 
-    virtual Fusion *replicate() const override {
-        return new Fusion(*this);
-    }
-
 protected:
     double weight1, weight2;
 

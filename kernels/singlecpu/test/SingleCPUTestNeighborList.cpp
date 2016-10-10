@@ -30,9 +30,8 @@ struct NeighborListTest : ::testing::Test {
         readdy::model::KernelContext &ctx = kernel->getKernelContext();
         ctx.setDiffusionConstant("A", 1.0);
         double eductDistance = 1.2;
-        ctx.registerReaction(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
-        readdy::testing::NOOPPotentialOrder2 pot(1.1, 0., 0.);
-        ctx.registerOrder2Potential(&pot, "A", "A");
+        kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", 0., eductDistance);
+        ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>(1.1,0,0), "A", "A");
         typeIdA = ctx.getParticleTypeID("A");
         ctx.configure();
     }

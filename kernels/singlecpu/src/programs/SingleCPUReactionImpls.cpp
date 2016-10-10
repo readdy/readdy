@@ -9,7 +9,7 @@
 
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 
-using _rdy_particle_t = readdy::model::Particle;
+using rdy_particle_t = readdy::model::Particle;
 
 namespace readdy {
 namespace kernel {
@@ -28,7 +28,7 @@ void UncontrolledApproximation::execute() {
     const auto &dt = ctx.getTimeStep();
     auto data = kernel->getKernelStateModel().getParticleData();
     auto rnd = readdy::model::RandomProvider();
-    std::vector<_rdy_particle_t> newParticles{};
+    std::vector<rdy_particle_t> newParticles{};
     std::vector<std::function<void()>> events{};
 
     // reactions with one educt
@@ -60,7 +60,7 @@ void UncontrolledApproximation::execute() {
                                     );
                                 } else {
                                     const auto particle = (*_data)[particleIdx];
-                                    _rdy_particle_t outParticle1{};
+                                    rdy_particle_t outParticle1{};
                                     reaction->perform(particle, particle, outParticle1,
                                                       outParticle1);
                                     newParticles.push_back(outParticle1);
@@ -69,7 +69,7 @@ void UncontrolledApproximation::execute() {
                             }
                             case 2: {
                                 const auto particle = (*_data)[particleIdx];
-                                _rdy_particle_t outParticle1{}, outParticle2{};
+                                rdy_particle_t outParticle1{}, outParticle2{};
                                 if (mapping_12.find(reaction->getId()) != mapping_12.end()) {
                                     mapping_12[reaction->getId()](particle, outParticle1,
                                                                   outParticle2);
@@ -124,7 +124,7 @@ void UncontrolledApproximation::execute() {
                                             mapping_21[reaction->getId()](inParticle1,
                                                                           inParticle2));
                                 } else {
-                                    _rdy_particle_t outParticle1{};
+                                    rdy_particle_t outParticle1{};
                                     reaction->perform(inParticle1, inParticle2, outParticle1,
                                                       outParticle1);
                                     newParticles.push_back(outParticle1);
@@ -132,7 +132,7 @@ void UncontrolledApproximation::execute() {
                                 break;
                             }
                             case 2: {
-                                _rdy_particle_t outParticle1{}, outParticle2{};
+                                rdy_particle_t outParticle1{}, outParticle2{};
                                 if (mapping_22.find(reaction->getId()) != mapping_22.end()) {
                                     mapping_22[reaction->getId()](inParticle1, inParticle2,
                                                                   outParticle1, outParticle2);
@@ -161,7 +161,7 @@ void UncontrolledApproximation::execute() {
 
     // reposition particles to respect the periodic b.c.
     std::for_each(newParticles.begin(), newParticles.end(),
-                  [&fixPos](_rdy_particle_t &p) { fixPos(p.getPos()); });
+                  [&fixPos](rdy_particle_t &p) { fixPos(p.getPos()); });
 
     // update data structure
     data->deactivateMarked();
@@ -248,8 +248,8 @@ std::ostream &operator<<(std::ostream &os, const ReactionEvent &evt) {
 
 
 std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<ReactionEvent> events, double alpha) {
-    using _rdy_particle_t = readdy::model::Particle;
-    std::vector<_rdy_particle_t> newParticles{};
+    using rdy_particle_t = readdy::model::Particle;
+    std::vector<rdy_particle_t> newParticles{};
 
     const auto &ctx = kernel->getKernelContext();
     auto rnd = readdy::model::RandomProvider();
@@ -280,7 +280,7 @@ std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<Reactio
                  */
                 {
                     const auto p1 = data->operator[](event.idx1);
-                    _rdy_particle_t pOut1{}, pOut2{};
+                    rdy_particle_t pOut1{}, pOut2{};
                     if (event.nEducts == 1) {
                         auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
                         if (reaction->getNProducts() == 1) {
@@ -381,9 +381,9 @@ std::vector<ReactionEvent> Gillespie::gatherEvents(double &alpha) {
                 if (rate > 0) {
                     alpha += rate;
                     events.push_back(
-                            {1, (*it)->getNProducts(), (_reaction_idx_t) (it_type - data->begin_types()), 0, rate,
+                            {1, (*it)->getNProducts(), (reaction_idx_t) (it_type - data->begin_types()), 0, rate,
                              alpha,
-                             (_reaction_idx_t) (it - reactions.begin()), *it_type, 0});
+                             (reaction_idx_t) (it - reactions.begin()), *it_type, 0});
                 }
             }
             ++it_type;
@@ -397,7 +397,7 @@ std::vector<ReactionEvent> Gillespie::gatherEvents(double &alpha) {
         const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
         auto typesBegin = data->begin_types();
         for (auto &&nl_it = neighborList->begin(); nl_it != neighborList->end(); ++nl_it) {
-            const _reaction_idx_t idx1 = nl_it->idx1, idx2 = nl_it->idx2;
+            const reaction_idx_t idx1 = nl_it->idx1, idx2 = nl_it->idx2;
             const auto &reactions = ctx.getOrder2Reactions(
                     *(data->begin_types() + idx1), *(data->begin_types() + idx2)
             );
@@ -415,7 +415,7 @@ std::vector<ReactionEvent> Gillespie::gatherEvents(double &alpha) {
                         alpha += rate;
                         events.push_back(
                                 {2, reaction->getNProducts(), idx1, idx2, rate, alpha,
-                                 (_reaction_idx_t) (it - reactions.begin()),
+                                 (reaction_idx_t) (it - reactions.begin()),
                                  *(typesBegin + idx1), *(typesBegin + idx2)});
                     }
                 }

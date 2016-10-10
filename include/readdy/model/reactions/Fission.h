@@ -57,13 +57,8 @@ public:
         return weight2;
     }
 
-    virtual Fission *replicate() const override {
-        return new Fission(*this);
-    }
-
 protected:
     double weight1, weight2;
-
 
 };
 }

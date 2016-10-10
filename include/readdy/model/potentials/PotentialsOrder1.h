@@ -24,8 +24,6 @@ class CubePotential : public PotentialOrder1 {
 public:
     CubePotential(const Kernel *const kernel);
 
-    virtual CubePotential *replicate() const override = 0;
-
     virtual void configureForType(const unsigned int type) override;
 
     const Vec3 &getOrigin() const;

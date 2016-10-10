@@ -35,10 +35,10 @@ public:
 
 protected:
     SingleCPUKernel const *const kernel;
-    std::unordered_map<boost::uuids::uuid, reaction_11, boost::hash<boost::uuids::uuid>> mapping_11{};
-    std::unordered_map<boost::uuids::uuid, reaction_12, boost::hash<boost::uuids::uuid>> mapping_12{};
-    std::unordered_map<boost::uuids::uuid, reaction_21, boost::hash<boost::uuids::uuid>> mapping_21{};
-    std::unordered_map<boost::uuids::uuid, reaction_22, boost::hash<boost::uuids::uuid>> mapping_22{};
+    std::unordered_map<short, reaction_11> mapping_11{};
+    std::unordered_map<short, reaction_12> mapping_12{};
+    std::unordered_map<short, reaction_21> mapping_21{};
+    std::unordered_map<short, reaction_22> mapping_22{};
 };
 
 struct ReactionEvent {
@@ -59,7 +59,7 @@ struct ReactionEvent {
 };
 
 class Gillespie : public readdy::model::programs::reactions::Gillespie {
-    using _reaction_idx_t = ReactionEvent::index_type;
+    using reaction_idx_t = ReactionEvent::index_type;
 public:
 
     Gillespie(SingleCPUKernel const *const kernel) : kernel(kernel) {};

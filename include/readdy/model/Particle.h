@@ -43,9 +43,9 @@ public:
 
     virtual ~Particle();
 
-    bool operator==(const Particle &rhs);
+    bool operator==(const Particle &rhs) const;
 
-    bool operator!=(const Particle &rhs);
+    bool operator!=(const Particle &rhs) const;
 
     friend std::ostream &operator<<(std::ostream &, const Particle &);
 

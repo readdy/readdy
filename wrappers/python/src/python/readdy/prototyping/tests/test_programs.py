@@ -10,9 +10,7 @@ class TestPrograms(unittest.TestCase):
     def test_custom_state_model(self):
         class CustomStateModel(pr.Model):
             def get_particle_positions(self):
-                result = cmn.Vecvec()
-                result.append(cmn.Vec(-1, -1, -1))
-                return result
+                return [cmn.Vec(-1, -1, -1)]
 
         class CustomKernel(pr.SingleCPUKernel):
             def __init__(self):

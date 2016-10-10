@@ -97,26 +97,26 @@ const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() con
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
 
-void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 const *const ptr,
-                                         const std::string &type) {
+void Simulation::registerExternalPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr,
+                                                 const std::string &type) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().registerOrder1Potential(ptr, type);
+    pimpl->kernel->getKernelContext().registerExternalPotential(ptr, type);
 }
 
-void Simulation::deregisterPotential(const boost::uuids::uuid &uuid) {
+void Simulation::deregisterPotential(const short uuid) {
     pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };
 
-boost::uuids::uuid
+const short
 Simulation::registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB,
                                                double forceConstant) {
     ensureKernelSelected();
     auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
     ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleTypeA, particleTypeB);
 }
 
-boost::uuids::uuid
+const short
 Simulation::registerWeakInteractionPiecewiseHarmonicPotential(std::string particleTypeA, std::string particleTypeB,
                                                               double forceConstant, double desiredParticleDistance,
                                                               double depth, double noInteractionDistance) {
@@ -126,10 +126,10 @@ Simulation::registerWeakInteractionPiecewiseHarmonicPotential(std::string partic
     ptr->setDesiredParticleDistance(desiredParticleDistance);
     ptr->setDepthAtDesiredDistance(depth);
     ptr->setNoInteractionDistance(noInteractionDistance);
-    return pimpl->kernel->getKernelContext().registerOrder2Potential(ptr.get(), particleTypeA, particleTypeB);
+    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleTypeA, particleTypeB);
 }
 
-boost::uuids::uuid
+const short
 Simulation::registerBoxPotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin,
                                  readdy::model::Vec3 extent, bool considerParticleRadius) {
     ensureKernelSelected();
@@ -138,14 +138,7 @@ Simulation::registerBoxPotential(std::string particleType, double forceConstant,
     ptr->setExtent(extent);
     ptr->setConsiderParticleRadius(considerParticleRadius);
     ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerOrder1Potential(ptr.get(), particleType);
-}
-
-void
-Simulation::registerPotentialOrder2(model::potentials::PotentialOrder2 const *const ptr, const std::string &type1,
-                                    const std::string &type2) {
-    ensureKernelSelected();
-    pimpl->kernel->getKernelContext().registerOrder2Potential(ptr, type1, type2);
+    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
 }
 
 void Simulation::ensureKernelSelected() const {
@@ -188,7 +181,7 @@ Simulation::Simulation(Simulation &&rhs) = default;
 
 Simulation::~Simulation() = default;
 
-const boost::uuids::uuid &
+const short
 Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                        const double rate) {
     ensureKernelSelected();
@@ -197,7 +190,7 @@ Simulation::registerConversionReaction(const std::string &name, const std::strin
     return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
 }
 
-const boost::uuids::uuid &
+const short
 Simulation::registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                                       const std::string &to, const double rate,
                                       const double eductDistance) {
@@ -207,7 +200,7 @@ Simulation::registerEnzymaticReaction(const std::string &name, const std::string
     return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
 }
 
-const boost::uuids::uuid &
+const short
 Simulation::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                                     const std::string &to2,
                                     const double rate, const double productDistance, const double weight1,
@@ -217,7 +210,7 @@ Simulation::registerFissionReaction(const std::string &name, const std::string &
     return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
 }
 
-const boost::uuids::uuid &
+const short
 Simulation::registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
                                    const std::string &to, const double rate,
                                    const double eductDistance, const double weight1, const double weight2) {
@@ -226,7 +219,7 @@ Simulation::registerFusionReaction(const std::string &name, const std::string &f
     return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
 }
 
-const boost::uuids::uuid &
+const short
 Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const double rate) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createDecayReaction(name, particleType, rate);
@@ -248,9 +241,9 @@ std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string ty
 double Simulation::getRecommendedTimeStep(unsigned int N) const {
     double tau_R = 0;
 
-    readdy::kernel::singlecpu::SingleCPUKernel k;
+    auto &context = pimpl->kernel->getKernelContext();
+    context.configure();
 
-    const auto &context = pimpl->kernel->getKernelContext();
     double kbt = context.getKBT();
     double kReactionMax = 0;
 

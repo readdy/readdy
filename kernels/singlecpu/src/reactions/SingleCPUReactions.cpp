@@ -10,26 +10,21 @@
 #include <readdy/model/Particle.h>
 #include <readdy/kernel/singlecpu/reactions/SingleCPUReactions.h>
 
-using _rdy_particle_t = readdy::model::Particle;
+using rdy_particle_t = readdy::model::Particle;
 
 namespace readdy {
 namespace kernel {
 namespace singlecpu {
 namespace reactions {
-void Conversion::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out,
-                         _rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
+void Conversion::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, rdy_particle_t &p1_out,
+                         rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
     p1_out.setPos(p1_in.getPos());
     p1_out.setType(getTypeTo());
     p1_out.setId(p1_in.getId());
 }
 
-Conversion *Conversion::replicate() const {
-    return new Conversion(*this);
-}
-
-
-void Enzymatic::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out,
-                        _rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
+void Enzymatic::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, rdy_particle_t &p1_out,
+                        rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
     if (p1_in.getType() == getCatalyst()) {
         // p1 is the catalyst
         p1_out.setType(getCatalyst());
@@ -47,12 +42,8 @@ void Enzymatic::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_
     }
 }
 
-Enzymatic *Enzymatic::replicate() const {
-    return new Enzymatic(*this);
-}
-
-void Fission::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out,
-                      _rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
+void Fission::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, rdy_particle_t &p1_out,
+                      rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
     // as long as the orientation is uniform, it does not matter of which type p1_in and p2_in are.
     auto n3 = rnd->getNormal3();
     n3 /= sqrt(n3 * n3);
@@ -63,12 +54,8 @@ void Fission::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in
     p2_out.setPos(p1_in.getPos() - getWeight2() * getProductDistance() * n3);
 }
 
-Fission *Fission::replicate() const {
-    return new Fission(*this);
-}
-
-void Fusion::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in, _rdy_particle_t &p1_out,
-                     _rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
+void Fusion::perform(const rdy_particle_t &p1_in, const rdy_particle_t &p2_in, rdy_particle_t &p1_out,
+                     rdy_particle_t &p2_out, const rnd_ptr &rnd) const {
     p1_out.setType(getTo());
     if (getFrom1() == p1_in.getType()) {
         p1_out.setPos(p1_in.getPos() + getWeight1() * (p2_in.getPos() - p1_in.getPos()));
@@ -77,9 +64,6 @@ void Fusion::perform(const _rdy_particle_t &p1_in, const _rdy_particle_t &p2_in,
     }
 }
 
-Fusion *Fusion::replicate() const {
-    return new Fusion(*this);
-}
 }
 }
 }

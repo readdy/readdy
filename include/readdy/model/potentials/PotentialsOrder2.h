@@ -25,8 +25,6 @@ class HarmonicRepulsion : public PotentialOrder2 {
 public:
     HarmonicRepulsion(const Kernel *const kernel);
 
-    virtual HarmonicRepulsion *replicate() const override = 0;
-
     double getSumOfParticleRadii() const;
 
     double getSumOfParticleRadiiSquared() const;
@@ -51,8 +49,6 @@ class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
 
 public:
     WeakInteractionPiecewiseHarmonic(const Kernel *const kernel);
-
-    virtual WeakInteractionPiecewiseHarmonic *replicate() const override = 0;
 
     virtual void configureForTypes(unsigned int type1, unsigned int type2) override;
 

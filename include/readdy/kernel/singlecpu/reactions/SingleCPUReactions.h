@@ -32,8 +32,6 @@ public:
     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                          readdy::model::Particle &p1_out,
                          readdy::model::Particle &p2_out, const rnd_ptr &rnd) const override;
-
-    virtual Conversion *replicate() const override;
 };
 
 class Enzymatic : public readdy::model::reactions::Enzymatic {
@@ -46,8 +44,6 @@ public:
     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                          readdy::model::Particle &p1_out,
                          readdy::model::Particle &p2_out, const rnd_ptr &rnd) const override;
-
-    virtual Enzymatic *replicate() const override;
 };
 
 class Fission : public readdy::model::reactions::Fission {
@@ -61,8 +57,6 @@ public:
     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                          readdy::model::Particle &p1_out,
                          readdy::model::Particle &p2_out, const rnd_ptr &rnd) const override;
-
-    virtual Fission *replicate() const override;
 
     Fission(const Fission &rhs)
             : Fission(rhs.name, rhs.educts[0], rhs.products[0], rhs.products[1],
@@ -83,8 +77,6 @@ public:
     virtual void perform(const readdy::model::Particle &p1_in, const readdy::model::Particle &p2_in,
                          readdy::model::Particle &p1_out,
                          readdy::model::Particle &p2_out, const rnd_ptr &rnd) const override;
-
-    virtual Fusion *replicate() const override;
 
 };
 

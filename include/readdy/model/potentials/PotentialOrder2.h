@@ -32,8 +32,6 @@ public:
 
     virtual void configureForTypes(unsigned int type1, unsigned int type2) {}
 
-    virtual PotentialOrder2 *replicate() const override = 0;
-
     virtual double getCutoffRadius() const = 0;
 
     virtual double getCutoffRadiusSquared() const = 0;

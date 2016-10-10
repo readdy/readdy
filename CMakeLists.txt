@@ -254,6 +254,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
     IF (READDY_BUILD_PYTHON_WRAPPER)
+        ADD_SUBDIRECTORY(libraries/pybind11)
         ADD_SUBDIRECTORY(wrappers)
     ENDIF (READDY_BUILD_PYTHON_WRAPPER)
 

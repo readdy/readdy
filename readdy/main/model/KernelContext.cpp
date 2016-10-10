@@ -22,11 +22,6 @@ struct KernelContext::Impl {
     std::unordered_map<uint, double> diffusionConstants{};
     std::unordered_map<uint, double> particleRadii{};
 
-    std::unordered_map<unsigned int, std::vector<potentials::PotentialOrder1 *>> potentialO1Registry{};
-    std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher> potentialO2Registry{};
-    std::unordered_map<unsigned int, std::vector<std::unique_ptr<potentials::PotentialOrder1>>> internalPotentialO1Registry{};
-    std::unordered_map<readdy::util::ParticleTypePair, std::vector<std::unique_ptr<potentials::PotentialOrder2>>, readdy::util::ParticleTypePairHasher> internalPotentialO2Registry{};
-
     double timeStep;
 
     std::function<void(Vec3 &)> fixPositionFun = [](
@@ -217,23 +212,6 @@ unsigned int KernelContext::getOrCreateTypeId(const std::string &particleType) {
     return t_id;
 }
 
-const boost::uuids::uuid &
-KernelContext::registerOrder2Potential(potentials::PotentialOrder2 const *const potential,
-                                       const std::string &type1, const std::string &type2) {
-    // wlog: type1 <= type2
-    auto type1Id = pimpl->typeMapping[type1];
-    auto type2Id = pimpl->typeMapping[type2];
-    readdy::util::ParticleTypePair pp{type1Id, type2Id};
-    if (pimpl->internalPotentialO2Registry.find(pp) == pimpl->internalPotentialO2Registry.end()) {
-        pimpl->internalPotentialO2Registry.emplace(pp,
-                                                   std::vector<std::unique_ptr<potentials::PotentialOrder2>>());
-    }
-    auto pot = potential->replicate();
-    pot->configureForTypes(type1Id, type2Id);
-    pimpl->internalPotentialO2Registry[pp].push_back(std::unique_ptr<potentials::PotentialOrder2>(pot));
-    return pimpl->internalPotentialO2Registry[pp].back()->getId();
-}
-
 const std::vector<potentials::PotentialOrder2 *> &
 KernelContext::getOrder2Potentials(const std::string &type1, const std::string &type2) const {
     return getOrder2Potentials(pimpl->typeMapping[type1], pimpl->typeMapping[type2]);
@@ -241,32 +219,18 @@ KernelContext::getOrder2Potentials(const std::string &type1, const std::string &
 
 const std::vector<potentials::PotentialOrder2 *> &
 KernelContext::getOrder2Potentials(const unsigned int type1, const unsigned int type2) const {
-    return readdy::util::collections::getOrDefault(pimpl->potentialO2Registry, {type1, type2},
+    return readdy::util::collections::getOrDefault(*potentialO2Registry, {type1, type2},
                                                    pimpl->defaultPotentialsO2);
 }
 
 std::vector<std::tuple<unsigned int, unsigned int>>
 KernelContext::getAllOrder2RegisteredPotentialTypes() const {
     std::vector<std::tuple<unsigned int, unsigned int>> result{};
-    for (auto it = pimpl->internalPotentialO2Registry.begin();
-         it != pimpl->internalPotentialO2Registry.end(); ++it) {
+    for (auto it = potentialO2Registry->begin();
+         it != potentialO2Registry->end(); ++it) {
         result.push_back(std::make_tuple(it->first.t1, it->first.t2));
     }
     return result;
-}
-
-const boost::uuids::uuid &
-KernelContext::registerOrder1Potential(potentials::PotentialOrder1 const *const potential,
-                                       const std::string &type) {
-    auto typeId = pimpl->typeMapping[type];
-    if (pimpl->internalPotentialO1Registry.find(typeId) == pimpl->internalPotentialO1Registry.end()) {
-        pimpl->internalPotentialO1Registry.insert(
-                std::make_pair(typeId, std::vector<std::unique_ptr<potentials::PotentialOrder1>>()));
-    }
-    auto ptr = potential->replicate();
-    ptr->configureForType(typeId);
-    pimpl->internalPotentialO1Registry[typeId].push_back(std::unique_ptr<potentials::PotentialOrder1>(ptr));
-    return pimpl->internalPotentialO1Registry[typeId].back()->getId();
 }
 
 std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(const std::string &type) const {
@@ -274,32 +238,46 @@ std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(co
 }
 
 std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(const unsigned int type) const {
-    return readdy::util::collections::getOrDefault(pimpl->potentialO1Registry, type, pimpl->defaultPotentialsO1);
+    return readdy::util::collections::getOrDefault(*potentialO1Registry, type, pimpl->defaultPotentialsO1);
 }
 
 std::unordered_set<unsigned int> KernelContext::getAllOrder1RegisteredPotentialTypes() const {
     std::unordered_set<unsigned int> result{};
-    for (auto it = pimpl->internalPotentialO1Registry.begin();
-         it != pimpl->internalPotentialO1Registry.end(); ++it) {
+    for (auto it = potentialO1RegistryInternal->begin();
+         it != potentialO1RegistryInternal->end(); ++it) {
         result.insert(it->first);
     }
     return result;
 }
 
-void KernelContext::deregisterPotential(const boost::uuids::uuid &potential) {
-    const auto deleterO1 = [&potential](std::unique_ptr<potentials::PotentialOrder1> const &p) -> bool {
-        return potential == p->getId();
-    };
-    const auto deleterO2 = [&potential](std::unique_ptr<potentials::PotentialOrder2> const &p) -> bool {
-        return potential == p->getId();
-    };
-    for (auto it = pimpl->internalPotentialO1Registry.begin();
-         it != pimpl->internalPotentialO1Registry.end(); ++it) {
-        it->second.erase(std::remove_if(it->second.begin(), it->second.end(), deleterO1), it->second.end());
+void KernelContext::deregisterPotential(const short potential) {
+    for (auto it = potentialO1RegistryInternal->begin(); it != potentialO1RegistryInternal->end(); ++it) {
+        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+                                        [&potential](const std::unique_ptr<potentials::PotentialOrder1> &p) -> bool {
+                                            return potential == p->getId();
+                                        }
+        ), it->second.end());
     }
-    for (auto it = pimpl->internalPotentialO2Registry.begin();
-         it != pimpl->internalPotentialO2Registry.end(); ++it) {
-        it->second.erase(std::remove_if(it->second.begin(), it->second.end(), deleterO2), it->second.end());
+    for (auto it = potentialO2RegistryInternal->begin(); it != potentialO2RegistryInternal->end(); ++it) {
+        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+                                        [&potential](const std::unique_ptr<potentials::PotentialOrder2> &p) -> bool {
+                                            return potential == p->getId();
+                                        }
+        ), it->second.end());
+    }
+    for (auto it = potentialO1RegistryExternal->begin(); it != potentialO1RegistryExternal->end(); ++it) {
+        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+                                        [&potential](potentials::PotentialOrder1* p) -> bool {
+                                            return potential == p->getId();
+                                        }
+        ), it->second.end());
+    }
+    for (auto it = potentialO2RegistryExternal->begin(); it != potentialO2RegistryExternal->end(); ++it) {
+        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+                                        [&potential](potentials::PotentialOrder2* p) -> bool {
+                                            return potential == p->getId();
+                                        }
+        ), it->second.end());
     }
 }
 
@@ -324,18 +302,18 @@ KernelContext::getOrder2Reactions(const unsigned int type1, const unsigned int t
 
 const std::vector<const reactions::Reaction<1> *> KernelContext::getAllOrder1Reactions() const {
     auto result = std::vector<const reactions::Reaction<1> *>();
-    for (const auto &mapEntry : *internalReactionOneEductRegistry) {
+    for (const auto &mapEntry : *reactionOneEductRegistry) {
         for (const auto &reaction : mapEntry.second) {
-            result.push_back(reaction.get());
+            result.push_back(reaction);
         }
     }
     return result;
 }
 
 const reactions::Reaction<1> *const KernelContext::getReactionOrder1WithName(const std::string &name) const {
-    for (const auto &mapEntry : *internalReactionOneEductRegistry) {
+    for (const auto &mapEntry : *reactionOneEductRegistry) {
         for (const auto &reaction : mapEntry.second) {
-            if (reaction->getName() == name) return reaction.get();
+            if (reaction->getName() == name) return reaction;
         }
     }
 
@@ -344,18 +322,18 @@ const reactions::Reaction<1> *const KernelContext::getReactionOrder1WithName(con
 
 const std::vector<const reactions::Reaction<2> *> KernelContext::getAllOrder2Reactions() const {
     auto result = std::vector<const reactions::Reaction<2> *>();
-    for (const auto &mapEntry : *internalReactionTwoEductsRegistry) {
+    for (const auto &mapEntry : *reactionTwoEductsRegistry) {
         for (const auto &reaction : mapEntry.second) {
-            result.push_back(reaction.get());
+            result.push_back(reaction);
         }
     }
     return result;
 }
 
 const reactions::Reaction<2> *const KernelContext::getReactionOrder2WithName(const std::string &name) const {
-    for (const auto &mapEntry : *internalReactionTwoEductsRegistry) {
+    for (const auto &mapEntry : *reactionTwoEductsRegistry) {
         for (const auto &reaction : mapEntry.second) {
-            if (reaction->getName() == name) return reaction.get();
+            if (reaction->getName() == name) return reaction;
         }
     }
     return nullptr;
@@ -374,44 +352,45 @@ const std::function<Vec3(const Vec3 &, const Vec3 &)> &KernelContext::getShortes
 }
 
 void KernelContext::configure() {
-    pimpl->potentialO1Registry.clear();
-    pimpl->potentialO2Registry.clear();
+    namespace coll = readdy::util::collections;
+    using pair = util::ParticleTypePair;
+    using pot1 = potentials::PotentialOrder1;
+    using pot1_ptr = std::unique_ptr<potentials::PotentialOrder1>;
+    using pot2_ptr = std::unique_ptr<potentials::PotentialOrder2>;
+    using pot2 = potentials::PotentialOrder2;
+    using reaction1ptr = std::unique_ptr<reactions::Reaction<1>>;
+    using reaction2ptr = std::unique_ptr<reactions::Reaction<2>>;
+
+    potentialO1Registry->clear();
+    potentialO2Registry->clear();
     reactionOneEductRegistry->clear();
     reactionTwoEductsRegistry->clear();
-    for (auto &&e : pimpl->internalPotentialO1Registry) {
-        pimpl->potentialO1Registry[e.first] = std::vector<readdy::model::potentials::PotentialOrder1 *>();
-        pimpl->potentialO1Registry[e.first].reserve(e.second.size());
-        for (auto &&pot : e.second) {
-            pot->configureForType(e.first);
-            pimpl->potentialO1Registry[e.first].push_back(pot.get());
-        }
-    }
-    for (auto &&e : pimpl->internalPotentialO2Registry) {
-        pimpl->potentialO2Registry[e.first] = std::vector<readdy::model::potentials::PotentialOrder2 *>();
-        pimpl->potentialO2Registry[e.first].reserve(e.second.size());
-        for (auto &&pot : e.second) {
-            pot->configureForTypes(e.first.t1, e.first.t2);
-            pimpl->potentialO2Registry[e.first].push_back(pot.get());
-        }
-    }
-    for (auto &&e : *internalReactionOneEductRegistry) {
-        (*reactionOneEductRegistry)[e.first] = std::vector<reactions::Reaction<1> *>();
-        (*reactionOneEductRegistry)[e.first].reserve(e.second.size());
-        std::for_each(e.second.begin(), e.second.end(),
-                      [this, &e](const std::unique_ptr<reactions::Reaction<1>> &ptr) {
-                          (*reactionOneEductRegistry)[e.first].push_back(ptr.get());
-                      }
-        );
-    }
-    for (auto &&e : *internalReactionTwoEductsRegistry) {
-        (*reactionTwoEductsRegistry)[e.first] = std::vector<reactions::Reaction<2> *>();
-        (*reactionTwoEductsRegistry)[e.first].reserve(e.second.size());
-        std::for_each(e.second.begin(), e.second.end(),
-                      [this, &e](const std::unique_ptr<reactions::Reaction<2>> &ptr) {
-                          (*reactionTwoEductsRegistry)[e.first].push_back(ptr.get());
-                      }
-        );
-    }
+
+    coll::for_each_value(*potentialO1RegistryInternal, [&](const unsigned int type, const pot1_ptr& ptr) {
+        ptr->configureForType(type); (*potentialO1Registry)[type].push_back(ptr.get());
+    });
+    coll::for_each_value(*potentialO2RegistryInternal, [&](const pair& type, const pot2_ptr& ptr) {
+        ptr->configureForTypes(type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr.get());
+    });
+    coll::for_each_value(*potentialO1RegistryExternal, [&](const unsigned int type, pot1* ptr) {
+        ptr->configureForType(type); (*potentialO1Registry)[type].push_back(ptr);
+    });
+    coll::for_each_value(*potentialO2RegistryExternal, [&](const pair& type, pot2* ptr) {
+        ptr->configureForTypes(type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr);
+    });
+    coll::for_each_value(*reactionOneEductRegistryInternal, [&](const unsigned int type, const reaction1ptr& ptr) {
+        (*reactionOneEductRegistry)[type].push_back(ptr.get());
+    });
+    coll::for_each_value(*reactionTwoEductsRegistryInternal, [&](const pair& type, const reaction2ptr& r) {
+        (*reactionTwoEductsRegistry)[type].push_back(r.get());
+    });
+    coll::for_each_value(*reactionOneEductRegistryExternal, [&](const unsigned int type, reactions::Reaction<1>* ptr) {
+        (*reactionOneEductRegistry)[type].push_back(ptr);
+    });
+    coll::for_each_value(*reactionTwoEductsRegistryExternal, [&](const pair& type, reactions::Reaction<2>* r) {
+        (*reactionTwoEductsRegistry)[type].push_back(r);
+    });
+
 }
 
 std::vector<unsigned int> KernelContext::getAllRegisteredParticleTypes() const {
@@ -431,12 +410,12 @@ std::string KernelContext::getParticleName(unsigned int id) const {
 
 const std::unordered_map<unsigned int, std::vector<potentials::PotentialOrder1 *>>
 KernelContext::getAllOrder1Potentials() const {
-    return pimpl->potentialO1Registry;
+    return *potentialO1Registry;
 }
 
 const std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher>
 KernelContext::getAllOrder2Potentials() const {
-    return pimpl->potentialO2Registry;
+    return *potentialO2Registry;
 }
 
 const KernelContext::rdy_type_mapping &KernelContext::getTypeMapping() const {

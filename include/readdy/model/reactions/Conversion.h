@@ -34,9 +34,6 @@ public:
         return products[0];
     }
 
-    virtual Conversion *replicate() const override {
-        return new Conversion(*this);
-    }
 };
 }
 }

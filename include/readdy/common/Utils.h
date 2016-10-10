@@ -47,6 +47,15 @@ inline const V &getOrDefault(const C<K, V, Args...> &m, const K &key, const V &d
     }
     return it->second;
 }
+
+template<typename Collection, typename Fun>
+inline void for_each_value(const Collection& collection, Fun f)  {
+    for(auto&& e : collection) {
+        for(auto&& inner : e.second) {
+            f(e.first, inner);
+        }
+    }
+}
 }
 
 }

@@ -1,3 +1,6 @@
+#include <readdy/model/reactions/Reaction.h>
+#include <readdy/model/potentials/Potential.h>
+
 /**
  * This file contains the gory implementation details of the Simulation.h template code and thus is separated
  * from the rest.

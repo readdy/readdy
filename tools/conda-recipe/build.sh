@@ -1,11 +1,6 @@
 #!/bin/bash
 
-#########################################################
-#                                                       #
-# fix dylib rpaths, gracefully taken from               #
-# https://github.com/minrk/patch-conda-rpaths           #
-#                                                       #
-#########################################################
+unset MACOSX_DEPLOYMENT_TARGET
 
 #########################################################
 #                                                       #
@@ -31,26 +26,6 @@ CMAKE_FLAGS+=" -DREADDY_INSTALL_UNIT_TEST_EXECUTABLE:BOOL=ON"
 # hdf5 flags
 CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIR=$PREFIX/include"
 
-# attempt to feed the right python library to
-# FindPythonLibs (weird behavior of cmake's find module)
-lib_path=""
-if [ `uname` == Darwin ]; then
-    if [ ${PY3K} -eq 1 ]; then
-        cd ${PREFIX}/lib
-        ln -s libpython${PY_VER}m.dylib libpython${PY_VER}.dylib
-        cd -
-    fi
-    lib_path="$PREFIX/lib/libpython${PY_VER}.dylib"
-fi
-if [ `uname` == Linux ]; then
-    if [ ${PY3K} -eq 1 ]; then
-        lib_path="$PREFIX/lib/libpython${PY_VER}m.so"
-    else
-        lib_path="$PREFIX/lib/libpython${PY_VER}.so"
-    fi
-fi
-CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=${lib_path}"
-
 #########################################################
 #                                                       #
 # environment variables                                 #
@@ -63,10 +38,6 @@ CMAKE_FLAGS+=" -DPYTHON_LIBRARY:FILEPATH=${lib_path}"
 #########################################################
 
 export HDF5_DIR=${PREFIX}
-export PYTHON_INCLUDE_DIR=`python -c "from __future__ import print_function; import distutils.sysconfig; print(distutils.sysconfig.get_python_inc(True))"`
-if [ `uname` == Darwin ]; then
-    export MACOSX_DEPLOYMENT_TARGET=10.9
-fi
 
 # cant reliably determine cpu count in a docker container,
 # therefore fix this value.

@@ -30,10 +30,10 @@ void CPUStateModel::calculateForces() {
     {
         std::vector<util::ScopedThread> threads;
         threads.reserve(config->nThreads);
-        using _it_t = std::vector<unsigned int>::const_iterator;
+        using iter_t = std::vector<unsigned int>::const_iterator;
         using pot1map = std::unordered_map<unsigned int, std::vector<readdy::model::potentials::PotentialOrder1 *>>;
 
-        auto worker = [](_it_t it_types, _it_t it_types_end, double &energy,
+        auto worker = [](iter_t it_types, iter_t it_types_end, double &energy,
                          data_t *data, pot1map pot1Map) -> void {
             auto idx = it_types - data->cbegin_types();
             const readdy::model::Vec3 zero{0, 0, 0};

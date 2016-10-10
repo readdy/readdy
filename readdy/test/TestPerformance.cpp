@@ -27,6 +27,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
     kernel.getKernelContext().setPeriodicBoundary(false, false, false);
 
     std::string types[]{"A", "B", "C"};
+    std::string tup[3][2] = {{"A", "B"}, {"A", "C"}, {"B", "C"}};
     {
         double x = 1.0;
         for (auto &&t : types) {
@@ -35,25 +36,26 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
         }
     }
 
-    {
+
+    for(auto i = 0; i < 3; ++i){
+        auto t = tup[i];
         auto repulsion = kernel.createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
         repulsion->setForceConstant(1.0);
-        kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "A", "B");
-        kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "A", "C");
-        kernel.getKernelContext().registerOrder2Potential(repulsion.get(), "B", "C");
+        kernel.getKernelContext().registerPotential(std::move(repulsion), t[0], t[1]);
     }
     {
-        auto box = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
-        box->setForceConstant(1.0);
         const auto verts = kernel.getKernelContext().getBoxBoundingVertices();
-        box->setOrigin(std::get<0>(verts) + readdy::model::Vec3(1, 1, 1));
-        box->setExtent((std::get<1>(verts) - std::get<0>(verts)) - 2);
-        kernel.getKernelContext().registerOrder1Potential(box.get(), "A");
-        kernel.getKernelContext().registerOrder1Potential(box.get(), "B");
-        kernel.getKernelContext().registerOrder1Potential(box.get(), "C");
+        int i = 0;
+        for(auto type : types) {
+            auto box = kernel.createPotentialAs<readdy::model::potentials::CubePotential>();
+            box->setForceConstant(1.0);
+            box->setOrigin(std::get<0>(verts) + readdy::model::Vec3(1, 1, 1));
+            box->setExtent((std::get<1>(verts) - std::get<0>(verts)) - 2);
+            kernel.getKernelContext().registerPotential(std::move(box), type);
+        }
     }
 
-    const unsigned int nParticles = 25000;
+    const unsigned int nParticles = 50000;
     for (unsigned long _ = 0; _ < nParticles; ++_) {
         for (const auto &t : types) {
             readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),

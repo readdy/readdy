@@ -35,10 +35,6 @@ public:
 
     virtual double getCutoffRadiusSquared() const override;
 
-
-    virtual potentials::HarmonicRepulsion *replicate() const override;
-
-
 };
 
 class WeakInteractionPiecewiseHarmonic : public readdy::model::potentials::WeakInteractionPiecewiseHarmonic {
@@ -53,12 +49,9 @@ public:
     virtual void
     calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy, const readdy::model::Vec3 &x_ij) const override;
 
-    virtual potentials::WeakInteractionPiecewiseHarmonic *replicate() const override;
-
     virtual double getCutoffRadius() const override;
 
     virtual double getCutoffRadiusSquared() const override;
-
 
 };
 
