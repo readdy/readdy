@@ -10,7 +10,6 @@
 #ifndef READDY_MAIN_PROGRAMWRAP_H
 #define READDY_MAIN_PROGRAMWRAP_H
 
-#include <pybind11/pybind11.h>
 #include <readdy/model/programs/Program.h>
 
 namespace readdy {

@@ -7,13 +7,13 @@
  * @date 03.08.16
  */
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/functional.h>
 
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include "KernelWrap.h"
-#include "../PyFunction.h"
+#include "../api/PyFunction.h"
 
 namespace bpy = pybind11;
 

@@ -6,8 +6,8 @@
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
 #include "ExportSchemeApi.h"
-#include "../PyPotential.h"
-#include "../PyFunction.h"
+#include "PyPotential.h"
+#include "PyFunction.h"
 
 namespace bpy = pybind11;
 

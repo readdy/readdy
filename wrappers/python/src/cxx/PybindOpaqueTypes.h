@@ -10,9 +10,10 @@
 #ifndef READDY_MAIN_PYBINDOPAQUETYPES_H
 #define READDY_MAIN_PYBINDOPAQUETYPES_H
 
+#include <pybind11/cast.h>
+
 #include <vector>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <pybind11/cast.h>
 
 PYBIND11_MAKE_OPAQUE(std::vector<double>);
 PYBIND11_MAKE_OPAQUE(std::vector<unsigned long>);

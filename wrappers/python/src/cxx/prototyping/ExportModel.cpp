@@ -8,12 +8,12 @@
  */
 
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include <readdy/model/Particle.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <boost/uuid/uuid_io.hpp>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 #include "ModelWrap.h"
 
@@ -34,21 +34,6 @@ using rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
 
 using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
 using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
-
-const std::function<readdy::model::Vec3(readdy::model::Vec3, readdy::model::Vec3)>
-getShortestDistanceFunWrap(rdy_ctx_t &self) {
-    auto shortestDifference = self.getShortestDifferenceFun();
-    return [shortestDifference](readdy::model::Vec3 v1, readdy::model::Vec3 v2) {
-        return shortestDifference(v1, v2);
-    };
-}
-
-const std::function<double(readdy::model::Vec3, readdy::model::Vec3)> getDistSquaredFunWrap(rdy_ctx_t &self) {
-    auto dist = self.getDistSquaredFun();
-    return [dist](readdy::model::Vec3 v1, readdy::model::Vec3 v2) {
-        return dist(v1, v2);
-    };
-}
 
 void exportModelClasses(bpy::module &proto) {
 
@@ -75,8 +60,8 @@ void exportModelClasses(bpy::module &proto) {
             .def("get_diffusion_constant",
                  (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getDiffusionConstant)
             .def("get_fix_position_fun", &rdy_ctx_t::getFixPositionFun)
-            .def("get_shortest_difference_fun", &getShortestDistanceFunWrap)
-            .def("get_dist_squared_fun", &getDistSquaredFunWrap)
+            .def("get_shortest_difference_fun", &rdy_ctx_t::getShortestDifferenceFun)
+            .def("get_dist_squared_fun", &rdy_ctx_t::getDistSquaredFun)
             .def("get_particle_radius",
                  (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)
             .def("set_particle_radius", &rdy_ctx_t::setParticleRadius)

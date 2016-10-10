@@ -10,25 +10,18 @@
 
 #include <pybind11/pybind11.h>
 
-#include <../PyConverters.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUProgramFactory.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUEulerBDIntegrator.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
-#include <../PyFunction.h>
 #include "ProgramWrap.h"
 
 namespace bpy = pybind11;
 namespace rpy = readdy::py;
 
 using rdy_particle_t = readdy::model::Particle;
-using py_fun_11_t = rpy::PyFunction<rdy_particle_t(const rdy_particle_t &)>;
-using py_fun_12_t = rpy::PyFunction<void(const rdy_particle_t &, rdy_particle_t &, rdy_particle_t &)>;
-using py_fun_21_t = rpy::PyFunction<rdy_particle_t(const rdy_particle_t &, const rdy_particle_t &)>;
-using py_fun_22_t = rpy::PyFunction<void(const rdy_particle_t &, const rdy_particle_t &, rdy_particle_t &,
-                                         rdy_particle_t &)>;
 
 using prog_factory_t = readdy::model::programs::ProgramFactory;
 

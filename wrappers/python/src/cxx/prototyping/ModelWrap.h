@@ -10,8 +10,6 @@
 #ifndef READDY_MAIN_MODELWRAP_H
 #define READDY_MAIN_MODELWRAP_H
 
-#include <pybind11/pybind11.h>
-#include <pybind11/functional.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
 
 namespace bpy = pybind11;

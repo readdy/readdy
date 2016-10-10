@@ -2,16 +2,15 @@
 // Created by mho on 10/08/16.
 //
 #include <pybind11/pybind11.h>
+
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder1.h>
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
-#include "../PyConverters.h"
 
 namespace bpy = pybind11;
 namespace mpl = boost::mpl;
-namespace rpy = readdy::py;
 namespace pot = readdy::model::potentials;
 namespace spot = readdy::kernel::singlecpu::potentials;
 

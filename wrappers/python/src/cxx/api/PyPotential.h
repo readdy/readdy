@@ -11,8 +11,6 @@
 #define READDY_MAIN_POTENTIALWRAPPER_H
 
 #include <pybind11/pybind11.h>
-
-#include <functional>
 #include <readdy/model/potentials/PotentialOrder2.h>
 
 namespace readdy {
