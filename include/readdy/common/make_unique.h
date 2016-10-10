@@ -32,6 +32,8 @@
 #ifndef READDY_MAIN_MAKE_UNIQUE_H_H
 #define READDY_MAIN_MAKE_UNIQUE_H_H
 
+#ifndef COMPILER_SUPPORTS_MAKE_UNIQUE
+
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -70,5 +72,9 @@ template<class T, class... Args>
 typename _Unique_if<T>::_Known_bound
 make_unique(Args &&...) = delete;
 }
+
+#else
+#include <memory>
+#endif
 
 #endif //READDY_MAIN_MAKE_UNIQUE_H_H

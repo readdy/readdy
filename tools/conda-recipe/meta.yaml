@@ -19,7 +19,7 @@ build:
 
 requirements:
   build:
-    - cmake >=3.2.0
+    - cmake # [not win]
     - curl
     - python
     - h5py
@@ -27,6 +27,7 @@ requirements:
     - hdf5 >=1.8.15.1 # [not osx]
     - bzip2
     - numpy
+    - vs2015_runtime  # [win]
 
   run:
     - python
