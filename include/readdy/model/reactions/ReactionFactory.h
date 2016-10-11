@@ -86,7 +86,7 @@ protected:
 
     template<typename T, typename... Args>
     struct get_dispatcher {
-        static T *impl(const ReactionFactory *self, Args... args) {
+        static T *impl(const ReactionFactory *self, Args&&... args) {
             // this only invokes the normal constructor
             return new T(std::forward<Args>(args)...);
         };

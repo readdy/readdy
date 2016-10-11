@@ -206,10 +206,12 @@ public:
                         }
                     }
                 }
-                for (unsigned long i = 0; i < nBoxes[0]; ++i) {
-                    for (unsigned long j = 0; j < nBoxes[1]; ++j) {
-                        for (unsigned long k = 0; k < nBoxes[2]; ++k) {
-                            setupNeighboringBoxes(i, j, k);
+                for (auto i = 0; i < nBoxes[0]; ++i) {
+                    for (auto j = 0; j < nBoxes[1]; ++j) {
+                        for (auto k = 0; k < nBoxes[2]; ++k) {
+                            setupNeighboringBoxes(static_cast<unsigned long>(i),
+                                                  static_cast<unsigned long>(j),
+                                                  static_cast<unsigned long>(k));
                         }
                     }
                 }

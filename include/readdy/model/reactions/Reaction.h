@@ -115,12 +115,12 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
         os << "Reaction(\"" << reaction.name << "\", N_Educts=" << reaction._n_educts << ", N_Products="
            << reaction._n_products << ", (";
-        for (int i = 0; i < reaction._n_educts; i++) {
+        for (unsigned int i = 0; i < reaction._n_educts; i++) {
             if (i > 0) os << ",";
             os << reaction.educts[i];
         }
         os << ") -> (";
-        for (int i = 0; i < reaction._n_products; i++) {
+        for (unsigned int i = 0; i < reaction._n_products; i++) {
             if (i > 0) os << ",";
             os << reaction.products[i];
         }

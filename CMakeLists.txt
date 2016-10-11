@@ -183,7 +183,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET(BUILD_GTEST ON)
         SET(BUILD_GMOCK ON)
         SET(gtest_force_shared_crt ON)
-        SET(BUILD_SHARED_LIBS ON)
+        SET(gtest_disable_pthreads ON)
         ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
         SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"

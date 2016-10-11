@@ -62,6 +62,8 @@ struct KernelContext::Impl {
     std::vector<potentials::PotentialOrder1 *> defaultPotentialsO1{};
     std::vector<potentials::PotentialOrder2 *> defaultPotentialsO2{};
 
+    ~Impl() = default;
+
     void updateDistAndFixPositionFun() {
         if (periodic_boundary[0]) {
             if (periodic_boundary[1]) {

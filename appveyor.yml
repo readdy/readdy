@@ -23,7 +23,7 @@ environment:
       PYTHON_VERSION: 3.5
 
 install:
-  - cmd: '"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%'
+  - '%CMD_IN_ENV% "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x64'
   - "SET PATH=%MINICONDA_PYTHON%;%MINICONDA_PYTHON%\\Scripts;%PATH%;"
   - git submodule init
   - git submodule update
@@ -34,4 +34,4 @@ install:
 build: false
 
 test_script:
-  - conda build -q tools/conda-recipe
+  - "%CMD_IN_ENV% conda build -q tools/conda-recipe"
