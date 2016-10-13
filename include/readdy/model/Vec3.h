@@ -39,7 +39,7 @@
 namespace readdy {
 namespace model {
 
-class READDY_EXPORT Vec3 {
+class READDY_API Vec3 {
 public:
 
     using entry_t = double;

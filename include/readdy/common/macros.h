@@ -51,9 +51,9 @@
  * Export symbols / change their visibility
  */
 #if READDY_WINDOWS
-#  define READDY_EXPORT __declspec(dllexport)
+#  define READDY_API __declspec(dllexport)
 #else
-#  define READDY_EXPORT __attribute__ ((visibility("default")))
+#  define READDY_API __attribute__ ((visibility("default")))
 #endif
 
 #endif //READDY_MAIN_MACROS_H
