@@ -26,6 +26,11 @@
 namespace readdy {
 namespace model {
 
+class UnknownParticleType : public std::runtime_error {
+public:
+    UnknownParticleType(const std::string &__arg) : runtime_error(__arg) {}
+};
+
 class KernelContext {
     using rea_ptr_vec1 = std::vector<std::unique_ptr<reactions::Reaction<1>>>;
     using rea_ptr_vec2 = std::vector<std::unique_ptr<reactions::Reaction<2>>>;

@@ -1,7 +1,7 @@
 /**
  * << detailed description >>
  *
- * @file Reactions.h.h
+ * @file Reactions.h
  * @brief << brief description >>
  * @author clonker
  * @date 14.07.16
