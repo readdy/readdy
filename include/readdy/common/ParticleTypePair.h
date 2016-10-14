@@ -12,7 +12,7 @@
 
 #include <cstddef>
 #include <tuple>
-#include <boost/functional/hash.hpp>
+#include "hash.h"
 
 namespace readdy {
 namespace util {
@@ -32,8 +32,8 @@ struct ParticleTypePair {
 
     friend std::size_t hash_value(const ParticleTypePair &pair) {
         std::size_t seed = 0;
-        boost::hash_combine(seed, pair.t1);
-        boost::hash_combine(seed, pair.t2);
+        hash::combine(seed, pair.t1);
+        hash::combine(seed, pair.t2);
         return seed;
     }
 
@@ -53,11 +53,11 @@ public:
         const auto &t1 = std::get<0>(k);
         const auto &t2 = std::get<1>(k);
         if (t1 <= t2) {
-            boost::hash_combine(seed, t1);
-            boost::hash_combine(seed, t2);
+            hash::combine(seed, t1);
+            hash::combine(seed, t2);
         } else {
-            boost::hash_combine(seed, t2);
-            boost::hash_combine(seed, t1);
+            hash::combine(seed, t2);
+            hash::combine(seed, t1);
         }
         return seed;
     }

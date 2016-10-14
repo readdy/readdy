@@ -19,12 +19,16 @@
 #ifndef READDY_MAIN_OBSERVABLE_H
 #define READDY_MAIN_OBSERVABLE_H
 
-#include <boost/signals2/signal.hpp>
 #include <readdy/common/make_unique.h>
-#include <readdy/common/Types.h>
+#include <readdy/common/signals.h>
 
 namespace readdy {
 namespace model {
+namespace observables {
+using time_step_type = unsigned long;
+using signal_type = readdy::signals::signal<void(time_step_type)>;
+using observable_type = signal_type::slot_type;
+}
 
 template<typename T>
 struct ObservableName {
@@ -46,17 +50,18 @@ public:
         return stride;
     }
 
-    const readdy::model::time_step_type &getCurrentTimeStep() const {
+    const observables::time_step_type &getCurrentTimeStep() const {
         return t_current;
     }
 
-    virtual ~ObservableBase();
+    virtual ~ObservableBase() = default;
 
-    virtual void callback(readdy::model::time_step_type t) {
-        if (t_current == t && !firstCall) return;
-        firstCall = false;
-        t_current = t;
-        evaluate();
+    virtual void callback(observables::time_step_type t) {
+        if ((t_current != t || firstCall) && t % stride == 0) {
+            firstCall = false;
+            t_current = t;
+            evaluate();
+        }
     };
 
     virtual void evaluate() = 0;
@@ -64,7 +69,7 @@ public:
 protected:
     unsigned int stride;
     readdy::model::Kernel *const kernel;
-    readdy::model::time_step_type t_current = 0;
+    observables::time_step_type t_current = 0;
     bool firstCall = true;
 };
 
@@ -88,7 +93,7 @@ public:
         Observable::_callback_f = callbackFun;
     }
 
-    virtual void callback(readdy::model::time_step_type t) override {
+    virtual void callback(observables::time_step_type t) override {
         if (t_current == t && !firstCall) return;
         ObservableBase::callback(t);
         _callback_f(result);
@@ -113,7 +118,7 @@ public:
     CombinerObservable(Kernel *const kernel, Obs1_t *obs1, Obs2_t *obs2, unsigned int stride = 1)
             : readdy::model::Observable<Res_t>::Observable(kernel, stride), obs1(obs1), obs2(obs2) {}
 
-    virtual void callback(readdy::model::time_step_type t) override {
+    virtual void callback(observables::time_step_type t) override {
         if (obs1->getCurrentTimeStep() != ObservableBase::t_current) obs1->callback(ObservableBase::t_current);
         if (obs2->getCurrentTimeStep() != ObservableBase::t_current) obs2->callback(ObservableBase::t_current);
         ObservableBase::callback(t);

@@ -16,12 +16,10 @@
 #define READDY_MAIN_UTILS_H
 
 #include <string>
-#include <boost/smart_ptr/shared_ptr.hpp>
 #include <ostream>
 #include <iostream>
 #include <memory>
 #include <tuple>
-#include <boost/functional/hash.hpp>
 
 namespace readdy {
 namespace util {

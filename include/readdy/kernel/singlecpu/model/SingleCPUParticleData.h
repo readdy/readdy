@@ -47,17 +47,17 @@ public:
 
     SingleCPUParticleData &operator=(const SingleCPUParticleData &rhs) = delete;
 
-    std::vector<boost::uuids::uuid>::iterator begin_ids();
+    std::vector<readdy::model::Particle::id_type>::iterator begin_ids();
 
-    std::vector<boost::uuids::uuid>::const_iterator begin_ids() const;
+    std::vector<readdy::model::Particle::id_type>::const_iterator begin_ids() const;
 
-    std::vector<boost::uuids::uuid>::const_iterator cbegin_ids() const;
+    std::vector<readdy::model::Particle::id_type>::const_iterator cbegin_ids() const;
 
-    std::vector<boost::uuids::uuid>::iterator end_ids();
+    std::vector<readdy::model::Particle::id_type>::iterator end_ids();
 
-    std::vector<boost::uuids::uuid>::const_iterator end_ids() const;
+    std::vector<readdy::model::Particle::id_type>::const_iterator end_ids() const;
 
-    std::vector<boost::uuids::uuid>::const_iterator cend_ids() const;
+    std::vector<readdy::model::Particle::id_type>::const_iterator cend_ids() const;
 
     std::vector<readdy::model::Vec3>::iterator begin_positions();
 
@@ -160,7 +160,7 @@ public:
     void deactivateMarked();
 
 protected:
-    std::unique_ptr<std::vector<boost::uuids::uuid>> ids;
+    std::unique_ptr<std::vector<readdy::model::Particle::id_type>> ids;
     std::unique_ptr<std::vector<readdy::model::Vec3>> positions;
     std::unique_ptr<std::vector<readdy::model::Vec3>> forces;
     std::unique_ptr<std::vector<unsigned int>> type;

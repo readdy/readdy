@@ -14,10 +14,6 @@
 namespace readdy {
 namespace model {
 
-ObservableBase::~ObservableBase() {
-    kernel->disconnectObservable(this);
-}
-
 void ParticlePositionObservable::evaluate() {
     ParticlePositionObservable::result = kernel->getKernelStateModel().getParticlePositions();
 }
@@ -111,7 +107,7 @@ void RadialDistributionObservable::setBinBorders(const std::vector<double> &binB
             ++it_begin_next;
         }
     } else {
-        BOOST_LOG_TRIVIAL(warning) << "Argument bin borders' size should be at least two to make sense.";
+        log::console()->warn("Argument bin borders' size should be at least two to make sense.");
     }
 
 }

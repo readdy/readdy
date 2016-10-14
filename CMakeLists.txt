@@ -117,15 +117,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET(CMAKE_INSTALL_PREFIX ${READDY_INSTALL_PREFIX} CACHE PATH "Where to install ReaDDy" FORCE)
     ENDIF(${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT})
 
-    # includes
-    LIST(APPEND READDY_HEADERS "${PROJECT_SOURCE_DIR}/include")
-
-    # download and install boost into cache dir
-    INCLUDE(SetupBoost)
-
-    # setup boost.dll
-    INCLUDE(SetupBoostDLL)
-
     # extra compile and link flags
     SET(EXTRA_COMPILE_FLAGS "-std=c++11")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})

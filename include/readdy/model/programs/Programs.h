@@ -21,7 +21,6 @@
 #define READDY_MAIN_PROGRAMS_H_H
 
 #include <readdy/model/programs/Program.h>
-#include <readdy/common/Types.h>
 #include <readdy/model/Particle.h>
 #include <type_traits>
 

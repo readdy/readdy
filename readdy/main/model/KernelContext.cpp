@@ -190,8 +190,7 @@ double KernelContext::getParticleRadius(const std::string &type) const {
 
 double KernelContext::getParticleRadius(const unsigned int type) const {
     if (pimpl->particleRadii.find(type) == pimpl->particleRadii.end()) {
-        BOOST_LOG_TRIVIAL(warning) << "No particle radius was set for the particle type id " << type
-                                   << ", setting r=1";
+        log::console()->warn("No particle radius was set for the particle type id {}, setting r=1", type);
         pimpl->particleRadii[type] = 1;
     }
     return pimpl->particleRadii[type];

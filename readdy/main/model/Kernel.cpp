@@ -22,15 +22,12 @@ struct Kernel::Impl {
     /**
      * todo
      */
-    std::unique_ptr<signal_t> signal = std::make_unique<signal_t>();
+    std::unique_ptr<observables::signal_type> signal = std::make_unique<observables::signal_type>();
     /**
      * todo
      */
     std::unique_ptr<_internal::ObservableFactory> observableFactory;
-    /**
-     * todo
-     */
-    std::unordered_map<ObservableBase *, boost::signals2::shared_connection_block> observableBlocks{};
+
 };
 
 const std::string &Kernel::getName() const {
@@ -45,16 +42,12 @@ Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()
 Kernel::~Kernel() {
 }
 
-boost::signals2::scoped_connection Kernel::connectObservable(ObservableBase *const observable) {
-    boost::signals2::scoped_connection connection(
-            pimpl->signal.get()->connect(std::bind(&ObservableBase::callback, observable, std::placeholders::_1)));
-    boost::signals2::shared_connection_block block{connection, false};
-    pimpl->observableBlocks[observable] = block;
-    return connection;
+readdy::signals::scoped_connection Kernel::connectObservable(ObservableBase *const observable) {
+    return pimpl->signal->connect_scoped([=](observables::time_step_type t) {observable->callback(t);});
 }
 
-std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, boost::signals2::scoped_connection>
-Kernel::registerObservable(const ObservableType &observable, unsigned int stride) {
+std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
+Kernel::registerObservable(const observables::observable_type &observable, unsigned int stride) {
     auto &&wrap = std::make_unique<ObservableWrapper>(this, observable, stride);
     auto &&connection = connectObservable(wrap.get());
     return std::make_tuple(std::move(wrap), std::move(connection));
@@ -64,29 +57,8 @@ readdy::model::_internal::ObservableFactory &Kernel::getObservableFactory() cons
     return *pimpl->observableFactory;
 }
 
-void Kernel::evaluateObservables(readdy::model::time_step_type t) {
-    for (auto &&e : pimpl->observableBlocks) {
-        if (e.first->getStride() > 0 && t % e.first->getStride() != 0) {
-            e.second.block();
-        } else {
-            e.second.unblock();
-        }
-    }
-    (*pimpl->signal)(t);
-}
-
-void Kernel::evaluateAllObservables(readdy::model::time_step_type t) {
-    for (auto &&e : pimpl->observableBlocks) {
-        e.second.unblock();
-    }
-    (*pimpl->signal)(t);
-}
-
-void Kernel::disconnectObservable(ObservableBase *const observable) {
-    const auto obs_it = pimpl->observableBlocks.find(observable);
-    if (obs_it != pimpl->observableBlocks.end()) {
-        pimpl->observableBlocks.erase(obs_it);
-    }
+void Kernel::evaluateObservables(observables::time_step_type t) {
+    pimpl->signal->fire_signal(t);
 }
 
 std::vector<std::string> Kernel::getAvailablePotentials() const {

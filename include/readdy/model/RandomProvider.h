@@ -12,32 +12,34 @@
 #define READDY_MAIN_RANDOMPROVIDER_H
 
 #include <memory>
+#include <random>
 #include "Vec3.h"
 
 namespace readdy {
 namespace model {
+namespace rnd {
 
-class RandomProvider {
-public:
-    RandomProvider();
+template<typename Generator = std::mt19937>
+double normal(const double mean = 0.0, const double variance = 1.0) {
+    static thread_local Generator generator;
+    std::normal_distribution<double> distribution(mean, variance);
+    return distribution(generator);
+}
 
-    ~RandomProvider();
+template<typename Generator = std::mt19937>
+double uniform(const double a = 0.0, const double b = 1.0) {
+    static thread_local std::mt19937 generator;
+    std::normal_distribution<double> distribution(a,b);
+    return distribution(generator);
+}
 
-    RandomProvider(RandomProvider &&rhs);
+template<typename Generator = std::mt19937>
+Vec3 normal3(const double mean = 0.0, const double variance = 1.0) {
+    return {normal<Generator>(mean, variance), normal<Generator>(mean, variance), normal<Generator>(mean, variance)};
+}
 
-    RandomProvider &operator=(RandomProvider &&rhs);
 
-    virtual double getNormal(const double mean = 0.0, const double variance = 1.0) const;
-
-    virtual double getUniform(double a = 0.0, double b = 1.0);
-
-    virtual Vec3 getNormal3(const double mean = 0.0, const double variance = 1.0) const;
-
-private:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-};
-
+}
 }
 }
 #endif //READDY_MAIN_RANDOMPROVIDER_H

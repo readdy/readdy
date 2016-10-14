@@ -15,7 +15,6 @@
 
 #include <array>
 #include <memory>
-#include <boost/predef.h>
 #include <vector>
 #include <unordered_set>
 #include <readdy/model/potentials/PotentialOrder1.h>
@@ -121,7 +120,7 @@ public:
     template<typename R>
     const short registerReaction(std::unique_ptr<R> r,
                                  typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type * = 0) {
-        BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
+        log::console()->trace("registering reaction {}", *r);
         const auto id = r->getId();
         const auto type = r->getEducts()[0];
         if (reactionOneEductRegistryInternal->find(type) == reactionOneEductRegistryInternal->end()) {
@@ -134,7 +133,7 @@ public:
     template<typename R>
     const short registerReaction(std::unique_ptr<R> r,
                                  typename std::enable_if<std::is_base_of<reactions::Reaction<2>, R>::value>::type * = 0) {
-        BOOST_LOG_TRIVIAL(trace) << "registering reaction " << *r;
+        log::console()->trace("registering reaction {}", *r);
         const auto id = r->getId();
         const auto t1 = r->getEducts()[0];
         const auto t2 = r->getEducts()[1];

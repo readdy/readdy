@@ -3,10 +3,6 @@
 //
 
 #include <iostream>
-#include <boost/dll.hpp>
-#include <boost/range/iterator_range_core.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 #include <readdy/common/Utils.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
@@ -14,7 +10,6 @@
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
-namespace fs = boost::filesystem;
 namespace utl = readdy::util;
 namespace readdy {
 namespace plugin {
@@ -26,7 +21,7 @@ KernelProvider &KernelProvider::getInstance() {
 
 KernelProvider::KernelProvider() {
     fs::path path = fs::current_path();
-    BOOST_LOG_TRIVIAL(debug) << "current path is " << path;
+    log::console()->debug("current path is {}", path);
     add(readdy::kernel::singlecpu::SingleCPUKernel::name, [] {
         return new readdy::kernel::singlecpu::SingleCPUKernel();
     });
@@ -53,7 +48,7 @@ const std::string KernelProvider::getDefaultKernelDirectory() {
 }
 
 void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
-    BOOST_LOG_TRIVIAL(debug) << "loading kernels from directory: " << directory;
+    log::console()->debug("loading kernels from directory: {}", directory);
     const fs::path p(directory);
     if (fs::exists(p) && fs::is_directory(p)) {
         for (auto &&dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
@@ -62,10 +57,7 @@ void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
                     add(dirEntry.path());
                 }
             } catch (const std::exception &e) {
-                BOOST_LOG_TRIVIAL(warning) << "Could not load " << dirEntry << " due to: " << e.what();
-            } catch (const boost::exception &e) {
-                BOOST_LOG_TRIVIAL(warning) << "Could not load " << dirEntry << " due to: "
-                                           << boost::diagnostic_information(e);
+                log::console()->warn("could not load {} due to {}", dirEntry, std::string(e.what()));
             }
         }
     } else {

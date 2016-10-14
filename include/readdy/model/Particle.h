@@ -13,7 +13,7 @@
 
 #include <array>
 #include <string>
-#include <boost/uuid/uuid.hpp>
+#include <atomic>
 #include "Vec3.h"
 
 namespace readdy {
@@ -21,6 +21,9 @@ namespace model {
 
 class Particle {
 public:
+    
+    using id_type = unsigned long;
+    
     const Vec3 &getPos() const;
 
     Vec3 &getPos();
@@ -31,15 +34,15 @@ public:
 
     void setType(const unsigned int type);
 
-    const boost::uuids::uuid &getId() const;
+    const id_type getId() const;
 
-    void setId(const boost::uuids::uuid &id);
+    void setId(const id_type id);
 
     Particle();
 
     Particle(double x, double y, double z, unsigned int type);
 
-    Particle(Vec3 pos, unsigned int type, boost::uuids::uuid id);
+    Particle(Vec3 pos, unsigned int type, id_type id);
 
     virtual ~Particle();
 
@@ -53,7 +56,9 @@ public:
 private:
     Vec3 pos;
     unsigned int type;
-    boost::uuids::uuid id;
+    id_type id;
+
+    static std::atomic<id_type> id_counter;
 };
 
 }

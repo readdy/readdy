@@ -15,7 +15,6 @@
 #include <string>
 #include <array>
 #include <readdy/model/Particle.h>
-#include <boost/uuid/random_generator.hpp>
 
 namespace readdy {
 namespace model {

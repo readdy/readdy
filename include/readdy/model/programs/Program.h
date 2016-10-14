@@ -13,9 +13,7 @@
 
 #include <memory>
 
-#include <boost/predef.h>
-
-#if BOOST_OS_MACOS
+#if READDY_OSX
 #include <string>
 #endif
 

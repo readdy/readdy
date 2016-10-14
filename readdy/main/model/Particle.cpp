@@ -1,6 +1,5 @@
 #include <readdy/model/Particle.h>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
+#include <ostream>
 
 /**
  * << detailed description >>
@@ -13,7 +12,10 @@
 
 namespace readdy {
 namespace model {
-Particle::Particle() : id(boost::uuids::random_generator()()), pos(0, 0, 0) {
+
+std::atomic<Particle::id_type> Particle::id_counter {0};
+
+Particle::Particle() : Particle(0,0,0,0) {
 }
 
 bool Particle::operator==(const Particle &rhs) const{
@@ -24,7 +26,7 @@ bool Particle::operator!=(const Particle &rhs) const{
     return !(*this == rhs);
 }
 
-Particle::Particle(double x, double y, double z, uint type) : id(boost::uuids::random_generator()()), pos(x, y, z) {
+Particle::Particle(double x, double y, double z, uint type) : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z) {
     this->type = type;
 }
 
@@ -44,14 +46,14 @@ void Particle::setType(unsigned int type) {
     Particle::type = type;
 }
 
-const boost::uuids::uuid &Particle::getId() const {
+const Particle::id_type Particle::getId() const {
     return id;
 }
 
-Particle::Particle(Vec3 pos, unsigned int type, boost::uuids::uuid id) : pos(pos), type(type), id(id) {
+Particle::Particle(Vec3 pos, unsigned int type, id_type id) : pos(pos), type(type), id(id) {
 }
 
-void Particle::setId(const boost::uuids::uuid &id) {
+void Particle::setId(const id_type id) {
     Particle::id = id;
 }
 
@@ -63,7 +65,7 @@ Vec3 &Particle::getPos() {
 Particle::~Particle() = default;
 
 std::ostream &operator<<(std::ostream &os, const Particle &p) {
-    os << "Particle(id=" << boost::uuids::to_string(p.id) << ", type=" << p.type << ", pos=" << p.pos << ")";
+    os << "Particle(id=" << p.id << ", type=" << p.type << ", pos=" << p.pos << ")";
     return os;
 }
 

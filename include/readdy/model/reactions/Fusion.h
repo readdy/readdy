@@ -12,7 +12,6 @@
 #define READDY_MAIN_FUSION_H
 
 #include "Reaction.h"
-#include <boost/log/trivial.hpp>
 
 namespace readdy {
 namespace model {
@@ -32,8 +31,8 @@ public:
         if (sum != 1) {
             this->weight1 /= sum;
             this->weight2 /= sum;
-            BOOST_LOG_TRIVIAL(warning) << "The weights did not add up to 1, they were changed to weight1="
-                                       << this->weight1 << ", weight2=" << this->weight2;
+            log::console()->warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
+                                 this->weight1, this->weight2);
         }
     }
 
