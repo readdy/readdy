@@ -3,36 +3,31 @@
 //
 
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
-#include <boost/dll.hpp>
 
 namespace plug = readdy::plugin::_internal;
-namespace dll = boost::dll;
+namespace dll = readdy::util::dll;
 
 const std::string &plug::KernelPluginDecorator::getName() const {
     return reference.get()->getName();
 }
 
-readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const boost::filesystem::path sharedLib)
-        : readdy::model::Kernel::Kernel(sharedLib.string()) {
+readdy::model::KernelStateModel &readdy::plugin::_internal::KernelPluginDecorator::getKernelStateModel() const {
+    return (*reference).getKernelStateModel();
+}
+
+readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const std::string& sharedLib)
+        : readdy::model::Kernel::Kernel(sharedLib) {
     // load the library
-    lib = dll::shared_library(sharedLib, dll::load_mode::rtld_lazy | dll::load_mode::rtld_global);
+    lib = std::make_unique<dll::shared_library>(sharedLib, RTLD_LAZY | RTLD_GLOBAL);
     // check if library has required symbol
-    if (!lib.has("createKernel")) {
-        BOOST_LOG_TRIVIAL(error) << "... skipping, since it had no createKernel symbol";
-        if (lib.is_loaded()) lib.unload();
-        std::string errMsg = std::string("library ").append(sharedLib.string()).append(" had no createKernel symbol.");
-        throw plug::InvalidPluginException(errMsg);
+    if (!lib->has_symbol("createKernel")) {
+        log::console()->error("skipping, since it had no createKernel symbol");
+        throw plug::InvalidPluginException("library " + sharedLib + " had no createKernel symbol.");
     }
     // load the kernel
     {
-        typedef std::unique_ptr<readdy::model::Kernel> (kernel_t)();
-        boost::function<kernel_t> factory = dll::import_alias<kernel_t>(lib, "createKernel");
-        reference = factory();
+        reference = lib->call<std::unique_ptr<readdy::model::Kernel>>("createKernel")();
     }
-}
-
-readdy::model::KernelStateModel &readdy::plugin::_internal::KernelPluginDecorator::getKernelStateModel() const {
-    return (*reference).getKernelStateModel();
 }
 
 readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
@@ -71,14 +66,9 @@ readdy::plugin::_internal::KernelPluginDecorator::getObservableFactory() const {
     return reference->getObservableFactory();
 }
 
-boost::signals2::scoped_connection
+readdy::signals::scoped_connection
 readdy::plugin::_internal::KernelPluginDecorator::connectObservable(readdy::model::ObservableBase *const observable) {
     return reference->connectObservable(observable);
-}
-
-void readdy::plugin::_internal::KernelPluginDecorator::disconnectObservable(
-        readdy::model::ObservableBase *const observable) {
-    reference->disconnectObservable(observable);
 }
 
 std::unique_ptr<readdy::model::programs::Program>
@@ -86,17 +76,14 @@ readdy::plugin::_internal::KernelPluginDecorator::createProgram(const std::strin
     return reference->createProgram(name);
 }
 
-void readdy::plugin::_internal::KernelPluginDecorator::evaluateObservables(readdy::model::time_step_type t) {
+void readdy::plugin::_internal::KernelPluginDecorator::evaluateObservables(model::observables::time_step_type t) {
     reference->evaluateObservables(t);
 }
 
-void readdy::plugin::_internal::KernelPluginDecorator::evaluateAllObservables(readdy::model::time_step_type t) {
-    reference->evaluateAllObservables(t);
-}
-
-std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, boost::signals2::scoped_connection>
-readdy::plugin::_internal::KernelPluginDecorator::registerObservable(const readdy::model::ObservableType &observable,
-                                                                     unsigned int stride) {
+std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
+readdy::plugin::_internal::KernelPluginDecorator::registerObservable(
+        const model::observables::observable_type &observable, unsigned int stride
+) {
     return reference->registerObservable(observable, stride);
 }
 
@@ -116,14 +103,11 @@ unsigned int readdy::plugin::_internal::KernelPluginDecorator::getTypeId(const s
 
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) {}
 
-const std::string readdy::plugin::_internal::loadKernelName(const boost::filesystem::path &sharedLib) {
-    auto lib = dll::shared_library(sharedLib, dll::load_mode::rtld_lazy | dll::load_mode::rtld_global);
-    if (!lib.has("name")) {
-        if (lib.is_loaded()) lib.unload();
-        std::string errMsg = std::string("library ").append(sharedLib.string()).append(" had no name() symbol.");
-        throw plug::InvalidPluginException(errMsg);
+const std::string readdy::plugin::_internal::loadKernelName(const std::string &sharedLib) {
+    auto lib = dll::shared_library(sharedLib, RTLD_LAZY | RTLD_GLOBAL);
+    if (!lib.has_symbol("name")) {
+        throw plug::InvalidPluginException("library " + sharedLib + " had no name() symbol");
     } else {
-        boost::shared_ptr<std::string> name = dll::import_alias<std::string>(lib, "name");
-        return *name;
+        return lib.call<std::string>("name")();
     }
 }

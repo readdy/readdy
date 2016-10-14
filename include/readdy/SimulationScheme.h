@@ -30,7 +30,6 @@
 
 #include <memory>
 #include <type_traits>
-#include <readdy/common/Types.h>
 #include <readdy/model/Kernel.h>
 
 namespace readdy {
@@ -41,7 +40,7 @@ namespace readdy {
         struct SimulationScheme {
             SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
 
-            virtual void run(const model::time_step_type steps) = 0;
+            virtual void run(const model::observables::time_step_type steps) = 0;
 
         protected:
             template<typename SchemeType>
@@ -59,13 +58,13 @@ namespace readdy {
         public:
             ReaDDyScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
 
-            virtual void run(const model::time_step_type steps) override {
+            virtual void run(const model::observables::time_step_type steps) override {
                 kernel->getKernelContext().configure();
 
                 if (neighborList) neighborList->execute();
                 if (forces) forces->execute();
                 if (evaluateObservables) kernel->evaluateObservables(0);
-                for (model::time_step_type &&t = 0; t < steps; ++t) {
+                for (model::observables::time_step_type &&t = 0; t < steps; ++t) {
                     if (integrator) integrator->execute();
                     if (neighborList) neighborList->execute();
                     if (forces) forces->execute();
@@ -161,7 +160,7 @@ namespace readdy {
                 return ptr;
             }
 
-            void configureAndRun(const model::time_step_type steps) {
+            void configureAndRun(const model::observables::time_step_type steps) {
                 configure()->run(steps);
             }
 

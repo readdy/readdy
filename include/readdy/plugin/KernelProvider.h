@@ -34,8 +34,8 @@ protected:
     /**
      * The destructor of KernelProvider.
      */
-    ~KernelProvider() {
-        BOOST_LOG_TRIVIAL(debug) << "destroying kernel provider";
+    virtual ~KernelProvider() {
+        log::console()->debug("destroying kernel provider");
     }
 
     /**
@@ -44,7 +44,7 @@ protected:
      * @param path the path
      * @return True if the path points to a shared library, otherwise false.
      */
-    bool isSharedLibrary(const boost::filesystem::path &path) const;
+    bool isSharedLibrary(const std::string &path) const;
 
 public:
     /**
@@ -74,7 +74,7 @@ public:
      *
      * @param sharedLib the path to the shared lib
      */
-    void add(const boost::filesystem::path &sharedLib);
+    void add(const std::string &sharedLib);
 
     /**
      * Method that gives the default kernel directory, i.e., where the kernel implementations are usually to be found.

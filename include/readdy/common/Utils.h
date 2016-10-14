@@ -16,10 +16,10 @@
 #define READDY_MAIN_UTILS_H
 
 #include <string>
-#include <ostream>
 #include <iostream>
 #include <memory>
 #include <tuple>
+#include <vector>
 
 namespace readdy {
 namespace util {

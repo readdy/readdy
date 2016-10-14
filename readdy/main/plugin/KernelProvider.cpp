@@ -5,12 +5,14 @@
 #include <iostream>
 #include <readdy/common/Utils.h>
 #include <readdy/common/make_unique.h>
+#include <readdy/common/filesystem.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace utl = readdy::util;
+namespace fs = utl::fs;
 namespace readdy {
 namespace plugin {
 
@@ -20,7 +22,7 @@ KernelProvider &KernelProvider::getInstance() {
 }
 
 KernelProvider::KernelProvider() {
-    fs::path path = fs::current_path();
+    const auto path = fs::current_path();
     log::console()->debug("current path is {}", path);
     add(readdy::kernel::singlecpu::SingleCPUKernel::name, [] {
         return new readdy::kernel::singlecpu::SingleCPUKernel();
@@ -49,37 +51,37 @@ const std::string KernelProvider::getDefaultKernelDirectory() {
 
 void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
     log::console()->debug("loading kernels from directory: {}", directory);
-    const fs::path p(directory);
-    if (fs::exists(p) && fs::is_directory(p)) {
-        for (auto &&dirEntry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
+    if (fs::exists(directory) && fs::is_directory(directory)) {
+        fs::dir dir(directory);
+        while(dir.has_next()) {
+            const auto file = dir.next();
             try {
-                if (isSharedLibrary(dirEntry.path())) {
-                    add(dirEntry.path());
+                if (isSharedLibrary(file)) {
+                    add(file);
                 }
             } catch (const std::exception &e) {
-                log::console()->warn("could not load {} due to {}", dirEntry, std::string(e.what()));
+                log::console()->warn("could not load {} due to {}", file, std::string(e.what()));
             }
         }
     } else {
-        throw std::runtime_error("file [" + p.string() + "] did not exist or was a file.");
+        throw std::runtime_error("file [" + directory + "] did not exist or was a file.");
     }
 }
 
 
-bool KernelProvider::isSharedLibrary(const boost::filesystem::path &path) const {
-    const std::string s = path.string();
-    return (s.find(".dll") != std::string::npos || s.find(".so") != std::string::npos ||
-            s.find(".dylib") != std::string::npos)
-           && s.find(".lib") == std::string::npos
-           && s.find(".exp") == std::string::npos
-           && s.find(".pdb") == std::string::npos
-           && s.find(".manifest") == std::string::npos
-           && s.find(".rsp") == std::string::npos
-           && s.find(".obj") == std::string::npos
-           && s.find(".a") == std::string::npos;
+bool KernelProvider::isSharedLibrary(const std::string &path) const {
+    return (path.find(".dll") != std::string::npos || path.find(".so") != std::string::npos ||
+            path.find(".dylib") != std::string::npos)
+           && path.find(".lib") == std::string::npos
+           && path.find(".exp") == std::string::npos
+           && path.find(".pdb") == std::string::npos
+           && path.find(".manifest") == std::string::npos
+           && path.find(".rsp") == std::string::npos
+           && path.find(".obj") == std::string::npos
+           && path.find(".a") == std::string::npos;
 }
 
-void KernelProvider::add(const boost::filesystem::path &sharedLib) {
+void KernelProvider::add(const std::string &sharedLib) {
     using namespace _internal;
     const auto name = loadKernelName(sharedLib);
     factory.emplace(std::make_pair(name, [sharedLib] { return new KernelPluginDecorator(sharedLib); }));
