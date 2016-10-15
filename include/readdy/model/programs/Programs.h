@@ -24,6 +24,10 @@
 #include <readdy/model/Particle.h>
 #include <type_traits>
 
+#if READDY_OSX
+#include <functional>
+#endif
+
 namespace readdy {
 namespace model {
 namespace programs {

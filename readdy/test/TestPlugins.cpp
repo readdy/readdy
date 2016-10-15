@@ -3,8 +3,9 @@
 //
 
 #include <readdy/plugin/KernelProvider.h>
-#include <boost/algorithm/string/predicate.hpp>
 #include <readdy/testing/KernelMock.h>
+#include <readdy/common/string.h>
+#include <readdy/common/filesystem.h>
 
 namespace plug = readdy::plugin;
 
@@ -30,7 +31,7 @@ TEST(Kernel, LoadingExistingPlugin) {
 
 TEST(KernelProvider, SanityCheckDefaultDirectory) {
     std::string defaultDirectory = plug::KernelProvider::getInstance().getDefaultKernelDirectory();
-    BOOST_LOG_TRIVIAL(debug) << "default directory is " << defaultDirectory;
+    readdy::log::console() ->debug("default directory is {}", defaultDirectory);
     SUCCEED();
 }
 
@@ -43,19 +44,19 @@ TEST(KernelProvider, TestLoadPluginsFromDirectory) {
     std::string pluginDir = "readdy/readdy_plugins";
     if (env) {
         auto _env = std::string(env);
-        if (!boost::algorithm::ends_with(env, "/")) {
+        if (!readdy::util::str::has_suffix(_env, "/")) {
             _env = _env.append("/");
         }
         pluginDir = _env.append(pluginDir);
     }
     plug::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-    BOOST_LOG_TRIVIAL(debug) << "current path: " << boost::filesystem::current_path().string();
+    readdy::log::console()->debug("current path: {}", readdy::util::fs::current_path());
 }
 
 TEST(KernelProvider, TestFoo) {
     auto k = plug::KernelProvider::getInstance().create("SingleCPU");
     auto name = k.get()->getName();
-    BOOST_LOG_TRIVIAL(debug) << "foo name: " << name;
+    readdy::log::console()->debug("foo name: {}", name);
 }
 
 TEST(KernelProvider, TestTestProgram) {

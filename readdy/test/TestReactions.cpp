@@ -7,7 +7,6 @@
  * @date 21.06.16
  */
 
-#include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/SimulationScheme.h>
 #include <readdy/testing/KernelTest.h>
@@ -27,7 +26,7 @@ TEST_P(TestReactions, TestReactionFactory) {
     {
         // sanity check of operator<< for reactions
         const auto r = kernel->getReactionFactory().createReaction<readdy::model::reactions::Decay>("decay", 0, .1);
-        BOOST_LOG_TRIVIAL(debug) << "decay reaction: " << *r;
+        readdy::log::console()->debug("decay reaction: {}", *r);
     }
 }
 

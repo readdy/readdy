@@ -8,7 +8,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/common/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
@@ -58,7 +57,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
             avg += v;
         }
         avg /= currentResult.size();
-        if (!allWithinBounds) BOOST_LOG_TRIVIAL(debug) << "Average position: " << avg;
+        if (!allWithinBounds) readdy::log::console()->debug("Average position: {}", avg);
         ASSERT_TRUE(allWithinBounds);
     });
     auto connection = kernel->connectObservable(ppObs.get());
@@ -68,7 +67,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
     auto &&nl = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
     nl->execute();
-    for (readdy::model::time_step_type &&t = 0; t < nSteps; ++t) {
+    for (readdy::model::observables::time_step_type &&t = 0; t < nSteps; ++t) {
         forces->execute();
         integrator->execute();
         nl->execute();

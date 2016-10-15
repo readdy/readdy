@@ -16,6 +16,7 @@
 
 #include <string>
 #include <ostream>
+#include <spdlog/fmt/ostr.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/RandomProvider.h>
 #include <readdy/common/make_unique.h>

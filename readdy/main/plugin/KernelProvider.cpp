@@ -55,6 +55,9 @@ void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
         fs::dir dir(directory);
         while(dir.has_next()) {
             const auto file = dir.next();
+            if(file == ".") {
+                break;
+            }
             try {
                 if (isSharedLibrary(file)) {
                     add(file);

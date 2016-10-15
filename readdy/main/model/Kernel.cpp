@@ -43,7 +43,7 @@ Kernel::~Kernel() {
 }
 
 readdy::signals::scoped_connection Kernel::connectObservable(ObservableBase *const observable) {
-    return pimpl->signal->connect_scoped([=](observables::time_step_type t) {observable->callback(t);});
+    return pimpl->signal->connect_scoped([observable](observables::time_step_type t) {observable->callback(t);});
 }
 
 std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>

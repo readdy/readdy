@@ -1,11 +1,5 @@
-#include <readdy/Simulation.h>
 #include "gtest/gtest.h"
-
-#if BOOST_OS_MACOS
-#include <array>
-#endif
-
-#include <boost/algorithm/string.hpp>
+#include <readdy/Simulation.h>
 
 using namespace readdy;
 
@@ -82,8 +76,8 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
         msd += position * position;
     }
     msd /= positions.size();
-    BOOST_LOG_TRIVIAL(debug) << "mean squared displacement: " << msd;
-    BOOST_LOG_TRIVIAL(debug) << "mean squared displacement2: " << *aggregator.result;
+    readdy::log::console()->debug("mean squared displacement: {}", msd);
+    readdy::log::console()->debug("mean squared displacement2: {}", *aggregator.result);
 }
 
 TEST_F(TestSimulation, TestObservables) {
