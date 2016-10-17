@@ -33,15 +33,31 @@ public:
 
     void disconnect() {
         auto container = slots_container.lock();
-        if(container) {
+        if (container) {
             disconnector(container);
             slots_container.reset();
         }
     }
+
+    connection(connection const &) = delete;
+
+    connection &operator=(connection const &) = delete;
+
+    connection(connection &&rhs) : disconnector(std::move(rhs.disconnector)),
+                                   slots_container(std::move(rhs.slots_container)) {
+    }
+
+    connection &operator=(connection &&rhs) {
+        disconnector = std::move(rhs.disconnector);
+        slots_container = std::move(rhs.slots_container);
+        return *this;
+    }
+
 private:
 
     template<typename T>
-    friend class slots_container;
+    friend
+    class slots_container;
 
     friend class scoped_connection;
 
@@ -59,9 +75,23 @@ public:
     virtual ~scoped_connection() {
         disconnect();
     }
+
     scoped_connection(connection connection) : connection(std::move(connection)) {}
+
     void disconnect() {
         connection.disconnect();
+    }
+
+    scoped_connection(const scoped_connection &) = delete;
+
+    scoped_connection &operator=(const scoped_connection &) = delete;
+
+    scoped_connection(scoped_connection &&rhs) : connection(std::move(rhs.connection)) {
+    }
+
+    scoped_connection &operator=(scoped_connection &&rhs) {
+        connection = std::move(rhs.connection);
+        return *this;
     }
 
 private:
@@ -71,25 +101,29 @@ private:
 template<typename T>
 class slots_container {
     std::shared_ptr<std::list<T>> container;
+
     struct eraser {
-        eraser(typename std::list<T>::iterator it) : it(it) { }
+        eraser(typename std::list<T>::iterator it) : it(it) {}
+
         void operator()(std::shared_ptr<void> ptr) {
             auto slots = std::static_pointer_cast<std::list<T>>(ptr);
             slots->erase(it);
         }
+
     private:
         typename std::list<T>::iterator it;
     };
+
 public:
 
-    slots_container() : container(std::make_shared<std::list<T>>()) { }
+    slots_container() : container(std::make_shared<std::list<T>>()) {}
 
-    connection connect(const T& slot) {
+    connection connect(const T &slot) {
         auto it = container->insert(container->end(), slot);
         return connection(container, eraser(it));
     }
 
-    scoped_connection connect_scoped(const T& slot) {
+    scoped_connection connect_scoped(const T &slot) {
         return scoped_connection(connect(slot));
     }
 
@@ -117,7 +151,7 @@ public:
     using slot_type = std::function<void(Args...)>;
 
     void fire_signal(Args... args) {
-        std::for_each(this->begin(), this->end(), [&](slot_type& slot) { slot(std::forward<Args>(args)...); });
+        std::for_each(this->begin(), this->end(), [&](slot_type &slot) { slot(std::forward<Args>(args)...); });
     }
 
     void operator()(Args... args) {

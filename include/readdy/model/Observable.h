@@ -77,6 +77,7 @@ protected:
 template<typename Result>
 class Observable : public ObservableBase {
 public:
+    using callback_function = std::function<void(const Result&)>;
     typedef Result result_t;
 
     Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride), result() {
@@ -86,7 +87,7 @@ public:
         return result;
     }
 
-    void setCallback(std::function<void(const result_t &)> callbackFun) {
+    void setCallback(const callback_function& callbackFun) {
         Observable::_callback_f = std::move(callbackFun);
     }
 
@@ -99,7 +100,7 @@ public:
 
 protected:
     Result result;
-    std::function<void(Result)> _callback_f = [](const Result) {};
+    callback_function _callback_f = [](const Result) {};
 };
 
 template<typename Res_t, typename Obs1_t, typename Obs2_t>

@@ -57,30 +57,29 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         kernel->addParticle("B", {stdRand(-2.5, 2.5), stdRand(-2.5, 2.5), stdRand(-2.5, 2.5)});
     }
 
-    {
 
-        auto obs = kernel->createObservable<n_particles_obs>(1, std::vector<std::string>({"A", "B", "AB"}));
-        auto conn = kernel->connectObservable(obs.get());
-        obs->setCallback([&n_A, &n_B](const n_particles_obs::result_t &result) {
-            if (result.size() == 2) {
-                EXPECT_EQ(n_A, result[0] + result[2])
-                                    << "Expected #(A)+#(AB)==" << n_A << ", but #(A)=" << result[0] << ", #(AB)="
-                                    << result[2];
-                EXPECT_EQ(n_B, result[1] + result[2])
-                                    << "Expected #(B)+#(AB)==" << n_B << ", but #(B)=" << result[1] << ", #(AB)="
-                                    << result[2];
-            }
-        });
-
-        {
-            auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
-            const auto progs = kernel->getAvailablePrograms();
-            if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
-                conf = std::move(conf.withReactionScheduler<readdy::model::programs::reactions::GillespieParallel>());
-            }
-            conf.configureAndRun(10);
+    auto obs = kernel->createObservable<n_particles_obs>(1, std::vector<std::string>({"A", "B", "AB"}));
+    auto conn = kernel->connectObservable(obs.get());
+    obs->setCallback([&n_A, &n_B](const n_particles_obs::result_t &result) {
+        if (result.size() == 2) {
+            EXPECT_EQ(n_A, result[0] + result[2])
+                                << "Expected #(A)+#(AB)==" << n_A << ", but #(A)=" << result[0] << ", #(AB)="
+                                << result[2];
+            EXPECT_EQ(n_B, result[1] + result[2])
+                                << "Expected #(B)+#(AB)==" << n_B << ", but #(B)=" << result[1] << ", #(AB)="
+                                << result[2];
         }
+    });
+
+    {
+        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
+        const auto progs = kernel->getAvailablePrograms();
+        if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
+            conf = std::move(conf.withReactionScheduler<readdy::model::programs::reactions::GillespieParallel>());
+        }
+        conf.configureAndRun(10);
     }
+
 }
 
 INSTANTIATE_TEST_CASE_P(TestReactionsCore, TestReactions,

@@ -346,7 +346,31 @@ namespace readdy {
         NoKernelSelectedException(const std::string &__arg);
     };
 
-    #include "readdy/_internal/SimulationImpl.hpp"
+struct Simulation::Impl {
+    std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections {};
+    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::ObservableBase>> observables {};
+    std::unique_ptr<readdy::model::Kernel> kernel;
+    unsigned long counter = 0;
+};
+
+
+template<typename T, typename... Args>
+unsigned long Simulation::registerObservable(const std::function<void(typename T::result_t)>& callbackFun, unsigned int stride, Args... args) {
+    ensureKernelSelected();
+    auto uuid = pimpl->counter++;
+    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
+    obs->setCallback(callbackFun);
+    auto connection = pimpl->kernel->connectObservable(obs.get());
+    pimpl->observables.emplace(uuid, std::move(obs));
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+    return uuid;
+}
+
+template<typename SchemeType>
+readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool useDefaults) {
+    ensureKernelSelected();
+    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
+}
 
 }
 
