@@ -34,6 +34,8 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     // scenario: two particle types A and B, which can form a complex AB which after a time is going to dissolve back
     // into A and B. Therefore, the numbers #(A) + #(AB) and #(B) + #(AB) must remain constant.
 
+    using n_particles_obs = readdy::model::NParticlesObservable;
+
     auto stdRand = [](double lower = 0.0, double upper = 1.0) -> double {
         return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
     };
@@ -55,22 +57,30 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         kernel->addParticle("B", {stdRand(-2.5, 2.5), stdRand(-2.5, 2.5), stdRand(-2.5, 2.5)});
     }
 
-    auto obsTuple = kernel->createAndConnectObservable<readdy::model::NParticlesObservable>(1, std::vector<std::string>(
-            {"A", "B", "AB"}));
-    std::get<0>(obsTuple)->setCallback([&](const readdy::model::NParticlesObservable::result_t &result) {
-        EXPECT_EQ(n_A, result[0] + result[2])
-                            << "Expected #(A)+#(AB)==" << n_A << ", but #(A)=" << result[0] << ", #(AB)=" << result[2];
-        EXPECT_EQ(n_B, result[1] + result[2])
-                            << "Expected #(B)+#(AB)==" << n_B << ", but #(B)=" << result[1] << ", #(AB)=" << result[2];
-    });
+    {
 
-    auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
-    const auto progs = kernel->getAvailablePrograms();
-    if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
-        conf = std::move(conf.withReactionScheduler<readdy::model::programs::reactions::GillespieParallel>());
+        auto obs = kernel->createObservable<n_particles_obs>(1, std::vector<std::string>({"A", "B", "AB"}));
+        auto conn = kernel->connectObservable(obs.get());
+        obs->setCallback([&n_A, &n_B](const n_particles_obs::result_t &result) {
+            if (result.size() == 2) {
+                EXPECT_EQ(n_A, result[0] + result[2])
+                                    << "Expected #(A)+#(AB)==" << n_A << ", but #(A)=" << result[0] << ", #(AB)="
+                                    << result[2];
+                EXPECT_EQ(n_B, result[1] + result[2])
+                                    << "Expected #(B)+#(AB)==" << n_B << ", but #(B)=" << result[1] << ", #(AB)="
+                                    << result[2];
+            }
+        });
+
+        {
+            auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
+            const auto progs = kernel->getAvailablePrograms();
+            if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
+                conf = std::move(conf.withReactionScheduler<readdy::model::programs::reactions::GillespieParallel>());
+            }
+            conf.configureAndRun(10);
+        }
     }
-    conf.configureAndRun(10);
-
 }
 
 INSTANTIATE_TEST_CASE_P(TestReactionsCore, TestReactions,

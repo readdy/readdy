@@ -35,7 +35,6 @@ protected:
      * The destructor of KernelProvider.
      */
     virtual ~KernelProvider() {
-        log::console()->debug("destroying kernel provider");
     }
 
     /**

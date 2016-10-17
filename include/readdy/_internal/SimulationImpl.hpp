@@ -13,22 +13,21 @@
  */
 
 struct Simulation::Impl {
-    std::unique_ptr<readdy::model::Kernel> kernel;
-    std::vector<std::unique_ptr<readdy::model::ObservableBase>> foo {};
-    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::ObservableBase>> observables {};
     std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections {};
+    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::ObservableBase>> observables {};
+    std::unique_ptr<readdy::model::Kernel> kernel;
     unsigned long counter = 0;
 };
 
 
 template<typename T, typename... Args>
-unsigned long Simulation::registerObservable(const std::function<void(typename T::result_t)> callbackFun, unsigned int stride, Args... args) {
+unsigned long Simulation::registerObservable(const std::function<void(typename T::result_t)>& callbackFun, unsigned int stride, Args... args) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;
-    auto && obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
-    obs->setCallback(std::move(callbackFun));
+    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
+    obs->setCallback(callbackFun);
+    auto&& connection = pimpl->kernel->connectObservable(obs.get());
     pimpl->observables.emplace(uuid, std::move(obs));
-    auto&& connection = pimpl->kernel->connectObservable(pimpl->observables[uuid].get());
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return uuid;
 }

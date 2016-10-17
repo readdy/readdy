@@ -97,22 +97,9 @@ public:
     };
 
     /**
-     * Creates an observable and connects it to the kernel.
-     *
-     * @return a tuple of the created observable and a scoped_connection object.
-     */
-    template<typename T, typename... Args>
-    std::tuple<std::unique_ptr<T>, readdy::signals::scoped_connection>
-    createAndConnectObservable(unsigned int stride, Args &&... args) {
-        auto &&obs = createObservable<T>(stride, std::forward<Args>(args)...);
-        auto &&connection = connectObservable(obs.get());
-        return std::make_tuple(std::move(obs), std::move(connection));
-    };
-
-    /**
      * Connects an observable to the kernel signal.
      *
-     * @return A scoped_connection object that, once deleted, releases the connection of the observable.
+     * @return A connection object that, once deleted, releases the connection of the observable.
      */
     virtual readdy::signals::scoped_connection connectObservable(ObservableBase *const observable);
 

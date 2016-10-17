@@ -15,6 +15,7 @@
 #include <memory>
 #include <algorithm>
 #include "make_unique.h"
+#include "logging.h"
 
 namespace readdy {
 namespace signals {
@@ -22,7 +23,7 @@ namespace signals {
 class connection {
 public:
     using slots_container_type = std::shared_ptr<void>;
-    using disconnector_type = std::function<void(slots_container_type)>;
+    using disconnector_type = std::function<void(std::shared_ptr<void>)>;
 
     virtual ~connection() = default;
 
@@ -33,7 +34,8 @@ public:
     void disconnect() {
         auto container = slots_container.lock();
         if(container) {
-
+            disconnector(container);
+            slots_container.reset();
         }
     }
 private:
@@ -52,41 +54,43 @@ private:
     std::weak_ptr<void> slots_container;
 };
 
-class scoped_connection : public connection {
+class scoped_connection {
 public:
     virtual ~scoped_connection() {
         disconnect();
     }
+    scoped_connection(connection connection) : connection(std::move(connection)) {}
+    void disconnect() {
+        connection.disconnect();
+    }
 
 private:
-
-    template<typename T>
-    friend class slots_container;
-
-    scoped_connection(const connection::slots_container_type &slots_container,
-                      const connection::disconnector_type &disconnector)
-            : connection(slots_container, disconnector) {}
-
+    connection connection;
 };
 
 template<typename T>
 class slots_container {
+    std::shared_ptr<std::list<T>> container;
+    struct eraser {
+        eraser(typename std::list<T>::iterator it) : it(it) { }
+        void operator()(std::shared_ptr<void> ptr) {
+            auto slots = std::static_pointer_cast<std::list<T>>(ptr);
+            slots->erase(it);
+        }
+    private:
+        typename std::list<T>::iterator it;
+    };
 public:
 
     slots_container() : container(std::make_shared<std::list<T>>()) { }
 
     connection connect(const T& slot) {
         auto it = container->insert(container->end(), slot);
-        return connection(container, [it](connection::disconnector_type::argument_type ptr) {
-            std::static_pointer_cast<std::list<T>>(ptr)->erase(it);
-        });
+        return connection(container, eraser(it));
     }
 
     scoped_connection connect_scoped(const T& slot) {
-        auto it = container->insert(container->end(), slot);
-        return scoped_connection(container, [it](connection::disconnector_type::argument_type ptr) {
-            std::static_pointer_cast<std::list<T>>(ptr)->erase(it);
-        });
+        return scoped_connection(connect(slot));
     }
 
     const std::size_t n_slots() const {
@@ -101,8 +105,6 @@ public:
         return container->end();
     }
 
-private:
-    std::shared_ptr<std::list<T>> container;
 };
 
 template<typename F>

@@ -21,7 +21,8 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     m::KernelContext &ctx = kernel->getKernelContext();
     auto &stateModel = kernel->getKernelStateModel();
 
-    auto obs = kernel->createAndConnectObservable<m::ForcesObservable>(1);
+    auto obs = kernel->createObservable<m::ForcesObservable>(1);
+    auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
     ctx.setDiffusionConstant("A", 1.0);
     ctx.setParticleRadius("A", 1.0);
@@ -42,8 +43,8 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     stateModel.calculateForces();
     stateModel.calculateForces(); // calculating twice should yield the same result. force and energy must not accumulate
     // check results
-    std::get<0>(obs)->evaluate();
-    auto forcesIt = std::get<0>(obs)->getResult().begin();
+    obs->evaluate();
+    auto forcesIt = obs->getResult().begin();
     EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
     ++forcesIt;
     EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
@@ -55,7 +56,8 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     auto &stateModel = kernel->getKernelStateModel();
 
     // similar situation as before but now with repulsion between A and B
-    auto obs = kernel->createAndConnectObservable<m::ForcesObservable>(1);
+    auto obs = kernel->createObservable<m::ForcesObservable>(1);
+    auto conn = kernel->connectObservable(obs.get());
     ctx.setDiffusionConstant("A", 1.0);
     ctx.setDiffusionConstant("B", 1.0);
     ctx.setParticleRadius("A", 1.0);
@@ -99,8 +101,8 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     const m::Vec3 force23(1.4641005886756873, 0, -2.1961508830135306);
     const m::Vec3 force25(-2.1961508830135306, 0, -1.4641005886756873);
     // check results
-    std::get<0>(obs)->evaluate();
-    auto forcesIt = std::get<0>(obs)->getResult().begin();
+    obs->evaluate();
+    auto forcesIt = obs->getResult().begin();
     EXPECT_VEC3_EQ(*forcesIt, force03 + force05) << "force on particle 0 = force03 + force05";
     ++forcesIt;
     EXPECT_VEC3_EQ(*forcesIt, force13 + force15) << "force on particle 1 = force13 + force15";
@@ -123,7 +125,8 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     auto &stateModel = kernel->getKernelStateModel();
 
     // several particles without potentials -> forces must all be zero
-    auto obs = kernel->createAndConnectObservable<m::ForcesObservable>(1);
+    auto obs = kernel->createObservable<m::ForcesObservable>(1);
+    auto conn = kernel->connectObservable(obs.get());
     ctx.setDiffusionConstant("A", 1.0);
     ctx.setDiffusionConstant("B", 1.0);
     ctx.setParticleRadius("A", 1.0);
@@ -144,8 +147,8 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     stateModel.updateNeighborList();
     stateModel.calculateForces();
     // check results
-    std::get<0>(obs)->evaluate();
-    for (auto &&force : std::get<0>(obs)->getResult()) {
+    obs->evaluate();
+    for (auto &&force : obs->getResult()) {
         EXPECT_VEC3_EQ(force, m::Vec3(0, 0, 0));
     }
 }

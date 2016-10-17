@@ -8,7 +8,6 @@
  */
 
 #include <stdio.h>
-#include <sys/stat.h>
 
 #ifdef WINDOWS
 #include <direct.h>
@@ -19,8 +18,8 @@
 #define GetCurrentDir getcwd
 #endif
 
-#include <readdy/common/filesystem.h>
-#include <readdy/common/make_unique.h>
+#include "readdy/common/filesystem.h"
+#include "readdy/common/make_unique.h"
 #include "readdy/common/tinydir.h"
 
 namespace readdy {
@@ -43,34 +42,27 @@ bool exists(const std::string& path) {
 }
 
 bool is_file(const std::string &path) {
-    struct stat s;
-    if (stat(path.c_str(), &s) == 0) {
-        if (s.st_mode & S_IFREG) {
-            return true;
-        }
-    }
-    return false;
+    return !is_directory(path);
 }
 
 bool is_directory(const std::string &path) {
-    struct stat s;
-    if (stat(path.c_str(), &s) == 0) {
-        if (s.st_mode & S_IFDIR) {
-            return true;
-        }
+    tinydir_file file;
+    if(tinydir_file_open(&file, path.c_str()) == -1) {
+        throw std::runtime_error("error on opening " + path);
     }
-    return false;
+    return file.is_dir != 0;
 }
 
-struct dir::Impl {
-    tinydir_dir dir;
+struct dir_iterator::Impl {
+    std::unique_ptr<tinydir_dir> dir = std::make_unique<tinydir_dir>();
+    std::size_t n = 0;
 };
 
 
-dir::dir(const std::string &path) : pimpl(std::make_unique<Impl>()) {
+dir_iterator::dir_iterator(const std::string &path) : pimpl(std::make_unique<Impl>()) {
     if(exists(path)) {
         if(is_directory(path)) {
-            if (tinydir_open(&(pimpl->dir), path.c_str()) == -1) {
+            if (tinydir_open_sorted(pimpl->dir.get(), path.c_str()) == -1) {
                 throw std::runtime_error("Error getting file " + path);
             }
         } else {
@@ -81,21 +73,35 @@ dir::dir(const std::string &path) : pimpl(std::make_unique<Impl>()) {
     }
 }
 
-dir::~dir() {
-    tinydir_close(&(pimpl->dir));
+dir_iterator::~dir_iterator() {
+    tinydir_close(pimpl->dir.get());
 }
 
-bool dir::has_next() const {
-    return static_cast<bool>(pimpl->dir.has_next);
+bool dir_iterator::has_next() const {
+    return pimpl->n < pimpl->dir->n_files;
 }
 
-std::string dir::next() {
+std::string dir_iterator::next() {
     tinydir_file file;
-    if(tinydir_readfile(&(pimpl->dir), &file) == -1) {
+    if(tinydir_readfile_n(pimpl->dir.get(), &file, pimpl->n++) == -1) {
         throw std::runtime_error("error on getting file");
     }
-    return std::string(file.name);
+    return std::string(pimpl->dir->path) + std::string(&separator) + std::string(file.name);
 }
+
+dir_iterator::dir_iterator(dir_iterator && rhs) = default;
+
+dir_iterator &dir_iterator::operator=(dir_iterator && rhs) = default;
+
+std::string dir_iterator::base_name() const {
+    const std::string path{pimpl->dir->path};
+    auto lastSlash = path.find_last_of("/\\");
+    if (lastSlash == std::string::npos) {
+        return path;
+    }
+    return path.substr(lastSlash + 1);
+}
+
 }
 }
 }

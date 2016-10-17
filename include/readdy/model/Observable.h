@@ -21,6 +21,7 @@
 
 #include <readdy/common/make_unique.h>
 #include <readdy/common/signals.h>
+#include <readdy/common/logging.h>
 
 namespace readdy {
 namespace model {
@@ -78,19 +79,15 @@ class Observable : public ObservableBase {
 public:
     typedef Result result_t;
 
-    Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride) {
+    Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride), result() {
     }
 
     const result_t &getResult() {
         return result;
     }
 
-    void setCallback(std::function<void(const result_t &)> &&callbackFun) {
+    void setCallback(std::function<void(const result_t &)> callbackFun) {
         Observable::_callback_f = std::move(callbackFun);
-    }
-
-    void setCallback(const std::function<void(const result_t &)> &callbackFun) {
-        Observable::_callback_f = callbackFun;
     }
 
     virtual void callback(observables::time_step_type t) override {

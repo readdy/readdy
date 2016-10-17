@@ -26,7 +26,7 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const st
     }
     // load the kernel
     {
-        reference = lib->call<std::unique_ptr<readdy::model::Kernel>>("createKernel")();
+        reference = lib->load<std::unique_ptr<readdy::model::Kernel>()>("createKernel")();
     }
 }
 
@@ -108,6 +108,6 @@ const std::string readdy::plugin::_internal::loadKernelName(const std::string &s
     if (!lib.has_symbol("name")) {
         throw plug::InvalidPluginException("library " + sharedLib + " had no name() symbol");
     } else {
-        return lib.call<std::string>("name")();
+        return lib.load<std::string()>("name")();
     }
 }

@@ -101,7 +101,7 @@ namespace readdy {
          * @return a uuid with which the observable is associated
          */
         template<typename T, typename... Args>
-        unsigned long registerObservable(const std::function<void(typename T::result_t)> callbackFun,
+        unsigned long registerObservable(const std::function<void(typename T::result_t)>& callbackFun,
                                               unsigned int stride, Args... args);
 
         /**

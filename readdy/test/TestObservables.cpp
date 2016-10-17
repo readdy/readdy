@@ -128,8 +128,8 @@ TEST_P(TestObservables, TestForcesObservable) {
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
     kernel->getKernelContext().configure();
     {
-        auto &&obsC = kernel->createObservable<m::ForcesObservable>(1, std::vector<std::string>{"C"});
-        auto &&connectionC = kernel->connectObservable(obsC.get());
+        auto obsC = kernel->createObservable<m::ForcesObservable>(1, std::vector<std::string>{"C"});
+        auto connectionC = kernel->connectObservable(obsC.get());
         nl->execute();
         forces->execute();
         kernel->evaluateObservables(2);

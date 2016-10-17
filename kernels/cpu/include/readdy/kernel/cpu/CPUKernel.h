@@ -20,6 +20,7 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
+
 class CPUKernel : public readdy::model::Kernel {
 public:
     static const std::string name;
@@ -52,16 +53,14 @@ private:
     std::unique_ptr<Impl> pimpl;
 };
 
+std::string name() {
+    return readdy::kernel::cpu::CPUKernel::name;
+}
 
-BOOST_DLL_ALIAS(
-        readdy::kernel::cpu::CPUKernel::name,
-        name
-);
-// export factory method as "create_kernel"
-BOOST_DLL_ALIAS(
-        readdy::kernel::cpu::CPUKernel::create,
-        createKernel
-);
+std::unique_ptr<readdy::kernel::cpu::CPUKernel> createKernel() {
+    return readdy::kernel::cpu::CPUKernel::create();
+}
+
 }
 }
 }

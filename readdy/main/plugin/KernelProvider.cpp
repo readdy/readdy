@@ -52,18 +52,19 @@ const std::string KernelProvider::getDefaultKernelDirectory() {
 void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
     log::console()->debug("loading kernels from directory: {}", directory);
     if (fs::exists(directory) && fs::is_directory(directory)) {
-        fs::dir dir(directory);
+        fs::dir_iterator dir(directory);
         while(dir.has_next()) {
             const auto file = dir.next();
-            if(file == ".") {
-                break;
-            }
-            try {
-                if (isSharedLibrary(file)) {
-                    add(file);
+            if(fs::is_file(file)) {
+                try {
+                    if (isSharedLibrary(file)) {
+                        add(file);
+                    }
+                } catch (const std::exception &e) {
+                    log::console()->warn("could not load {} due to {}", file, std::string(e.what()));
                 }
-            } catch (const std::exception &e) {
-                log::console()->warn("could not load {} due to {}", file, std::string(e.what()));
+            } else {
+                log::console()->debug("omitted {} because it was no file.", file);
             }
         }
     } else {

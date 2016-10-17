@@ -17,12 +17,25 @@ namespace readdy {
 namespace util {
 namespace fs {
 
-struct dir {
+constexpr char separator =
+#if READDY_WINDOWS
+        '\\';
+#else
+        '/';
+#endif
 
-    dir(const std::string& path);
+struct dir_iterator {
+
+    dir_iterator(const std::string& path);
     bool has_next() const;
+    std::string base_name() const;
     std::string next();
-    virtual ~dir();
+    virtual ~dir_iterator();
+
+    dir_iterator(const dir_iterator&) = delete;
+    dir_iterator& operator=(const dir_iterator&) = delete;
+    dir_iterator(dir_iterator&&);
+    dir_iterator& operator=(dir_iterator&&);
 
 private:
     struct Impl;

@@ -41,22 +41,17 @@ struct shared_library {
         }
     }
 
-    template<typename Ret, typename... Args>
-    std::function<Ret(Args...)> call(const std::string& symbol, Args... args) {
-        using fptr = Ret (*)(Args...);
-        if(so_ptr) {
-            return (fptr) (dlsym(so_ptr, symbol.c_str()));
+    template<typename Signature>
+    std::function<Signature> load(const std::string &symbol) {
+        dlerror();
+        const auto result = dlsym(so_ptr, symbol.c_str());
+        if(!result) {
+            const auto error = dlerror();
+            if(error) {
+                throw std::logic_error("couldn't find symbol \""+symbol+"\": " + error);
+            }
         }
-        /**
-         * TODO!
-         */
-        /*
-
-        if(so_ptr) {
-            fptr fptr = ;
-            return fptr(args...);
-        }*/
-        throw std::runtime_error("no library loaded");
+        return reinterpret_cast<Signature*>(result);
     };
 
 };

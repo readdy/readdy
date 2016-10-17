@@ -22,7 +22,7 @@ struct Kernel::Impl {
     /**
      * todo
      */
-    std::unique_ptr<observables::signal_type> signal = std::make_unique<observables::signal_type>();
+    std::unique_ptr<observables::signal_type> signal;
     /**
      * todo
      */
@@ -37,13 +37,16 @@ const std::string &Kernel::getName() const {
 Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()) {
     pimpl->name = name;
     pimpl->observableFactory = std::make_unique<_internal::ObservableFactory>(this);
+    pimpl->signal = std::make_unique<observables::signal_type>();
 }
 
 Kernel::~Kernel() {
 }
 
 readdy::signals::scoped_connection Kernel::connectObservable(ObservableBase *const observable) {
-    return pimpl->signal->connect_scoped([observable](observables::time_step_type t) {observable->callback(t);});
+    return pimpl->signal->connect_scoped([observable](const observables::time_step_type t) {
+        observable->callback(t);
+    });
 }
 
 std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
@@ -58,7 +61,7 @@ readdy::model::_internal::ObservableFactory &Kernel::getObservableFactory() cons
 }
 
 void Kernel::evaluateObservables(observables::time_step_type t) {
-    pimpl->signal->fire_signal(t);
+    (*pimpl->signal)(t);
 }
 
 std::vector<std::string> Kernel::getAvailablePotentials() const {
