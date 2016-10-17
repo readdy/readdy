@@ -36,6 +36,11 @@ readdy::model::ForcesObservable *
 SingleCPUObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
     return new ForcesObservable<>(kernel, stride, typesToCount);
 }
+
+readdy::model::ParticlePositionObservable *
+SingleCPUObservableFactory::createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
+    return new ParticlePositionObservable<>(kernel, stride, typesToCount);
+}
 }
 }
 }

@@ -33,6 +33,9 @@ public:
     virtual readdy::model::ForcesObservable *
     createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
+    virtual readdy::model::ParticlePositionObservable *
+    createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+
 private:
     readdy::kernel::singlecpu::SingleCPUKernel *const kernel;
 };

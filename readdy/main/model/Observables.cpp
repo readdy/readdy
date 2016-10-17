@@ -14,9 +14,11 @@
 namespace readdy {
 namespace model {
 
-void ParticlePositionObservable::evaluate() {
-    ParticlePositionObservable::result = kernel->getKernelStateModel().getParticlePositions();
-}
+ParticlePositionObservable::ParticlePositionObservable(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
+        ParticlePositionObservable(kernel, stride, _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
+
+ParticlePositionObservable::ParticlePositionObservable(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount) :
+        Observable(kernel, stride), typesToCount(typesToCount) {}
 
 void TestCombinerObservable::evaluate() {
     std::vector<double> result;

@@ -37,7 +37,7 @@ public:
 
 protected:
     SingleCPUKernel const *const kernel;
-    std::vector<std::function<bool(readdy::model::Vec3)>> characteristicFuns;
+    std::vector<std::function<bool(readdy::model::Vec3)>> compartments;
     std::unordered_map<compartmentIdx_t, std::unordered_map<particleType_t, particleType_t>> conversions;
 };
 

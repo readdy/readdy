@@ -30,14 +30,19 @@ class KernelContext;
 
 class ParticlePositionObservable : public Observable<std::vector<Vec3>> {
 public:
-
-
     ParticlePositionObservable(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
+
+    ParticlePositionObservable(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
+
+    ParticlePositionObservable(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
     virtual ~ParticlePositionObservable() {
     }
 
-    virtual void evaluate() override;
+    virtual void evaluate() = 0;
+
+protected:
+    std::vector<unsigned int> typesToCount;
 };
 
 class RadialDistributionObservable : public Observable<std::pair<std::vector<double>, std::vector<double>>> {

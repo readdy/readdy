@@ -56,6 +56,11 @@ public:
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
+    virtual ParticlePositionObservable *
+    createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
+        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+    }
+
 protected:
     Kernel *const kernel;
 
@@ -88,6 +93,13 @@ protected:
     struct get_dispatcher<readdy::model::ForcesObservable, Args...> {
         static ForcesObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
             return self->createForcesObservable(stride, std::forward<Args>(args)...);
+        }
+    };
+
+    template<typename... Args>
+    struct get_dispatcher<readdy::model::ParticlePositionObservable, Args...> {
+        static ParticlePositionObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+            return self->createParticlePositionObservable(stride, std::forward<Args>(args)...);
         }
     };
 };

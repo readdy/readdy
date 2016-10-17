@@ -16,14 +16,16 @@ Compartments::Compartments(SingleCPUKernel const *const kernel) : kernel(kernel)
 
 void Compartments::execute() {
     throw std::runtime_error("Not yet impl'd");
+    const auto &ctx = kernel->getKernelContext();
+    auto data = kernel->getKernelStateModel().getParticleData();
 }
 
 void Compartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
-    characteristicFuns.push_back(std::move(fun));
+    compartments.push_back(std::move(fun));
 }
 
 void Compartments::registerConversion(Compartments::compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
-    if (compartmentIdx >= characteristicFuns.size()) {
+    if (compartmentIdx >= compartments.size()) {
         throw std::runtime_error("Given compartment does not exist. Register it first.");
     }
     if (conversions.find(compartmentIdx) == conversions.end()) {
