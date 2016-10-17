@@ -21,11 +21,6 @@ using ctx = readdy::model::KernelContext;
 using kern = readdy::model::Kernel;
 using uuid = boost::uuids::uuid;
 
-struct nodelete {
-    template<typename T>
-    void operator()(T *) {}
-};
-
 // thin wrappers
 void setBoxSize(sim &self, const vec &size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
 

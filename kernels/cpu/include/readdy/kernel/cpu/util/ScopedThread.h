@@ -11,7 +11,6 @@
 #define READDY_MAIN_SCOPEDTHREAD_H
 
 #include <thread>
-#include <boost/log/trivial.hpp>
 
 namespace readdy {
 namespace kernel {

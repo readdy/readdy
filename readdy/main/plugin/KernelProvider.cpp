@@ -88,6 +88,7 @@ bool KernelProvider::isSharedLibrary(const std::string &path) const {
 void KernelProvider::add(const std::string &sharedLib) {
     using namespace _internal;
     const auto name = loadKernelName(sharedLib);
+    log::console()->debug("Trying to load kernel with name {}", name);
     factory.emplace(std::make_pair(name, [sharedLib] { return new KernelPluginDecorator(sharedLib); }));
 }
 

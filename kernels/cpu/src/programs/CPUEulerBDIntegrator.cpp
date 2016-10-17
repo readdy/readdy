@@ -29,13 +29,13 @@ void CPUEulerBDIntegrator::execute() {
 
     auto worker = [&context](it_vec3_t pos0, it_vec3_t posEnd, it_vec3_t forces0,
                              it_uint_t types0) {
-        readdy::model::RandomProvider provider;
+
         const auto &fixPos = context.getFixPositionFun();
         const auto &kbt = context.getKBT();
         const auto &&dt = context.getTimeStep();
         for (auto it = pos0; it != posEnd; ++it) {
             const double D = context.getDiffusionConstant(*types0);
-            const auto randomDisplacement = sqrt(2. * D * dt) * (provider.getNormal3());
+            const auto randomDisplacement = sqrt(2. * D * dt) * readdy::model::rnd::normal3(0, 1);
             *it += randomDisplacement;
             const auto deterministicDisplacement = *forces0 * dt * D / kbt;
             *it += deterministicDisplacement;

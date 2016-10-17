@@ -28,7 +28,6 @@ void UncontrolledApproximation::execute() {
     const auto &fixPos = ctx.getFixPositionFun();
     const auto &dt = ctx.getTimeStep();
     auto data = kernel->getKernelStateModel().getParticleData();
-    auto rnd = readdy::model::RandomProvider();
     std::vector<rdy_particle_t> newParticles{};
     std::vector<std::function<void()>> events{};
 
@@ -41,7 +40,7 @@ void UncontrolledApproximation::execute() {
             const auto &reactions = ctx.getOrder1Reactions(*it_type);
             for (const auto &reaction : reactions) {
                 auto r = reaction->getRate() * dt;
-                if (rnd.getUniform() < r) {
+                if (readdy::model::rnd::uniform() < r) {
                     const size_t particleIdx = (const size_t) (it_type - data->begin_types());
                     events.push_back([particleIdx, &newParticles, &reaction, this] {
                         auto &&_data = kernel->getKernelStateModel().getParticleData();
@@ -70,7 +69,7 @@ void UncontrolledApproximation::execute() {
                                 break;
                             }
                             default: {
-                                BOOST_LOG_TRIVIAL(error) << "This should not happen!";
+                                log::console()->error("This should not happen!");
                             }
                         }
                     });
@@ -96,7 +95,7 @@ void UncontrolledApproximation::execute() {
                 for (const auto &reaction : reactions) {
                     // if close enough and coin flip successful
                     if (distSquared < reaction->getEductDistanceSquared()
-                        && rnd.getUniform() < reaction->getRate() * dt) {
+                        && readdy::model::rnd::uniform() < reaction->getRate() * dt) {
                         events.push_back([idx1, neighbor, this, &newParticles, &reaction] {
                             auto &&_data = kernel->getKernelStateModel().getParticleData();
                             if (_data->isMarkedForDeactivation(idx1)) return;
@@ -120,7 +119,7 @@ void UncontrolledApproximation::execute() {
                                     break;
                                 }
                                 default: {
-                                    BOOST_LOG_TRIVIAL(error) << "This should not happen!";
+                                    log::console()->error("This should not happen!");
                                 }
                             }
                         });
@@ -224,7 +223,6 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
     std::vector<rdy_particle_t> newParticles{};
 
     const auto &ctx = kernel->getKernelContext();
-    auto rnd = std::make_unique<readdy::model::RandomProvider>();
     const auto data = kernel->getKernelStateModel().getParticleData();
     const auto dt = ctx.getTimeStep();
     /**
@@ -235,7 +233,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
         const std::size_t nEvents = events.size();
         while (nDeactivated < nEvents) {
             const auto alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-            const auto x = rnd->getUniform(0, alpha);
+            const auto x = readdy::model::rnd::uniform(0, alpha);
             const auto eventIt = std::lower_bound(
                     events.begin(), events.end() - nDeactivated, x,
                     [](const event_t &elem1, double elem2) {
@@ -246,7 +244,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
             if (eventIt == events.end() - nDeactivated) {
                 throw std::runtime_error("this should not happen (event not found)");
             }
-            if (filterEventsInAdvance || rnd->getUniform() < event.reactionRate * dt) {
+            if (filterEventsInAdvance || readdy::model::rnd::uniform() < event.reactionRate * dt) {
                 /**
                  * Perform reaction
                  */
@@ -255,7 +253,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
                     rdy_particle_t pOut1{}, pOut2{};
                     if (event.nEducts == 1) {
                         auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                        reaction->perform(p1, p1, pOut1, pOut2, rnd);
+                        reaction->perform(p1, p1, pOut1, pOut2);
                         if (reaction->getNProducts() > 0) {
                             *(data->begin_positions() + event.idx1) = pOut1.getPos();
                             *(data->begin_types() + event.idx1) = pOut1.getType();
@@ -269,7 +267,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
                     } else {
                         auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
                         const auto p2 = data->operator[](event.idx2);
-                        reaction->perform(p1, p2, pOut1, pOut2, rnd);
+                        reaction->perform(p1, p2, pOut1, pOut2);
                         *(data->begin_positions() + event.idx1) = pOut1.getPos();
                         *(data->begin_types() + event.idx1) = pOut1.getType();
                         *(data->begin_ids() + event.idx1) = pOut1.getId();
@@ -673,7 +671,6 @@ template<typename ParticleCollection>
 void
 GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
                                 std::vector<GillespieParallel::event_t> &events) const {
-    readdy::model::RandomProvider rnd;
     const auto dt = kernel->getKernelContext().getTimeStep();
     for (const auto idx : particles) {
         // this being false should really not happen, though
@@ -684,7 +681,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                 const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
-                    if (rate > 0 && (!filterEventsInAdvance || rnd.getUniform() < rate * dt)) {
+                    if (rate > 0 && (!filterEventsInAdvance || readdy::model::rnd::uniform() < rate * dt)) {
                         alpha += rate;
                         events.push_back(
                                 {1, (*it)->getNProducts(), idx, 0, rate, alpha,
@@ -710,7 +707,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                                 const auto rate = react->getRate();
                                 if (rate > 0
                                     && distSquared < react->getEductDistanceSquared()
-                                    && (!filterEventsInAdvance || rnd.getUniform() < rate * dt)) {
+                                    && (!filterEventsInAdvance || readdy::model::rnd::uniform() < rate * dt)) {
                                     if (*(data->begin_deactivated() + idx_neighbor.idx)) {
                                         auto get_box_idx = [&](
                                                 unsigned long _idx) {
@@ -724,15 +721,13 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                                         const auto nShellIdx = boxes[nBoxIdx].getShellIndex(nPos);
                                         const auto myBoxIdx = get_box_idx(idx);
                                         const auto myPos = *(data->begin_positions() + idx);
-                                        BOOST_LOG_TRIVIAL(error)
-                                            << "Got neighbor that was deactivated (ie conflicting "
-                                                    "reaction) in shell index "
-                                            << nShellIdx << ", was in box[" << nBoxIdx << "]="
-                                            << boxes[nBoxIdx].isInBox(nPos);
-                                        BOOST_LOG_TRIVIAL(error)
-                                            << "The neighbor is neighbor of a particle in box["
-                                            << myBoxIdx << "]=" << boxes[myBoxIdx].isInBox(myPos)
-                                            << ", shell=" << boxes[myBoxIdx].getShellIndex(myPos);
+                                        log::console()->error("Got neighbor that was deactivated (ie conflicting "
+                                                                      "reaction) in shell index {}, was in box[{}]={}",
+                                                              nShellIdx, nBoxIdx, boxes[nBoxIdx].isInBox(nPos));
+                                        log::console()->error("The neighbor is neighbor of a particle "
+                                                                      "in box[{}]={}, shell={}", myBoxIdx,
+                                                              boxes[myBoxIdx].isInBox(myPos),
+                                                              boxes[myBoxIdx].getShellIndex(myPos));
                                     }
                                     alpha += rate;
                                     events.push_back({2, react->getNProducts(), idx, idx_neighbor.idx,
@@ -746,8 +741,8 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                 }
             }
         } else {
-            BOOST_LOG_TRIVIAL(error) << "The particles list which was given to gather events "
-                        "contained a particle that was already deactivated. This should not happen!";
+            log::console()->error("The particles list which was given to gather events contained a particle that "
+                                          "was already deactivated. This should not happen!");
         }
     }
 

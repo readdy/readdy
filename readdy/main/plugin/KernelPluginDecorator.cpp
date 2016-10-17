@@ -3,6 +3,7 @@
 //
 
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
+#include <readdy/common/nodelete.h>
 
 namespace plug = readdy::plugin::_internal;
 namespace dll = readdy::util::dll;
@@ -26,12 +27,15 @@ readdy::plugin::_internal::KernelPluginDecorator::KernelPluginDecorator(const st
     }
     // load the kernel
     {
-        reference = lib->load<std::unique_ptr<readdy::model::Kernel>()>("createKernel")();
+        readdy::model::Kernel* kernel = lib->load<readdy::model::Kernel*()>("createKernel")();
+        log::console()->debug("loaded kernel with name {}", kernel->getName());
+        reference = std::unique_ptr<readdy::model::Kernel>(std::move(kernel));
     }
 }
 
 readdy::plugin::_internal::KernelPluginDecorator::~KernelPluginDecorator() {
-    reference.reset();
+    // release and delete reference kernel
+    reference.reset(nullptr);
 }
 
 readdy::model::KernelContext &readdy::plugin::_internal::KernelPluginDecorator::getKernelContext() const {
@@ -108,6 +112,7 @@ const std::string readdy::plugin::_internal::loadKernelName(const std::string &s
     if (!lib.has_symbol("name")) {
         throw plug::InvalidPluginException("library " + sharedLib + " had no name() symbol");
     } else {
-        return lib.load<std::string()>("name")();
+        auto fun = lib.load<const char*()>("name");
+        return fun();
     }
 }

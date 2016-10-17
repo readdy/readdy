@@ -30,8 +30,8 @@ struct CPUKernel::Impl {
     std::unique_ptr<util::Config> config;
 };
 
-std::unique_ptr<CPUKernel> CPUKernel::create() {
-    return std::make_unique<CPUKernel>();
+readdy::model::Kernel* CPUKernel::create() {
+    return new CPUKernel();
 }
 
 readdy::model::programs::ProgramFactory &CPUKernel::getProgramFactory() const {
@@ -83,4 +83,13 @@ CPUKernel::~CPUKernel() = default;
 
 }
 }
+}
+
+
+const char* name()  {
+    return readdy::kernel::cpu::CPUKernel::name.c_str();
+}
+
+readdy::model::Kernel* createKernel() {
+    return readdy::kernel::cpu::CPUKernel::create();
 }

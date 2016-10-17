@@ -18,33 +18,34 @@ namespace util {
 namespace dll {
 struct shared_library {
 
-    void* so_ptr = nullptr;
+    void* handle = nullptr;
 
     shared_library() {
         // no op
     }
 
     shared_library(const std::string& path, int mode) {
-        so_ptr = dlopen(path.c_str(), mode);
+        handle = dlopen(path.c_str(), mode);
     }
 
     bool has_symbol(const std::string& symbol) {
-        if(so_ptr) {
-            return dlsym(so_ptr, symbol.c_str()) != nullptr;
+        if(handle) {
+            return dlsym(handle, symbol.c_str()) != nullptr;
         }
         return false;
     }
 
     virtual ~shared_library() {
-        if(so_ptr) {
-            dlclose(so_ptr);
+        if(handle) {
+            dlclose(handle);
+            handle = 0;
         }
     }
 
     template<typename Signature>
     std::function<Signature> load(const std::string &symbol) {
         dlerror();
-        const auto result = dlsym(so_ptr, symbol.c_str());
+        const auto result = dlsym(handle, symbol.c_str());
         if(!result) {
             const auto error = dlerror();
             if(error) {
@@ -58,4 +59,13 @@ struct shared_library {
 }
 }
 }
+
+#if READDY_LINUX || READDY_OSX
+#define READDY_EXPORT_FUNCTION_AS(FunctionName, ExportName) extern "C" const void* ExportName();
+#define READDY_EXPORT_FUNCTION_AS_IMPL(FunctionName, ExportName) \
+     const void* ExportName() { return reinterpret_cast<const void*>(reinterpret_cast<intptr_t>(&FunctionName)); }
+#else
+// todo msvc
+#endif // if readdy_linux || readdy_osx
+
 #endif //READDY_MAIN_DLL_H
