@@ -29,7 +29,7 @@ double normal(const double mean = 0.0, const double variance = 1.0) {
 template<typename Generator = std::mt19937>
 double uniform(const double a = 0.0, const double b = 1.0) {
     static thread_local std::mt19937 generator;
-    std::normal_distribution<double> distribution(a,b);
+    std::uniform_real_distribution<double> distribution(a,b);
     return distribution(generator);
 }
 
