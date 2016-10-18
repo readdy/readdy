@@ -15,6 +15,8 @@
 #else
 #include <unistd.h>
 #include <system_error>
+#include <readdy/common/logging.h>
+
 #define GetCurrentDir getcwd
 #endif
 
@@ -48,6 +50,7 @@ bool is_file(const std::string &path) {
 bool is_directory(const std::string &path) {
     tinydir_file file;
     if(tinydir_file_open(&file, path.c_str()) == -1) {
+        log::console()->error("error on opening {}", path);
         throw std::runtime_error("error on opening " + path);
     }
     return file.is_dir != 0;
@@ -60,6 +63,7 @@ struct dir_iterator::Impl {
 
 
 dir_iterator::dir_iterator(const std::string &path) : pimpl(std::make_unique<Impl>()) {
+    log::console()->debug("getting dir iterator for path=\"{}\"", path);
     if(exists(path)) {
         if(is_directory(path)) {
             if (tinydir_open_sorted(pimpl->dir.get(), path.c_str()) == -1) {
@@ -86,7 +90,7 @@ std::string dir_iterator::next() {
     if(tinydir_readfile_n(pimpl->dir.get(), &file, pimpl->n++) == -1) {
         throw std::runtime_error("error on getting file");
     }
-    return std::string(pimpl->dir->path) + std::string(&separator) + std::string(file.name);
+    return std::string(file.path);
 }
 
 dir_iterator::dir_iterator(dir_iterator && rhs) = default;

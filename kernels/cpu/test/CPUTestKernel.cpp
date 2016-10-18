@@ -8,7 +8,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
 #include <readdy/model/RandomProvider.h>
@@ -36,7 +35,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     const int n_particles = 500;
     const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
-    BOOST_LOG_TRIVIAL(debug) << "n_particles=" << particlesToBeginWith.size();
+    readdy::log::console()->debug("n_particles={}", particlesToBeginWith.size());
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
 
     kernel->getKernelContext().configure();
@@ -51,8 +50,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
         reactionsProgram->execute();
 
         pp_obs->evaluate();
-        BOOST_LOG_TRIVIAL(debug) << "\tcurrently n particles: " << pp_obs->getResult().size();
-
+        readdy::log::console()->debug("\tcurrently n particles: {}", pp_obs->getResult().size());
     }
 
     connection.disconnect();

@@ -76,26 +76,26 @@ public:
         disconnect();
     }
 
-    scoped_connection(connection connection) : connection(std::move(connection)) {}
+    scoped_connection(connection connection) : conn(std::move(connection)) {}
 
     void disconnect() {
-        connection.disconnect();
+        conn.disconnect();
     }
 
     scoped_connection(const scoped_connection &) = delete;
 
     scoped_connection &operator=(const scoped_connection &) = delete;
 
-    scoped_connection(scoped_connection &&rhs) : connection(std::move(rhs.connection)) {
+    scoped_connection(scoped_connection &&rhs) : conn(std::move(rhs.conn)) {
     }
 
     scoped_connection &operator=(scoped_connection &&rhs) {
-        connection = std::move(rhs.connection);
+        conn = std::move(rhs.conn);
         return *this;
     }
 
 private:
-    connection connection;
+    readdy::signals::connection conn;
 };
 
 template<typename T>

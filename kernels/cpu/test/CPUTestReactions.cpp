@@ -9,7 +9,6 @@
 
 #include <gtest/gtest.h>
 #include <readdy/model/Kernel.h>
-#include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/cpu/programs/Reactions.h>
 
@@ -254,7 +253,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     //   9 and 10, resulting in a particle A at {0,0,5.25}
     {
         const auto particles = kernel->getKernelStateModel().getParticles();
-        for (auto p : particles) BOOST_LOG_TRIVIAL(debug) << "particle " << p;
+        for (auto p : particles) readdy::log::console()->debug("particle {}", p);
         EXPECT_EQ(7, particles.size());
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
             return p.getType() == typeB && p.getPos() == vec_t(0, 0, -1.7);

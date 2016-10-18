@@ -2,9 +2,9 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include <boost/uuid/uuid_io.hpp>
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
+#include <readdy/common/nodelete.h>
 #include "ExportSchemeApi.h"
 #include "PyPotential.h"
 #include "PyFunction.h"
@@ -19,7 +19,6 @@ using pot2 = readdy::py::PotentialOrder2Wrapper;
 using model = readdy::model::KernelStateModel;
 using ctx = readdy::model::KernelContext;
 using kern = readdy::model::Kernel;
-using uuid = boost::uuids::uuid;
 
 // thin wrappers
 void setBoxSize(sim &self, const vec &size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
@@ -32,13 +31,13 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
     self.registerPotentialOrder2(potential, type1, type2);
 }
 
-boost::uuids::uuid
+unsigned long
 registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
 }
 
-boost::uuids::uuid
+unsigned long
 registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::object callbackFun,
                                       bpy::array_t<double> &binBorders, std::string typeCountFrom,
                                       std::string typeCountTo, double particleDensity) {
@@ -53,7 +52,7 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::
                                                                                 particleDensity);
 }
 
-boost::uuids::uuid
+unsigned long
 registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::object &callbackFun,
                                 std::vector<std::string> types) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
@@ -62,7 +61,7 @@ registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::
     );
 }
 
-boost::uuids::uuid
+unsigned long
 registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const bpy::object &callbackFun,
                                                 bpy::array_t<double> &binBorders, bpy::list types, unsigned int axis) {
     const auto info = binBorders.request();
@@ -85,7 +84,7 @@ registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, 
 
 }
 
-boost::uuids::uuid
+unsigned long
 registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list types, const bpy::object &callbackFun) {
     const auto sizeTypes = bpy::len(types);
     std::vector<std::string> typesVec{};
@@ -97,7 +96,7 @@ registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list typ
     return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, typesVec);
 }
 
-boost::uuids::uuid registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun) {
+unsigned long registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride);
 }
@@ -150,7 +149,7 @@ PYBIND11_PLUGIN (api) {
             )
             .def("run", &sim::run);
 
-    bpy::class_<kp, std::unique_ptr<kp, nodelete>>(api, "KernelProvider")
+    bpy::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
             .def_static("get", &kp::getInstance, rvp::reference)
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
 

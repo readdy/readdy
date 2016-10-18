@@ -7,11 +7,8 @@
 #include <pybind11/stl_bind.h>
 
 #include <readdy/model/Vec3.h>
-#include <boost/uuid/uuid_io.hpp>
 
 namespace bpy = pybind11;
-
-using uuid = boost::uuids::uuid;
 
 /**
  * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
@@ -42,8 +39,6 @@ PYBIND11_PLUGIN (common) {
             .def("__getitem__", [](const readdy::model::Vec3 &self, unsigned int i) {
                 return self[i];
             });
-
-    bpy::class_<uuid>(common, "uuid").def("__str__", [](const uuid &uuid) { return boost::uuids::to_string(uuid); });
 
     return common.ptr();
 }
