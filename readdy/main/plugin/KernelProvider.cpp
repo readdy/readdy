@@ -23,6 +23,13 @@ KernelProvider &KernelProvider::getInstance() {
 
 KernelProvider::KernelProvider() {
     const auto path = fs::current_path();
+    if(!log::console()) {
+        spdlog::set_sync_mode();
+        auto console = spdlog::stdout_color_mt("console");
+        console->set_level(spdlog::level::debug);
+        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+        log::console()->warn("initialized default console logger because there was none");
+    }
     log::console()->debug("current path is {}", path);
     add(readdy::kernel::singlecpu::SingleCPUKernel::name, [] {
         return new readdy::kernel::singlecpu::SingleCPUKernel();

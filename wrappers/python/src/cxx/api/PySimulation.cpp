@@ -106,6 +106,11 @@ unsigned long registerObservable_NParticles(sim &self, unsigned int stride, cons
 // module
 PYBIND11_PLUGIN (api) {
 
+    spdlog::set_sync_mode();
+    auto console = spdlog::stdout_color_mt("console");
+    console->set_level(spdlog::level::debug);
+    console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+
     bpy::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");

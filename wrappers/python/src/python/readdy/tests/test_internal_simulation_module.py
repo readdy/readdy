@@ -12,12 +12,11 @@ from readdy.util import platform_utils
 
 
 class TestInternalSimulationModule(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.kernel_provider = KernelProvider.get()
-        cls.kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
-        cls.simulation = Simulation()
 
+    def setUp(self):
+        self.kernel_provider = KernelProvider.get()
+        self.kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
+        self.simulation = Simulation()
 
     def py_harmonic_repulsion_energy(self, x_ij):
         dist = x_ij*x_ij
