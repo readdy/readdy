@@ -8,7 +8,7 @@
 
 #include <readdy/model/Vec3.h>
 
-#include <spdlog/spdlog.h>
+#include <readdy/common/logging.h>
 
 namespace bpy = pybind11;
 
@@ -20,10 +20,12 @@ namespace bpy = pybind11;
 // module
 PYBIND11_PLUGIN (common) {
 
-    spdlog::set_sync_mode();
-    auto console = spdlog::stdout_color_mt("console");
-    console->set_level(spdlog::level::debug);
-    console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+    if(!readdy::log::console()) {
+        spdlog::set_sync_mode();
+        auto console = spdlog::stdout_color_mt("console");
+        console->set_level(spdlog::level::debug);
+        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+    }
 
     bpy::module common("common", "ReaDDy common python module");
 

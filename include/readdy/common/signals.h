@@ -1,5 +1,5 @@
 /**
- * Strongly simplified signals implementation similar to the one that can be found in, e.g., boost.signals2.
+ * Strongly simplified signals implementation similar to the one that can be found in, e.g., boost.signals2 and halmd.
  *
  * @file signals.h
  * @brief A signals implementation

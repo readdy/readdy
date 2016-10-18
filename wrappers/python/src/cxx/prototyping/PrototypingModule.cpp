@@ -41,10 +41,12 @@ using core_program_t = readdy::model::programs::Program;
 // module
 PYBIND11_PLUGIN (prototyping) {
 
-    spdlog::set_sync_mode();
-    auto console = spdlog::stdout_color_mt("console");
-    console->set_level(spdlog::level::debug);
-    console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+    if(!readdy::log::console()) {
+        spdlog::set_sync_mode();
+        auto console = spdlog::stdout_color_mt("console");
+        console->set_level(spdlog::level::debug);
+        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+    }
 
     bpy::module proto("prototyping", "ReaDDy prototyping python module");
 
