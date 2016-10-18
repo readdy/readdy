@@ -9,7 +9,13 @@
 
 #include <thread>
 #include <readdy/common/logging.h>
+#include <readdy/common/macros.h>
+
 #include "readdy/kernel/cpu/util/Config.h"
+
+#if READDY_OSX
+#include <cstdlib>
+#endif
 
 namespace readdy {
 namespace kernel {
