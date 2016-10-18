@@ -64,7 +64,7 @@ namespace readdy {
                 if (neighborList) neighborList->execute();
                 if (forces) forces->execute();
                 if (evaluateObservables) kernel->evaluateObservables(0);
-                for (model::observables::time_step_type &&t = 0; t < steps; ++t) {
+                for (model::observables::time_step_type t = 0; t < steps; ++t) {
                     if (integrator) integrator->execute();
                     if (neighborList) neighborList->execute();
                     if (forces) forces->execute();

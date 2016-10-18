@@ -58,12 +58,16 @@ public:
     virtual ~ObservableBase() = default;
 
     virtual void callback(observables::time_step_type t) {
-        if ((t_current != t || firstCall) && (stride == 0 || t % stride == 0)) {
+        if (should_execute_callback(t)) {
             firstCall = false;
             t_current = t;
             evaluate();
         }
     };
+
+    virtual bool should_execute_callback(observables::time_step_type t) const {
+        return (t_current != t || firstCall) && (stride == 0 || t % stride == 0);
+    }
 
     virtual void evaluate() = 0;
 
@@ -92,9 +96,10 @@ public:
     }
 
     virtual void callback(observables::time_step_type t) override {
-        if (t_current == t && !firstCall) return;
-        ObservableBase::callback(t);
-        _callback_f(result);
+        if (should_execute_callback(t)) {
+            ObservableBase::callback(t);
+            _callback_f(result);
+        }
     }
 
 
