@@ -59,7 +59,7 @@ namespace readdy {
             ReaDDyScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
 
             virtual void run(const model::observables::time_step_type steps) override {
-                kernel->getKernelContext().configure();
+                kernel->getKernelContext().configure(true);
 
                 if (neighborList) neighborList->execute();
                 if (forces) forces->execute();

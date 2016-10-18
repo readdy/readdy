@@ -350,7 +350,7 @@ const std::function<Vec3(const Vec3 &, const Vec3 &)> &KernelContext::getShortes
     return pimpl->diffFun;
 }
 
-void KernelContext::configure() {
+void KernelContext::configure(bool debugOutput) {
     namespace coll = readdy::util::collections;
     using pair = util::ParticleTypePair;
     using pot1 = potentials::PotentialOrder1;
@@ -389,6 +389,57 @@ void KernelContext::configure() {
     coll::for_each_value(*reactionTwoEductsRegistryExternal, [&](const pair& type, reactions::Reaction<2>* r) {
         (*reactionTwoEductsRegistry)[type].push_back(r);
     });
+
+    /**
+     * Info output
+     */
+    if(debugOutput) {
+        auto find_pot_name = [this](unsigned int type) -> const std::string {
+            for (auto &&t : pimpl->typeMapping) {
+                if (t.second == type) return t.first;
+            }
+            return "";
+        };
+        log::console()->debug("Configured kernel context with: ");
+        log::console()->debug("--------------------------------");
+        log::console()->debug(" - kBT = {}", getKBT());
+        log::console()->debug(" - tau = {}", getTimeStep());
+        log::console()->debug(" - periodic b.c. = ({}, {}, {})", getPeriodicBoundary()[0], getPeriodicBoundary()[1],
+                              getPeriodicBoundary()[2]);
+        log::console()->debug(" - box size = ({}, {}, {})", getBoxSize()[0], getBoxSize()[1], getBoxSize()[2]);
+
+        if (!getAllOrder1Potentials().empty()) {
+            log::console()->debug(" - potentials of order 1:");
+            for (auto types : getAllOrder1Potentials()) {
+                log::console()->debug("     * for type {}", find_pot_name(types.first));
+                for (auto pot : types.second) {
+                    log::console()->debug("         * {}", pot->getName());
+                }
+            }
+        }
+        if (!getAllOrder2Potentials().empty()) {
+            log::console()->debug(" - potentials of order 2:");
+            for (auto types : getAllOrder2Potentials()) {
+                log::console()->debug("     * for types {} and {}", find_pot_name(types.first.t1),
+                                      find_pot_name(types.first.t2));
+                for (auto pot : types.second) {
+                    log::console()->debug("         * {}", pot->getName());
+                }
+            }
+        }
+        if (!getAllOrder1Reactions().empty()) {
+            log::console()->debug(" - reactions of order 1:");
+            for (auto reaction : getAllOrder1Reactions()) {
+                log::console()->debug("     * reaction {}", *reaction);
+            }
+        }
+        if (!getAllOrder2Reactions().empty()) {
+            log::console()->debug(" - reactions of order 2:");
+            for (auto reaction : getAllOrder2Reactions()) {
+                log::console()->debug("     * reaction {}", *reaction);
+            }
+        }
+    }
 
 }
 

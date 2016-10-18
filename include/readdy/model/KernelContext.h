@@ -229,7 +229,7 @@ public:
 
     std::string getParticleName(unsigned int id) const;
 
-    void configure();
+    void configure(bool debugOutput=false);
 
     const rdy_type_mapping &getTypeMapping() const;
 
