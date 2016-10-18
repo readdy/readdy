@@ -20,7 +20,7 @@ namespace kernel {
 namespace singlecpu {
 namespace programs {
 
-class Compartments : readdy::model::programs::Compartments {
+class Compartments : public readdy::model::programs::Compartments {
 public:
     using compartmentIdx_t = size_t;
     using particleType_t = unsigned int;
