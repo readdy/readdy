@@ -32,9 +32,6 @@ SET(READDY_GENERATE_DOCUMENTATION_TARGET_ONLY OFF CACHE BOOL "If set to true, th
 # log configuration variables of interest
 SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of relevant cmake variables is logged at configuration time.")
 
-# boost download cache dir
-SET(BOOST_DOWNLOAD_CACHE_DIR "${CMAKE_BINARY_DIR}/download/external/boost" CACHE PATH "Path to the directory into which the boost libraries are downloaded and installed.")
-
 #####################################
 #                                   #
 # Advanced cache variables          #
@@ -131,9 +128,6 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
             SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -Wl,--no-as-needed -lrt")
         ENDIF (NOT ANDROID)
     ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
-
-    # link dynamically against boost log
-    ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 
     # main project name
     SET(READDY_PROJECT_NAME "ReaDDy")

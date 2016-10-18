@@ -15,10 +15,6 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/SimulationScheme.h>
 
-#if BOOST_OS_MACOS
-#include <array>
-#endif
-
 namespace readdy {
     /**
      * Simulation is the focus of the high-level C++ API of ReaDDy.

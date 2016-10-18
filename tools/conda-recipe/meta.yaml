@@ -12,7 +12,6 @@ build:
   script_env:
     - CXX
     - CC
-    - BOOST_DOWNLOAD_CACHE_DIR
     - TRAVIS
   rpaths:
     - lib/

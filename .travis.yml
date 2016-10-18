@@ -41,16 +41,10 @@ matrix:
 cache:
   apt: true
   ccache: true
-  directories:
-    - $HOME/readdy_cache/boost_dl_job_1
-    - $HOME/readdy_cache/boost_dl_job_2
-    - $HOME/readdy_cache/boost_dl_job_3
-    - $HOME/readdy_cache/boost_dl_job_4
 
 before_install:
 - tools/ci/travis/setup_travis.sh
 - tools/ci/travis/install_miniconda.sh
-- export BOOST_DOWNLOAD_CACHE_DIR=$HOME/readdy_cache/boost_dl_job_${TRAVIS_JOB_NUMBER##*.}
 
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi

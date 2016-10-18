@@ -23,10 +23,6 @@
 #include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/common/ParticleTypePair.h>
 
-#if BOOST_OS_MAC
-#include <string>
-#endif
-
 namespace readdy {
 namespace model {
 

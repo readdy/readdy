@@ -9,9 +9,6 @@
 
 #include <readdy/kernel/singlecpu/programs/SingleCPUEulerBDIntegrator.h>
 
-#if BOOST_OS_MACOS
-#include <math.h>
-#endif
 namespace readdy {
 namespace kernel {
 namespace singlecpu {

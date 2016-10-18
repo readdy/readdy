@@ -13,8 +13,6 @@ PY_VER="2.7"
 
 # prefix path
 CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=$PREFIX"
-# boost
-CMAKE_FLAGS+=" -DBOOST_DOWNLOAD_CACHE_DIR:PATH=~/misc/boost_dl"
 # do not generate documentation target
 CMAKE_FLAGS+=" -DREADDY_GENERATE_DOCUMENTATION_TARGET:BOOL=ON"
 # build separate libs

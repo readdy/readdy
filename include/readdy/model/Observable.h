@@ -58,7 +58,7 @@ public:
     virtual ~ObservableBase() = default;
 
     virtual void callback(observables::time_step_type t) {
-        if ((t_current != t || firstCall) && t % stride == 0) {
+        if ((t_current != t || firstCall) && (stride == 0 || t % stride == 0)) {
             firstCall = false;
             t_current = t;
             evaluate();
