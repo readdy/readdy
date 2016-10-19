@@ -23,6 +23,9 @@ CMAKE_FLAGS+=" -DREADDY_CREATE_TEST_TARGET:BOOL=ON"
 CMAKE_FLAGS+=" -DREADDY_INSTALL_UNIT_TEST_EXECUTABLE:BOOL=ON"
 # hdf5 flags
 CMAKE_FLAGS+=" -DHDF5_INCLUDE_DIR=$PREFIX/include"
+# select compiler
+CMAKE_FLAGS+=" -DCMAKE_C_COMPILER=${CC}"
+CMAKE_FLAGS+=" -DCMAKE_CXX_COMPILER=${CXX}"
 
 #########################################################
 #                                                       #

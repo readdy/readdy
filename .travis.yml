@@ -47,7 +47,7 @@ before_install:
 - tools/ci/travis/install_miniconda.sh
 
 install:
-- if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
+- if [ "$CXX" = "g++" ]; then export CXX="/usr/lib/ccache/g++-5" CC="/usr/lib/ccache/gcc-5"; fi
 
 script:
 - conda build -q tools/conda-recipe
