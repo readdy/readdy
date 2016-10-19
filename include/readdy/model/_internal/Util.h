@@ -1,8 +1,8 @@
 /**
- * << detailed description >>
+ * Utility methods to deal with particle type ids: Transform a vector of types into a vector or set of type ids.
  *
- * @file Util.h.h
- * @brief << brief description >>
+ * @file Util.h
+ * @brief Some utility methods for the model module.
  * @author clonker
  * @date 09.08.16
  */

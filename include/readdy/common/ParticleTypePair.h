@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * Definition and implementation of ParticleTypePair and ParticleTypePair hasher. They serve as a tuple that is order-
+ * independent.
  *
  * @file ParticleTypePair.h
- * @brief << brief description >>
+ * @brief Header file containing ParticleTypePair and ParticleTypePairHasher.
  * @author clonker
  * @date 03.08.16
  */

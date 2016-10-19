@@ -1,8 +1,8 @@
 /**
- * << detailed description >>
+ * Header file containing a console() logger which gives the spd console logger.
  *
  * @file logging.h
- * @brief << brief description >>
+ * @brief Header responsible for the logging system.
  * @author clonker
  * @date 14.10.16
  */

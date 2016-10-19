@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * Nodelete callable struct that can be supplied to, e.g., instances of unique_ptr such that the helt object is not
+ * deleted along with the instance.
  *
  * @file nodelete.h
- * @brief << brief description >>
+ * @brief Header file containing nodelete.
  * @author clonker
  * @date 18.10.16
  */

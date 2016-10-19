@@ -1,6 +1,12 @@
-//
-// Created by mho on 15/10/2016.
-//
+/**
+ * String utils (mainly to replace boost's string utils). So far only
+ *     - has_suffix, which does exactly what the name says
+ *
+ * @file string.h
+ * @brief Utility methods that deal with std::string's.
+ * @author clonker
+ * @date 15.10.16
+ */
 
 #ifndef READDY_MAIN_STRING_H
 #define READDY_MAIN_STRING_H

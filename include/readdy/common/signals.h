@@ -1,5 +1,7 @@
 /**
  * Strongly simplified signals implementation similar to the one that can be found in, e.g., boost.signals2 and halmd.
+ * The implementation details are orientated on what can be found in halmd
+ * (https://github.com/halmd-org/halmd/blob/testing/halmd/utility/signal.hpp), licensed under LGPL-3+.
  *
  * @file signals.h
  * @brief A signals implementation

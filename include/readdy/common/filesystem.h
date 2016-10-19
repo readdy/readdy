@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * This header's purpose is mainly to replace boost's filesystem library. The dir_iterator gives access to files within
+ * a directory using tinydir, the other methods are self-explanatory.
  *
  * @file filesystem.h
- * @brief << brief description >>
+ * @brief Definition of the dir_iterator and some file system utilities.
  * @author clonker
  * @date 14.10.16
  */

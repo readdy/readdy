@@ -1,8 +1,8 @@
 /**
- * << detailed description >>
+ * Header file for the Timer class, which measures execution time in RAII style.
  *
  * @file Timer.h
- * @brief << brief description >>
+ * @brief Header file containing definition and implementation of a RAII-Timer.
  * @author clonker
  * @date 13.07.16
  */

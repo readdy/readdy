@@ -1,8 +1,9 @@
 /**
- * << detailed description >>
+ * This header file is mainly to replace boost.dll. It contains a shared_library struct that loads and unloads shared
+ * libraries and is also capable of calling exported functions thereof.
  *
  * @file dll.h
- * @brief << brief description >>
+ * @brief Definition of shared_library.
  * @author clonker
  * @date 14.10.16
  */

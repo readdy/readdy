@@ -1,6 +1,6 @@
 /**
- * The random provider can provide normal and uniform distributed random numbers. The choice of random generator is
- * hidden within the implementation and can currently not be altered.
+ * The random provider can provide normal and uniform distributed random numbers. The choice of random generator
+ * can be altered by template parameter. Current default: mt19937.
  *
  * @file Random.h
  * @brief Header file containing the definitions for readdy::model::RandomProvider.
