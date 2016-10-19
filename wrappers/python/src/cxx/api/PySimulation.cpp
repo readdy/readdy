@@ -32,7 +32,7 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
 }
 
 unsigned long
-registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun) {
+registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun, std::vector<std::string> types) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride, types);
 }

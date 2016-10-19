@@ -34,13 +34,13 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     auto &&obs = kernel->createObservable<m::NParticlesObservable>(1, typesToCount);
     obs->evaluate();
     const auto &resultBefore = obs->getResult();
-    EXPECT_THAT(resultBefore, ::testing::ElementsAre(1,0)) << "Expect one A particle before program execution";
+    EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
 
     comp->execute();
 
     obs->evaluate();
     const auto &resultAfter = obs->getResult();
-    EXPECT_THAT(resultAfter, ::testing::ElementsAre(0,1)) << "Expect zero A particle after program execution";
+    EXPECT_THAT(resultAfter, ::testing::ElementsAre(0, 1)) << "Expect zero A particle after program execution";
 }
 
 TEST_P(TestCompartments, TwoCompartments) {
@@ -65,14 +65,9 @@ TEST_P(TestCompartments, TwoCompartments) {
     comp->registerConversion(1, "A", "D");
     comp->registerConversion(1, "B", "D");
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::normal_distribution<> normal;
-    for (auto i=0; i<100; ++i) {
-        const m::Vec3 posA(normal(mt),normal(mt),normal(mt));
-        kernel->addParticle("A", posA);
-        const m::Vec3 posB(normal(mt),normal(mt),normal(mt));
-        kernel->addParticle("A", posB);
+    for (auto i = 0; i < 100; ++i) {
+        kernel->addParticle("A", readdy::model::rnd::normal3());
+        kernel->addParticle("B", readdy::model::rnd::normal3());
     }
 
     comp->execute();
