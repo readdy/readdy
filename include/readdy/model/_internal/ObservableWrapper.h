@@ -19,15 +19,15 @@ namespace model {
 
 class ObservableWrapper : public ObservableBase {
 public:
-    ObservableWrapper(readdy::model::Kernel *const kernel,
-                      const readdy::model::ObservableType &observable, unsigned int stride = 1);
+    ObservableWrapper(Kernel *const kernel,
+                      const observables::observable_type &observable, unsigned int stride = 1);
 
-    void operator()(readdy::model::time_step_type t);
+    void operator()(observables::time_step_type t);
 
     virtual void evaluate() override;
 
 protected:
-    const readdy::model::ObservableType observable;
+    const observables::observable_type observable;
 };
 
 }

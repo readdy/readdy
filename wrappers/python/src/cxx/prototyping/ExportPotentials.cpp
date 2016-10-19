@@ -10,7 +10,6 @@
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
 
 namespace bpy = pybind11;
-namespace mpl = boost::mpl;
 namespace pot = readdy::model::potentials;
 namespace spot = readdy::kernel::singlecpu::potentials;
 

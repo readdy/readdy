@@ -27,7 +27,6 @@ void UncontrolledApproximation::execute() {
     const auto &fixPos = ctx.getFixPositionFun();
     const auto &dt = ctx.getTimeStep();
     auto data = kernel->getKernelStateModel().getParticleData();
-    auto rnd = readdy::model::RandomProvider();
     std::vector<rdy_particle_t> newParticles{};
     std::vector<std::function<void()>> events{};
 
@@ -40,7 +39,7 @@ void UncontrolledApproximation::execute() {
             const auto &reactions = ctx.getOrder1Reactions(*it_type);
             for (const auto &reaction : reactions) {
                 auto r = reaction->getRate() * dt;
-                if (rnd.getUniform() < r) {
+                if (readdy::model::rnd::uniform() < r) {
                     const size_t particleIdx = (const size_t) (it_type - data->begin_types());
                     events.push_back([particleIdx, &newParticles, &reaction, this] {
                         auto &&_data = kernel->getKernelStateModel().getParticleData();
@@ -82,7 +81,7 @@ void UncontrolledApproximation::execute() {
                                 break;
                             }
                             default: {
-                                BOOST_LOG_TRIVIAL(error) << "This should not happen!";
+                                log::console()->error("This should not happen!");
                             }
                         }
                     });
@@ -108,7 +107,7 @@ void UncontrolledApproximation::execute() {
             for (const auto &reaction : reactions) {
                 // if close enough and coin flip successful
                 if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
-                    && rnd.getUniform() < reaction->getRate() * dt) {
+                    && readdy::model::rnd::uniform() < reaction->getRate() * dt) {
                     events.push_back([idx1, idx2, this, &newParticles, &reaction] {
                         auto &&_data = kernel->getKernelStateModel().getParticleData();
                         if (_data->isMarkedForDeactivation(idx1)) return;
@@ -145,7 +144,7 @@ void UncontrolledApproximation::execute() {
                                 break;
                             }
                             default: {
-                                BOOST_LOG_TRIVIAL(error) << "This should not happen!";
+                                log::console()->error("This should not happen!");
                             }
                         }
                     });
@@ -252,7 +251,6 @@ std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<Reactio
     std::vector<rdy_particle_t> newParticles{};
 
     const auto &ctx = kernel->getKernelContext();
-    auto rnd = readdy::model::RandomProvider();
     auto data = kernel->getKernelStateModel().getParticleData();
     const auto &dt = ctx.getTimeStep();
     /**
@@ -263,7 +261,7 @@ std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<Reactio
         const std::size_t nEvents = events.size();
         while (nDeactivated < nEvents) {
             alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-            const auto x = rnd.getUniform(0, alpha);
+            const auto x = readdy::model::rnd::uniform(0, alpha);
             const auto eventIt = std::lower_bound(
                     events.begin(), events.end() - nDeactivated, x,
                     [](const ReactionEvent &elem1, double elem2) {
@@ -274,7 +272,7 @@ std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<Reactio
             if (eventIt == events.end() - nDeactivated) {
                 throw std::runtime_error("this should not happen (event not found)");
             }
-            if (rnd.getUniform() < event.reactionRate * dt) {
+            if (readdy::model::rnd::uniform() < event.reactionRate * dt) {
                 /**
                  * Perform reaction
                  */

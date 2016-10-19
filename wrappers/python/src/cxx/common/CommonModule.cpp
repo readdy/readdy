@@ -7,11 +7,10 @@
 #include <pybind11/stl_bind.h>
 
 #include <readdy/model/Vec3.h>
-#include <boost/uuid/uuid_io.hpp>
+
+#include <readdy/common/logging.h>
 
 namespace bpy = pybind11;
-
-using uuid = boost::uuids::uuid;
 
 /**
  * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
@@ -20,6 +19,13 @@ using uuid = boost::uuids::uuid;
 
 // module
 PYBIND11_PLUGIN (common) {
+
+    if(!readdy::log::console()) {
+        spdlog::set_sync_mode();
+        auto console = spdlog::stdout_color_mt("console");
+        console->set_level(spdlog::level::debug);
+        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+    }
 
     bpy::module common("common", "ReaDDy common python module");
 
@@ -42,8 +48,6 @@ PYBIND11_PLUGIN (common) {
             .def("__getitem__", [](const readdy::model::Vec3 &self, unsigned int i) {
                 return self[i];
             });
-
-    bpy::class_<uuid>(common, "uuid").def("__str__", [](const uuid &uuid) { return boost::uuids::to_string(uuid); });
 
     return common.ptr();
 }

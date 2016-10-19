@@ -29,7 +29,8 @@ public:
     }
 
     virtual void perform(const Particle &p1_in, const Particle &p2_in, Particle &p1_out, Particle &p2_out,
-                         const rnd_ptr &rnd = nullptr) const override {};
+                         rnd_normal rnd) const override {
+    }
 
 };
 }

@@ -7,9 +7,9 @@
  * @date 03.06.16
  */
 
-#include <readdy/common/make_unique.h>
 #include <numeric>
-#include <boost/log/trivial.hpp>
+#include <readdy/common/make_unique.h>
+#include <readdy/common/logging.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
 
 namespace readdy {
@@ -28,7 +28,7 @@ SingleCPUParticleData::SingleCPUParticleData() : SingleCPUParticleData(0, true) 
 
 SingleCPUParticleData::SingleCPUParticleData(unsigned int capacity, bool useMarkedSet)
         : useMarkedSet(useMarkedSet) {
-    ids = std::make_unique<std::vector<boost::uuids::uuid>>(capacity);
+    ids = std::make_unique<std::vector<readdy::model::Particle::id_type>>(capacity);
     positions = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
     forces = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
     type = std::make_unique<std::vector<unsigned int>>(capacity);
@@ -135,7 +135,7 @@ void SingleCPUParticleData::markForDeactivation(size_t index) {
         if (*it == false) {
             ++n_marked;
         } else {
-            BOOST_LOG_TRIVIAL(error) << "this should not have happened! (idx=" << index << ")";
+            log::console()->error("this should not have happened! (idx={})", index);
         }
     }
     *it = true;
@@ -156,15 +156,15 @@ void SingleCPUParticleData::removeParticle(const readdy::model::Particle &partic
     if (it != endIt) {
         removeParticle(it - beginIt);
     } else {
-        BOOST_LOG_TRIVIAL(warning) << "Could not find and thus remove particle";
+        log::console()->warn("Could not find and thus remove particle");
     }
 }
 
-std::vector<boost::uuids::uuid>::iterator SingleCPUParticleData::begin_ids() {
+std::vector<readdy::model::Particle::id_type>::iterator SingleCPUParticleData::begin_ids() {
     return ids->begin();
 }
 
-std::vector<boost::uuids::uuid>::iterator SingleCPUParticleData::end_ids() {
+std::vector<readdy::model::Particle::id_type>::iterator SingleCPUParticleData::end_ids() {
     return ids->begin() + deactivated_index;
 }
 
@@ -239,19 +239,19 @@ SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) {
 SingleCPUParticleData::~SingleCPUParticleData() {
 }
 
-std::vector<boost::uuids::uuid>::const_iterator SingleCPUParticleData::begin_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::begin_ids() const {
     return cbegin_ids();
 }
 
-std::vector<boost::uuids::uuid>::const_iterator SingleCPUParticleData::cbegin_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::cbegin_ids() const {
     return ids->cbegin();
 }
 
-std::vector<boost::uuids::uuid>::const_iterator SingleCPUParticleData::end_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::end_ids() const {
     return cend_ids();
 }
 
-std::vector<boost::uuids::uuid>::const_iterator SingleCPUParticleData::cend_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::cend_ids() const {
     return ids->begin() + deactivated_index;
 }
 

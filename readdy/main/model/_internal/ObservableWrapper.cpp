@@ -1,4 +1,3 @@
-#include <readdy/common/Types.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/Kernel.h>
 
@@ -12,12 +11,12 @@
  */
 
 
-void readdy::model::ObservableWrapper::operator()(readdy::model::time_step_type t) {
+void readdy::model::ObservableWrapper::operator()(observables::time_step_type t) {
     callback(t);
 }
 
 readdy::model::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel,
-                                                    const readdy::model::ObservableType &observable,
+                                                    const observables::observable_type &observable,
                                                     unsigned int stride)
         : ObservableBase(kernel, stride), observable(observable) {
 }

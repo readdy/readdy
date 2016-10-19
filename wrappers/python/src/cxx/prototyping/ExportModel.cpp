@@ -94,7 +94,7 @@ void exportModelClasses(bpy::module &proto) {
                      return self.registerExternalPotential(p, t1, t2);
                  }, rvp::reference_internal)
             .def("get_particle_type_id", &rdy_ctx_t::getParticleTypeID)
-            .def("configure", &rdy_ctx_t::configure);
+            .def("configure", &rdy_ctx_t::configure, bpy::arg("debugOutput") = false);
 
     bpy::class_ <rdy_scpu_model_t, rdy_scpu_model_wrap_t> model(proto, "Model");
     model

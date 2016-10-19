@@ -2,25 +2,26 @@
 // Created by clonker on 08.03.16.
 //
 
-#include <boost/predef.h>
+#include <vector>
+#include <sstream>
 #include <readdy/common/Utils.h>
 
 namespace readdy {
 namespace util {
 bool isWindows() {
-#if BOOST_OS_WINDOWS
+#if READDY_WINDOWS
     return true;
 #endif
     return false;
 }
 
 std::string getOS() {
-#if BOOST_OS_WINDOWS
+#if READDY_WINDOWS
 #ifdef _WIN64
     return "win64";
 #endif
     return "win32";
-#elif BOOST_OS_MACOS
+#elif READDY_WINDOWS
     return "osx";
 #else
     return "unix";

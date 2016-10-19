@@ -161,8 +161,8 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
                                 }
                             }
                         } else {
-                            BOOST_LOG_TRIVIAL(error) << "CPUNeighborList: The particle index was not to be found in "
-                                        "the map, risking a concurrent modification! This should not happen.";
+                            log::console()->error("CPUNeighborList: The particle index was not to be found in the map, "
+                                                          "risking a concurrent modification! This should not happen.");
                         }
 
                     }

@@ -11,15 +11,15 @@
 #ifndef READDY_MAIN_CPUKERNEL_H
 #define READDY_MAIN_CPUKERNEL_H
 
-#include <boost/dll.hpp>
 #include <readdy/model/Kernel.h>
+#include <readdy/common/dll.h>
 #include "CPUStateModel.h"
-
-// #define BOOST_DLL_FORCE_ALIAS_INSTANTIATION
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
+
+
 class CPUKernel : public readdy::model::Kernel {
 public:
     static const std::string name;
@@ -29,7 +29,7 @@ public:
     ~CPUKernel();
 
     // factory method
-    static std::unique_ptr<CPUKernel> create();
+    static readdy::model::Kernel* create();
 
     virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
@@ -52,18 +52,12 @@ private:
     std::unique_ptr<Impl> pimpl;
 };
 
+}
+}
+}
 
-BOOST_DLL_ALIAS(
-        readdy::kernel::cpu::CPUKernel::name,
-        name
-);
-// export factory method as "create_kernel"
-BOOST_DLL_ALIAS(
-        readdy::kernel::cpu::CPUKernel::create,
-        createKernel
-);
-}
-}
-}
+extern "C" const char* name();
+
+extern "C" readdy::model::Kernel* createKernel();
 
 #endif //READDY_MAIN_CPUKERNEL_H

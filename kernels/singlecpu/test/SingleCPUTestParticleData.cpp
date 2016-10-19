@@ -10,7 +10,6 @@
 #include <gtest/gtest.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
-#include <boost/log/trivial.hpp>
 
 
 using namespace readdy::kernel::singlecpu::model;
@@ -133,7 +132,7 @@ TEST_P(ParticleDataTest, markingForRemoval2) {
     for (auto &&i = 0; i < n_particles; i++) {
         data->addParticle({(double) i, (double) i, (double) i, 5});
     }
-    std::vector<boost::uuids::uuid> deactivatedIds = {
+    std::vector<unsigned long> deactivatedIds = {
             *(data->begin_ids() + 10),
             *(data->begin_ids() + 7),
             *(data->begin_ids() + 8),

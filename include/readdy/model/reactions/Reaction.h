@@ -14,9 +14,9 @@
 #ifndef READDY_MAIN_REACTION_H
 #define READDY_MAIN_REACTION_H
 
-#include <boost/uuid/uuid.hpp>
 #include <string>
-#include <boost/uuid/random_generator.hpp>
+#include <ostream>
+#include <spdlog/fmt/ostr.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/RandomProvider.h>
 #include <readdy/common/make_unique.h>
@@ -28,9 +28,9 @@ namespace reactions {
 template<unsigned int N_EDUCTS>
 class Reaction {
 protected:
-    using rnd_ptr = std::unique_ptr<readdy::model::RandomProvider>;
     static short counter;
 public:
+    using rnd_normal = std::function<Vec3(const double, const double)>;
     static constexpr unsigned int n_educts = N_EDUCTS;
 
     Reaction(const std::string &name, const double rate, const double eductDistance,
@@ -79,13 +79,12 @@ public:
     }
 
     virtual void perform(const Particle &p1_in, const Particle &p2_in,
-                         Particle &p1_out, Particle &p2_out,
-                         const rnd_ptr &rnd) const {
+                         Particle &p1_out, Particle &p2_out, rnd_normal rnd) const {
     }
 
     virtual void perform(const Particle &p1_in, const Particle &p2_in,
                          Particle &p1_out, Particle &p2_out) const {
-        perform(p1_in, p2_in, p1_out, p2_out, rand);
+        perform(p1_in, p2_in, p1_out, p2_out, &readdy::model::rnd::normal3<>);
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
@@ -130,7 +129,6 @@ protected:
     const double rate;
     const double eductDistance, eductDistanceSquared;
     const double productDistance;
-    std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
 };
 
 }

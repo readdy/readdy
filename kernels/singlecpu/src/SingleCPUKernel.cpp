@@ -15,7 +15,6 @@ namespace kernel {
 namespace singlecpu {
 const std::string SingleCPUKernel::name = "SingleCPU";
 struct SingleCPUKernel::Impl {
-    std::unique_ptr<readdy::model::RandomProvider> rand = std::make_unique<readdy::model::RandomProvider>();
     std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<SingleCPUKernelStateModel> model;
     std::unique_ptr<potentials::SingleCPUPotentialFactory> potentials;

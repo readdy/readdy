@@ -14,7 +14,7 @@
 
 namespace {
 
-void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_type steps = 3) {
+void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observables::time_step_type steps = 3) {
     using timer = readdy::util::Timer;
 
     auto stdRand = [](double lower = 0.0, double upper = 1.0) -> double {
@@ -74,7 +74,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
 
     auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
     obs->setCallback([](const std::vector<unsigned long> n) {
-        BOOST_LOG_TRIVIAL(debug) << "have n particles = " << n[0];
+        readdy::log::console()->debug("have n particles = {}", n[0]);
     });
     auto connection = kernel.connectObservable(obs.get());
 
@@ -83,9 +83,9 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::time_step_
     kernel.getKernelContext().configure();
 
     neighborList->execute();
-    for (readdy::model::time_step_type t = 0; t < steps; ++t) {
-        BOOST_LOG_TRIVIAL(debug) << "----------";
-        BOOST_LOG_TRIVIAL(debug) << "t = " << t;
+    for (readdy::model::observables::time_step_type t = 0; t < steps; ++t) {
+        readdy::log::console()->debug("----------");
+        readdy::log::console()->debug("t = {}", t);
         kernel.evaluateObservables(t);
         {
             timer c("forces");

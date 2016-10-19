@@ -13,7 +13,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <ostream>
-#include <boost/functional/hash.hpp>
+#include <readdy/common/hash.h>
 
 namespace readdy {
 namespace kernel {
@@ -36,8 +36,8 @@ struct ParticleIndexPair {
 
     friend std::size_t hash_value(const ParticleIndexPair &pip) {
         std::size_t seed = 0;
-        boost::hash_combine(seed, pip.idx1);
-        boost::hash_combine(seed, pip.idx2);
+        readdy::util::hash::combine(seed, pip.idx1);
+        readdy::util::hash::combine(seed, pip.idx2);
         return seed;
     }
 

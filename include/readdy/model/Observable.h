@@ -19,12 +19,17 @@
 #ifndef READDY_MAIN_OBSERVABLE_H
 #define READDY_MAIN_OBSERVABLE_H
 
-#include <boost/signals2/signal.hpp>
 #include <readdy/common/make_unique.h>
-#include <readdy/common/Types.h>
+#include <readdy/common/signals.h>
+#include <readdy/common/logging.h>
 
 namespace readdy {
 namespace model {
+namespace observables {
+using time_step_type = unsigned long;
+using signal_type = readdy::signals::signal<void(time_step_type)>;
+using observable_type = signal_type::slot_type;
+}
 
 template<typename T>
 struct ObservableName {
@@ -46,58 +51,61 @@ public:
         return stride;
     }
 
-    const readdy::model::time_step_type &getCurrentTimeStep() const {
+    const observables::time_step_type &getCurrentTimeStep() const {
         return t_current;
     }
 
-    virtual ~ObservableBase();
+    virtual ~ObservableBase() = default;
 
-    virtual void callback(readdy::model::time_step_type t) {
-        if (t_current == t && !firstCall) return;
-        firstCall = false;
-        t_current = t;
-        evaluate();
+    virtual void callback(observables::time_step_type t) {
+        if (should_execute_callback(t)) {
+            firstCall = false;
+            t_current = t;
+            evaluate();
+        }
     };
+
+    virtual bool should_execute_callback(observables::time_step_type t) const {
+        return (t_current != t || firstCall) && (stride == 0 || t % stride == 0);
+    }
 
     virtual void evaluate() = 0;
 
 protected:
     unsigned int stride;
     readdy::model::Kernel *const kernel;
-    readdy::model::time_step_type t_current = 0;
+    observables::time_step_type t_current = 0;
     bool firstCall = true;
 };
 
 template<typename Result>
 class Observable : public ObservableBase {
 public:
+    using callback_function = std::function<void(const Result&)>;
     typedef Result result_t;
 
-    Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride) {
+    Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride), result() {
     }
 
     const result_t &getResult() {
         return result;
     }
 
-    void setCallback(std::function<void(const result_t &)> &&callbackFun) {
+    void setCallback(const callback_function& callbackFun) {
         Observable::_callback_f = std::move(callbackFun);
     }
 
-    void setCallback(const std::function<void(const result_t &)> &callbackFun) {
-        Observable::_callback_f = callbackFun;
-    }
-
-    virtual void callback(readdy::model::time_step_type t) override {
-        if (t_current == t && !firstCall) return;
-        ObservableBase::callback(t);
-        _callback_f(result);
+    virtual void callback(observables::time_step_type t) override {
+        if (should_execute_callback(t)) {
+            ObservableBase::callback(t);
+            _callback_f(result);
+        }
     }
 
 
 protected:
     Result result;
-    std::function<void(Result)> _callback_f = [](const Result) {};
+    callback_function _callback_f = [](const Result) {};
 };
 
 template<typename Res_t, typename Obs1_t, typename Obs2_t>
@@ -113,7 +121,7 @@ public:
     CombinerObservable(Kernel *const kernel, Obs1_t *obs1, Obs2_t *obs2, unsigned int stride = 1)
             : readdy::model::Observable<Res_t>::Observable(kernel, stride), obs1(obs1), obs2(obs2) {}
 
-    virtual void callback(readdy::model::time_step_type t) override {
+    virtual void callback(observables::time_step_type t) override {
         if (obs1->getCurrentTimeStep() != ObservableBase::t_current) obs1->callback(ObservableBase::t_current);
         if (obs2->getCurrentTimeStep() != ObservableBase::t_current) obs2->callback(ObservableBase::t_current);
         ObservableBase::callback(t);

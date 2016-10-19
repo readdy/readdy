@@ -12,8 +12,6 @@
 #define READDY_MAIN_KERNELSTATEMODEL_H
 
 #include <vector>
-#include <readdy/common/Types.h>
-#include <boost/signals2/signal.hpp>
 #include "Particle.h"
 #include "Vec3.h"
 

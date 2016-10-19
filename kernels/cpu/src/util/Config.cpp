@@ -8,8 +8,14 @@
  */
 
 #include <thread>
-#include <boost/log/trivial.hpp>
+#include <readdy/common/logging.h>
+#include <readdy/common/macros.h>
+
 #include "readdy/kernel/cpu/util/Config.h"
+
+#if READDY_OSX
+#include <cstdlib>
+#endif
 
 namespace readdy {
 namespace kernel {
@@ -20,8 +26,7 @@ Config::Config() {
     const char *env = std::getenv("READDY_N_CORES");
     if (env) {
         nThreads = static_cast<unsigned long>(std::stol(env));
-        BOOST_LOG_TRIVIAL(debug) << "Using "
-                                 << nThreads << " threads (by environment variable READDY_N_CORES)";
+        log::console()->debug("Using {} threads (by environment variable READDY_N_CORES", nThreads);
     }
 }
 }

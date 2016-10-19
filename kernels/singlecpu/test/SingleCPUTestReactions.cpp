@@ -10,7 +10,6 @@
 #include <gtest/gtest.h>
 #include <readdy/kernel/singlecpu/reactions/SingleCPUReactions.h>
 #include <readdy/model/Kernel.h>
-#include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>
 
@@ -141,7 +140,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
     pp_obs->setCallback([](const readdy::model::ParticlePositionObservable::result_t &t) {
-        BOOST_LOG_TRIVIAL(trace) << "got n particles=" << t.size();
+        readdy::log::console()->trace("got n particles={}", t.size());
     });
     auto connection = kernel->connectObservable(pp_obs.get());
 
@@ -260,11 +259,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
             case 1: {
                 EXPECT_TRUE(particles.size() == 2 || particles.size() == 1);
                 if (particles.size() == 2) {
-                    BOOST_LOG_TRIVIAL(debug) << "------> conversion happened";
+                    readdy::log::console()->debug("------> conversion happened");
                     EXPECT_TRUE(containsB);
                     EXPECT_TRUE(containsD);
                 } else {
-                    BOOST_LOG_TRIVIAL(debug) << "------> fusion happened";
+                    readdy::log::console()->debug("------> fusion happened");
                     EXPECT_TRUE(containsE);
                 }
                 break;

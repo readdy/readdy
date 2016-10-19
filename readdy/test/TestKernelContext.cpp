@@ -11,7 +11,6 @@
 #include <readdy/common/Utils.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
-#include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
@@ -24,9 +23,6 @@ namespace {
 class TestKernelContext : public ::testing::Test {
 protected:
     TestKernelContext() {}
-
-    std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory{
-            new readdy::model::reactions::ReactionFactory()};
 };
 
 class TestKernelContextWithKernels : public KernelTest {

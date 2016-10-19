@@ -3,7 +3,6 @@
 //
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 
 namespace rmr = readdy::model::reactions;
 namespace rmp = readdy::model::programs;
@@ -44,12 +43,12 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
     return pimpl->kernel->getKernelContext().getPeriodicBoundary();
 }
 
-void Simulation::run(const readdy::model::time_step_type steps, const double timeStep) {
+void Simulation::run(const readdy::model::observables::time_step_type steps, const double timeStep) {
     ensureKernelSelected();
     {
-        BOOST_LOG_TRIVIAL(debug) << "available programs: ";
+        log::console()->debug("available programs: ");
         for (auto &&p : pimpl->kernel->getAvailablePrograms()) {
-            BOOST_LOG_TRIVIAL(debug) << "\t" << p;
+            log::console()->debug("\t {}", p);
         }
     }
     pimpl->kernel->getKernelContext().setTimeStep(timeStep);
@@ -58,8 +57,7 @@ void Simulation::run(const readdy::model::time_step_type steps, const double tim
 
 void Simulation::setKernel(const std::string &kernel) {
     if (isKernelSelected()) {
-        BOOST_LOG_TRIVIAL(debug) << "replacing kernel \"" << pimpl->kernel->getName() << "\" with \"" << kernel
-                                 << "\"";
+        log::console()->debug("replacing kernel \"{}\" with \"{}\"", pimpl->kernel->getName(), kernel);
     }
     pimpl->kernel = readdy::plugin::KernelProvider::getInstance().create(kernel);
 }
@@ -80,7 +78,7 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
         readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
         pimpl->kernel->getKernelStateModel().addParticle(p);
     } else {
-        BOOST_LOG_TRIVIAL(error) << "particle position was not in bounds of the simulation box!";
+        log::console()->error("particle position was not in bounds of the simulation box!");
     }
 
 }
@@ -152,16 +150,15 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-boost::uuids::uuid Simulation::registerObservable(readdy::model::ObservableBase &observable) {
+unsigned long Simulation::registerObservable(readdy::model::ObservableBase &observable) {
     ensureKernelSelected();
-    boost::uuids::random_generator uuid_gen;
-    auto uuid = uuid_gen();
+    auto uuid = pimpl->counter++;
     auto &&connection = pimpl->kernel->connectObservable(&observable);
     pimpl->observableConnections.emplace(uuid, std::move(connection));
     return uuid;
 }
 
-void Simulation::deregisterObservable(const boost::uuids::uuid uuid) {
+void Simulation::deregisterObservable(const unsigned long uuid) {
     pimpl->observableConnections.erase(uuid);
     if (pimpl->observables.find(uuid) != pimpl->observables.end()) {
         pimpl->observables.erase(uuid);
@@ -292,7 +289,7 @@ double Simulation::getRecommendedTimeStep(unsigned int N) const {
                     rMin = std::min(rMin, pot->getCutoffRadius());
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
                 } else {
-                    BOOST_LOG_TRIVIAL(warning) << "Discovered potential with cutoff radius 0.";
+                    log::console()->warn("Discovered potential with cutoff radius 0.");
                 }
             }
         }
@@ -304,8 +301,7 @@ double Simulation::getRecommendedTimeStep(unsigned int N) const {
             tD = .5 * rho * rho / D;
         }
         fMaxes.emplace(pI, fMax);
-        BOOST_LOG_TRIVIAL(trace) << " tau for " << context.getParticleName(pI) << ": " << tD << "( xi = "
-                                 << xi << ", rho=" << rho << ")";
+        log::console()->trace(" tau for {}: {} ( xi = {}, rho = {})", context.getParticleName(pI), tD, xi, rho);
         if (tDMin == 0) {
             tDMin = tD;
         } else {
@@ -313,13 +309,12 @@ double Simulation::getRecommendedTimeStep(unsigned int N) const {
         }
     }
 
-    BOOST_LOG_TRIVIAL(debug)
-        << "Maximal displacement for particle types per time step (stochastic + deterministic): ";
+    log::console()->debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
     for (auto &&pI : context.getAllRegisteredParticleTypes()) {
         double D = context.getDiffusionConstant(pI);
         double xmax = sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
-        BOOST_LOG_TRIVIAL(debug) << "\t - " << context.getParticleName(pI) << ": " << sqrt(2 * D * tDMin) << " + "
-                                 << D * kbt * fMaxes[pI] * tDMin << " = " << xmax;
+        log::console()->debug("\t - {}: {} + {} = {}" , context.getParticleName(pI), sqrt(2 * D * tDMin),
+                              D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 
     if (kReactionMax > 0) tau_R = 1. / kReactionMax;
@@ -328,7 +323,7 @@ double Simulation::getRecommendedTimeStep(unsigned int N) const {
     if (tau_R > 0) tau = std::min(tau_R, tau);
     if (tDMin > 0) tau = std::min(tDMin, tau);
     tau /= (double) N;
-    BOOST_LOG_TRIVIAL(debug) << "Estimated time step: " << tau;
+    log::console()->debug("Estimated time step: {}", tau);
     return tau;
 }
 

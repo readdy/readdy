@@ -1,5 +1,5 @@
 /**
- * The KernelPluginDecorator class wraps a loaded kernel instance and the corresponding boost::dll::shared_library
+ * The KernelPluginDecorator class wraps a loaded kernel instance and the corresponding shared_library
  * instance by using the decorator pattern.
  *
  * @file KernelPluginDecorator.h
@@ -11,9 +11,8 @@
 #ifndef READDY_MAIN_KERNELPLUGINDECORATOR_H
 #define READDY_MAIN_KERNELPLUGINDECORATOR_H
 
-
 #include <readdy/model/Kernel.h>
-#include <boost/dll/shared_library.hpp>
+#include <readdy/common/dll.h>
 
 namespace readdy {
 namespace plugin {
@@ -22,10 +21,10 @@ namespace _internal {
 class KernelPluginDecorator : public readdy::model::Kernel {
 protected:
     std::unique_ptr<readdy::model::Kernel> reference;
-    boost::dll::shared_library lib;
+    std::unique_ptr<readdy::util::dll::shared_library> lib;
 
 public:
-    KernelPluginDecorator(const boost::filesystem::path sharedLib);
+    KernelPluginDecorator(const std::string& sharedLib);
 
     virtual ~KernelPluginDecorator();
 
@@ -43,19 +42,15 @@ public:
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
-    virtual boost::signals2::scoped_connection
+    virtual readdy::signals::scoped_connection
     connectObservable(model::ObservableBase *const observable) override;
-
-    virtual void disconnectObservable(model::ObservableBase *const observable) override;
 
     virtual std::unique_ptr<model::programs::Program> createProgram(const std::string &name) const override;
 
-    virtual void evaluateObservables(readdy::model::time_step_type t) override;
+    virtual void evaluateObservables(readdy::model::observables::time_step_type t) override;
 
-    virtual void evaluateAllObservables(readdy::model::time_step_type t) override;
-
-    virtual std::tuple<std::unique_ptr<model::ObservableWrapper>, boost::signals2::scoped_connection>
-    registerObservable(const model::ObservableType &observable, unsigned int stride) override;
+    virtual std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
+    registerObservable(const model::observables::observable_type &observable, unsigned int stride) override;
 
     virtual std::vector<std::string> getAvailablePrograms() const override;
 
@@ -77,7 +72,7 @@ public:
     InvalidPluginException(const std::string &__arg);
 };
 
-const std::string loadKernelName(const boost::filesystem::path &sharedLib);
+const std::string loadKernelName(const std::string &sharedLib);
 }
 }
 }

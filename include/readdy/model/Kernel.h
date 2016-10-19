@@ -15,15 +15,12 @@
 
 #include <map> 
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <readdy/common/signals.h>
 #include <readdy/model/Plugin.h>
-#include <boost/log/sources/logger.hpp>
 #include <readdy/model/programs/Program.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/_internal/ObservableFactory.h>
-#include <boost/signals2/signal.hpp>
-#include <boost/signals2/shared_connection_block.hpp>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/programs/ProgramFactory.h>
@@ -45,6 +42,7 @@ struct get_reaction_dispatcher;
  */
 class Kernel : public Plugin {
 public:
+
     /**
      * Constructs a kernel with a given name.
      */
@@ -99,46 +97,22 @@ public:
     };
 
     /**
-     * Creates an observable and connects it to the kernel.
-     *
-     * @return a tuple of the created observable and a scoped_connection object.
-     */
-    template<typename T, typename... Args>
-    std::tuple<std::unique_ptr<T>, boost::signals2::scoped_connection>
-    createAndConnectObservable(unsigned int stride, Args &&... args) {
-        auto &&obs = createObservable<T>(stride, std::forward<Args>(args)...);
-        auto &&connection = connectObservable(obs.get());
-        return std::make_tuple(std::move(obs), std::move(connection));
-    };
-
-    /**
      * Connects an observable to the kernel signal.
      *
-     * @return A scoped_connection object that, once deleted, releases the connection of the observable.
+     * @return A connection object that, once deleted, releases the connection of the observable.
      */
-    virtual boost::signals2::scoped_connection connectObservable(ObservableBase *const observable);
+    virtual readdy::signals::scoped_connection connectObservable(ObservableBase *const observable);
 
     /**
      * Evaluates all unblocked observables.
      */
-    virtual void evaluateObservables(readdy::model::time_step_type t);
-
-    /**
-     * Evaluates all observables, regardless if they are blocked or not.
-     */
-    virtual void evaluateAllObservables(readdy::model::time_step_type t);
-
-    /**
-     * Deconnects the observable of the signal, deletes the
-     * corresponding connection block object.
-     */
-    virtual void disconnectObservable(ObservableBase *const observable);
+    virtual void evaluateObservables(observables::time_step_type t);
 
     /**
      * Registers an observable to the kernel signal.
      */
-    virtual std::tuple<std::unique_ptr<ObservableWrapper>, boost::signals2::scoped_connection>
-    registerObservable(const ObservableType &observable, unsigned int stride);
+    virtual std::tuple<std::unique_ptr<ObservableWrapper>, readdy::signals::scoped_connection>
+    registerObservable(const observables::observable_type &observable, unsigned int stride);
 
     virtual readdy::model::programs::ProgramFactory &getProgramFactory() const = 0;
 

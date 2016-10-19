@@ -20,7 +20,6 @@
 #include <readdy/model/Observable.h>
 #include <readdy/model/Vec3.h>
 #include <vector>
-#include <readdy/common/Types.h>
 #include <iostream>
 #include <set>
 

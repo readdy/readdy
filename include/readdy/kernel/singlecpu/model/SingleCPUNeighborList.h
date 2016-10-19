@@ -10,10 +10,9 @@
 #ifndef READDY_MAIN_SINGLECPUNEIGHBORLIST_H
 #define READDY_MAIN_SINGLECPUNEIGHBORLIST_H
 
-#include "SingleCPUParticleData.h"
 #include <unordered_set>
-#include <boost/functional/hash.hpp>
 #include <readdy/model/KernelContext.h>
+#include "SingleCPUParticleData.h"
 
 namespace readdy {
 namespace kernel {
@@ -36,8 +35,8 @@ struct ParticleIndexPair {
 
     friend size_t hash_value(const ParticleIndexPair &pip) {
         size_t seed = 0;
-        boost::hash_combine(seed, pip.idx1);
-        boost::hash_combine(seed, pip.idx2);
+        readdy::util::hash::combine(seed, pip.idx1);
+        readdy::util::hash::combine(seed, pip.idx2);
         return seed;
     }
 

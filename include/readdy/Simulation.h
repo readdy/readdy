@@ -15,10 +15,6 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/SimulationScheme.h>
 
-#if BOOST_OS_MACOS
-#include <array>
-#endif
-
 namespace readdy {
     /**
      * Simulation is the focus of the high-level C++ API of ReaDDy.
@@ -101,7 +97,7 @@ namespace readdy {
          * @return a uuid with which the observable is associated
          */
         template<typename T, typename... Args>
-        boost::uuids::uuid registerObservable(const std::function<void(typename T::result_t)> callbackFun,
+        unsigned long registerObservable(const std::function<void(typename T::result_t)>& callbackFun,
                                               unsigned int stride, Args... args);
 
         /**
@@ -109,7 +105,7 @@ namespace readdy {
          * @param observable the observable
          * @return a uuid with which the observable is associated
          */
-        boost::uuids::uuid registerObservable(readdy::model::ObservableBase& observable);
+        unsigned long registerObservable(readdy::model::ObservableBase& observable);
 
         /**
          * Gives all available predefined observable names.
@@ -122,7 +118,7 @@ namespace readdy {
          * Removes an observable by uuid.
          * @param uuid the uuid of the observable to be removed.
          */
-        void deregisterObservable(const boost::uuids::uuid uuid);
+        void deregisterObservable(const unsigned long uuid);
 
         /**
          * A method to access the particle positions of a certain type.
@@ -327,7 +323,7 @@ namespace readdy {
 
         void setTimeStep(const double);
 
-        virtual void run(const readdy::model::time_step_type steps, const double timeStep);
+        virtual void run(const readdy::model::observables::time_step_type steps, const double timeStep);
 
         double getRecommendedTimeStep(unsigned int N) const;
 
@@ -346,7 +342,31 @@ namespace readdy {
         NoKernelSelectedException(const std::string &__arg);
     };
 
-    #include "readdy/_internal/SimulationImpl.hpp"
+struct Simulation::Impl {
+    std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections {};
+    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::ObservableBase>> observables {};
+    std::unique_ptr<readdy::model::Kernel> kernel;
+    unsigned long counter = 0;
+};
+
+
+template<typename T, typename... Args>
+unsigned long Simulation::registerObservable(const std::function<void(typename T::result_t)>& callbackFun, unsigned int stride, Args... args) {
+    ensureKernelSelected();
+    auto uuid = pimpl->counter++;
+    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
+    obs->setCallback(callbackFun);
+    auto connection = pimpl->kernel->connectObservable(obs.get());
+    pimpl->observables.emplace(uuid, std::move(obs));
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+    return uuid;
+}
+
+template<typename SchemeType>
+readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool useDefaults) {
+    ensureKernelSelected();
+    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
+}
 
 }
 

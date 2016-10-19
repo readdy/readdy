@@ -7,7 +7,6 @@
  * @date 02.05.16
  */
 
-#include <boost/algorithm/string.hpp>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/Simulation.h>
 #include <readdy/testing/KernelTest.h>
@@ -39,7 +38,7 @@ TEST_P(TestObservables, TestParticlePositions) {
 
     auto &&integrator = kernel->createProgram("EulerBDIntegrator");
     auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    for (readdy::model::time_step_type t = 0; t < 100; t++) {
+    for (readdy::model::observables::time_step_type t = 0; t < 100; t++) {
         integrator->execute();
         neighborList->execute();
         kernel->evaluateObservables(t);
@@ -65,7 +64,7 @@ TEST_P(TestObservables, TestCombinerObservable) {
     auto &&connection = kernel->connectObservable(o3.get());
     auto &&integrator = kernel->createProgram("EulerBDIntegrator");
     kernel->getKernelStateModel().updateNeighborList();
-    for (readdy::model::time_step_type t = 0; t < 100; t++) {
+    for (readdy::model::observables::time_step_type t = 0; t < 100; t++) {
         integrator->execute();
         kernel->getKernelStateModel().updateNeighborList();
     }
@@ -129,8 +128,8 @@ TEST_P(TestObservables, TestForcesObservable) {
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
     kernel->getKernelContext().configure();
     {
-        auto &&obsC = kernel->createObservable<m::ForcesObservable>(1, std::vector<std::string>{"C"});
-        auto &&connectionC = kernel->connectObservable(obsC.get());
+        auto obsC = kernel->createObservable<m::ForcesObservable>(1, std::vector<std::string>{"C"});
+        auto connectionC = kernel->connectObservable(obsC.get());
         nl->execute();
         forces->execute();
         kernel->evaluateObservables(2);

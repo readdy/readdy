@@ -16,7 +16,6 @@
 #include <unordered_map>
 #include <type_traits>
 #include <readdy/common/make_unique.h>
-#include <boost/log/trivial.hpp>
 #include "Conversion.h"
 #include "Enzymatic.h"
 #include "Fission.h"

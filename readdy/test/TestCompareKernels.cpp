@@ -28,7 +28,7 @@ namespace {
  */
 TEST(TestCompareKernels, ForcesSmallSystem) {
     auto singleCpuKernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    auto cpuKernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    //auto cpuKernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 }
 
 /**
@@ -37,6 +37,6 @@ TEST(TestCompareKernels, ForcesSmallSystem) {
  */
 TEST(TestCompareKernels, ForcesLargerSystem) {
     auto singleCpuKernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    auto cpuKernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    //auto cpuKernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 }
 }
