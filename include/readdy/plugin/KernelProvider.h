@@ -38,7 +38,7 @@ protected:
     }
 
     /**
-     * A protected method that determines if a boost::filesystem::path points to a shared library.
+     * A protected method that determines if a path points to a shared library.
      *
      * @param path the path
      * @return True if the path points to a shared library, otherwise false.

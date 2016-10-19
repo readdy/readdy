@@ -10,7 +10,6 @@ ReaDDy is a Python / C++ based particle reaction-diffusion simulator.
 
 ### Dependencies
 - HDF5
-- boost
 - cmake
 - *optional*: python (2 or 3), numpy (for python bindings)
 - *testing*: gtest (included by git submodule)
@@ -45,7 +44,7 @@ readdy/
 |   |   |   (core library tests)
 |
 |___libraries/
-|   |   (gtest, boost.DLL)
+|   |   (googletest, h5xx, pybind11, spdlog)
 |
 |___wrappers/
 |___|___python/
@@ -60,12 +59,8 @@ readdy/
 ```
 ### Building
 
-Before building, it should be noted that the build process will download
-boost and store it in a cache directory. Per default, this is "${CMAKE_BINARY_DIR}/download/external/boost", where CMAKE_BINARY_DIR corresponds to the directory in which cmake was executed.
-
 Build by conda-build:
-  1. Optionally set the boost cache dir by setting the *environment* variable "BOOST_DOWNLOAD_CACHE_DIR".
-  2. Install conda-build and then execute the conda recipe:
+> Install conda-build and then execute the conda recipe:
 ```bash
 conda install conda-build
 conda-build PATH_TO_READDY/tools/conda-recipe
@@ -85,7 +80,6 @@ Build by using CMake: This type of build is suggested if one is interested in de
 | READDY_GENERATE_DOCUMENTATION_TARGET:BOOL | OFF | Determines if the documentation target should be generated or not, which, if generated, can be called by "make doc". |
 | READDY_GENERATE_DOCUMENTATION_TARGET_ONLY:BOOL | OFF | This option has the same effect as the previous option, just that it does not need any dependencies other than doxygen to be fulfilled and generates the documentation target exclusively. |
 | READDY_LOG_CMAKE_CONFIGURATION:BOOL | OFF | This option determines if the status of relevant cmake cache variables should be logged at configuration time or not. |
-| BOOST_DOWNLOAD_CACHE_DIR:PATH | "./download/external/boost" | Cache variable determining the boost cache dir. If one can expect the output directory to be cleaned regularly, one should set this path to some other location. |
 | READDY_KERNELS_TO_TEST:STRING | "SingleCPU,CPU" | Comma separated list of kernels against which the core library should be tested within the test targets. |
 | *advanced*: INCLUDE_PERFORMANCE_TESTS:BOOL | OFF | Flag indicating if the performance tests should be part of the unit test target or not. |
 
