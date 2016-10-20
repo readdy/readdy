@@ -18,15 +18,15 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 #include "ProgramWrap.h"
 
-namespace bpy = pybind11;
-namespace rpy = readdy::py;
+namespace py = pybind11;
+namespace rpy = readdy::rpy;
 
 using rdy_particle_t = readdy::model::Particle;
 
 using prog_factory_t = readdy::model::programs::ProgramFactory;
 
 using program_t = readdy::model::programs::Program;
-using program_wrap_t = readdy::py::PyProgram;
+using program_wrap_t = readdy::rpy::PyProgram;
 
 using add_particle_t = readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram;
 using euler_integrator_t = readdy::kernel::singlecpu::programs::SingleCPUEulerBDIntegrator;
@@ -35,7 +35,7 @@ using neighbor_list_t = readdy::kernel::singlecpu::programs::SingleCPUUpdateNeig
 
 using reactions_u_a_t = readdy::kernel::singlecpu::programs::reactions::UncontrolledApproximation;
 
-void exportPrograms(bpy::module &proto) {
+void exportPrograms(py::module &proto) {
     auto f_add_particle = &prog_factory_t::createProgram<add_particle_t>;
     auto f_euler_integrator = &prog_factory_t::createProgram<euler_integrator_t>;
     auto f_forces = &prog_factory_t::createProgram<forces_t>;
@@ -44,34 +44,34 @@ void exportPrograms(bpy::module &proto) {
 
     using scpu_kernel_t = readdy::kernel::singlecpu::SingleCPUKernel;
 
-    bpy::class_<prog_factory_t>(proto, "ProgramFactory")
+    py::class_<prog_factory_t>(proto, "ProgramFactory")
             .def("create_add_particles", f_add_particle)
             .def("create_euler_integrator", f_euler_integrator)
             .def("create_update_forces", f_forces)
             .def("create_update_neighbor_list", f_neighbor_list)
             .def("create_reactions_uncontrolled_approximation", f_reactions_uncontrolled_approximation);
 
-    bpy::class_ <program_t, program_wrap_t> program(proto, "Program");
+    py::class_ <program_t, program_wrap_t> program(proto, "Program");
     program
-            .def(bpy::init<>())
+            .def(py::init<>())
             .def("execute", &program_t::execute);
 
-    bpy::class_<add_particle_t>(proto, "AddParticle", program)
-            .def(bpy::init<scpu_kernel_t *>())
+    py::class_<add_particle_t>(proto, "AddParticle", program)
+            .def(py::init<scpu_kernel_t *>())
             .def("execute", &add_particle_t::execute)
             .def("add_particle", &add_particle_t::addParticle)
             .def("set_particles", &add_particle_t::setParticles);
 
-    bpy::class_<euler_integrator_t>(proto, "EulerBDIntegrator", program)
-            .def(bpy::init<scpu_kernel_t *>())
+    py::class_<euler_integrator_t>(proto, "EulerBDIntegrator", program)
+            .def(py::init<scpu_kernel_t *>())
             .def("execute", &euler_integrator_t::execute);
 
-    bpy::class_<forces_t>(proto, "CalculateForces", program)
-            .def(bpy::init<scpu_kernel_t *>())
+    py::class_<forces_t>(proto, "CalculateForces", program)
+            .def(py::init<scpu_kernel_t *>())
             .def("execute", &forces_t::execute);
 
-    bpy::class_<neighbor_list_t>(proto, "UpdateNeighborList", program)
-            .def(bpy::init<scpu_kernel_t *>())
+    py::class_<neighbor_list_t>(proto, "UpdateNeighborList", program)
+            .def(py::init<scpu_kernel_t *>())
             .def("execute", &neighbor_list_t::execute);
 
     /**
@@ -81,8 +81,8 @@ void exportPrograms(bpy::module &proto) {
                  })
      */
 
-    bpy::class_<reactions_u_a_t>(proto, "ReactionsUncontrolledApproximation", program)
-            .def(bpy::init<scpu_kernel_t *>())
+    py::class_<reactions_u_a_t>(proto, "ReactionsUncontrolledApproximation", program)
+            .def(py::init<scpu_kernel_t *>())
             .def("execute", &reactions_u_a_t::execute)
             .def("register_reaction_scheme_11", &reactions_u_a_t::registerReactionScheme_11)
             .def("register_reaction_scheme_12", &reactions_u_a_t::registerReactionScheme_12)

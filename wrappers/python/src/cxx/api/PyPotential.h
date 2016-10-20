@@ -14,7 +14,7 @@
 #include <readdy/model/potentials/PotentialOrder2.h>
 
 namespace readdy {
-namespace py {
+namespace rpy {
 class PotentialOrder2Wrapper : public readdy::model::potentials::PotentialOrder2 {
 
 public:
