@@ -5,8 +5,8 @@
  * @date 18.10.16
  */
 
-#ifndef READDY_MAIN_COMPARTMENTS_H
-#define READDY_MAIN_COMPARTMENTS_H
+#ifndef READDY_CPUKERNEL_COMPARTMENTS_H
+#define READDY_CPUKERNEL_COMPARTMENTS_H
 
 #include <readdy/kernel/singlecpu/programs/Compartments.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
@@ -42,4 +42,4 @@ protected:
 }
 }
 
-#endif //READDY_MAIN_COMPARTMENTS_H
+#endif //READDY_CPUKERNEL_COMPARTMENTS_H

@@ -8,8 +8,8 @@
  */
 
 
-#ifndef READDY_MAIN_CALCULATEFORCES_H
-#define READDY_MAIN_CALCULATEFORCES_H
+#ifndef READDY_CPUKERNEL_CALCULATEFORCES_H
+#define READDY_CPUKERNEL_CALCULATEFORCES_H
 
 #include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
@@ -35,4 +35,4 @@ protected:
 }
 }
 }
-#endif //READDY_MAIN_CALCULATEFORCES_H
+#endif //READDY_CPUKERNEL_CALCULATEFORCES_H

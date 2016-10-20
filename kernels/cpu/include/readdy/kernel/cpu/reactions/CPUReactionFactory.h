@@ -8,8 +8,8 @@
  */
 
 
-#ifndef READDY_MAIN_CPUREACTIONFACTORY_H
-#define READDY_MAIN_CPUREACTIONFACTORY_H
+#ifndef READDY_CPUKERNEL_CPUREACTIONFACTORY_H
+#define READDY_CPUKERNEL_CPUREACTIONFACTORY_H
 
 #include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/model/RandomProvider.h>
@@ -156,4 +156,4 @@ protected:
 }
 }
 }
-#endif //READDY_MAIN_CPUREACTIONFACTORY_H
+#endif //READDY_CPUKERNEL_CPUREACTIONFACTORY_H

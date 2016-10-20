@@ -7,8 +7,8 @@
  * @date 14.07.16
  */
 
-#ifndef READDY_MAIN_NEIGHBORLIST_H
-#define READDY_MAIN_NEIGHBORLIST_H
+#ifndef READDY_CPUKERNEL_NEIGHBORLIST_H
+#define READDY_CPUKERNEL_NEIGHBORLIST_H
 
 #include <memory>
 #include <readdy/common/make_unique.h>
@@ -71,4 +71,4 @@ protected:
 }
 }
 }
-#endif //READDY_MAIN_NEIGHBORLIST_H
+#endif //READDY_CPUKERNEL_NEIGHBORLIST_H

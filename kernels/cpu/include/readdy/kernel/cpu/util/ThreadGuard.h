@@ -7,8 +7,8 @@
  * @date 01.08.16
  */
 
-#ifndef READDY_MAIN_THREADGUARD_H
-#define READDY_MAIN_THREADGUARD_H
+#ifndef READDY_CPUKERNEL_THREADGUARD_H
+#define READDY_CPUKERNEL_THREADGUARD_H
 
 #include <thread>
 
@@ -43,4 +43,4 @@ public:
 }
 }
 }
-#endif //READDY_MAIN_THREADGUARD_H
+#endif //READDY_CPUKERNEL_THREADGUARD_H

@@ -7,8 +7,8 @@
  * @date 07.07.16
  */
 
-#ifndef READDY_MAIN_CPUEULERBDINTEGRATOR_H
-#define READDY_MAIN_CPUEULERBDINTEGRATOR_H
+#ifndef READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
+#define READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
 
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/model/programs/Programs.h>
@@ -31,4 +31,4 @@ private:
 }
 }
 }
-#endif //READDY_MAIN_CPUEULERBDINTEGRATOR_H
+#endif //READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H

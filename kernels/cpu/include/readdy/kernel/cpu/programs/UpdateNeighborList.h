@@ -8,8 +8,8 @@
  */
 
 
-#ifndef READDY_MAIN_UPDATENEIGHBORLIST_H
-#define READDY_MAIN_UPDATENEIGHBORLIST_H
+#ifndef READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
+#define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
 
 #include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
@@ -43,4 +43,4 @@ private:
 }
 }
 }
-#endif //READDY_MAIN_UPDATENEIGHBORLIST_H
+#endif //READDY_CPUKERNEL_UPDATENEIGHBORLIST_H

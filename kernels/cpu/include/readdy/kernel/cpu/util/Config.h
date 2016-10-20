@@ -7,8 +7,8 @@
  * @date 05.09.16
  */
 
-#ifndef READDY_MAIN_CONFIG_H
-#define READDY_MAIN_CONFIG_H
+#ifndef READDY_CPUKERNEL_CONFIG_H
+#define READDY_CPUKERNEL_CONFIG_H
 
 namespace readdy {
 namespace kernel {
@@ -23,4 +23,4 @@ struct Config {
 }
 }
 }
-#endif //READDY_MAIN_CONFIG_H
+#endif //READDY_CPUKERNEL_CONFIG_H

@@ -7,8 +7,8 @@
  * @date 20.10.16
  */
 
-#ifndef READDY_MAIN_REACTIONUTILS_H
-#define READDY_MAIN_REACTIONUTILS_H
+#ifndef READDY_CPUKERNEL_REACTIONUTILS_H
+#define READDY_CPUKERNEL_REACTIONUTILS_H
 
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
@@ -45,4 +45,4 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
 }
 }
 }
-#endif //READDY_MAIN_REACTIONUTILS_H
+#endif //READDY_CPUKERNEL_REACTIONUTILS_H

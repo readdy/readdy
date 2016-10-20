@@ -7,8 +7,8 @@
  * @date 13.07.16
  */
 
-#ifndef READDY_MAIN_CPUSTATEMODEL_H
-#define READDY_MAIN_CPUSTATEMODEL_H
+#ifndef READDY_CPUKERNEL_CPUSTATEMODEL_H
+#define READDY_CPUKERNEL_CPUSTATEMODEL_H
 
 
 #include <readdy/model/KernelStateModel.h>
@@ -61,4 +61,4 @@ private:
 }
 }
 
-#endif //READDY_MAIN_CPUSTATEMODEL_H
+#endif //READDY_CPUKERNEL_CPUSTATEMODEL_H

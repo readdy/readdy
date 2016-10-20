@@ -8,8 +8,8 @@
  */
 
 
-#ifndef READDY_MAIN_CPUKERNEL_H
-#define READDY_MAIN_CPUKERNEL_H
+#ifndef READDY_CPUKERNEL_CPUKERNEL_H
+#define READDY_CPUKERNEL_CPUKERNEL_H
 
 #include <readdy/model/Kernel.h>
 #include <readdy/common/dll.h>
@@ -60,4 +60,4 @@ extern "C" const char* name();
 
 extern "C" readdy::model::Kernel* createKernel();
 
-#endif //READDY_MAIN_CPUKERNEL_H
+#endif //READDY_CPUKERNEL_CPUKERNEL_H

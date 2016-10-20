@@ -7,8 +7,8 @@
  * @date 14.07.16
  */
 
-#ifndef READDY_MAIN_PARTICLEINDEXPAIR_H
-#define READDY_MAIN_PARTICLEINDEXPAIR_H
+#ifndef READDY_CPUKERNEL_PARTICLEINDEXPAIR_H
+#define READDY_CPUKERNEL_PARTICLEINDEXPAIR_H
 
 #include <cstddef>
 #include <stdexcept>
@@ -60,4 +60,4 @@ struct ParticleIndexPairHasher {
 }
 }
 }
-#endif //READDY_MAIN_PARTICLEINDEXPAIR_H
+#endif //READDY_CPUKERNEL_PARTICLEINDEXPAIR_H

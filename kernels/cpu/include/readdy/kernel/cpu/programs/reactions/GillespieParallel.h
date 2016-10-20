@@ -51,7 +51,7 @@ public:
 
     void setFilterEventsInAdvance(bool filterEventsInAdvance);
 
-private:
+protected:
     kernel_t const *const kernel;
     double maxReactionRadius = 0.0;
     double boxWidth = 0.0;
@@ -70,7 +70,7 @@ private:
 public:
     void setApproximateRate(bool approximateRate);
 
-private:
+protected:
 
     /**
      * Sorts particles into boxes and adds them to the problematic particles should they fall into
