@@ -8,11 +8,13 @@
  */
 
 #include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
-#include <readdy/kernel/cpu/programs/Reactions.h>
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
 #include <readdy/kernel/cpu/programs/UpdateNeighborList.h>
 #include <readdy/kernel/cpu/programs/CalculateForces.h>
 #include <readdy/kernel/cpu/programs/Compartments.h>
+#include <readdy/kernel/cpu/programs/reactions/Gillespie.h>
+#include <readdy/kernel/cpu/programs/reactions/UncontrolledApproximation.h>
+#include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
 
 namespace core_p = readdy::model::programs;
 

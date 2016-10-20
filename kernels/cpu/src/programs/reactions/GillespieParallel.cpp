@@ -1,15 +1,17 @@
 /**
  * << detailed description >>
  *
- * @file CPUDefaultReactionProgram.cpp
+ * @file GillespieParallel.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 23.06.16
+ * @date 20.10.16
  */
 
-#include <readdy/kernel/cpu/programs/Reactions.h>
+#include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
 #include <future>
+#include <readdy/kernel/cpu/programs/reactions/ReactionUtils.h>
 #include <queue>
+
 
 using rdy_particle_t = readdy::model::Particle;
 
@@ -18,324 +20,7 @@ namespace kernel {
 namespace cpu {
 namespace programs {
 namespace reactions {
-UncontrolledApproximation::UncontrolledApproximation(const CPUKernel *const kernel)
-        : kernel(kernel) {
 
-}
-
-void UncontrolledApproximation::execute() {
-    const auto &ctx = kernel->getKernelContext();
-    const auto &fixPos = ctx.getFixPositionFun();
-    const auto &dt = ctx.getTimeStep();
-    auto data = kernel->getKernelStateModel().getParticleData();
-    std::vector<rdy_particle_t> newParticles{};
-    std::vector<std::function<void()>> events{};
-
-    // reactions with one educt
-    {
-        auto it_type = data->begin_types();
-
-        while (it_type != data->end_types()) {
-            // gather reactions
-            const auto &reactions = ctx.getOrder1Reactions(*it_type);
-            for (const auto &reaction : reactions) {
-                auto r = reaction->getRate() * dt;
-                if (readdy::model::rnd::uniform() < r) {
-                    const size_t particleIdx = (const size_t) (it_type - data->begin_types());
-                    events.push_back([particleIdx, &newParticles, &reaction, this] {
-                        auto &&_data = kernel->getKernelStateModel().getParticleData();
-                        if (_data->isMarkedForDeactivation(particleIdx)) return;
-                        _data->markForDeactivation(particleIdx);
-
-                        switch (reaction->getNProducts()) {
-                            case 0: {
-                                // no operation, just deactivation
-                                // (read out loud with saxony accent)
-                                break;
-                            }
-                            case 1: {
-                                const auto particle = (*_data)[particleIdx];
-                                rdy_particle_t outParticle1{};
-                                reaction->perform(particle, particle, outParticle1, outParticle1);
-                                newParticles.push_back(outParticle1);
-                                break;
-                            }
-                            case 2: {
-                                const auto particle = (*_data)[particleIdx];
-                                rdy_particle_t outParticle1{}, outParticle2{};
-                                reaction->perform(particle, particle, outParticle1, outParticle2);
-                                newParticles.push_back(outParticle1);
-                                newParticles.push_back(outParticle2);
-                                break;
-                            }
-                            default: {
-                                log::console()->error("This should not happen!");
-                            }
-                        }
-                    });
-                }
-            }
-            ++it_type;
-        }
-    }
-
-    // reactions with two educts
-    {
-        auto cbegin = kernel->getKernelStateModel().getNeighborList()->pairs->cbegin();
-        const auto cend = kernel->getKernelStateModel().getNeighborList()->pairs->cend();
-        for (auto &it = cbegin; it != cend; ++it) {
-            const auto idx1 = it->first;
-            for (const auto &neighbor : it->second) {
-                if (idx1 > neighbor.idx) continue;
-                const auto &reactions = ctx.getOrder2Reactions(
-                        *(data->begin_types() + idx1), *(data->begin_types() + neighbor.idx)
-                );
-
-                const auto distSquared = neighbor.d2;
-                for (const auto &reaction : reactions) {
-                    // if close enough and coin flip successful
-                    if (distSquared < reaction->getEductDistanceSquared()
-                        && readdy::model::rnd::uniform() < reaction->getRate() * dt) {
-                        events.push_back([idx1, neighbor, this, &newParticles, &reaction] {
-                            auto &&_data = kernel->getKernelStateModel().getParticleData();
-                            if (_data->isMarkedForDeactivation(idx1)) return;
-                            if (_data->isMarkedForDeactivation(neighbor.idx)) return;
-                            _data->markForDeactivation(idx1);
-                            _data->markForDeactivation(neighbor.idx);
-                            const auto inParticle1 = (*_data)[idx1];
-                            const auto inParticle2 = (*_data)[neighbor.idx];
-                            switch (reaction->getNProducts()) {
-                                case 1: {
-                                    rdy_particle_t out{};
-                                    reaction->perform(inParticle1, inParticle2, out, out);
-                                    newParticles.push_back(out);
-                                    break;
-                                }
-                                case 2: {
-                                    rdy_particle_t out1{}, out2{};
-                                    reaction->perform(inParticle1, inParticle2, out1, out2);
-                                    newParticles.push_back(out1);
-                                    newParticles.push_back(out2);
-                                    break;
-                                }
-                                default: {
-                                    log::console()->error("This should not happen!");
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-        }
-    }
-    // shuffle reactions
-    std::random_shuffle(events.begin(), events.end());
-
-    // execute reactions
-    std::for_each(events.begin(), events.end(), [](const std::function<void()> &f) { f(); });
-
-    // reposition particles to respect the periodic b.c.
-    std::for_each(newParticles.begin(), newParticles.end(),
-                  [&fixPos](rdy_particle_t &p) { fixPos(p.getPos()); });
-
-    // update data structure
-    data->deactivateMarked();
-    data->addParticles(newParticles);
-}
-
-Gillespie::Gillespie(const CPUKernel *const kernel) : kernel(kernel) {}
-
-std::vector<singlecpu::programs::reactions::ReactionEvent> Gillespie::gatherEvents(double &alpha) {
-    using index_t = singlecpu::programs::reactions::ReactionEvent::index_type;
-    std::vector<singlecpu::programs::reactions::ReactionEvent> events;
-    const auto &ctx = kernel->getKernelContext();
-    auto data = kernel->getKernelStateModel().getParticleData();
-    /**
-    * Reactions with one educt
-    */
-    {
-        auto it_type = data->begin_types();
-        auto it_deactivated = data->begin_deactivated();
-        const auto end = data->end_types();
-        while (it_type != end) {
-            if (!*it_deactivated) {
-                const auto &reactions = ctx.getOrder1Reactions(*it_type);
-                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                    const auto rate = (*it)->getRate();
-                    if (rate > 0) {
-                        alpha += rate;
-                        events.push_back({1, (*it)->getNProducts(),
-                                          (index_t) (it_type - data->begin_types()), 0, rate, alpha,
-                                          (index_t) (it - reactions.begin()), *it_type, 0});
-                    }
-                }
-            }
-            ++it_type;
-            ++it_deactivated;
-        }
-    }
-
-    /**
-     * Reactions with two educts
-     */
-    {
-        const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
-        auto typesBegin = data->begin_types();
-        for (auto &&nl_it = neighborList->pairs->begin(); nl_it != neighborList->pairs->end(); ++nl_it) {
-            const index_t idx1 = nl_it->first;
-            if (*(data->begin_deactivated() + idx1)) continue;
-            auto neighbors = nl_it->second;
-            for (const auto &neighbor : neighbors) {
-                if (idx1 > neighbor.idx) continue;
-                if (*(data->begin_deactivated() + neighbor.idx)) continue;
-                const auto &reactions = ctx.getOrder2Reactions(
-                        *(data->begin_types() + idx1), *(data->begin_types() + neighbor.idx)
-                );
-
-                const auto distSquared = neighbor.d2;
-
-                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                    // if close enough
-                    const auto reaction = *it;
-                    if (distSquared < reaction->getEductDistanceSquared()) {
-                        const auto rate = reaction->getRate();
-                        if (rate > 0) {
-                            alpha += rate;
-                            events.push_back(
-                                    {2, reaction->getNProducts(), idx1, neighbor.idx, rate, alpha,
-                                     (index_t) (it - reactions.begin()),
-                                     *(typesBegin + idx1), *(typesBegin + neighbor.idx)});
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return events;
-}
-
-std::vector<readdy::model::Particle> handleEventsGillespie(
-        CPUKernel const *const kernel,
-        bool filterEventsInAdvance,
-        std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events) {
-    using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
-    using rdy_particle_t = readdy::model::Particle;
-    std::vector<rdy_particle_t> newParticles{};
-
-    const auto &ctx = kernel->getKernelContext();
-    const auto data = kernel->getKernelStateModel().getParticleData();
-    const auto dt = ctx.getTimeStep();
-    /**
-     * Handle gathered reaction events
-     */
-    {
-        std::size_t nDeactivated = 0;
-        const std::size_t nEvents = events.size();
-        while (nDeactivated < nEvents) {
-            const auto alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-            const auto x = readdy::model::rnd::uniform(0, alpha);
-            const auto eventIt = std::lower_bound(
-                    events.begin(), events.end() - nDeactivated, x,
-                    [](const event_t &elem1, double elem2) {
-                        return elem1.cumulativeRate < elem2;
-                    }
-            );
-            const auto event = *eventIt;
-            if (eventIt == events.end() - nDeactivated) {
-                throw std::runtime_error("this should not happen (event not found)");
-            }
-            if (filterEventsInAdvance || readdy::model::rnd::uniform() < event.reactionRate * dt) {
-                /**
-                 * Perform reaction
-                 */
-                {
-                    const auto p1 = data->operator[](event.idx1);
-                    rdy_particle_t pOut1{}, pOut2{};
-                    if (event.nEducts == 1) {
-                        auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                        reaction->perform(p1, p1, pOut1, pOut2);
-                        if (reaction->getNProducts() > 0) {
-                            *(data->begin_positions() + event.idx1) = pOut1.getPos();
-                            *(data->begin_types() + event.idx1) = pOut1.getType();
-                            *(data->begin_ids() + event.idx1) = pOut1.getId();
-                            if (reaction->getNProducts() == 2) {
-                                newParticles.push_back(pOut2);
-                            }
-                        } else {
-                            data->markForDeactivation(event.idx1);
-                        }
-                    } else {
-                        auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                        const auto p2 = data->operator[](event.idx2);
-                        reaction->perform(p1, p2, pOut1, pOut2);
-                        *(data->begin_positions() + event.idx1) = pOut1.getPos();
-                        *(data->begin_types() + event.idx1) = pOut1.getType();
-                        *(data->begin_ids() + event.idx1) = pOut1.getId();
-                        if (reaction->getNProducts() == 2) {
-                            *(data->begin_positions() + event.idx2) = pOut2.getPos();
-                            *(data->begin_types() + event.idx2) = pOut2.getType();
-                            *(data->begin_ids() + event.idx2) = pOut2.getId();
-                        } else if (reaction->getNProducts() == 1) {
-                            data->markForDeactivation(event.idx2);
-                        } else {
-                            data->markForDeactivation(event.idx1);
-                            data->markForDeactivation(event.idx2);
-                        }
-                    }
-                }
-                /**
-                 * deactivate events whose educts have disappeared (including the just handled one)
-                 */
-                {
-                    auto _it = events.begin();
-                    double cumsum = 0.0;
-                    const auto idx1 = event.idx1;
-                    if (event.nEducts == 1) {
-                        while (_it < events.end() - nDeactivated) {
-                            if ((*_it).idx1 == idx1 ||
-                                ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
-                                ++nDeactivated;
-                                std::iter_swap(_it, events.end() - nDeactivated);
-                            } else {
-                                cumsum += (*_it).reactionRate;
-                                (*_it).cumulativeRate = cumsum;
-                                ++_it;
-                            }
-                        }
-                    } else {
-                        const auto idx2 = event.idx2;
-                        while (_it < events.end() - nDeactivated) {
-                            if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2 ||
-                                ((*_it).nEducts == 2 &&
-                                 ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
-                                ++nDeactivated;
-                                std::iter_swap(_it, events.end() - nDeactivated);
-                            } else {
-                                (*_it).cumulativeRate = cumsum;
-                                cumsum += (*_it).reactionRate;
-                                ++_it;
-                            }
-                        }
-                    }
-
-                }
-            } else {
-                nDeactivated++;
-                std::iter_swap(eventIt, events.end() - nDeactivated);
-                (*eventIt).cumulativeRate = (*eventIt).reactionRate;
-                if (eventIt > events.begin()) {
-                    (*eventIt).cumulativeRate += (*(eventIt - 1)).cumulativeRate;
-                }
-                auto cumsum = (*eventIt).cumulativeRate;
-                for (auto _it = eventIt + 1; _it < events.end() - nDeactivated; ++_it) {
-                    cumsum += (*_it).reactionRate;
-                    (*_it).cumulativeRate = cumsum;
-                }
-            }
-        }
-    }
-    return newParticles;
-}
 
 struct GillespieParallel::SlicedBox {
     // shellIdx -> particles, outmost shell has idx 0
@@ -515,7 +200,7 @@ void GillespieParallel::handleBoxReactions() {
             // handle events
             {
                 newParticles.set_value(
-                        handleEventsGillespie(kernel, filterEventsInAdvance, std::move(localEvents))
+                        handleEventsGillespie(kernel, filterEventsInAdvance, approximateRate, std::move(localEvents))
                 );
             }
 
@@ -557,7 +242,8 @@ void GillespieParallel::handleBoxReactions() {
                          kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
-        auto newProblemParticles = handleEventsGillespie(kernel, filterEventsInAdvance, std::move(evilEvents));
+        auto newProblemParticles = handleEventsGillespie(kernel, filterEventsInAdvance, approximateRate,
+                                                         std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
         kernel->getKernelStateModel().getParticleData()->deactivateMarked();
@@ -681,7 +367,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                 const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
-                    if (rate > 0 && (!filterEventsInAdvance || readdy::model::rnd::uniform() < rate * dt)) {
+                    if (rate > 0 && (!filterEventsInAdvance || performEvent(rate, dt, approximateRate))) {
                         alpha += rate;
                         events.push_back(
                                 {1, (*it)->getNProducts(), idx, 0, rate, alpha,
@@ -707,7 +393,7 @@ GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t 
                                 const auto rate = react->getRate();
                                 if (rate > 0
                                     && distSquared < react->getEductDistanceSquared()
-                                    && (!filterEventsInAdvance || readdy::model::rnd::uniform() < rate * dt)) {
+                                    && (!filterEventsInAdvance || performEvent(rate, dt, approximateRate))) {
                                     if (*(data->begin_deactivated() + idx_neighbor.idx)) {
                                         auto get_box_idx = [&](
                                                 unsigned long _idx) {
@@ -770,6 +456,10 @@ unsigned int GillespieParallel::getOtherAxis2() const {
 
 void GillespieParallel::setFilterEventsInAdvance(bool filterEventsInAdvance) {
     GillespieParallel::filterEventsInAdvance = filterEventsInAdvance;
+}
+
+void GillespieParallel::setApproximateRate(bool approximateRate) {
+    GillespieParallel::approximateRate = approximateRate;
 }
 
 template void GillespieParallel::gatherEvents<std::vector<unsigned long>>(
