@@ -10,6 +10,7 @@
 #include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
+#include <readdy/kernel/singlecpu/programs/Compartments.h>
 
 namespace readdy {
 namespace kernel {
@@ -35,6 +36,9 @@ SingleCPUProgramFactory::SingleCPUProgramFactory(SingleCPUKernel *kernel) : kern
     };
     factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
         return new reactions::Gillespie(kernel);
+    };
+    factory[core_p::getProgramName<Compartments>()] = [kernel] {
+        return new Compartments(kernel);
     };
 }
 }

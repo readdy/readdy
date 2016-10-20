@@ -7,6 +7,7 @@
  *   - UpdateNeighborList: A program that creates neighbor lists.
  *   - CalculateForces: A program that calculates forces for later use in, e.g., integration schemes.
  *   - DefaultReactionProgram: A program that executes the default reaction scheme.
+ *   - CompartmentConversion: Perform instantaneous particle conversions depending on the particles' position.
  *
  * Further, specializations of ProgramName<T> are declared.
  *
@@ -101,6 +102,15 @@ public:
 
 }
 
+class Compartments : public Program {
+public:
+    Compartments() : Program() {}
+
+    virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> characteristicFun) = 0;
+
+    virtual void registerConversion(size_t compartmentIdx, std::string from, std::string to) = 0;
+};
+
 template<typename T>
 const std::string getProgramName(typename std::enable_if<std::is_base_of<Test, T>::value>::type * = 0) {
     return "Test";
@@ -142,6 +152,12 @@ const std::string
 getProgramName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type * = 0) {
     return "GillespieParallel";
 };
+
+template<typename T>
+const std::string getProgramName(typename std::enable_if<std::is_base_of<Compartments, T>::value>::type * = 0) {
+    return "Compartments";
+};
+
 }
 }
 }

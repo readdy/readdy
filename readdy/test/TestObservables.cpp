@@ -19,11 +19,6 @@ class TestObservables : public KernelTest {
 
 };
 
-TEST_P(TestObservables, Foo) {
-    readdy::model::_internal::ObservableFactory obsf(kernel.get());
-    obsf.create<m::ParticlePositionObservable>(1);
-}
-
 TEST_P(TestObservables, TestParticlePositions) {
     const unsigned int n_particles = 100;
     const double diffusionConstant = 1;

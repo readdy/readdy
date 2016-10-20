@@ -32,9 +32,9 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
 }
 
 unsigned long
-registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun) {
+registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun, std::vector<std::string> types) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride);
+    return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride, types);
 }
 
 unsigned long
@@ -63,45 +63,29 @@ registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::
 
 unsigned long
 registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const bpy::object &callbackFun,
-                                                bpy::array_t<double> &binBorders, bpy::list types, unsigned int axis) {
+                                                bpy::array_t<double> binBorders, unsigned int axis, std::vector<std::string> types) {
     const auto info = binBorders.request();
     const auto sizeBorders = info.shape[0];
     auto binBordersData = static_cast<double *>(info.ptr);
-    const auto sizeTypes = bpy::len(types);
-    std::vector<std::string> typesVec{};
-    typesVec.reserve((unsigned long) sizeTypes);
     std::vector<double> binBordersVec{};
     binBordersVec.reserve(sizeBorders);
     for (auto i = 0; i < sizeBorders; ++i) {
         binBordersVec.push_back(binBordersData[i]);
     }
-    for (auto i = 0; i < sizeTypes; ++i) {
-        typesVec.push_back(types[i].cast<std::string>());
-    }
     auto pyFun = readdy::py::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec,
-                                                                                typesVec, axis);
-
+    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec, types, axis);
 }
 
 unsigned long
-registerObservable_NParticlesTypes(sim &self, unsigned int stride, bpy::list types, const bpy::object &callbackFun) {
-    const auto sizeTypes = bpy::len(types);
-    std::vector<std::string> typesVec{};
-    typesVec.reserve((unsigned long) sizeTypes);
-    for (auto i = 0; i < sizeTypes; ++i) {
-        typesVec.push_back(types[i].cast<std::string>());
-    }
+registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun, std::vector<std::string> types) {
     auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, typesVec);
+    return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, types);
 }
 
-unsigned long registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun) {
-    auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride);
+unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride, pybind11::object callbackFun, std::vector<std::string> types) {
+    auto pyFun = readdy::py::PyFunction<void(readdy::model::ForcesObservable::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::ForcesObservable>(std::move(pyFun), stride, types);
 }
-
-// todo @chrisfroe register forces observable
 
 // module
 PYBIND11_PLUGIN (api) {
@@ -139,7 +123,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable)
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
-            .def("register_observable_n_particles_types", &registerObservable_NParticlesTypes)
+            .def("register_observable_forces", &registerObservable_ForcesObservable)
             .def("register_reaction_conversion", &sim::registerConversionReaction, rvp::reference_internal)
             .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, rvp::reference_internal)
             .def("register_reaction_fission", &sim::registerFissionReaction, rvp::reference_internal)

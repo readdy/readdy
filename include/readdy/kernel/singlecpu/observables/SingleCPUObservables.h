@@ -21,6 +21,37 @@ namespace singlecpu {
 namespace observables {
 
 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
+class ParticlePositionObservable : public readdy::model::ParticlePositionObservable {
+public:
+    ParticlePositionObservable(kernel_t *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
+            readdy::model::ParticlePositionObservable(kernel, stride, typesToCount), kernel(kernel) {}
+
+    virtual void evaluate() override {
+        result.clear();
+        const auto &pd = kernel->getKernelStateModel().getParticleData();
+        auto positionsIt = pd->cbegin_positions();
+        if (typesToCount.empty()) {
+            // get all particles' positions
+            result.reserve(pd->size());
+            std::copy(positionsIt, pd->cend_positions(), std::back_inserter(result));
+        } else {
+            // only get positions of typesToCount
+            auto typesIt = pd->cbegin_types();
+            while (positionsIt != pd->cend_positions()) {
+                if (std::find(typesToCount.begin(), typesToCount.end(), *typesIt) != typesToCount.end()) {
+                    result.push_back(*positionsIt);
+                }
+                ++positionsIt;
+                ++typesIt;
+            }
+        }
+    }
+
+protected:
+    kernel_t *const kernel;
+};
+
+template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
 class HistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
 
 public:

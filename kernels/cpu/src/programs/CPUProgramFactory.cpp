@@ -12,6 +12,7 @@
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
 #include <readdy/kernel/cpu/programs/UpdateNeighborList.h>
 #include <readdy/kernel/cpu/programs/CalculateForces.h>
+#include <readdy/kernel/cpu/programs/Compartments.h>
 
 namespace core_p = readdy::model::programs;
 
@@ -37,6 +38,9 @@ CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
     };
     factory[core_p::getProgramName<core_p::reactions::GillespieParallel>()] = [kernel] {
         return new reactions::GillespieParallel(kernel);
+    };
+    factory[core_p::getProgramName<core_p::Compartments>()] = [kernel] {
+        return new Compartments(kernel);
     };
 }
 }
