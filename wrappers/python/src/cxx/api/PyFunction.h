@@ -15,7 +15,7 @@
 #include <pybind11/functional.h>
 
 namespace readdy {
-namespace py {
+namespace rpy {
 
 template<typename Signature>
 struct PyFunction;

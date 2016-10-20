@@ -11,7 +11,7 @@
 
 namespace readdy {
 
-namespace py {
+namespace rpy {
 PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &name, pybind11::object o1, pybind11::object o2)
         : PotentialOrder2(name),
           calcEnergyFun(new pybind11::object(o1), [](pybind11::object *o) {

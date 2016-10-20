@@ -9,11 +9,11 @@
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder1.h>
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
 
-namespace bpy = pybind11;
+namespace py = pybind11;
 namespace pot = readdy::model::potentials;
 namespace spot = readdy::kernel::singlecpu::potentials;
 
-using rvp = bpy::return_value_policy;
+using rvp = py::return_value_policy;
 
 using rdy_vec = readdy::model::Vec3;
 
@@ -29,10 +29,12 @@ public:
     using rdy_pot1::PotentialOrder1;
 
     virtual double calculateEnergy(const rdy_vec &position) const override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "calculate_energy", calculateEnergy, position);
     }
 
     virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO1, "calculate_force", calculateForce, pos);
     }
 
@@ -46,14 +48,17 @@ public:
     }
 
     virtual void configureForType(const unsigned int type) override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(void, PyPotentialO1, "configure_for_type", configureForType, type);
     }
 
     virtual double getRelevantLengthScale() const noexcept override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_relevant_length_scale", getRelevantLengthScale,);
     }
 
     virtual double getMaximalForce(double kbt) const noexcept override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
     }
 
@@ -65,14 +70,17 @@ public:
     using rdy_pot2::PotentialOrder2;
 
     virtual double getMaximalForce(double kbt) const noexcept override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "get_maximal_force", getMaximalForce, kbt);
     }
 
     virtual double calculateEnergy(const rdy_vec &x_ij) const override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "calculate_energy", calculateEnergy, x_ij);
     }
 
     virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO2, "calculate_force", calculateForce, pos);
     }
 
@@ -91,33 +99,35 @@ public:
     }
 
     virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot2, "configure_for_types", configureForType, type1, type2);
     }
 
     virtual double getCutoffRadius() const override {
+        py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
     }
 };
 
-void exportPotentials(bpy::module &proto) {
+void exportPotentials(py::module &proto) {
 
-    bpy::class_<rdy_pot>(proto, "Potential");
-    bpy::class_<spot::CubePotential, rdy_pot>(proto, "CubePotential")
+    py::class_<rdy_pot>(proto, "Potential");
+    py::class_<spot::CubePotential, rdy_pot>(proto, "CubePotential")
             .def("get_name", &spot::CubePotential::getName);
-    bpy::class_<spot::HarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
+    py::class_<spot::HarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
             .def("get_name", &spot::HarmonicRepulsion::getName);
-    bpy::class_<spot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
+    py::class_<spot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
             .def("get_name", &spot::WeakInteractionPiecewiseHarmonic::getName);
 
-    bpy::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
-            .def(bpy::init<std::string>())
+    py::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
+            .def(py::init<std::string>())
             .def("calculate_energy", &rdy_pot1::calculateEnergy)
             .def("calculate_force", &rdy_pot1::calculateForce)
             .def("configure_for_type", &rdy_pot1::configureForType)
             .def("get_relevant_length_scale", &rdy_pot1::getRelevantLengthScale)
             .def("get_maximal_force", &rdy_pot1::getMaximalForce);
-    bpy::class_<rdy_pot2, PyPotentialO2>(proto, "PotentialOrder2")
-            .def(bpy::init<std::string>())
+    py::class_<rdy_pot2, PyPotentialO2>(proto, "PotentialOrder2")
+            .def(py::init<std::string>())
             .def("calculate_energy", &rdy_pot2::calculateEnergy)
             .def("calculate_force", &rdy_pot2::calculateForce)
             .def("configure_for_types", &rdy_pot2::configureForTypes)
@@ -127,7 +137,7 @@ void exportPotentials(bpy::module &proto) {
     auto f_create_cube_pot = &rdy_pot_factory::createPotential<spot::CubePotential>;
     auto f_create_harmonic_pot = &rdy_pot_factory::createPotential<spot::HarmonicRepulsion>;
     auto f_create_weak_inter_pot = &rdy_pot_factory::createPotential<spot::WeakInteractionPiecewiseHarmonic>;
-    bpy::class_<rdy_pot_factory>(proto, "PotentialFactory")
+    py::class_<rdy_pot_factory>(proto, "PotentialFactory")
             .def("create_cube_potential", f_create_cube_pot)
             .def("create_harmonic_repulsion", f_create_harmonic_pot)
             .def("create_weak_interaction", f_create_weak_inter_pot);

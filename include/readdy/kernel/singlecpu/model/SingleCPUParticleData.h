@@ -25,6 +25,7 @@ namespace model {
 class SingleCPUParticleData {
 public:
     using marked_count_t = std::atomic<std::size_t>;
+    using particle_type = readdy::model::Particle;
 
     // ctor / dtor
     SingleCPUParticleData();
@@ -47,29 +48,29 @@ public:
 
     SingleCPUParticleData &operator=(const SingleCPUParticleData &rhs) = delete;
 
-    std::vector<readdy::model::Particle::id_type>::iterator begin_ids();
+    std::vector<particle_type::id_type>::iterator begin_ids();
 
-    std::vector<readdy::model::Particle::id_type>::const_iterator begin_ids() const;
+    std::vector<particle_type::id_type>::const_iterator begin_ids() const;
 
-    std::vector<readdy::model::Particle::id_type>::const_iterator cbegin_ids() const;
+    std::vector<particle_type::id_type>::const_iterator cbegin_ids() const;
 
-    std::vector<readdy::model::Particle::id_type>::iterator end_ids();
+    std::vector<particle_type::id_type>::iterator end_ids();
 
-    std::vector<readdy::model::Particle::id_type>::const_iterator end_ids() const;
+    std::vector<particle_type::id_type>::const_iterator end_ids() const;
 
-    std::vector<readdy::model::Particle::id_type>::const_iterator cend_ids() const;
+    std::vector<particle_type::id_type>::const_iterator cend_ids() const;
 
-    std::vector<readdy::model::Vec3>::iterator begin_positions();
+    std::vector<particle_type::pos_type>::iterator begin_positions();
 
-    std::vector<readdy::model::Vec3>::const_iterator begin_positions() const;
+    std::vector<particle_type::pos_type>::const_iterator begin_positions() const;
 
-    std::vector<readdy::model::Vec3>::const_iterator cbegin_positions() const;
+    std::vector<particle_type::pos_type>::const_iterator cbegin_positions() const;
 
-    std::vector<readdy::model::Vec3>::iterator end_positions();
+    std::vector<particle_type::pos_type>::iterator end_positions();
 
-    std::vector<readdy::model::Vec3>::const_iterator end_positions() const;
+    std::vector<particle_type::pos_type>::const_iterator end_positions() const;
 
-    std::vector<readdy::model::Vec3>::const_iterator cend_positions() const;
+    std::vector<particle_type::pos_type>::const_iterator cend_positions() const;
 
     std::vector<readdy::model::Vec3>::iterator begin_forces();
 
@@ -83,17 +84,17 @@ public:
 
     std::vector<readdy::model::Vec3>::const_iterator cend_forces() const;
 
-    std::vector<unsigned int>::iterator begin_types();
+    std::vector<particle_type::type_type>::iterator begin_types();
 
-    std::vector<unsigned int>::const_iterator begin_types() const;
+    std::vector<particle_type::type_type>::const_iterator begin_types() const;
 
-    std::vector<unsigned int>::const_iterator cbegin_types() const;
+    std::vector<particle_type::type_type>::const_iterator cbegin_types() const;
 
-    std::vector<unsigned int>::iterator end_types();
+    std::vector<particle_type::type_type>::iterator end_types();
 
-    std::vector<unsigned int>::const_iterator end_types() const;
+    std::vector<particle_type::type_type>::const_iterator end_types() const;
 
-    std::vector<unsigned int>::const_iterator cend_types() const;
+    std::vector<particle_type::type_type>::const_iterator cend_types() const;
 
     std::vector<char>::iterator begin_deactivated();
 
@@ -117,21 +118,21 @@ public:
 
     void clear();
 
-    void addParticle(const readdy::model::Particle &particle);
+    void addParticle(const particle_type &particle);
 
-    void addParticles(const std::vector<readdy::model::Particle> &particles);
+    void addParticles(const std::vector<particle_type> &particles);
 
     /**
      * Remove a particle via its unique id.
      * @param particle the particle to be removed
      */
-    void removeParticle(const readdy::model::Particle &particle);
+    void removeParticle(const particle_type &particle);
 
     void removeParticle(const size_t index);
 
-    void setParticleData(const readdy::model::Particle &particle, const size_t &index);
+    void setParticleData(const particle_type &particle, const size_t &index);
 
-    readdy::model::Particle operator[](const size_t index) const;
+    particle_type operator[](const size_t index) const;
 
     bool isMarkedForDeactivation(const size_t index);
 
@@ -160,10 +161,10 @@ public:
     void deactivateMarked();
 
 protected:
-    std::unique_ptr<std::vector<readdy::model::Particle::id_type>> ids;
-    std::unique_ptr<std::vector<readdy::model::Vec3>> positions;
+    std::unique_ptr<std::vector<particle_type::id_type>> ids;
+    std::unique_ptr<std::vector<particle_type::pos_type>> positions;
     std::unique_ptr<std::vector<readdy::model::Vec3>> forces;
-    std::unique_ptr<std::vector<unsigned int>> type;
+    std::unique_ptr<std::vector<particle_type::type_type>> type;
     std::unique_ptr<std::vector<char>> deactivated;
     size_t deactivated_index;
     size_t n_deactivated;

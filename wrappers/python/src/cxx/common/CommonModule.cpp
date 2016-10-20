@@ -10,7 +10,7 @@
 
 #include <readdy/common/logging.h>
 
-namespace bpy = pybind11;
+namespace py = pybind11;
 
 /**
  * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
@@ -27,19 +27,19 @@ PYBIND11_PLUGIN (common) {
         console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
     }
 
-    bpy::module common("common", "ReaDDy common python module");
+    py::module common("common", "ReaDDy common python module");
 
-    bpy::class_<readdy::model::Vec3>(common, "Vec")
-            .def(bpy::init<double, double, double>())
-            .def(bpy::self + bpy::self)
-            .def(bpy::self - bpy::self)
-            .def(double() * bpy::self)
-            .def(bpy::self / double())
-            .def(bpy::self += bpy::self)
-            .def(bpy::self *= double())
-            .def(bpy::self == bpy::self)
-            .def(bpy::self != bpy::self)
-            .def(bpy::self * bpy::self)
+    py::class_<readdy::model::Vec3>(common, "Vec")
+            .def(py::init<double, double, double>())
+            .def(py::self + py::self)
+            .def(py::self - py::self)
+            .def(double() * py::self)
+            .def(py::self / double())
+            .def(py::self += py::self)
+            .def(py::self *= double())
+            .def(py::self == py::self)
+            .def(py::self != py::self)
+            .def(py::self * py::self)
             .def("__repr__", [](const readdy::model::Vec3 &self) {
                 std::ostringstream stream;
                 stream << self;

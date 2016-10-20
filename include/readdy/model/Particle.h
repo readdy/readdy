@@ -23,6 +23,8 @@ class Particle {
 public:
     
     using id_type = unsigned long;
+    using pos_type = Vec3;
+    using type_type = unsigned int;
     
     const Vec3 &getPos() const;
 

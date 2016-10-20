@@ -15,15 +15,15 @@
 #include "KernelWrap.h"
 #include "../api/PyFunction.h"
 
-namespace bpy = pybind11;
+namespace py = pybind11;
 
-using rvp = bpy::return_value_policy;
+using rvp = py::return_value_policy;
 
-void exportPrograms(bpy::module &);
+void exportPrograms(py::module &);
 
-void exportModelClasses(bpy::module &);
+void exportModelClasses(py::module &);
 
-void exportPotentials(bpy::module &);
+void exportPotentials(py::module &);
 
 namespace scpu = readdy::kernel::singlecpu;
 
@@ -33,7 +33,7 @@ using scpu_kernel_t = scpu::SingleCPUKernel;
 using scpu_kernel_wrap_t = scpu_kernel_t; // todo: do i need readdy::py::SingleCPUKernelWrap here?
 
 using core_kernel_t = readdy::model::Kernel;
-using core_kernel_wrap_t = readdy::py::KernelWrap;
+using core_kernel_wrap_t = readdy::rpy::KernelWrap;
 using core_program_factory = readdy::model::programs::ProgramFactory;
 using core_program_t = readdy::model::programs::Program;
 
@@ -48,14 +48,14 @@ PYBIND11_PLUGIN (prototyping) {
         console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
     }
 
-    bpy::module proto("prototyping", "ReaDDy prototyping python module");
+    py::module proto("prototyping", "ReaDDy prototyping python module");
 
     exportPrograms(proto);
     exportModelClasses(proto);
     exportPotentials(proto);
 
-    bpy::class_<scpu_kernel_wrap_t>(proto, "SingleCPUKernel")
-            .def(bpy::init<>())
+    py::class_<scpu_kernel_wrap_t>(proto, "SingleCPUKernel")
+            .def(py::init<>())
             .def("get_kernel_state_model", &scpu_kernel_wrap_t::getKernelStateModel, rvp::reference_internal)
             .def("get_kernel_context", &scpu_kernel_wrap_t::getKernelContext, rvp::reference_internal)
             .def("get_available_potentials", &scpu_kernel_wrap_t::getAvailablePotentials)

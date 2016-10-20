@@ -9,13 +9,13 @@
 #include "PyPotential.h"
 #include "PyFunction.h"
 
-namespace bpy = pybind11;
+namespace py = pybind11;
 
-using rvp = bpy::return_value_policy;
+using rvp = py::return_value_policy;
 using sim = readdy::Simulation;
 using kp = readdy::plugin::KernelProvider;
 using vec = readdy::model::Vec3;
-using pot2 = readdy::py::PotentialOrder2Wrapper;
+using pot2 = readdy::rpy::PotentialOrder2Wrapper;
 using model = readdy::model::KernelStateModel;
 using ctx = readdy::model::KernelContext;
 using kern = readdy::model::Kernel;
@@ -33,15 +33,15 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
 
 unsigned long
 registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun, std::vector<std::string> types) {
-    auto pyFun = readdy::py::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride, types);
 }
 
 unsigned long
 registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::object callbackFun,
-                                      bpy::array_t<double> &binBorders, std::string typeCountFrom,
+                                      py::array_t<double> &binBorders, std::string typeCountFrom,
                                       std::string typeCountTo, double particleDensity) {
-    auto pyFun = readdy::py::PyFunction<void(readdy::model::RadialDistributionObservable::result_t)>(callbackFun);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::RadialDistributionObservable::result_t)>(callbackFun);
     const auto info = binBorders.request();
     std::vector<double> binBordersVec{};
     binBordersVec.reserve(info.shape[0]);
@@ -55,15 +55,15 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::
 unsigned long
 registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::object &callbackFun,
                                 std::vector<std::string> types) {
-    auto pyFun = readdy::py::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::CenterOfMassObservable>(
             std::move(pyFun), stride, types
     );
 }
 
 unsigned long
-registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const bpy::object &callbackFun,
-                                                bpy::array_t<double> binBorders, unsigned int axis, std::vector<std::string> types) {
+registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const py::object &callbackFun,
+                                                py::array_t<double> binBorders, unsigned int axis, std::vector<std::string> types) {
     const auto info = binBorders.request();
     const auto sizeBorders = info.shape[0];
     auto binBordersData = static_cast<double *>(info.ptr);
@@ -72,18 +72,18 @@ registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, 
     for (auto i = 0; i < sizeBorders; ++i) {
         binBordersVec.push_back(binBordersData[i]);
     }
-    auto pyFun = readdy::py::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec, types, axis);
 }
 
 unsigned long
-registerObservable_NParticles(sim &self, unsigned int stride, const bpy::object &callbackFun, std::vector<std::string> types) {
-    auto pyFun = readdy::py::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
+registerObservable_NParticles(sim &self, unsigned int stride, const py::object &callbackFun, std::vector<std::string> types) {
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, types);
 }
 
-unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride, pybind11::object callbackFun, std::vector<std::string> types) {
-    auto pyFun = readdy::py::PyFunction<void(readdy::model::ForcesObservable::result_t)>(callbackFun);
+unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride, py::object callbackFun, std::vector<std::string> types) {
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::ForcesObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ForcesObservable>(std::move(pyFun), stride, types);
 }
 
@@ -97,12 +97,12 @@ PYBIND11_PLUGIN (api) {
         console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
     }
 
-    bpy::module api("api", "ReaDDy c++-api python module");
+    py::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
 
-    bpy::class_<sim>(api, "Simulation")
-            .def(bpy::init<>())
+    py::class_<sim>(api, "Simulation")
+            .def(py::init<>())
             .def_property("kbt", &sim::getKBT, &sim::setKBT)
             .def_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)
@@ -138,18 +138,21 @@ PYBIND11_PLUGIN (api) {
                      );
                  }
             )
-            .def("run", &sim::run);
+            .def("run", [](sim& self, const readdy::model::observables::time_step_type steps, const double timeStep) {
+                py::gil_scoped_release release;
+                self.run(steps, timeStep);
+            });
 
-    bpy::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
+    py::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
             .def_static("get", &kp::getInstance, rvp::reference)
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
 
-    bpy::class_<pot2>(api, "Pot2")
-            .def(bpy::init<std::string, bpy::object, bpy::object>())
+    py::class_<pot2>(api, "Pot2")
+            .def(py::init<std::string, py::object, py::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);
 
-    bpy::class_<kern>(api, "Kernel").def("get_name", &kern::getName, rvp::reference);
+    py::class_<kern>(api, "Kernel").def("get_name", &kern::getName, rvp::reference);
 
     return api.ptr();
 
