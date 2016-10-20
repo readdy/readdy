@@ -32,7 +32,8 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
 }
 
 unsigned long
-registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun, std::vector<std::string> types) {
+registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun,
+                                     std::vector<std::string> types) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride, types);
 }
@@ -63,7 +64,8 @@ registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::
 
 unsigned long
 registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const py::object &callbackFun,
-                                                py::array_t<double> binBorders, unsigned int axis, std::vector<std::string> types) {
+                                                py::array_t<double> binBorders, unsigned int axis,
+                                                std::vector<std::string> types) {
     const auto info = binBorders.request();
     const auto sizeBorders = info.shape[0];
     auto binBordersData = static_cast<double *>(info.ptr);
@@ -73,16 +75,19 @@ registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, 
         binBordersVec.push_back(binBordersData[i]);
     }
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec, types, axis);
+    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec,
+                                                                                types, axis);
 }
 
 unsigned long
-registerObservable_NParticles(sim &self, unsigned int stride, const py::object &callbackFun, std::vector<std::string> types) {
+registerObservable_NParticles(sim &self, unsigned int stride, const py::object &callbackFun,
+                              std::vector<std::string> types) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, types);
 }
 
-unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride, py::object callbackFun, std::vector<std::string> types) {
+unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride, py::object callbackFun,
+                                                  std::vector<std::string> types) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::ForcesObservable::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::ForcesObservable>(std::move(pyFun), stride, types);
 }
@@ -90,7 +95,7 @@ unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride
 // module
 PYBIND11_PLUGIN (api) {
 
-    if(!readdy::log::console()) {
+    if (!readdy::log::console()) {
         spdlog::set_sync_mode();
         auto console = spdlog::stdout_color_mt("console");
         console->set_level(spdlog::level::debug);
@@ -138,7 +143,7 @@ PYBIND11_PLUGIN (api) {
                      );
                  }
             )
-            .def("run", [](sim& self, const readdy::model::observables::time_step_type steps, const double timeStep) {
+            .def("run", [](sim &self, const readdy::model::observables::time_step_type steps, const double timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);
             });
