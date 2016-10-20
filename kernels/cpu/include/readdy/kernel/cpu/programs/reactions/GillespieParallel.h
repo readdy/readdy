@@ -14,6 +14,7 @@
 #include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
+#include "ReactionUtils.h"
 
 namespace readdy {
 namespace kernel {
@@ -22,14 +23,6 @@ namespace programs {
 namespace reactions {
 
 class GillespieParallel : public readdy::model::programs::reactions::GillespieParallel {
-    using kernel_t = readdy::kernel::cpu::CPUKernel;
-    using vec_t = readdy::model::Vec3;
-    using data_t = decltype(std::declval<kernel_t>().getKernelStateModel().getParticleData());
-    using nl_t = const decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
-    using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
-    using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
-    using index_t = event_t::index_type;
-    using particle_t = readdy::model::Particle;
 public:
     GillespieParallel(kernel_t const *const kernel);
 
@@ -49,7 +42,7 @@ public:
 
     unsigned int getOtherAxis2() const;
 
-    void setFilterEventsInAdvance(bool filterEventsInAdvance);
+    void setApproximateRate(bool approximateRate);
 
 protected:
     kernel_t const *const kernel;
@@ -57,8 +50,29 @@ protected:
     double boxWidth = 0.0;
     unsigned int longestAxis;
     unsigned int otherAxis1, otherAxis2;
-    bool filterEventsInAdvance = false;
-    struct SlicedBox;
+    struct SlicedBox {
+        using particle_indices_t = std::vector<unsigned long>;
+        particle_indices_t particleIndices{};
+        unsigned int id = 0;
+        vec_t lowerLeftVertex, upperRightVertex;
+        double leftBoundary = 0;
+        double rightBoundary = 0;
+        particle_indices_t::size_type n_shells;
+        unsigned int longestAxis;
+        double boxWidth;
+        double shellWidth = 0.0;
+        long getShellIndex(const vec_t &pos) const;
+        SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
+                  unsigned int longestAxis);
+        friend bool operator==(const SlicedBox &lhs, const SlicedBox &rhs) {
+            return lhs.id == rhs.id;
+        }
+
+        friend bool operator!=(const SlicedBox &lhs, const SlicedBox &rhs) {
+            return !(lhs == rhs);
+        }
+        bool isInBox(const vec_t &particle) const;
+    };
     std::vector<SlicedBox> boxes;
     bool approximateRate = true;
 
@@ -67,25 +81,16 @@ protected:
      */
     void setupBoxes();
 
-public:
-    void setApproximateRate(bool approximateRate);
-
-protected:
-
     /**
      * Sorts particles into boxes and adds them to the problematic particles should they fall into
      * a halo region
      */
     void fillBoxes();
 
-    /**
+    virtual /**
      * Executes the gillespie algorithm for each box and gives an update on problematic particles
      */
     void handleBoxReactions();
-
-    template<typename ParticleCollection>
-    void gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
-                      std::vector<GillespieParallel::event_t> &events) const;
 
     void findProblematicParticles(const unsigned long idx, const SlicedBox &box, ctx_t ctx,
                                   data_t data, nl_t nl, std::set<unsigned long> &problematic) const;

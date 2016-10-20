@@ -12,6 +12,7 @@
 
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
+#include <readdy/common/range.h>
 #include "ReactionUtils.h"
 
 namespace readdy {
@@ -33,9 +34,11 @@ public:
         auto data = kernel->getKernelStateModel().getParticleData();
         const auto &dist = ctx.getDistSquaredFun();
         const auto &fixPos = ctx.getFixPositionFun();
+        const auto nl = kernel->getKernelStateModel().getNeighborList();
 
         double alpha = 0.0;
-        auto events = gatherEvents(alpha);
+        std::vector<event_t> events;
+        gatherEvents<false>(kernel, readdy::util::range<std::size_t>(0, data->size()), nl, data, alpha, true, events);
         auto newParticles = handleEventsGillespie(kernel, false, true, std::move(events));
 
         // reposition particles to respect the periodic b.c.
@@ -48,8 +51,6 @@ public:
     }
 
 protected:
-    virtual std::vector<event_t> gatherEvents(double &alpha);
-
     CPUKernel const *const kernel;
 };
 }

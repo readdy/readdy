@@ -23,17 +23,6 @@ namespace reactions {
 
 
 struct GillespieParallel::SlicedBox {
-    // shellIdx -> particles, outmost shell has idx 0
-    using particle_indices_t = std::vector<unsigned long>;
-    particle_indices_t particleIndices{};
-    unsigned int id = 0;
-    vec_t lowerLeftVertex, upperRightVertex;
-    double leftBoundary = 0;
-    double rightBoundary = 0;
-    particle_indices_t::size_type n_shells;
-    unsigned int longestAxis;
-    double boxWidth;
-    double shellWidth = 0.0;
 
     long getShellIndex(const vec_t &pos) const {
         if (shellWidth > 0) {
@@ -58,14 +47,6 @@ struct GillespieParallel::SlicedBox {
         );
         shellWidth = .5 * boxWidth / static_cast<double>(n_shells);
         particleIndices.resize(n_shells);
-    }
-
-    friend bool operator==(const SlicedBox &lhs, const SlicedBox &rhs) {
-        return lhs.id == rhs.id;
-    }
-
-    friend bool operator!=(const SlicedBox &lhs, const SlicedBox &rhs) {
-        return !(lhs == rhs);
     }
 
     bool isInBox(const vec_t &particle) const {
@@ -196,12 +177,10 @@ void GillespieParallel::handleBoxReactions() {
                                        return problematic.find(x) != problematic.end();
                                    }), box.particleIndices.end()
             );
-            gatherEvents(box.particleIndices, nl, data, localAlpha, localEvents);
+            gatherEvents<false>(kernel, box.particleIndices, nl, data, localAlpha, approximateRate,localEvents);
             // handle events
             {
-                newParticles.set_value(
-                        handleEventsGillespie(kernel, filterEventsInAdvance, approximateRate, std::move(localEvents))
-                );
+                newParticles.set_value(handleEventsGillespie(kernel, false, approximateRate, std::move(localEvents)));
             }
 
         }
@@ -238,12 +217,11 @@ void GillespieParallel::handleBoxReactions() {
         for (auto &&update : updates) {
             auto &&local_problematic = update.get();
             n_local_problematic += local_problematic.size();
-            gatherEvents(std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
-                         kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
+            gatherEvents<false>(kernel, std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
+                         kernel->getKernelStateModel().getParticleData(), alpha, approximateRate, evilEvents);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
-        auto newProblemParticles = handleEventsGillespie(kernel, filterEventsInAdvance, approximateRate,
-                                                         std::move(evilEvents));
+        auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
         kernel->getKernelStateModel().getParticleData()->deactivateMarked();
@@ -353,87 +331,6 @@ void GillespieParallel::findProblematicParticles(
 
 }
 
-template<typename ParticleCollection>
-void
-GillespieParallel::gatherEvents(const ParticleCollection &particles, const nl_t nl, const data_t data, double &alpha,
-                                std::vector<GillespieParallel::event_t> &events) const {
-    const auto dt = kernel->getKernelContext().getTimeStep();
-    for (const auto idx : particles) {
-        // this being false should really not happen, though
-        if (!*(data->begin_deactivated() + idx)) {
-            const auto particleType = *(data->begin_types() + idx);
-            // order 1
-            {
-                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
-                for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                    const auto rate = (*it)->getRate();
-                    if (rate > 0 && (!filterEventsInAdvance || performEvent(rate, dt, approximateRate))) {
-                        alpha += rate;
-                        events.push_back(
-                                {1, (*it)->getNProducts(), idx, 0, rate, alpha,
-                                 static_cast<index_t>(it - reactions.begin()),
-                                 particleType, 0});
-                    }
-                }
-            }
-            // order 2
-            {
-                auto nl_it = nl->pairs->find(idx);
-                if (nl_it != nl->pairs->end()) {
-                    for (const auto &idx_neighbor : nl_it->second) {
-                        if (idx > idx_neighbor.idx) continue;
-                        const auto neighborType = *(data->begin_types() + idx_neighbor.idx);
-                        const auto &reactions = kernel->getKernelContext().getOrder2Reactions(
-                                particleType, neighborType
-                        );
-                        if (!reactions.empty()) {
-                            const auto distSquared = idx_neighbor.d2;
-                            for (auto it = reactions.begin(); it < reactions.end(); ++it) {
-                                const auto &react = *it;
-                                const auto rate = react->getRate();
-                                if (rate > 0
-                                    && distSquared < react->getEductDistanceSquared()
-                                    && (!filterEventsInAdvance || performEvent(rate, dt, approximateRate))) {
-                                    if (*(data->begin_deactivated() + idx_neighbor.idx)) {
-                                        auto get_box_idx = [&](
-                                                unsigned long _idx) {
-                                            return static_cast<unsigned int>( floor(
-                                                    ((*(data->begin_positions() + _idx))[longestAxis] +
-                                                     .5 * kernel->getKernelContext().getBoxSize()[longestAxis]) /
-                                                    boxWidth));
-                                        };
-                                        const auto nBoxIdx = get_box_idx(idx_neighbor.idx);
-                                        const auto nPos = *(data->begin_positions() + idx_neighbor.idx);
-                                        const auto nShellIdx = boxes[nBoxIdx].getShellIndex(nPos);
-                                        const auto myBoxIdx = get_box_idx(idx);
-                                        const auto myPos = *(data->begin_positions() + idx);
-                                        log::console()->error("Got neighbor that was deactivated (ie conflicting "
-                                                                      "reaction) in shell index {}, was in box[{}]={}",
-                                                              nShellIdx, nBoxIdx, boxes[nBoxIdx].isInBox(nPos));
-                                        log::console()->error("The neighbor is neighbor of a particle "
-                                                                      "in box[{}]={}, shell={}", myBoxIdx,
-                                                              boxes[myBoxIdx].isInBox(myPos),
-                                                              boxes[myBoxIdx].getShellIndex(myPos));
-                                    }
-                                    alpha += rate;
-                                    events.push_back({2, react->getNProducts(), idx, idx_neighbor.idx,
-                                                      rate, alpha,
-                                                      static_cast<index_t>(it - reactions.begin()),
-                                                      particleType, neighborType});
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            log::console()->error("The particles list which was given to gather events contained a particle that "
-                                          "was already deactivated. This should not happen!");
-        }
-    }
-
-}
-
 double GillespieParallel::getMaxReactionRadius() const {
     return maxReactionRadius;
 }
@@ -454,21 +351,9 @@ unsigned int GillespieParallel::getOtherAxis2() const {
     return otherAxis2;
 }
 
-void GillespieParallel::setFilterEventsInAdvance(bool filterEventsInAdvance) {
-    GillespieParallel::filterEventsInAdvance = filterEventsInAdvance;
-}
-
 void GillespieParallel::setApproximateRate(bool approximateRate) {
     GillespieParallel::approximateRate = approximateRate;
 }
-
-template void GillespieParallel::gatherEvents<std::vector<unsigned long>>(
-        const std::vector<unsigned long> &particles, const nl_t nl, const data_t data, double &alpha,
-        std::vector<GillespieParallel::event_t> &events) const;
-
-template void GillespieParallel::gatherEvents<std::set<unsigned long>>(
-        const std::set<unsigned long> &particles, const nl_t nl, const data_t data, double &alpha,
-        std::vector<GillespieParallel::event_t> &events) const;
 
 GillespieParallel::~GillespieParallel() = default;
 }

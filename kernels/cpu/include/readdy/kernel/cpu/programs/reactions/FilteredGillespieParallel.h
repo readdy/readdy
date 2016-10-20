@@ -22,8 +22,13 @@ class FilteredGillespieParallel : GillespieParallel {
 public:
     FilteredGillespieParallel(const kernel_t *const kernel);
 
+private:
+    virtual void handleBoxReactions() override;
 };
 
-}}}}
+}
+}
+}
+}
 }
 #endif //READDY_CPUKERNEL_FILTEREDGILLESPIEPARALLEL_H
