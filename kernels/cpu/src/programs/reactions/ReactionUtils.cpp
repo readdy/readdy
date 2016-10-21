@@ -45,7 +45,7 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
             if (eventIt == events.end() - nDeactivated) {
                 throw std::runtime_error("this should not happen (event not found)");
             }
-            if (filterEventsInAdvance || performEvent(event.reactionRate, dt, approximateRate)) {
+            if (filterEventsInAdvance || shouldPerformEvent(event.reactionRate, dt, approximateRate)) {
                 /**
                  * Perform reaction
                  */

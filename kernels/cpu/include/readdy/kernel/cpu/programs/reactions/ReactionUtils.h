@@ -41,7 +41,7 @@ bool performReactionEvent(const double rate, const double timeStep) {
 }
 
 
-inline bool performEvent(const double rate, const double timestep, bool approximated) {
+inline bool shouldPerformEvent(const double rate, const double timestep, bool approximated) {
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
@@ -50,11 +50,9 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events);
 
-template<bool filterEventsInAdvance, typename ParticleCollection>
-void
-gatherEvents(CPUKernel const *const kernel, const ParticleCollection &particles, const nl_t nl, const data_t data,
-             double &alpha, bool approximateRate, std::vector<event_t> &events) {
-    const auto dt = kernel->getKernelContext().getTimeStep();
+template<typename ParticleIndexCollection>
+void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &particles, const nl_t &nl,
+                  const data_t &data, double &alpha, std::vector<event_t> &events) {
     for (const auto idx : particles) {
         // this being false should really not happen, though
         if (!*(data->begin_deactivated() + idx)) {
@@ -64,7 +62,7 @@ gatherEvents(CPUKernel const *const kernel, const ParticleCollection &particles,
                 const auto &reactions = kernel->getKernelContext().getOrder1Reactions(particleType);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
-                    if (rate > 0 && (!filterEventsInAdvance || performEvent(rate, dt, approximateRate))) {
+                    if (rate > 0) {
                         alpha += rate;
                         events.push_back(
                                 {1, (*it)->getNProducts(), idx, 0, rate, alpha,
@@ -88,9 +86,7 @@ gatherEvents(CPUKernel const *const kernel, const ParticleCollection &particles,
                             for (auto it = reactions.begin(); it < reactions.end(); ++it) {
                                 const auto &react = *it;
                                 const auto rate = react->getRate();
-                                if (rate > 0
-                                    && distSquared < react->getEductDistanceSquared()
-                                    && (!filterEventsInAdvance || performEvent(rate, dt, approximateRate))) {
+                                if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
                                     alpha += rate;
                                     events.push_back({2, react->getNProducts(), idx, idx_neighbor.idx,
                                                       rate, alpha,

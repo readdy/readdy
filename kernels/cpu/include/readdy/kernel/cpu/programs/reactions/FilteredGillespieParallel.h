@@ -18,7 +18,7 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-class FilteredGillespieParallel : GillespieParallel {
+class FilteredGillespieParallel : public GillespieParallel {
 public:
     FilteredGillespieParallel(const kernel_t *const kernel);
 

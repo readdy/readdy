@@ -1,5 +1,5 @@
-#include <readdy/kernel/cpu/programs/reactions/FilteredGillespieParallel.h>
 #include <future>
+#include <readdy/kernel/cpu/programs/reactions/FilteredGillespieParallel.h>
 
 /**
  * << detailed description >>
@@ -14,7 +14,7 @@ readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::FilteredGil
         const readdy::kernel::cpu::CPUKernel *const kernel) : GillespieParallel(kernel) {}
 
 void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handleBoxReactions() {
-    using promise_t = std::promise<std::set<unsigned long>>;
+    using promise_t = std::promise<std::set<event_t>>;
     using promise_new_particles_t = std::promise<std::vector<particle_t>>;
 
     auto worker = [this](SlicedBox &box, ctx_t ctx, data_t data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
@@ -22,7 +22,7 @@ void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handle
         double localAlpha = 0.0;
         std::vector<event_t> localEvents{};
         std::set<event_t> boxoverlappingEvents {};
-        gatherEvents<false>(kernel, box.particleIndices, nl, data, localAlpha, approximateRate, localEvents);
+        gatherEvents(kernel, box.particleIndices, nl, data, localAlpha, localEvents);
         {
             // handle events
             newParticles.set_value(handleEventsGillespie(kernel, false, approximateRate, std::move(localEvents)));
@@ -30,7 +30,7 @@ void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handle
         update.set_value(std::move(boxoverlappingEvents));
     };
 
-    std::vector<std::future<std::set<unsigned long>>> updates;
+    std::vector<std::future<std::set<event_t>>> updates;
     std::vector<std::future<std::vector<particle_t>>> newParticles;
     {
         //readdy::util::Timer t ("\t run threads");
@@ -60,8 +60,8 @@ void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handle
         for (auto &&update : updates) {
             auto &&local_problematic = update.get();
             n_local_problematic += local_problematic.size();
-            gatherEvents<false>(kernel, std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
-                                kernel->getKernelStateModel().getParticleData(), alpha, approximateRate, evilEvents);
+            /*gatherEvents<false>(kernel, std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
+                                kernel->getKernelStateModel().getParticleData(), approximateRate, alpha, evilEvents);*/
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
         auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));

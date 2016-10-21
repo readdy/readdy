@@ -50,6 +50,7 @@ protected:
     double boxWidth = 0.0;
     unsigned int longestAxis;
     unsigned int otherAxis1, otherAxis2;
+
     struct SlicedBox {
         using particle_indices_t = std::vector<unsigned long>;
         particle_indices_t particleIndices{};
@@ -61,9 +62,12 @@ protected:
         unsigned int longestAxis;
         double boxWidth;
         double shellWidth = 0.0;
+
         long getShellIndex(const vec_t &pos) const;
+
         SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
                   unsigned int longestAxis);
+
         friend bool operator==(const SlicedBox &lhs, const SlicedBox &rhs) {
             return lhs.id == rhs.id;
         }
@@ -71,8 +75,10 @@ protected:
         friend bool operator!=(const SlicedBox &lhs, const SlicedBox &rhs) {
             return !(lhs == rhs);
         }
+
         bool isInBox(const vec_t &particle) const;
     };
+
     std::vector<SlicedBox> boxes;
     bool approximateRate = true;
 

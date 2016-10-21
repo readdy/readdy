@@ -7,10 +7,10 @@
  * @date 20.10.16
  */
 
-#include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
 #include <future>
-#include <readdy/kernel/cpu/programs/reactions/ReactionUtils.h>
 #include <queue>
+
+#include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
 
 
 using rdy_particle_t = readdy::model::Particle;
@@ -22,37 +22,35 @@ namespace programs {
 namespace reactions {
 
 
-struct GillespieParallel::SlicedBox {
-
-    long getShellIndex(const vec_t &pos) const {
-        if (shellWidth > 0) {
-            const auto mindist = std::min(
-                    std::abs(pos[longestAxis] - leftBoundary),
-                    std::abs(rightBoundary - pos[longestAxis])
-            );
-            return static_cast<long>(std::floor(mindist / shellWidth));
-        } else {
-            return 0;
-        }
-    }
-
-    SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
-              unsigned int longestAxis)
-            : id(id), lowerLeftVertex(lowerLeftVertex), upperRightVertex(upperRightVertex), longestAxis(longestAxis) {
-        leftBoundary = lowerLeftVertex[longestAxis];
-        rightBoundary = upperRightVertex[longestAxis];
-        boxWidth = rightBoundary - leftBoundary;
-        n_shells = static_cast<particle_indices_t::size_type>(
-                std::floor(.5 * boxWidth / maxReactionRadius)
+long GillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
+    if (shellWidth > 0) {
+        const auto mindist = std::min(
+                std::abs(pos[longestAxis] - leftBoundary),
+                std::abs(rightBoundary - pos[longestAxis])
         );
-        shellWidth = .5 * boxWidth / static_cast<double>(n_shells);
-        particleIndices.resize(n_shells);
+        return static_cast<long>(std::floor(mindist / shellWidth));
+    } else {
+        return 0;
     }
+}
 
-    bool isInBox(const vec_t &particle) const {
-        return particle[longestAxis] >= leftBoundary && particle[longestAxis] < rightBoundary;
-    }
-};
+GillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex,
+                                        double maxReactionRadius,
+                                        unsigned int longestAxis)
+        : id(id), lowerLeftVertex(lowerLeftVertex), upperRightVertex(upperRightVertex), longestAxis(longestAxis) {
+    leftBoundary = lowerLeftVertex[longestAxis];
+    rightBoundary = upperRightVertex[longestAxis];
+    boxWidth = rightBoundary - leftBoundary;
+    n_shells = static_cast<particle_indices_t::size_type>(
+            std::floor(.5 * boxWidth / maxReactionRadius)
+    );
+    shellWidth = .5 * boxWidth / static_cast<double>(n_shells);
+    particleIndices.resize(n_shells);
+}
+
+bool GillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
+    return particle[longestAxis] >= leftBoundary && particle[longestAxis] < rightBoundary;
+}
 
 void GillespieParallel::execute() {
     {
@@ -177,7 +175,7 @@ void GillespieParallel::handleBoxReactions() {
                                        return problematic.find(x) != problematic.end();
                                    }), box.particleIndices.end()
             );
-            gatherEvents<false>(kernel, box.particleIndices, nl, data, localAlpha, approximateRate,localEvents);
+            gatherEvents(kernel, box.particleIndices, nl, data, localAlpha, localEvents);
             // handle events
             {
                 newParticles.set_value(handleEventsGillespie(kernel, false, approximateRate, std::move(localEvents)));
@@ -217,8 +215,8 @@ void GillespieParallel::handleBoxReactions() {
         for (auto &&update : updates) {
             auto &&local_problematic = update.get();
             n_local_problematic += local_problematic.size();
-            gatherEvents<false>(kernel, std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
-                         kernel->getKernelStateModel().getParticleData(), alpha, approximateRate, evilEvents);
+            gatherEvents(kernel, std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
+                                kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
         auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
