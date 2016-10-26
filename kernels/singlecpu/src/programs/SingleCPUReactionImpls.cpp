@@ -261,7 +261,7 @@ std::vector<readdy::model::Particle> Gillespie::handleEvents(std::vector<Reactio
         const std::size_t nEvents = events.size();
         while (nDeactivated < nEvents) {
             alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-            const auto x = readdy::model::rnd::uniform_real(0, alpha);
+            const auto x = readdy::model::rnd::uniform_real(0.0, alpha);
             const auto eventIt = std::lower_bound(
                     events.begin(), events.end() - nDeactivated, x,
                     [](const ReactionEvent &elem1, double elem2) {

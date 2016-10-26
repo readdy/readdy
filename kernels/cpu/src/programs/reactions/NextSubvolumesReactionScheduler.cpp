@@ -121,7 +121,7 @@ void NextSubvolumes::assignParticles() {
 void NextSubvolumes::evaluateReactions() {
     std::vector<GridCell *>::size_type n_cells_done = 0;
     const auto& ctx = kernel->getKernelContext();
-    auto& data = kernel->getKernelStateModel().getParticleData();
+    auto data = kernel->getKernelStateModel().getParticleData();
 
     const auto comparator = [](const GridCell *c1, const GridCell *c2) {
         return c1->cellRate < c2->cellRate;
@@ -137,7 +137,7 @@ void NextSubvolumes::evaluateReactions() {
             const auto& particles = currentCell->particles;
             const auto& nextEvent = currentCell->nextEvent;
             if(nextEvent.isValid()) {
-                const auto findType1 = std::find(particles.begin(), particles.end(), nextEvent.type1);
+                const auto findType1 = particles.find(nextEvent.type1);
                 if(findType1 != particles.end()) {
                     const auto& particlesType1 = findType1->second;
                     if (!particlesType1.empty()) {
@@ -282,7 +282,7 @@ void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
     cell.timestamp = rnd::exponential(cell.cellRate);
     // select next event
     {
-        const auto x = rnd::uniform_real(0, events.back().cumulativeRate);
+        const auto x = rnd::uniform_real(0., events.back().cumulativeRate);
         const auto eventIt = std::lower_bound(
                 events.begin(), events.end(), x, [](const ReactionEvent &elem1, double elem2) {
                     return elem1.cumulativeRate < elem2;
