@@ -7,7 +7,7 @@
  * @date 09.09.16
  */
 
-#include "readdy/kernel/cpu/programs/NextSubvolumesReactionScheduler.h"
+#include "readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h"
 
 namespace readdy {
 namespace kernel {

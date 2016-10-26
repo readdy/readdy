@@ -20,3 +20,4 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/UncontrolledApproxima
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/Gillespie.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/GillespieParallel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/FilteredGillespieParallel.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/NextSubvolumesReactionScheduler.cpp")

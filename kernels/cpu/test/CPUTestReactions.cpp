@@ -14,6 +14,7 @@
 #include <readdy/kernel/cpu/programs/NextSubvolumesReactionScheduler.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
+#include <readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h>
 
 struct fix_n_threads {
     fix_n_threads(readdy::kernel::cpu::CPUKernel *const kernel, unsigned int n)

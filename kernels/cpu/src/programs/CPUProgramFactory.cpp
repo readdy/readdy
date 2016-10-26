@@ -15,7 +15,7 @@
 #include <readdy/kernel/cpu/programs/reactions/Gillespie.h>
 #include <readdy/kernel/cpu/programs/reactions/UncontrolledApproximation.h>
 #include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
-#include <readdy/kernel/cpu/programs/NextSubvolumesReactionScheduler.h>
+#include <readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h>
 
 namespace core_p = readdy::model::programs;
 
