@@ -164,11 +164,10 @@ NextSubvolumes::getCell(cell_index_t i, cell_index_t j, cell_index_t k) {
 void NextSubvolumes::setUpEventQueue() {
     const auto &ctx = kernel->getKernelContext();
     const auto dt = ctx.getTimeStep();
-    readdy::model::RandomProvider rnd {};
     {
         // todo: this can easily be parallelized
         for (auto &cell : cells) {
-           setUpCell(rnd, cell);
+           setUpCell(cell);
         }
     }
     {
@@ -185,7 +184,7 @@ void NextSubvolumes::setUpEventQueue() {
     std::make_heap(eventQueue.begin(), eventQueue.end(), comparator);
 }
 
-void NextSubvolumes::setUpCell(readdy::model::RandomProvider &rnd, NextSubvolumes::GridCell &cell) {
+void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
     const auto &ctx = kernel->getKernelContext();
     const auto data = kernel->getKernelStateModel().getParticleData();
     std::vector<ReactionEvent> events;
@@ -230,10 +229,10 @@ void NextSubvolumes::setUpCell(readdy::model::RandomProvider &rnd, NextSubvolume
             ++reactionIdx;
         }
     }
-    cell.timestamp = rnd.getExponential(cell.cellRate);
+    cell.timestamp = readdy::model::rnd::exponential(cell.cellRate);
     // select next event
     {
-        const auto x = rnd.getUniform(0, events.back().cumulativeRate);
+        const auto x = readdy::model::rnd::uniform(0, events.back().cumulativeRate);
         const auto eventIt = std::lower_bound(
                 events.begin(), events.end(), x, [](const ReactionEvent &elem1, double elem2) {
                     return elem1.cumulativeRate < elem2;
@@ -242,7 +241,7 @@ void NextSubvolumes::setUpCell(readdy::model::RandomProvider &rnd, NextSubvolume
         if(eventIt != events.end()) {
             cell.nextEvent = std::move(events[eventIt - events.begin()]);
         } else {
-            BOOST_LOG_TRIVIAL(error) << "next subvolumes: the next event was events.end()!";
+            log::console()->error("next subvolumes: the next event was events.end()!");
         }
     }
 }

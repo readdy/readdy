@@ -35,7 +35,7 @@ private:
     CPUKernel const* const kernel;
 
     // sets up a grid cell (rate, timestamp, next event)
-    void setUpCell(readdy::model::RandomProvider &rnd, GridCell& cell);
+    void setUpCell(GridCell& cell);
     // sets up the computational grid with spacing >= max(reaction radii)
     void setUpGrid();
     // assigns particles to the computational grid

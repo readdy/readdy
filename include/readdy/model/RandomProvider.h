@@ -36,6 +36,13 @@ double uniform(const double a = 0.0, const double b = 1.0) {
 }
 
 template<typename Generator = std::mt19937>
+double exponential(double lambda = 1.0) {
+    static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
+    std::exponential_distribution<double> distribution(lambda);
+    return distribution(generator);
+}
+
+template<typename Generator = std::mt19937>
 Vec3 normal3(const double mean = 0.0, const double variance = 1.0) {
     return {normal<Generator>(mean, variance), normal<Generator>(mean, variance), normal<Generator>(mean, variance)};
 }
