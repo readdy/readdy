@@ -39,7 +39,7 @@ void UncontrolledApproximation::execute() {
             const auto &reactions = ctx.getOrder1Reactions(*it_type);
             for (const auto &reaction : reactions) {
                 auto r = reaction->getRate() * dt;
-                if (readdy::model::rnd::uniform() < r) {
+                if (readdy::model::rnd::uniform_real() < r) {
                     const size_t particleIdx = (const size_t) (it_type - data->begin_types());
                     events.push_back([particleIdx, &newParticles, &reaction, this] {
                         auto &&_data = kernel->getKernelStateModel().getParticleData();
@@ -94,7 +94,7 @@ void UncontrolledApproximation::execute() {
                 for (const auto &reaction : reactions) {
                     // if close enough and coin flip successful
                     if (distSquared < reaction->getEductDistanceSquared()
-                        && readdy::model::rnd::uniform() < reaction->getRate() * dt) {
+                        && readdy::model::rnd::uniform_real() < reaction->getRate() * dt) {
                         events.push_back([idx1, neighbor, this, &newParticles, &reaction] {
                             auto &&_data = kernel->getKernelStateModel().getParticleData();
                             if (_data->isMarkedForDeactivation(idx1)) return;

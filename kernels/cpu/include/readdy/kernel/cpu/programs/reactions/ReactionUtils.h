@@ -34,9 +34,9 @@ using particle_t = readdy::model::Particle;
 template<bool approximated>
 bool performReactionEvent(const double rate, const double timeStep) {
     if (approximated) {
-        return readdy::model::rnd::uniform() < rate * timeStep;
+        return readdy::model::rnd::uniform_real() < rate * timeStep;
     } else {
-        return readdy::model::rnd::uniform() < 1 - std::exp(-rate * timeStep);
+        return readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * timeStep);
     }
 }
 

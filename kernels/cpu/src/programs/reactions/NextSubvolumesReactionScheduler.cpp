@@ -9,6 +9,9 @@
 
 #include "readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h"
 
+using particle_type = readdy::model::Particle;
+namespace rnd = readdy::model::rnd;
+
 namespace readdy {
 namespace kernel {
 namespace cpu {
@@ -28,7 +31,7 @@ struct NextSubvolumes::ReactionEvent {
 
     ReactionEvent() : ReactionEvent(-1, 0, 0, 0, 0) {}
 
-    bool isValid() {
+    bool isValid() const {
         return order >= 0;
     }
 };
@@ -36,14 +39,14 @@ struct NextSubvolumes::ReactionEvent {
 struct NextSubvolumes::GridCell {
     const cell_index_t i, j, k, id;
     std::vector<const GridCell *> neighbors;
-    std::vector<unsigned long> particles;
+    std::unordered_map<particle_type::type_type, std::vector<unsigned long>> particles;
     std::vector<unsigned long> typeCounts;
     double cellRate;
     double timestamp;
-    ReactionEvent nextEvent {};
+    ReactionEvent nextEvent{};
 
     GridCell(const cell_index_t i, const cell_index_t j, const cell_index_t k, const cell_index_t id,
-                           const unsigned long nTypes)
+             const unsigned long nTypes)
             : i(i), j(j), k(k), id(id), neighbors({27}), particles({}), cellRate(0), typeCounts(nTypes), timestamp(0) {
     }
 
@@ -105,8 +108,9 @@ void NextSubvolumes::assignParticles() {
         const auto k = static_cast<cell_index_t>(floor(pos_shifted[2] / cellSize[2]));
         auto box = getCell(i, j, k);
         if (box) {
-            box->particles.push_back(idx);
-            ++(box->typeCounts[*it_type]);
+            const auto type = *it_type;
+            box->particles[type].push_back(idx);
+            ++(box->typeCounts[type]);
         }
         ++idx;
         ++it_type;
@@ -115,16 +119,61 @@ void NextSubvolumes::assignParticles() {
 }
 
 void NextSubvolumes::evaluateReactions() {
-    const auto comparator = [](const GridCell* c1, const GridCell* c2) {
+    std::vector<GridCell *>::size_type n_cells_done = 0;
+    const auto& ctx = kernel->getKernelContext();
+    auto& data = kernel->getKernelStateModel().getParticleData();
+
+    const auto comparator = [](const GridCell *c1, const GridCell *c2) {
         return c1->cellRate < c2->cellRate;
     };
-    while(!eventQueue.empty()) {
-        std::pop_heap(eventQueue.begin(), eventQueue.end(), comparator);
+    const auto get_event_queue_end = [this, &n_cells_done] {
+        return eventQueue.end() - n_cells_done;
+    };
+
+    while (eventQueue.begin() != get_event_queue_end()) {
+        std::pop_heap(eventQueue.begin(), get_event_queue_end(), comparator);
         auto currentCell = eventQueue.back();
-        eventQueue.pop_back();
-        {
-            // todo execute the reaction, and update cells and event queue (see slides)
+        if (currentCell->timestamp < kernel->getKernelContext().getTimeStep()) {
+            const auto& particles = currentCell->particles;
+            const auto& nextEvent = currentCell->nextEvent;
+            if(nextEvent.isValid()) {
+                const auto findType1 = std::find(particles.begin(), particles.end(), nextEvent.type1);
+                if(findType1 != particles.end()) {
+                    const auto& particlesType1 = findType1->second;
+                    if (!particlesType1.empty()) {
+                        const auto rndParticle1It = rnd::random_element(particlesType1.begin(), particlesType1.end());
+                        const auto p1 = (*data)[*rndParticle1It];
+                        // todo execute the reaction, and update cells and event queue (see slides)
+                        switch (nextEvent.order) {
+                            case 0: {
+                                auto reaction = ctx.getOrder1Reactions(nextEvent.type1)[nextEvent.reactionIndex];
+                                //reaction->perform(p1, p1, pOut1, pOut2);
+                                break;
+                            }
+                            case 1: {
+                                break;
+                            }
+                            case 2: {
+                                break;
+                            }
+                            default: {
+                                log::console()->error("encountered event with order > 2! (order was {})",
+                                                      nextEvent.order);
+                            }
+                        }
+                    }
+                } else {
+                    log::console()->debug("did not find any particle of type {} in current box", nextEvent.type1);
+                }
+            } else {
+                log::console()->error("The event was not set previously, should not happen! (?)");
+            }
+
+        } else {
+            ++n_cells_done;
         }
+
+        std::push_heap(eventQueue.begin(), get_event_queue_end(), comparator);
     }
 }
 
@@ -167,18 +216,18 @@ void NextSubvolumes::setUpEventQueue() {
     {
         // todo: this can easily be parallelized
         for (auto &cell : cells) {
-           setUpCell(cell);
+            setUpCell(cell);
         }
     }
     {
         // fill up event queue with viable cells
-        for(auto &cell : cells) {
-            if(cell.timestamp < dt) eventQueue.push_back(&cell);
+        for (auto &cell : cells) {
+            if (cell.timestamp < dt) eventQueue.push_back(&cell);
         }
     }
 
     std::for_each(cells.begin(), cells.end(), [this](GridCell &cell) { eventQueue.push_back(&cell); });
-    const auto comparator = [](const GridCell* c1, const GridCell* c2) {
+    const auto comparator = [](const GridCell *c1, const GridCell *c2) {
         return c1->timestamp > c2->timestamp;
     };
     std::make_heap(eventQueue.begin(), eventQueue.end(), comparator);
@@ -186,22 +235,23 @@ void NextSubvolumes::setUpEventQueue() {
 
 void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
     const auto &ctx = kernel->getKernelContext();
-    const auto data = kernel->getKernelStateModel().getParticleData();
     std::vector<ReactionEvent> events;
     // order 1 reactions
-    for (const auto pIdx : cell.particles) {
-        const auto pType = *(data->begin_types() + pIdx);
-        std::size_t reactionIdx = 0;
-        for (const auto reactionOrder1 : ctx.getOrder1Reactions(pType)) {
-            const auto rateUpdate = cell.typeCounts[pType] * reactionOrder1->getRate();
-            if(rateUpdate > 0) {
-                cell.cellRate += rateUpdate;
-                auto evt = ReactionEvent(1, reactionIdx, rateUpdate, pType, 0);
-                evt.cumulativeRate = evt.reactionRate;
-                if(!events.empty()) evt.cumulativeRate += events.back().cumulativeRate;
-                events.push_back(std::move(evt));
+    for (const auto it : cell.particles) {
+        const auto pType = it.first;
+        for(auto i = 0; i < it.second.size(); ++i) {
+            std::size_t reactionIdx = 0;
+            for (const auto reactionOrder1 : ctx.getOrder1Reactions(pType)) {
+                const auto rateUpdate = cell.typeCounts[pType] * reactionOrder1->getRate();
+                if (rateUpdate > 0) {
+                    cell.cellRate += rateUpdate;
+                    auto evt = ReactionEvent(1, reactionIdx, rateUpdate, pType, 0);
+                    evt.cumulativeRate = evt.reactionRate;
+                    if (!events.empty()) evt.cumulativeRate += events.back().cumulativeRate;
+                    events.push_back(std::move(evt));
+                }
+                ++reactionIdx;
             }
-            ++reactionIdx;
         }
     }
     // order 2 reactions
@@ -222,23 +272,23 @@ void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
                     auto evt = ReactionEvent(1, reactionIdx, rateUpdate, typeA, typeB);
                     cell.cellRate += rateUpdate;
                     evt.cumulativeRate = evt.reactionRate;
-                    if(!events.empty()) evt.cumulativeRate += events.back().cumulativeRate;
+                    if (!events.empty()) evt.cumulativeRate += events.back().cumulativeRate;
                     events.push_back(std::move(evt));
                 }
             }
             ++reactionIdx;
         }
     }
-    cell.timestamp = readdy::model::rnd::exponential(cell.cellRate);
+    cell.timestamp = rnd::exponential(cell.cellRate);
     // select next event
     {
-        const auto x = readdy::model::rnd::uniform(0, events.back().cumulativeRate);
+        const auto x = rnd::uniform_real(0, events.back().cumulativeRate);
         const auto eventIt = std::lower_bound(
                 events.begin(), events.end(), x, [](const ReactionEvent &elem1, double elem2) {
                     return elem1.cumulativeRate < elem2;
                 }
         );
-        if(eventIt != events.end()) {
+        if (eventIt != events.end()) {
             cell.nextEvent = std::move(events[eventIt - events.begin()]);
         } else {
             log::console()->error("next subvolumes: the next event was events.end()!");

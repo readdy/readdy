@@ -290,14 +290,18 @@ TEST(TestNextSubvolumes, ReactionRadii) {
     kernel->getKernelContext().setDiffusionConstant("A", 1.0);
 
     auto nextSubvolumes = kernel->createProgram<readdy::kernel::cpu::programs::reactions::NextSubvolumes>();
+    kernel->getKernelContext().configure();
     EXPECT_EQ(0, nextSubvolumes->getMaxReactionRadius()) << "no reactions present, expect max radius to be 0";
 
     kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, 6.0);
+    kernel->getKernelContext().configure();
     EXPECT_EQ(6.0, nextSubvolumes->getMaxReactionRadius()) << "one reaction with radius 6.0";
 
     kernel->registerReaction<fusion_t>("annihilation2", "A", "A", "A", 1.0, 5.0);
+    kernel->getKernelContext().configure();
     EXPECT_EQ(6.0, nextSubvolumes->getMaxReactionRadius()) << "max(5.0, 6.0) = 6.0";
 
     kernel->registerReaction<fusion_t>("annihilation3", "A", "A", "A", 1.0, 7.0);
+    kernel->getKernelContext().configure();
     EXPECT_EQ(7.0, nextSubvolumes->getMaxReactionRadius()) << "max(5.0, 6.0, 7.0) = 7.0";
 }
