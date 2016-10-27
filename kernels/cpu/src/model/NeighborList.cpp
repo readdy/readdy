@@ -109,19 +109,21 @@ void NeighborList::fillBoxes(const data_t &data) {
         for (auto &&box : boxes) {
             box.particleIndices.clear();
         }
-        pairs->clear();
+        pairs.clear();
 
-        auto it_pos = data.cbegin_positions();
+        auto it = data.entries.begin();
         particle_index idx = 0;
-        while (it_pos != data.cend_positions()) {
-            const auto pos = *it_pos;
-            auto box = getBox(pos);
-            if (box) {
-                box->particleIndices.push_back(idx);
+        while (it != data.entries.end()) {
+            const auto& particle = *it;
+            if(!particle.is_deactivated()) {
+                auto box = getBox(particle.pos);
+                if (box) {
+                    box->particleIndices.push_back(idx);
+                }
+                pairs.emplace(idx, std::vector<neighbor_t>());
             }
-            pairs->emplace(idx, std::vector<neighbor_t>());
+            ++it;
             ++idx;
-            ++it_pos;
         }
         {
             const auto size = boxes.size();
@@ -133,22 +135,24 @@ void NeighborList::fillBoxes(const data_t &data) {
                     const auto &box = boxes[_b];
                     for (particle_index i = 0; i < box.particleIndices.size(); ++i) {
                         const auto pI = box.particleIndices[i];
-                        if (pairs->find(pI) != pairs->end()) {
-                            const auto pos = *(data.begin_positions() + pI);
+                        if (pairs.find(pI) != pairs.end()) {
+                            const auto& entryI = *(data.entries.begin() + pI);
                             for (particle_index j = 0; j < box.particleIndices.size(); ++j) {
                                 if (i != j) {
                                     const auto pJ = box.particleIndices[j];
-                                    const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
+                                    const auto& entryJ = *(data.entries.begin() + pJ);
+                                    const auto distSquared = d2(entryI.pos, entryJ.pos);
                                     if (distSquared < cutoffSquared) {
-                                        (*pairs)[pI].push_back({pJ, distSquared});
+                                        pairs[pI].push_back({pJ, distSquared});
                                     }
                                 }
                             }
                             for (auto &&neighboringBox : box.neighbors) {
                                 for (const auto &pJ : neighboringBox->particleIndices) {
-                                    const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
+                                    const auto& entryJ = *(data.entries.begin() + pJ);
+                                    const auto distSquared = d2(entryI.pos, entryJ.pos);
                                     if (distSquared < cutoffSquared) {
-                                        (*pairs)[pI].push_back({pJ, distSquared});
+                                        pairs[pI].push_back({pJ, distSquared});
                                     }
                                 }
                             }
@@ -161,14 +165,14 @@ void NeighborList::fillBoxes(const data_t &data) {
                 }
             };
 
-            std::vector<util::ScopedThread> threads;
+            std::vector<util::scoped_thread> threads;
             threads.reserve(config->nThreads);
 
             for (auto i = 0; i < config->nThreads - 1; ++i) {
-                threads.push_back(util::ScopedThread(std::thread(worker, i * grainSize, (i + 1) * grainSize)));
+                threads.push_back(util::scoped_thread(std::thread(worker, i * grainSize, (i + 1) * grainSize)));
             }
             threads.push_back(
-                    util::ScopedThread(std::thread(worker, (config->nThreads - 1) * grainSize, boxes.size())));
+                    util::scoped_thread(std::thread(worker, (config->nThreads - 1) * grainSize, boxes.size())));
         }
     }
 }
@@ -191,41 +195,43 @@ NeighborList::Box *NeighborList::getBox(signed_box_index i, signed_box_index j, 
 }
 
 void NeighborList::remove(const particle_index idx) {
-    auto neighbors = (*pairs)[idx];
+    auto neighbors = pairs[idx];
     for (auto &&neighbor : neighbors) {
-        auto neighbors2 = (*pairs)[neighbor.idx];
+        auto neighbors2 = pairs[neighbor.idx];
         std::remove_if(neighbors2.begin(), neighbors2.end(), [idx](const neighbor_t &n) {
             return n.idx == idx;
         });
     }
-    pairs->erase(idx);
+    pairs.erase(idx);
 }
 
 void NeighborList::insert(const data_t &data, const particle_index idx) {
     const auto d2 = ctx->getDistSquaredFun();
-    const auto pos = *(data.begin_positions() + idx);
+    const auto pos = (*(data.entries.begin() + idx)).pos;
     const auto cutoffSquared = maxCutoff * maxCutoff;
     auto box = getBox(pos);
     if (box) {
         box->particleIndices.push_back(idx);
-        pairs->emplace(idx, std::vector<neighbor_t>());
+        pairs.emplace(idx, std::vector<neighbor_t>());
 
         for (particle_index j = 0; j < box->particleIndices.size(); ++j) {
             if (idx != j) {
                 const auto pJ = box->particleIndices[j];
-                const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
+                const auto& posJ = (*(data.entries.begin() + pJ)).pos;
+                const auto distSquared = d2(pos, posJ);
                 if (distSquared < cutoffSquared) {
-                    (*pairs)[idx].push_back({pJ, distSquared});
-                    (*pairs)[pJ].push_back({idx, distSquared});
+                    pairs[idx].push_back({pJ, distSquared});
+                    pairs[pJ].push_back({idx, distSquared});
                 }
             }
         }
         for (auto &&neighboringBox : box->neighbors) {
             for (const auto &pJ : neighboringBox->particleIndices) {
-                const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
+                const auto& posJ = (*(data.entries.begin() + pJ)).pos;
+                const auto distSquared = d2(pos, posJ);
                 if (distSquared < cutoffSquared) {
-                    (*pairs)[idx].push_back({pJ, distSquared});
-                    (*pairs)[pJ].push_back({idx, distSquared});
+                    pairs[idx].push_back({pJ, distSquared});
+                    pairs[pJ].push_back({idx, distSquared});
                 }
             }
         }

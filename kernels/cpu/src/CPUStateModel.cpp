@@ -7,8 +7,8 @@
  * @date 13.07.16
  */
 
-#include <readdy/kernel/singlecpu/model/ParticleData.h>
 #include <readdy/kernel/cpu/CPUStateModel.h>
+#include <readdy/kernel/cpu/model/ParticleData.h>
 
 namespace readdy {
 namespace kernel {
@@ -16,7 +16,7 @@ namespace cpu {
 
 struct CPUStateModel::Impl {
     readdy::model::KernelContext *context;
-    std::unique_ptr<readdy::kernel::singlecpu::model::ParticleData> particleData;
+    std::unique_ptr<readdy::kernel::cpu::model::ParticleData> particleData;
     std::unique_ptr<readdy::kernel::cpu::model::NeighborList> neighborList;
     double currentEnergy = 0;
 };
@@ -26,46 +26,40 @@ void CPUStateModel::calculateForces() {
     // update forces and energy order 1 potentials
     std::vector<double> energyUpdate;
     energyUpdate.reserve(config->nThreads);
-    using data_t = readdy::kernel::singlecpu::model::ParticleData;
     {
-        std::vector<util::ScopedThread> threads;
+        std::vector<util::scoped_thread> threads;
         threads.reserve(config->nThreads);
-        using iter_t = std::vector<unsigned int>::const_iterator;
+        using iter_t = data_t::entries_t::iterator;
         using pot1map = std::unordered_map<unsigned int, std::vector<readdy::model::potentials::PotentialOrder1 *>>;
 
-        auto worker = [](iter_t it_types, iter_t it_types_end, double &energy,
-                         data_t *data, pot1map pot1Map) -> void {
-            auto idx = it_types - data->cbegin_types();
-            const readdy::model::Vec3 zero{0, 0, 0};
-            auto &&it_forces = data->begin_forces() + idx;
-            auto &&it_pos = data->cbegin_positions() + idx;
-            while (it_types != it_types_end) {
-                *it_forces = zero;
-                for (auto po1 : pot1Map[*it_types]) {
-                    po1->calculateForceAndEnergy(*it_forces, energy, *it_pos);
+        auto worker = [](iter_t begin, const iter_t end, double &energy,pot1map pot1Map) -> void {
+            const readdy::model::Vec3 zero;
+            while (begin != end) {
+                if(!begin->is_deactivated()) {
+                    (*begin).force = zero;
+                    for (auto po1 : pot1Map[(*begin).type]) {
+                        po1->calculateForceAndEnergy((*begin).force, energy, (*begin).pos);
+                    }
                 }
-                ++it_forces;
-                ++it_types;
-                ++it_pos;
+                ++begin;
             }
         };
 
         const auto size = pimpl->particleData->size();
         const std::size_t grainSize = size / config->nThreads;
 
-        auto it = pimpl->particleData->cbegin_types();
+        auto it = pimpl->particleData->entries.begin();
         for (auto i = 0; i < config->nThreads - 1; ++i) {
             energyUpdate.push_back(0);
-            threads.push_back(util::ScopedThread(
+            threads.push_back(util::scoped_thread(
                     std::thread(worker, it, it + grainSize, std::ref(energyUpdate.back()),
-                                pimpl->particleData.get(), pimpl->context->getAllOrder1Potentials())));
+                                pimpl->context->getAllOrder1Potentials())));
             it += grainSize;
         }
         energyUpdate.push_back(0);
         threads.push_back(
-                util::ScopedThread(std::thread(worker, it, pimpl->particleData->cend_types(),
-                                               std::ref(energyUpdate.back()), pimpl->particleData.get(),
-                                               pimpl->context->getAllOrder1Potentials()))
+                util::scoped_thread(std::thread(worker, it, pimpl->particleData->entries.end(),
+                                               std::ref(energyUpdate.back()), pimpl->context->getAllOrder1Potentials()))
         );
     }
 
@@ -75,48 +69,45 @@ void CPUStateModel::calculateForces() {
         using nl_it_t = model::NeighborList::container_t::iterator;
         using pot2map = std::unordered_map<readdy::util::ParticleTypePair, std::vector<readdy::model::potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher>;
         using dist_t = std::function<readdy::model::Vec3(const readdy::model::Vec3 &, const readdy::model::Vec3 &)>;
-        std::vector<util::ScopedThread> threads;
+        std::vector<util::scoped_thread> threads;
         threads.reserve(config->nThreads);
         auto worker = [](nl_it_t begin, const unsigned long n, double &energy, data_t *data, pot2map pot2Map,
                          dist_t dist) -> void {
-
             auto it = begin;
             for (unsigned long _i = 0; _i < n; ++_i) {
                 auto i = it->first;
-                const auto type_i = *(data->cbegin_types() + i);
-                const auto &pos_i = *(data->cbegin_positions() + i);
+                auto &entry_i = *(data->entries.begin() + i);
 
                 for (const auto &neighbor : it->second) {
                     readdy::model::Vec3 forceVec{0, 0, 0};
-                    const auto type_j = *(data->cbegin_types() + neighbor.idx);
-                    const auto &pos_j = *(data->cbegin_positions() + neighbor.idx);
-                    const auto &potentials = pot2Map[{type_i, type_j}];
+                    const auto &entry_j = *(data->entries.begin() + neighbor.idx);
+                    const auto &potentials = pot2Map[{entry_i.type, entry_j.type}];
                     for (const auto &potential : potentials) {
                         if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
                             readdy::model::Vec3 updateVec{0, 0, 0};
-                            potential->calculateForceAndEnergy(updateVec, energy, dist(pos_i, pos_j));
+                            potential->calculateForceAndEnergy(updateVec, energy, dist(entry_i.pos, entry_j.pos));
                             forceVec += updateVec;
                         }
                     }
-                    *(data->begin_forces() + i) += forceVec;
+                    entry_i.force += forceVec;
                 }
 
                 it = std::next(it);
             }
         };
 
-        const auto size = pimpl->neighborList->pairs->size();
+        const auto size = pimpl->neighborList->pairs.size();
         const std::size_t grainSize = size / config->nThreads;
 
-        auto it = pimpl->neighborList->pairs->begin();
+        auto it = pimpl->neighborList->pairs.begin();
         for (auto i = 0; i < config->nThreads - 1; ++i) {
-            threads.push_back(util::ScopedThread(
+            threads.push_back(util::scoped_thread(
                     std::thread(worker, it, grainSize, std::ref(energyUpdate[i]), pimpl->particleData.get(),
                                 pimpl->context->getAllOrder2Potentials(), pimpl->context->getShortestDifferenceFun())));
             std::advance(it, grainSize);
         }
-        threads.push_back(util::ScopedThread(
-                std::thread(worker, it, std::distance(it, pimpl->neighborList->pairs->end()),
+        threads.push_back(util::scoped_thread(
+                std::thread(worker, it, std::distance(it, pimpl->neighborList->pairs.end()),
                             std::ref(energyUpdate.back()), pimpl->particleData.get(),
                             pimpl->context->getAllOrder2Potentials(), pimpl->context->getShortestDifferenceFun())));
 
@@ -130,18 +121,24 @@ void CPUStateModel::calculateForces() {
 }
 
 const std::vector<readdy::model::Vec3> CPUStateModel::getParticlePositions() const {
-    const auto begin = pimpl->particleData->begin_positions();
-    const auto end = pimpl->particleData->end_positions();
+    const auto& entries = pimpl->particleData->entries;
     std::vector<readdy::model::Vec3> target{};
-    target.reserve(end - begin);
-    std::copy(begin, end, std::back_inserter(target));
+    target.reserve(pimpl->particleData->size());
+    std::for_each(entries.begin(), entries.end(), [&target](const data_t::Entry& entry) {
+        if(!entry.is_deactivated()) {
+            target.push_back(entry.pos);
+        }
+    });
     return target;
 }
 
 const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
     std::vector<readdy::model::Particle> result;
-    for (auto i = 0; i < pimpl->particleData->size(); ++i) {
-        result.push_back((*pimpl->particleData)[i]);
+    result.reserve(pimpl->particleData->size());
+    for(const auto& entry : pimpl->particleData->entries) {
+        if(!entry.is_deactivated()) {
+            result.push_back(pimpl->particleData->toParticle(entry));
+        }
     }
     return result;
 }
@@ -169,11 +166,11 @@ double CPUStateModel::getEnergy() const {
 CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config)
         : pimpl(std::make_unique<Impl>()), config(config) {
     pimpl->context = context;
-    pimpl->particleData = std::make_unique<readdy::kernel::singlecpu::model::ParticleData>(0, false);
+    pimpl->particleData = std::make_unique<data_t>();
     pimpl->neighborList = std::make_unique<model::NeighborList>(context, config);
 }
 
-readdy::kernel::singlecpu::model::ParticleData *const CPUStateModel::getParticleData() const {
+CPUStateModel::data_t *const CPUStateModel::getParticleData() const {
     return pimpl->particleData.get();
 }
 

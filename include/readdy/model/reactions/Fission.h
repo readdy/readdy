@@ -19,12 +19,14 @@ namespace model {
 namespace reactions {
 
 class Fission : public Reaction<1> {
-
+    using super = Reaction<1>;
 public:
     Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2,
             const double rate, const double productDistance, const double weight1 = 0.5,
             const double weight2 = 0.5) :
-            Reaction(name, rate, 0, productDistance, 2), weight1(weight1), weight2(weight2) {
+            Reaction(name, rate, 0, productDistance, 2) {
+        super::weight1 = weight1;
+        super::weight2 = weight2;
         educts = {from};
         products = {to1, to2};
         const auto sum = weight1 + weight2;
@@ -48,16 +50,9 @@ public:
         return products[1];
     }
 
-    const double getWeight1() const {
-        return weight1;
+    virtual const ReactionType getType() override {
+        return ReactionType::Fission;
     }
-
-    const double getWeight2() const {
-        return weight2;
-    }
-
-protected:
-    double weight1, weight2;
 
 };
 }

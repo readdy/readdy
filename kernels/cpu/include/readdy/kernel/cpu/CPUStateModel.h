@@ -14,9 +14,9 @@
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/singlecpu/model/ParticleData.h>
 #include <readdy/kernel/cpu/model/NeighborList.h>
 #include <readdy/kernel/cpu/util/Config.h>
+#include <readdy/kernel/cpu/model/ParticleData.h>
 
 namespace readdy {
 namespace kernel {
@@ -24,6 +24,9 @@ namespace cpu {
 class CPUStateModel : public readdy::model::KernelStateModel {
 
 public:
+
+    using data_t = readdy::kernel::cpu::model::ParticleData;
+
     CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config);
 
     ~CPUStateModel();
@@ -46,7 +49,7 @@ public:
 
     virtual double getEnergy() const override;
 
-    readdy::kernel::singlecpu::model::ParticleData *const getParticleData() const;
+    data_t *const getParticleData() const;
 
     model::NeighborList *const getNeighborList() const;
 

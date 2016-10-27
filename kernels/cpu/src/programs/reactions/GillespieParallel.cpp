@@ -189,14 +189,14 @@ void GillespieParallel::handleBoxReactions() {
     std::vector<std::future<std::vector<particle_t>>> newParticles;
     {
         //readdy::util::Timer t ("\t run threads");
-        std::vector<util::ScopedThread> threads;
+        std::vector<util::scoped_thread> threads;
         for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
             promise_t promise;
             updates.push_back(promise.get_future());
             promise_new_particles_t promiseParticles;
             newParticles.push_back(promiseParticles.get_future());
             threads.push_back(
-                    util::ScopedThread(std::thread(
+                    util::scoped_thread(std::thread(
                             worker, std::ref(boxes[i]),
                             std::ref(kernel->getKernelContext()),
                             kernel->getKernelStateModel().getParticleData(),

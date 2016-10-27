@@ -20,10 +20,9 @@ namespace kernel {
 namespace singlecpu {
 namespace observables {
 
-template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
-class ParticlePositionObservable : public readdy::model::ParticlePositionObservable {
+class ParticlePosition : public readdy::model::ParticlePositionObservable {
 public:
-    ParticlePositionObservable(kernel_t *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
+    ParticlePosition(SingleCPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
             readdy::model::ParticlePositionObservable(kernel, stride, typesToCount), kernel(kernel) {}
 
     virtual void evaluate() override {
@@ -48,14 +47,13 @@ public:
     }
 
 protected:
-    kernel_t *const kernel;
+    SingleCPUKernel *const kernel;
 };
 
-template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
-class HistogramAlongAxisObservable : public readdy::model::HistogramAlongAxisObservable {
+class HistogramAlongAxis : public readdy::model::HistogramAlongAxisObservable {
 
 public:
-    HistogramAlongAxisObservable(kernel_t *const kernel, unsigned int stride,
+    HistogramAlongAxis(SingleCPUKernel *const kernel, unsigned int stride,
                                  const std::vector<double> &binBorders,
                                  const std::vector<std::string> &typesToCount,
                                  unsigned int axis)
@@ -90,14 +88,13 @@ public:
     }
 
 protected:
-    kernel_t *const kernel;
+    SingleCPUKernel *const kernel;
     size_t size;
 };
 
-template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
-class NParticlesObservable : public readdy::model::NParticlesObservable {
+class NParticles : public readdy::model::NParticlesObservable {
 public:
-    NParticlesObservable(kernel_t *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+    NParticles(SingleCPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
             readdy::model::NParticlesObservable(kernel, stride, typesToCount),
             singleCPUKernel(kernel) {}
 
@@ -125,17 +122,16 @@ public:
     }
 
 protected:
-    kernel_t *const singleCPUKernel;
+    SingleCPUKernel *const singleCPUKernel;
 };
 
-template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>
-class ForcesObservable : public readdy::model::ForcesObservable {
+class Forces : public readdy::model::ForcesObservable {
 public:
-    ForcesObservable(kernel_t *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+    Forces(SingleCPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
             readdy::model::ForcesObservable(kernel, stride, typesToCount),
             kernel(kernel) {}
 
-    virtual ~ForcesObservable() {}
+    virtual ~Forces() {}
 
     virtual void evaluate() override {
         result.clear();
@@ -164,7 +160,7 @@ public:
 
 
 protected:
-    kernel_t *const kernel;
+    SingleCPUKernel *const kernel;
 };
 
 template<typename kernel_t=readdy::kernel::singlecpu::SingleCPUKernel>

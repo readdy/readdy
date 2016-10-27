@@ -24,17 +24,34 @@ namespace model {
 
 class ParticleData {
 public:
-    using particle_type = readdy::model::Particle;
-    using index_t = std::vector<particle_type::id_type>::size_type;
+    struct Entry;
 
+    using particle_type = readdy::model::Particle;
+    using entries_t = std::vector<Entry>;
+    using index_t = entries_t::size_type;
+
+    /**
+     * Particle data entry with padding such that it fits exactly into 64 bytes.
+     */
     struct Entry {
-        particle_type::id_type id; //4
-        particle_type::pos_type pos; // 4 + 24 = 28
-        readdy::model::Vec3 force; // 28 + 24 = 52
-        particle_type::type_type type; // 52 + 8 = 60
-        bool deactivated; // 60 + 1 = 61
+        Entry(const particle_type &particle) : id(particle.getId()), pos(particle.getPos()),
+                                               force(readdy::model::Vec3()), type(particle.getType()),
+                                               deactivated(false) { }
+
+        particle_type::id_type id; // 4 bytes
+        particle_type::pos_type pos; // 4 + 24 = 28 bytes
+        readdy::model::Vec3 force; // 28 + 24 = 52 bytes
+        particle_type::type_type type; // 52 + 8 = 60 bytes
+
+        bool is_deactivated() const {
+            return deactivated;
+        }
+
     private:
-        bool padding[3]; // 61 + 3 = 64
+        friend class readdy::kernel::cpu::model::ParticleData;
+
+        bool deactivated; // 60 + 1 = 61 bytes
+        bool padding[3]; // 61 + 3 = 64 bytes
     };
 
     // ctor / dtor
@@ -59,20 +76,22 @@ public:
 
     void addParticle(const particle_type &particle);
 
+    void addEntries(const std::vector<Entry> &entries);
+
     void addParticles(const std::vector<particle_type> &particles);
-/*
+
+    readdy::model::Particle getParticle(const index_t index) const;
+
+    readdy::model::Particle toParticle(const Entry& e) const;
+
     void removeParticle(const particle_type &particle);
 
     void removeParticle(const index_t index);
 
-    particle_type operator[](const index_t index) const;
-
-    bool isMarkedForDeactivation(const index_t index);
-
     index_t getNDeactivated() const;
 
-    void markForDeactivation(const size_t index);
-*/
+    entries_t entries;
+
 protected:
     std::stack<index_t> blanks;
 };

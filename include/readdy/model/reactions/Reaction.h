@@ -30,6 +30,8 @@ class Reaction {
 protected:
     static short counter;
 public:
+    enum ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
+
     using rnd_normal = std::function<Vec3(const double, const double)>;
     static constexpr unsigned int n_educts = N_EDUCTS;
 
@@ -45,6 +47,7 @@ public:
 
     virtual ~Reaction() = default;
 
+    virtual const ReactionType getType() = 0;
 
     const std::string &getName() const {
         return name;
@@ -119,6 +122,15 @@ public:
               eductDistanceSquared(rhs.eductDistanceSquared) {
     }
 
+    const double getWeight1() const {
+        return weight1;
+    }
+
+    const double getWeight2() const {
+        return weight2;
+    }
+
+
 protected:
     const unsigned int _n_educts = N_EDUCTS;
     const unsigned int _n_products;
@@ -129,6 +141,8 @@ protected:
     const double rate;
     const double eductDistance, eductDistanceSquared;
     const double productDistance;
+
+    double weight1, weight2;
 };
 
 }

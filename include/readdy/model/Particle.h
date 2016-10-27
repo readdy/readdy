@@ -14,6 +14,7 @@
 #include <array>
 #include <string>
 #include <atomic>
+#include <spdlog/fmt/ostr.h>
 #include "Vec3.h"
 
 namespace readdy {
@@ -44,6 +45,7 @@ public:
 
     Particle(double x, double y, double z, unsigned int type);
 
+    Particle(Vec3 pos, unsigned int type);
     Particle(Vec3 pos, unsigned int type, id_type id);
 
     virtual ~Particle();

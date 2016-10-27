@@ -15,13 +15,14 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-std::vector<readdy::model::Particle> handleEventsGillespie(
+data_t::entries_t handleEventsGillespie(
         CPUKernel const *const kernel,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events) {
     using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
     using rdy_particle_t = readdy::model::Particle;
-    std::vector<rdy_particle_t> newParticles{};
+
+    data_t::entries_t newParticles{};
 
     const auto &ctx = kernel->getKernelContext();
     const auto data = kernel->getKernelStateModel().getParticleData();
@@ -50,38 +51,15 @@ std::vector<readdy::model::Particle> handleEventsGillespie(
                  * Perform reaction
                  */
                 {
-                    const auto p1 = data->operator[](event.idx1);
-                    rdy_particle_t pOut1{}, pOut2{};
+
+                    auto& entry1 = data->entries[event.idx1];
                     if (event.nEducts == 1) {
                         auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                        reaction->perform(p1, p1, pOut1, pOut2);
-                        if (reaction->getNProducts() > 0) {
-                            *(data->begin_positions() + event.idx1) = pOut1.getPos();
-                            *(data->begin_types() + event.idx1) = pOut1.getType();
-                            *(data->begin_ids() + event.idx1) = pOut1.getId();
-                            if (reaction->getNProducts() == 2) {
-                                newParticles.push_back(pOut2);
-                            }
-                        } else {
-                            data->markForDeactivation(event.idx1);
-                        }
+                        performReaction(*data, entry1, entry1, event.idx1, event.idx2, newParticles, reaction);
                     } else {
                         auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                        const auto p2 = data->operator[](event.idx2);
-                        reaction->perform(p1, p2, pOut1, pOut2);
-                        *(data->begin_positions() + event.idx1) = pOut1.getPos();
-                        *(data->begin_types() + event.idx1) = pOut1.getType();
-                        *(data->begin_ids() + event.idx1) = pOut1.getId();
-                        if (reaction->getNProducts() == 2) {
-                            *(data->begin_positions() + event.idx2) = pOut2.getPos();
-                            *(data->begin_types() + event.idx2) = pOut2.getType();
-                            *(data->begin_ids() + event.idx2) = pOut2.getId();
-                        } else if (reaction->getNProducts() == 1) {
-                            data->markForDeactivation(event.idx2);
-                        } else {
-                            data->markForDeactivation(event.idx1);
-                            data->markForDeactivation(event.idx2);
-                        }
+                        auto& entry2 = data->entries[event.idx2];
+                        performReaction(*data, entry1, entry2, event.idx1, event.idx2, newParticles, reaction);
                     }
                 }
                 /**

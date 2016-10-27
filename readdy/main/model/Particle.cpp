@@ -61,6 +61,9 @@ Vec3 &Particle::getPos() {
     return pos;
 }
 
+Particle::Particle(Vec3 pos, unsigned int type) : pos(pos), type(type), id(std::atomic_fetch_add<id_type>(&id_counter, 1)) {
+}
+
 
 Particle::~Particle() = default;
 

@@ -24,22 +24,22 @@ readdy::model::HistogramAlongAxisObservable *
 SingleCPUObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                                           std::vector<std::string> typesToCount,
                                                           unsigned int axis) const {
-    return new HistogramAlongAxisObservable<>(kernel, stride, binBorders, typesToCount, axis);
+    return new HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
 }
 
 readdy::model::NParticlesObservable *SingleCPUObservableFactory::createNParticlesObservable(
         unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new NParticlesObservable<>(kernel, stride, typesToCount);
+    return new NParticles(kernel, stride, typesToCount);
 }
 
 readdy::model::ForcesObservable *
 SingleCPUObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new ForcesObservable<>(kernel, stride, typesToCount);
+    return new Forces(kernel, stride, typesToCount);
 }
 
 readdy::model::ParticlePositionObservable *
 SingleCPUObservableFactory::createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new ParticlePositionObservable<>(kernel, stride, typesToCount);
+    return new ParticlePosition(kernel, stride, typesToCount);
 }
 
 readdy::model::RadialDistributionObservable *

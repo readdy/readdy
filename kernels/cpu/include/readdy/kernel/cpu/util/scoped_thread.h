@@ -16,31 +16,31 @@ namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace util {
-class ScopedThread {
+class scoped_thread {
     std::thread t;
 public:
-    explicit ScopedThread(std::thread _t) : t(std::move(_t)) {
+    explicit scoped_thread(std::thread _t) : t(std::move(_t)) {
         if (!t.joinable()) throw std::logic_error("No thread!");
     }
 
-    ~ScopedThread() {
+    ~scoped_thread() {
         if (t.joinable()) {
             t.join();
         }
     }
 
-    ScopedThread(ScopedThread &&rhs) {
+    scoped_thread(scoped_thread &&rhs) {
         t = std::move(rhs.t);
     }
 
-    ScopedThread &operator=(ScopedThread &&rhs) {
+    scoped_thread &operator=(scoped_thread &&rhs) {
         t = std::move(rhs.t);
         return *this;
     }
 
-    ScopedThread(const ScopedThread &) = delete;
+    scoped_thread(const scoped_thread &) = delete;
 
-    ScopedThread &operator=(const ScopedThread &) = delete;
+    scoped_thread &operator=(const scoped_thread &) = delete;
 };
 }
 }

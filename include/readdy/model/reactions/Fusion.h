@@ -18,12 +18,14 @@ namespace model {
 namespace reactions {
 
 class Fusion : public Reaction<2> {
-
+    using super = Reaction<2>;
 public:
     Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to,
            const double rate, const double eductDistance, const double weight1 = 0.5,
            const double weight2 = 0.5) :
-            Reaction(name, rate, eductDistance, 0, 1), weight1(weight1), weight2(weight2) {
+            Reaction(name, rate, eductDistance, 0, 1){
+        super::weight1 = weight1;
+        super::weight2 = weight2;
         educts = {from1, from2};
         products = {to};
 
@@ -48,16 +50,10 @@ public:
         return products[0];
     }
 
-    const double getWeight1() const {
-        return weight1;
+    virtual const ReactionType getType() override {
+        return ReactionType::Fusion;
     }
 
-    const double getWeight2() const {
-        return weight2;
-    }
-
-protected:
-    double weight1, weight2;
 
 };
 }

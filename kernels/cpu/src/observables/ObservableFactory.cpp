@@ -8,8 +8,8 @@
  */
 
 #include <readdy/kernel/cpu/observables/ObservableFactory.h>
-#include <readdy/kernel/singlecpu/observables/SingleCPUObservables.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/observables/Observables.h>
 
 namespace readdy {
 namespace kernel {
@@ -21,26 +21,24 @@ ObservableFactory::ObservableFactory(CPUKernel *const kernel) : readdy::model::_
 
 readdy::model::NParticlesObservable *
 ObservableFactory::createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new readdy::kernel::singlecpu::observables::NParticlesObservable<CPUKernel>(kernel, stride, typesToCount);
+    return new NParticles(kernel, stride, typesToCount);
 }
 
 readdy::model::HistogramAlongAxisObservable *
 ObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                                  std::vector<std::string> typesToCount,
                                                  unsigned int axis) const {
-    return new readdy::kernel::singlecpu::observables::HistogramAlongAxisObservable<CPUKernel>(kernel, stride,
-                                                                                               binBorders, typesToCount,
-                                                                                               axis);
+    return new HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
 }
 
 readdy::model::ForcesObservable *
 ObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new readdy::kernel::singlecpu::observables::ForcesObservable<CPUKernel>(kernel, stride, typesToCount);
+    return new Forces(kernel, stride, typesToCount);
 }
 
 readdy::model::ParticlePositionObservable *
 ObservableFactory::createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new readdy::kernel::singlecpu::observables::ParticlePositionObservable<CPUKernel>(kernel, stride, typesToCount);
+    return new ParticlePosition(kernel, stride, typesToCount);
 }
 
 readdy::model::RadialDistributionObservable *

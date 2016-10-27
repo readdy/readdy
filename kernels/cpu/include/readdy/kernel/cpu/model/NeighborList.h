@@ -15,8 +15,9 @@
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <readdy/kernel/cpu/util/ScopedThread.h>
+#include <readdy/kernel/cpu/util/scoped_thread.h>
 #include <readdy/kernel/cpu/util/Config.h>
+#include "ParticleData.h"
 
 namespace readdy {
 namespace kernel {
@@ -38,9 +39,9 @@ public:
     using particle_index = Neighbor::index_t;
     using neighbor_t = Neighbor;
     using container_t = std::unordered_map<particle_index, std::vector<neighbor_t>>;
-    using data_t = singlecpu::model::ParticleData;
+    using data_t = readdy::kernel::cpu::model::ParticleData;
 
-    std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
+    container_t pairs {};
 
     NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config);
 

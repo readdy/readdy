@@ -13,7 +13,8 @@
 
 namespace {
     TEST(TestParticleData, TestEntryBytesize) {
-        readdy::kernel::cpu::model::ParticleData::Entry entry {};
+        readdy::model::Particle p;
+        readdy::kernel::cpu::model::ParticleData::Entry entry {p};
         EXPECT_EQ(64, sizeof(entry)) << "an entry should have exactly 64 bytes";
     }
 }

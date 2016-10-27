@@ -8,63 +8,47 @@
  */
 
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
-#include <thread>
-#include <readdy/model/RandomProvider.h>
-#include <readdy/kernel/cpu/util/ScopedThread.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
+
+namespace rnd = readdy::model::rnd;
+
 void CPUEulerBDIntegrator::execute() {
     const auto &&pd = kernel->getKernelStateModel().getParticleData();
     const auto size = pd->size();
-    std::vector<util::ScopedThread> threads;
+    std::vector<util::scoped_thread> threads;
     threads.reserve(kernel->getNThreads());
     const std::size_t grainSize = size / kernel->getNThreads();
 
     const auto &context = kernel->getKernelContext();
-    using it_vec3_t = std::vector<readdy::model::Vec3>::iterator;
-    using it_uint_t = std::vector<unsigned int>::iterator;
+    using iter_t = decltype(pd->entries.begin());
 
-    auto worker = [&context](it_vec3_t pos0, it_vec3_t posEnd, it_vec3_t forces0,
-                             it_uint_t types0) {
-
+    auto worker = [&context](iter_t entry_begin, iter_t entry_end)  {
         const auto &fixPos = context.getFixPositionFun();
-        const auto &kbt = context.getKBT();
-        const auto &&dt = context.getTimeStep();
-        for (auto it = pos0; it != posEnd; ++it) {
-            const double D = context.getDiffusionConstant(*types0);
-            const auto randomDisplacement = sqrt(2. * D * dt) * readdy::model::rnd::normal3(0, 1);
-            *it += randomDisplacement;
-            const auto deterministicDisplacement = *forces0 * dt * D / kbt;
-            *it += deterministicDisplacement;
-            fixPos(*it);
-            ++forces0;
-            ++types0;
+        const auto kbt = context.getKBT();
+        const auto dt = context.getTimeStep();
+        for (auto it = entry_begin; it != entry_end; ++it) {
+            if(!(*it).is_deactivated()) {
+                const double D = context.getDiffusionConstant((*it).type);
+                const auto randomDisplacement = sqrt(2. * D * dt) * rnd::normal3(0, 1);
+                it->pos += randomDisplacement;
+                const auto deterministicDisplacement = (*it).force * dt * D / kbt;
+                it->pos += deterministicDisplacement;
+                fixPos(it->pos);
+            }
         }
 
     };
-    auto work_iter = pd->begin_positions();
-    std::size_t pos = 0;
-
+    auto work_iter = pd->entries.begin();
     {
-
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
-            threads.push_back(
-                    util::ScopedThread(
-                            std::thread(worker, work_iter, work_iter + grainSize,
-                                        pd->begin_forces() + pos,
-                                        pd->begin_types() + pos)
-                    )
-            );
+            threads.push_back(util::scoped_thread(std::thread(worker, work_iter, work_iter + grainSize)));
             work_iter += grainSize;
-            pos += grainSize;
         }
-        threads.push_back(util::ScopedThread(
-                std::thread(worker, work_iter, pd->end_positions(), pd->begin_forces() + pos,
-                            pd->begin_types() + pos))
-        );
+        threads.push_back(util::scoped_thread(std::thread(worker, work_iter, pd->entries.end())));
     }
 
 }
