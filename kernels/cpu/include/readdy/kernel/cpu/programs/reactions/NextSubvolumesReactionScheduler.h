@@ -46,8 +46,9 @@ private:
     void evaluateReactions();
     // sets up the neighbor-linked-list structure
     void setUpNeighbors(GridCell& cell);
+    GridCell * getCell(const readdy::model::Vec3& particlePosition);
     // fetches a cell at (i,j,k)
-    GridCell * getCell(cell_index_t i, cell_index_t j, cell_index_t k) ;
+    GridCell * getCell(cell_index_t i, cell_index_t j, cell_index_t k);
 
     // array holding the number of boxes in each spatial direction
     std::array<unsigned int, 3> nCells;

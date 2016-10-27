@@ -17,8 +17,8 @@ namespace util {
 namespace numeric {
 
 template<typename T, typename D, typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<D>::value, int>::type = 0>
-inline unsigned long positive_modulo(T i, D n) {
-    return static_cast<unsigned long>((i % n + n) % n);
+inline typename std::make_unsigned<T>::type positive_modulo(T i, D n) {
+    return static_cast<typename std::make_unsigned<T>::type>((i % n + n) % n);
 }
 
 }

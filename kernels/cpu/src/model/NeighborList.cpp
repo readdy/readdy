@@ -8,7 +8,6 @@
  */
 
 #include <readdy/kernel/cpu/model/NeighborList.h>
-#include <readdy/common/numeric.h>
 
 namespace readdy {
 namespace kernel {
@@ -17,14 +16,12 @@ namespace model {
 
 struct NeighborList::Box {
     std::vector<Box *> neighbors{};
-    std::vector<unsigned long> particleIndices{};
-    const long i, j, k;
-    const long id = 0;
+    std::vector<NeighborListElement::index_t> particleIndices{};
+    const box_index id = 0;
     const bool enoughBoxes;
 
-    Box(long i, long j, long k, const std::array<unsigned int, 3> &nBoxes)
-            : i(i), j(j), k(k),
-              id(k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]),
+    Box(box_index i, box_index j, box_index k, const std::array<box_index, 3> &nBoxes)
+            : id(k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]),
               enoughBoxes(nBoxes[0] >= 5 && nBoxes[1] >= 5 && nBoxes[2] >= 5) {
     }
 
@@ -63,21 +60,21 @@ void NeighborList::setupBoxes() {
         if (maxCutoff > 0) {
             const auto desiredBoxWidth = .5 * maxCutoff;
 
-            for (unsigned int i = 0; i < 3; ++i) {
-                nBoxes[i] = static_cast<unsigned int>(floor(simBoxSize[i] / desiredBoxWidth));
+            for (unsigned short i = 0; i < 3; ++i) {
+                nBoxes[i] = static_cast<box_index>(floor(simBoxSize[i] / desiredBoxWidth));
                 if (nBoxes[i] == 0) nBoxes[i] = 1;
                 boxSize[i] = simBoxSize[i] / nBoxes[i];
             }
-            for (long i = 0; i < nBoxes[0]; ++i) {
-                for (long j = 0; j < nBoxes[1]; ++j) {
-                    for (long k = 0; k < nBoxes[2]; ++k) {
+            for (box_index i = 0; i < nBoxes[0]; ++i) {
+                for (box_index j = 0; j < nBoxes[1]; ++j) {
+                    for (box_index k = 0; k < nBoxes[2]; ++k) {
                         boxes.push_back({i, j, k, nBoxes});
                     }
                 }
             }
-            for (unsigned long i = 0; i < nBoxes[0]; ++i) {
-                for (unsigned long j = 0; j < nBoxes[1]; ++j) {
-                    for (unsigned long k = 0; k < nBoxes[2]; ++k) {
+            for (box_index i = 0; i < nBoxes[0]; ++i) {
+                for (box_index j = 0; j < nBoxes[1]; ++j) {
+                    for (box_index k = 0; k < nBoxes[2]; ++k) {
                         setupNeighboringBoxes(i, j, k);
                     }
                 }
@@ -86,11 +83,11 @@ void NeighborList::setupBoxes() {
     }
 }
 
-void NeighborList::setupNeighboringBoxes(unsigned long i, unsigned long j, unsigned long k) {
+void NeighborList::setupNeighboringBoxes(const signed_box_index i, const signed_box_index j, const signed_box_index k) {
     auto me = getBox(i, j, k);
-    for (int _i = -2; _i < 3; ++_i) {
-        for (int _j = -2; _j < 3; ++_j) {
-            for (int _k = -2; _k < 3; ++_k) {
+    for (signed_box_index _i = -2; _i < 3; ++_i) {
+        for (signed_box_index _j = -2; _j < 3; ++_j) {
+            for (signed_box_index _k = -2; _k < 3; ++_k) {
                 // don't add me as neighbor to myself
                 if (!(_i == 0 && _j == 0 && _k == 0)) {
                     me->addNeighbor(getBox(i + _i, j + _j, k + _k));
@@ -114,14 +111,15 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
         pairs->clear();
 
         auto it_pos = data.cbegin_positions();
-        unsigned long idx = 0;
+        NeighborListElement::index_t idx = 0;
         const auto shift = readdy::model::Vec3(.5 * simBoxSize[0], .5 * simBoxSize[1],
                                                .5 * simBoxSize[2]);
         while (it_pos != data.cend_positions()) {
+            const auto pos = *it_pos;
             const auto pos_shifted = *it_pos + shift;
-            const long i = (const long) floor(pos_shifted[0] / boxSize[0]);
-            const long j = (const long) floor(pos_shifted[1] / boxSize[1]);
-            const long k = (const long) floor(pos_shifted[2] / boxSize[2]);
+            const box_index i = static_cast<const box_index>(floor((pos[0] + .5 * simBoxSize[0]) / boxSize[0]));
+            const box_index j = static_cast<const box_index>(floor(pos_shifted[1] / boxSize[1]));
+            const box_index k = static_cast<const box_index>(floor(pos_shifted[2] / boxSize[2]));
             auto box = getBox(i, j, k);
             if (box) {
                 box->particleIndices.push_back(idx);
@@ -136,15 +134,15 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
             const auto size = boxes.size();
             const std::size_t grainSize = size / config->nThreads;
             const auto cutoffSquared = maxCutoff * maxCutoff;
-            auto worker = [this, &data, cutoffSquared](unsigned long begin, unsigned long end) {
+            auto worker = [this, &data, cutoffSquared](const box_index begin, const box_index end) {
                 const auto d2 = ctx->getDistSquaredFun();
                 for (auto _b = begin; _b < end; ++_b) {
                     const auto &box = boxes[_b];
-                    for (long i = 0; i < box.particleIndices.size(); ++i) {
+                    for (NeighborListElement::index_t i = 0; i < box.particleIndices.size(); ++i) {
                         const auto pI = box.particleIndices[i];
                         if (pairs->find(pI) != pairs->end()) {
                             const auto pos = *(data.begin_positions() + pI);
-                            for (long j = 0; j < box.particleIndices.size(); ++j) {
+                            for (NeighborListElement::index_t j = 0; j < box.particleIndices.size(); ++j) {
                                 if (i != j) {
                                     const auto pJ = box.particleIndices[j];
                                     const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
@@ -187,7 +185,7 @@ void NeighborList::create(const readdy::kernel::singlecpu::model::SingleCPUParti
     fillBoxes(data);
 }
 
-NeighborList::Box *NeighborList::getBox(long i, long j, long k) {
+NeighborList::Box *NeighborList::getBox(signed_box_index i, signed_box_index j, signed_box_index k) {
     const auto &periodic = ctx->getPeriodicBoundary();
     if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nBoxes[0]);
     else if (i < 0 || i >= nBoxes[0]) return nullptr;
@@ -200,7 +198,7 @@ NeighborList::Box *NeighborList::getBox(long i, long j, long k) {
 
 NeighborList::~NeighborList() = default;
 
-NeighborListElement::NeighborListElement(const unsigned long idx, const double d2) : idx(idx), d2(d2) {}
+NeighborListElement::NeighborListElement(const index_t idx, const double d2) : idx(idx), d2(d2) {}
 
 }
 }

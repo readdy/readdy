@@ -23,18 +23,23 @@ namespace kernel {
 namespace cpu {
 namespace model {
 struct NeighborListElement {
-    const unsigned long idx;
+
+    using index_t = readdy::model::Particle::id_type;
+
+    const index_t idx;
     const double d2;
 
-    NeighborListElement(const unsigned long idx, const double d2);
+    NeighborListElement(const index_t idx, const double d2);
 };
 
 class NeighborList {
     struct Box;
 
 public:
+    using box_index = unsigned short;
+    using signed_box_index = typename std::make_signed<box_index>::type;
     using neighbor_t = NeighborListElement;
-    using container_t = std::unordered_map<unsigned long, std::vector<neighbor_t>>;
+    using container_t = std::unordered_map<NeighborListElement::index_t, std::vector<neighbor_t>>;
 
     std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
 
@@ -44,7 +49,7 @@ public:
 
     virtual void setupBoxes();
 
-    virtual void setupNeighboringBoxes(unsigned long i, unsigned long j, unsigned long k);
+    virtual void setupNeighboringBoxes(const signed_box_index i, const signed_box_index j, const signed_box_index k);
 
     void clear();
 
@@ -55,12 +60,12 @@ public:
 protected:
 
     std::vector<Box> boxes;
-    std::array<unsigned int, 3> nBoxes{{0, 0, 0}};
+    std::array<box_index, 3> nBoxes{{0, 0, 0}};
     readdy::model::Vec3 boxSize{0, 0, 0};
     double maxCutoff = 0;
     util::Config const *const config;
 
-    Box *getBox(long i, long j, long k);
+    Box *getBox(signed_box_index i, signed_box_index j, signed_box_index k);
 
     const readdy::model::KernelContext *const ctx;
 };

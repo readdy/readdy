@@ -98,15 +98,10 @@ void NextSubvolumes::assignParticles() {
         cell.cellRate = 0;
     });
 
-    const auto shift = .5 * readdy::model::Vec3(simBoxSize[0], simBoxSize[1], simBoxSize[2]);
     unsigned long idx = 0;
     auto it_type = data->begin_types();
     for (auto it = data->begin_positions(); it != data->end_positions(); ++it) {
-        const auto pos_shifted = *it + shift;
-        const auto i = static_cast<cell_index_t>(floor(pos_shifted[0] / cellSize[0]));
-        const auto j = static_cast<cell_index_t>(floor(pos_shifted[1] / cellSize[1]));
-        const auto k = static_cast<cell_index_t>(floor(pos_shifted[2] / cellSize[2]));
-        auto box = getCell(i, j, k);
+        auto box = getCell(*it);
         if (box) {
             const auto type = *it_type;
             box->particles[type].push_back(idx);
@@ -122,6 +117,7 @@ void NextSubvolumes::evaluateReactions() {
     std::vector<GridCell *>::size_type n_cells_done = 0;
     const auto& ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
+    const auto neighbor_list = kernel->getKernelStateModel().getNeighborList();
 
     const auto comparator = [](const GridCell *c1, const GridCell *c2) {
         return c1->cellRate < c2->cellRate;
@@ -133,37 +129,59 @@ void NextSubvolumes::evaluateReactions() {
     while (eventQueue.begin() != get_event_queue_end()) {
         std::pop_heap(eventQueue.begin(), get_event_queue_end(), comparator);
         auto currentCell = eventQueue.back();
+        bool performedSomething = false;
         if (currentCell->timestamp < kernel->getKernelContext().getTimeStep()) {
             const auto& particles = currentCell->particles;
-            const auto& nextEvent = currentCell->nextEvent;
-            if(nextEvent.isValid()) {
-                const auto findType1 = particles.find(nextEvent.type1);
+            const auto& event = currentCell->nextEvent;
+            if(event.isValid()) {
+                const auto findType1 = particles.find(event.type1);
                 if(findType1 != particles.end()) {
                     const auto& particlesType1 = findType1->second;
                     if (!particlesType1.empty()) {
-                        const auto rndParticle1It = rnd::random_element(particlesType1.begin(), particlesType1.end());
-                        const auto p1 = (*data)[*rndParticle1It];
+                        const auto p1_it = rnd::random_element(particlesType1.begin(), particlesType1.end());
+                        const auto p1_idx = *p1_it;
+                        const auto p1 = (*data)[p1_idx];
+                        particle_type pOut1{}, pOut2{};
                         // todo execute the reaction, and update cells and event queue (see slides)
-                        switch (nextEvent.order) {
-                            case 0: {
-                                auto reaction = ctx.getOrder1Reactions(nextEvent.type1)[nextEvent.reactionIndex];
-                                //reaction->perform(p1, p1, pOut1, pOut2);
-                                break;
-                            }
+                        switch (event.order) {
                             case 1: {
+                                // todo update neighbor list with this particle
+                                auto reaction = ctx.getOrder1Reactions(event.type1)[event.reactionIndex];
+                                reaction->perform(p1, p1, pOut1, pOut2);
+                                performedSomething = true;
+                                --currentCell->typeCounts[event.type1];
+                                currentCell->particles[event.type1].erase(p1_it);
+                                if (reaction->getNProducts() > 0) {
+                                    *(data->begin_positions() + p1_idx) = pOut1.getPos();
+                                    *(data->begin_types() + p1_idx) = pOut1.getType();
+                                    *(data->begin_ids() + p1_idx) = pOut1.getId();
+
+                                    auto c1Out = getCell(pOut1.getPos());
+                                    ++c1Out->typeCounts[pOut1.getType()];
+                                    c1Out->particles[pOut1.getType()].push_back(p1_idx);
+                                    if (reaction->getNProducts() == 2) {
+                                        auto c2Out = getCell(pOut2.getPos());
+                                        data->addParticle(pOut2);
+                                        ++c2Out->typeCounts[pOut2.getType()];
+                                        c2Out->particles[pOut2.getType()].push_back(data->size()-1);
+                                    }
+                                } else {
+                                    data->removeParticle(p1_idx);
+                                }
                                 break;
                             }
                             case 2: {
+                                auto reaction = ctx.getOrder2Reactions(event.type1, event.type2)[event.reactionIndex];
                                 break;
                             }
                             default: {
                                 log::console()->error("encountered event with order > 2! (order was {})",
-                                                      nextEvent.order);
+                                                      event.order);
                             }
                         }
                     }
                 } else {
-                    log::console()->debug("did not find any particle of type {} in current box", nextEvent.type1);
+                    log::console()->debug("did not find any particle of type {} in current box", event.type1);
                 }
             } else {
                 log::console()->error("The event was not set previously, should not happen! (?)");
@@ -207,7 +225,7 @@ NextSubvolumes::getCell(cell_index_t i, cell_index_t j, cell_index_t k) {
     else if (j < 0 || j >= nCells[1]) return nullptr;
     if (periodic[2]) k = static_cast<cell_index_t>(readdy::util::numeric::positive_modulo(k, nCells[2]));
     else if (k < 0 || k >= nCells[2]) return nullptr;
-    return &cells[k + j * nCells[2] + i * nCells[2] * nCells[1]];
+    return &*(cells.begin() + k + j * nCells[2] + i * nCells[2] * nCells[1]);
 }
 
 void NextSubvolumes::setUpEventQueue() {
@@ -294,6 +312,14 @@ void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
             log::console()->error("next subvolumes: the next event was events.end()!");
         }
     }
+}
+
+NextSubvolumes::GridCell *NextSubvolumes::getCell(const readdy::model::Vec3 &particlePosition) {
+    const auto& simBoxSize = kernel->getKernelContext().getBoxSize();
+    const auto i = static_cast<cell_index_t>(floor((particlePosition[0] + .5*simBoxSize[0]) / cellSize[0]));
+    const auto j = static_cast<cell_index_t>(floor((particlePosition[1] + .5*simBoxSize[1]) / cellSize[1]));
+    const auto k = static_cast<cell_index_t>(floor((particlePosition[2] + .5*simBoxSize[2]) / cellSize[2]));
+    return getCell(i, j, k);
 }
 
 NextSubvolumes::~NextSubvolumes() = default;
