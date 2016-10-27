@@ -18,14 +18,14 @@ namespace kernel {
 namespace singlecpu {
 struct SingleCPUKernelStateModel::Impl {
     double currentEnergy = 0;
-    std::unique_ptr<model::SingleCPUParticleData> particleData;
+    std::unique_ptr<model::ParticleData> particleData;
     std::unique_ptr<model::SingleCPUNeighborList> neighborList;
     readdy::model::KernelContext const *context;
 };
 
 SingleCPUKernelStateModel::SingleCPUKernelStateModel(readdy::model::KernelContext const *context) : pimpl(
         std::make_unique<SingleCPUKernelStateModel::Impl>()) {
-    pimpl->particleData = std::make_unique<model::SingleCPUParticleData>(10, true);
+    pimpl->particleData = std::make_unique<model::ParticleData>(10, true);
     pimpl->neighborList = std::make_unique<model::SingleCPUNeighborList>(context);
     pimpl->context = context;
 }
@@ -48,7 +48,7 @@ readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticlePositions() con
     return target;
 }
 
-model::SingleCPUParticleData *readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticleData() const {
+model::ParticleData *readdy::kernel::singlecpu::SingleCPUKernelStateModel::getParticleData() const {
     return pimpl->particleData.get();
 }
 

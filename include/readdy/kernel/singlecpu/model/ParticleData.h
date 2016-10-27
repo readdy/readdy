@@ -22,31 +22,31 @@ namespace kernel {
 namespace singlecpu {
 namespace model {
 
-class SingleCPUParticleData {
+class ParticleData {
 public:
     using marked_count_t = std::atomic<std::size_t>;
     using particle_type = readdy::model::Particle;
 
     // ctor / dtor
-    SingleCPUParticleData();
+    ParticleData();
 
-    SingleCPUParticleData(bool useMarkedSet);
+    ParticleData(bool useMarkedSet);
 
-    SingleCPUParticleData(unsigned int capacity);
+    ParticleData(unsigned int capacity);
 
-    SingleCPUParticleData(unsigned int capacity, bool useMarkedSet);
+    ParticleData(unsigned int capacity, bool useMarkedSet);
 
-    ~SingleCPUParticleData();
+    ~ParticleData();
 
     // move
-    SingleCPUParticleData(SingleCPUParticleData &&rhs);
+    ParticleData(ParticleData &&rhs);
 
-    SingleCPUParticleData &operator=(SingleCPUParticleData &&rhs);
+    ParticleData &operator=(ParticleData &&rhs);
 
     // copy
-    SingleCPUParticleData(const SingleCPUParticleData &rhs) = delete;
+    ParticleData(const ParticleData &rhs) = delete;
 
-    SingleCPUParticleData &operator=(const SingleCPUParticleData &rhs) = delete;
+    ParticleData &operator=(const ParticleData &rhs) = delete;
 
     std::vector<particle_type::id_type>::iterator begin_ids();
 
@@ -108,7 +108,7 @@ public:
 
     std::vector<char>::const_iterator cend_deactivated() const;
 
-    void swap(SingleCPUParticleData &rhs);
+    void swap(ParticleData &rhs);
 
     size_t size() const;
 

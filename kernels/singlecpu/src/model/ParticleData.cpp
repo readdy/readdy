@@ -10,23 +10,23 @@
 #include <numeric>
 #include <readdy/common/make_unique.h>
 #include <readdy/common/logging.h>
-#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
+#include <readdy/kernel/singlecpu/model/ParticleData.h>
 
 namespace readdy {
 namespace kernel {
 namespace singlecpu {
 namespace model {
 
-SingleCPUParticleData::SingleCPUParticleData(bool useMarkedSet)
-        : SingleCPUParticleData(0, useMarkedSet) {}
+ParticleData::ParticleData(bool useMarkedSet)
+        : ParticleData(0, useMarkedSet) {}
 
-SingleCPUParticleData::SingleCPUParticleData(unsigned int capacity)
-        : SingleCPUParticleData(capacity, true) {}
+ParticleData::ParticleData(unsigned int capacity)
+        : ParticleData(capacity, true) {}
 
-SingleCPUParticleData::SingleCPUParticleData() : SingleCPUParticleData(0, true) {
+ParticleData::ParticleData() : ParticleData(0, true) {
 }
 
-SingleCPUParticleData::SingleCPUParticleData(unsigned int capacity, bool useMarkedSet)
+ParticleData::ParticleData(unsigned int capacity, bool useMarkedSet)
         : useMarkedSet(useMarkedSet) {
     ids = std::make_unique<std::vector<readdy::model::Particle::id_type>>(capacity);
     positions = std::make_unique<std::vector<readdy::model::Vec3>>(capacity);
@@ -43,7 +43,7 @@ SingleCPUParticleData::SingleCPUParticleData(unsigned int capacity, bool useMark
     deactivated_index = 0;
 }
 
-void SingleCPUParticleData::swap(SingleCPUParticleData &rhs) {
+void ParticleData::swap(ParticleData &rhs) {
     std::swap(ids, rhs.ids);
     std::swap(positions, rhs.positions);
     std::swap(forces, rhs.forces);
@@ -59,24 +59,24 @@ void SingleCPUParticleData::swap(SingleCPUParticleData &rhs) {
     std::swap(useMarkedSet, rhs.useMarkedSet);
 }
 
-size_t SingleCPUParticleData::size() const {
+size_t ParticleData::size() const {
     auto s = useMarkedSet ? markedForDeactivation->size() : n_marked.load();
     return s <= deactivated_index ? deactivated_index - s : 0;
 }
 
-size_t SingleCPUParticleData::max_size() const {
+size_t ParticleData::max_size() const {
     return ids->max_size();
 }
 
-bool SingleCPUParticleData::empty() const {
+bool ParticleData::empty() const {
     return size() == 0;
 }
 
-void SingleCPUParticleData::addParticle(const readdy::model::Particle &particle) {
+void ParticleData::addParticle(const readdy::model::Particle &particle) {
     addParticles({particle});
 };
 
-void SingleCPUParticleData::addParticles(const std::vector<readdy::model::Particle> &particles) {
+void ParticleData::addParticles(const std::vector<readdy::model::Particle> &particles) {
     auto added = particles.cbegin();
     auto ids_it = ids->begin() + deactivated_index;
     auto positions_it = positions->begin() + deactivated_index;
@@ -112,7 +112,7 @@ void SingleCPUParticleData::addParticles(const std::vector<readdy::model::Partic
     }
 }
 
-void SingleCPUParticleData::removeParticle(const size_t index) {
+void ParticleData::removeParticle(const size_t index) {
     (*deactivated)[index] = true;
 
     std::swap((*ids)[index], (*ids)[deactivated_index - 1]);
@@ -126,7 +126,7 @@ void SingleCPUParticleData::removeParticle(const size_t index) {
     --deactivated_index;
 }
 
-void SingleCPUParticleData::markForDeactivation(size_t index) {
+void ParticleData::markForDeactivation(size_t index) {
     auto it = begin_deactivated() + index;
     if (useMarkedSet) {
         std::lock_guard<std::mutex> lock(markedForDeactivationMutex);
@@ -141,7 +141,7 @@ void SingleCPUParticleData::markForDeactivation(size_t index) {
     *it = true;
 }
 
-void SingleCPUParticleData::deactivateMarked() {
+void ParticleData::deactivateMarked() {
     if (useMarkedSet) {
         deactivateMarkedSet();
     } else {
@@ -149,7 +149,7 @@ void SingleCPUParticleData::deactivateMarked() {
     }
 }
 
-void SingleCPUParticleData::removeParticle(const readdy::model::Particle &particle) {
+void ParticleData::removeParticle(const readdy::model::Particle &particle) {
     auto &&beginIt = begin_ids();
     auto &&endIt = end_ids();
     auto &&it = std::find(beginIt, endIt, particle.getId());
@@ -160,44 +160,44 @@ void SingleCPUParticleData::removeParticle(const readdy::model::Particle &partic
     }
 }
 
-std::vector<readdy::model::Particle::id_type>::iterator SingleCPUParticleData::begin_ids() {
+std::vector<readdy::model::Particle::id_type>::iterator ParticleData::begin_ids() {
     return ids->begin();
 }
 
-std::vector<readdy::model::Particle::id_type>::iterator SingleCPUParticleData::end_ids() {
+std::vector<readdy::model::Particle::id_type>::iterator ParticleData::end_ids() {
     return ids->begin() + deactivated_index;
 }
 
-std::vector<readdy::model::Vec3>::iterator SingleCPUParticleData::begin_positions() {
+std::vector<readdy::model::Vec3>::iterator ParticleData::begin_positions() {
     return positions->begin();
 }
 
-std::vector<readdy::model::Vec3>::iterator SingleCPUParticleData::end_positions() {
+std::vector<readdy::model::Vec3>::iterator ParticleData::end_positions() {
     return positions->begin() + deactivated_index;
 }
 
-std::vector<readdy::model::Vec3>::iterator SingleCPUParticleData::begin_forces() {
+std::vector<readdy::model::Vec3>::iterator ParticleData::begin_forces() {
     return forces->begin();
 }
 
-std::vector<readdy::model::Vec3>::iterator SingleCPUParticleData::end_forces() {
+std::vector<readdy::model::Vec3>::iterator ParticleData::end_forces() {
     return forces->begin() + deactivated_index;
 }
 
-std::vector<unsigned int>::iterator SingleCPUParticleData::begin_types() {
+std::vector<unsigned int>::iterator ParticleData::begin_types() {
     return type->begin();
 }
 
-std::vector<unsigned int>::iterator SingleCPUParticleData::end_types() {
+std::vector<unsigned int>::iterator ParticleData::end_types() {
     return type->begin() + deactivated_index;
 }
 
-readdy::model::Particle SingleCPUParticleData::operator[](const size_t index) const {
+readdy::model::Particle ParticleData::operator[](const size_t index) const {
     return readdy::model::Particle(*(begin_positions() + index), *(begin_types() + index), *(begin_ids() + index));
 }
 
 
-SingleCPUParticleData &SingleCPUParticleData::operator=(SingleCPUParticleData &&rhs) {
+ParticleData &ParticleData::operator=(ParticleData &&rhs) {
     if (this != &rhs) {
         std::unique_lock<std::mutex> lhs_lock(markedForDeactivationMutex, std::defer_lock);
         std::unique_lock<std::mutex> rhs_lock(rhs.markedForDeactivationMutex, std::defer_lock);
@@ -219,7 +219,7 @@ SingleCPUParticleData &SingleCPUParticleData::operator=(SingleCPUParticleData &&
     return *this;
 };
 
-SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) {
+ParticleData::ParticleData(ParticleData &&rhs) {
     std::unique_lock<std::mutex> rhs_lock(rhs.markedForDeactivationMutex);
     ids = std::move(rhs.ids);
     positions = std::move(rhs.positions);
@@ -236,121 +236,121 @@ SingleCPUParticleData::SingleCPUParticleData(SingleCPUParticleData &&rhs) {
     useMarkedSet = std::move(rhs.useMarkedSet);
 };
 
-SingleCPUParticleData::~SingleCPUParticleData() {
+ParticleData::~ParticleData() {
 }
 
-std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::begin_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator ParticleData::begin_ids() const {
     return cbegin_ids();
 }
 
-std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::cbegin_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator ParticleData::cbegin_ids() const {
     return ids->cbegin();
 }
 
-std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::end_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator ParticleData::end_ids() const {
     return cend_ids();
 }
 
-std::vector<readdy::model::Particle::id_type>::const_iterator SingleCPUParticleData::cend_ids() const {
+std::vector<readdy::model::Particle::id_type>::const_iterator ParticleData::cend_ids() const {
     return ids->begin() + deactivated_index;
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::begin_positions() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::begin_positions() const {
     return cbegin_positions();
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::cbegin_positions() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::cbegin_positions() const {
     return positions->cbegin();
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::end_positions() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::end_positions() const {
     return cend_positions();
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::cend_positions() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::cend_positions() const {
     return positions->cbegin() + deactivated_index;
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::begin_forces() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::begin_forces() const {
     return cbegin_forces();
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::cbegin_forces() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::cbegin_forces() const {
     return forces->cbegin();
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::end_forces() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::end_forces() const {
     return cend_forces();
 }
 
-std::vector<readdy::model::Vec3>::const_iterator SingleCPUParticleData::cend_forces() const {
+std::vector<readdy::model::Vec3>::const_iterator ParticleData::cend_forces() const {
     return forces->cbegin() + deactivated_index;
 }
 
-std::vector<unsigned int>::const_iterator SingleCPUParticleData::begin_types() const {
+std::vector<unsigned int>::const_iterator ParticleData::begin_types() const {
     return cbegin_types();
 }
 
-std::vector<unsigned int>::const_iterator SingleCPUParticleData::cbegin_types() const {
+std::vector<unsigned int>::const_iterator ParticleData::cbegin_types() const {
     return type->cbegin();
 }
 
-std::vector<unsigned int>::const_iterator SingleCPUParticleData::end_types() const {
+std::vector<unsigned int>::const_iterator ParticleData::end_types() const {
     return cend_types();
 }
 
-std::vector<unsigned int>::const_iterator SingleCPUParticleData::cend_types() const {
+std::vector<unsigned int>::const_iterator ParticleData::cend_types() const {
     return type->cbegin() + deactivated_index;
 }
 
-bool SingleCPUParticleData::isMarkedForDeactivation(const size_t index) {
+bool ParticleData::isMarkedForDeactivation(const size_t index) {
     return (*deactivated)[index];
 }
 
-size_t SingleCPUParticleData::getDeactivatedIndex() const {
+size_t ParticleData::getDeactivatedIndex() const {
     return deactivated_index;
 }
 
-size_t SingleCPUParticleData::getNDeactivated() const {
+size_t ParticleData::getNDeactivated() const {
     return n_deactivated;
 }
 
-void SingleCPUParticleData::setParticleData(const readdy::model::Particle &particle, const size_t &index) {
+void ParticleData::setParticleData(const readdy::model::Particle &particle, const size_t &index) {
     (*ids)[index] = particle.getId();
     (*positions)[index] = particle.getPos();
     (*type)[index] = particle.getType();
 }
 
-void SingleCPUParticleData::clear() {
+void ParticleData::clear() {
     deactivated_index = 0;
     n_deactivated = ids->size();
 }
 
-std::vector<char>::iterator SingleCPUParticleData::begin_deactivated() {
+std::vector<char>::iterator ParticleData::begin_deactivated() {
     return deactivated->begin();
 }
 
-std::vector<char>::const_iterator SingleCPUParticleData::begin_deactivated() const {
+std::vector<char>::const_iterator ParticleData::begin_deactivated() const {
     return cbegin_deactivated();
 }
 
-std::vector<char>::iterator SingleCPUParticleData::end_deactivated() {
+std::vector<char>::iterator ParticleData::end_deactivated() {
     return deactivated->begin() + deactivated_index;
 }
 
-std::vector<char>::const_iterator SingleCPUParticleData::end_deactivated() const {
+std::vector<char>::const_iterator ParticleData::end_deactivated() const {
     return cend_deactivated();
 }
 
-std::vector<char>::const_iterator SingleCPUParticleData::cend_deactivated() const {
+std::vector<char>::const_iterator ParticleData::cend_deactivated() const {
     return deactivated->cbegin() + deactivated_index;
 }
 
-std::vector<char>::const_iterator SingleCPUParticleData::cbegin_deactivated() const {
+std::vector<char>::const_iterator ParticleData::cbegin_deactivated() const {
     return deactivated->cbegin();
 }
 
-void SingleCPUParticleData::deactivateMarkedNoSet() {
+void ParticleData::deactivateMarkedNoSet() {
     if (n_marked == 0) return;
     // sanity check: the deactivated_index is pointing to the
     // first (real) deactivated particle, i.e., marks the end of the
@@ -396,7 +396,7 @@ void SingleCPUParticleData::deactivateMarkedNoSet() {
     n_marked = 0;
 }
 
-void SingleCPUParticleData::deactivateMarkedSet() {
+void ParticleData::deactivateMarkedSet() {
     // if we havent marked anything, return
     if (markedForDeactivation->size() == 0) return;
     // sanity check: the deactivated_index is pointing to the

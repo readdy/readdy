@@ -39,7 +39,7 @@ struct NeighborListTest : ::testing::Test {
 
 TEST(NeighborList, Naive) {
     unsigned int n_particles = 20;
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     for (unsigned int i = 0; i < n_particles; ++i) {
         data.addParticle({(double) i, (double) i, (double) i, 5});
     }
@@ -73,7 +73,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     // now create three particles. The resulting neighborlist should contain three pairs
     const auto threeParticles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA)};
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(threeParticles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 3);
@@ -104,7 +104,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA),
             m::Particle(0, 1.6, -1.6, typeIdA), m::Particle(-1.6, 0, 1.6, typeIdA), m::Particle(1.6, -1.6, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 15);
@@ -131,7 +131,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(-2.1, -2.4, -2.4, typeIdA), m::Particle(1, 1, 1, typeIdA), m::Particle(2.1, 2.4, 2.4, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 2);
@@ -155,7 +155,7 @@ TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 1);

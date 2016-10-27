@@ -76,7 +76,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     auto pairs = list.pairs.get();
@@ -97,7 +97,7 @@ TEST_F(TestNeighborList, OneDirection) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     auto pairs = list.pairs.get();
@@ -123,7 +123,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
             m::Particle(0, .3, -.3, typeIdA), m::Particle(-.3, 0, .3, typeIdA), m::Particle(.3, -.3, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     auto pairs = list.pairs.get();

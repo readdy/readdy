@@ -14,7 +14,7 @@
 #include <readdy/model/KernelStateModel.h>
 #include <memory>
 #include <readdy/model/Vec3.h>
-#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
+#include <readdy/kernel/singlecpu/model/ParticleData.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
 
@@ -54,7 +54,7 @@ public:
 
     SingleCPUKernelStateModel &operator=(SingleCPUKernelStateModel &&rhs);
 
-    virtual readdy::kernel::singlecpu::model::SingleCPUParticleData *getParticleData() const;
+    virtual readdy::kernel::singlecpu::model::ParticleData *getParticleData() const;
 
     virtual void setNeighborList(std::unique_ptr<model::SingleCPUNeighborList> ptr);
 

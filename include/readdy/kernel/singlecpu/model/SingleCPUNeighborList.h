@@ -12,7 +12,7 @@
 
 #include <unordered_set>
 #include <readdy/model/KernelContext.h>
-#include "SingleCPUParticleData.h"
+#include "ParticleData.h"
 #include <readdy/common/numeric.h>
 
 namespace readdy {
@@ -74,14 +74,14 @@ struct SingleCPUNeighborListContainer {
 
     virtual const_iter_type cend() const { return pairs->cend(); };
 
-    virtual void create(const SingleCPUParticleData &data) = 0;
+    virtual void create(const ParticleData &data) = 0;
 
 protected:
     std::unique_ptr<container> pairs = std::make_unique<container>();
 };
 
 struct NaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<> {
-    virtual void create(const SingleCPUParticleData &data) override;
+    virtual void create(const ParticleData &data) override;
 
     // ctor and dtor
     NaiveSingleCPUNeighborList();
@@ -133,7 +133,7 @@ public:
     NotThatNaiveSingleCPUNeighborList(const context_t *const context) : ctx(context) {
     }
 
-    virtual void create(const SingleCPUParticleData &data) override {
+    virtual void create(const ParticleData &data) override {
         setupBoxes();
         fillBoxes(data);
     }
@@ -195,7 +195,7 @@ public:
         }
     }
 
-    virtual void fillBoxes(const SingleCPUParticleData &data) {
+    virtual void fillBoxes(const ParticleData &data) {
         const auto simBoxSize = ctx->getBoxSize();
         if (maxCutoff > 0) {
 

@@ -20,6 +20,9 @@ struct NeighborList::Box {
     const box_index id = 0;
     const bool enoughBoxes;
 
+    // dirty flag indicating whether the box and its neighboring boxes have to be re-created
+    bool dirty = true;
+
     Box(box_index i, box_index j, box_index k, const std::array<box_index, 3> &nBoxes)
             : id(k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]),
               enoughBoxes(nBoxes[0] >= 5 && nBoxes[1] >= 5 && nBoxes[2] >= 5) {
@@ -240,7 +243,7 @@ NeighborList::Box *NeighborList::getBox(const readdy::model::Particle::pos_type 
 
 NeighborList::~NeighborList() = default;
 
-NeighborListElement::NeighborListElement(const index_t idx, const double d2) : idx(idx), d2(d2) {}
+Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {}
 
 }
 }

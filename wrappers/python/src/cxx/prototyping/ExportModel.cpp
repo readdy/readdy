@@ -30,7 +30,7 @@ using rdy_scpu_model_wrap_t = readdy::rpy::Model;
 
 using rdy_scpu_nl_t = readdy::kernel::singlecpu::model::SingleCPUNeighborList;
 using rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
-using rdy_scpu_pd_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
+using rdy_scpu_pd_t = readdy::kernel::singlecpu::model::ParticleData;
 
 using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
 using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;

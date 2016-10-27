@@ -14,7 +14,7 @@
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
+#include <readdy/kernel/singlecpu/model/ParticleData.h>
 #include <readdy/kernel/cpu/model/NeighborList.h>
 #include <readdy/kernel/cpu/util/Config.h>
 
@@ -46,7 +46,7 @@ public:
 
     virtual double getEnergy() const override;
 
-    readdy::kernel::singlecpu::model::SingleCPUParticleData *const getParticleData() const;
+    readdy::kernel::singlecpu::model::ParticleData *const getParticleData() const;
 
     model::NeighborList *const getNeighborList() const;
 

@@ -7,7 +7,7 @@
  * @date 13.07.16
  */
 
-#include <readdy/kernel/singlecpu/model/SingleCPUParticleData.h>
+#include <readdy/kernel/singlecpu/model/ParticleData.h>
 #include <readdy/kernel/cpu/CPUStateModel.h>
 
 namespace readdy {
@@ -16,7 +16,7 @@ namespace cpu {
 
 struct CPUStateModel::Impl {
     readdy::model::KernelContext *context;
-    std::unique_ptr<readdy::kernel::singlecpu::model::SingleCPUParticleData> particleData;
+    std::unique_ptr<readdy::kernel::singlecpu::model::ParticleData> particleData;
     std::unique_ptr<readdy::kernel::cpu::model::NeighborList> neighborList;
     double currentEnergy = 0;
 };
@@ -26,7 +26,7 @@ void CPUStateModel::calculateForces() {
     // update forces and energy order 1 potentials
     std::vector<double> energyUpdate;
     energyUpdate.reserve(config->nThreads);
-    using data_t = readdy::kernel::singlecpu::model::SingleCPUParticleData;
+    using data_t = readdy::kernel::singlecpu::model::ParticleData;
     {
         std::vector<util::ScopedThread> threads;
         threads.reserve(config->nThreads);
@@ -169,11 +169,11 @@ double CPUStateModel::getEnergy() const {
 CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config)
         : pimpl(std::make_unique<Impl>()), config(config) {
     pimpl->context = context;
-    pimpl->particleData = std::make_unique<readdy::kernel::singlecpu::model::SingleCPUParticleData>(0, false);
+    pimpl->particleData = std::make_unique<readdy::kernel::singlecpu::model::ParticleData>(0, false);
     pimpl->neighborList = std::make_unique<model::NeighborList>(context, config);
 }
 
-readdy::kernel::singlecpu::model::SingleCPUParticleData *const CPUStateModel::getParticleData() const {
+readdy::kernel::singlecpu::model::ParticleData *const CPUStateModel::getParticleData() const {
     return pimpl->particleData.get();
 }
 
