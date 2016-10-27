@@ -177,7 +177,7 @@ readdy::kernel::singlecpu::model::SingleCPUParticleData *const CPUStateModel::ge
     return pimpl->particleData.get();
 }
 
-const model::NeighborList *const CPUStateModel::getNeighborList() const {
+model::NeighborList *const CPUStateModel::getNeighborList() const {
     return pimpl->neighborList.get();
 }
 

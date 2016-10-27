@@ -23,23 +23,22 @@ namespace kernel {
 namespace cpu {
 namespace model {
 struct NeighborListElement {
-
     using index_t = readdy::model::Particle::id_type;
-
-    const index_t idx;
-    const double d2;
+    index_t idx;
+    double d2;
 
     NeighborListElement(const index_t idx, const double d2);
 };
 
 class NeighborList {
-    struct Box;
 
 public:
     using box_index = unsigned short;
     using signed_box_index = typename std::make_signed<box_index>::type;
+    using particle_index = NeighborListElement::index_t;
     using neighbor_t = NeighborListElement;
-    using container_t = std::unordered_map<NeighborListElement::index_t, std::vector<neighbor_t>>;
+    using container_t = std::unordered_map<particle_index, std::vector<neighbor_t>>;
+    using data_t = singlecpu::model::SingleCPUParticleData;
 
     std::unique_ptr<container_t> pairs = std::make_unique<container_t>();
 
@@ -53,11 +52,20 @@ public:
 
     void clear();
 
-    virtual void fillBoxes(const singlecpu::model::SingleCPUParticleData &data);
+    virtual void fillBoxes(const data_t &data);
 
-    virtual void create(const readdy::kernel::singlecpu::model::SingleCPUParticleData &data);
+    virtual void create(const data_t &data);
+
+    void remove(const particle_index);
+    void insert(const data_t& data, const particle_index);
 
 protected:
+    struct Box;
+    const readdy::model::KernelContext *const ctx;
+
+    using box_size_t = decltype(ctx->getBoxSize());
+
+    box_size_t simBoxSize;
 
     std::vector<Box> boxes;
     std::array<box_index, 3> nBoxes{{0, 0, 0}};
@@ -65,9 +73,9 @@ protected:
     double maxCutoff = 0;
     util::Config const *const config;
 
+    Box *getBox(const readdy::model::Particle::pos_type& pos);
     Box *getBox(signed_box_index i, signed_box_index j, signed_box_index k);
 
-    const readdy::model::KernelContext *const ctx;
 };
 }
 }

@@ -16,7 +16,7 @@ namespace model {
 
 struct NeighborList::Box {
     std::vector<Box *> neighbors{};
-    std::vector<NeighborListElement::index_t> particleIndices{};
+    std::vector<particle_index> particleIndices{};
     const box_index id = 0;
     const bool enoughBoxes;
 
@@ -42,10 +42,9 @@ struct NeighborList::Box {
 };
 
 NeighborList::NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config)
-        : ctx(context), config(config), boxes({}) {}
+        : ctx(context), config(config), boxes({}), simBoxSize(ctx->getBoxSize()) {}
 
 void NeighborList::setupBoxes() {
-    const auto simBoxSize = ctx->getBoxSize();
     if (boxes.empty()) {
         double maxCutoff = 0;
         for (auto &&e : ctx->getAllOrder2RegisteredPotentialTypes()) {
@@ -101,8 +100,7 @@ void NeighborList::clear() {
     boxes.clear();
 }
 
-void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data) {
-    const auto simBoxSize = ctx->getBoxSize();
+void NeighborList::fillBoxes(const data_t &data) {
     if (maxCutoff > 0) {
 
         for (auto &&box : boxes) {
@@ -111,16 +109,10 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
         pairs->clear();
 
         auto it_pos = data.cbegin_positions();
-        NeighborListElement::index_t idx = 0;
-        const auto shift = readdy::model::Vec3(.5 * simBoxSize[0], .5 * simBoxSize[1],
-                                               .5 * simBoxSize[2]);
+        particle_index idx = 0;
         while (it_pos != data.cend_positions()) {
             const auto pos = *it_pos;
-            const auto pos_shifted = *it_pos + shift;
-            const box_index i = static_cast<const box_index>(floor((pos[0] + .5 * simBoxSize[0]) / boxSize[0]));
-            const box_index j = static_cast<const box_index>(floor(pos_shifted[1] / boxSize[1]));
-            const box_index k = static_cast<const box_index>(floor(pos_shifted[2] / boxSize[2]));
-            auto box = getBox(i, j, k);
+            auto box = getBox(pos);
             if (box) {
                 box->particleIndices.push_back(idx);
             }
@@ -128,8 +120,6 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
             ++idx;
             ++it_pos;
         }
-
-
         {
             const auto size = boxes.size();
             const std::size_t grainSize = size / config->nThreads;
@@ -138,11 +128,11 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
                 const auto d2 = ctx->getDistSquaredFun();
                 for (auto _b = begin; _b < end; ++_b) {
                     const auto &box = boxes[_b];
-                    for (NeighborListElement::index_t i = 0; i < box.particleIndices.size(); ++i) {
+                    for (particle_index i = 0; i < box.particleIndices.size(); ++i) {
                         const auto pI = box.particleIndices[i];
                         if (pairs->find(pI) != pairs->end()) {
                             const auto pos = *(data.begin_positions() + pI);
-                            for (NeighborListElement::index_t j = 0; j < box.particleIndices.size(); ++j) {
+                            for (particle_index j = 0; j < box.particleIndices.size(); ++j) {
                                 if (i != j) {
                                     const auto pJ = box.particleIndices[j];
                                     const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
@@ -180,7 +170,8 @@ void NeighborList::fillBoxes(const singlecpu::model::SingleCPUParticleData &data
     }
 }
 
-void NeighborList::create(const readdy::kernel::singlecpu::model::SingleCPUParticleData &data) {
+void NeighborList::create(const data_t &data) {
+    simBoxSize = ctx->getBoxSize();
     setupBoxes();
     fillBoxes(data);
 }
@@ -194,6 +185,57 @@ NeighborList::Box *NeighborList::getBox(signed_box_index i, signed_box_index j, 
     if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nBoxes[2]);
     else if (k < 0 || k >= nBoxes[2]) return nullptr;
     return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
+}
+
+void NeighborList::remove(const particle_index idx) {
+    auto neighbors = (*pairs)[idx];
+    for (auto &&neighbor : neighbors) {
+        auto neighbors2 = (*pairs)[neighbor.idx];
+        std::remove_if(neighbors2.begin(), neighbors2.end(), [idx](const neighbor_t &n) {
+            return n.idx == idx;
+        });
+    }
+    pairs->erase(idx);
+}
+
+void NeighborList::insert(const data_t &data, const particle_index idx) {
+    const auto d2 = ctx->getDistSquaredFun();
+    const auto pos = *(data.begin_positions() + idx);
+    const auto cutoffSquared = maxCutoff * maxCutoff;
+    auto box = getBox(pos);
+    if (box) {
+        box->particleIndices.push_back(idx);
+        pairs->emplace(idx, std::vector<neighbor_t>());
+
+        for (particle_index j = 0; j < box->particleIndices.size(); ++j) {
+            if (idx != j) {
+                const auto pJ = box->particleIndices[j];
+                const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
+                if (distSquared < cutoffSquared) {
+                    (*pairs)[idx].push_back({pJ, distSquared});
+                    (*pairs)[pJ].push_back({idx, distSquared});
+                }
+            }
+        }
+        for (auto &&neighboringBox : box->neighbors) {
+            for (const auto &pJ : neighboringBox->particleIndices) {
+                const auto distSquared = d2(pos, *(data.begin_positions() + pJ));
+                if (distSquared < cutoffSquared) {
+                    (*pairs)[idx].push_back({pJ, distSquared});
+                    (*pairs)[pJ].push_back({idx, distSquared});
+                }
+            }
+        }
+    } else {
+        log::console()->error("could not assign particle (index={}) to any box!", idx);
+    }
+}
+
+NeighborList::Box *NeighborList::getBox(const readdy::model::Particle::pos_type &pos) {
+    const box_index i = static_cast<const box_index>(floor((pos[0] + .5 * simBoxSize[0]) / boxSize[0]));
+    const box_index j = static_cast<const box_index>(floor((pos[1] + .5 * simBoxSize[1]) / boxSize[1]));
+    const box_index k = static_cast<const box_index>(floor((pos[2] + .5 * simBoxSize[2]) / boxSize[2]));
+    return getBox(i, j, k);
 }
 
 NeighborList::~NeighborList() = default;

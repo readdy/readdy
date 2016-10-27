@@ -48,7 +48,7 @@ public:
 
     readdy::kernel::singlecpu::model::SingleCPUParticleData *const getParticleData() const;
 
-    const model::NeighborList *const getNeighborList() const;
+    model::NeighborList *const getNeighborList() const;
 
     virtual void clearNeighborList() override;
 

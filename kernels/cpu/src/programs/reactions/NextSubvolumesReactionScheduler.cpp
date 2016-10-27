@@ -90,7 +90,6 @@ void NextSubvolumes::setUpGrid() {
 }
 
 void NextSubvolumes::assignParticles() {
-    const auto simBoxSize = kernel->getKernelContext().getBoxSize();
     const auto data = kernel->getKernelStateModel().getParticleData();
     std::for_each(cells.begin(), cells.end(), [](GridCell &cell) {
         cell.particles.clear();
@@ -117,7 +116,7 @@ void NextSubvolumes::evaluateReactions() {
     std::vector<GridCell *>::size_type n_cells_done = 0;
     const auto& ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
-    const auto neighbor_list = kernel->getKernelStateModel().getNeighborList();
+    auto neighbor_list = kernel->getKernelStateModel().getNeighborList();
 
     const auto comparator = [](const GridCell *c1, const GridCell *c2) {
         return c1->cellRate < c2->cellRate;
@@ -162,16 +161,40 @@ void NextSubvolumes::evaluateReactions() {
                                     if (reaction->getNProducts() == 2) {
                                         auto c2Out = getCell(pOut2.getPos());
                                         data->addParticle(pOut2);
+                                        neighbor_list->insert(*data, data->size()-1);
                                         ++c2Out->typeCounts[pOut2.getType()];
                                         c2Out->particles[pOut2.getType()].push_back(data->size()-1);
                                     }
                                 } else {
                                     data->removeParticle(p1_idx);
+                                    neighbor_list->remove(p1_idx);
                                 }
                                 break;
                             }
                             case 2: {
                                 auto reaction = ctx.getOrder2Reactions(event.type1, event.type2)[event.reactionIndex];
+                                const auto findType2 = particles.find(event.type2);
+                                if(findType2 != particles.end()) {
+                                    const auto& particlesType2 = findType2->second;
+                                    const auto p2_it = rnd::random_element(particlesType2.begin(), particlesType2.end());
+                                    const auto p2_idx = *p2_it;
+                                    const auto p2 = (*data)[p2_idx];
+
+                                    reaction->perform(p1, p2, pOut1, pOut2);
+                                    performedSomething = true;
+
+                                    auto c1Out = getCell(pOut1.getPos());
+                                    ++c1Out->typeCounts[pOut1.getType()];
+                                    c1Out->particles[pOut1.getType()].push_back(p2_idx);
+                                    if (reaction->getNProducts() == 2) {
+                                        auto c2Out = getCell(pOut2.getPos());
+                                        data->addParticle(pOut2);
+                                        neighbor_list->insert(*data, data->size()-1);
+                                        ++c2Out->typeCounts[pOut2.getType()];
+                                        c2Out->particles[pOut2.getType()].push_back(data->size()-1);
+                                    }
+
+                                }
                                 break;
                             }
                             default: {
@@ -185,6 +208,10 @@ void NextSubvolumes::evaluateReactions() {
                 }
             } else {
                 log::console()->error("The event was not set previously, should not happen! (?)");
+            }
+
+            if(performedSomething) {
+                // todo do something
             }
 
         } else {
