@@ -28,11 +28,13 @@ public:
     using index_t = std::vector<particle_type::id_type>::size_type;
 
     struct Entry {
-        particle_type::id_type id;
-        particle_type::pos_type pos;
-        readdy::model::Vec3 force;
-        particle_type::type_type type;
-        bool deactivated;
+        particle_type::id_type id; //4
+        particle_type::pos_type pos; // 4 + 24 = 28
+        readdy::model::Vec3 force; // 28 + 24 = 52
+        particle_type::type_type type; // 52 + 8 = 60
+        bool deactivated; // 60 + 1 = 61
+    private:
+        bool padding[3]; // 61 + 3 = 64
     };
 
     // ctor / dtor

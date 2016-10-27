@@ -18,6 +18,6 @@ namespace log = readdy::log;
 
     TEST(Vec3, SizeOfVec3) {
         vec_t vec(0,0,0);
-        EXPECT_EQ(8*3, sizeof(vec));
+        EXPECT_EQ(8*3, sizeof(vec)) << "a vector should have exactly 24 bytes";
     }
 }
