@@ -78,6 +78,8 @@ public:
 
     void addEntries(const std::vector<Entry> &entries);
 
+    index_t addEntry(Entry entry);
+
     void addParticles(const std::vector<particle_type> &particles);
 
     readdy::model::Particle getParticle(const index_t index) const;

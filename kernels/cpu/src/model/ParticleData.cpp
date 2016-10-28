@@ -86,13 +86,19 @@ readdy::model::Particle ParticleData::toParticle(const ParticleData::Entry &e) c
 
 void ParticleData::addEntries(const std::vector<ParticleData::Entry> &newEntries) {
     for(const auto& entry : newEntries) {
-        if(!blanks.empty()) {
-            const auto idx = blanks.top();
-            blanks.pop();
-            entries[idx] = entry;
-        } else {
-            entries.push_back(entry);
-        }
+        addEntry(entry);
+    }
+}
+
+ParticleData::index_t ParticleData::addEntry(ParticleData::Entry entry) {
+    if(!blanks.empty()) {
+        const auto idx = blanks.top();
+        blanks.pop();
+        entries[idx] = std::move(entry);
+        return idx;
+    } else {
+        entries.push_back(std::move(entry));
+        return entries.size()-1;
     }
 }
 

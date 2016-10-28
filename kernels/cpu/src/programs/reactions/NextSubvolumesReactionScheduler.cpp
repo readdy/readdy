@@ -7,6 +7,7 @@
  * @date 09.09.16
  */
 
+#include <readdy/kernel/cpu/programs/reactions/ReactionUtils.h>
 #include "readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h"
 
 using particle_type = readdy::model::Particle;
@@ -90,6 +91,7 @@ void NextSubvolumes::setUpGrid() {
 }
 
 void NextSubvolumes::assignParticles() {
+    // todo this can be easily parallelized
     const auto data = kernel->getKernelStateModel().getParticleData();
     std::for_each(cells.begin(), cells.end(), [](GridCell &cell) {
         cell.particles.clear();
@@ -98,16 +100,15 @@ void NextSubvolumes::assignParticles() {
     });
 
     unsigned long idx = 0;
-    auto it_type = data->begin_types();
-    for (auto it = data->begin_positions(); it != data->end_positions(); ++it) {
-        auto box = getCell(*it);
-        if (box) {
-            const auto type = *it_type;
-            box->particles[type].push_back(idx);
-            ++(box->typeCounts[type]);
+    for (const auto& e : data->entries) {
+        if(!e.is_deactivated()) {
+            auto box = getCell(e.pos);
+            if (box) {
+                box->particles[e.type].push_back(idx);
+                ++(box->typeCounts[e.type]);
+            }
         }
         ++idx;
-        ++it_type;
     }
 
 }
@@ -139,31 +140,28 @@ void NextSubvolumes::evaluateReactions() {
                     if (!particlesType1.empty()) {
                         const auto p1_it = rnd::random_element(particlesType1.begin(), particlesType1.end());
                         const auto p1_idx = *p1_it;
-                        const auto p1 = (*data)[p1_idx];
-                        particle_type pOut1{}, pOut2{};
+                        auto& p1_entry = data->entries[p1_idx];
                         // todo execute the reaction, and update cells and event queue (see slides)
                         switch (event.order) {
                             case 1: {
                                 // todo update neighbor list with this particle
+                                data_t::entries_t newEntries;
                                 auto reaction = ctx.getOrder1Reactions(event.type1)[event.reactionIndex];
-                                reaction->perform(p1, p1, pOut1, pOut2);
+                                performReaction(*data, p1_entry, p1_entry, p1_idx, p1_idx, newEntries, reaction);
                                 performedSomething = true;
                                 --currentCell->typeCounts[event.type1];
                                 currentCell->particles[event.type1].erase(p1_it);
                                 if (reaction->getNProducts() > 0) {
-                                    *(data->begin_positions() + p1_idx) = pOut1.getPos();
-                                    *(data->begin_types() + p1_idx) = pOut1.getType();
-                                    *(data->begin_ids() + p1_idx) = pOut1.getId();
-
-                                    auto c1Out = getCell(pOut1.getPos());
-                                    ++c1Out->typeCounts[pOut1.getType()];
-                                    c1Out->particles[pOut1.getType()].push_back(p1_idx);
+                                    auto c1Out = getCell(p1_entry.pos);
+                                    ++c1Out->typeCounts[p1_entry.type];
+                                    c1Out->particles[p1_entry.type].push_back(p1_idx);
                                     if (reaction->getNProducts() == 2) {
-                                        auto c2Out = getCell(pOut2.getPos());
-                                        data->addParticle(pOut2);
-                                        neighbor_list->insert(*data, data->size()-1);
-                                        ++c2Out->typeCounts[pOut2.getType()];
-                                        c2Out->particles[pOut2.getType()].push_back(data->size()-1);
+                                        const auto& entry2 = newEntries.back();
+                                        auto c2Out = getCell(entry2.pos);
+                                        auto idx = data->addEntry(entry2);
+                                        neighbor_list->insert(*data, idx);
+                                        ++c2Out->typeCounts[entry2.type];
+                                        c2Out->particles[entry2.type].push_back(data->size()-1);
                                     }
                                 } else {
                                     data->removeParticle(p1_idx);
@@ -172,7 +170,7 @@ void NextSubvolumes::evaluateReactions() {
                                 break;
                             }
                             case 2: {
-                                auto reaction = ctx.getOrder2Reactions(event.type1, event.type2)[event.reactionIndex];
+                                /*auto reaction = ctx.getOrder2Reactions(event.type1, event.type2)[event.reactionIndex];
                                 const auto findType2 = particles.find(event.type2);
                                 if(findType2 != particles.end()) {
                                     const auto& particlesType2 = findType2->second;
@@ -194,7 +192,7 @@ void NextSubvolumes::evaluateReactions() {
                                         c2Out->particles[pOut2.getType()].push_back(data->size()-1);
                                     }
 
-                                }
+                                }*/
                                 break;
                             }
                             default: {

@@ -76,13 +76,12 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
-    scpum::ParticleData data;
+    readdy::kernel::cpu::model::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
-    auto pairs = list.pairs.get();
-    EXPECT_EQ(getNumberPairs(pairs), 2);
-    EXPECT_TRUE(isPairInList(pairs, 0, 1));
-    EXPECT_TRUE(isPairInList(pairs, 1, 0));
+    EXPECT_EQ(getNumberPairs(&list.pairs), 2);
+    EXPECT_TRUE(isPairInList(&list.pairs, 0, 1));
+    EXPECT_TRUE(isPairInList(&list.pairs, 1, 0));
 }
 
 TEST_F(TestNeighborList, OneDirection) {
@@ -97,10 +96,10 @@ TEST_F(TestNeighborList, OneDirection) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
-    scpum::ParticleData data;
+    readdy::kernel::cpu::model::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
-    auto pairs = list.pairs.get();
+    auto pairs = &list.pairs;
     EXPECT_EQ(getNumberPairs(pairs), 4);
     EXPECT_TRUE(isPairInList(pairs, 0, 2));
     EXPECT_TRUE(isPairInList(pairs, 2, 0));
@@ -123,10 +122,10 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
             m::Particle(0, .3, -.3, typeIdA), m::Particle(-.3, 0, .3, typeIdA), m::Particle(.3, -.3, 0, typeIdA)
     };
-    scpum::ParticleData data;
+    readdy::kernel::cpu::model::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
-    auto pairs = list.pairs.get();
+    auto pairs = &list.pairs;
     EXPECT_EQ(getNumberPairs(pairs), 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {

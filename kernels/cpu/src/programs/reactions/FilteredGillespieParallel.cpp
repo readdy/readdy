@@ -10,19 +10,21 @@
  * @date 20.10.16
  */
 
+using data_t = readdy::kernel::cpu::model::ParticleData;
+
 readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::FilteredGillespieParallel(
         const readdy::kernel::cpu::CPUKernel *const kernel) : GillespieParallel(kernel) {}
 
 void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<event_t>>;
-    using promise_new_particles_t = std::promise<std::vector<particle_t>>;
+    using promise_new_particles_t = std::promise<data_t::entries_t>;
 
-    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
+    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t* data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
 
         double localAlpha = 0.0;
         std::vector<event_t> localEvents{};
         std::set<event_t> boxoverlappingEvents {};
-        gatherEvents(kernel, box.particleIndices, nl, data, localAlpha, localEvents);
+        gatherEvents(kernel, box.particleIndices, nl, *data, localAlpha, localEvents);
         {
             // handle events
             newParticles.set_value(handleEventsGillespie(kernel, false, approximateRate, std::move(localEvents)));
@@ -31,7 +33,7 @@ void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handle
     };
 
     std::vector<std::future<std::set<event_t>>> updates;
-    std::vector<std::future<std::vector<particle_t>>> newParticles;
+    std::vector<std::future<data_t::entries_t>> newParticles;
     {
         //readdy::util::Timer t ("\t run threads");
         std::vector<util::scoped_thread> threads;
@@ -67,18 +69,16 @@ void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handle
         auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
-        kernel->getKernelStateModel().getParticleData()->deactivateMarked();
-
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         for (auto &&future : newParticles) {
             auto particles = future.get();
             // reposition particles to respect the periodic b.c.
             std::for_each(particles.begin(), particles.end(),
-                          [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
-            kernel->getKernelStateModel().getParticleData()->addParticles(particles);
+                          [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
+            kernel->getKernelStateModel().getParticleData()->addEntries(particles);
         }
         std::for_each(newProblemParticles.begin(), newProblemParticles.end(),
-                      [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
-        kernel->getKernelStateModel().getParticleData()->addParticles(newProblemParticles);
+                      [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
+        kernel->getKernelStateModel().getParticleData()->addEntries(newProblemParticles);
     }
 }

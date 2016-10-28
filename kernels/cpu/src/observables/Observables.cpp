@@ -77,12 +77,9 @@ void NParticles::evaluate()  {
         const auto &pd = kernel->getKernelStateModel().getParticleData();
         for(const auto& e : pd->entries) {
             if(!e.is_deactivated()) {
-                unsigned int idx = 0;
-                for(const auto type : typesToCount) {
-                    if(type == e.type) {
-                        ++resultVec[idx];
-                        break;
-                    }
+                auto typeIt = std::find(typesToCount.begin(), typesToCount.end(), e.type);
+                if(typeIt != typesToCount.end()) {
+                    ++resultVec[typeIt - typesToCount.begin()];
                 }
             }
         }

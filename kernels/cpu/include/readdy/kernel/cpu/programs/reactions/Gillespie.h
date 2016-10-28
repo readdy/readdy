@@ -43,7 +43,7 @@ public:
 
         // reposition particles to respect the periodic b.c.
         std::for_each(newParticles.begin(), newParticles.end(),
-                      [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
+                      [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
 
         // update data structure
         data->addEntries(newParticles);

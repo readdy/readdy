@@ -134,13 +134,15 @@ void GillespieParallel::fillBoxes() {
     const auto simBoxSize = kernel->getKernelContext().getBoxSize();
     const auto nBoxes = boxes.size();
     std::size_t idx = 0;
-    for (auto it = particleData->begin_positions(); it < particleData->end_positions(); ++it) {
-        unsigned int boxIndex = static_cast<unsigned int>(
-                floor(((*it)[longestAxis] + .5 * simBoxSize[longestAxis]) / boxWidth)
-        );
-        if (boxIndex < nBoxes) {
-            auto &box = boxes[boxIndex];
-            box.particleIndices.push_back(idx);
+    for (const auto& e : particleData->entries) {
+        if(!e.is_deactivated()) {
+            unsigned int boxIndex = static_cast<unsigned int>(
+                    floor((e.pos[longestAxis] + .5 * simBoxSize[longestAxis]) / boxWidth)
+            );
+            if (boxIndex < nBoxes) {
+                auto &box = boxes[boxIndex];
+                box.particleIndices.push_back(idx);
+            }
         }
         ++idx;
     }
@@ -153,9 +155,9 @@ void GillespieParallel::clear() {
 
 void GillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<unsigned long>>;
-    using promise_new_particles_t = std::promise<std::vector<particle_t>>;
+    using promise_new_particles_t = std::promise<data_t::entries_t>;
 
-    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t data, nl_t nl, promise_t update,
+    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t* data, nl_t nl, promise_t update,
                          promise_new_particles_t newParticles) {
         std::set<unsigned long> problematic{};
         double localAlpha = 0.0;
@@ -164,7 +166,7 @@ void GillespieParallel::handleBoxReactions() {
         // a reaction with a particle in another box)
         {
             for (const auto pIdx : box.particleIndices) {
-                findProblematicParticles(pIdx, box, ctx, data, nl, problematic);
+                findProblematicParticles(pIdx, box, ctx, *data, nl, problematic);
             }
         }
         // step 2: remove the problematic ones out of the box and gather remaining events
@@ -175,7 +177,7 @@ void GillespieParallel::handleBoxReactions() {
                                        return problematic.find(x) != problematic.end();
                                    }), box.particleIndices.end()
             );
-            gatherEvents(kernel, box.particleIndices, nl, data, localAlpha, localEvents);
+            gatherEvents(kernel, box.particleIndices, nl, *data, localAlpha, localEvents);
             // handle events
             {
                 newParticles.set_value(handleEventsGillespie(kernel, false, approximateRate, std::move(localEvents)));
@@ -186,7 +188,7 @@ void GillespieParallel::handleBoxReactions() {
     };
 
     std::vector<std::future<std::set<unsigned long>>> updates;
-    std::vector<std::future<std::vector<particle_t>>> newParticles;
+    std::vector<std::future<data_t::entries_t>> newParticles;
     {
         //readdy::util::Timer t ("\t run threads");
         std::vector<util::scoped_thread> threads;
@@ -216,60 +218,56 @@ void GillespieParallel::handleBoxReactions() {
             auto &&local_problematic = update.get();
             n_local_problematic += local_problematic.size();
             gatherEvents(kernel, std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
-                                kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
+                                *kernel->getKernelStateModel().getParticleData(), alpha, evilEvents);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
         auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
-
-        kernel->getKernelStateModel().getParticleData()->deactivateMarked();
 
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         for (auto &&future : newParticles) {
             auto particles = future.get();
             // reposition particles to respect the periodic b.c.
             std::for_each(particles.begin(), particles.end(),
-                          [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
-            kernel->getKernelStateModel().getParticleData()->addParticles(particles);
+                          [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
+            kernel->getKernelStateModel().getParticleData()->addEntries(particles);
         }
         std::for_each(newProblemParticles.begin(), newProblemParticles.end(),
-                      [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
-        kernel->getKernelStateModel().getParticleData()->addParticles(newProblemParticles);
+                      [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
+        kernel->getKernelStateModel().getParticleData()->addEntries(newProblemParticles);
     }
 
 }
 
 void GillespieParallel::findProblematicParticles(
         const unsigned long idx, const SlicedBox &box, ctx_t ctx,
-        data_t data, nl_t nl, std::set<unsigned long> &problematic
+        const data_t& data, nl_t nl, std::set<unsigned long> &problematic
 ) const {
     if (problematic.find(idx) != problematic.end()) {
         return;
     }
 
-    const auto pPos = *(data->begin_positions() + idx);
+    const auto& pEntry = data.entries[idx];
     // we only want out most particles here, since the transitively dependent particles
     // are resolved within this method and therefore have no significance as input parameter
-    if (box.getShellIndex(pPos) > 0) {
+    if (box.getShellIndex(pEntry.pos) > 0) {
         //BOOST_LOG_TRIVIAL(debug) << "--> ignoring particle " << (*data)[idx] << " with shell idx " << box.getShellIndex(pPos);
         return;
     }
 
     std::queue<unsigned long> bfs{};
 
-    auto nlIt = nl->pairs->find(idx);
-    if (nlIt != nl->pairs->end()) {
-        const auto pType = *(data->begin_types() + idx);
+    auto nlIt = nl->pairs.find(idx);
+    if (nlIt != nl->pairs.end()) {
         for (const auto &neighbor : nlIt->second) {
-            const auto neighborType = *(data->begin_types() + neighbor.idx);
-            const auto &reactions = ctx.getOrder2Reactions(pType, neighborType);
+            const auto& neighborEntry = data.entries[neighbor.idx];
+            const auto &reactions = ctx.getOrder2Reactions(pEntry.type, neighborEntry.type);
             if (!reactions.empty()) {
-                const auto neighborPos = *(data->begin_positions() + neighbor.idx);
                 const auto distSquared = neighbor.d2;
                 for (const auto &r : reactions) {
                     if (r->getRate() > 0 && distSquared < r->getEductDistanceSquared()) {
                         const bool neighborProblematic = problematic.find(neighbor.idx) != problematic.end();
-                        if (neighborProblematic || !box.isInBox(neighborPos)) {
+                        if (neighborProblematic || !box.isInBox(neighborEntry.pos)) {
                             // we have a problematic particle!
                             problematic.insert(idx);
                             bfs.push(idx);
@@ -284,17 +282,14 @@ void GillespieParallel::findProblematicParticles(
     while (!bfs.empty()) {
         const auto x = bfs.front();
         bfs.pop();
-        const auto xPos = *(data->begin_positions() + x);
-        const auto x_shell_idx = box.getShellIndex(xPos);
-        auto neighIt = nl->pairs->find(x);
-        if (neighIt != nl->pairs->end()) {
+        const auto& xEntry = data.entries[x];
+        const auto x_shell_idx = box.getShellIndex(xEntry.pos);
+        auto neighIt = nl->pairs.find(x);
+        if (neighIt != nl->pairs.end()) {
             //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
-            const auto x_type = *(data->begin_types() + x);
             for (const auto &x_neighbor : neighIt->second) {
                 //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
-                const auto neighborType = *(data->begin_types() + x_neighbor.idx);
-                const auto neighborPos = *(data->begin_positions() + x_neighbor.idx);
-                const auto neighbor_shell_idx = box.getShellIndex(neighborPos);
+                const auto& neighborEntry = data.entries[x_neighbor.idx];
                 /*if(neighbor_shell_idx == 0) {
                     //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor was in outer shell, ignore";
                     continue;
@@ -302,9 +297,10 @@ void GillespieParallel::findProblematicParticles(
                     //BOOST_LOG_TRIVIAL(debug) << "\t ----> got neighbor with shell index " << neighbor_shell_idx;
                 }*/
                 //BOOST_LOG_TRIVIAL(debug) << "\t\t inBox=" <<box.isInBox(neighborPos) <<", shellabsdiff=" <<std::abs(x_shell_idx - neighbor_shell_idx);
-                if (box.isInBox(neighborPos) && std::abs(x_shell_idx - neighbor_shell_idx) <= 1.0) {
+                if (box.isInBox(neighborEntry.pos)
+                    && std::abs(x_shell_idx - box.getShellIndex(neighborEntry.pos)) <= 1.0) {
                     //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was in box and adjacent shell";
-                    const auto &reactions = ctx.getOrder2Reactions(x_type, neighborType);
+                    const auto &reactions = ctx.getOrder2Reactions(xEntry.type, neighborEntry.type);
                     if (!reactions.empty()) {
                         //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor had potentially conflicting reactions";
                         const bool alreadyProblematic = problematic.find(x_neighbor.idx) != problematic.end();

@@ -99,7 +99,7 @@ protected:
     void handleBoxReactions();
 
     void findProblematicParticles(const unsigned long idx, const SlicedBox &box, ctx_t ctx,
-                                  data_t data, nl_t nl, std::set<unsigned long> &problematic) const;
+                                  const data_t& data, nl_t nl, std::set<unsigned long> &problematic) const;
 
 };
 }
