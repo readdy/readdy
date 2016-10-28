@@ -193,6 +193,7 @@ void GillespieParallel::handleBoxReactions() {
         //readdy::util::Timer t ("\t run threads");
         std::vector<util::scoped_thread> threads;
         for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
+            // nboxes == nthreads
             promise_t promise;
             updates.push_back(promise.get_future());
             promise_new_particles_t promiseParticles;
