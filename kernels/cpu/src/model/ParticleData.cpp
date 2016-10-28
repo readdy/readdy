@@ -90,16 +90,33 @@ void ParticleData::addEntries(const std::vector<ParticleData::Entry> &newEntries
     }
 }
 
-ParticleData::index_t ParticleData::addEntry(ParticleData::Entry entry) {
+ParticleData::Entry* ParticleData::addEntry(ParticleData::Entry entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.top();
         blanks.pop();
         entries[idx] = std::move(entry);
-        return idx;
+        return &entries[idx];
     } else {
         entries.push_back(std::move(entry));
-        return entries.size()-1;
+        return &entries.back();
     }
+}
+
+void ParticleData::removeEntry(ParticleData::Entry *const entry) {
+    if(!entry->is_deactivated()) {
+        entry->deactivated = true;
+        blanks.push(getEntryIndex(entry));
+    }
+}
+
+ParticleData::index_t ParticleData::getEntryIndex(const ParticleData::Entry *const entry) const {
+    return static_cast<index_t>(entry - &*entries.begin());
+}
+
+void ParticleData::update(const std::pair<ParticleData::entries_t, std::vector<ParticleData::Entry *>> &update) {
+    const auto &newEntries = std::get<0>(update);
+    const auto &removedEntries = std::get<1>(update);
+    // todo!
 }
 
 ParticleData::~ParticleData() = default;

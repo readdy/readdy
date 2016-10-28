@@ -24,7 +24,7 @@ namespace kernel {
 namespace cpu {
 namespace model {
 struct Neighbor {
-    using index_t = readdy::model::Particle::id_type;
+    using index_t = readdy::kernel::cpu::model::ParticleData::Entry *;
     index_t idx;
     double d2;
 
@@ -53,9 +53,9 @@ public:
 
     void clear();
 
-    virtual void fillBoxes(const data_t &data);
+    virtual void fillBoxes(  data_t &data);
 
-    virtual void create(const data_t &data);
+    virtual void create(data_t &data);
 
     void remove(const particle_index);
 

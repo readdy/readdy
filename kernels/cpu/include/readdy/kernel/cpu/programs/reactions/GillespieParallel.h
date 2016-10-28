@@ -52,7 +52,7 @@ protected:
     unsigned int otherAxis1, otherAxis2;
 
     struct SlicedBox {
-        using particle_indices_t = std::vector<unsigned long>;
+        using particle_indices_t = std::vector<data_t::Entry*>;
         particle_indices_t particleIndices{};
         unsigned int id = 0;
         vec_t lowerLeftVertex, upperRightVertex;
@@ -98,8 +98,8 @@ protected:
      */
     void handleBoxReactions();
 
-    void findProblematicParticles(const unsigned long idx, const SlicedBox &box, ctx_t ctx,
-                                  const data_t& data, nl_t nl, std::set<unsigned long> &problematic) const;
+    void findProblematicParticles(data_t::Entry* entry, const SlicedBox &box, ctx_t ctx,
+                                  const data_t& data, nl_t nl, std::set<data_t::Entry*> &problematic) const;
 
 };
 }

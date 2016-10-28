@@ -23,6 +23,8 @@ namespace m = readdy::model;
 
 namespace {
 
+using data_t = cpu::model::ParticleData;
+
 struct TestNeighborList : ::testing::Test {
 
     std::unique_ptr<cpu::CPUKernel> kernel;
@@ -41,14 +43,16 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
-auto isPairInList = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs, unsigned long idx1,
-                       unsigned long idx2) {
+auto isPairInList = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs, data_t& data,
+                       unsigned long idx1, unsigned long idx2) {
     using neighbor_t = readdy::kernel::cpu::model::NeighborList::neighbor_t;
-    const auto neighborsIt = pairs->find(idx1);
+    const auto ptr = &*(data.entries.begin() + idx1);
+    const auto neighborsIt = pairs->find(ptr);
+    auto neighborEntry = &data.entries[idx2];
     if (neighborsIt != pairs->end()) {
         const auto neighbors = neighborsIt->second;
-        return std::find_if(neighbors.begin(), neighbors.end(), [idx2](const neighbor_t &neighbor) {
-            return neighbor.idx == idx2;
+        return std::find_if(neighbors.begin(), neighbors.end(), [neighborEntry](const neighbor_t &neighbor) {
+            return neighbor.idx == neighborEntry;
         }) != neighbors.end();
     }
     return false;
@@ -80,8 +84,8 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(getNumberPairs(&list.pairs), 2);
-    EXPECT_TRUE(isPairInList(&list.pairs, 0, 1));
-    EXPECT_TRUE(isPairInList(&list.pairs, 1, 0));
+    EXPECT_TRUE(isPairInList(&list.pairs, data, 0, 1));
+    EXPECT_TRUE(isPairInList(&list.pairs, data, 1, 0));
 }
 
 TEST_F(TestNeighborList, OneDirection) {
@@ -101,12 +105,12 @@ TEST_F(TestNeighborList, OneDirection) {
     list.fillBoxes(data);
     auto pairs = &list.pairs;
     EXPECT_EQ(getNumberPairs(pairs), 4);
-    EXPECT_TRUE(isPairInList(pairs, 0, 2));
-    EXPECT_TRUE(isPairInList(pairs, 2, 0));
-    EXPECT_TRUE(isPairInList(pairs, 1, 2));
-    EXPECT_TRUE(isPairInList(pairs, 2, 1));
-    EXPECT_FALSE(isPairInList(pairs, 0, 1));
-    EXPECT_FALSE(isPairInList(pairs, 1, 0));
+    EXPECT_TRUE(isPairInList(pairs, data, 0, 2));
+    EXPECT_TRUE(isPairInList(pairs, data, 2, 0));
+    EXPECT_TRUE(isPairInList(pairs, data, 1, 2));
+    EXPECT_TRUE(isPairInList(pairs, data, 2, 1));
+    EXPECT_FALSE(isPairInList(pairs, data, 0, 1));
+    EXPECT_FALSE(isPairInList(pairs, data, 1, 0));
 }
 
 TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
@@ -129,8 +133,8 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     EXPECT_EQ(getNumberPairs(pairs), 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {
-            EXPECT_TRUE(isPairInList(pairs, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
-            EXPECT_TRUE(isPairInList(pairs, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(pairs, data, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(pairs, data, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
         }
     }
 }

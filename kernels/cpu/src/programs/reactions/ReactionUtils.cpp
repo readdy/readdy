@@ -15,14 +15,14 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-data_t::entries_t handleEventsGillespie(
+std::pair<data_t::entries_t, std::vector<data_t::Entry*>> handleEventsGillespie(
         CPUKernel const *const kernel,
         bool filterEventsInAdvance, bool approximateRate,
-        std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events) {
-    using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
+        std::vector<event_t> &&events) {
     using rdy_particle_t = readdy::model::Particle;
 
     data_t::entries_t newParticles{};
+    std::vector<data_t::Entry*> decayedEntries {};
 
     const auto &ctx = kernel->getKernelContext();
     const auto data = kernel->getKernelStateModel().getParticleData();
@@ -52,14 +52,13 @@ data_t::entries_t handleEventsGillespie(
                  */
                 {
 
-                    auto& entry1 = data->entries[event.idx1];
+                    auto entry1 = event.idx1;
                     if (event.nEducts == 1) {
                         auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                        performReaction(*data, entry1, entry1, event.idx1, event.idx2, newParticles, reaction);
+                        performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction);
                     } else {
                         auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                        auto& entry2 = data->entries[event.idx2];
-                        performReaction(*data, entry1, entry2, event.idx1, event.idx2, newParticles, reaction);
+                        performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction);
                     }
                 }
                 /**
@@ -113,7 +112,7 @@ data_t::entries_t handleEventsGillespie(
             }
         }
     }
-    return newParticles;
+    return std::make_pair(newParticles, decayedEntries);
 }
 }
 }

@@ -38,9 +38,11 @@ struct NextSubvolumes::ReactionEvent {
 };
 
 struct NextSubvolumes::GridCell {
+    using particle_index = readdy::kernel::cpu::model::ParticleData::Entry*;
+
     const cell_index_t i, j, k, id;
     std::vector<const GridCell *> neighbors;
-    std::unordered_map<particle_type::type_type, std::vector<unsigned long>> particles;
+    std::unordered_map<particle_type::type_type, std::vector<particle_index>> particles;
     std::vector<unsigned long> typeCounts;
     double cellRate;
     double timestamp;
@@ -99,16 +101,14 @@ void NextSubvolumes::assignParticles() {
         cell.cellRate = 0;
     });
 
-    unsigned long idx = 0;
-    for (const auto& e : data->entries) {
+    for (auto& e : data->entries) {
         if(!e.is_deactivated()) {
             auto box = getCell(e.pos);
             if (box) {
-                box->particles[e.type].push_back(idx);
+                box->particles[e.type].push_back(&e);
                 ++(box->typeCounts[e.type]);
             }
         }
-        ++idx;
     }
 
 }
@@ -139,34 +139,33 @@ void NextSubvolumes::evaluateReactions() {
                     const auto& particlesType1 = findType1->second;
                     if (!particlesType1.empty()) {
                         const auto p1_it = rnd::random_element(particlesType1.begin(), particlesType1.end());
-                        const auto p1_idx = *p1_it;
-                        auto& p1_entry = data->entries[p1_idx];
+                        const auto p1 = *p1_it;
                         // todo execute the reaction, and update cells and event queue (see slides)
                         switch (event.order) {
                             case 1: {
                                 // todo update neighbor list with this particle
-                                data_t::entries_t newEntries;
+                                /*data_t::entries_t newEntries;
                                 auto reaction = ctx.getOrder1Reactions(event.type1)[event.reactionIndex];
-                                performReaction(*data, p1_entry, p1_entry, p1_idx, p1_idx, newEntries, reaction);
+                                performReaction(*data, p1, p1, newEntries, reaction);
                                 performedSomething = true;
                                 --currentCell->typeCounts[event.type1];
                                 currentCell->particles[event.type1].erase(p1_it);
                                 if (reaction->getNProducts() > 0) {
-                                    auto c1Out = getCell(p1_entry.pos);
-                                    ++c1Out->typeCounts[p1_entry.type];
-                                    c1Out->particles[p1_entry.type].push_back(p1_idx);
+                                    auto c1Out = getCell(p1->pos);
+                                    ++c1Out->typeCounts[p1->type];
+                                    c1Out->particles[p1->type].push_back(p1);
                                     if (reaction->getNProducts() == 2) {
                                         const auto& entry2 = newEntries.back();
                                         auto c2Out = getCell(entry2.pos);
                                         auto idx = data->addEntry(entry2);
                                         neighbor_list->insert(*data, idx);
                                         ++c2Out->typeCounts[entry2.type];
-                                        c2Out->particles[entry2.type].push_back(data->size()-1);
+                                        c2Out->particles[entry2.type].push_back(idx);
                                     }
                                 } else {
-                                    data->removeParticle(p1_idx);
-                                    neighbor_list->remove(p1_idx);
-                                }
+                                    data->removeEntry(p1);
+                                    neighbor_list->remove(p1);
+                                }*/
                                 break;
                             }
                             case 2: {

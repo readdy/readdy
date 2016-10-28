@@ -78,7 +78,7 @@ public:
 
     void addEntries(const std::vector<Entry> &entries);
 
-    index_t addEntry(Entry entry);
+    ParticleData::Entry* addEntry(Entry entry);
 
     void addParticles(const std::vector<particle_type> &particles);
 
@@ -90,7 +90,13 @@ public:
 
     void removeParticle(const index_t index);
 
+    void removeEntry(Entry *const entry);
+
+    index_t getEntryIndex(const Entry *const entry) const;
+
     index_t getNDeactivated() const;
+
+    void update(const std::pair<entries_t, std::vector<Entry*>> &update);
 
     entries_t entries;
 

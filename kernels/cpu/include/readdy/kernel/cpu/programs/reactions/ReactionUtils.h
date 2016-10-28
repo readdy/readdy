@@ -1,7 +1,7 @@
 /**
  * << detailed description >>
  *
- * @file ReactionUtils.h
+ * @file ReactionUtils.h<
  * @brief << brief description >>
  * @author clonker
  * @date 20.10.16
@@ -12,9 +12,9 @@
 
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/common/logging.h>
+#include "Event.h"
 
 namespace readdy {
 namespace kernel {
@@ -28,8 +28,7 @@ using data_t = readdy::kernel::cpu::model::ParticleData;
 using reaction_type = readdy::model::reactions::Reaction<1>::ReactionType;
 using nl_t = const decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
 using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
-using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
-using event_index_t = event_t::index_type;
+using event_t = Event;
 using particle_t = readdy::model::Particle;
 
 template<bool approximated>
@@ -46,29 +45,28 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
-data_t::entries_t handleEventsGillespie(
+std::pair<data_t::entries_t, std::vector<data_t::Entry*>> handleEventsGillespie(
         CPUKernel const *const kernel,
         bool filterEventsInAdvance, bool approximateRate,
-        std::vector<readdy::kernel::singlecpu::programs::reactions::ReactionEvent> &&events);
+        std::vector<event_t> &&events);
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &particles, const nl_t &nl,
                   const data_t &data, double &alpha, std::vector<event_t> &events) {
     for (const auto idx : particles) {
         // this being false should really not happen, though
-        const auto& entry = *(data.entries.begin() + idx);
-        if (!entry.is_deactivated()) {
+        if (!idx->is_deactivated()) {
             // order 1
             {
-                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(entry.type);
+                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(idx->type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
                     if (rate > 0) {
                         alpha += rate;
                         events.push_back(
                                 {1, (*it)->getNProducts(), idx, 0, rate, alpha,
-                                 static_cast<event_index_t>(it - reactions.begin()),
-                                 entry.type, 0});
+                                 static_cast<event_t::reaction_index_type>(it - reactions.begin()),
+                                 idx->type, 0});
                     }
                 }
             }
@@ -76,10 +74,10 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
             {
                 auto nl_it = nl->pairs.find(idx);
                 if (nl_it != nl->pairs.end()) {
-                    for (const auto &idx_neighbor : nl_it->second) {
+                    for (const auto idx_neighbor : nl_it->second) {
                         if (idx > idx_neighbor.idx) continue;
-                        const auto neighborType = (data.entries.begin() + idx_neighbor.idx)->type;
-                        const auto &reactions = kernel->getKernelContext().getOrder2Reactions(entry.type, neighborType);
+                        const auto neighbor = idx_neighbor.idx;
+                        const auto &reactions = kernel->getKernelContext().getOrder2Reactions(idx->type, neighbor->type);
                         if (!reactions.empty()) {
                             const auto distSquared = idx_neighbor.d2;
                             for (auto it = reactions.begin(); it < reactions.end(); ++it) {
@@ -89,8 +87,8 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
                                     alpha += rate;
                                     events.push_back({2, react->getNProducts(), idx, idx_neighbor.idx,
                                                       rate, alpha,
-                                                      static_cast<event_index_t>(it - reactions.begin()),
-                                                      entry.type, neighborType});
+                                                      static_cast<event_t::reaction_index_type>(it - reactions.begin()),
+                                                      idx->type, neighbor->type});
                                 }
                             }
                         }
@@ -106,45 +104,47 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
 }
 
 template<typename Reaction>
-void performReaction(data_t& data, data_t::Entry &e1, data_t::Entry &e2, const data_t::index_t idx1,
-                     const data_t::index_t idx2, data_t::entries_t& newEntries, Reaction* reaction) {
+void performReaction(data_t& data, data_t::Entry* e1, data_t::Entry* e2, data_t::entries_t& newEntries,
+                     std::vector<data_t::Entry*>& decayedEntries, Reaction* reaction) {
     switch(reaction->getType()) {
         case reaction_type::Decay: {
-            data.removeParticle(idx1);
+            decayedEntries.push_back(e1);
+            //data.removeEntry(e1);
             break;
         }
         case reaction_type::Conversion: {
-            e1.type = reaction->getProducts()[0];
+            e1->type = reaction->getProducts()[0];
             break;
         }
         case reaction_type::Enzymatic: {
-            if (e1.type == reaction->getEducts()[1]) {
+            if (e1->type == reaction->getEducts()[1]) {
                 // p1 is the catalyst
-                e2.type = reaction->getProducts()[0];
+                e2->type = reaction->getProducts()[0];
             } else {
                 // p2 is the catalyst
-                e1.type = reaction->getProducts()[0];
+                e1->type = reaction->getProducts()[0];
             }
             break;
         }
         case reaction_type::Fission: {
             auto n3 = readdy::model::rnd::normal3(0, 1);
             n3 /= sqrt(n3 * n3);
-            e1.type = reaction->getProducts()[0];
-            e1.pos = e1.pos + reaction->getWeight1() * reaction->getProductDistance() * n3;
+            e1->type = reaction->getProducts()[0];
+            e1->pos = e1->pos + reaction->getWeight1() * reaction->getProductDistance() * n3;
 
-            readdy::model::Particle p (e1.pos - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
+            readdy::model::Particle p (e1->pos - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
             newEntries.push_back({p});
             break;
         }
         case reaction_type::Fusion: {
-            e1.type = reaction->getProducts()[0];
-            if (reaction->getEducts()[0] == e1.type) {
-                e1.pos = e1.pos + reaction->getWeight1() * (e2.pos - e1.pos);
+            e1->type = reaction->getProducts()[0];
+            if (reaction->getEducts()[0] == e1->type) {
+                e1->pos = e1->pos + reaction->getWeight1() * (e2->pos - e1->pos);
             } else {
-                e1.pos = e2.pos + reaction->getWeight1() * (e1.pos - e2.pos);
+                e1->pos = e2->pos + reaction->getWeight1() * (e1->pos - e2->pos);
             }
-            data.removeParticle(idx2);
+            decayedEntries.push_back(e2);
+            // data.removeEntry(e2);
             break;
         }
     }

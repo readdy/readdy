@@ -11,7 +11,6 @@
 #define READDY_CPUKERNEL_GILLESPIE_H
 
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 #include <readdy/common/range.h>
 #include "ReactionUtils.h"
 
@@ -22,7 +21,7 @@ namespace programs {
 namespace reactions {
 
 class Gillespie : public readdy::model::programs::reactions::Gillespie {
-    using event_t = readdy::kernel::singlecpu::programs::reactions::ReactionEvent;
+    using event_t = Event;
     using reaction_idx_t = event_t::index_type;
 
 public:
@@ -38,15 +37,16 @@ public:
 
         double alpha = 0.0;
         std::vector<event_t> events;
-        gatherEvents(kernel, readdy::util::range<std::size_t>(0, data->size()), nl, *data, alpha, events);
-        auto newParticles = handleEventsGillespie(kernel, false, true, std::move(events));
+        gatherEvents(kernel, readdy::util::range<event_t::index_type>(&*data->entries.begin(), &*data->entries.end()),
+                     nl, *data, alpha, events);
+        auto particlesUpdate = handleEventsGillespie(kernel, false, true, std::move(events));
 
         // reposition particles to respect the periodic b.c.
-        std::for_each(newParticles.begin(), newParticles.end(),
+        std::for_each(std::get<0>(particlesUpdate).begin(), std::get<0>(particlesUpdate).end(),
                       [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
 
         // update data structure
-        data->addEntries(newParticles);
+        data->update(std::move(particlesUpdate));
     }
 
 protected:

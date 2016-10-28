@@ -18,6 +18,7 @@ readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::FilteredGil
 void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<event_t>>;
     using promise_new_particles_t = std::promise<data_t::entries_t>;
+    /*
 
     auto worker = [this](SlicedBox &box, ctx_t ctx, data_t* data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
 
@@ -62,8 +63,6 @@ void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handle
         for (auto &&update : updates) {
             auto &&local_problematic = update.get();
             n_local_problematic += local_problematic.size();
-            /*gatherEvents<false>(kernel, std::move(local_problematic), kernel->getKernelStateModel().getNeighborList(),
-                                kernel->getKernelStateModel().getParticleData(), approximateRate, alpha, evilEvents);*/
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
         auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
@@ -80,5 +79,5 @@ void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handle
         std::for_each(newProblemParticles.begin(), newProblemParticles.end(),
                       [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
         kernel->getKernelStateModel().getParticleData()->addEntries(newProblemParticles);
-    }
+    }*/
 }

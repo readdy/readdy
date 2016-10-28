@@ -103,7 +103,7 @@ void NeighborList::clear() {
     boxes.clear();
 }
 
-void NeighborList::fillBoxes(const data_t &data) {
+void NeighborList::fillBoxes(data_t &data) {
     if (maxCutoff > 0) {
 
         for (auto &&box : boxes) {
@@ -112,18 +112,16 @@ void NeighborList::fillBoxes(const data_t &data) {
         pairs.clear();
 
         auto it = data.entries.begin();
-        particle_index idx = 0;
         while (it != data.entries.end()) {
-            const auto& particle = *it;
-            if(!particle.is_deactivated()) {
-                auto box = getBox(particle.pos);
+            auto idx = &*it;
+            if(!idx->is_deactivated()) {
+                auto box = getBox(idx->pos);
                 if (box) {
                     box->particleIndices.push_back(idx);
                 }
                 pairs.emplace(idx, std::vector<neighbor_t>());
             }
             ++it;
-            ++idx;
         }
         {
             const auto size = boxes.size();
@@ -133,24 +131,21 @@ void NeighborList::fillBoxes(const data_t &data) {
                 const auto d2 = ctx->getDistSquaredFun();
                 for (auto _b = begin; _b < end; ++_b) {
                     const auto &box = boxes[_b];
-                    for (particle_index i = 0; i < box.particleIndices.size(); ++i) {
+                    for (std::vector<particle_index>::size_type i = 0; i < box.particleIndices.size(); ++i) {
                         const auto pI = box.particleIndices[i];
                         if (pairs.find(pI) != pairs.end()) {
-                            const auto& entryI = *(data.entries.begin() + pI);
-                            for (particle_index j = 0; j < box.particleIndices.size(); ++j) {
+                            for (std::vector<particle_index>::size_type j = 0; j < box.particleIndices.size(); ++j) {
                                 if (i != j) {
                                     const auto pJ = box.particleIndices[j];
-                                    const auto& entryJ = *(data.entries.begin() + pJ);
-                                    const auto distSquared = d2(entryI.pos, entryJ.pos);
+                                    const auto distSquared = d2(pI->pos, pJ->pos);
                                     if (distSquared < cutoffSquared) {
                                         pairs[pI].push_back({pJ, distSquared});
                                     }
                                 }
                             }
                             for (auto &&neighboringBox : box.neighbors) {
-                                for (const auto &pJ : neighboringBox->particleIndices) {
-                                    const auto& entryJ = *(data.entries.begin() + pJ);
-                                    const auto distSquared = d2(entryI.pos, entryJ.pos);
+                                for (const auto pJ : neighboringBox->particleIndices) {
+                                    const auto distSquared = d2(pI->pos, pJ->pos);
                                     if (distSquared < cutoffSquared) {
                                         pairs[pI].push_back({pJ, distSquared});
                                     }
@@ -177,7 +172,7 @@ void NeighborList::fillBoxes(const data_t &data) {
     }
 }
 
-void NeighborList::create(const data_t &data) {
+void NeighborList::create(data_t &data) {
     simBoxSize = ctx->getBoxSize();
     setupBoxes();
     fillBoxes(data);
@@ -207,18 +202,16 @@ void NeighborList::remove(const particle_index idx) {
 
 void NeighborList::insert(const data_t &data, const particle_index idx) {
     const auto d2 = ctx->getDistSquaredFun();
-    const auto pos = (*(data.entries.begin() + idx)).pos;
+    const auto pos = idx->pos;
     const auto cutoffSquared = maxCutoff * maxCutoff;
     auto box = getBox(pos);
     if (box) {
         box->particleIndices.push_back(idx);
         pairs.emplace(idx, std::vector<neighbor_t>());
 
-        for (particle_index j = 0; j < box->particleIndices.size(); ++j) {
-            if (idx != j) {
-                const auto pJ = box->particleIndices[j];
-                const auto& posJ = (*(data.entries.begin() + pJ)).pos;
-                const auto distSquared = d2(pos, posJ);
+        for (const auto pJ : box->particleIndices) {
+            if (idx != pJ) {
+                const auto distSquared = d2(pos, pJ->pos);
                 if (distSquared < cutoffSquared) {
                     pairs[idx].push_back({pJ, distSquared});
                     pairs[pJ].push_back({idx, distSquared});
@@ -227,8 +220,7 @@ void NeighborList::insert(const data_t &data, const particle_index idx) {
         }
         for (auto &&neighboringBox : box->neighbors) {
             for (const auto &pJ : neighboringBox->particleIndices) {
-                const auto& posJ = (*(data.entries.begin() + pJ)).pos;
-                const auto distSquared = d2(pos, posJ);
+                const auto distSquared = d2(pos, pJ->pos);
                 if (distSquared < cutoffSquared) {
                     pairs[idx].push_back({pJ, distSquared});
                     pairs[pJ].push_back({idx, distSquared});
@@ -236,7 +228,7 @@ void NeighborList::insert(const data_t &data, const particle_index idx) {
             }
         }
     } else {
-        log::console()->error("could not assign particle (index={}) to any box!", idx);
+        log::console()->error("could not assign particle (index={}) to any box!", data.getEntryIndex(idx));
     }
 }
 

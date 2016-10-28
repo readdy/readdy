@@ -75,21 +75,19 @@ void CPUStateModel::calculateForces() {
                          dist_t dist) -> void {
             auto it = begin;
             for (unsigned long _i = 0; _i < n; ++_i) {
-                auto i = it->first;
-                auto &entry_i = *(data->entries.begin() + i);
+                auto entry_i = it->first;
 
                 for (const auto &neighbor : it->second) {
                     readdy::model::Vec3 forceVec{0, 0, 0};
-                    const auto &entry_j = *(data->entries.begin() + neighbor.idx);
-                    const auto &potentials = pot2Map[{entry_i.type, entry_j.type}];
+                    const auto &potentials = pot2Map[{entry_i->type, neighbor.idx->type}];
                     for (const auto &potential : potentials) {
                         if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
                             readdy::model::Vec3 updateVec{0, 0, 0};
-                            potential->calculateForceAndEnergy(updateVec, energy, dist(entry_i.pos, entry_j.pos));
+                            potential->calculateForceAndEnergy(updateVec, energy, dist(entry_i->pos, neighbor.idx->pos));
                             forceVec += updateVec;
                         }
                     }
-                    entry_i.force += forceVec;
+                    entry_i->force += forceVec;
                 }
 
                 it = std::next(it);
