@@ -113,10 +113,28 @@ ParticleData::index_t ParticleData::getEntryIndex(const ParticleData::Entry *con
     return static_cast<index_t>(entry - &*entries.begin());
 }
 
-void ParticleData::update(const std::pair<ParticleData::entries_t, std::vector<ParticleData::Entry *>> &update) {
-    const auto &newEntries = std::get<0>(update);
-    const auto &removedEntries = std::get<1>(update);
-    // todo!
+void ParticleData::update(update_t &&update_data) {
+    const auto &newEntries = std::get<0>(update_data);
+    auto &removedEntries = std::get<1>(update_data);
+    auto it_new = newEntries.begin();
+    auto it_del = removedEntries.begin();
+    while(it_new != newEntries.end()) {
+        if(it_del != removedEntries.end()) {
+            (*it_del)->id = it_new->id;
+            (*it_del)->pos = it_new->pos;
+            (*it_del)->force = {};
+            (*it_del)->type = it_new->type;
+            (*it_del)->deactivated = false;
+            ++it_del;
+        } else {
+            addEntry(*it_new);
+        }
+        ++it_new;
+    }
+    while(it_del != removedEntries.end()) {
+        removeEntry(*it_del);
+        ++it_del;
+    }
 }
 
 ParticleData::~ParticleData() = default;

@@ -189,6 +189,8 @@ NeighborList::Box *NeighborList::getBox(signed_box_index i, signed_box_index j, 
     return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
 }
 
+// todo the particledata update needs to be propagated (or funneled) through here
+
 void NeighborList::remove(const particle_index idx) {
     auto neighbors = pairs[idx];
     for (auto &&neighbor : neighbors) {

@@ -50,7 +50,7 @@ struct NextSubvolumes::GridCell {
 
     GridCell(const cell_index_t i, const cell_index_t j, const cell_index_t k, const cell_index_t id,
              const unsigned long nTypes)
-            : i(i), j(j), k(k), id(id), neighbors({27}), particles({}), cellRate(0), typeCounts(nTypes), timestamp(0) {
+            : i(i), j(j), k(k), id(id), neighbors(27), particles({}), cellRate(0), typeCounts(nTypes), timestamp(0) {
     }
 
     void addNeighbor(GridCell const *const cell) {
@@ -241,7 +241,7 @@ void NextSubvolumes::setUpNeighbors(NextSubvolumes::GridCell &cell) {
 }
 
 NextSubvolumes::GridCell *
-NextSubvolumes::getCell(cell_index_t i, cell_index_t j, cell_index_t k) {
+NextSubvolumes::getCell(signed_cell_index_t i, signed_cell_index_t j, signed_cell_index_t k) {
     const auto &periodic = kernel->getKernelContext().getPeriodicBoundary();
     if (periodic[0]) i = static_cast<cell_index_t>(readdy::util::numeric::positive_modulo(i, nCells[0]));
     else if (i < 0 || i >= nCells[0]) return nullptr;

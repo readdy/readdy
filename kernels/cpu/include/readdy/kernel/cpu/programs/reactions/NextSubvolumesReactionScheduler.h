@@ -21,6 +21,7 @@ namespace reactions {
 
 class NextSubvolumes : public readdy::model::programs::reactions::NextSubvolumes {
 using cell_index_t = unsigned int;
+using signed_cell_index_t = typename std::make_signed<cell_index_t>::type;
 public:
     NextSubvolumes(const CPUKernel *const kernel);
     ~NextSubvolumes();
@@ -48,7 +49,7 @@ private:
     void setUpNeighbors(GridCell& cell);
     GridCell * getCell(const readdy::model::Vec3& particlePosition);
     // fetches a cell at (i,j,k)
-    GridCell * getCell(cell_index_t i, cell_index_t j, cell_index_t k);
+    GridCell * getCell(signed_cell_index_t i, signed_cell_index_t j, signed_cell_index_t k);
 
     // array holding the number of boxes in each spatial direction
     std::array<unsigned int, 3> nCells;

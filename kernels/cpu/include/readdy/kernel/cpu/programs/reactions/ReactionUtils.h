@@ -45,7 +45,7 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
-std::pair<data_t::entries_t, std::vector<data_t::Entry*>> handleEventsGillespie(
+data_t::update_t handleEventsGillespie(
         CPUKernel const *const kernel,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events);

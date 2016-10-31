@@ -152,10 +152,8 @@ void GillespieParallel::clear() {
 }
 
 void GillespieParallel::handleBoxReactions() {
-    using update_t = std::pair<data_t::entries_t, std::vector<data_t::Entry*>>;
-
     using promise_t = std::promise<std::set<data_t::Entry*>>;
-    using promise_new_particles_t = std::promise<update_t>;
+    using promise_new_particles_t = std::promise<data_t::update_t>;
 
     auto worker = [this](SlicedBox &box, ctx_t ctx, data_t* data, nl_t nl, promise_t update,
                          promise_new_particles_t newParticles) {
@@ -192,7 +190,7 @@ void GillespieParallel::handleBoxReactions() {
     };
 
     std::vector<std::future<std::set<data_t::Entry*>>> updates;
-    std::vector<std::future<update_t>> newParticles;
+    std::vector<std::future<data_t::update_t>> newParticles;
     {
         //readdy::util::Timer t ("\t run threads");
         std::vector<util::scoped_thread> threads;

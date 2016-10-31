@@ -29,6 +29,7 @@ public:
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
     using index_t = entries_t::size_type;
+    using update_t = std::pair<ParticleData::entries_t, std::vector<ParticleData::Entry *>>;
 
     /**
      * Particle data entry with padding such that it fits exactly into 64 bytes.
@@ -96,7 +97,7 @@ public:
 
     index_t getNDeactivated() const;
 
-    void update(const std::pair<entries_t, std::vector<Entry*>> &update);
+    void update(update_t&&);
 
     entries_t entries;
 
