@@ -53,9 +53,11 @@ public:
 
     void clear();
 
-    virtual void fillBoxes(  data_t &data);
+    virtual void fillBoxes(data_t &data);
 
     virtual void create(data_t &data);
+
+    void updateData(data_t &data, data_t::update_t&& update);
 
     void remove(const particle_index);
 

@@ -81,6 +81,10 @@ void NeighborList::setupBoxes() {
                     }
                 }
             }
+        } else {
+            nBoxes = {{1, 1, 1}};
+            boxes.push_back({0, 0, 0, nBoxes});
+            setupNeighboringBoxes(0, 0, 0);
         }
     }
 }
@@ -114,7 +118,7 @@ void NeighborList::fillBoxes(data_t &data) {
         auto it = data.entries.begin();
         while (it != data.entries.end()) {
             auto idx = &*it;
-            if(!idx->is_deactivated()) {
+            if (!idx->is_deactivated()) {
                 auto box = getBox(idx->pos);
                 if (box) {
                     box->particleIndices.push_back(idx);
@@ -230,7 +234,7 @@ void NeighborList::insert(const data_t &data, const particle_index idx) {
             }
         }
     } else {
-        log::console()->error("could not assign particle (index={}) to any box!", data.getEntryIndex(idx));
+        //log::console()->error("could not assign particle (index={}) to any box!", data.getEntryIndex(idx));
     }
 }
 
@@ -239,6 +243,17 @@ NeighborList::Box *NeighborList::getBox(const readdy::model::Particle::pos_type 
     const box_index j = static_cast<const box_index>(floor((pos[1] + .5 * simBoxSize[1]) / boxSize[1]));
     const box_index k = static_cast<const box_index>(floor((pos[2] + .5 * simBoxSize[2]) / boxSize[2]));
     return getBox(i, j, k);
+}
+
+void NeighborList::updateData(NeighborList::data_t &data, ParticleData::update_t &&update) {
+    for (const auto p : std::get<1>(update)) {
+        remove(p);
+    }
+
+    auto newEntries = data.update(std::move(update));
+    for (const auto p : newEntries) {
+        insert(data, p);
+    }
 }
 
 NeighborList::~NeighborList() = default;

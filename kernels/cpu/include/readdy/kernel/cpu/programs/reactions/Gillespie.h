@@ -46,7 +46,7 @@ public:
                       [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
 
         // update data structure
-        data->update(std::move(particlesUpdate));
+        nl->updateData(*data, std::move(particlesUpdate));
     }
 
 protected:

@@ -97,7 +97,11 @@ public:
 
     index_t getNDeactivated() const;
 
-    void update(update_t&&);
+    /**
+     *
+     * @return vector of new entries
+     */
+    std::vector<Entry*> update(update_t&&);
 
     entries_t entries;
 
