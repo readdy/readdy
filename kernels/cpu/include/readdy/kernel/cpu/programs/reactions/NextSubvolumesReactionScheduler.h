@@ -51,7 +51,7 @@ private:
     // fetches a cell at (i,j,k)
     GridCell * getCell(signed_cell_index_t i, signed_cell_index_t j, signed_cell_index_t k);
 
-    // array holding the number of boxes in each spatial direction
+    // array holding the number of cells in each spatial direction
     std::array<unsigned int, 3> nCells;
     // size of each box
     readdy::model::Vec3 cellSize;

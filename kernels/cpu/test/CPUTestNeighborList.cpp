@@ -43,49 +43,53 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
-auto isPairInList = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs, data_t& data,
+auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t& data,
                        unsigned long idx1, unsigned long idx2) {
     using neighbor_t = readdy::kernel::cpu::model::NeighborList::neighbor_t;
     const auto ptr = &*(data.entries.begin() + idx1);
-    const auto neighborsIt = pairs->find(ptr);
-    auto neighborEntry = &data.entries[idx2];
-    if (neighborsIt != pairs->end()) {
-        const auto neighbors = neighborsIt->second;
-        return std::find_if(neighbors.begin(), neighbors.end(), [neighborEntry](const neighbor_t &neighbor) {
-            return neighbor.idx == neighborEntry;
-        }) != neighbors.end();
+    for(const auto& cell : *pairs) {
+        const auto neighborsIt = cell.pairs.find(ptr);
+        auto neighborEntry = &data.entries[idx2];
+        if (neighborsIt != cell.pairs.end()) {
+            const auto &neighbors = neighborsIt->second;
+            const auto found = std::find_if(neighbors.begin(), neighbors.end(), [neighborEntry](const neighbor_t &neighbor) {
+                return neighbor.idx == neighborEntry;
+            }) != neighbors.end();;
+            if(found) {
+                return true;
+            }
+        }
     }
     return false;
 };
 
-auto getNumberPairs = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs) {
-    auto pairsIt = pairs->cbegin();
-    size_t numberPairs = 0;
-    while (pairsIt != pairs->cend()) {
-        numberPairs += pairsIt->second.size();
-        ++pairsIt;
-    }
-    return numberPairs;
+auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList::container_t &pairs) {
+    using val_t = readdy::kernel::cpu::model::NeighborList::container_t::iterator::value_type;
+    return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, const val_t& x) {
+        return acc + x.second.size();
+    });
 };
 
 TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
-    // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three boxes
+    // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(1.5, 4, 1.5);
     ctx.setPeriodicBoundary(false, false, false);
     readdy::kernel::cpu::util::Config conf;
     cpum::NeighborList list(&ctx, &conf);
-    list.setupBoxes();
+    list.setupCells();
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
     readdy::kernel::cpu::model::ParticleData data;
     data.addParticles(particles);
-    list.fillBoxes(data);
-    EXPECT_EQ(getNumberPairs(&list.pairs), 2);
-    EXPECT_TRUE(isPairInList(&list.pairs, data, 0, 1));
-    EXPECT_TRUE(isPairInList(&list.pairs, data, 1, 0));
+    list.fillCells(data);
+    int sum = 0;
+    std::for_each(list.begin(), list.end(), [&sum](const cpum::NeighborList::Cell& cell) { sum += getNumberPairs(cell.pairs); });
+    EXPECT_EQ(sum, 2);
+    EXPECT_TRUE(isPairInList(&list, data, 0, 1));
+    EXPECT_TRUE(isPairInList(&list, data, 1, 0));
 }
 
 TEST_F(TestNeighborList, OneDirection) {
@@ -95,22 +99,23 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.setPeriodicBoundary(false, false, true);
     readdy::kernel::cpu::util::Config conf;
     cpum::NeighborList list(&ctx, &conf);
-    list.setupBoxes();
+    list.setupCells();
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
     readdy::kernel::cpu::model::ParticleData data;
     data.addParticles(particles);
-    list.fillBoxes(data);
-    auto pairs = &list.pairs;
-    EXPECT_EQ(getNumberPairs(pairs), 4);
-    EXPECT_TRUE(isPairInList(pairs, data, 0, 2));
-    EXPECT_TRUE(isPairInList(pairs, data, 2, 0));
-    EXPECT_TRUE(isPairInList(pairs, data, 1, 2));
-    EXPECT_TRUE(isPairInList(pairs, data, 2, 1));
-    EXPECT_FALSE(isPairInList(pairs, data, 0, 1));
-    EXPECT_FALSE(isPairInList(pairs, data, 1, 0));
+    list.fillCells(data);
+    int sum = 0;
+    std::for_each(list.begin(), list.end(), [&sum](const cpum::NeighborList::Cell& cell) { sum += getNumberPairs(cell.pairs); });
+    EXPECT_EQ(sum, 4);
+    EXPECT_TRUE(isPairInList(&list, data, 0, 2));
+    EXPECT_TRUE(isPairInList(&list, data, 2, 0));
+    EXPECT_TRUE(isPairInList(&list, data, 1, 2));
+    EXPECT_TRUE(isPairInList(&list, data, 2, 1));
+    EXPECT_FALSE(isPairInList(&list, data, 0, 1));
+    EXPECT_FALSE(isPairInList(&list, data, 1, 0));
 }
 
 TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
@@ -120,7 +125,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     ctx.setPeriodicBoundary(true, true, true);
     readdy::kernel::cpu::util::Config conf;
     cpum::NeighborList list(&ctx, &conf);
-    list.setupBoxes();
+    list.setupCells();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
@@ -128,13 +133,14 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     };
     readdy::kernel::cpu::model::ParticleData data;
     data.addParticles(particles);
-    list.fillBoxes(data);
-    auto pairs = &list.pairs;
-    EXPECT_EQ(getNumberPairs(pairs), 30);
+    list.fillCells(data);
+    int sum = 0;
+    std::for_each(list.begin(), list.end(), [&sum](const cpum::NeighborList::Cell& cell) { sum += getNumberPairs(cell.pairs); });
+    EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {
-            EXPECT_TRUE(isPairInList(pairs, data, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
-            EXPECT_TRUE(isPairInList(pairs, data, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(&list, data, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(&list, data, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
         }
     }
 }

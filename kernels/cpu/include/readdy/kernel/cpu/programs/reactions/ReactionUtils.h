@@ -72,24 +72,21 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
             }
             // order 2
             {
-                auto nl_it = nl->pairs.find(idx);
-                if (nl_it != nl->pairs.end()) {
-                    for (const auto idx_neighbor : nl_it->second) {
-                        if (idx > idx_neighbor.idx) continue;
-                        const auto neighbor = idx_neighbor.idx;
-                        const auto &reactions = kernel->getKernelContext().getOrder2Reactions(idx->type, neighbor->type);
-                        if (!reactions.empty()) {
-                            const auto distSquared = idx_neighbor.d2;
-                            for (auto it = reactions.begin(); it < reactions.end(); ++it) {
-                                const auto &react = *it;
-                                const auto rate = react->getRate();
-                                if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
-                                    alpha += rate;
-                                    events.push_back({2, react->getNProducts(), idx, idx_neighbor.idx,
-                                                      rate, alpha,
-                                                      static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                                      idx->type, neighbor->type});
-                                }
+                for (const auto& idx_neighbor : nl->neighbors(idx)) {
+                    if (idx > idx_neighbor.idx) continue;
+                    const auto neighbor = idx_neighbor.idx;
+                    const auto &reactions = kernel->getKernelContext().getOrder2Reactions(idx->type, neighbor->type);
+                    if (!reactions.empty()) {
+                        const auto distSquared = idx_neighbor.d2;
+                        for (auto it = reactions.begin(); it < reactions.end(); ++it) {
+                            const auto &react = *it;
+                            const auto rate = react->getRate();
+                            if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
+                                alpha += rate;
+                                events.push_back({2, react->getNProducts(), idx, idx_neighbor.idx,
+                                                  rate, alpha,
+                                                  static_cast<event_t::reaction_index_type>(it - reactions.begin()),
+                                                  idx->type, neighbor->type});
                             }
                         }
                     }

@@ -65,47 +65,47 @@ void CPUStateModel::calculateForces() {
 
 
     // update forces and energy order 2 potentials
+    // todo: energy update with futures, adapt to new neighbor list structure
     {
-        using nl_it_t = model::NeighborList::container_t::iterator;
+        using cells_it = std::vector<readdy::kernel::cpu::model::NeighborList::Cell>::iterator;
         using pot2map = std::unordered_map<readdy::util::ParticleTypePair, std::vector<readdy::model::potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher>;
         using dist_t = std::function<readdy::model::Vec3(const readdy::model::Vec3 &, const readdy::model::Vec3 &)>;
         std::vector<util::scoped_thread> threads;
         threads.reserve(config->nThreads);
-        auto worker = [](nl_it_t begin, const unsigned long n, double &energy, data_t *data, pot2map pot2Map,
+        auto worker = [](cells_it begin, cells_it end, double &energy, data_t *data, const pot2map& pot2Map,
                          dist_t dist) -> void {
-            auto it = begin;
-            for (unsigned long _i = 0; _i < n; ++_i) {
-                auto entry_i = it->first;
+            for (auto it = begin; it != end; ++it) {
+                for(auto& nl_element : it->pairs) {
+                    auto entry_i = nl_element.first;
 
-                for (const auto &neighbor : it->second) {
-                    readdy::model::Vec3 forceVec{0, 0, 0};
-                    const auto &potentials = pot2Map[{entry_i->type, neighbor.idx->type}];
-                    for (const auto &potential : potentials) {
-                        if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
-                            readdy::model::Vec3 updateVec{0, 0, 0};
-                            potential->calculateForceAndEnergy(updateVec, energy, dist(entry_i->pos, neighbor.idx->pos));
-                            forceVec += updateVec;
+                    for (const auto &neighbor : nl_element.second) {
+                        readdy::model::Vec3 forceVec{0, 0, 0};
+                        for (const auto &potential : pot2Map.at({entry_i->type, neighbor.idx->type})) {
+                            if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
+                                readdy::model::Vec3 updateVec{0, 0, 0};
+                                potential->calculateForceAndEnergy(updateVec, energy, dist(entry_i->pos, neighbor.idx->pos));
+                                forceVec += updateVec;
+                            }
                         }
+                        entry_i->force += forceVec;
                     }
-                    entry_i->force += forceVec;
                 }
 
-                it = std::next(it);
             }
         };
 
-        const auto size = pimpl->neighborList->pairs.size();
+        const auto size = pimpl->neighborList->n_cells();
         const std::size_t grainSize = size / config->nThreads;
 
-        auto it = pimpl->neighborList->pairs.begin();
+        auto it = pimpl->neighborList->begin();
         for (auto i = 0; i < config->nThreads - 1; ++i) {
             threads.push_back(util::scoped_thread(
-                    std::thread(worker, it, grainSize, std::ref(energyUpdate[i]), pimpl->particleData.get(),
+                    std::thread(worker, it, it + grainSize, std::ref(energyUpdate[i]), pimpl->particleData.get(),
                                 pimpl->context->getAllOrder2Potentials(), pimpl->context->getShortestDifferenceFun())));
             std::advance(it, grainSize);
         }
         threads.push_back(util::scoped_thread(
-                std::thread(worker, it, std::distance(it, pimpl->neighborList->pairs.end()),
+                std::thread(worker, it, pimpl->neighborList->end(),
                             std::ref(energyUpdate.back()), pimpl->particleData.get(),
                             pimpl->context->getAllOrder2Potentials(), pimpl->context->getShortestDifferenceFun())));
 

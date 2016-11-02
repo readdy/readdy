@@ -14,41 +14,11 @@ namespace kernel {
 namespace cpu {
 namespace model {
 
-struct NeighborList::Box {
-    std::vector<Box *> neighbors{};
-    std::vector<particle_index> particleIndices{};
-    const box_index id = 0;
-    const bool enoughBoxes;
-
-    // dirty flag indicating whether the box and its neighboring boxes have to be re-created
-    bool dirty = true;
-
-    Box(box_index i, box_index j, box_index k, const std::array<box_index, 3> &nBoxes)
-            : id(k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]),
-              enoughBoxes(nBoxes[0] >= 5 && nBoxes[1] >= 5 && nBoxes[2] >= 5) {
-    }
-
-    void addNeighbor(Box *box) {
-        if (box && box->id != id
-            && (enoughBoxes || std::find(neighbors.begin(), neighbors.end(), box) == neighbors.end())) {
-            neighbors.push_back(box);
-        }
-    }
-
-    friend bool operator==(const Box &lhs, const Box &rhs) {
-        return lhs.id == rhs.id;
-    }
-
-    friend bool operator!=(const Box &lhs, const Box &rhs) {
-        return !(lhs == rhs);
-    }
-};
-
 NeighborList::NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config)
-        : ctx(context), config(config), boxes({}), simBoxSize(ctx->getBoxSize()) {}
+        : ctx(context), config(config), cells(std::vector<Cell>()), simBoxSize(ctx->getBoxSize()) {}
 
-void NeighborList::setupBoxes() {
-    if (boxes.empty()) {
+void NeighborList::setupCells() {
+    if (cells.empty()) {
         double maxCutoff = 0;
         for (auto &&e : ctx->getAllOrder2RegisteredPotentialTypes()) {
             for (auto &&p : ctx->getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
@@ -60,43 +30,43 @@ void NeighborList::setupBoxes() {
         }
         NeighborList::maxCutoff = maxCutoff;
         if (maxCutoff > 0) {
-            const auto desiredBoxWidth = .5 * maxCutoff;
+            const auto desiredCellWidth = .5 * maxCutoff;
 
             for (unsigned short i = 0; i < 3; ++i) {
-                nBoxes[i] = static_cast<box_index>(floor(simBoxSize[i] / desiredBoxWidth));
-                if (nBoxes[i] == 0) nBoxes[i] = 1;
-                boxSize[i] = simBoxSize[i] / nBoxes[i];
+                nCells[i] = static_cast<cell_index>(floor(simBoxSize[i] / desiredCellWidth));
+                if (nCells[i] == 0) nCells[i] = 1;
+                cellSize[i] = simBoxSize[i] / nCells[i];
             }
-            for (box_index i = 0; i < nBoxes[0]; ++i) {
-                for (box_index j = 0; j < nBoxes[1]; ++j) {
-                    for (box_index k = 0; k < nBoxes[2]; ++k) {
-                        boxes.push_back({i, j, k, nBoxes});
+            for (cell_index i = 0; i < nCells[0]; ++i) {
+                for (cell_index j = 0; j < nCells[1]; ++j) {
+                    for (cell_index k = 0; k < nCells[2]; ++k) {
+                        cells.push_back({i, j, k, nCells});
                     }
                 }
             }
-            for (box_index i = 0; i < nBoxes[0]; ++i) {
-                for (box_index j = 0; j < nBoxes[1]; ++j) {
-                    for (box_index k = 0; k < nBoxes[2]; ++k) {
-                        setupNeighboringBoxes(i, j, k);
+            for (cell_index i = 0; i < nCells[0]; ++i) {
+                for (cell_index j = 0; j < nCells[1]; ++j) {
+                    for (cell_index k = 0; k < nCells[2]; ++k) {
+                        setupNeighboringCells(i, j, k);
                     }
                 }
             }
         } else {
-            nBoxes = {{1, 1, 1}};
-            boxes.push_back({0, 0, 0, nBoxes});
-            setupNeighboringBoxes(0, 0, 0);
+            nCells = {{1, 1, 1}};
+            cells.push_back({0, 0, 0, nCells});
+            setupNeighboringCells(0, 0, 0);
         }
     }
 }
 
-void NeighborList::setupNeighboringBoxes(const signed_box_index i, const signed_box_index j, const signed_box_index k) {
-    auto me = getBox(i, j, k);
-    for (signed_box_index _i = -2; _i < 3; ++_i) {
-        for (signed_box_index _j = -2; _j < 3; ++_j) {
-            for (signed_box_index _k = -2; _k < 3; ++_k) {
+void NeighborList::setupNeighboringCells(const signed_cell_index i, const signed_cell_index j, const signed_cell_index k) {
+    auto me = getCell(i, j, k);
+    for (signed_cell_index _i = -2; _i < 3; ++_i) {
+        for (signed_cell_index _j = -2; _j < 3; ++_j) {
+            for (signed_cell_index _k = -2; _k < 3; ++_k) {
                 // don't add me as neighbor to myself
                 if (!(_i == 0 && _j == 0 && _k == 0)) {
-                    me->addNeighbor(getBox(i + _i, j + _j, k + _k));
+                    me->addNeighbor(getCell(i + _i, j + _j, k + _k));
                 }
             }
         }
@@ -104,62 +74,61 @@ void NeighborList::setupNeighboringBoxes(const signed_box_index i, const signed_
 }
 
 void NeighborList::clear() {
-    boxes.clear();
+    cells.clear();
 }
 
-void NeighborList::fillBoxes(data_t &data) {
+void NeighborList::fillCells(data_t &data) {
     if (maxCutoff > 0) {
 
-        for (auto &&box : boxes) {
-            box.particleIndices.clear();
+        for (auto &cell : cells) {
+            cell.particleIndices.clear();
+            cell.pairs.clear();
         }
-        pairs.clear();
 
         auto it = data.entries.begin();
         while (it != data.entries.end()) {
             auto idx = &*it;
             if (!idx->is_deactivated()) {
-                auto box = getBox(idx->pos);
-                if (box) {
-                    box->particleIndices.push_back(idx);
+                auto cell = getCell(idx->pos);
+                if (cell) {
+                    cell->particleIndices.push_back(idx);
+                    cell->pairs.emplace(idx, std::vector<neighbor_t>());
                 }
-                pairs.emplace(idx, std::vector<neighbor_t>());
             }
             ++it;
         }
+        // todo: in order to avoid concurrent modification, each cell has its own neighbor list map
         {
-            const auto size = boxes.size();
+            const auto size = cells.size();
             const std::size_t grainSize = size / config->nThreads;
             const auto cutoffSquared = maxCutoff * maxCutoff;
-            auto worker = [this, &data, cutoffSquared](const box_index begin, const box_index end) {
+            auto worker = [&data, cutoffSquared, this](const cell_index begin, const cell_index end) {
                 const auto d2 = ctx->getDistSquaredFun();
                 for (auto _b = begin; _b < end; ++_b) {
-                    const auto &box = boxes[_b];
-                    for (std::vector<particle_index>::size_type i = 0; i < box.particleIndices.size(); ++i) {
-                        const auto pI = box.particleIndices[i];
-                        if (pairs.find(pI) != pairs.end()) {
-                            for (std::vector<particle_index>::size_type j = 0; j < box.particleIndices.size(); ++j) {
-                                if (i != j) {
-                                    const auto pJ = box.particleIndices[j];
+                    auto &cell = cells.at(_b);
+                    for (const auto& pI : cell.particleIndices) {
+                        auto pI_it = cell.pairs.find(pI);
+                        if (pI_it != cell.pairs.end()) {
+                            auto &pI_vec = *pI_it;
+                            for (const auto &pJ : cell.particleIndices) {
+                                if (pI != pJ) {
                                     const auto distSquared = d2(pI->pos, pJ->pos);
                                     if (distSquared < cutoffSquared) {
-                                        pairs[pI].push_back({pJ, distSquared});
+                                        Neighbor neighbor{pJ, distSquared};
+                                        pI_vec.second.push_back(std::move(neighbor));
                                     }
                                 }
                             }
-                            for (auto &&neighboringBox : box.neighbors) {
-                                for (const auto pJ : neighboringBox->particleIndices) {
+                            for (auto &neighboringCell : cell.neighbors) {
+                                for (const auto pJ : neighboringCell->particleIndices) {
                                     const auto distSquared = d2(pI->pos, pJ->pos);
                                     if (distSquared < cutoffSquared) {
-                                        pairs[pI].push_back({pJ, distSquared});
+                                        Neighbor neighbor{pJ, distSquared};
+                                        pI_vec.second.push_back(std::move(neighbor));
                                     }
                                 }
                             }
-                        } else {
-                            log::console()->error("CPUNeighborList: The particle index was not to be found in the map, "
-                                                          "risking a concurrent modification! This should not happen.");
                         }
-
                     }
                 }
             };
@@ -171,78 +140,77 @@ void NeighborList::fillBoxes(data_t &data) {
                 threads.push_back(util::scoped_thread(std::thread(worker, i * grainSize, (i + 1) * grainSize)));
             }
             threads.push_back(
-                    util::scoped_thread(std::thread(worker, (config->nThreads - 1) * grainSize, boxes.size())));
+                    util::scoped_thread(std::thread(worker, (config->nThreads - 1) * grainSize, cells.size())));
         }
     }
 }
 
 void NeighborList::create(data_t &data) {
     simBoxSize = ctx->getBoxSize();
-    setupBoxes();
-    fillBoxes(data);
+    setupCells();
+    fillCells(data);
 }
 
-NeighborList::Box *NeighborList::getBox(signed_box_index i, signed_box_index j, signed_box_index k) {
+NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) {
     const auto &periodic = ctx->getPeriodicBoundary();
-    if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nBoxes[0]);
-    else if (i < 0 || i >= nBoxes[0]) return nullptr;
-    if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nBoxes[1]);
-    else if (j < 0 || j >= nBoxes[1]) return nullptr;
-    if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nBoxes[2]);
-    else if (k < 0 || k >= nBoxes[2]) return nullptr;
-    return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
+    if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nCells[0]);
+    else if (i < 0 || i >= nCells[0]) return nullptr;
+    if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nCells[1]);
+    else if (j < 0 || j >= nCells[1]) return nullptr;
+    if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nCells[2]);
+    else if (k < 0 || k >= nCells[2]) return nullptr;
+    return &cells[k + j * nCells[2] + i * nCells[2] * nCells[1]];
 }
 
 // todo the particledata update needs to be propagated (or funneled) through here
 
 void NeighborList::remove(const particle_index idx) {
-    auto neighbors = pairs[idx];
-    for (auto &&neighbor : neighbors) {
-        auto neighbors2 = pairs[neighbor.idx];
-        std::remove_if(neighbors2.begin(), neighbors2.end(), [idx](const neighbor_t &n) {
+    for (auto &neighbor : neighbors(idx)) {
+        auto&& neighborCell = getCell(neighbor.idx->pos);
+        std::remove_if(neighborCell->pairs[neighbor.idx].begin(), neighborCell->pairs[neighbor.idx].end(), [idx](const neighbor_t &n) {
             return n.idx == idx;
         });
     }
-    pairs.erase(idx);
+    getCell(idx->pos)->pairs.erase(idx);
 }
 
 void NeighborList::insert(const data_t &data, const particle_index idx) {
     const auto d2 = ctx->getDistSquaredFun();
     const auto pos = idx->pos;
     const auto cutoffSquared = maxCutoff * maxCutoff;
-    auto box = getBox(pos);
-    if (box) {
-        box->particleIndices.push_back(idx);
-        pairs.emplace(idx, std::vector<neighbor_t>());
+    auto cell = getCell(pos);
+    if (cell) {
+        cell->particleIndices.push_back(idx);
+        cell->pairs.emplace(idx, std::vector<neighbor_t>());
 
-        for (const auto pJ : box->particleIndices) {
+        for (const auto pJ : cell->particleIndices) {
             if (idx != pJ) {
                 const auto distSquared = d2(pos, pJ->pos);
                 if (distSquared < cutoffSquared) {
-                    pairs[idx].push_back({pJ, distSquared});
-                    pairs[pJ].push_back({idx, distSquared});
+                    cell->pairs[idx].push_back({pJ, distSquared});
+                    cell->pairs[pJ].push_back({idx, distSquared});
                 }
             }
         }
-        for (auto &&neighboringBox : box->neighbors) {
-            for (const auto &pJ : neighboringBox->particleIndices) {
+        for (auto &neighboringCell : cell->neighbors) {
+            for (const auto &pJ : neighboringCell->particleIndices) {
                 const auto distSquared = d2(pos, pJ->pos);
                 if (distSquared < cutoffSquared) {
-                    pairs[idx].push_back({pJ, distSquared});
-                    pairs[pJ].push_back({idx, distSquared});
+                    cell->pairs[idx].push_back({pJ, distSquared});
+                    neighboringCell->pairs[pJ].push_back({idx, distSquared});
                 }
             }
         }
     } else {
-        //log::console()->error("could not assign particle (index={}) to any box!", data.getEntryIndex(idx));
+        //log::console()->error("could not assign particle (index={}) to any cell!", data.getEntryIndex(idx));
     }
 }
 
-NeighborList::Box *NeighborList::getBox(const readdy::model::Particle::pos_type &pos) {
-    const box_index i = static_cast<const box_index>(floor((pos[0] + .5 * simBoxSize[0]) / boxSize[0]));
-    const box_index j = static_cast<const box_index>(floor((pos[1] + .5 * simBoxSize[1]) / boxSize[1]));
-    const box_index k = static_cast<const box_index>(floor((pos[2] + .5 * simBoxSize[2]) / boxSize[2]));
-    return getBox(i, j, k);
+NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_type &pos) {
+    const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
+    const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
+    const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
+    return getCell(i, j, k);
 }
 
 void NeighborList::updateData(NeighborList::data_t &data, ParticleData::update_t &&update) {
@@ -256,10 +224,57 @@ void NeighborList::updateData(NeighborList::data_t &data, ParticleData::update_t
     }
 }
 
+const std::vector<NeighborList::neighbor_t> &NeighborList::neighbors(NeighborList::particle_index const entry) const {
+    const auto cell = getCell(entry->pos);
+    return cell->pairs.at(entry);
+}
+
+const NeighborList::Cell *const NeighborList::getCell(const readdy::model::Particle::pos_type &pos) const {
+    const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
+    const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
+    const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
+    return getCell(i, j, k);
+}
+
+const NeighborList::Cell *const NeighborList::getCell(NeighborList::signed_cell_index i,
+                                                      NeighborList::signed_cell_index j,
+                                                      NeighborList::signed_cell_index k) const {
+
+    const auto &periodic = ctx->getPeriodicBoundary();
+    if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nCells[0]);
+    else if (i < 0 || i >= nCells[0]) return nullptr;
+    if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nCells[1]);
+    else if (j < 0 || j >= nCells[1]) return nullptr;
+    if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nCells[2]);
+    else if (k < 0 || k >= nCells[2]) return nullptr;
+    return &cells.at(k + j * nCells[2] + i * nCells[2] * nCells[1]);
+}
+
 NeighborList::~NeighborList() = default;
 
 Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {}
 
+Neighbor::Neighbor(Neighbor &&rhs) : idx(rhs.idx), d2(std::move(rhs.d2)) {
+}
+
+Neighbor &Neighbor::operator=(Neighbor &&rhs) {
+    idx = rhs.idx;
+    d2 = std::move(rhs.d2);
+    return *this;
+}
+
+void NeighborList::Cell::addNeighbor(NeighborList::Cell *cell) {
+    if (cell && cell->id != id
+        && (enoughCells || std::find(neighbors.begin(), neighbors.end(), cell) == neighbors.end())) {
+        neighbors.push_back(cell);
+    }
+}
+
+NeighborList::Cell::Cell(NeighborList::cell_index i, NeighborList::cell_index j, NeighborList::cell_index k,
+                       const std::array<NeighborList::cell_index, 3> &nCells)
+        : id(k + j * nCells[2] + i * nCells[2] * nCells[1]),
+          enoughCells(nCells[0] >= 5 && nCells[1] >= 5 && nCells[2] >= 5) {
+}
 }
 }
 }
