@@ -7,7 +7,6 @@
 
 #include <readdy/kernel/cpu/potentials/CPUPotentialFactory.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/model/potentials/PotentialsOrder1.h>
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder1.h>
 #include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
 

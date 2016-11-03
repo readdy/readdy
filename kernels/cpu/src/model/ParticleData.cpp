@@ -124,11 +124,7 @@ std::vector<ParticleData::Entry*> ParticleData::update(update_t &&update_data) {
     auto it_del = removedEntries.begin();
     while(it_new != newEntries.end()) {
         if(it_del != removedEntries.end()) {
-            (*it_del)->id = it_new->id;
-            (*it_del)->pos = it_new->pos;
-            (*it_del)->force = {};
-            (*it_del)->type = it_new->type;
-            (*it_del)->deactivated = false;
+            **it_del = std::move(*it_new);
             result.push_back(*it_del);
             ++it_del;
         } else {

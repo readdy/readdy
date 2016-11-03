@@ -43,19 +43,20 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
-auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t& data,
+auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &data,
                        unsigned long idx1, unsigned long idx2) {
     using neighbor_t = readdy::kernel::cpu::model::NeighborList::neighbor_t;
     const auto ptr = &*(data.entries.begin() + idx1);
-    for(const auto& cell : *pairs) {
-        const auto neighborsIt = cell.pairs.find(ptr);
+    for (const auto &map : *pairs) {
+        const auto neighborsIt = map.find(ptr);
         auto neighborEntry = &data.entries[idx2];
-        if (neighborsIt != cell.pairs.end()) {
+        if (neighborsIt != map.end()) {
             const auto &neighbors = neighborsIt->second;
-            const auto found = std::find_if(neighbors.begin(), neighbors.end(), [neighborEntry](const neighbor_t &neighbor) {
-                return neighbor.idx == neighborEntry;
-            }) != neighbors.end();;
-            if(found) {
+            const auto found =
+                    std::find_if(neighbors.begin(), neighbors.end(), [neighborEntry](const neighbor_t &neighbor) {
+                        return neighbor.idx == neighborEntry;
+                    }) != neighbors.end();
+            if (found) {
                 return true;
             }
         }
@@ -65,7 +66,7 @@ auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t& 
 
 auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList::container_t &pairs) {
     using val_t = readdy::kernel::cpu::model::NeighborList::container_t::iterator::value_type;
-    return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, const val_t& x) {
+    return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, const val_t &x) {
         return acc + x.second.size();
     });
 };
@@ -86,7 +87,8 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     data.addParticles(particles);
     list.fillCells(data);
     int sum = 0;
-    std::for_each(list.begin(), list.end(), [&sum](const cpum::NeighborList::Cell& cell) { sum += getNumberPairs(cell.pairs); });
+    std::for_each(list.begin(), list.end(),
+                  [&sum](const cpum::NeighborList::container_t &map) { sum += getNumberPairs(map); });
     EXPECT_EQ(sum, 2);
     EXPECT_TRUE(isPairInList(&list, data, 0, 1));
     EXPECT_TRUE(isPairInList(&list, data, 1, 0));
@@ -108,7 +110,8 @@ TEST_F(TestNeighborList, OneDirection) {
     data.addParticles(particles);
     list.fillCells(data);
     int sum = 0;
-    std::for_each(list.begin(), list.end(), [&sum](const cpum::NeighborList::Cell& cell) { sum += getNumberPairs(cell.pairs); });
+    std::for_each(list.begin(), list.end(),
+                  [&sum](const cpum::NeighborList::container_t &map) { sum += getNumberPairs(map); });
     EXPECT_EQ(sum, 4);
     EXPECT_TRUE(isPairInList(&list, data, 0, 2));
     EXPECT_TRUE(isPairInList(&list, data, 2, 0));
@@ -135,7 +138,8 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     data.addParticles(particles);
     list.fillCells(data);
     int sum = 0;
-    std::for_each(list.begin(), list.end(), [&sum](const cpum::NeighborList::Cell& cell) { sum += getNumberPairs(cell.pairs); });
+    std::for_each(list.begin(), list.end(),
+                  [&sum](const cpum::NeighborList::container_t &map) { sum += getNumberPairs(map); });
     EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {

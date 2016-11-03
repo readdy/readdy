@@ -25,9 +25,10 @@ Config::Config() {
     nThreads = std::thread::hardware_concurrency();
     const char *env = std::getenv("READDY_N_CORES");
     if (env) {
-        nThreads = static_cast<unsigned long>(std::stol(env));
+        nThreads = static_cast<n_threads_t>(std::stol(env));
         log::console()->debug("Using {} threads (by environment variable READDY_N_CORES", nThreads);
     }
+    nThreads = 2;
 }
 }
 }

@@ -15,9 +15,11 @@ namespace kernel {
 namespace cpu {
 namespace util {
 struct Config {
+    using n_threads_t = decltype(std::thread::hardware_concurrency());
+
     Config();
 
-    unsigned long nThreads;
+    n_threads_t nThreads;
 };
 }
 }

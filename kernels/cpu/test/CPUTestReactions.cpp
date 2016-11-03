@@ -229,7 +229,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->getKernelStateModel().addParticle({0, 0, 5.5, typeA});          // 10
 
     kernel->getKernelContext().configure();
-    // a box width in z direction of 12 should divide into two boxes of 5x5x6 minus the halo region of width 1.0.
+    // a box width in z direction of 12 should divide into two boxes of 5x5x6
     {
         fix_n_threads n_threads{kernel.get(), 2};
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();

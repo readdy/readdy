@@ -12,8 +12,6 @@
 #include <readdy/kernel/cpu/potentials/CPUPotentialFactory.h>
 #include <readdy/kernel/cpu/reactions/CPUReactionFactory.h>
 #include <readdy/kernel/cpu/observables/ObservableFactory.h>
-#include <thread>
-#include <readdy/kernel/cpu/util/Config.h>
 
 namespace readdy {
 namespace kernel {

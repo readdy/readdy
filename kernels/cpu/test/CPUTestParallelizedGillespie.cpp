@@ -21,6 +21,7 @@ TEST(TestParallelGillespie, Sanity) {
     kernel.addParticle("A", {-5, .2, 5.5});
     kernel.addParticle("A", {-5, .2, 0});
     kernel.getKernelContext().configure();
+    kernel.getKernelStateModel().getNeighborList()->create(*kernel.getKernelStateModel().getParticleData());
     auto prog = kernel.createProgram<readdy::model::programs::reactions::GillespieParallel>();
     prog->execute();
 }

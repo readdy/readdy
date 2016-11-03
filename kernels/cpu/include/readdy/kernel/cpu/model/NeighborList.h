@@ -36,20 +36,21 @@ struct Neighbor {
 };
 
 class NeighborList {
-public: class Cell;
-private: std::vector<Cell> cells;
-public:
+public: 
+    class Cell;
     using cell_index = unsigned short;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
     using particle_index = Neighbor::index_t;
     using neighbor_t = Neighbor;
-    using container_t = std::unordered_map<particle_index, std::vector<neighbor_t>>;
     using data_t = readdy::kernel::cpu::model::ParticleData;
-
+    using container_t = std::unordered_map<particle_index, std::vector<neighbor_t>>;
+private: 
+    std::vector<Cell> cells;
+    std::vector<container_t> maps;
+public:
     struct Cell {
         std::vector<Cell *> neighbors{};
         std::vector<particle_index> particleIndices{};
-        container_t pairs {};
         const cell_index id = 0;
         const bool enoughCells;
 
@@ -85,32 +86,32 @@ public:
 
     virtual void create(data_t &data);
 
-    void updateData(data_t &data, data_t::update_t&& update);
+    void updateData(data_t &data, data_t::update_t update);
 
     void remove(const particle_index);
 
     void insert(const data_t &data, const particle_index);
 
-    auto begin() -> decltype(cells.begin()) {
-        return cells.begin();
+    auto begin() -> decltype(maps.begin()) {
+        return maps.begin();
     }
-    auto end() -> decltype(cells.end()) {
-        return cells.end();
+    auto end() -> decltype(maps.end()) {
+        return maps.end();
     }
-    auto cbegin() const -> decltype(cells.cbegin()) {
-        return cells.cbegin();
+    auto cbegin() const -> decltype(maps.cbegin()) {
+        return maps.cbegin();
     }
-    auto cend() const -> decltype(cells.cend()) {
-        return cells.cend();
+    auto cend() const -> decltype(maps.cend()) {
+        return maps.cend();
     }
-    auto begin() const -> decltype(cells.cbegin()) {
+    auto begin() const -> decltype(maps.cbegin()) {
         return cbegin();
     }
-    auto end() const -> decltype(cells.cend()) {
+    auto end() const -> decltype(maps.cend()) {
         return cend();
     }
-    auto n_cells() const -> decltype(cells.size()) {
-        return cells.size();
+    auto n_maps() const -> decltype(maps.size()) {
+        return maps.size();
     }
 
 protected:
@@ -134,6 +135,13 @@ protected:
 
     const Cell * const getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) const;
 
+    container_t& getPairs(const Cell* const cell) {
+        return maps.at(static_cast<util::Config::n_threads_t>(cell->id * config->nThreads / cells.size()));
+    }
+
+    const container_t& getPairs(const Cell* const cell) const {
+        return maps.at(static_cast<util::Config::n_threads_t>(cell->id * config->nThreads / cells.size()));
+    }
 };
 }
 }

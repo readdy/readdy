@@ -18,7 +18,8 @@ namespace numeric {
 
 template<typename T, typename D, typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<D>::value, int>::type = 0>
 inline typename std::make_unsigned<T>::type positive_modulo(T i, D n) {
-    return static_cast<typename std::make_unsigned<T>::type>((i % n + n) % n);
+    using return_t = typename std::make_unsigned<T>::type;
+    return static_cast<return_t>((i % n + n) % n);
 }
 
 }

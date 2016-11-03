@@ -71,7 +71,7 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
                 }
             }
             // order 2
-            {
+            try {
                 for (const auto& idx_neighbor : nl->neighbors(idx)) {
                     if (idx > idx_neighbor.idx) continue;
                     const auto neighbor = idx_neighbor.idx;
@@ -91,6 +91,8 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
                         }
                     }
                 }
+            } catch(const std::out_of_range& e) {
+                log::console()->trace("The particle {} was not in the neighbor list! {}", data.getEntryIndex(idx), e.what());
             }
         } else {
             log::console()->error("The particles list which was given to gather events contained a particle that "
