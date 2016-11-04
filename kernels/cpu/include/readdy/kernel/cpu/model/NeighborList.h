@@ -38,7 +38,7 @@ struct Neighbor {
 class NeighborList {
 public: 
     class Cell;
-    using cell_index = unsigned short;
+    using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
     using particle_index = Neighbor::index_t;
     using neighbor_t = Neighbor;
@@ -47,11 +47,12 @@ public:
 private: 
     std::vector<Cell> cells;
     std::vector<container_t> maps;
+    std::vector<NeighborList::neighbor_t> no_neighbors;
 public:
     struct Cell {
         std::vector<Cell *> neighbors{};
         std::vector<particle_index> particleIndices{};
-        const cell_index id = 0;
+        const cell_index id;
         const bool enoughCells;
 
         // dirty flag indicating whether the cell and its neighboring cells have to be re-created
@@ -135,13 +136,11 @@ protected:
 
     const Cell * const getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) const;
 
-    container_t& getPairs(const Cell* const cell) {
-        return maps.at(static_cast<util::Config::n_threads_t>(cell->id * config->nThreads / cells.size()));
-    }
+    util::Config::n_threads_t getMapsIndex(const Cell* const cell) const;
 
-    const container_t& getPairs(const Cell* const cell) const {
-        return maps.at(static_cast<util::Config::n_threads_t>(cell->id * config->nThreads / cells.size()));
-    }
+    container_t& getPairs(const Cell* const cell);
+
+    const container_t& getPairs(const Cell* const cell) const;
 };
 }
 }

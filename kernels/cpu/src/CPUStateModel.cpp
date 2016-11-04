@@ -8,7 +8,6 @@
  */
 
 #include <readdy/kernel/cpu/CPUStateModel.h>
-#include <readdy/common/Timer.h>
 #include <future>
 
 namespace readdy {
@@ -28,7 +27,6 @@ void CPUStateModel::calculateForces() {
     {
         std::vector<double> energyUpdate;
         energyUpdate.reserve(config->nThreads);
-        readdy::util::Timer timer ("update forces order 1", true);
         std::vector<util::scoped_thread> threads;
         threads.reserve(config->nThreads);
         using iter_t = data_t::entries_t::iterator;
@@ -65,41 +63,35 @@ void CPUStateModel::calculateForces() {
         std::for_each(energyUpdate.begin(), energyUpdate.end(), [this](double e) { pimpl->currentEnergy += e; });
     }
 
-    log::console()->error("n boxes = {}", pimpl->neighborList->end() - pimpl->neighborList->begin());
     // update forces and energy order 2 potentials
     {
 
         std::vector<std::future<double>> energyFutures;
         energyFutures.reserve(config->nThreads);
         {
-            readdy::util::Timer timer("update forces order 2", true);
-            using iter_t = decltype(pimpl->neighborList->begin());
+            using iter_t = decltype(pimpl->neighborList->begin()->begin());
             using pot2map = std::unordered_map<readdy::util::ParticleTypePair, std::vector<readdy::model::potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher>;
             std::vector<util::scoped_thread> threads;
             threads.reserve(config->nThreads);
-
-            auto worker = [this](model::NeighborList::container_t* map, std::promise<double> energyPromise) -> void {
-                const auto& context = *pimpl->context;
-                readdy::util::Timer timer2("update forces order 2 thread", true);
+            const auto &d = pimpl->context->getShortestDifferenceFun();
+            auto worker = [d](iter_t begin, iter_t end, std::promise<double> energyPromise, pot2map pot2Map) -> void {
                 double energy = 0;
-                const auto &dist = context.getShortestDifferenceFun();
-                const auto &pot2Map = context.getAllOrder2Potentials();
-                for (auto &nl_element : *map) {
-                    auto entry_i = nl_element.first;
 
-                    for (const auto &neighbor : nl_element.second) {
+                for(auto it = begin; it != end; ++it) {
+                    auto entry_i = it->first;
+
+                    for (const auto &neighbor : it->second) {
                         readdy::model::Vec3 forceVec{0, 0, 0};
-                        try {
-                            for (const auto &potential : pot2Map.at({entry_i->type, neighbor.idx->type})) {
+                        auto potit = pot2Map.find({entry_i->type, neighbor.idx->type});
+                        if(potit != pot2Map.end()) {
+                            for (const auto &potential : potit->second) {
                                 if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
                                     readdy::model::Vec3 updateVec{0, 0, 0};
                                     potential->calculateForceAndEnergy(updateVec, energy,
-                                                                       dist(entry_i->pos, neighbor.idx->pos));
+                                                                       d(entry_i->pos, neighbor.idx->pos));
                                     forceVec += updateVec;
                                 }
                             }
-                        } catch (const std::out_of_range &) {
-                            /* ignore, just means we dont have a potential for (i.type,neighbor.type) */
                         }
                         entry_i->force += forceVec;
                     }
@@ -107,10 +99,10 @@ void CPUStateModel::calculateForces() {
                 energyPromise.set_value(energy);
             };
 
-            for (auto i = 0; i < config->nThreads; ++i) {
+            for (auto& map : *pimpl->neighborList) {
                 std::promise<double> energyPromise;
                 energyFutures.push_back(energyPromise.get_future());
-                threads.push_back(util::scoped_thread(std::thread(worker, &*(pimpl->neighborList->begin() + i), std::move(energyPromise))));
+                threads.push_back(util::scoped_thread(std::thread(worker, map.begin(), map.end(), std::move(energyPromise), pimpl->context->getAllOrder2Potentials())));
             }
         }
         for (auto &f : energyFutures) {
