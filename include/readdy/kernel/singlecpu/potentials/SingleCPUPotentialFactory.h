@@ -1,8 +1,6 @@
 /**
- * << detailed description >>
- *
  * @file SingleCPUPotentialFactory.h
- * @brief << brief description >>
+ * @brief This factory creates potentials for the singlecpu kernel.
  * @author clonker
  * @date 09.06.16
  */

@@ -1,8 +1,6 @@
 /**
- * << detailed description >>
- *
  * @file CPUPotentialFactory.cpp
- * @brief << brief description >>
+ * @brief Fill the CPUPotentialFactory with kernel-specific constructors for potentials.
  * @author clonker
  * @date 13.07.16
  */
@@ -22,6 +20,9 @@ CPUPotentialFactory::CPUPotentialFactory(CPUKernel *const kernel) {
     namespace singlecpu_pot = readdy::kernel::singlecpu::potentials;
     factory[p::getPotentialName<p::CubePotential>()] = [kernel] {
         return new singlecpu_pot::CubePotential(kernel);
+    };
+    factory[p::getPotentialName<p::SpherePotential>()] = [kernel] {
+        return new singlecpu_pot::SpherePotential(kernel);
     };
     factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] {
         return new singlecpu_pot::HarmonicRepulsion(kernel);

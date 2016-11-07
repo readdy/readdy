@@ -36,9 +36,6 @@ public:
 
     ParticlePositionObservable(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
-    virtual ~ParticlePositionObservable() {
-    }
-
     virtual void evaluate() = 0;
 
 protected:
@@ -54,7 +51,7 @@ public:
                                  const std::string &typeCountFrom, const std::string &typeCountTo,
                                  double particleDensity);
 
-    virtual void evaluate() override;
+    virtual void evaluate() = 0;
 
     const std::vector<double> &getBinBorders() const;
 
@@ -144,6 +141,7 @@ public:
 protected:
     std::vector<unsigned int> typesToCount;
 };
+
 }
 }
 

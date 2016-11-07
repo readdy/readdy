@@ -51,7 +51,7 @@ MARK_AS_ADVANCED(INCLUDE_PERFORMANCE_TESTS)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2.0)
 
 # extend cmake module path to include readdy custom modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
 # ensure that the build directory is not the source directory
 INCLUDE(MacroOutOfSourceBuild)

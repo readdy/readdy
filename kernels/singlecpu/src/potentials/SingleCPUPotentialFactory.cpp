@@ -1,8 +1,6 @@
 /**
- * << detailed description >>
- *
  * @file SingleCPUPotentialFactory.cpp
- * @brief << brief description >>
+ * @brief Fill the SingleCPUPotentialFactory with kernel-specific constructors for potentials.
  * @author clonker
  * @date 09.06.16
  */
@@ -21,6 +19,7 @@ SingleCPUPotentialFactory::SingleCPUPotentialFactory(SingleCPUKernel *const kern
     namespace p = readdy::model::potentials;
     // order 1
     factory[p::getPotentialName<p::CubePotential>()] = [kernel] { return new CubePotential(kernel); };
+    factory[p::getPotentialName<p::SpherePotential>()] = [kernel] { return new SpherePotential(kernel); };
     // order 2
     factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] { return new HarmonicRepulsion(kernel); };
     factory[p::getPotentialName<p::WeakInteractionPiecewiseHarmonic>()] = [kernel] {

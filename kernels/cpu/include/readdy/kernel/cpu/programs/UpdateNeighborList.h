@@ -30,7 +30,7 @@ public:
                 kernel->getKernelStateModel().updateNeighborList();
                 break;
             case clear:
-                kernel->getKernelStateModel().getNeighborList();
+                kernel->getKernelStateModel().clearNeighborList();
                 break;
         }
 

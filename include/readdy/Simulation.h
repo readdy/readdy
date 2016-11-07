@@ -146,19 +146,34 @@ namespace readdy {
         // Order 1 potentials
         //----------------------
         /**
-         * Register a box potential.
-         * @param the particle type for which the box potential should take effect
-         * @param forceConstant the force constant of the box potential
+         * Register a box potential, which is used to confine particles to a cuboid volume. The energy function
+         * increases quadratically with respect to the distance from the cuboid edges, resulting in a
+         * harmonic repulsion.
+         *
+         * @param particleType the particle type for which the box potential should take effect
+         * @param forceConstant the force constant determines the strength of repulsion
          * @param origin the coordinate of the lower left corner of the box
          * @param extent the extent from the origin
          * @param considerParticleRadius a boolean that indicates if the particle radius should play a role
          *        when calculating force and energy or not
-         * @return a uuid with which the potential can be removed again
-         * @todo document this more thoroughly
+         * @return a uuid with which the potential can be removed
          */
         const short registerBoxPotential(std::string particleType, double forceConstant,
                                                 readdy::model::Vec3 origin, readdy::model::Vec3 extent,
                                                 bool considerParticleRadius);
+        /**
+         * Register a sphere potential, which is used to confine particles to a spherical volume. The energy function
+         * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
+         *
+         * @param particleType the particle type for which the sphere potential should take effect
+         * @param forceConstant the force constant determines the strength of repulsion
+         * @param origin the center of the sphere
+         * @param radius the extent of the sphere
+         * @return a uuid with which the potential can be removed
+         * @todo add a considerParticleRadius parameter
+         */
+        const short registerSpherePotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, double radius);
+
         /**
          * Register a potential of order 1, i.e., a potential that only depends on the position of one particle.
          * @param ptr a const pointer to a PotentialOrder1 instance that is to be evaluated

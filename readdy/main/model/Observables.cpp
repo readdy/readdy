@@ -45,50 +45,6 @@ RadialDistributionObservable::RadialDistributionObservable(Kernel *const kernel,
     setBinBorders(binBorders);
 }
 
-void RadialDistributionObservable::evaluate() {
-    if (binBorders.size() > 1) {
-        std::fill(counts.begin(), counts.end(), 0);
-        const auto particles = kernel->getKernelStateModel().getParticles();
-        const auto n_from_particles = std::count_if(particles.begin(), particles.end(),
-                                                    [this](const readdy::model::Particle &p) {
-                                                        return p.getType() == typeCountFrom;
-                                                    });
-        {
-            const auto &distSquared = kernel->getKernelContext().getDistSquaredFun();
-            for (auto &&pFrom : particles) {
-                if (pFrom.getType() == typeCountFrom) {
-                    for (auto &&pTo : particles) {
-                        if (pTo.getType() == typeCountTo && pFrom.getId() != pTo.getId()) {
-                            const auto dist = sqrt(distSquared(pFrom.getPos(), pTo.getPos()));
-                            auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), dist);
-                            if (upperBound != binBorders.end()) {
-                                const auto binBordersIdx = upperBound - binBorders.begin();
-                                counts[binBordersIdx - 1]++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        auto &radialDistribution = std::get<1>(result);
-        {
-            const auto &binCenters = std::get<0>(result);
-            auto &&it_centers = binCenters.begin();
-            auto &&it_distribution = radialDistribution.begin();
-            for (auto &&it_counts = counts.begin(); it_counts != counts.end(); ++it_counts) {
-                const auto idx = it_centers - binCenters.begin();
-                const auto r = *it_centers;
-                const auto dr = binBorders[idx + 1] - binBorders[idx];
-                *it_distribution = (*it_counts) / (4 * M_PI * r * r * dr * n_from_particles * particleDensity);
-
-                ++it_distribution;
-                ++it_centers;
-            }
-        }
-    }
-}
-
 const std::vector<double> &RadialDistributionObservable::getBinBorders() const {
     return binBorders;
 }

@@ -1,15 +1,12 @@
 /**
- * << detailed description >>
- *
- * @file Potentials.cpp.cpp
- * @brief << brief description >>
+ * @file Potentials.cpp
+ * @brief Core library implementation of order 1 potentials
  * @author clonker
+ * @author chrisfroe
  * @date 20.06.16
  */
 
 #include <readdy/model/Kernel.h>
-#include <readdy/model/potentials/PotentialsOrder1.h>
-#include <readdy/model/potentials/PotentialsOrder2.h>
 
 namespace readdy {
 namespace model {
@@ -70,9 +67,33 @@ double CubePotential::getRelevantLengthScale() const noexcept {
     return std::min(extent[0], std::min(extent[1], extent[2]));
 }
 
+/*
+ * Sphere Potential
+ */
 
+SpherePotential::SpherePotential(const Kernel *kernel) : PotentialOrder1(getPotentialName<SpherePotential>()), kernel(kernel) {}
 
+const Vec3 &SpherePotential::getOrigin() const { return origin; }
 
+void SpherePotential::setOrigin(const Vec3 &origin) { SpherePotential::origin = origin; }
+
+double SpherePotential::getRadius() const { return radius; }
+
+void SpherePotential::setRadius(double radius) { SpherePotential::radius = radius; }
+
+double SpherePotential::getForceConstant() const { return forceConstant; }
+
+void SpherePotential::setForceConstant(double forceConstant) { SpherePotential::forceConstant = forceConstant; }
+
+void SpherePotential::configureForType(const unsigned int type) {}
+
+double SpherePotential::getRelevantLengthScale() const noexcept {
+    return radius;
+}
+
+double SpherePotential::getMaximalForce(double kbt) const noexcept {
+    return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //

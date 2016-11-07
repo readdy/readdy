@@ -4,7 +4,7 @@
  * in a certain way. One example would be the ReaDDyScheme, which will configure the context, then:
  *
  * - create neighbor list
- * - calcualte forces
+ * - calculate forces
  * - evaluate observables (0)
  * - for i in range(steps):
  *      - evaluate integrator
@@ -12,7 +12,7 @@
  *      - calculate forces
  *      - evaluate reactions
  *      - update the neighbor list
- *      - calcualte forces
+ *      - calculate forces
  *      - evaluate observables (i+1)
  *  - clear neighbor list
  *

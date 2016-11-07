@@ -1,8 +1,6 @@
 /**
- * << detailed description >>
- *
  * @file CPUPotentialFactory.h
- * @brief << brief description >>
+ * @brief This factory creates potentials for the cpu kernel.
  * @author clonker
  * @date 13.07.16
  */

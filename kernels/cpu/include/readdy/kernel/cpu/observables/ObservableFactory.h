@@ -18,6 +18,7 @@ namespace kernel {
 namespace cpu {
 class CPUKernel;
 namespace observables {
+
 class ObservableFactory : public readdy::model::_internal::ObservableFactory {
 
 public:
@@ -37,9 +38,14 @@ public:
     virtual readdy::model::ParticlePositionObservable *
     createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
+    virtual readdy::model::RadialDistributionObservable *
+    createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
+                                        std::string typeCountTo, double particleToDensity) const override;
+
 private:
     CPUKernel *const kernel;
 };
+
 }
 }
 }
