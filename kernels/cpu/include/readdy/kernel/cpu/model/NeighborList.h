@@ -47,7 +47,6 @@ public:
 private: 
     std::vector<Cell> cells;
     std::vector<container_t> maps;
-    std::vector<NeighborList::neighbor_t> no_neighbors;
 public:
     struct Cell {
         std::vector<Cell *> neighbors{};
@@ -82,6 +81,7 @@ public:
     void clear();
 
     const std::vector<neighbor_t>& neighbors(const particle_index entry) const;
+    const std::vector<neighbor_t>& find_neighbors(const particle_index) const;
 
     virtual void fillCells(data_t &data);
 

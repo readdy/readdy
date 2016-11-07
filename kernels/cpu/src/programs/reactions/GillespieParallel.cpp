@@ -259,26 +259,22 @@ void GillespieParallel::findProblematicParticles(
 
     std::queue<decltype(entry)> bfs{};
 
-    try {
-        for (const auto &neighbor : nl->neighbors(entry)) {
-            const auto &reactions = ctx.getOrder2Reactions(entry->type, neighbor.idx->type);
-            if (!reactions.empty()) {
-                const auto distSquared = neighbor.d2;
-                for (const auto &r : reactions) {
-                    if (r->getRate() > 0 && distSquared < r->getEductDistanceSquared()) {
-                        const bool neighborProblematic = problematic.find(neighbor.idx) != problematic.end();
-                        if (neighborProblematic || !box.isInBox(neighbor.idx->pos)) {
-                            // we have a problematic particle!
-                            problematic.insert(entry);
-                            bfs.push(entry);
-                            break;
-                        }
+    for (const auto &neighbor : nl->find_neighbors(entry)) {
+        const auto &reactions = ctx.getOrder2Reactions(entry->type, neighbor.idx->type);
+        if (!reactions.empty()) {
+            const auto distSquared = neighbor.d2;
+            for (const auto &r : reactions) {
+                if (r->getRate() > 0 && distSquared < r->getEductDistanceSquared()) {
+                    const bool neighborProblematic = problematic.find(neighbor.idx) != problematic.end();
+                    if (neighborProblematic || !box.isInBox(neighbor.idx->pos)) {
+                        // we have a problematic particle!
+                        problematic.insert(entry);
+                        bfs.push(entry);
+                        break;
                     }
                 }
             }
         }
-    } catch(const std::out_of_range& e) {
-        log::console()->trace("The particle {} was not in the neighbor list 2! {}", data.getEntryIndex(entry), e.what());
     }
     //BOOST_LOG_TRIVIAL(debug) << "------------------ BFS -----------------";
     while (!bfs.empty()) {
@@ -286,42 +282,37 @@ void GillespieParallel::findProblematicParticles(
         bfs.pop();
         const auto x_shell_idx = box.getShellIndex(x->pos);
         //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
-        try {
-
-            for (const auto &x_neighbor : nl->neighbors(x)) {
-                //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
-                /*if(neighbor_shell_idx == 0) {
-                    //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor was in outer shell, ignore";
-                    continue;
-                } else {
-                    //BOOST_LOG_TRIVIAL(debug) << "\t ----> got neighbor with shell index " << neighbor_shell_idx;
-                }*/
-                //BOOST_LOG_TRIVIAL(debug) << "\t\t inBox=" <<box.isInBox(neighborPos) <<", shellabsdiff=" <<std::abs(x_shell_idx - neighbor_shell_idx);
-                if (box.isInBox(x_neighbor.idx->pos)
-                    && std::abs(x_shell_idx - box.getShellIndex(x_neighbor.idx->pos)) <= 1.0) {
-                    //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was in box and adjacent shell";
-                    const auto &reactions = ctx.getOrder2Reactions(x->type, x_neighbor.idx->type);
-                    if (!reactions.empty()) {
-                        //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor had potentially conflicting reactions";
-                        const bool alreadyProblematic = problematic.find(x_neighbor.idx) != problematic.end();
-                        if (alreadyProblematic) {
-                            //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was already found, ignore";
-                            continue;
-                        }
-                        const auto distSquared = x_neighbor.d2;
-                        for (const auto &reaction : reactions) {
-                            if (reaction->getRate() > 0 && distSquared < reaction->getEductDistanceSquared()) {
-                                // we have a problematic particle!
-                                problematic.insert(x_neighbor.idx);
-                                bfs.push(x_neighbor.idx);
-                                break;
-                            }
+        for (const auto &x_neighbor : nl->find_neighbors(x)) {
+            //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
+            /*if(neighbor_shell_idx == 0) {
+                //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor was in outer shell, ignore";
+                continue;
+            } else {
+                //BOOST_LOG_TRIVIAL(debug) << "\t ----> got neighbor with shell index " << neighbor_shell_idx;
+            }*/
+            //BOOST_LOG_TRIVIAL(debug) << "\t\t inBox=" <<box.isInBox(neighborPos) <<", shellabsdiff=" <<std::abs(x_shell_idx - neighbor_shell_idx);
+            if (box.isInBox(x_neighbor.idx->pos)
+                && std::abs(x_shell_idx - box.getShellIndex(x_neighbor.idx->pos)) <= 1.0) {
+                //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was in box and adjacent shell";
+                const auto &reactions = ctx.getOrder2Reactions(x->type, x_neighbor.idx->type);
+                if (!reactions.empty()) {
+                    //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor had potentially conflicting reactions";
+                    const bool alreadyProblematic = problematic.find(x_neighbor.idx) != problematic.end();
+                    if (alreadyProblematic) {
+                        //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was already found, ignore";
+                        continue;
+                    }
+                    const auto distSquared = x_neighbor.d2;
+                    for (const auto &reaction : reactions) {
+                        if (reaction->getRate() > 0 && distSquared < reaction->getEductDistanceSquared()) {
+                            // we have a problematic particle!
+                            problematic.insert(x_neighbor.idx);
+                            bfs.push(x_neighbor.idx);
+                            break;
                         }
                     }
                 }
             }
-        } catch (const std::out_of_range& e) {
-            log::console()->trace("the particle {} was not in the neighbor list 3! {}", data.getEntryIndex(x), e.what());
         }
     }
 
