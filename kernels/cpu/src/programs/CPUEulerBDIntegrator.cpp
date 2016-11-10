@@ -34,9 +34,8 @@ void CPUEulerBDIntegrator::execute() {
             if(!(*it).is_deactivated()) {
                 const double D = context.getDiffusionConstant((*it).type);
                 const auto randomDisplacement = sqrt(2. * D * dt) * rnd::normal3(0, 1);
-                it->pos += randomDisplacement;
                 const auto deterministicDisplacement = (*it).force * dt * D / kbt;
-                it->pos += deterministicDisplacement;
+                it->pos += randomDisplacement + deterministicDisplacement;
                 fixPos(it->pos);
             }
         }

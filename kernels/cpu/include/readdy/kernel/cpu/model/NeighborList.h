@@ -23,6 +23,7 @@ namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace model {
+
 struct Neighbor {
     using index_t = readdy::kernel::cpu::model::ParticleData::Entry *;
     index_t idx;
@@ -43,16 +44,22 @@ public:
     using particle_index = Neighbor::index_t;
     using neighbor_t = Neighbor;
     using data_t = readdy::kernel::cpu::model::ParticleData;
-    using container_t = std::unordered_map<particle_index, std::vector<neighbor_t>>;
+    using container_t = std::vector<std::vector<neighbor_t>>;
+    using skin_size_t = double;
+    using data_iter_t = decltype(std::declval<data_t>().entries.begin());
+    using hilbert_index_t = unsigned int;
 private: 
     std::vector<Cell> cells;
     std::vector<container_t> maps;
+    skin_size_t skin_size;
+    std::vector<hilbert_index_t> hilbertIndexMapping;
 public:
     struct Cell {
         std::vector<Cell *> neighbors{};
         std::vector<particle_index> particleIndices{};
-        const cell_index id;
-        const bool enoughCells;
+        hilbert_index_t hilbert_index;
+        cell_index contiguous_index;
+        bool enoughCells;
 
         // dirty flag indicating whether the cell and its neighboring cells have to be re-created
         bool dirty = true;
@@ -61,16 +68,12 @@ public:
 
         void addNeighbor(Cell *cell);
 
-        friend bool operator==(const Cell &lhs, const Cell &rhs) {
-            return lhs.id == rhs.id;
-        }
+        friend bool operator==(const Cell &lhs, const Cell &rhs);
 
-        friend bool operator!=(const Cell &lhs, const Cell &rhs) {
-            return !(lhs == rhs);
-        }
+        friend bool operator!=(const Cell &lhs, const Cell &rhs);
     };
 
-    NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config);
+    NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config, skin_size_t = 0);
 
     virtual ~NeighborList();
 
@@ -88,6 +91,8 @@ public:
     virtual void create(data_t &data);
 
     void updateData(data_t &data, data_t::update_t update);
+
+    void displace(data_iter_t iter, const readdy::model::Vec3& vec);
 
     void remove(const particle_index);
 
@@ -110,9 +115,6 @@ public:
     }
     auto end() const -> decltype(maps.cend()) {
         return cend();
-    }
-    auto n_maps() const -> decltype(maps.size()) {
-        return maps.size();
     }
 
 protected:
@@ -142,6 +144,12 @@ protected:
 
     const container_t& getPairs(const Cell* const cell) const;
 };
+
+NeighborList::hilbert_index_t getHilbertIndex(NeighborList::cell_index i,
+                                              NeighborList::cell_index j,
+                                              NeighborList::cell_index k);
+
+
 }
 }
 }

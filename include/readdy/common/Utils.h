@@ -54,6 +54,7 @@ inline void for_each_value(const Collection& collection, Fun f)  {
         }
     }
 }
+
 }
 
 }
