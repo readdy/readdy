@@ -8,9 +8,12 @@
  * @todo hilbert curve sorting of cells, grouping of particles into cells, replace maps by vector w/ padding
  */
 
-#include <readdy/kernel/cpu/model/NeighborList.h>
+#include <set>
 #include <sstream>
+
+#include <readdy/kernel/cpu/model/NeighborList.h>
 #include <readdy/kernel/cpu/util/hilbert.h>
+#include <readdy/common/numeric.h>
 
 template<typename T, typename Predicate>
 typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const &item, Predicate pred) {
@@ -37,10 +40,10 @@ auto cells_search_predicate = [](const NeighborList::Cell& c1, const NeighborLis
 
 const static std::vector<NeighborList::neighbor_t> no_neighbors{};
 
-NeighborList::NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config,
+NeighborList::NeighborList(const ctx_t *const context, data_t &data, util::Config const *const config,
                            skin_size_t skin)
         : ctx(context), config(config), cells(std::vector<Cell>()), simBoxSize(ctx->getBoxSize()),
-          maps(config->nThreads), skin_size(skin) {}
+          maps(config->nThreads), skin_size(skin), data(data) {}
 
 void NeighborList::setupCells() {
     if (cells.empty()) {
@@ -129,7 +132,7 @@ void NeighborList::clear() {
     maps.clear();
 }
 
-void NeighborList::fillCells(data_t &data) {
+void NeighborList::fillCells() {
     if (maxCutoff > 0) {
 
         for (auto &cell : cells) {
@@ -144,7 +147,6 @@ void NeighborList::fillCells(data_t &data) {
                 auto cell = getCell(it->pos);
                 if (cell) {
                     auto ptr = &(*it);
-                    getPairs(cell).emplace(ptr, std::vector<neighbor_t>());
                     cell->particleIndices.push_back(ptr);
                 }
             }
@@ -156,34 +158,30 @@ void NeighborList::fillCells(data_t &data) {
             const auto size = cells.size();
             const std::size_t grainSize = size / config->nThreads;
             const auto cutoffSquared = maxCutoff * maxCutoff;
-            auto worker = [&data, cutoffSquared, this](const cell_it_t begin, const cell_it_t end, container_t &map) {
+            auto worker = [cutoffSquared, this](const cell_it_t begin, const cell_it_t end, container_t &map) {
                 const auto &d2 = ctx->getDistSquaredFun();
-                for (auto _b = begin; _b != end; ++_b) {
+                for (cell_it_t _b = begin; _b != end; ++_b) {
                     auto &cell = *_b;
                     for (const auto &pI : cell.particleIndices) {
-                        const auto pIIt = map.find(pI);
-                        if (pIIt != map.end()) {
-                            auto &pI_vec = pIIt->second;
-                            for (const auto &pJ : cell.particleIndices) {
-                                if (pI != pJ) {
-                                    const auto distSquared = d2(pI->pos, pJ->pos);
-                                    if (distSquared < cutoffSquared) {
-                                        Neighbor neighbor{pJ, distSquared};
-                                        pI_vec.push_back(std::move(neighbor));
-                                    }
+                        const auto idx_i = data.getEntryIndex(pI);
+                        auto& neighbors_i = data.neighbors.at(idx_i);
+                        for (const auto &pJ : cell.particleIndices) {
+                            if (pI != pJ) {
+                                const auto distSquared = d2(pI->pos, pJ->pos);
+                                if (distSquared < cutoffSquared) {
+                                    neighbors_i.push_back({pJ, distSquared});
                                 }
                             }
-                            for (auto &neighboringCell : cell.neighbors) {
-                                for (const auto pJ : neighboringCell->particleIndices) {
-                                    const auto distSquared = d2(pI->pos, pJ->pos);
-                                    if (distSquared < cutoffSquared) {
-                                        Neighbor neighbor{pJ, distSquared};
-                                        pI_vec.push_back(std::move(neighbor));
-                                    }
-                                }
-                            }
-
                         }
+                        for (auto &neighboringCell : cell.neighbors) {
+                            for (const auto pJ : neighboringCell->particleIndices) {
+                                const auto distSquared = d2(pI->pos, pJ->pos);
+                                if (distSquared < cutoffSquared) {
+                                    neighbors_i.push_back({pJ, distSquared});
+                                }
+                            }
+                        }
+
                     }
                 }
             };
@@ -204,10 +202,11 @@ void NeighborList::fillCells(data_t &data) {
     }
 }
 
-void NeighborList::create(data_t &data) {
+void NeighborList::create() {
     simBoxSize = ctx->getBoxSize();
+    data.setFixPosFun(ctx->getFixPositionFun());
     setupCells();
-    fillCells(data);
+    fillCells();
 }
 
 NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) {
@@ -232,40 +231,25 @@ NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index
 void NeighborList::remove(const particle_index idx) {
     auto cell = getCell(idx->pos);
     if (cell != nullptr) {
-        std::set<container_t *> affectedMaps;
-        for (auto neighborCell : getCell(idx->pos)->neighbors) {
-            affectedMaps.insert(&getPairs(neighborCell));
-        }
         try {
             for (auto &neighbor : neighbors(idx)) {
-                auto &&neighborCell = getCell(neighbor.idx->pos);
-                for (auto map : affectedMaps) {
-                    const auto it = map->find(neighbor.idx);
-                    if (it != map->end()) {
-                        std::remove_if(it->second.begin(), it->second.end(),
-                                       [idx](const neighbor_t &n) {
-                                           return n.idx == idx;
-                                       });
-                    }
-
-                }
+                auto& neighbors_neighbors = data.neighbors.at(data.getEntryIndex(neighbor.idx));
+                neighbors_neighbors.erase(std::find(neighbors_neighbors.begin(), neighbors_neighbors.end(), idx));
             }
-            getPairs(cell).erase(idx);
+            cell->particleIndices.erase(std::find(cell->particleIndices.begin(), cell->particleIndices.end(), idx));
         } catch (const std::out_of_range &) {
             log::console()->error("tried to remove particle with id {} but it was not in the neighbor list", idx->id);
         }
     }
 }
 
-void NeighborList::insert(const data_t &data, const particle_index idx) {
+void NeighborList::insert(const particle_index idx) {
     const auto d2 = ctx->getDistSquaredFun();
     const auto pos = idx->pos;
     const auto cutoffSquared = maxCutoff * maxCutoff;
     auto cell = getCell(pos);
     if (cell) {
-        auto &map = getPairs(cell);
         cell->particleIndices.push_back(idx);
-        auto emplace_ret = map.emplace(idx, std::vector<neighbor_t>());
 
         for (const auto pJ : cell->particleIndices) {
             if (idx != pJ) {
@@ -298,7 +282,7 @@ NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_typ
     return getCell(i, j, k);
 }
 
-void NeighborList::updateData(NeighborList::data_t &data, ParticleData::update_t update) {
+void NeighborList::updateData(ParticleData::update_t update) {
     if (maxCutoff > 0) {
         for (const auto &p : std::get<1>(update)) {
             remove(p);
@@ -308,21 +292,14 @@ void NeighborList::updateData(NeighborList::data_t &data, ParticleData::update_t
     auto newEntries = data.update(std::move(update));
     if (maxCutoff > 0) {
         for (const auto &p : newEntries) {
-            insert(data, p);
+            insert(p);
         }
     }
 }
 
 const std::vector<NeighborList::neighbor_t> &NeighborList::neighbors(NeighborList::particle_index const entry) const {
     if (maxCutoff > 0) {
-        const auto cell = getCell(entry->pos);
-        if (cell != nullptr) {
-            return getPairs(cell).at(entry);
-        } else {
-            std::stringstream stream;
-            stream << "the particle position " << entry->pos << " was in no neighbor list cell" << std::endl;
-            throw std::out_of_range(stream.str());
-        }
+        return data.neighbors.at(data.getEntryIndex(entry));
     }
     return no_neighbors;
 }
@@ -356,49 +333,22 @@ const NeighborList::Cell *const NeighborList::getCell(NeighborList::signed_cell_
     return &*std::lower_bound(cells.begin(), cells.end(), hix, cells_search_predicate);
 }
 
-NeighborList::container_t &NeighborList::getPairs(const NeighborList::Cell *const cell) {
-    return maps.at(getMapsIndex(cell));
-}
-
-const NeighborList::container_t &NeighborList::getPairs(const NeighborList::Cell *const cell) const {
-    return maps.at(getMapsIndex(cell));
-}
-
 util::Config::n_threads_t NeighborList::getMapsIndex(const NeighborList::Cell *const cell) const {
     return static_cast<util::Config::n_threads_t>(floor(cell->contiguous_index / floor(cells.size() / config->nThreads)));
 }
 
 const std::vector<NeighborList::neighbor_t> &NeighborList::find_neighbors(particle_index const entry) const {
     if (maxCutoff > 0) {
-        const auto cell = getCell(entry->pos);
-        if (cell != nullptr) {
-            const auto &map = getPairs(cell);
-            const auto it = map.find(entry);
-            if (it != map.end()) {
-                return it->second;
-            }
-        }
+        return data.neighbors.at(data.getEntryIndex(entry));
     }
     return no_neighbors;
 }
 
 void NeighborList::displace(NeighborList::data_iter_t iter, const readdy::model::Vec3 &vec) {
-    iter->pos += vec;
-    // todo record displacement
+    data.displace(&*iter, vec);
 }
 
 NeighborList::~NeighborList() = default;
-
-Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {}
-
-Neighbor::Neighbor(Neighbor &&rhs) : idx(rhs.idx), d2(std::move(rhs.d2)) {
-}
-
-Neighbor &Neighbor::operator=(Neighbor &&rhs) {
-    idx = rhs.idx;
-    d2 = std::move(rhs.d2);
-    return *this;
-}
 
 void NeighborList::Cell::addNeighbor(NeighborList::Cell *cell) {
     if (cell && cell->hilbert_index != hilbert_index

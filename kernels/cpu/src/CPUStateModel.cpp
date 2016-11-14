@@ -16,13 +16,32 @@ namespace cpu {
 
 struct CPUStateModel::Impl {
     readdy::model::KernelContext *context;
-    std::unique_ptr<readdy::kernel::cpu::model::ParticleData> particleData;
     std::unique_ptr<readdy::kernel::cpu::model::NeighborList> neighborList;
     double currentEnergy = 0;
+
+    template<bool fixpos=true>
+    const model::ParticleData& cdata() const {
+        if(fixpos) particleData->setFixPosFun(context->getFixPositionFun());
+        return *particleData;
+    }
+
+    template<bool fixpos=true>
+    model::ParticleData& data() {
+        if(fixpos) particleData->setFixPosFun(context->getFixPositionFun());
+        return *particleData;
+    }
+
+    Impl() {
+        particleData = std::make_unique<CPUStateModel::data_t>();
+    }
+
+private:
+    std::unique_ptr<readdy::kernel::cpu::model::ParticleData> particleData;
 };
 
 void CPUStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
+    const auto& particleData = pimpl->cdata<true>();
     // update forces and energy order 1 potentials
     {
         std::vector<double> energyUpdate;
@@ -44,10 +63,10 @@ void CPUStateModel::calculateForces() {
             }
         };
 
-        const auto size = pimpl->particleData->size();
+        const auto size = particleData.size();
         const std::size_t grainSize = size / config->nThreads;
 
-        auto it = pimpl->particleData->entries.begin();
+        auto it = particleData.begin();
         for (auto i = 0; i < config->nThreads - 1; ++i) {
             energyUpdate.push_back(0);
             threads.push_back(util::scoped_thread(
@@ -57,7 +76,7 @@ void CPUStateModel::calculateForces() {
         }
         energyUpdate.push_back(0);
         threads.push_back(
-                util::scoped_thread(std::thread(worker, it, pimpl->particleData->entries.end(),
+                util::scoped_thread(std::thread(worker, it, particleData.end(),
                                                std::ref(energyUpdate.back()), pimpl->context->getAllOrder1Potentials()))
         );
         std::for_each(energyUpdate.begin(), energyUpdate.end(), [this](double e) { pimpl->currentEnergy += e; });
@@ -117,42 +136,41 @@ void CPUStateModel::calculateForces() {
 }
 
 const std::vector<readdy::model::Vec3> CPUStateModel::getParticlePositions() const {
-    const auto& entries = pimpl->particleData->entries;
+    const auto& data = pimpl->cdata();
     std::vector<readdy::model::Vec3> target{};
-    target.reserve(pimpl->particleData->size());
-    std::for_each(entries.begin(), entries.end(), [&target](const data_t::Entry& entry) {
-        if(!entry.is_deactivated()) {
-            target.push_back(entry.pos);
-        }
-    });
+    target.reserve(data.size());
+    for(const auto& entry : data) {
+        target.push_back(entry.position());
+    }
     return target;
 }
 
 const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
+    const auto& data = pimpl->cdata();
     std::vector<readdy::model::Particle> result;
-    result.reserve(pimpl->particleData->size());
-    for(const auto& entry : pimpl->particleData->entries) {
+    result.reserve(data.size());
+    for(const auto& entry : data) {
         if(!entry.is_deactivated()) {
-            result.push_back(pimpl->particleData->toParticle(entry));
+            result.push_back(data.toParticle(entry));
         }
     }
     return result;
 }
 
 void CPUStateModel::updateNeighborList() {
-    pimpl->neighborList->create(*pimpl->particleData);
+    pimpl->neighborList->create(pimpl->data<false>());
 }
 
 void CPUStateModel::addParticle(const readdy::model::Particle &p) {
-    pimpl->particleData->addParticle(p);
+    pimpl->data<false>().addParticle(p);
 }
 
 void CPUStateModel::addParticles(const std::vector<readdy::model::Particle> &p) {
-    pimpl->particleData->addParticles(p);
+    pimpl->data<false>().addParticles(p);
 }
 
 void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
-    pimpl->particleData->removeParticle(p);
+    pimpl->data<false>().removeParticle(p);
 }
 
 double CPUStateModel::getEnergy() const {
@@ -162,12 +180,11 @@ double CPUStateModel::getEnergy() const {
 CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config)
         : pimpl(std::make_unique<Impl>()), config(config) {
     pimpl->context = context;
-    pimpl->particleData = std::make_unique<data_t>();
     pimpl->neighborList = std::make_unique<model::NeighborList>(context, config);
 }
 
 CPUStateModel::data_t *const CPUStateModel::getParticleData() const {
-    return pimpl->particleData.get();
+    return &pimpl->data<false>();
 }
 
 model::NeighborList *const CPUStateModel::getNeighborList() const {
@@ -179,7 +196,7 @@ void CPUStateModel::clearNeighborList() {
 }
 
 void CPUStateModel::removeAllParticles() {
-    pimpl->particleData->clear();
+    pimpl->data<false>().clear();
 }
 
 CPUStateModel::~CPUStateModel() = default;

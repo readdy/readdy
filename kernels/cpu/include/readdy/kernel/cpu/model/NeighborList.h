@@ -11,12 +11,14 @@
 #define READDY_CPUKERNEL_NEIGHBORLIST_H
 
 #include <memory>
+
 #include <readdy/common/make_unique.h>
-#include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/model/KernelContext.h>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
+
+#include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/kernel/cpu/util/scoped_thread.h>
 #include <readdy/kernel/cpu/util/Config.h>
+
 #include "ParticleData.h"
 
 namespace readdy {
@@ -24,26 +26,15 @@ namespace kernel {
 namespace cpu {
 namespace model {
 
-struct Neighbor {
-    using index_t = readdy::kernel::cpu::model::ParticleData::Entry *;
-    index_t idx;
-    double d2;
-
-    Neighbor(const index_t idx, const double d2);
-    Neighbor(const Neighbor&) = delete;
-    Neighbor& operator=(const Neighbor&) = delete;
-    Neighbor(Neighbor&&);
-    Neighbor& operator=(Neighbor&&);
-};
-
 class NeighborList {
 public: 
     class Cell;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
-    using particle_index = Neighbor::index_t;
-    using neighbor_t = Neighbor;
+    using particle_index = ParticleData::Neighbor::index_t;
+    using neighbor_t = ParticleData::Neighbor;
     using data_t = readdy::kernel::cpu::model::ParticleData;
+    using ctx_t = readdy::model::KernelContext;
     using container_t = std::vector<std::vector<neighbor_t>>;
     using skin_size_t = double;
     using data_iter_t = decltype(std::declval<data_t>().entries.begin());
@@ -73,7 +64,7 @@ public:
         friend bool operator!=(const Cell &lhs, const Cell &rhs);
     };
 
-    NeighborList(const readdy::model::KernelContext *const context, util::Config const *const config, skin_size_t = 0);
+    NeighborList(const ctx_t *const context, data_t &data, util::Config const *const config, skin_size_t = 0);
 
     virtual ~NeighborList();
 
@@ -86,17 +77,17 @@ public:
     const std::vector<neighbor_t>& neighbors(const particle_index entry) const;
     const std::vector<neighbor_t>& find_neighbors(const particle_index) const;
 
-    virtual void fillCells(data_t &data);
+    virtual void fillCells();
 
-    virtual void create(data_t &data);
+    virtual void create();
 
-    void updateData(data_t &data, data_t::update_t update);
+    void updateData(data_t::update_t update);
 
     void displace(data_iter_t iter, const readdy::model::Vec3& vec);
 
     void remove(const particle_index);
 
-    void insert(const data_t &data, const particle_index);
+    void insert(const particle_index);
 
     auto begin() -> decltype(maps.begin()) {
         return maps.begin();
@@ -140,9 +131,7 @@ protected:
 
     util::Config::n_threads_t getMapsIndex(const Cell* const cell) const;
 
-    container_t& getPairs(const Cell* const cell);
-
-    const container_t& getPairs(const Cell* const cell) const;
+    data_t& data;
 };
 
 NeighborList::hilbert_index_t getHilbertIndex(NeighborList::cell_index i,

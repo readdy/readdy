@@ -180,7 +180,7 @@ unsigned int KernelContext::getParticleTypeID(const std::string &name) const {
     return pimpl->typeMapping[name];
 }
 
-double KernelContext::getDiffusionConstant(uint particleType) const {
+double KernelContext::getDiffusionConstant(unsigned int particleType) const {
     return pimpl->diffusionConstants[particleType];
 }
 
@@ -201,7 +201,7 @@ void KernelContext::setParticleRadius(const std::string &particleType, const dou
 }
 
 unsigned int KernelContext::getOrCreateTypeId(const std::string &particleType) {
-    uint t_id;
+    unsigned int t_id;
     if (pimpl->typeMapping.find(particleType) != pimpl->typeMapping.end()) {
         t_id = pimpl->typeMapping[particleType];
     } else {
@@ -338,15 +338,15 @@ const reactions::Reaction<2> *const KernelContext::getReactionOrder2WithName(con
     return nullptr;
 }
 
-const std::function<void(Vec3 &)> &KernelContext::getFixPositionFun() const {
+const KernelContext::fix_pos_fun &KernelContext::getFixPositionFun() const {
     return pimpl->fixPositionFun;
 }
 
-const std::function<double(const Vec3 &, const Vec3 &)> &KernelContext::getDistSquaredFun() const {
+const KernelContext::dist_squared_fun &KernelContext::getDistSquaredFun() const {
     return pimpl->distFun;
 }
 
-const std::function<Vec3(const Vec3 &, const Vec3 &)> &KernelContext::getShortestDifferenceFun() const {
+const KernelContext::shortest_dist_fun &KernelContext::getShortestDifferenceFun() const {
     return pimpl->diffFun;
 }
 

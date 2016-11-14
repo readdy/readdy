@@ -51,7 +51,7 @@ class KernelContext {
 
 public:
 
-    using rdy_type_mapping = std::unordered_map<std::string, uint>;
+    using rdy_type_mapping = std::unordered_map<std::string, unsigned int>;
 
     using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
     using rdy_pot_1_registry = std::unordered_map<unsigned int, std::vector<rdy_pot_1 *>>;
@@ -61,6 +61,10 @@ public:
 
     using reaction_o1_registry = std::unordered_map<unsigned int, std::vector<reactions::Reaction<1> *>>;
     using reaction_o2_registry = std::unordered_map<rdy_ptp, std::vector<reactions::Reaction<2> *>, rdy_ptp_hasher>;
+
+    using fix_pos_fun = std::function<void(Vec3 &)>;
+    using dist_squared_fun = std::function<double(const Vec3 &, const Vec3 &)>;
+    using shortest_dist_fun = std::function<Vec3(const Vec3 &, const Vec3 &)>;
 
     double getKBT() const;
 
@@ -78,11 +82,11 @@ public:
 
     void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
-    const std::function<void(Vec3 &)> &getFixPositionFun() const;
+    const fix_pos_fun &getFixPositionFun() const;
 
-    const std::function<double(const Vec3 &, const Vec3 &)> &getDistSquaredFun() const;
+    const dist_squared_fun &getDistSquaredFun() const;
 
-    const std::function<Vec3(const Vec3 &, const Vec3 &)> &getShortestDifferenceFun() const;
+    const shortest_dist_fun &getShortestDifferenceFun() const;
 
     double getDiffusionConstant(const std::string &particleType) const;
 
