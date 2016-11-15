@@ -9,6 +9,7 @@
 
 #include <readdy/kernel/cpu/CPUStateModel.h>
 #include <future>
+#include <readdy/kernel/cpu/util/scoped_thread.h>
 
 namespace readdy {
 namespace kernel {

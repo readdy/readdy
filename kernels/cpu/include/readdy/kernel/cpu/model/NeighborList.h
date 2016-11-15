@@ -16,7 +16,6 @@
 #include <readdy/model/KernelContext.h>
 
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/cpu/util/scoped_thread.h>
 #include <readdy/kernel/cpu/util/Config.h>
 
 #include "ParticleData.h"
@@ -39,24 +38,27 @@ public:
     using skin_size_t = double;
     using data_iter_t = decltype(std::declval<data_t>().entries.begin());
     using hilbert_index_t = unsigned int;
+    using cell_iter_t = decltype(std::declval<std::vector<Cell>>().begin());
 private: 
     std::vector<Cell> cells;
     skin_size_t skin_size;
-    // gives a mapping boxIndex -> hilbertIndex
-    std::vector<hilbert_index_t> hilbertIndexMapping;
+    bool initialSetup = true;
 public:
     struct Cell {
         std::vector<Cell *> neighbors{};
         std::vector<particle_index> particleIndices{};
+        double maximal_displacements[2];
         cell_index contiguous_index;
         bool enoughCells;
 
         // dirty flag indicating whether the cell and its neighboring cells have to be re-created
-        bool dirty = true;
+        bool dirty {false};
 
         Cell(cell_index i, cell_index j, cell_index k, const std::array<cell_index, 3> &nCells);
 
         void addNeighbor(Cell *cell);
+
+        void checkDirty(skin_size_t skin);
 
         friend bool operator==(const Cell &lhs, const Cell &rhs);
 
@@ -83,6 +85,9 @@ public:
     void updateData(data_t::update_t update);
 
     void displace(data_iter_t iter, const readdy::model::Vec3& vec);
+    void displace(data_t::Entry&, const data_t::particle_type::pos_type& delta);
+    void displace(data_t::index_t entry, const data_t::particle_type::pos_type& delta);
+    void setPosition(data_t::index_t entry, data_t::particle_type::pos_type&& newPosition);
 
     void remove(const particle_index);
 
@@ -124,13 +129,16 @@ protected:
 
     const Cell* const getCell(const readdy::model::Particle::pos_type &pos) const;
 
-    Cell *getCell(const readdy::model::Particle::pos_type &pos);
+    int getCellIndex(const readdy::model::Particle::pos_type &pos) const;
 
+    Cell *getCell(const readdy::model::Particle::pos_type &pos);
     Cell *getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k);
 
     const Cell * const getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) const;
 
-    util::Config::n_threads_t getMapsIndex(const Cell* const cell) const;
+    std::unordered_set<Cell*> findDirtyCells();
+
+    void setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
 
     data_t& data;
 };

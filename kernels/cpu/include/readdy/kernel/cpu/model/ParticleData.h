@@ -33,7 +33,8 @@ public:
     using ctx_t = readdy::model::KernelContext;
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
-    using neighbor_list_t = std::vector<std::vector<Neighbor>>;
+    using neighbors_t = std::vector<Neighbor>;
+    using neighbor_list_t = std::vector<neighbors_t>;
     using index_t = entries_t::size_type;
     using update_t = std::pair<ParticleData::entries_t, std::vector<index_t>>;
     using force_t = readdy::model::Vec3;
@@ -68,12 +69,12 @@ public:
 
         particle_type::id_type id; // 8 bytes
         force_t force; // 3*8 + 8 = 32 bytes
+        displacement_t displacement; // 32 + 8 = 40 bytes
 
     private:
         friend class readdy::kernel::cpu::model::ParticleData;
         friend class NeighborList;
 
-        displacement_t displacement; // 32 + 8 = 40 bytes
         particle_type::pos_type pos; // 40 + 3*8 = 64 bytes
     public:
         particle_type::type_type type; // 64 + 4 = 68 bytes
@@ -141,11 +142,12 @@ public:
     const Entry& entry_at(index_t) const;
     const Entry& centry_at(index_t) const;
 
+    neighbors_t& neighbors_at(index_t);
+    const neighbors_t& neighbors_at(index_t) const;
+    const neighbors_t& cneighbors_at(index_t) const;
+
     const particle_type::pos_type& pos(index_t) const;
 
-    void displace(Entry&, const particle_type::pos_type& delta);
-    void displace(index_t entry, const particle_type::pos_type& delta);
-    void setPosition(index_t entry, particle_type::pos_type&& newPosition);
     void setFixPosFun(const ctx_t::fix_pos_fun&);
 
     index_t getEntryIndex(const Entry *const entry) const;
@@ -157,8 +159,11 @@ public:
      * @return vector of new entries
      */
     std::vector<index_t> update(update_t&&);
+    void displace(Entry&, const particle_type::pos_type& delta);
 
 protected:
+
+
     std::stack<index_t, std::vector<index_t>> blanks;
     neighbor_list_t neighbors;
     entries_t entries;

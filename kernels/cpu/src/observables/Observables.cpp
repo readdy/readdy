@@ -10,6 +10,7 @@
 #include <readdy/kernel/cpu/observables/Observables.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <future>
+#include <readdy/kernel/cpu/util/scoped_thread.h>
 
 namespace readdy {
 namespace kernel {

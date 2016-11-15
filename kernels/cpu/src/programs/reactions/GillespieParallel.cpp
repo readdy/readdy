@@ -11,6 +11,7 @@
 #include <queue>
 
 #include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
+#include <readdy/kernel/cpu/util/scoped_thread.h>
 
 
 using rdy_particle_t = readdy::model::Particle;
@@ -228,8 +229,7 @@ void GillespieParallel::handleBoxReactions() {
 
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         for (auto &&future : newParticles) {
-            auto particles = future.get();
-            neighbor_list.updateData(std::move(particles));
+            neighbor_list.updateData(std::move(future.get()));
         }
         neighbor_list.updateData(std::move(newProblemParticles));
     }

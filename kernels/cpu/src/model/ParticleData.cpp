@@ -20,7 +20,7 @@ namespace model {
 
 ParticleData::Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {}
 
-ParticleData::Neighbor::Neighbor(Neighbor &&rhs) : idx(rhs.idx), d2(std::move(rhs.d2)) {
+ParticleData::Neighbor::Neighbor(Neighbor &&rhs) : idx(std::move(rhs.idx)), d2(std::move(rhs.d2)) {
 }
 
 ParticleData::Neighbor& ParticleData::Neighbor::operator=(ParticleData::Neighbor &&rhs) {
@@ -134,7 +134,12 @@ ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.top();
         blanks.pop();
-        entries.at(idx) = std::move(entry);
+        try {
+            entries.at(idx) = std::move(entry);
+            neighbors.at(idx).clear();
+        } catch(const std::out_of_range&) {
+            log::console()->error("no1");
+        }
         return idx;
     } else {
         entries.push_back(std::move(entry));
@@ -144,10 +149,14 @@ ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
 }
 
 void ParticleData::removeEntry(index_t idx) {
-    auto& entry = entries.at(idx);
-    if(!entry.is_deactivated()) {
-        entry.deactivated = true;
-        blanks.push(idx);
+    try {
+        auto &entry = entries.at(idx);
+        if(!entry.is_deactivated()) {
+            entry.deactivated = true;
+            blanks.push(idx);
+        }
+    } catch(const std::out_of_range&) {
+        log::console()->error("no2");
     }
 }
 
@@ -156,17 +165,25 @@ ParticleData::index_t ParticleData::getEntryIndex(const ParticleData::Entry *con
 }
 
 std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) {
+    std::vector<index_t> result;
+
     auto &&newEntries = std::move(std::get<0>(update_data));
     auto &&removedEntries = std::move(std::get<1>(update_data));
-
-    std::vector<index_t> result;
     result.reserve(newEntries.size());
 
     auto it_del = removedEntries.begin();
     for(auto&& newEntry : newEntries) {
         if(it_del != removedEntries.end()) {
-            entries.at(*it_del) = std::move(newEntry);
-            neighbors.at(*it_del).clear();
+            try {
+                entries.at(*it_del) = std::move(newEntry);
+            } catch(const std::out_of_range&) {
+                log::console()->error("no3");
+            }
+            try {
+                neighbors.at(*it_del).clear();
+            } catch(const std::out_of_range&) {
+                log::console()->error("no4");
+            }
             result.push_back(*it_del);
             ++it_del;
         } else {
@@ -181,24 +198,17 @@ std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) 
     return result;
 }
 
-void ParticleData::displace(index_t index, const particle_type::pos_type &delta) {
-    displace(entries.at(index), delta);
-}
-
-void ParticleData::setPosition(index_t idx, particle_type::pos_type &&newPosition) {
-    auto& entry = entries.at(idx);
-    const auto delta = newPosition - entry.pos;
-    entry.pos = std::move(newPosition);
-    fixPos(entry.pos);
-    entry.displacement += sqrt(delta * delta);
-}
-
 void ParticleData::setFixPosFun(const ctx_t::fix_pos_fun &f) {
     fixPos = f;
 }
 
 const ParticleData::particle_type::pos_type &ParticleData::pos(ParticleData::index_t idx) const {
-    return entries.at(idx).pos;
+    try {
+        return entries.at(idx).pos;
+    } catch(const std::out_of_range& e) {
+        log::console()->error("no5");
+        throw e;
+    }
 }
 
 void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
@@ -208,7 +218,12 @@ void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Par
 }
 
 ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) {
-    return entries.at(idx);
+    try {
+        return entries.at(idx);
+    } catch(const std::out_of_range& e) {
+        log::console()->error("no6");
+        throw e;
+    }
 }
 
 const ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) const {
@@ -216,7 +231,34 @@ const ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) con
 }
 
 const ParticleData::Entry &ParticleData::centry_at(ParticleData::index_t idx) const {
-    return entries.at(idx);
+    try {
+        return entries.at(idx);
+    } catch(const std::out_of_range& e) {
+        log::console()->error("no7");
+        throw e;
+    }
+}
+
+ParticleData::neighbors_t &ParticleData::neighbors_at(ParticleData::index_t idx) {
+    try {
+        return neighbors.at(idx);
+    } catch(const std::out_of_range& e) {
+        log::console()->error("no9");
+        throw e;
+    }
+}
+
+const ParticleData::neighbors_t &ParticleData::neighbors_at(ParticleData::index_t idx) const {
+    return cneighbors_at(idx);
+}
+
+const ParticleData::neighbors_t &ParticleData::cneighbors_at(ParticleData::index_t idx) const {
+    try {
+        return neighbors.at(idx);
+    } catch(const std::out_of_range& e) {
+        log::console()->error("no10");
+        throw e;
+    }
 }
 
 

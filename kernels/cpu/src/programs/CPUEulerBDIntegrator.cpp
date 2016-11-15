@@ -8,6 +8,7 @@
  */
 
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu/util/scoped_thread.h>
 
 namespace readdy {
 namespace kernel {
