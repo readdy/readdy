@@ -54,15 +54,12 @@ bool GillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
 
 void GillespieParallel::execute() {
     {
-        //readdy::util::Timer t ("gillespie parallel: setup boxes");
         setupBoxes();
     }
     {
-        //readdy::util::Timer t ("gillespie parallel: fill boxes");
         fillBoxes();
     }
     {
-        //readdy::util::Timer t ("gillespie parallel: handle reactions");
         handleBoxReactions();
     }
 }

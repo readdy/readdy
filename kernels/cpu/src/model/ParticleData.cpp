@@ -139,7 +139,7 @@ ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
     } else {
         entries.push_back(std::move(entry));
         neighbors.push_back({});
-        return entries.size();
+        return entries.size()-1;
     }
 }
 

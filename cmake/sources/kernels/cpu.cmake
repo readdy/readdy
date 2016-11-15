@@ -10,7 +10,6 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/potentials/CPUPotentialFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/ObservableFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/Observables.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/util/Config.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/util/hilbert.c")
 
 # --- programs ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/CPUProgramFactory.cpp")
@@ -25,3 +24,6 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/Gillespie.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/GillespieParallel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/FilteredGillespieParallel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/NextSubvolumesReactionScheduler.cpp")
+
+# --- c sources ---
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/util/hilbert.c")
