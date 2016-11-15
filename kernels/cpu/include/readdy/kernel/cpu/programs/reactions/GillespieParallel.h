@@ -52,7 +52,7 @@ protected:
     unsigned int otherAxis1, otherAxis2;
 
     struct SlicedBox {
-        using particle_indices_t = std::vector<data_t::Entry*>;
+        using particle_indices_t = std::vector<data_t::index_t>;
         particle_indices_t particleIndices{};
         unsigned int id = 0;
         vec_t lowerLeftVertex, upperRightVertex;
@@ -93,13 +93,13 @@ protected:
      */
     void fillBoxes();
 
-    virtual /**
+    /**
      * Executes the gillespie algorithm for each box and gives an update on problematic particles
      */
-    void handleBoxReactions();
+    virtual void handleBoxReactions();
 
-    void findProblematicParticles(data_t::Entry* entry, const SlicedBox &box, ctx_t ctx,
-                                  const data_t& data, nl_t nl, std::set<data_t::Entry*> &problematic) const;
+    void findProblematicParticles(data_t::index_t entry, const SlicedBox &box, ctx_t ctx,
+                                  const data_t& data, nl_t nl, std::set<data_t::index_t> &problematic) const;
 
 };
 }

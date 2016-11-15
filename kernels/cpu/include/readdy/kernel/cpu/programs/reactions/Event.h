@@ -19,7 +19,7 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 struct Event {
-    using index_type = model::ParticleData::Entry *;
+    using index_type = model::ParticleData::index_t;
     using reaction_index_type = std::size_t;
     unsigned int nEducts;
     unsigned int nProducts;

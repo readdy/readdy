@@ -8,6 +8,7 @@
  */
 
 #include <readdy/kernel/cpu/programs/reactions/ReactionUtils.h>
+#include <readdy/common/numeric.h>
 #include "readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h"
 
 using particle_type = readdy::model::Particle;
@@ -101,9 +102,9 @@ void NextSubvolumes::assignParticles() {
         cell.cellRate = 0;
     });
 
-    for (auto& e : data->entries) {
+    for (auto& e : *data) {
         if(!e.is_deactivated()) {
-            auto box = getCell(e.pos);
+            auto box = getCell(e.position());
             if (box) {
                 box->particles[e.type].push_back(&e);
                 ++(box->typeCounts[e.type]);

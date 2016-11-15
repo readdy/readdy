@@ -23,14 +23,13 @@ ParticlePosition::ParticlePosition(CPUKernel *const kernel, unsigned int stride,
 void ParticlePosition::evaluate() {
     result.clear();
     const auto &pd = kernel->getKernelStateModel().getParticleData();
-    const auto &entries = kernel->getKernelStateModel().getParticleData()->entries;
     if (typesToCount.empty()) {
         result = kernel->getKernelStateModel().getParticlePositions();
     } else {
-        for (const auto &e : entries) {
+        for (const auto &e : *kernel->getKernelStateModel().getParticleData()) {
             if (!e.is_deactivated() &&
                 std::find(typesToCount.begin(), typesToCount.end(), e.type) != typesToCount.end()) {
-                result.push_back(e.pos);
+                result.push_back(e.position());
             }
         }
     }
@@ -60,11 +59,9 @@ void HistogramAlongAxis::evaluate() {
         result_t resultUpdate;
         resultUpdate.resize(resultSize);
 
-        const auto &entries = data->entries;
-
         for (auto it = from; it != to; ++it) {
             if (!it->is_deactivated() && typesToCount.find(it->type) != typesToCount.end()) {
-                auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), it->pos[axis]);
+                auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), it->position()[axis]);
                 if (upperBound != binBorders.end()) {
                     unsigned long binBordersIdx = upperBound - binBorders.begin();
                     if (binBordersIdx > 1) {
@@ -81,7 +78,7 @@ void HistogramAlongAxis::evaluate() {
         const std::size_t grainSize = size / kernel->getNThreads();
 
         std::vector<util::scoped_thread> threads;
-        Iter workIter = data->entries.cbegin();
+        Iter workIter = data->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads()-1; ++i) {
             std::promise<result_t> promise;
             updates.push_back(promise.get_future());
@@ -90,7 +87,7 @@ void HistogramAlongAxis::evaluate() {
         }
         std::promise<result_t> promise;
         updates.push_back(promise.get_future());
-        threads.push_back(util::scoped_thread(std::thread(worker, workIter, data->entries.cend(), std::move(promise))));
+        threads.push_back(util::scoped_thread(std::thread(worker, workIter, data->cend(), std::move(promise))));
     }
 
     for(auto& update : updates) {
@@ -111,7 +108,7 @@ void NParticles::evaluate() {
     } else {
         resultVec.resize(typesToCount.size());
         const auto &pd = kernel->getKernelStateModel().getParticleData();
-        for (const auto &e : pd->entries) {
+        for (const auto &e : *pd) {
             if (!e.is_deactivated()) {
                 auto typeIt = std::find(typesToCount.begin(), typesToCount.end(), e.type);
                 if (typeIt != typesToCount.end()) {
@@ -133,7 +130,7 @@ void Forces::evaluate() {
     if (typesToCount.empty()) {
         result.reserve(pd->size());
     }
-    for (const auto &e : pd->entries) {
+    for (const auto &e : *pd) {
         if (!e.is_deactivated()) {
             if (typesToCount.empty()) {
                 result.push_back(e.force);

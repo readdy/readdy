@@ -130,24 +130,24 @@ readdy::model::Particle ParticleData::toParticle(const ParticleData::Entry &e) c
     return readdy::model::Particle(e.pos, e.type, e.id);
 }
 
-ParticleData::Entry* ParticleData::addEntry(ParticleData::Entry &&entry) {
+ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.top();
         blanks.pop();
-        auto ptr = &entries.at(idx);
-        *ptr = std::move(entry);
-        return ptr;
+        entries.at(idx) = std::move(entry);
+        return idx;
     } else {
         entries.push_back(std::move(entry));
         neighbors.push_back({});
-        return &entries.back();
+        return entries.size();
     }
 }
 
-void ParticleData::removeEntry(ParticleData::Entry *const entry) {
-    if(!entry->is_deactivated()) {
-        entry->deactivated = true;
-        blanks.push(getEntryIndex(entry));
+void ParticleData::removeEntry(index_t idx) {
+    auto& entry = entries.at(idx);
+    if(!entry.is_deactivated()) {
+        entry.deactivated = true;
+        blanks.push(idx);
     }
 }
 
@@ -155,17 +155,18 @@ ParticleData::index_t ParticleData::getEntryIndex(const ParticleData::Entry *con
     return static_cast<index_t>(entry - &*entries.begin());
 }
 
-std::vector<ParticleData::Entry*> ParticleData::update(update_t &&update_data) {
+std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) {
     auto &&newEntries = std::move(std::get<0>(update_data));
     auto &&removedEntries = std::move(std::get<1>(update_data));
 
-    std::vector<Entry*> result;
+    std::vector<index_t> result;
     result.reserve(newEntries.size());
 
     auto it_del = removedEntries.begin();
     for(auto&& newEntry : newEntries) {
         if(it_del != removedEntries.end()) {
-            **it_del = std::move(newEntry);
+            entries.at(*it_del) = std::move(newEntry);
+            neighbors.at(*it_del).clear();
             result.push_back(*it_del);
             ++it_del;
         } else {
@@ -180,23 +181,42 @@ std::vector<ParticleData::Entry*> ParticleData::update(update_t &&update_data) {
     return result;
 }
 
-void ParticleData::displace(ParticleData::Entry *const entry, const particle_type::pos_type &delta) {
-    auto& ref = entry->pos;
-    ref += delta;
-    fixPos(ref);
-    entry->displacement += sqrt(delta * delta);
+void ParticleData::displace(index_t index, const particle_type::pos_type &delta) {
+    displace(entries.at(index), delta);
 }
 
-void ParticleData::setPosition(ParticleData::Entry *const entry, particle_type::pos_type &&newPosition) {
-    auto& ref = entry->pos;
-    const auto delta = newPosition - ref;
-    ref = std::move(newPosition);
-    fixPos(ref);
-    entry->displacement += sqrt(delta * delta);
+void ParticleData::setPosition(index_t idx, particle_type::pos_type &&newPosition) {
+    auto& entry = entries.at(idx);
+    const auto delta = newPosition - entry.pos;
+    entry.pos = std::move(newPosition);
+    fixPos(entry.pos);
+    entry.displacement += sqrt(delta * delta);
 }
 
 void ParticleData::setFixPosFun(const ctx_t::fix_pos_fun &f) {
     fixPos = f;
+}
+
+const ParticleData::particle_type::pos_type &ParticleData::pos(ParticleData::index_t idx) const {
+    return entries.at(idx).pos;
+}
+
+void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
+    entry.pos += delta;
+    fixPos(entry.pos);
+    entry.displacement += sqrt(delta * delta);
+}
+
+ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) {
+    return entries.at(idx);
+}
+
+const ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) const {
+    return centry_at(idx);
+}
+
+const ParticleData::Entry &ParticleData::centry_at(ParticleData::index_t idx) const {
+    return entries.at(idx);
 }
 
 

@@ -37,16 +37,12 @@ public:
 
         double alpha = 0.0;
         std::vector<event_t> events;
-        gatherEvents(kernel, readdy::util::range<event_t::index_type>(&*data->entries.begin(), &*data->entries.end()),
+        gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size() + data->getNDeactivated()),
                      nl, *data, alpha, events);
         auto particlesUpdate = handleEventsGillespie(kernel, false, true, std::move(events));
 
-        // reposition particles to respect the periodic b.c.
-        std::for_each(std::get<0>(particlesUpdate).begin(), std::get<0>(particlesUpdate).end(),
-                      [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
-
         // update data structure
-        nl->updateData(*data, std::move(particlesUpdate));
+        nl->updateData(std::move(particlesUpdate));
     }
 
 protected:

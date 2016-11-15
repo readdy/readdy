@@ -41,14 +41,13 @@ public:
     using hilbert_index_t = unsigned int;
 private: 
     std::vector<Cell> cells;
-    std::vector<container_t> maps;
     skin_size_t skin_size;
+    // gives a mapping boxIndex -> hilbertIndex
     std::vector<hilbert_index_t> hilbertIndexMapping;
 public:
     struct Cell {
         std::vector<Cell *> neighbors{};
         std::vector<particle_index> particleIndices{};
-        hilbert_index_t hilbert_index;
         cell_index contiguous_index;
         bool enoughCells;
 
@@ -89,24 +88,26 @@ public:
 
     void insert(const particle_index);
 
-    auto begin() -> decltype(maps.begin()) {
-        return maps.begin();
+    auto begin() -> decltype(std::declval<data_t>().neighbors.begin()) {
+        return data.neighbors.begin();
     }
-    auto end() -> decltype(maps.end()) {
-        return maps.end();
+    auto end() -> decltype(std::declval<data_t>().neighbors.end()) {
+        return data.neighbors.end();
     }
-    auto cbegin() const -> decltype(maps.cbegin()) {
-        return maps.cbegin();
+    auto cbegin() const -> decltype(std::declval<data_t>().neighbors.cbegin()) {
+        return data.neighbors.cbegin();
     }
-    auto cend() const -> decltype(maps.cend()) {
-        return maps.cend();
+    auto cend() const -> decltype(std::declval<data_t>().neighbors.cend()) {
+        return data.neighbors.cend();
     }
-    auto begin() const -> decltype(maps.cbegin()) {
+    auto begin() const -> decltype(std::declval<data_t>().neighbors.cbegin()) {
         return cbegin();
     }
-    auto end() const -> decltype(maps.cend()) {
+    auto end() const -> decltype(std::declval<data_t>().neighbors.cend()) {
         return cend();
     }
+
+    hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
 protected:
 
@@ -133,10 +134,6 @@ protected:
 
     data_t& data;
 };
-
-NeighborList::hilbert_index_t getHilbertIndex(NeighborList::cell_index i,
-                                              NeighborList::cell_index j,
-                                              NeighborList::cell_index k);
 
 
 }

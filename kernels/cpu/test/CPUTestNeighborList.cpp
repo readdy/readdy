@@ -45,29 +45,25 @@ struct TestNeighborList : ::testing::Test {
 
 auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &data,
                        unsigned long idx1, unsigned long idx2) {
-    using neighbor_t = readdy::kernel::cpu::model::NeighborList::neighbor_t;
-    const auto ptr = &*(data.entries.begin() + idx1);
-    for (const auto &map : *pairs) {
-        const auto neighborsIt = map.find(ptr);
-        auto neighborEntry = &data.entries[idx2];
-        if (neighborsIt != map.end()) {
-            const auto &neighbors = neighborsIt->second;
-            const auto found =
-                    std::find_if(neighbors.begin(), neighbors.end(), [neighborEntry](const neighbor_t &neighbor) {
-                        return neighbor.idx == neighborEntry;
-                    }) != neighbors.end();
-            if (found) {
-                return true;
-            }
+    const auto &neighbors1 = pairs->find_neighbors(idx1);
+    for (auto &neigh_idx : neighbors1) {
+        if (neigh_idx.idx == idx2) {
+            return true;
+        }
+    }
+    const auto &neighbors2 = pairs->find_neighbors(idx2);
+    for (auto &neigh_idx : neighbors2) {
+        if (neigh_idx.idx == idx1) {
+            return true;
         }
     }
     return false;
 };
 
-auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList::container_t &pairs) {
-    using val_t = readdy::kernel::cpu::model::NeighborList::container_t::iterator::value_type;
+auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList &pairs) {
+    using val_t = decltype(*pairs.begin());
     return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, const val_t &x) {
-        return acc + x.second.size();
+        return acc + x.size();
     });
 };
 
@@ -76,19 +72,20 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(1.5, 4, 1.5);
     ctx.setPeriodicBoundary(false, false, false);
+
     readdy::kernel::cpu::util::Config conf;
-    cpum::NeighborList list(&ctx, &conf);
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
+
     list.setupCells();
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
-    readdy::kernel::cpu::model::ParticleData data;
+
     data.addParticles(particles);
-    list.fillCells(data);
-    int sum = 0;
-    std::for_each(list.begin(), list.end(),
-                  [&sum](const cpum::NeighborList::container_t &map) { sum += getNumberPairs(map); });
+    list.fillCells();
+    int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 2);
     EXPECT_TRUE(isPairInList(&list, data, 0, 1));
     EXPECT_TRUE(isPairInList(&list, data, 1, 0));
@@ -99,19 +96,19 @@ TEST_F(TestNeighborList, OneDirection) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(1.2, 1.1, 2.8);
     ctx.setPeriodicBoundary(false, false, true);
+
     readdy::kernel::cpu::util::Config conf;
-    cpum::NeighborList list(&ctx, &conf);
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
+
     list.setupCells();
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
-    readdy::kernel::cpu::model::ParticleData data;
     data.addParticles(particles);
-    list.fillCells(data);
-    int sum = 0;
-    std::for_each(list.begin(), list.end(),
-                  [&sum](const cpum::NeighborList::container_t &map) { sum += getNumberPairs(map); });
+    list.fillCells();
+    int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 4);
     EXPECT_TRUE(isPairInList(&list, data, 0, 2));
     EXPECT_TRUE(isPairInList(&list, data, 2, 0));
@@ -127,19 +124,18 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
     readdy::kernel::cpu::util::Config conf;
-    cpum::NeighborList list(&ctx, &conf);
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
     list.setupCells();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
             m::Particle(0, .3, -.3, typeIdA), m::Particle(-.3, 0, .3, typeIdA), m::Particle(.3, -.3, 0, typeIdA)
     };
-    readdy::kernel::cpu::model::ParticleData data;
+
     data.addParticles(particles);
-    list.fillCells(data);
-    int sum = 0;
-    std::for_each(list.begin(), list.end(),
-                  [&sum](const cpum::NeighborList::container_t &map) { sum += getNumberPairs(map); });
+    list.fillCells();
+    int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {

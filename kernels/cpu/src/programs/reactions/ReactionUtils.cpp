@@ -22,7 +22,7 @@ data_t::update_t handleEventsGillespie(
     using rdy_particle_t = readdy::model::Particle;
 
     data_t::entries_t newParticles{};
-    std::vector<data_t::Entry*> decayedEntries {};
+    std::vector<data_t::index_t> decayedEntries {};
 
     const auto &ctx = kernel->getKernelContext();
     const auto data = kernel->getKernelStateModel().getParticleData();
@@ -112,7 +112,7 @@ data_t::update_t handleEventsGillespie(
             }
         }
     }
-    return std::make_pair(newParticles, decayedEntries);
+    return std::make_pair(std::move(newParticles), std::move(decayedEntries));
 }
 }
 }

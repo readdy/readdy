@@ -17,10 +17,10 @@ Compartments::Compartments(const CPUKernel *const kernel) : kernel(kernel) {}
 void Compartments::execute() {
     const auto &ctx = kernel->getKernelContext();
     long long idx = 0;
-    for(auto& e : kernel->getKernelStateModel().getParticleData()->entries) {
+    for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
         if(!e.is_deactivated()) {
             for (auto i = 0; i < compartments.size(); ++i) {
-                if (compartments[i](e.pos)) {
+                if (compartments[i](e.position())) {
                     if (conversions[i].find(e.type) != conversions[i].end()) {
                         e.type = conversions[i][e.type];
                     }
