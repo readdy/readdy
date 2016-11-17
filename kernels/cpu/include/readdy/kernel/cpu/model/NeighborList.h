@@ -112,6 +112,8 @@ public:
         return cend();
     }
 
+    void setSkinSize(skin_size_t skin_size);
+
     hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
 protected:
@@ -125,6 +127,7 @@ protected:
     std::array<cell_index, 3> nCells{{0, 0, 0}};
     readdy::model::Vec3 cellSize{0, 0, 0};
     double maxCutoff = 0;
+    double maxCutoffPlusSkin = 0;
     util::Config const *const config;
 
     const Cell* const getCell(const readdy::model::Particle::pos_type &pos) const;

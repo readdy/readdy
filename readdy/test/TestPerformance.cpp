@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/common/Timer.h>
+#include <readdy/model/Utils.h>
 
 namespace {
 
@@ -23,7 +24,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
 
     kernel.getKernelContext().setBoxSize(30.0, 80.0, 30.0);
     kernel.getKernelContext().setKBT(1.0);
-    kernel.getKernelContext().setTimeStep(1.);
+    kernel.getKernelContext().setTimeStep(.001);
     kernel.getKernelContext().setPeriodicBoundary(false, false, false);
 
     std::string types[]{"A", "B", "C"};
@@ -58,7 +59,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
     const unsigned int nParticles = 50000;
     for (unsigned long _ = 0; _ < nParticles; ++_) {
         for (const auto &t : types) {
-            readdy::model::Particle p{stdRand(-15, 15), stdRand(-15, 15), stdRand(-15, 15),
+            readdy::model::Particle p{stdRand(-15, 15), stdRand(-40, 40), stdRand(-15, 15),
                                       kernel.getKernelContext().getParticleTypeID(t)};
             kernel.getKernelStateModel().addParticle(p);
         }
@@ -69,6 +70,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
 
     auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
+    neighborList->setSkinSize(15*readdy::model::util::getMaximumDisplacement(kernel.getKernelContext()));
     auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
     auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::GillespieParallel>();
 
@@ -82,7 +84,11 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
 
     kernel.getKernelContext().configure();
 
-    neighborList->execute();
+    {
+        timer c("neighbor list init");
+        neighborList->execute();
+        t_nl += c.getSeconds();
+    }
     for (readdy::model::observables::time_step_type t = 0; t < steps; ++t) {
         readdy::log::console()->debug("----------");
         readdy::log::console()->debug("t = {}", t);
@@ -113,7 +119,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
     std::cout << "--------------------------------------------------------------" << std::endl;
     std::cout << "Average time for calculating forces: " << t_forces / steps << std::endl;
     std::cout << "Average time for the integrator:     " << t_integrator / steps << std::endl;
-    std::cout << "Average time for the neighbor list:  " << t_nl / steps << std::endl;;
+    std::cout << "Average time for the neighbor list:  " << t_nl / (steps+1) << std::endl;;
     std::cout << "Average time for handling reactions: " << t_reactions / steps << std::endl;;
     std::cout << "--------------------------------------------------------------" << std::endl;;
 }

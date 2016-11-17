@@ -20,6 +20,7 @@
 #include <memory>
 #include <tuple>
 #include <vector>
+#include <algorithm>
 
 namespace readdy {
 namespace util {
@@ -54,6 +55,12 @@ inline void for_each_value(const Collection& collection, Fun f)  {
         }
     }
 }
+
+template<typename T, typename Predicate>
+typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const &item, Predicate pred) {
+    return vec.insert(std::upper_bound(vec.begin(), vec.end(), item, pred), item);
+}
+
 
 }
 

@@ -16,11 +16,7 @@
 #include <future>
 #include <readdy/kernel/cpu/util/scoped_thread.h>
 #include <readdy/kernel/cpu/util/barrier.h>
-
-template<typename T, typename Predicate>
-typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const &item, Predicate pred) {
-    return vec.insert(std::upper_bound(vec.begin(), vec.end(), item, pred), item);
-}
+#include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
@@ -30,6 +26,11 @@ namespace model {
 template<typename T, typename Dims>
 T get_contiguous_index(T i, T j, T k, Dims I, Dims J) {
     return k + j * J + i * I * J;
+};
+
+class ParticleTravelledTooFarException : public std::runtime_error {
+public:
+    ParticleTravelledTooFarException() : runtime_error("") {}
 };
 
 const static std::vector<NeighborList::neighbor_t> no_neighbors{};
@@ -50,15 +51,20 @@ void NeighborList::setupCells() {
         for (auto &&e : ctx->getAllOrder2Reactions()) {
             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
         }
-        NeighborList::maxCutoff = maxCutoff + skin_size;
+        NeighborList::maxCutoff = maxCutoff;
+        NeighborList::maxCutoffPlusSkin = maxCutoff + skin_size;
+
+        log::console()->debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size, maxCutoff + skin_size);
+
         if (maxCutoff > 0) {
-            const auto desiredCellWidth = .5 * maxCutoff;
+            const auto desiredCellWidth = .5 * maxCutoffPlusSkin;
 
             for (unsigned short i = 0; i < 3; ++i) {
                 nCells[i] = static_cast<cell_index>(floor(simBoxSize[i] / desiredCellWidth));
                 if (nCells[i] == 0) nCells[i] = 1;
                 cellSize[i] = simBoxSize[i] / static_cast<double>(nCells[i]);
             }
+            log::console()->debug("resulting cell size = {}", cellSize);
 
             for (cell_index i = 0; i < nCells[0]; ++i) {
                 for (cell_index j = 0; j < nCells[1]; ++j) {
@@ -110,11 +116,24 @@ void NeighborList::clear() {
     initialSetup = true;
 }
 
-void checkCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const NeighborList::skin_size_t skin) {
+/**
+ * Potentially marks a cell dirty. If there is a particle that has travelled too far, it will return false, otherwise
+ * true. Travelling too far means:
+ *  - with boxes of width .5(r_c + r_s): displacement > r_c + r_s (this is our case)
+ *  - with boxes of width r_c + r_s: displacement > 2r_c + 2r_s
+ *
+ * @param cell the cell
+ * @param data the underlying data
+ * @param skin the skin width
+ * @return true if everything is ok, false if a particle travelled too far
+ */
+bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const double r_c, const double r_s) {
+    bool travelledTooFar = false;
     for (const auto idx : cell.particleIndices) {
         const auto &entry = data.entry_at(idx);
         if (!entry.is_deactivated()) {
             const double disp = entry.displacement;
+            travelledTooFar = disp > r_c + r_s;
             if (disp > cell.maximal_displacements[0]) {
                 cell.maximal_displacements[0] = disp;
             } else if (disp > cell.maximal_displacements[1]) {
@@ -122,7 +141,8 @@ void checkCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const
             }
         }
     }
-    cell.checkDirty(skin);
+    cell.checkDirty(r_s);
+    return travelledTooFar;
 }
 
 bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
@@ -134,7 +154,7 @@ bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
 
 void NeighborList::fillCells() {
     if (maxCutoff > 0) {
-        const auto c2 = maxCutoff * maxCutoff;
+        const auto c2 = maxCutoffPlusSkin * maxCutoffPlusSkin;
         auto d2 = ctx->getDistSquaredFun();
 
         if (initialSetup) {
@@ -161,7 +181,7 @@ void NeighborList::fillCells() {
             const std::size_t grainSize = size / config->nThreads;
 
             auto worker = [this, c2, d2](cell_it_t cellsBegin, cell_it_t cellsEnd) -> void {
-                for (auto _b = cellsBegin; _b != cellsEnd; ++_b) {
+                for (cell_it_t _b = cellsBegin; _b != cellsEnd; ++_b) {
                     auto &cell = *_b;
                     setUpCell(cell, c2, d2);
                 }
@@ -178,73 +198,92 @@ void NeighborList::fillCells() {
             threads.push_back(util::scoped_thread(std::thread(worker, it_cells, cells.end())));
         } else {
             auto dirtyCells = findDirtyCells();
-            const std::size_t grainSize = dirtyCells.size() / config->nThreads;
 
-            using cell_it_t = decltype(dirtyCells.begin());
+            if(dirtyCells.size() >= cells.size() * .50) {
+                initialSetup = true;
+                log::console()->debug("had more than 50% dirty cells, recreate neighbor list");
+                setupCells();
+                fillCells();
+                initialSetup = false;
+                return;
+            } else {
 
-            auto worker = [this, c2, d2, grainSize](cell_it_t begin, cell_it_t end, const util::barrier &barrier) {
-                // first gather updates
-                std::vector<std::vector<NeighborList::particle_index>> cellUpdates;
-                cellUpdates.reserve(grainSize);
-                {
-                    for (cell_it_t _b = begin; _b != end; ++_b) {
-                        auto cell = *_b;
-                        cellUpdates.push_back({});
-                        auto &updatedIndices = cellUpdates.back();
-                        updatedIndices.reserve(cell->particleIndices.size());
-                        for (const auto idx : cell->particleIndices) {
-                            const auto &entry = data.entry_at(idx);
-                            if (!entry.is_deactivated() && cell->contiguous_index == getCellIndex(entry.position())) {
-                                updatedIndices.push_back(idx);
-                            }
-                        }
-                        for (const auto neigh : cell->neighbors) {
-                            for (const auto idx : neigh->particleIndices) {
+                const std::size_t grainSize = dirtyCells.size() / config->nThreads;
+
+                using cell_it_t = decltype(dirtyCells.begin());
+
+                auto worker = [this, c2, d2, grainSize](cell_it_t begin, cell_it_t end, const util::barrier &barrier) {
+                    // first gather updates
+                    std::vector<std::vector<NeighborList::particle_index>> cellUpdates;
+                    cellUpdates.reserve(grainSize);
+                    {
+                        for (cell_it_t _b = begin; _b != end; ++_b) {
+                            auto cell = *_b;
+                            cellUpdates.push_back({});
+                            auto &updatedIndices = cellUpdates.back();
+                            updatedIndices.reserve(cell->particleIndices.size());
+                            for (const auto idx : cell->particleIndices) {
                                 const auto &entry = data.entry_at(idx);
-                                if (!entry.is_deactivated()
-                                    && cell->contiguous_index == getCellIndex(entry.position())) {
+                                if (!entry.is_deactivated() &&
+                                    cell->contiguous_index == getCellIndex(entry.position())) {
                                     updatedIndices.push_back(idx);
+                                }
+                            }
+                            for (const auto neigh : cell->neighbors) {
+                                if (cell->dirty || neigh->dirty) {
+                                    for (const auto idx : neigh->particleIndices) {
+                                        const auto &entry = data.entry_at(idx);
+                                        if (!entry.is_deactivated()
+                                            && cell->contiguous_index == getCellIndex(entry.position())) {
+                                            updatedIndices.push_back(idx);
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                // wait until all threads have their updates gathered
-                barrier.wait();
-                // apply updates
-                {
-                    auto it = begin;
-                    for (auto &&update : cellUpdates) {
-                        auto cell = *it;
-                        cell->particleIndices = std::move(update);
-                        ++it;
+
+                    // wait until all threads have their updates gathered
+                    barrier.wait();
+                    // apply updates
+                    {
+                        auto it = begin;
+                        for (auto &&update : cellUpdates) {
+                            auto cell = *it;
+                            cell->particleIndices = std::move(update);
+                            ++it;
+                        }
                     }
-                }
-                // wait until all threads have applied their updates
-                barrier.wait();
-                // update neighbor list in respective cells
-                {
-                    for (auto _b = begin; _b != end; ++_b) {
-                        auto cell = *_b;
-                        setUpCell(*cell, c2, d2);
+                    // wait until all threads have applied their updates
+                    barrier.wait();
+                    // update neighbor list in respective cells
+                    {
+                        for (cell_it_t _b = begin; _b != end; ++_b) {
+                            auto cell = *_b;
+                            setUpCell(*cell, c2, d2);
+                        }
                     }
+                };
+
+                readdy::util::Timer t("        update dirty cells");
+                util::barrier b(config->nThreads);
+
+                std::vector<util::scoped_thread> threads;
+                threads.reserve(config->nThreads);
+
+                log::console()->debug("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
+
+                {
+                    auto it_cells = dirtyCells.begin();
+                    for (int i = 0; i < config->nThreads - 1; ++i) {
+                        auto advanced = std::next(it_cells, grainSize);
+                        threads.push_back(util::scoped_thread(std::thread(worker, it_cells, advanced, std::cref(b))));
+                        it_cells = advanced;
+                    }
+                    threads.push_back(
+                            util::scoped_thread(std::thread(worker, it_cells, dirtyCells.end(), std::cref(b))));
                 }
-            };
-
-            util::barrier b(config->nThreads);
-
-            std::vector<util::scoped_thread> threads;
-            threads.reserve(config->nThreads);
-
-            log::console()->trace("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
-
-            auto it_cells = dirtyCells.begin();
-            for (int i = 0; i < config->nThreads - 1; ++i) {
-                auto advanced = std::next(it_cells, grainSize);
-                threads.push_back(util::scoped_thread(std::thread(worker, it_cells, advanced, std::cref(b))));
-                it_cells = advanced;
             }
-            threads.push_back(util::scoped_thread(std::thread(worker, it_cells, dirtyCells.end(), std::cref(b))));
         }
     }
 }
@@ -252,8 +291,21 @@ void NeighborList::fillCells() {
 void NeighborList::create() {
     simBoxSize = ctx->getBoxSize();
     data.setFixPosFun(ctx->getFixPositionFun());
-    setupCells();
-    fillCells();
+    {
+        setupCells();
+    }
+    bool redoFillCells = false;
+    try {
+        fillCells();
+    } catch(const ParticleTravelledTooFarException&) {
+        initialSetup = true;
+        redoFillCells = true;
+        log::console()->warn("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
+                                     "it might have left its cell linked-list cell. This should, if at all, only happen "
+                                     "very rarely and triggers a complete rebuild of the neighbor list.",
+                             maxCutoff, skin_size, maxCutoffPlusSkin);
+    }
+    if(redoFillCells) fillCells();
     initialSetup = false;
 }
 
@@ -285,7 +337,7 @@ void NeighborList::remove(const particle_index idx) {
             for (auto &neighbor : neighbors(idx)) {
                 auto &neighbors_2nd = data.neighbors.at(neighbor.idx);
                 auto it = std::find_if(neighbors_2nd.begin(), neighbors_2nd.end(), remove_predicate);
-                if(it != neighbors_2nd.end()) {
+                if (it != neighbors_2nd.end()) {
                     neighbors_2nd.erase(it);
                 }
             }
@@ -302,7 +354,7 @@ void NeighborList::remove(const particle_index idx) {
 void NeighborList::insert(const particle_index idx) {
     const auto &d2 = ctx->getDistSquaredFun();
     const auto &pos = data.pos(idx);
-    const auto cutoffSquared = maxCutoff * maxCutoff;
+    const auto cutoffSquared = maxCutoffPlusSkin * maxCutoffPlusSkin;
     auto cell = getCell(pos);
     if (cell) {
         cell->particleIndices.push_back(idx);
@@ -337,7 +389,7 @@ NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_typ
     return getCell(i, j, k);
 }
 
-void NeighborList::updateData(ParticleData::update_t&& update) {
+void NeighborList::updateData(ParticleData::update_t &&update) {
     if (maxCutoff > 0) {
         for (const auto &p : std::get<1>(update)) {
             remove(p);
@@ -454,21 +506,26 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
     std::unordered_set<NeighborList::Cell *> result;
 
 
-    auto worker = [this](it_type begin, it_type end, promise_t update, const util::barrier& barrier) {
-
-        for(it_type it = begin; it != end; ++it) {
-            checkCell(*it, data, skin_size);
-        }
-        barrier.wait();
-
-        std::vector<Cell *> foundDirtyCells;
+    auto worker = [this](it_type begin, it_type end, promise_t update, const util::barrier &barrier, std::atomic<bool>& interrupt) {
+        // interrupt if there is a particle that travelled too far (r_c + r_s)
+        bool shouldInterrupt = false;
         for (it_type it = begin; it != end; ++it) {
-            if (cellOrNeighborDirty(*it)) {
-                foundDirtyCells.push_back(&*it);
+            shouldInterrupt |= markCell(*it, data, maxCutoff, skin_size);
+        }
+        if(shouldInterrupt) interrupt = shouldInterrupt;
+        barrier.wait();
+        std::vector<Cell *> foundDirtyCells;
+        if(!interrupt.load()) {
+            for (it_type it = begin; it != end; ++it) {
+                if (cellOrNeighborDirty(*it)) {
+                    foundDirtyCells.push_back(&*it);
+                }
             }
         }
         update.set_value(std::move(foundDirtyCells));
     };
+
+    std::atomic<bool> interrupt(false);
     util::barrier b(config->nThreads);
 
     std::vector<future_t> dirtyCells;
@@ -481,20 +538,24 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
             promise_t promise;
             dirtyCells.push_back(promise.get_future());
             threads.push_back(
-                    util::scoped_thread(std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b)))
+                    util::scoped_thread(
+                            std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b), std::ref(interrupt)))
             );
             it_cells += grainSize;
         }
         promise_t promise;
         dirtyCells.push_back(promise.get_future());
-        threads.push_back(util::scoped_thread(std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b))));
+        threads.push_back(util::scoped_thread(
+                std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b), std::ref(interrupt))));
+    }
+    if(interrupt.load()) {
+        throw ParticleTravelledTooFarException();
     }
     for (auto &&dirties : dirtyCells) {
         auto v = std::move(dirties.get());
         result.insert(v.begin(), v.end());
     }
-    // no move needed, is inlined
-    return result;
+    return std::move(result);
 }
 
 void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun &d2) {
@@ -538,6 +599,13 @@ int NeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) con
     if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nCells[2]);
     else if (k < 0 || k >= nCells[2]) return -1;
     return get_contiguous_index(i, j, k, nCells[1], nCells[2]);
+}
+
+void NeighborList::setSkinSize(NeighborList::skin_size_t skin_size) {
+    initialSetup = true;
+    cells.clear();
+    NeighborList::skin_size = skin_size;
+    log::console()->debug("skin size set to {}", skin_size);
 }
 
 }

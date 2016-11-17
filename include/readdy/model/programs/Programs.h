@@ -64,6 +64,7 @@ public:
     UpdateNeighborList() : Program() {}
 
     void setAction(Action action) { UpdateNeighborList::action = action; }
+    virtual void setSkinSize(double skinSize);
 
 protected:
     Action action = Action::create;

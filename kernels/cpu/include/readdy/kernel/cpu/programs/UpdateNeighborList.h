@@ -36,6 +36,10 @@ public:
 
     }
 
+    virtual void setSkinSize(double skinSize) override {
+        kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
+    }
+
 private:
     CPUKernel *kernel;
 };
