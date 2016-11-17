@@ -91,9 +91,6 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
                     }
                 }
             }
-        } else {
-            log::console()->error("The particles list which was given to gather events contained a particle that "
-                                          "was already deactivated. This should not happen!");
         }
     }
 

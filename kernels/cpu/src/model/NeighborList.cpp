@@ -111,22 +111,18 @@ void NeighborList::clear() {
 }
 
 void checkCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const NeighborList::skin_size_t skin) {
-    if (skin > 0) {
-        for (const auto idx : cell.particleIndices) {
-            const auto &entry = data.entry_at(idx);
-            if (!entry.is_deactivated()) {
-                const double disp = entry.displacement;
-                if (disp > cell.maximal_displacements[0]) {
-                    cell.maximal_displacements[0] = disp;
-                } else if (disp > cell.maximal_displacements[1]) {
-                    cell.maximal_displacements[1] = disp;
-                }
+    for (const auto idx : cell.particleIndices) {
+        const auto &entry = data.entry_at(idx);
+        if (!entry.is_deactivated()) {
+            const double disp = entry.displacement;
+            if (disp > cell.maximal_displacements[0]) {
+                cell.maximal_displacements[0] = disp;
+            } else if (disp > cell.maximal_displacements[1]) {
+                cell.maximal_displacements[1] = disp;
             }
         }
-        cell.checkDirty(skin);
-    } else {
-        cell.dirty = true;
     }
+    cell.checkDirty(skin);
 }
 
 bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
@@ -191,7 +187,7 @@ void NeighborList::fillCells() {
                 std::vector<std::vector<NeighborList::particle_index>> cellUpdates;
                 cellUpdates.reserve(grainSize);
                 {
-                    for (auto _b = begin; _b != end; ++_b) {
+                    for (cell_it_t _b = begin; _b != end; ++_b) {
                         auto cell = *_b;
                         cellUpdates.push_back({});
                         auto &updatedIndices = cellUpdates.back();
@@ -240,12 +236,11 @@ void NeighborList::fillCells() {
             std::vector<util::scoped_thread> threads;
             threads.reserve(config->nThreads);
 
-            log::console()->debug("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
+            log::console()->trace("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
 
             auto it_cells = dirtyCells.begin();
             for (int i = 0; i < config->nThreads - 1; ++i) {
                 auto advanced = std::next(it_cells, grainSize);
-                log::console()->debug("dist={}", std::distance(it_cells, advanced));
                 threads.push_back(util::scoped_thread(std::thread(worker, it_cells, advanced, std::cref(b))));
                 it_cells = advanced;
             }
@@ -289,7 +284,10 @@ void NeighborList::remove(const particle_index idx) {
         try {
             for (auto &neighbor : neighbors(idx)) {
                 auto &neighbors_2nd = data.neighbors.at(neighbor.idx);
-                neighbors_2nd.erase(std::find_if(neighbors_2nd.begin(), neighbors_2nd.end(), remove_predicate));
+                auto it = std::find_if(neighbors_2nd.begin(), neighbors_2nd.end(), remove_predicate);
+                if(it != neighbors_2nd.end()) {
+                    neighbors_2nd.erase(it);
+                }
             }
             auto find_it = std::find(cell->particleIndices.begin(), cell->particleIndices.end(), idx);
             if (find_it != cell->particleIndices.end()) {
@@ -308,28 +306,24 @@ void NeighborList::insert(const particle_index idx) {
     auto cell = getCell(pos);
     if (cell) {
         cell->particleIndices.push_back(idx);
-        try {
-            auto &myNeighbors = data.neighbors.at(idx);
-            for (const auto pJ : cell->particleIndices) {
-                if (idx != pJ) {
-                    const auto distSquared = d2(pos, data.pos(pJ));
-                    if (distSquared < cutoffSquared) {
-                        myNeighbors.push_back({pJ, distSquared});
-                        data.neighbors.at(pJ).push_back({idx, distSquared});
-                    }
+        auto &myNeighbors = data.neighbors.at(idx);
+        for (const auto pJ : cell->particleIndices) {
+            if (idx != pJ) {
+                const auto distSquared = d2(pos, data.pos(pJ));
+                if (distSquared < cutoffSquared) {
+                    myNeighbors.push_back({pJ, distSquared});
+                    data.neighbors.at(pJ).push_back({idx, distSquared});
                 }
             }
-            for (auto &neighboringCell : cell->neighbors) {
-                for (const auto &pJ : neighboringCell->particleIndices) {
-                    const auto distSquared = d2(pos, data.pos(pJ));
-                    if (distSquared < cutoffSquared) {
-                        myNeighbors.push_back({pJ, distSquared});
-                        data.neighbors.at(pJ).push_back({idx, distSquared});
-                    }
+        }
+        for (auto &neighboringCell : cell->neighbors) {
+            for (const auto &pJ : neighboringCell->particleIndices) {
+                const auto distSquared = d2(pos, data.pos(pJ));
+                if (distSquared < cutoffSquared) {
+                    myNeighbors.push_back({pJ, distSquared});
+                    data.neighbors.at(pJ).push_back({idx, distSquared});
                 }
             }
-        } catch (const std::out_of_range &) {
-            log::console()->error("this should not happen123");
         }
     } else {
         //log::console()->error("could not assign particle (index={}) to any cell!", data.getEntryIndex(idx));
@@ -343,13 +337,12 @@ NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_typ
     return getCell(i, j, k);
 }
 
-void NeighborList::updateData(ParticleData::update_t update) {
+void NeighborList::updateData(ParticleData::update_t&& update) {
     if (maxCutoff > 0) {
         for (const auto &p : std::get<1>(update)) {
             remove(p);
         }
     }
-
     auto newEntries = data.update(std::move(update));
     if (maxCutoff > 0) {
         for (const auto p : newEntries) {
@@ -360,11 +353,7 @@ void NeighborList::updateData(ParticleData::update_t update) {
 
 const std::vector<NeighborList::neighbor_t> &NeighborList::neighbors(NeighborList::particle_index const entry) const {
     if (maxCutoff > 0) {
-        try {
-            return data.neighbors.at(entry);
-        } catch (const std::out_of_range &) {
-            log::console()->error("this is garbage");
-        }
+        return data.neighbors.at(entry);
     }
     return no_neighbors;
 }
@@ -399,11 +388,7 @@ const NeighborList::Cell *const NeighborList::getCell(NeighborList::signed_cell_
 
 const std::vector<NeighborList::neighbor_t> &NeighborList::find_neighbors(particle_index const entry) const {
     if (maxCutoff > 0 && entry < data.neighbors.size()) {
-        try {
-            return data.neighbors.at(entry);
-        } catch (const std::out_of_range &) {
-            log::console()->error("this def should not happen!§§");
-        }
+        return data.neighbors.at(entry);
     }
     return no_neighbors;
 }

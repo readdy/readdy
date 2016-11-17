@@ -223,8 +223,7 @@ void GillespieParallel::handleBoxReactions() {
             gatherEvents(kernel, std::move(local_problematic), &neighbor_list, data, alpha, evilEvents);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
-        auto newProblemParticles = evilEvents.empty() ? data_t::update_t() :
-                                   handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
+        auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();

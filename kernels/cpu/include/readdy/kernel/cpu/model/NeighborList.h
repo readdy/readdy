@@ -82,7 +82,7 @@ public:
 
     virtual void create();
 
-    void updateData(data_t::update_t update);
+    void updateData(data_t::update_t&& update);
 
     void displace(data_iter_t iter, const readdy::model::Vec3& vec);
     void displace(data_t::Entry&, const data_t::particle_type::pos_type& delta);

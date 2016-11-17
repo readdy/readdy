@@ -20,14 +20,9 @@ namespace model {
 
 ParticleData::Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {}
 
-ParticleData::Neighbor::Neighbor(Neighbor &&rhs) : idx(std::move(rhs.idx)), d2(std::move(rhs.d2)) {
-}
+ParticleData::Neighbor::Neighbor(Neighbor &&rhs) = default;
 
-ParticleData::Neighbor& ParticleData::Neighbor::operator=(ParticleData::Neighbor &&rhs) {
-    idx = rhs.idx;
-    d2 = std::move(rhs.d2);
-    return *this;
-}
+ParticleData::Neighbor& ParticleData::Neighbor::operator=(ParticleData::Neighbor &&rhs) = default;
 
 //
 // Entry Impl
@@ -84,7 +79,7 @@ void ParticleData::addParticles(const std::vector<ParticleData::particle_type> &
         if(!blanks.empty()) {
             const auto idx = blanks.top();
             blanks.pop();
-            entries[idx] = {p};
+            entries.at(idx) = {p};
         } else {
             entries.push_back({p});
             neighbors.push_back({});
@@ -109,6 +104,7 @@ void ParticleData::removeParticle(const ParticleData::index_t index) {
     if(!p.deactivated) {
         blanks.push(index);
         p.deactivated = true;
+        // neighbors.at(index).clear();
     } else {
         log::console()->error("Tried to remove particle (index={}), that was already removed!", index);
     }
@@ -134,12 +130,8 @@ ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.top();
         blanks.pop();
-        try {
-            entries.at(idx) = std::move(entry);
-            neighbors.at(idx).clear();
-        } catch(const std::out_of_range&) {
-            log::console()->error("no1");
-        }
+        entries.at(idx) = std::move(entry);
+        neighbors.at(idx).clear();
         return idx;
     } else {
         entries.push_back(std::move(entry));
@@ -149,14 +141,10 @@ ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
 }
 
 void ParticleData::removeEntry(index_t idx) {
-    try {
-        auto &entry = entries.at(idx);
-        if(!entry.is_deactivated()) {
-            entry.deactivated = true;
-            blanks.push(idx);
-        }
-    } catch(const std::out_of_range&) {
-        log::console()->error("no2");
+    auto &entry = entries.at(idx);
+    if(!entry.is_deactivated()) {
+        entry.deactivated = true;
+        blanks.push(idx);
     }
 }
 
@@ -174,16 +162,8 @@ std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) 
     auto it_del = removedEntries.begin();
     for(auto&& newEntry : newEntries) {
         if(it_del != removedEntries.end()) {
-            try {
-                entries.at(*it_del) = std::move(newEntry);
-            } catch(const std::out_of_range&) {
-                log::console()->error("no3");
-            }
-            try {
-                neighbors.at(*it_del).clear();
-            } catch(const std::out_of_range&) {
-                log::console()->error("no4");
-            }
+            entries.at(*it_del) = std::move(newEntry);
+            neighbors.at(*it_del).clear();
             result.push_back(*it_del);
             ++it_del;
         } else {
@@ -203,12 +183,7 @@ void ParticleData::setFixPosFun(const ctx_t::fix_pos_fun &f) {
 }
 
 const ParticleData::particle_type::pos_type &ParticleData::pos(ParticleData::index_t idx) const {
-    try {
-        return entries.at(idx).pos;
-    } catch(const std::out_of_range& e) {
-        log::console()->error("no5");
-        throw e;
-    }
+    return entries.at(idx).pos;
 }
 
 void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
@@ -218,12 +193,7 @@ void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Par
 }
 
 ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) {
-    try {
-        return entries.at(idx);
-    } catch(const std::out_of_range& e) {
-        log::console()->error("no6");
-        throw e;
-    }
+    return entries.at(idx);
 }
 
 const ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) const {
@@ -231,21 +201,11 @@ const ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) con
 }
 
 const ParticleData::Entry &ParticleData::centry_at(ParticleData::index_t idx) const {
-    try {
-        return entries.at(idx);
-    } catch(const std::out_of_range& e) {
-        log::console()->error("no7");
-        throw e;
-    }
+    return entries.at(idx);
 }
 
 ParticleData::neighbors_t &ParticleData::neighbors_at(ParticleData::index_t idx) {
-    try {
-        return neighbors.at(idx);
-    } catch(const std::out_of_range& e) {
-        log::console()->error("no9");
-        throw e;
-    }
+    return neighbors.at(idx);
 }
 
 const ParticleData::neighbors_t &ParticleData::neighbors_at(ParticleData::index_t idx) const {
@@ -253,12 +213,7 @@ const ParticleData::neighbors_t &ParticleData::neighbors_at(ParticleData::index_
 }
 
 const ParticleData::neighbors_t &ParticleData::cneighbors_at(ParticleData::index_t idx) const {
-    try {
-        return neighbors.at(idx);
-    } catch(const std::out_of_range& e) {
-        log::console()->error("no10");
-        throw e;
-    }
+    return neighbors.at(idx);
 }
 
 
