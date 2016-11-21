@@ -87,10 +87,6 @@ void NeighborList::setupCells() {
             setupNeighboringCells(0, 0, 0);
         }
     }
-    if (cells.size() > 1) {
-        // todo group particles by cells
-        // todo sort particles wrt hilbert curve within cells
-    }
 }
 
 void
@@ -134,6 +130,7 @@ bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const 
         if (!entry.is_deactivated()) {
             const double disp = entry.displacement;
             travelledTooFar = disp > r_c + r_s;
+            if(travelledTooFar) break;
             if (disp > cell.maximal_displacements[0]) {
                 cell.maximal_displacements[0] = disp;
             } else if (disp > cell.maximal_displacements[1]) {
@@ -199,9 +196,9 @@ void NeighborList::fillCells() {
         } else {
             auto dirtyCells = findDirtyCells();
 
-            if(dirtyCells.size() >= cells.size() * .50) {
+            if(dirtyCells.size() >= cells.size() * 1.) {
                 initialSetup = true;
-                log::console()->debug("had more than 50% dirty cells, recreate neighbor list");
+                log::console()->debug("had more than 100% dirty cells, recreate neighbor list");
                 setupCells();
                 fillCells();
                 initialSetup = false;
@@ -330,12 +327,12 @@ NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index
 void NeighborList::remove(const particle_index idx) {
     auto cell = getCell(data.pos(idx));
     if (cell != nullptr) {
-        auto remove_predicate = [idx](const ParticleData::Neighbor &n) {
-            return n.idx == idx;
+        auto remove_predicate = [idx](const ParticleData::Neighbor n) {
+            return n == idx;
         };
         try {
             for (auto &neighbor : neighbors(idx)) {
-                auto &neighbors_2nd = data.neighbors.at(neighbor.idx);
+                auto &neighbors_2nd = data.neighbors.at(neighbor);
                 auto it = std::find_if(neighbors_2nd.begin(), neighbors_2nd.end(), remove_predicate);
                 if (it != neighbors_2nd.end()) {
                     neighbors_2nd.erase(it);
@@ -363,8 +360,8 @@ void NeighborList::insert(const particle_index idx) {
             if (idx != pJ) {
                 const auto distSquared = d2(pos, data.pos(pJ));
                 if (distSquared < cutoffSquared) {
-                    myNeighbors.push_back({pJ, distSquared});
-                    data.neighbors.at(pJ).push_back({idx, distSquared});
+                    myNeighbors.push_back(pJ);
+                    data.neighbors.at(pJ).push_back(idx);
                 }
             }
         }
@@ -372,8 +369,8 @@ void NeighborList::insert(const particle_index idx) {
             for (const auto &pJ : neighboringCell->particleIndices) {
                 const auto distSquared = d2(pos, data.pos(pJ));
                 if (distSquared < cutoffSquared) {
-                    myNeighbors.push_back({pJ, distSquared});
-                    data.neighbors.at(pJ).push_back({idx, distSquared});
+                    myNeighbors.push_back(pJ);
+                    data.neighbors.at(pJ).push_back(idx);
                 }
             }
         }
@@ -390,6 +387,7 @@ NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_typ
 }
 
 void NeighborList::updateData(ParticleData::update_t &&update) {
+    readdy::util::Timer t ("updateData");
     if (maxCutoff > 0) {
         for (const auto &p : std::get<1>(update)) {
             remove(p);
@@ -571,7 +569,7 @@ void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquare
             if (pI != pJ) {
                 const auto distSquared = d2(entry_i.position(), data.pos(pJ));
                 if (distSquared < cutoffSquared) {
-                    neighbors_i.push_back({pJ, distSquared});
+                    neighbors_i.push_back(pJ);
                 }
             }
         }
@@ -579,7 +577,7 @@ void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquare
             for (const auto pJ : neighboringCell->particleIndices) {
                 const auto distSquared = d2(entry_i.position(), data.pos(pJ));
                 if (distSquared < cutoffSquared) {
-                    neighbors_i.push_back({pJ, distSquared});
+                    neighbors_i.push_back(pJ);
                 }
             }
         }

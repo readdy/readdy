@@ -29,7 +29,7 @@ class ParticleData {
 public:
 
     struct Entry;
-    struct Neighbor;
+    using Neighbor = std::size_t;
     using ctx_t = readdy::model::KernelContext;
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
@@ -39,18 +39,6 @@ public:
     using update_t = std::pair<ParticleData::entries_t, std::vector<index_t>>;
     using force_t = readdy::model::Vec3;
     using displacement_t = double;
-
-    struct Neighbor {
-        using index_t = entries_t::size_type;
-        index_t idx;
-        double d2;
-
-        Neighbor(const index_t idx, const double d2);
-        Neighbor(const Neighbor&) = delete;
-        Neighbor& operator=(const Neighbor&) = delete;
-        Neighbor(Neighbor&&);
-        Neighbor& operator=(Neighbor&&);
-    };
 
     /**
      * Particle data entry with padding such that it fits exactly into 64 bytes.

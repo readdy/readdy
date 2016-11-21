@@ -47,13 +47,13 @@ auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &
                        unsigned long idx1, unsigned long idx2) {
     const auto &neighbors1 = pairs->find_neighbors(idx1);
     for (auto &neigh_idx : neighbors1) {
-        if (neigh_idx.idx == idx2) {
+        if (neigh_idx == idx2) {
             return true;
         }
     }
     const auto &neighbors2 = pairs->find_neighbors(idx2);
     for (auto &neigh_idx : neighbors2) {
-        if (neigh_idx.idx == idx1) {
+        if (neigh_idx == idx1) {
             return true;
         }
     }

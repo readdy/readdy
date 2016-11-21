@@ -46,14 +46,16 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
             // 2nd order potentials
             //
 
-            for (const auto &neighbor : *neighbors_it) {
-                auto &neighborEntry = data.entry_at(neighbor.idx);
+            for (const auto neighbor : *neighbors_it) {
+                auto &neighborEntry = data.entry_at(neighbor);
                 auto potit = pot2.find({it->type, neighborEntry.type});
                 if (potit != pot2.end()) {
+                    auto x_ij = d(myPos, neighborEntry.position());
+                    auto distSquared = x_ij * x_ij;
                     for (const auto &potential : potit->second) {
-                        if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
+                        if (distSquared < potential->getCutoffRadiusSquared()) {
                             readdy::model::Vec3 updateVec{0, 0, 0};
-                            potential->calculateForceAndEnergy(updateVec, energyUpdate, d(myPos, neighborEntry.position()));
+                            potential->calculateForceAndEnergy(updateVec, energyUpdate, x_ij);
                             force += updateVec;
                         }
                     }

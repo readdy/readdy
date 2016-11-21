@@ -99,7 +99,8 @@ protected:
     virtual void handleBoxReactions();
 
     void findProblematicParticles(data_t::index_t entry, const SlicedBox &box, ctx_t ctx,
-                                  const data_t& data, nl_t nl, std::set<data_t::index_t> &problematic) const;
+                                  const data_t& data, nl_t nl, std::set<data_t::index_t> &problematic,
+                                  const readdy::model::KernelContext::dist_squared_fun&) const;
 
 };
 }

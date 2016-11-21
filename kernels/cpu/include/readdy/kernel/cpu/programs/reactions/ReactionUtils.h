@@ -52,7 +52,8 @@ data_t::update_t handleEventsGillespie(
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &particles, const nl_t &nl,
-                  const data_t &data, double &alpha, std::vector<event_t> &events) {
+                  const data_t &data, double &alpha, std::vector<event_t> &events,
+                  const readdy::model::KernelContext::dist_squared_fun& d2) {
     for (const auto index : particles) {
         auto& entry = data.entry_at(index);
         // this being false should really not happen, though
@@ -72,18 +73,18 @@ void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &
                 }
             }
             // order 2
-            for (const auto& idx_neighbor : nl->find_neighbors(index)) {
-                if (index > idx_neighbor.idx) continue;
-                const auto& neighbor = data.entry_at(idx_neighbor.idx);
+            for (const auto idx_neighbor : nl->find_neighbors(index)) {
+                if (index > idx_neighbor) continue;
+                const auto& neighbor = data.entry_at(idx_neighbor);
                 const auto &reactions = kernel->getKernelContext().getOrder2Reactions(entry.type, neighbor.type);
                 if (!reactions.empty()) {
-                    const auto distSquared = idx_neighbor.d2;
+                    const auto distSquared = d2(neighbor.position(), entry.position());
                     for (auto it = reactions.begin(); it < reactions.end(); ++it) {
                         const auto &react = *it;
                         const auto rate = react->getRate();
                         if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
                             alpha += rate;
-                            events.push_back({2, react->getNProducts(), index, idx_neighbor.idx,
+                            events.push_back({2, react->getNProducts(), index, idx_neighbor,
                                               rate, alpha,
                                               static_cast<event_t::reaction_index_type>(it - reactions.begin()),
                                               entry.type, neighbor.type});

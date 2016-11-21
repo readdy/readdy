@@ -316,7 +316,7 @@ class MinEMinDSimulation(object):
 
 
 if __name__ == '__main__':
-    sim = MinEMinDSimulation('test_mind_mine.npy', False)
+    sim = MinEMinDSimulation('test_mind_mine.npy', True)
     sim.execute()
 
     #X = np.load('test_mind_mine_no_membrane6.npy')

@@ -15,16 +15,6 @@ namespace cpu {
 namespace model {
 
 //
-// Neighbor Impl
-//
-
-ParticleData::Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {}
-
-ParticleData::Neighbor::Neighbor(Neighbor &&rhs) = default;
-
-ParticleData::Neighbor& ParticleData::Neighbor::operator=(ParticleData::Neighbor &&rhs) = default;
-
-//
 // Entry Impl
 //
 

@@ -56,16 +56,17 @@ void HistogramAlongAxis::evaluate() {
     const auto data = kernel->getKernelStateModel().getParticleData();
 
     std::vector<std::future<result_t>> updates;
+    updates.reserve(kernel->getNThreads());
     auto worker = [binBorders, typesToCount, resultSize, data, axis](Iter from, Iter to, std::promise<result_t> update) {
         result_t resultUpdate;
         resultUpdate.resize(resultSize);
 
-        for (auto it = from; it != to; ++it) {
+        for (Iter it = from; it != to; ++it) {
             if (!it->is_deactivated() && typesToCount.find(it->type) != typesToCount.end()) {
                 auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), it->position()[axis]);
                 if (upperBound != binBorders.end()) {
                     unsigned long binBordersIdx = upperBound - binBorders.begin();
-                    if (binBordersIdx > 1) {
+                    if (binBordersIdx >= 1 && binBordersIdx < resultSize) {
                         ++resultUpdate[binBordersIdx - 1];
                     }
                 }
@@ -76,7 +77,7 @@ void HistogramAlongAxis::evaluate() {
     };
 
     {
-        const std::size_t grainSize = size / kernel->getNThreads();
+        const std::size_t grainSize = (data->size() + data->getNDeactivated()) / kernel->getNThreads();
 
         std::vector<util::scoped_thread> threads;
         Iter workIter = data->cbegin();
@@ -93,7 +94,11 @@ void HistogramAlongAxis::evaluate() {
 
     for(auto& update : updates) {
         auto vec = std::move(update.get());
-        std::transform(vec.begin(), vec.end(), result.begin(), result.end(), std::plus<result_t::value_type>());
+        auto it1 = vec.begin();
+        auto it2 = result.begin();
+        for(;it1 != vec.end(); ++it1, ++it2) {
+            *it2 += *it1;
+        }
     }
 }
 

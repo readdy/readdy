@@ -30,7 +30,7 @@ public:
     class Cell;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
-    using particle_index = ParticleData::Neighbor::index_t;
+    using particle_index = ParticleData::index_t;
     using neighbor_t = ParticleData::Neighbor;
     using data_t = readdy::kernel::cpu::model::ParticleData;
     using ctx_t = readdy::model::KernelContext;

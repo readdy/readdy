@@ -14,13 +14,13 @@
 namespace readdy {
 namespace model {
 struct KernelContext::Impl {
-    uint typeCounter;
+    unsigned int typeCounter;
     std::unordered_map<std::string, unsigned int> typeMapping;
     double kBT = 1;
     std::array<double, 3> box_size{{1, 1, 1}};
     std::array<bool, 3> periodic_boundary{{true, true, true}};
-    std::unordered_map<uint, double> diffusionConstants{};
-    std::unordered_map<uint, double> particleRadii{};
+    std::unordered_map<unsigned int, double> diffusionConstants{};
+    std::unordered_map<unsigned int, double> particleRadii{};
 
     double timeStep;
 
