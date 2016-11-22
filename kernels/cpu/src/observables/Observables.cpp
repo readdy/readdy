@@ -7,15 +7,19 @@
  * @date 27.10.16
  */
 
+#include <future>
+
+#include <readdy/common/thread/scoped_thread.h>
+
 #include <readdy/kernel/cpu/observables/Observables.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <future>
-#include <readdy/kernel/cpu/util/scoped_thread.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace observables {
+
+namespace thd = readdy::util::thread;
 
 ParticlePosition::ParticlePosition(CPUKernel *const kernel, unsigned int stride,
                                    const std::vector<std::string> &typesToCount) :
@@ -79,17 +83,17 @@ void HistogramAlongAxis::evaluate() {
     {
         const std::size_t grainSize = data->size() / kernel->getNThreads();
 
-        std::vector<util::scoped_thread> threads;
+        std::vector<thd::scoped_thread> threads;
         Iter workIter = data->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads()-1; ++i) {
             std::promise<result_t> promise;
             updates.push_back(promise.get_future());
-            threads.push_back(util::scoped_thread(std::thread(worker, workIter, workIter+grainSize, std::move(promise))));
+            threads.push_back(thd::scoped_thread(std::thread(worker, workIter, workIter+grainSize, std::move(promise))));
             workIter+=grainSize;
         }
         std::promise<result_t> promise;
         updates.push_back(promise.get_future());
-        threads.push_back(util::scoped_thread(std::thread(worker, workIter, data->cend(), std::move(promise))));
+        threads.push_back(thd::scoped_thread(std::thread(worker, workIter, data->cend(), std::move(promise))));
     }
 
     for(auto& update : updates) {

@@ -9,11 +9,13 @@
 
 #include <future>
 #include <readdy/kernel/cpu/CPUStateModel.h>
-#include <readdy/kernel/cpu/util/scoped_thread.h>
+#include <readdy/common/thread/scoped_thread.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
+
+namespace thd = readdy::util::thread;
 
 using entries_it = CPUStateModel::data_t::entries_t::iterator;
 using neighbors_it = decltype(std::declval<readdy::kernel::cpu::model::NeighborList>().cbegin());
@@ -106,7 +108,7 @@ void CPUStateModel::calculateForces() {
     std::vector<std::future<double>> energyFutures;
         energyFutures.reserve(config->nThreads());
         {
-            std::vector<util::scoped_thread> threads;
+            std::vector<thd::scoped_thread> threads;
             threads.reserve(config->nThreads());
             const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
             auto it_data_end = pimpl->data<false>().end();
@@ -115,7 +117,7 @@ void CPUStateModel::calculateForces() {
             for (auto i = 0; i < config->nThreads() - 1; ++i) {
                 std::promise<double> energyPromise;
                 energyFutures.push_back(energyPromise.get_future());
-                threads.push_back(util::scoped_thread(
+                threads.push_back(thd::scoped_thread(
                         std::thread(calculateForcesThread, it_data, it_data+grainSize, it_nl, std::move(energyPromise),
                                     std::cref(particleData), potOrder1, potOrder2, d)
                 ));
@@ -125,7 +127,7 @@ void CPUStateModel::calculateForces() {
             {
                 std::promise<double> lastPromise;
                 energyFutures.push_back(lastPromise.get_future());
-                threads.push_back(util::scoped_thread(
+                threads.push_back(thd::scoped_thread(
                         std::thread(calculateForcesThread, it_data, it_data_end, it_nl, std::move(lastPromise),
                                     std::cref(particleData), potOrder1, potOrder2, d)));
             }

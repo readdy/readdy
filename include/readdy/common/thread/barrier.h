@@ -14,9 +14,8 @@
 #include <condition_variable>
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
 namespace util {
+namespace thread {
 
 class barrier {
 public:
@@ -46,7 +45,6 @@ private:
     mutable std::size_t generation;
 };
 
-}
 }
 }
 }

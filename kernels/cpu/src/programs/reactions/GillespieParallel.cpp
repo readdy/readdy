@@ -11,7 +11,7 @@
 #include <queue>
 
 #include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
-#include <readdy/kernel/cpu/util/scoped_thread.h>
+#include <readdy/common/thread/scoped_thread.h>
 
 
 using rdy_particle_t = readdy::model::Particle;
@@ -21,6 +21,8 @@ namespace kernel {
 namespace cpu {
 namespace programs {
 namespace reactions {
+
+namespace thd = readdy::util::thread;
 
 
 long GillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
@@ -192,7 +194,7 @@ void GillespieParallel::handleBoxReactions() {
     std::vector<std::future<data_t::update_t>> newParticles;
     {
         //readdy::util::Timer t ("\t run threads");
-        std::vector<util::scoped_thread> threads;
+        std::vector<thd::scoped_thread> threads;
         for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
             // nboxes == nthreads
             promise_t promise;
@@ -200,7 +202,7 @@ void GillespieParallel::handleBoxReactions() {
             promise_new_particles_t promiseParticles;
             newParticles.push_back(promiseParticles.get_future());
             threads.push_back(
-                    util::scoped_thread(std::thread(
+                    thd::scoped_thread(std::thread(
                             worker, std::ref(boxes[i]),
                             std::ref(kernel->getKernelContext()),
                             kernel->getKernelStateModel().getParticleData(),

@@ -7,8 +7,8 @@
  * @date 07.07.16
  */
 
+#include <readdy/common/thread/scoped_thread.h>
 #include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
-#include <readdy/kernel/cpu/util/scoped_thread.h>
 
 namespace readdy {
 namespace kernel {
@@ -16,11 +16,12 @@ namespace cpu {
 namespace programs {
 
 namespace rnd = readdy::model::rnd;
+namespace thd = readdy::util::thread;
 
 void CPUEulerBDIntegrator::execute() {
     auto& pd = *kernel->getKernelStateModel().getParticleData();
     const auto size = pd.size();
-    std::vector<util::scoped_thread> threads;
+    std::vector<thd::scoped_thread> threads;
     threads.reserve(kernel->getNThreads());
     const std::size_t grainSize = size / kernel->getNThreads();
 
@@ -44,10 +45,10 @@ void CPUEulerBDIntegrator::execute() {
     auto work_iter = pd.begin();
     {
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
-            threads.push_back(util::scoped_thread(std::thread(worker, work_iter, work_iter + grainSize)));
+            threads.push_back(thd::scoped_thread(std::thread(worker, work_iter, work_iter + grainSize)));
             work_iter += grainSize;
         }
-        threads.push_back(util::scoped_thread(std::thread(worker, work_iter, pd.end())));
+        threads.push_back(thd::scoped_thread(std::thread(worker, work_iter, pd.end())));
     }
 
 }

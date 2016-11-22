@@ -13,9 +13,9 @@
 #include <thread>
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
 namespace util {
+namespace thread {
+
 class scoped_thread {
     std::thread t;
 public:
@@ -42,7 +42,6 @@ public:
 
     scoped_thread &operator=(const scoped_thread &) = delete;
 };
-}
 }
 }
 }

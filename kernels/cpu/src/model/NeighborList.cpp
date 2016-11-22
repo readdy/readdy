@@ -14,14 +14,16 @@
 #include <readdy/kernel/cpu/util/hilbert.h>
 #include <readdy/common/numeric.h>
 #include <future>
-#include <readdy/kernel/cpu/util/scoped_thread.h>
-#include <readdy/kernel/cpu/util/barrier.h>
+#include <readdy/common/thread/scoped_thread.h>
+#include <readdy/common/thread/barrier.h>
 #include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace model {
+
+namespace thd = readdy::util::thread;
 
 template<typename T, typename Dims>
 T get_contiguous_index(T i, T j, T k, Dims I, Dims J) {
@@ -184,15 +186,15 @@ void NeighborList::fillCells() {
                 }
             };
 
-            std::vector<util::scoped_thread> threads;
+            std::vector<thd::scoped_thread> threads;
             threads.reserve(config->nThreads());
 
             auto it_cells = cells.begin();
             for (int i = 0; i < config->nThreads() - 1; ++i) {
-                threads.push_back(util::scoped_thread(std::thread(worker, it_cells, it_cells + grainSize)));
+                threads.push_back(thd::scoped_thread(std::thread(worker, it_cells, it_cells + grainSize)));
                 it_cells += grainSize;
             }
-            threads.push_back(util::scoped_thread(std::thread(worker, it_cells, cells.end())));
+            threads.push_back(thd::scoped_thread(std::thread(worker, it_cells, cells.end())));
         } else {
             auto dirtyCells = findDirtyCells();
 
@@ -209,7 +211,7 @@ void NeighborList::fillCells() {
 
                 using cell_it_t = decltype(dirtyCells.begin());
 
-                auto worker = [this, c2, d2, grainSize](cell_it_t begin, cell_it_t end, const util::barrier &barrier) {
+                auto worker = [this, c2, d2, grainSize](cell_it_t begin, cell_it_t end, const thd::barrier &barrier) {
                     // first gather updates
                     std::vector<std::vector<NeighborList::particle_index>> cellUpdates;
                     cellUpdates.reserve(grainSize);
@@ -263,9 +265,9 @@ void NeighborList::fillCells() {
                 };
 
                 readdy::util::Timer t("        update dirty cells");
-                util::barrier b(config->nThreads());
+                thd::barrier b(config->nThreads());
 
-                std::vector<util::scoped_thread> threads;
+                std::vector<thd::scoped_thread> threads;
                 threads.reserve(config->nThreads());
 
                 log::console()->debug("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
@@ -274,11 +276,11 @@ void NeighborList::fillCells() {
                     auto it_cells = dirtyCells.begin();
                     for (int i = 0; i < config->nThreads() - 1; ++i) {
                         auto advanced = std::next(it_cells, grainSize);
-                        threads.push_back(util::scoped_thread(std::thread(worker, it_cells, advanced, std::cref(b))));
+                        threads.push_back(thd::scoped_thread(std::thread(worker, it_cells, advanced, std::cref(b))));
                         it_cells = advanced;
                     }
                     threads.push_back(
-                            util::scoped_thread(std::thread(worker, it_cells, dirtyCells.end(), std::cref(b))));
+                            thd::scoped_thread(std::thread(worker, it_cells, dirtyCells.end(), std::cref(b))));
                 }
             }
         }
@@ -504,7 +506,7 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
     std::unordered_set<NeighborList::Cell *> result;
 
 
-    auto worker = [this](it_type begin, it_type end, promise_t update, const util::barrier &barrier, std::atomic<bool>& interrupt) {
+    auto worker = [this](it_type begin, it_type end, promise_t update, const thd::barrier &barrier, std::atomic<bool>& interrupt) {
         // interrupt if there is a particle that travelled too far (r_c + r_s)
         bool shouldInterrupt = false;
         for (it_type it = begin; it != end; ++it) {
@@ -524,26 +526,26 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
     };
 
     std::atomic<bool> interrupt(false);
-    util::barrier b(config->nThreads());
+    thd::barrier b(config->nThreads());
 
     std::vector<future_t> dirtyCells;
     dirtyCells.reserve(config->nThreads());
     {
         auto it_cells = cells.begin();
-        std::vector<util::scoped_thread> threads;
+        std::vector<thd::scoped_thread> threads;
         const std::size_t grainSize = cells.size() / config->nThreads();
         for (int i = 0; i < config->nThreads() - 1; ++i) {
             promise_t promise;
             dirtyCells.push_back(promise.get_future());
             threads.push_back(
-                    util::scoped_thread(
+                    thd::scoped_thread(
                             std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b), std::ref(interrupt)))
             );
             it_cells += grainSize;
         }
         promise_t promise;
         dirtyCells.push_back(promise.get_future());
-        threads.push_back(util::scoped_thread(
+        threads.push_back(thd::scoped_thread(
                 std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b), std::ref(interrupt))));
     }
     if(interrupt.load()) {

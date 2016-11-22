@@ -15,9 +15,8 @@
 
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
 namespace util {
+namespace thread {
 
 /**
  * counting semaphore implementation
@@ -63,7 +62,6 @@ private:
     mutable int count;
 };
 
-}
 }
 }
 }

@@ -13,9 +13,8 @@
 #include <thread>
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
 namespace util {
+namespace thread {
 class ThreadGuard {
     std::thread *t;
 public:
@@ -39,7 +38,6 @@ public:
         return *this;
     }
 };
-}
 }
 }
 }
