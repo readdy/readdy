@@ -1,2 +1,2 @@
 ADD_SUBDIRECTORY(cpu)
-# ADD_SUBDIRECTORY(cpu_dense)
+ADD_SUBDIRECTORY(cpu_dense)

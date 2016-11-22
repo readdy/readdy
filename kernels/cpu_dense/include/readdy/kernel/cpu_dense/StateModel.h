@@ -1,35 +1,34 @@
 /**
  * << detailed description >>
  *
- * @file CPUStateModel.h
+ * @file StateModel.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 22.11.16
  */
 
-#ifndef READDY_CPUKERNEL_CPUSTATEMODEL_H
-#define READDY_CPUKERNEL_CPUSTATEMODEL_H
-
+#ifndef READDY_DENSE_KERNEL_H
+#define READDY_DENSE_KERNEL_H
 
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
-#include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/cpu/model/NeighborList.h>
-#include <readdy/kernel/cpu/util/Config.h>
-#include <readdy/kernel/cpu/model/ParticleData.h>
+#include <readdy/kernel/cpu_dense/model/ParticleIndexPair.h>
+#include <readdy/kernel/cpu_dense/model/NeighborList.h>
+#include <readdy/common/thread/Config.h>
+#include <readdy/kernel/cpu_dense/model/ParticleData.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
-class CPUStateModel : public readdy::model::KernelStateModel {
+namespace cpu_dense {
+class StateModel : public readdy::model::KernelStateModel {
 
 public:
 
     using data_t = readdy::kernel::cpu::model::ParticleData;
 
-    CPUStateModel(readdy::model::KernelContext *const context, util::Config const *const config);
+    StateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
 
-    ~CPUStateModel();
+    ~StateModel();
 
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
@@ -58,10 +57,10 @@ public:
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
-    util::Config const *const config;
+    readdy::util::thread::Config const *const config;
 };
 }
 }
 }
 
-#endif //READDY_CPUKERNEL_CPUSTATEMODEL_H
+#endif //READDY_DENSE_KERNEL_H
