@@ -22,12 +22,20 @@ namespace kernel {
 namespace cpu {
 namespace util {
 Config::Config() {
-    nThreads = std::thread::hardware_concurrency();
+    m_nThreads = std::thread::hardware_concurrency();
     const char *env = std::getenv("READDY_N_CORES");
     if (env) {
-        nThreads = static_cast<n_threads_t>(std::stol(env));
-        log::console()->debug("Using {} threads (by environment variable READDY_N_CORES", nThreads);
+        m_nThreads = static_cast<n_threads_t>(std::stol(env));
+        log::console()->debug("Using {} threads (by environment variable READDY_N_CORES", m_nThreads);
     }
+}
+
+Config::n_threads_t Config::nThreads() const {
+    return m_nThreads;
+}
+
+void Config::setNThreads(const Config::n_threads_t n) {
+    m_nThreads = n;
 }
 }
 }

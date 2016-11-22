@@ -67,12 +67,15 @@ readdy::model::_internal::ObservableFactory &CPUKernel::getObservableFactory() c
 }
 
 unsigned long CPUKernel::getNThreads() const {
-    return pimpl->config->nThreads;
+    return pimpl->config->nThreads();
 }
 
-void CPUKernel::setNThreads(unsigned long n) {
+void CPUKernel::setNThreads(util::Config::n_threads_t n) {
     if (n > 0 && n < std::thread::hardware_concurrency()) {
-        pimpl->config->nThreads = n;
+        pimpl->config->setNThreads(n);
+    } else {
+        log::console()->error("Tried to set number of threads to {}, but there are only {} hardware thread contexts "
+                                      "available.", n, std::thread::hardware_concurrency());
     }
 }
 

@@ -37,7 +37,7 @@ public:
 
         double alpha = 0.0;
         std::vector<event_t> events;
-        gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size() + data->getNDeactivated()),
+        gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()),
                      nl, *data, alpha, events, dist);
         auto particlesUpdate = handleEventsGillespie(kernel, false, true, std::move(events));
 

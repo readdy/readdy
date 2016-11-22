@@ -77,7 +77,7 @@ void HistogramAlongAxis::evaluate() {
     };
 
     {
-        const std::size_t grainSize = (data->size() + data->getNDeactivated()) / kernel->getNThreads();
+        const std::size_t grainSize = data->size() / kernel->getNThreads();
 
         std::vector<util::scoped_thread> threads;
         Iter workIter = data->cbegin();

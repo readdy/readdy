@@ -7,7 +7,7 @@
  * @date 27.10.16
  */
 
-#include <readdy/kernel/cpu/model/ParticleData.h>
+#include "readdy/kernel/cpu/model/ParticleData.h"
 
 namespace readdy {
 namespace kernel {
@@ -49,11 +49,11 @@ ParticleData::ParticleData(readdy::model::KernelContext*const context)
         : blanks(std::vector<index_t>()), entries(), neighbors(), fixPos(context->getFixPositionFun())  { }
 
 std::size_t ParticleData::size() const {
-    return entries.size() - blanks.size();
+    return entries.size();
 }
 
 bool ParticleData::empty() const {
-    return size() == 0;
+    return size() == getNDeactivated();
 }
 
 void ParticleData::clear() {

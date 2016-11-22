@@ -45,7 +45,7 @@ public:
 
     unsigned long getNThreads() const;
 
-    void setNThreads(unsigned long n);
+    void setNThreads(util::Config::n_threads_t n);
 
 private:
     struct Impl;

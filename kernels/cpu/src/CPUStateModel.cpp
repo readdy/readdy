@@ -7,8 +7,8 @@
  * @date 13.07.16
  */
 
-#include <readdy/kernel/cpu/CPUStateModel.h>
 #include <future>
+#include <readdy/kernel/cpu/CPUStateModel.h>
 #include <readdy/kernel/cpu/util/scoped_thread.h>
 
 namespace readdy {
@@ -104,15 +104,15 @@ void CPUStateModel::calculateForces() {
     auto d = pimpl->context->getShortestDifferenceFun();
     {
     std::vector<std::future<double>> energyFutures;
-        energyFutures.reserve(config->nThreads);
+        energyFutures.reserve(config->nThreads());
         {
             std::vector<util::scoped_thread> threads;
-            threads.reserve(config->nThreads);
-            const std::size_t grainSize = (pimpl->cdata().size() + pimpl->cdata().getNDeactivated()) / config->nThreads;
+            threads.reserve(config->nThreads());
+            const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
             auto it_data_end = pimpl->data<false>().end();
             auto it_data = pimpl->data<false>().begin();
             auto it_nl = pimpl->neighborList->begin();
-            for (auto i = 0; i < config->nThreads - 1; ++i) {
+            for (auto i = 0; i < config->nThreads() - 1; ++i) {
                 std::promise<double> energyPromise;
                 energyFutures.push_back(energyPromise.get_future());
                 threads.push_back(util::scoped_thread(
