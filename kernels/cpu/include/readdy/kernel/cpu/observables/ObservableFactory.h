@@ -16,13 +16,13 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
-class CPUKernel;
+class Kernel;
 namespace observables {
 
 class ObservableFactory : public readdy::model::_internal::ObservableFactory {
 
 public:
-    ObservableFactory(CPUKernel *const kernel);
+    ObservableFactory(Kernel *const kernel);
 
     virtual readdy::model::NParticlesObservable *
     createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
@@ -43,7 +43,7 @@ public:
                                         std::string typeCountTo, double particleToDensity) const override;
 
 private:
-    CPUKernel *const kernel;
+    Kernel *const kernel;
 };
 
 }

@@ -10,14 +10,14 @@
 #include <gtest/gtest.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
+#include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/kernel/cpu/programs/Reactions.h>
 #include <readdy/kernel/cpu/programs/NextSubvolumesReactionScheduler.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
 #include <readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h>
 
 struct fix_n_threads {
-    fix_n_threads(readdy::kernel::cpu::CPUKernel *const kernel, unsigned int n)
+    fix_n_threads(readdy::kernel::cpu::Kernel *const kernel, unsigned int n)
             : oldValue(static_cast<unsigned int>(kernel->getNThreads())), kernel(kernel) {
         kernel->setNThreads(n);
     }
@@ -28,7 +28,7 @@ struct fix_n_threads {
 
 private:
     const unsigned int oldValue;
-    readdy::kernel::cpu::CPUKernel *const kernel;
+    readdy::kernel::cpu::Kernel *const kernel;
 };
 
 TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
@@ -193,7 +193,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
+    auto kernel = std::make_unique<readdy::kernel::cpu::Kernel>();
     kernel->getKernelContext().setBoxSize(10, 10, 30);
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);

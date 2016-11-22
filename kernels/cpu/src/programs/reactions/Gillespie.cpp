@@ -15,7 +15,7 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-Gillespie::Gillespie(const CPUKernel *const kernel) : kernel(kernel) {}
+Gillespie::Gillespie(const Kernel *const kernel) : kernel(kernel) {}
 
 }
 }

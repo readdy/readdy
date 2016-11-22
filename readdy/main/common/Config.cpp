@@ -11,16 +11,16 @@
 #include <readdy/common/logging.h>
 #include <readdy/common/macros.h>
 
-#include "readdy/kernel/cpu/util/Config.h"
+#include "readdy/common/thread/Config.h"
 
 #if READDY_OSX
 #include <cstdlib>
 #endif
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
 namespace util {
+namespace thread {
+
 Config::Config() {
     m_nThreads = std::thread::hardware_concurrency();
     const char *env = std::getenv("READDY_N_CORES");
@@ -37,7 +37,7 @@ Config::n_threads_t Config::nThreads() const {
 void Config::setNThreads(const Config::n_threads_t n) {
     m_nThreads = n;
 }
-}
+
 }
 }
 }

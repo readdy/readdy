@@ -37,7 +37,7 @@ public:
 
 const static std::vector<NeighborList::neighbor_t> no_neighbors{};
 
-NeighborList::NeighborList(const ctx_t *const context, data_t &data, util::Config const *const config,
+NeighborList::NeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config,
                            skin_size_t skin)
         : ctx(context), config(config), cells(std::vector<Cell>()),
           simBoxSize(ctx->getBoxSize()), skin_size(skin), data(data) {}

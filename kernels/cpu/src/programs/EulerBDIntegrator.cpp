@@ -8,7 +8,7 @@
  */
 
 #include <readdy/common/thread/scoped_thread.h>
-#include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu/programs/EulerBDIntegrator.h>
 
 namespace readdy {
 namespace kernel {
@@ -18,7 +18,7 @@ namespace programs {
 namespace rnd = readdy::model::rnd;
 namespace thd = readdy::util::thread;
 
-void CPUEulerBDIntegrator::execute() {
+void EulerBDIntegrator::execute() {
     auto& pd = *kernel->getKernelStateModel().getParticleData();
     const auto size = pd.size();
     std::vector<thd::scoped_thread> threads;
@@ -53,7 +53,7 @@ void CPUEulerBDIntegrator::execute() {
 
 }
 
-CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel) : kernel(kernel) {}
+EulerBDIntegrator::EulerBDIntegrator(Kernel *kernel) : kernel(kernel) {}
 
 }
 }

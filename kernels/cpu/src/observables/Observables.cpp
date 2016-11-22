@@ -12,7 +12,7 @@
 #include <readdy/common/thread/scoped_thread.h>
 
 #include <readdy/kernel/cpu/observables/Observables.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 
 namespace readdy {
 namespace kernel {
@@ -21,7 +21,7 @@ namespace observables {
 
 namespace thd = readdy::util::thread;
 
-ParticlePosition::ParticlePosition(CPUKernel *const kernel, unsigned int stride,
+ParticlePosition::ParticlePosition(Kernel *const kernel, unsigned int stride,
                                    const std::vector<std::string> &typesToCount) :
         readdy::model::ParticlePositionObservable(kernel, stride, typesToCount), kernel(kernel) {}
 
@@ -40,7 +40,7 @@ void ParticlePosition::evaluate() {
     }
 }
 
-HistogramAlongAxis::HistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
+HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride,
                                        const std::vector<double> &binBorders,
                                        const std::vector<std::string> &typesToCount, unsigned int axis)
         : readdy::model::HistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount, axis),
@@ -107,7 +107,7 @@ void HistogramAlongAxis::evaluate() {
 }
 
 
-NParticles::NParticles(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
+NParticles::NParticles(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : readdy::model::NParticlesObservable(kernel, stride, typesToCount),
           kernel(kernel) {}
 
@@ -130,7 +130,7 @@ void NParticles::evaluate() {
     result = resultVec;
 }
 
-Forces::Forces(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
+Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
         readdy::model::ForcesObservable(kernel, stride, typesToCount),
         kernel(kernel) {}
 

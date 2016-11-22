@@ -67,7 +67,7 @@ void NextSubvolumes::execute() {
     evaluateReactions();
 }
 
-NextSubvolumes::NextSubvolumes(const CPUKernel *const kernel)
+NextSubvolumes::NextSubvolumes(const Kernel *const kernel)
         : kernel(kernel), cells({}), nCells({}), cellSize(), eventQueue({}) {}
 
 void NextSubvolumes::setUpGrid() {

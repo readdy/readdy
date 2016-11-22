@@ -17,7 +17,7 @@ namespace reactions {
 
 using entry_type = readdy::kernel::cpu::model::ParticleData::Entry;
 
-UncontrolledApproximation::UncontrolledApproximation(const CPUKernel *const kernel)
+UncontrolledApproximation::UncontrolledApproximation(const Kernel *const kernel)
         : kernel(kernel) {
 
 }

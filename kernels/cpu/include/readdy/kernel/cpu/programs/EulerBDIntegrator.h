@@ -10,22 +10,22 @@
 #ifndef READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
 #define READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
 
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/model/programs/Programs.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-class CPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
+class EulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
 
 public:
-    CPUEulerBDIntegrator(CPUKernel *kernel);
+    EulerBDIntegrator(Kernel *kernel);
 
     virtual void execute() override;
 
 private:
-    CPUKernel *kernel;
+    Kernel *kernel;
 };
 }
 }

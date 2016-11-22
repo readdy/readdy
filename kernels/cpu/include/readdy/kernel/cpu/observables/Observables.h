@@ -15,24 +15,24 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
-class CPUKernel;
+class Kernel;
 
 namespace observables {
 
 class ParticlePosition : public readdy::model::ParticlePositionObservable {
 public:
-    ParticlePosition(CPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+    ParticlePosition(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
 
     virtual void evaluate() override;
 
 protected:
-    CPUKernel *const kernel;
+    Kernel *const kernel;
 };
 
 class HistogramAlongAxis : public readdy::model::HistogramAlongAxisObservable {
 
 public:
-    HistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
+    HistogramAlongAxis(Kernel *const kernel, unsigned int stride,
                        const std::vector<double> &binBorders,
                        const std::vector<std::string> &typesToCount,
                        unsigned int axis);
@@ -40,25 +40,25 @@ public:
     virtual void evaluate() override;
 
 protected:
-    CPUKernel *const kernel;
+    Kernel *const kernel;
     size_t size;
 };
 
 class NParticles : public readdy::model::NParticlesObservable {
 public:
 
-    NParticles(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
+    NParticles(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
 
 
     virtual void evaluate() override;
 
 protected:
-    CPUKernel *const kernel;
+    Kernel *const kernel;
 };
 
 class Forces : public readdy::model::ForcesObservable {
 public:
-    Forces(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
+    Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
 
     virtual ~Forces() {}
 
@@ -66,7 +66,7 @@ public:
 
 
 protected:
-    CPUKernel *const kernel;
+    Kernel *const kernel;
 };
 
 

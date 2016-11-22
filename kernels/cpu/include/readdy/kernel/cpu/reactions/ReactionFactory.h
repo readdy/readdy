@@ -105,9 +105,9 @@ struct Fusion : public readdy::model::reactions::Fusion {
 
 };
 
-class CPUReactionFactory : public readdy::model::reactions::ReactionFactory {
+class ReactionFactory : public readdy::model::reactions::ReactionFactory {
 public:
-    CPUReactionFactory(CPUKernel *const kernel) : kernel(kernel) {
+    ReactionFactory(Kernel *const kernel) : kernel(kernel) {
 
     }
 
@@ -148,7 +148,7 @@ protected:
 
 
 protected:
-    CPUKernel *const kernel;
+    Kernel *const kernel;
 };
 
 

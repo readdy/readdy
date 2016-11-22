@@ -11,7 +11,7 @@
 
 #include <gtest/gtest.h>
 #include <readdy/kernel/cpu/model/NeighborList.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
@@ -27,10 +27,10 @@ using data_t = cpu::model::ParticleData;
 
 struct TestNeighborList : ::testing::Test {
 
-    std::unique_ptr<cpu::CPUKernel> kernel;
+    std::unique_ptr<cpu::Kernel> kernel;
     unsigned int typeIdA;
 
-    TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
+    TestNeighborList() : kernel(std::make_unique<cpu::Kernel>()) {
         auto &ctx = kernel->getKernelContext();
         ctx.setDiffusionConstant("A", 1.0);
         double eductDistance = 1.2;
@@ -73,7 +73,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     ctx.setBoxSize(1.5, 4, 1.5);
     ctx.setPeriodicBoundary(false, false, false);
 
-    readdy::kernel::cpu::util::Config conf;
+    readdy::util::thread::Config conf;
     readdy::kernel::cpu::model::ParticleData data {&ctx};
     cpum::NeighborList list(&ctx, data, &conf);
 
@@ -97,7 +97,7 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.setBoxSize(1.2, 1.1, 2.8);
     ctx.setPeriodicBoundary(false, false, true);
 
-    readdy::kernel::cpu::util::Config conf;
+    readdy::util::thread::Config conf;
     readdy::kernel::cpu::model::ParticleData data {&ctx};
     cpum::NeighborList list(&ctx, data, &conf);
 
@@ -123,7 +123,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
-    readdy::kernel::cpu::util::Config conf;
+    readdy::util::thread::Config conf;
     readdy::kernel::cpu::model::ParticleData data {&ctx};
     cpum::NeighborList list(&ctx, data, &conf);
     list.setupCells();

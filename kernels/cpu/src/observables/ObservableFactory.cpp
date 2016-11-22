@@ -8,14 +8,14 @@
  */
 
 #include <readdy/kernel/cpu/observables/ObservableFactory.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/kernel/cpu/observables/Observables.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace observables {
-ObservableFactory::ObservableFactory(CPUKernel *const kernel) : readdy::model::_internal::ObservableFactory(kernel),
+ObservableFactory::ObservableFactory(Kernel *const kernel) : readdy::model::_internal::ObservableFactory(kernel),
                                                                 kernel(kernel) {
 }
 

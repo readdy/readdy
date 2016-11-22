@@ -13,7 +13,7 @@
 using data_t = readdy::kernel::cpu::model::ParticleData;
 
 readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::FilteredGillespieParallel(
-        const readdy::kernel::cpu::CPUKernel *const kernel) : GillespieParallel(kernel) {}
+        const readdy::kernel::cpu::Kernel *const kernel) : GillespieParallel(kernel) {}
 
 void readdy::kernel::cpu::programs::reactions::FilteredGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<event_t>>;

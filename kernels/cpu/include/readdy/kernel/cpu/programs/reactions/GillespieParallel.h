@@ -12,7 +12,7 @@
 
 
 #include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
 #include "ReactionUtils.h"
 

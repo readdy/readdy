@@ -10,7 +10,7 @@
 #ifndef READDY_CPUKERNEL_GILLESPIE_H
 #define READDY_CPUKERNEL_GILLESPIE_H
 
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/common/range.h>
 #include "ReactionUtils.h"
 
@@ -26,7 +26,7 @@ class Gillespie : public readdy::model::programs::reactions::Gillespie {
 
 public:
 
-    Gillespie(CPUKernel const *const kernel);
+    Gillespie(Kernel const *const kernel);
 
     virtual void execute() override {
         const auto &ctx = kernel->getKernelContext();
@@ -46,7 +46,7 @@ public:
     }
 
 protected:
-    CPUKernel const *const kernel;
+    Kernel const *const kernel;
 };
 }
 }

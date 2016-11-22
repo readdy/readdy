@@ -16,7 +16,7 @@ namespace programs {
 namespace reactions {
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel const *const kernel,
+        Kernel const *const kernel,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events) {
     using rdy_particle_t = readdy::model::Particle;

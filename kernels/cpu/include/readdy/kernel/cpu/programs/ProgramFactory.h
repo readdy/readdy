@@ -11,16 +11,16 @@
 #ifndef READDY_CPUKERNEL_CPUPROGRAMFACTORY_H
 #define READDY_CPUKERNEL_CPUPROGRAMFACTORY_H
 
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-class CPUProgramFactory : public readdy::model::programs::ProgramFactory {
+class ProgramFactory : public readdy::model::programs::ProgramFactory {
 
 public:
-    CPUProgramFactory(CPUKernel *kernel);
+    ProgramFactory(Kernel *kernel);
 };
 
 }

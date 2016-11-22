@@ -16,7 +16,7 @@
 #include <readdy/model/KernelContext.h>
 
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/cpu/util/Config.h>
+#include <readdy/common/thread/Config.h>
 
 #include "ParticleData.h"
 
@@ -65,7 +65,7 @@ public:
         friend bool operator!=(const Cell &lhs, const Cell &rhs);
     };
 
-    NeighborList(const ctx_t *const context, data_t &data, util::Config const *const config, skin_size_t = 0);
+    NeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config, skin_size_t = 0);
 
     virtual ~NeighborList();
 
@@ -128,7 +128,7 @@ protected:
     readdy::model::Vec3 cellSize{0, 0, 0};
     double maxCutoff = 0;
     double maxCutoffPlusSkin = 0;
-    util::Config const *const config;
+    readdy::util::thread::Config const *const config;
 
     const Cell* const getCell(const readdy::model::Particle::pos_type &pos) const;
 

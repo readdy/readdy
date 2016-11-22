@@ -7,8 +7,8 @@
  * @date 23.06.16
  */
 
-#include <readdy/kernel/cpu/programs/CPUProgramFactory.h>
-#include <readdy/kernel/cpu/programs/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu/programs/ProgramFactory.h>
+#include <readdy/kernel/cpu/programs/EulerBDIntegrator.h>
 #include <readdy/kernel/cpu/programs/UpdateNeighborList.h>
 #include <readdy/kernel/cpu/programs/CalculateForces.h>
 #include <readdy/kernel/cpu/programs/Compartments.h>
@@ -23,12 +23,12 @@ namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
+ProgramFactory::ProgramFactory(Kernel *kernel) {
     factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
         return new reactions::UncontrolledApproximation(kernel);
     };
     factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
-        return new CPUEulerBDIntegrator(kernel);
+        return new EulerBDIntegrator(kernel);
     };
     factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
         return new UpdateNeighborList(kernel);

@@ -12,7 +12,7 @@ namespace kernel {
 namespace cpu {
 namespace programs {
 
-Compartments::Compartments(const CPUKernel *const kernel) : kernel(kernel) {}
+Compartments::Compartments(const Kernel *const kernel) : kernel(kernel) {}
 
 void Compartments::execute() {
     const auto &ctx = kernel->getKernelContext();

@@ -7,13 +7,13 @@
  * @date 05.09.16
  */
 
-#ifndef READDY_CPUKERNEL_CONFIG_H
-#define READDY_CPUKERNEL_CONFIG_H
+#ifndef READDY_MAIN_CONFIG_H
+#define READDY_MAIN_CONFIG_H
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
 namespace util {
+namespace thread {
+
 struct Config {
     using n_threads_t = decltype(std::thread::hardware_concurrency());
 
@@ -23,8 +23,8 @@ struct Config {
 private:
     n_threads_t m_nThreads;
 };
+
 }
 }
 }
-}
-#endif //READDY_CPUKERNEL_CONFIG_H
+#endif //READDY_MAIN_CONFIG_H
