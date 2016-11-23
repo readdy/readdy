@@ -11,12 +11,12 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/kernel/cpu/model/NeighborList.h>
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu_dense/model/NeighborList.h>
+#include <readdy/kernel/cpu_dense/Kernel.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
-namespace cpu = readdy::kernel::cpu;
+namespace cpu = readdy::kernel::cpu_dense;
 namespace scpu = readdy::kernel::singlecpu;
 namespace cpum = cpu::model;
 namespace scpum = scpu::model;
@@ -44,57 +44,29 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
-auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &data,
+auto isPairInList = [](readdy::kernel::cpu_dense::model::NeighborList *pairs, data_t &data,
                        unsigned long idx1, unsigned long idx2) {
     const auto &neighbors1 = pairs->find_neighbors(idx1);
     for (auto &neigh_idx : neighbors1) {
-        if (neigh_idx == idx2) {
+        if (neigh_idx.idx == idx2) {
             return true;
         }
     }
     const auto &neighbors2 = pairs->find_neighbors(idx2);
     for (auto &neigh_idx : neighbors2) {
-        if (neigh_idx == idx1) {
+        if (neigh_idx.idx == idx1) {
             return true;
         }
     }
     return false;
 };
 
-auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList &pairs) {
+auto getNumberPairs = [](const readdy::kernel::cpu_dense::model::NeighborList &pairs) {
     using val_t = decltype(*pairs.begin());
     return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, const val_t &x) {
         return acc + x.size();
     });
 };
-
-TEST_F(TestNeighborList, TestCellsDirty) {
-    auto& ctx = kernel->getKernelContext();
-    ctx.setBoxSize(10, 10, 10);
-    ctx.configure();
-
-    readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
-    cpum::NeighborList list(&ctx, data, &conf);
-    list.setSkinSize(1.0);
-
-    // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
-    const auto particles = std::vector<m::Particle>{
-            m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
-    };
-
-    data.addParticles(particles);
-    list.create();
-
-    list.displace(data.entry_at(0), {1.2, .0, .0});
-    auto dirtyCells = list.findDirtyCells();
-    EXPECT_EQ(125, dirtyCells.size());
-
-    list.create();
-    dirtyCells = list.findDirtyCells();
-    EXPECT_EQ(0, dirtyCells.size());
-
-}
 
 TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
@@ -103,7 +75,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     ctx.setPeriodicBoundary(false, false, false);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    readdy::kernel::cpu_dense::model::ParticleData data {&ctx};
     cpum::NeighborList list(&ctx, data, &conf);
 
     list.setupCells();
@@ -127,7 +99,7 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.setPeriodicBoundary(false, false, true);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    readdy::kernel::cpu_dense::model::ParticleData data {&ctx};
     cpum::NeighborList list(&ctx, data, &conf);
 
     list.setupCells();
@@ -153,7 +125,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    readdy::kernel::cpu_dense::model::ParticleData data {&ctx};
     cpum::NeighborList list(&ctx, data, &conf);
     list.setupCells();
     // Create a few particles. In this box setup, all particles are neighbors.
