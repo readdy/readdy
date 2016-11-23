@@ -74,7 +74,7 @@ TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
         auto p_12 = diff(p_out1.getPos(), p_out2.getPos());
         auto p_12_nondirect = p_out2.getPos() - p_out1.getPos();
         EXPECT_EQ(p_12_nondirect, p_12);
-        auto distance = sqrt(p_12 * p_12);
+        auto distance = std::sqrt(p_12 * p_12);
         EXPECT_DOUBLE_EQ(productDistance, distance);
     }
 

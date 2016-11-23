@@ -67,6 +67,34 @@ auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList &pairs) 
     });
 };
 
+TEST_F(TestNeighborList, TestCellsDirty) {
+    auto& ctx = kernel->getKernelContext();
+    ctx.setBoxSize(10, 10, 10);
+    ctx.configure();
+
+    readdy::util::thread::Config conf;
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
+    list.setSkinSize(1.0);
+
+    // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
+    const auto particles = std::vector<m::Particle>{
+            m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
+    };
+
+    data.addParticles(particles);
+    list.create();
+
+    list.displace(data.entry_at(0), {1.2, .0, .0});
+    auto dirtyCells = list.findDirtyCells();
+    EXPECT_EQ(125, dirtyCells.size());
+
+    list.create();
+    dirtyCells = list.findDirtyCells();
+    EXPECT_EQ(0, dirtyCells.size());
+
+}
+
 TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
     auto &ctx = kernel->getKernelContext();

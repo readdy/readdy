@@ -124,7 +124,7 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
         case reaction_type::Fission: {
             auto& entry1 = data.entry_at(idx1);
             auto n3 = readdy::model::rnd::normal3(0, 1);
-            n3 /= sqrt(n3 * n3);
+            n3 /= std::sqrt(n3 * n3);
 
             readdy::model::Particle p (entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
             newEntries.push_back({p});

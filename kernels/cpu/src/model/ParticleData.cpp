@@ -184,7 +184,7 @@ const ParticleData::particle_type::pos_type &ParticleData::pos(ParticleData::ind
 void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
     entry.pos += delta;
     fixPos(entry.pos);
-    entry.displacement += sqrt(delta * delta);
+    entry.displacement += std::sqrt(delta * delta);
 }
 
 ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) {
@@ -215,7 +215,7 @@ const ParticleData::neighbors_t &ParticleData::cneighbors_at(ParticleData::index
 ParticleData::~ParticleData() = default;
 
 
-ParticleData::EntryUpdate::EntryUpdate(const ParticleData::particle_type &particle) 
+ParticleData::EntryUpdate::EntryUpdate(const ParticleData::particle_type &particle)
         : Entry(particle), id(particle.getId()) {}
 }
 }

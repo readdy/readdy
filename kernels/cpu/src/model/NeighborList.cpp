@@ -127,6 +127,9 @@ void NeighborList::clear() {
  */
 bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const double r_c, const double r_s) {
     bool travelledTooFar = false;
+    cell.maximal_displacements[0] = 0;
+    cell.maximal_displacements[1] = 0;
+
     for (const auto idx : cell.particleIndices) {
         const auto &entry = data.entry_at(idx);
         if (!entry.is_deactivated()) {
@@ -145,10 +148,11 @@ bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const 
 }
 
 bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
-    return cell.dirty ||
-           (std::find_if(cell.neighbors.begin(), cell.neighbors.end(), [](const NeighborList::Cell *const neighbor) {
-               return neighbor->dirty;
-           }) != cell.neighbors.end());
+    if(cell.dirty) return true;
+    for(const auto n : cell.neighbors) {
+        if(n->dirty) return true;
+    }
+    return false;
 }
 
 void NeighborList::fillCells() {
@@ -198,9 +202,10 @@ void NeighborList::fillCells() {
         } else {
             auto dirtyCells = findDirtyCells();
 
-            if(dirtyCells.size() > cells.size() * 1.) {
+            const double fraction = 1.;
+            if(dirtyCells.size() > cells.size() * fraction) {
                 initialSetup = true;
-                log::console()->debug("had more than 100% dirty cells, recreate neighbor list");
+                log::console()->debug("had more than {}% dirty cells, recreate neighbor list", fraction*100);
                 setupCells();
                 fillCells();
                 initialSetup = false;
@@ -264,13 +269,13 @@ void NeighborList::fillCells() {
                     }
                 };
 
-                readdy::util::Timer t("        update dirty cells");
+                // readdy::util::Timer t("        update dirty cells");
                 thd::barrier b(config->nThreads());
 
                 std::vector<thd::scoped_thread> threads;
                 threads.reserve(config->nThreads());
 
-                log::console()->debug("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
+                // log::console()->warn("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
 
                 {
                     auto it_cells = dirtyCells.begin();
@@ -282,6 +287,10 @@ void NeighborList::fillCells() {
                     threads.push_back(
                             thd::scoped_thread(std::thread(worker, it_cells, dirtyCells.end(), std::cref(b))));
                 }
+            }
+            {
+                // auto dirtyCells2 = findDirtyCells();
+                // log::console()->warn("dirty cells after: {}", dirtyCells2.size());
             }
         }
     }
@@ -505,11 +514,13 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
     std::unordered_set<NeighborList::Cell *> result;
 
 
-    auto worker = [this](it_type begin, it_type end, promise_t update, const thd::barrier &barrier, std::atomic<bool>& interrupt) {
+    auto worker = [this](it_type begin, it_type end, promise_t update, const thd::barrier &barrier,
+                         std::atomic<bool>& interrupt) {
         // interrupt if there is a particle that travelled too far (r_c + r_s)
         bool shouldInterrupt = false;
         for (it_type it = begin; it != end; ++it) {
             shouldInterrupt |= markCell(*it, data, maxCutoff, skin_size);
+            if(shouldInterrupt) break;
         }
         if(shouldInterrupt) interrupt = shouldInterrupt;
         barrier.wait();
@@ -552,7 +563,7 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
     }
     for (auto &&dirties : dirtyCells) {
         auto v = std::move(dirties.get());
-        result.insert(v.begin(), v.end());
+        std::copy(v.begin(), v.end(), std::inserter(result, result.end()));
     }
     return std::move(result);
 }
@@ -604,7 +615,6 @@ void NeighborList::setSkinSize(NeighborList::skin_size_t skin_size) {
     initialSetup = true;
     cells.clear();
     NeighborList::skin_size = skin_size;
-    log::console()->debug("skin size set to {}", skin_size);
 }
 
 }

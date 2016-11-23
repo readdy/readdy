@@ -116,6 +116,7 @@ public:
 
     hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
+    std::unordered_set<Cell*> findDirtyCells();
 protected:
 
     const readdy::model::KernelContext *const ctx;
@@ -138,8 +139,6 @@ protected:
     Cell *getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k);
 
     const Cell * const getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) const;
-
-    std::unordered_set<Cell*> findDirtyCells();
 
     void setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
 

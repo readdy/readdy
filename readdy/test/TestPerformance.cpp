@@ -114,12 +114,18 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
             reactionsProgram->execute();
             t_reactions += c.getSeconds();
         }
+
+        {
+            timer c("neighbor list");
+            neighborList->execute();
+            t_nl += c.getSeconds();
+        }
     }
 
     std::cout << "--------------------------------------------------------------" << std::endl;
     std::cout << "Average time for calculating forces: " << t_forces / steps << std::endl;
     std::cout << "Average time for the integrator:     " << t_integrator / steps << std::endl;
-    std::cout << "Average time for the neighbor list:  " << t_nl / (steps+1) << std::endl;;
+    std::cout << "Average time for the neighbor list:  " << t_nl / (2*steps+1) << std::endl;;
     std::cout << "Average time for handling reactions: " << t_reactions / steps << std::endl;;
     std::cout << "--------------------------------------------------------------" << std::endl;;
 }

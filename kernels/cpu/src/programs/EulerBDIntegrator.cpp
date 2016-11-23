@@ -35,7 +35,7 @@ void EulerBDIntegrator::execute() {
         for (iter_t it = entry_begin; it != entry_end; ++it) {
             if(!it->is_deactivated()) {
                 const double D = context.getDiffusionConstant(it->type);
-                const auto randomDisplacement = sqrt(2. * D * dt) * rnd::normal3(0, 1);
+                const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3(0, 1);
                 const auto deterministicDisplacement = it->force * dt * D / kbt;
                 pd.displace(*it, randomDisplacement + deterministicDisplacement);
             }

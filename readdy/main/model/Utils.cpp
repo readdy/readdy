@@ -37,7 +37,7 @@ double getMaximumDisplacement(KernelContext& context) {
             }
         }
         // todo magic number?
-        double local_maximum_displacement = sqrt(2 * D * tau) + D * kbt * fMax * tau;
+        double local_maximum_displacement = std::sqrt(2 * D * tau) + D * kbt * fMax * tau;
         maximum_displacement = std::max(local_maximum_displacement, maximum_displacement);
     }
 
@@ -104,7 +104,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
         double rho = rMin / 2;
         if (fMax > 0) {
             xi = 1. / (context.getKBT() * fMax);
-            tD = (xi * xi / D) * (1 + rho / xi - sqrt(1 + 2 * rho / xi));
+            tD = (xi * xi / D) * (1 + rho / xi - std::sqrt(1 + 2 * rho / xi));
         } else if (D > 0) {
             tD = .5 * rho * rho / D;
         }
@@ -120,8 +120,8 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     log::console()->debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
     for (auto &&pI : context.getAllRegisteredParticleTypes()) {
         double D = context.getDiffusionConstant(pI);
-        double xmax = sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
-        log::console()->debug("\t - {}: {} + {} = {}" , context.getParticleName(pI), sqrt(2 * D * tDMin),
+        double xmax = std::sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
+        log::console()->debug("\t - {}: {} + {} = {}" , context.getParticleName(pI), std::sqrt(2 * D * tDMin),
                               D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 
