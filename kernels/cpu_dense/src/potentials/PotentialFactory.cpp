@@ -28,6 +28,9 @@ PotentialFactory::PotentialFactory(Kernel *const kernel) {
     factory[p::getPotentialName<p::WeakInteractionPiecewiseHarmonic>()] = [kernel] {
         return new singlecpu_pot::WeakInteractionPiecewiseHarmonic(kernel);
     };
+    factory[p::getPotentialName<p::SpherePotential>()] = [kernel] {
+        return new singlecpu_pot::SpherePotential(kernel);
+    };
 }
 }
 }

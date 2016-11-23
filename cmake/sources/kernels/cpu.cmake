@@ -13,8 +13,6 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/Observables.cpp")
 # --- programs ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/ProgramFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/EulerBDIntegrator.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/Reactions.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/NextSubvolumesReactionScheduler.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/Compartments.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/ReactionUtils.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/programs/reactions/Event.cpp")
