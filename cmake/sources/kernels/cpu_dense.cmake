@@ -16,6 +16,7 @@ LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/programs/reactions/Event.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/programs/reactions/Gillespie.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/programs/reactions/GillespieParallel.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/programs/reactions/ReactionUtils.cpp")
+LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/programs/reactions/UncontrolledApproximation.cpp")
 
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/programs/Compartments.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/programs/EulerBDIntegrator.cpp")

@@ -15,7 +15,7 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-using entry_type = readdy::kernel::cpu::model::ParticleData::Entry;
+using entry_type = readdy::kernel::cpu_dense::model::ParticleData::Entry;
 
 UncontrolledApproximation::UncontrolledApproximation(const Kernel *const kernel)
         : kernel(kernel) {
