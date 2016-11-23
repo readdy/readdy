@@ -98,7 +98,7 @@ void gatherEvents(Kernel const *const kernel, const ParticleIndexCollection &par
 }
 
 template<typename Reaction>
-void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, data_t::entries_t& newEntries,
+void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, data_t::entries_update_t& newEntries,
                      std::vector<data_t::index_t>& decayedEntries, Reaction* reaction) {
     switch(reaction->getType()) {
         case reaction_type::Decay: {

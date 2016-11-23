@@ -198,7 +198,7 @@ void NeighborList::fillCells() {
         } else {
             auto dirtyCells = findDirtyCells();
 
-            if(dirtyCells.size() >= cells.size() * 1.) {
+            if(dirtyCells.size() > cells.size() * 1.) {
                 initialSetup = true;
                 log::console()->debug("had more than 100% dirty cells, recreate neighbor list");
                 setupCells();
@@ -389,7 +389,6 @@ NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_typ
 }
 
 void NeighborList::updateData(ParticleData::update_t &&update) {
-    readdy::util::Timer t ("updateData");
     if (maxCutoff > 0) {
         for (const auto &p : std::get<1>(update)) {
             remove(p);

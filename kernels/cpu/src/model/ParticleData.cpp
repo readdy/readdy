@@ -19,11 +19,10 @@ namespace model {
 //
 
 ParticleData::Entry::Entry(ParticleData::Entry &&rhs)
-        : id(std::move(rhs.id)), pos(std::move(rhs.pos)), force(std::move(rhs.force)), type(std::move(rhs.type)),
+        : pos(std::move(rhs.pos)), force(std::move(rhs.force)), type(std::move(rhs.type)),
           deactivated(std::move(rhs.deactivated)), displacement(std::move(rhs.displacement)){ }
 
 ParticleData::Entry &ParticleData::Entry::operator=(ParticleData::Entry &&rhs) {
-    id = std::move(rhs.id);
     pos = std::move(rhs.pos);
     force = std::move(rhs.force);
     type = std::move(rhs.type);
@@ -46,7 +45,7 @@ bool ParticleData::Entry::is_deactivated() const {
 
 
 ParticleData::ParticleData(readdy::model::KernelContext*const context)
-        : blanks(std::vector<index_t>()), entries(), neighbors(), fixPos(context->getFixPositionFun())  { }
+        : blanks(std::vector<index_t>()), entries(), ids(), neighbors(), fixPos(context->getFixPositionFun())  { }
 
 std::size_t ParticleData::size() const {
     return entries.size();
@@ -58,6 +57,9 @@ bool ParticleData::empty() const {
 
 void ParticleData::clear() {
     while(!blanks.empty()) blanks.pop();
+    entries.clear();
+    ids.clear();
+    neighbors.clear();
 }
 
 void ParticleData::addParticle(const ParticleData::particle_type &particle) {
@@ -70,23 +72,27 @@ void ParticleData::addParticles(const std::vector<ParticleData::particle_type> &
             const auto idx = blanks.top();
             blanks.pop();
             entries.at(idx) = {p};
+            ids.at(idx) = p.getId();
         } else {
             entries.push_back({p});
+            ids.push_back(p.getId());
             neighbors.push_back({});
         }
     }
 }
 
 void ParticleData::removeParticle(const ParticleData::particle_type &particle) {
-    auto it = std::find_if(entries.begin(), entries.end(), [&particle](const Entry& e) {
-        return e.id == particle.getId() && !e.deactivated;
-    });
-    if(it != entries.end()) {
-        blanks.push(it - entries.begin());
-        (*it).deactivated = true;
-    } else {
-        log::console()->error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
+    auto it_entries = begin();
+    auto it_ids = ids.begin();
+    std::size_t idx = 0;
+    for(; it_entries != end(); ++it_entries, ++it_ids, ++idx) {
+        if(!it_entries->is_deactivated() && *it_ids == particle.getId()) {
+            blanks.push(idx);
+            it_entries->deactivated = true;
+            return;
+        }
     }
+    log::console()->error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
 }
 
 void ParticleData::removeParticle(const ParticleData::index_t index) {
@@ -104,26 +110,28 @@ ParticleData::index_t ParticleData::getNDeactivated() const {
     return blanks.size();
 }
 
-readdy::model::Particle ParticleData::getParticle(const ParticleData::index_t index) const {
+readdy::model::Particle ParticleData::getParticle(const index_t index) const {
     const auto& entry = *(entries.begin() + index);
     if(entry.deactivated) {
-        log::console()->error("Requested deactivated particle!");
+        log::console()->error("Requested deactivated particle at index {}!", index);
     }
-    return toParticle(entry);
+    return toParticle(entry, ids.at(index));
 }
 
-readdy::model::Particle ParticleData::toParticle(const ParticleData::Entry &e) const {
-    return readdy::model::Particle(e.pos, e.type, e.id);
+readdy::model::Particle ParticleData::toParticle(const Entry &e, const particle_type::id_type id) const {
+    return readdy::model::Particle(e.pos, e.type, id);
 }
 
-ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
+ParticleData::index_t ParticleData::addEntry(ParticleData::EntryUpdate &&entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.top();
         blanks.pop();
+        ids.at(idx) = entry.id;
         entries.at(idx) = std::move(entry);
         neighbors.at(idx).clear();
         return idx;
     } else {
+        ids.push_back(entry.id);
         entries.push_back(std::move(entry));
         neighbors.push_back({});
         return entries.size()-1;
@@ -138,10 +146,6 @@ void ParticleData::removeEntry(index_t idx) {
     }
 }
 
-ParticleData::index_t ParticleData::getEntryIndex(const ParticleData::Entry *const entry) const {
-    return static_cast<index_t>(entry - &*entries.begin());
-}
-
 std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) {
     std::vector<index_t> result;
 
@@ -152,6 +156,7 @@ std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) 
     auto it_del = removedEntries.begin();
     for(auto&& newEntry : newEntries) {
         if(it_del != removedEntries.end()) {
+            ids.at(*it_del) = newEntry.id;
             entries.at(*it_del) = std::move(newEntry);
             neighbors.at(*it_del).clear();
             result.push_back(*it_del);
@@ -210,6 +215,8 @@ const ParticleData::neighbors_t &ParticleData::cneighbors_at(ParticleData::index
 ParticleData::~ParticleData() = default;
 
 
+ParticleData::EntryUpdate::EntryUpdate(const ParticleData::particle_type &particle) 
+        : Entry(particle), id(particle.getId()) {}
 }
 }
 }

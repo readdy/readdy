@@ -158,10 +158,12 @@ const std::vector<readdy::model::Particle> StateModel::getParticles() const {
     const auto &data = pimpl->cdata();
     std::vector<readdy::model::Particle> result;
     result.reserve(data.size());
+    auto ids_it = data.begin_ids();
     for (const auto &entry : data) {
         if (!entry.is_deactivated()) {
-            result.push_back(data.toParticle(entry));
+            result.push_back(data.toParticle(entry, *ids_it));
         }
+        ++ids_it;
     }
     return result;
 }

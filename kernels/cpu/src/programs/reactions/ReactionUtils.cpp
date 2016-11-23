@@ -21,7 +21,7 @@ data_t::update_t handleEventsGillespie(
         std::vector<event_t> &&events) {
     using rdy_particle_t = readdy::model::Particle;
 
-    data_t::entries_t newParticles{};
+    data_t::entries_update_t newParticles{};
     std::vector<data_t::index_t> decayedEntries {};
 
     if(!events.empty()) {
