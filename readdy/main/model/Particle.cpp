@@ -26,7 +26,7 @@ bool Particle::operator!=(const Particle &rhs) const{
     return !(*this == rhs);
 }
 
-Particle::Particle(double x, double y, double z, uint type) : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z) {
+Particle::Particle(double x, double y, double z, uint type) : id(std::atomic_fetch_add<id_type>(&id_counter, 1)), pos(x, y, z) {
     this->type = type;
 }
 
@@ -59,6 +59,9 @@ void Particle::setId(const id_type id) {
 
 Vec3 &Particle::getPos() {
     return pos;
+}
+
+Particle::Particle(Vec3 pos, unsigned int type) : pos(pos), type(type), id(std::atomic_fetch_add<id_type>(&id_counter, 1)) {
 }
 
 

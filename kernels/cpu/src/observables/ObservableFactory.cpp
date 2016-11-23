@@ -8,45 +8,44 @@
  */
 
 #include <readdy/kernel/cpu/observables/ObservableFactory.h>
+#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/observables/Observables.h>
 #include <readdy/kernel/singlecpu/observables/SingleCPUObservables.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace observables {
-ObservableFactory::ObservableFactory(CPUKernel *const kernel) : readdy::model::_internal::ObservableFactory(kernel),
+ObservableFactory::ObservableFactory(Kernel *const kernel) : readdy::model::_internal::ObservableFactory(kernel),
                                                                 kernel(kernel) {
 }
 
 readdy::model::NParticlesObservable *
 ObservableFactory::createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new readdy::kernel::singlecpu::observables::NParticlesObservable<CPUKernel>(kernel, stride, typesToCount);
+    return new NParticles(kernel, stride, typesToCount);
 }
 
 readdy::model::HistogramAlongAxisObservable *
 ObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                                  std::vector<std::string> typesToCount,
                                                  unsigned int axis) const {
-    return new readdy::kernel::singlecpu::observables::HistogramAlongAxisObservable<CPUKernel>(kernel, stride,
-                                                                                               binBorders, typesToCount,
-                                                                                               axis);
+    return new HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
 }
 
 readdy::model::ForcesObservable *
 ObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new readdy::kernel::singlecpu::observables::ForcesObservable<CPUKernel>(kernel, stride, typesToCount);
+    return new Forces(kernel, stride, typesToCount);
 }
 
 readdy::model::ParticlePositionObservable *
 ObservableFactory::createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new readdy::kernel::singlecpu::observables::ParticlePositionObservable<CPUKernel>(kernel, stride, typesToCount);
+    return new ParticlePosition(kernel, stride, typesToCount);
 }
 
 readdy::model::RadialDistributionObservable *
 ObservableFactory::createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
                                                       std::string typeCountTo, double particleToDensity) const {
-    return new readdy::kernel::singlecpu::observables::RadialDistributionObservable<CPUKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
+    return new readdy::kernel::singlecpu::observables::RadialDistributionObservable<Kernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
                                                                                                particleToDensity);
 }
 

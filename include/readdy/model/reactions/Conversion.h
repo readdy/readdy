@@ -34,6 +34,9 @@ public:
         return products[0];
     }
 
+    virtual const ReactionType getType() override {
+        return ReactionType::Conversion;
+    }
 };
 }
 }

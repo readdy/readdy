@@ -12,24 +12,22 @@ namespace kernel {
 namespace cpu {
 namespace programs {
 
-Compartments::Compartments(const CPUKernel *const kernel) : kernel(kernel) {}
+Compartments::Compartments(const Kernel *const kernel) : kernel(kernel) {}
 
 void Compartments::execute() {
     const auto &ctx = kernel->getKernelContext();
-    auto data = kernel->getKernelStateModel().getParticleData();
-    auto posIt = data->begin_positions();
-    auto typesIt = data->begin_types();
-    while (posIt != data->end_positions()) {
-        for (auto i = 0; i < compartments.size(); ++i) {
-            if (compartments[i](*posIt)) {
-                if (conversions[i].find(*typesIt) != conversions[i].end()) {
-                    const auto targetType = conversions[i][*typesIt];
-                    *typesIt = targetType;
+    long long idx = 0;
+    for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
+        if(!e.is_deactivated()) {
+            for (auto i = 0; i < compartments.size(); ++i) {
+                if (compartments[i](e.position())) {
+                    if (conversions[i].find(e.type) != conversions[i].end()) {
+                        e.type = conversions[i][e.type];
+                    }
                 }
             }
         }
-        ++posIt;
-        ++typesIt;
+        ++idx;
     }
 }
 

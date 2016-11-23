@@ -6,12 +6,13 @@
  * @file CPUTestNeighborList.cpp
  * @brief Test the neighborlist object of the CPU kernel.
  * @author chrisfroe
+ * @author clonker
  * @date 23.08.16
  */
 
 #include <gtest/gtest.h>
 #include <readdy/kernel/cpu/model/NeighborList.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
@@ -23,12 +24,14 @@ namespace m = readdy::model;
 
 namespace {
 
+using data_t = cpu::model::ParticleData;
+
 struct TestNeighborList : ::testing::Test {
 
-    std::unique_ptr<cpu::CPUKernel> kernel;
+    std::unique_ptr<cpu::Kernel> kernel;
     unsigned int typeIdA;
 
-    TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
+    TestNeighborList() : kernel(std::make_unique<cpu::Kernel>()) {
         auto &ctx = kernel->getKernelContext();
         ctx.setDiffusionConstant("A", 1.0);
         double eductDistance = 1.2;
@@ -41,48 +44,80 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
-auto isPairInList = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs, unsigned long idx1,
-                       unsigned long idx2) {
-    using neighbor_t = readdy::kernel::cpu::model::NeighborList::neighbor_t;
-    const auto neighborsIt = pairs->find(idx1);
-    if (neighborsIt != pairs->end()) {
-        const auto neighbors = neighborsIt->second;
-        return std::find_if(neighbors.begin(), neighbors.end(), [idx2](const neighbor_t &neighbor) {
-            return neighbor.idx == idx2;
-        }) != neighbors.end();
+auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &data,
+                       unsigned long idx1, unsigned long idx2) {
+    const auto &neighbors1 = pairs->find_neighbors(idx1);
+    for (auto &neigh_idx : neighbors1) {
+        if (neigh_idx == idx2) {
+            return true;
+        }
+    }
+    const auto &neighbors2 = pairs->find_neighbors(idx2);
+    for (auto &neigh_idx : neighbors2) {
+        if (neigh_idx == idx1) {
+            return true;
+        }
     }
     return false;
 };
 
-auto getNumberPairs = [](readdy::kernel::cpu::model::NeighborList::container_t *pairs) {
-    auto pairsIt = pairs->cbegin();
-    size_t numberPairs = 0;
-    while (pairsIt != pairs->cend()) {
-        numberPairs += pairsIt->second.size();
-        ++pairsIt;
-    }
-    return numberPairs;
+auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList &pairs) {
+    using val_t = decltype(*pairs.begin());
+    return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, const val_t &x) {
+        return acc + x.size();
+    });
 };
 
-TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
-    // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three boxes
-    auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(1.5, 4, 1.5);
-    ctx.setPeriodicBoundary(false, false, false);
-    readdy::kernel::cpu::util::Config conf;
-    cpum::NeighborList list(&ctx, &conf);
-    list.setupBoxes();
+TEST_F(TestNeighborList, TestCellsDirty) {
+    auto& ctx = kernel->getKernelContext();
+    ctx.setBoxSize(10, 10, 10);
+    ctx.configure();
+
+    readdy::util::thread::Config conf;
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
+    list.setSkinSize(1.0);
+
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+
     data.addParticles(particles);
-    list.fillBoxes(data);
-    auto pairs = list.pairs.get();
-    EXPECT_EQ(getNumberPairs(pairs), 2);
-    EXPECT_TRUE(isPairInList(pairs, 0, 1));
-    EXPECT_TRUE(isPairInList(pairs, 1, 0));
+    list.create();
+
+    list.displace(data.entry_at(0), {1.2, .0, .0});
+    auto dirtyCells = list.findDirtyCells();
+    EXPECT_EQ(125, dirtyCells.size());
+
+    list.create();
+    dirtyCells = list.findDirtyCells();
+    EXPECT_EQ(0, dirtyCells.size());
+
+}
+
+TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
+    // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
+    auto &ctx = kernel->getKernelContext();
+    ctx.setBoxSize(1.5, 4, 1.5);
+    ctx.setPeriodicBoundary(false, false, false);
+
+    readdy::util::thread::Config conf;
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
+
+    list.setupCells();
+    // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
+    const auto particles = std::vector<m::Particle>{
+            m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
+    };
+
+    data.addParticles(particles);
+    list.fillCells();
+    int sum = getNumberPairs(list);
+    EXPECT_EQ(sum, 2);
+    EXPECT_TRUE(isPairInList(&list, data, 0, 1));
+    EXPECT_TRUE(isPairInList(&list, data, 1, 0));
 }
 
 TEST_F(TestNeighborList, OneDirection) {
@@ -90,24 +125,26 @@ TEST_F(TestNeighborList, OneDirection) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(1.2, 1.1, 2.8);
     ctx.setPeriodicBoundary(false, false, true);
-    readdy::kernel::cpu::util::Config conf;
-    cpum::NeighborList list(&ctx, &conf);
-    list.setupBoxes();
+
+    readdy::util::thread::Config conf;
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
+
+    list.setupCells();
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
     data.addParticles(particles);
-    list.fillBoxes(data);
-    auto pairs = list.pairs.get();
-    EXPECT_EQ(getNumberPairs(pairs), 4);
-    EXPECT_TRUE(isPairInList(pairs, 0, 2));
-    EXPECT_TRUE(isPairInList(pairs, 2, 0));
-    EXPECT_TRUE(isPairInList(pairs, 1, 2));
-    EXPECT_TRUE(isPairInList(pairs, 2, 1));
-    EXPECT_FALSE(isPairInList(pairs, 0, 1));
-    EXPECT_FALSE(isPairInList(pairs, 1, 0));
+    list.fillCells();
+    int sum = getNumberPairs(list);
+    EXPECT_EQ(sum, 4);
+    EXPECT_TRUE(isPairInList(&list, data, 0, 2));
+    EXPECT_TRUE(isPairInList(&list, data, 2, 0));
+    EXPECT_TRUE(isPairInList(&list, data, 1, 2));
+    EXPECT_TRUE(isPairInList(&list, data, 2, 1));
+    EXPECT_FALSE(isPairInList(&list, data, 0, 1));
+    EXPECT_FALSE(isPairInList(&list, data, 1, 0));
 }
 
 TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
@@ -115,23 +152,24 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
-    readdy::kernel::cpu::util::Config conf;
-    cpum::NeighborList list(&ctx, &conf);
-    list.setupBoxes();
+    readdy::util::thread::Config conf;
+    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    cpum::NeighborList list(&ctx, data, &conf);
+    list.setupCells();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
             m::Particle(0, .3, -.3, typeIdA), m::Particle(-.3, 0, .3, typeIdA), m::Particle(.3, -.3, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+
     data.addParticles(particles);
-    list.fillBoxes(data);
-    auto pairs = list.pairs.get();
-    EXPECT_EQ(getNumberPairs(pairs), 30);
+    list.fillCells();
+    int sum = getNumberPairs(list);
+    EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {
-            EXPECT_TRUE(isPairInList(pairs, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
-            EXPECT_TRUE(isPairInList(pairs, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(&list, data, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(&list, data, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
         }
     }
 }

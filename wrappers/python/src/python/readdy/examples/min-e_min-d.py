@@ -277,7 +277,7 @@ class MinEMinDSimulation(object):
         for i in range(int(.5 * n_minD_particles), n_minD_particles):
             simulation.add_particle("D_P", Vec(mind_x[i], mind_y[i], mind_z[i]))
 
-        self.timestep = simulation.get_recommended_time_step(10)
+        self.timestep = simulation.get_recommended_time_step(2)
 
         ###################################
         #
@@ -291,7 +291,7 @@ class MinEMinDSimulation(object):
         print("histogram start")
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
-        stride = int(10./self.timestep)
+        stride = int(20./self.timestep)
         self.stride = stride
         print("using stride=%s" % stride)
         bins = np.linspace(-7, 7, 80)
@@ -316,7 +316,7 @@ class MinEMinDSimulation(object):
 
 
 if __name__ == '__main__':
-    sim = MinEMinDSimulation('test_mind_mine.npy', False)
+    sim = MinEMinDSimulation('test_mind_mine.npy', True)
     sim.execute()
 
     #X = np.load('test_mind_mine_no_membrane6.npy')

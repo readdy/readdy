@@ -12,7 +12,8 @@
 
 #include <unordered_set>
 #include <readdy/model/KernelContext.h>
-#include "SingleCPUParticleData.h"
+#include "ParticleData.h"
+#include <readdy/common/numeric.h>
 
 namespace readdy {
 namespace kernel {
@@ -73,14 +74,14 @@ struct SingleCPUNeighborListContainer {
 
     virtual const_iter_type cend() const { return pairs->cend(); };
 
-    virtual void create(const SingleCPUParticleData &data) = 0;
+    virtual void create(const ParticleData &data) = 0;
 
 protected:
     std::unique_ptr<container> pairs = std::make_unique<container>();
 };
 
 struct NaiveSingleCPUNeighborList : public SingleCPUNeighborListContainer<> {
-    virtual void create(const SingleCPUParticleData &data) override;
+    virtual void create(const ParticleData &data) override;
 
     // ctor and dtor
     NaiveSingleCPUNeighborList();
@@ -132,7 +133,7 @@ public:
     NotThatNaiveSingleCPUNeighborList(const context_t *const context) : ctx(context) {
     }
 
-    virtual void create(const SingleCPUParticleData &data) override {
+    virtual void create(const ParticleData &data) override {
         setupBoxes();
         fillBoxes(data);
     }
@@ -194,7 +195,7 @@ public:
         }
     }
 
-    virtual void fillBoxes(const SingleCPUParticleData &data) {
+    virtual void fillBoxes(const ParticleData &data) {
         const auto simBoxSize = ctx->getBoxSize();
         if (maxCutoff > 0) {
 
@@ -239,11 +240,11 @@ public:
 
     Box *getBox(long i, long j, long k) {
         const auto &periodic = ctx->getPeriodicBoundary();
-        if (periodic[0]) i = positive_modulo(i, nBoxes[0]);
+        if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nBoxes[0]);
         else if (i < 0 || i >= nBoxes[0]) return nullptr;
-        if (periodic[1]) j = positive_modulo(j, nBoxes[1]);
+        if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nBoxes[1]);
         else if (j < 0 || j >= nBoxes[1]) return nullptr;
-        if (periodic[2]) k = positive_modulo(k, nBoxes[2]);
+        if (periodic[2]) k = readdy::util::numeric::positive_modulo(k, nBoxes[2]);
         else if (k < 0 || k >= nBoxes[2]) return nullptr;
         return &boxes[k + j * nBoxes[2] + i * nBoxes[2] * nBoxes[1]];
     }
@@ -257,11 +258,6 @@ protected:
     std::array<int, 3> nBoxes{{0, 0, 0}};
     readdy::model::Vec3 boxSize{0, 0, 0};
     double maxCutoff = 0;
-
-    long positive_modulo(long i, long n) const {
-        return (i % n + n) % n;
-    }
-
 
     const context_t *const ctx;
 };

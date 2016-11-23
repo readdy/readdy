@@ -43,9 +43,9 @@ public:
         PYBIND11_OVERLOAD_NAME(void, super, "increase_energy", increaseEnergy, increase);
     }
 
-    virtual kernel::singlecpu::model::SingleCPUParticleData *getParticleData() const override {
+    virtual kernel::singlecpu::model::ParticleData *getParticleData() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(kernel::singlecpu::model::SingleCPUParticleData*, super, "get_particle_data",
+        PYBIND11_OVERLOAD_NAME(kernel::singlecpu::model::ParticleData*, super, "get_particle_data",
                                getParticleData,);
     }
 

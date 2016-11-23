@@ -39,7 +39,7 @@ struct NeighborListTest : ::testing::Test {
 
 TEST(NeighborList, Naive) {
     unsigned int n_particles = 20;
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     for (unsigned int i = 0; i < n_particles; ++i) {
         data.addParticle({(double) i, (double) i, (double) i, 5});
     }
@@ -55,7 +55,7 @@ TEST(NeighborList, Naive) {
 }
 
 TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
-    // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three boxes along the periodic axis
+    // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three cells along the periodic axis
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(3.6, 2, 2);
     ctx.setPeriodicBoundary(true, false, false);
@@ -73,7 +73,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     // now create three particles. The resulting neighborlist should contain three pairs
     const auto threeParticles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA)};
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(threeParticles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 3);
@@ -88,7 +88,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
 }
 
 TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
-    // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic, i.e. 27 boxes each with 13 neighbors
+    // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic, i.e. 27 cells each with 13 neighbors
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
@@ -104,7 +104,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA),
             m::Particle(0, 1.6, -1.6, typeIdA), m::Particle(-1.6, 0, 1.6, typeIdA), m::Particle(1.6, -1.6, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 15);
@@ -116,7 +116,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
 }
 
 TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
-    // maxcutoff is 1.2, system is 4.8 x 5 x 5.1, all periodic, i.e. 64 boxes each with 13 neighbors
+    // maxcutoff is 1.2, system is 4.8 x 5 x 5.1, all periodic, i.e. 64 cells each with 13 neighbors
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4.8, 5, 5.1);
     ctx.setPeriodicBoundary(true, true, true);
@@ -131,7 +131,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(-2.1, -2.4, -2.4, typeIdA), m::Particle(1, 1, 1, typeIdA), m::Particle(2.1, 2.4, 2.4, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 2);
@@ -143,7 +143,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
 
 
 TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
-    // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three boxes
+    // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(1.5, 4, 1.5);
     ctx.setPeriodicBoundary(false, false, false);
@@ -155,7 +155,7 @@ TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
-    scpum::SingleCPUParticleData data;
+    scpum::ParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 1);

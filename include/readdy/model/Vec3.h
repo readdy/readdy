@@ -82,14 +82,12 @@ inline void fixPosition(Vec3 &vec, const double dx, const double dy, const doubl
         vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
     }
     if (PY) {
-        vec[1] -= floor((vec[1] + .5 * dx) / dx) * dx;
+        vec[1] -= floor((vec[1] + .5 * dy) / dy) * dy;
     }
     if (PZ) {
-        vec[2] -= floor((vec[2] + .5 * dx) / dx) * dx;
+        vec[2] -= floor((vec[2] + .5 * dz) / dz) * dz;
     }
 };
-
-void fixPosition(Vec3 &vec, const std::array<bool, 3> &periodic, const std::array<double, 3> &boxSize);
 
 template<bool PX, bool PY, bool PZ>
 inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const double dx, const double dy, const double dz) {
@@ -115,8 +113,6 @@ inline double distSquared(const Vec3 &lhs, const Vec3 &rhs, const double dx, con
     return dv * dv;
 };
 
-double distSquared(const Vec3 &lhs, const Vec3 &rhs, const std::array<bool, 3> &periodic,
-                   const std::array<double, 3> &boxSize);
 }
 }
 

@@ -65,7 +65,7 @@ WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy:
         : readdy::model::potentials::WeakInteractionPiecewiseHarmonic(kernel) {}
 
 double WeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Vec3 &x_ij) const {
-    const auto dist = sqrt(x_ij * x_ij);
+    const auto dist = std::sqrt(x_ij * x_ij);
     const auto len_part2 = noInteractionDistance - desiredParticleDistance;
     if (dist < desiredParticleDistance) {
         // repulsive as we are closer than the desired distance
@@ -90,7 +90,7 @@ double WeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Ve
 
 void
 WeakInteractionPiecewiseHarmonic::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const {
-    const auto dist = sqrt(x_ij * x_ij);
+    const auto dist = std::sqrt(x_ij * x_ij);
     const auto len_part2 = noInteractionDistance - desiredParticleDistance;
     double factor = 0;
     if (dist < desiredParticleDistance) {

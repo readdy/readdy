@@ -14,7 +14,7 @@ namespace kernel {
 namespace singlecpu {
 namespace model {
 
-void NaiveSingleCPUNeighborList::create(const SingleCPUParticleData &data) {
+void NaiveSingleCPUNeighborList::create(const ParticleData &data) {
     pairs->clear();
     for (size_t i = 0; i < data.size(); ++i) {
         for (size_t j = i + 1; j < data.size(); ++j) {

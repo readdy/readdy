@@ -32,6 +32,9 @@ public:
                          rnd_normal rnd) const override {
     }
 
+    virtual const ReactionType getType() override {
+        return ReactionType::Decay;
+    }
 };
 }
 }

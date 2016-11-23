@@ -21,7 +21,7 @@ struct Timer {
 
     ~Timer() {
         if (print) {
-            std::cout << "Elapsed (" << label << "): " << getSeconds() << " seconds" << std::endl;
+            log::console()->debug("Elapsed ({}): {} seconds", label, getSeconds());
         }
     }
 

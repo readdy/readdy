@@ -15,7 +15,7 @@ PROJECT(ReaDDy_Main C CXX)
 SET(READDY_CREATE_TEST_TARGET ON CACHE BOOL "Determines if the test target should be added.")
 SET(READDY_CREATE_MEMORY_CHECK_TEST_TARGET OFF CACHE BOOL "Determines if valgrind test targets should be added. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
 SET(READDY_INSTALL_UNIT_TEST_EXECUTABLE OFF CACHE BOOL "Determines if the unit test executable should be installed. Requires the cache variable READDY_CREATE_TEST_TARGET to be ON.")
-SET(READDY_KERNELS_TO_TEST "SingleCPU,CPU" CACHE STRING "Variable holding which kernels should be tested in the core library.")
+SET(READDY_KERNELS_TO_TEST "SingleCPU,CPU,CPU_Dense" CACHE STRING "Variable holding which kernels should be tested in the core library.")
 
 # build single libraries or as a single shared library holding the whole thing
 SET(READDY_BUILD_SHARED_COMBINED OFF CACHE BOOL "Determines if one single shared library or shared libraries with respect to the components should be built")
@@ -115,12 +115,14 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     ENDIF(${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT})
 
     # extra compile and link flags
-    SET(EXTRA_COMPILE_FLAGS "-std=c++11")
+    SET(READDY_STANDARD 11)
+    SET(EXTRA_COMPILE_FLAGS "")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
     IF(APPLE)
         IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -stdlib=libc++")
-            SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -v -stdlib=libc++ -lc++abi")
+            SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+            # SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -stdlib=libc++")
+            # SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -v -stdlib=libc++ -lc++abi")
         ENDIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     ENDIF(APPLE)
     IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -162,6 +164,8 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
                 COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
+                CXX_STANDARD ${READDY_STANDARD}
+                CXX_STANDARD_REQUIRED ON
         )
 
         ENABLE_TESTING()

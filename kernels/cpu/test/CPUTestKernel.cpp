@@ -27,7 +27,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
+    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::GillespieParallel>();
 
     auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
     auto connection = kernel->connectObservable(pp_obs.get());
