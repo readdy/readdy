@@ -4,14 +4,15 @@
  * @file Gillespie.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 20.10.16
+ * @date 23.11.16
  */
-#include <readdy/kernel/cpu/programs/reactions/Gillespie.h>
+
+#include <readdy/kernel/cpu_dense/programs/reactions/Gillespie.h>
 
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
@@ -31,7 +32,8 @@ void Gillespie::execute() {
     auto particlesUpdate = handleEventsGillespie(kernel, false, true, std::move(events));
 
     // update data structure
-    nl->updateData(std::move(particlesUpdate));
+    data->deactivateMarked();
+    data->update(std::move(particlesUpdate));
 }
 
 }

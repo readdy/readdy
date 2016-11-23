@@ -4,7 +4,7 @@
  * @file ReactionEvent.h
  * @brief << brief description >>
  * @author clonker
- * @date 28.10.16
+ * @date 22.11.16
  */
 
 #ifndef READDY_MAIN_REACTIONEVENT_H

@@ -7,8 +7,8 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_KERNEL_H
-#define READDY_DENSE_KERNEL_H
+#ifndef READDY_DENSE_STATE_MODEL_H
+#define READDY_DENSE_STATE_MODEL_H
 
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
@@ -24,7 +24,7 @@ class StateModel : public readdy::model::KernelStateModel {
 
 public:
 
-    using data_t = readdy::kernel::cpu::model::ParticleData;
+    using data_t = readdy::kernel::cpu_dense::model::ParticleData;
 
     StateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
 
@@ -63,4 +63,4 @@ private:
 }
 }
 
-#endif //READDY_DENSE_KERNEL_H
+#endif //READDY_DENSE_STATE_MODEL_H

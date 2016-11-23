@@ -4,11 +4,11 @@
  * @file Observables.h
  * @brief << brief description >>
  * @author clonker
- * @date 27.10.16
+ * @date 22.11.16
  */
 
-#ifndef READDY_KERNEL_CPU_OBSERVABLES_H
-#define READDY_KERNEL_CPU_OBSERVABLES_H
+#ifndef READDY_KERNEL_CPU_DENSE_OBSERVABLES_H
+#define READDY_KERNEL_CPU_DENSE_OBSERVABLES_H
 
 #include <readdy/model/Observables.h>
 
@@ -74,4 +74,4 @@ protected:
 }
 }
 }
-#endif //READDY_KERNEL_CPU_OBSERVABLES_H
+#endif //READDY_KERNEL_CPU_DENSE_OBSERVABLES_H

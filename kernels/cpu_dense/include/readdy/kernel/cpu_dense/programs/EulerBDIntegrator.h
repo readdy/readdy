@@ -4,7 +4,7 @@
  * @file CPUEulerBDIntegrator.h
  * @brief << brief description >>
  * @author clonker
- * @date 07.07.16
+ * @date 22.11.16
  */
 
 #ifndef READDY_DENSE_CPUEULERBDINTEGRATOR_H

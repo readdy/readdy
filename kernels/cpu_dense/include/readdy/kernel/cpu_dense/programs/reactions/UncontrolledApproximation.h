@@ -4,7 +4,7 @@
  * @file UncontrolledApproximation.h
  * @brief << brief description >>
  * @author clonker
- * @date 20.10.16
+ * @date 22.11.16
  */
 
 #ifndef READDY_DENSE_UNCONTROLLEDAPPROXIMATION_H

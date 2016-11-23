@@ -7,14 +7,14 @@
  * @date 20.10.16
  */
 
-#ifndef READDY_DENSE_REACTIONUTILS_H
-#define READDY_DENSE_REACTIONUTILS_H
+#ifndef READDY_DENSE_KERNEL_REACTIONUTILS_H
+#define READDY_DENSE_KERNEL_REACTIONUTILS_H
 
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
-#include <readdy/kernel/cpu_dense/Kernel.h>
 #include <readdy/common/logging.h>
 #include "Event.h"
+#include "readdy/kernel/cpu_dense/Kernel.h"
 
 namespace readdy {
 namespace kernel {
@@ -22,9 +22,9 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-using kernel_t = readdy::kernel::cpu::Kernel;
+using kernel_t = readdy::kernel::cpu_dense::Kernel;
 using vec_t = readdy::model::Vec3;
-using data_t = readdy::kernel::cpu::model::ParticleData;
+using data_t = readdy::kernel::cpu_dense::model::ParticleData;
 using reaction_type = readdy::model::reactions::Reaction<1>::ReactionType;
 using nl_t = const decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
 using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
@@ -57,7 +57,7 @@ void gatherEvents(Kernel const *const kernel, const ParticleIndexCollection &par
     for (const auto index : particles) {
         auto& entry = data.entry_at(index);
         // this being false should really not happen, though
-        if (!entry.is_deactivated()) {
+        if (!entry.deactivated) {
             // order 1
             {
                 const auto &reactions = kernel->getKernelContext().getOrder1Reactions(entry.type);
@@ -73,9 +73,9 @@ void gatherEvents(Kernel const *const kernel, const ParticleIndexCollection &par
                 }
             }
             // order 2
-            for (const auto idx_neighbor : nl->find_neighbors(index)) {
-                if (index > idx_neighbor) continue;
-                const auto& neighbor = data.entry_at(idx_neighbor);
+            for (const auto& idx_neighbor : nl->find_neighbors(index)) {
+                if (index > idx_neighbor.idx) continue;
+                const auto& neighbor = data.entry_at(idx_neighbor.idx);
                 const auto &reactions = kernel->getKernelContext().getOrder2Reactions(entry.type, neighbor.type);
                 if (!reactions.empty()) {
                     const auto distSquared = d2(neighbor.position(), entry.position());
@@ -84,7 +84,7 @@ void gatherEvents(Kernel const *const kernel, const ParticleIndexCollection &par
                         const auto rate = react->getRate();
                         if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
                             alpha += rate;
-                            events.push_back({2, react->getNProducts(), index, idx_neighbor,
+                            events.push_back({2, react->getNProducts(), index, idx_neighbor.idx,
                                               rate, alpha,
                                               static_cast<event_t::reaction_index_type>(it - reactions.begin()),
                                               entry.type, neighbor.type});
@@ -98,12 +98,10 @@ void gatherEvents(Kernel const *const kernel, const ParticleIndexCollection &par
 }
 
 template<typename Reaction>
-void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, data_t::entries_t& newEntries,
-                     std::vector<data_t::index_t>& decayedEntries, Reaction* reaction) {
+void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, data_t::update_t& newEntries, Reaction* reaction) {
     switch(reaction->getType()) {
         case reaction_type::Decay: {
-            decayedEntries.push_back(idx1);
-            //data.removeEntry(e1);
+            data.deactivate(idx1);
             break;
         }
         case reaction_type::Conversion: {
@@ -125,24 +123,26 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
             auto& entry1 = data.entry_at(idx1);
             auto n3 = readdy::model::rnd::normal3(0, 1);
             n3 /= sqrt(n3 * n3);
+
+            readdy::model::Particle p (entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
+            newEntries.push_back({p});
+
             entry1.type = reaction->getProducts()[0];
             data.displace(entry1, reaction->getWeight1() * reaction->getProductDistance() * n3);
-
-            readdy::model::Particle p (entry1.position(), reaction->getProducts()[1]);
-            newEntries.push_back({p});
             break;
         }
         case reaction_type::Fusion: {
             auto& entry1 = data.entry_at(idx1);
-            entry1.type = reaction->getProducts()[0];
-            const auto e1Pos = data.pos(idx1);
-            const auto e2Pos = data.pos(idx2);
+            auto& entry2 = data.entry_at(idx2);
+            const auto& e1Pos = entry1.position();
+            const auto& e2Pos = entry2.position();
             if (reaction->getEducts()[0] == entry1.type) {
                 data.displace(entry1, reaction->getWeight1() * (e2Pos - e1Pos));
             } else {
                 data.displace(entry1, reaction->getWeight1() * (e1Pos - e2Pos));
             }
-            decayedEntries.push_back(idx2);
+            entry1.type = reaction->getProducts()[0];
+            data.deactivate(entry2);
             break;
         }
     }
@@ -153,4 +153,4 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
 }
 }
 }
-#endif //READDY_DENSE_REACTIONUTILS_H
+#endif //READDY_CPUKERNEL_REACTIONUTILS_H

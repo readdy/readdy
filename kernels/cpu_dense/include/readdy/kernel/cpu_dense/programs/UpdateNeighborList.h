@@ -4,7 +4,7 @@
  * @file UpdateNeighborList.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 22.11.16
  */
 
 
@@ -34,10 +34,6 @@ public:
                 break;
         }
 
-    }
-
-    virtual void setSkinSize(double skinSize) override {
-        kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
     }
 
 private:

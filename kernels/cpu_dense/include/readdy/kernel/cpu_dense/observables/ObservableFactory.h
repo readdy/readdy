@@ -4,11 +4,11 @@
  * @file ObservableFactory.h
  * @brief << brief description >>
  * @author clonker
- * @date 21.07.16
+ * @date 22.11.16
  */
 
-#ifndef READDY_CPU_OBSERVABLEFACTORY_H
-#define READDY_CPU_OBSERVABLEFACTORY_H
+#ifndef READDY_DENSE_OBSERVABLEFACTORY_H
+#define READDY_DENSE_OBSERVABLEFACTORY_H
 
 
 #include <readdy/model/_internal/ObservableFactory.h>
@@ -45,4 +45,4 @@ private:
 }
 }
 
-#endif //READDY_CPU_OBSERVABLEFACTORY_H
+#endif //READDY_DENSE_OBSERVABLEFACTORY_H

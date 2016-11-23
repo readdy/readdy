@@ -13,6 +13,8 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/common/thread/Config.h>
 
+#include "StateModel.h"
+
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
@@ -30,7 +32,7 @@ public:
 
     virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
-    virtual CPUStateModel &getKernelStateModel() const override;
+    virtual StateModel &getKernelStateModel() const override;
 
     virtual readdy::model::KernelContext &getKernelContext() const override;
 

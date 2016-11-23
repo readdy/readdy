@@ -4,18 +4,16 @@
  * @file ParticleData.h
  * @brief << brief description >>
  * @author clonker
- * @date 27.10.16
+ * @date 23.11.16
  */
 
-#ifndef READDY_KERNEL_CPU_PARTICLEDATA_H
-#define READDY_KERNEL_CPU_PARTICLEDATA_H
+#ifndef READDY_KERNEL_CPU_DENSE_PARTICLEDATA_H
+#define READDY_KERNEL_CPU_DENSE_PARTICLEDATA_H
 
 #include <cstddef>
 #include <atomic>
 #include <vector>
 #include <memory>
-#include <stack>
-
 #include <readdy/model/Particle.h>
 #include <readdy/model/KernelContext.h>
 
@@ -25,67 +23,79 @@ namespace cpu_dense {
 namespace model {
 
 class ParticleData {
-    friend class NeighborList;
 public:
 
-    struct Entry;
-    using Neighbor = std::size_t;
-    using ctx_t = readdy::model::KernelContext;
     using particle_type = readdy::model::Particle;
-    using entries_t = std::vector<Entry>;
-    using neighbors_t = std::vector<Neighbor>;
-    using neighbor_list_t = std::vector<neighbors_t>;
-    using index_t = entries_t::size_type;
-    using update_t = std::pair<ParticleData::entries_t, std::vector<index_t>>;
-    using force_t = readdy::model::Vec3;
-    using displacement_t = double;
 
     /**
-     * Particle data entry with padding such that it fits exactly into 64 bytes.
-     */
+    * Particle data entry with padding such that it fits exactly into 64 bytes.
+    */
     struct Entry {
-        Entry(const particle_type &particle) : id(particle.getId()), pos(particle.getPos()), force(force_t()),
-                                               type(particle.getType()), deactivated(false), displacement(0) { }
+        Entry(const particle_type &particle) : id(particle.getId()), pos(particle.getPos()),
+                                               force(readdy::model::Vec3()), type(particle.getType()),
+                                               deactivated(false) { }
 
-        Entry(const Entry&) = delete;
-        Entry& operator=(const Entry&) = delete;
-        Entry(Entry&&);
-        Entry& operator=(Entry&&);
+        particle_type::id_type id; // 4 bytes
+        particle_type::pos_type pos; // 4 + 24 = 28 bytes
+        readdy::model::Vec3 force; // 28 + 24 = 52 bytes
+        particle_type::type_type type; // 52 + 8 = 60 bytes
 
-        bool is_deactivated() const;
-        const particle_type::pos_type &position() const;
+        const particle_type::pos_type& position() const {
+            return pos;
+        }
 
-        particle_type::id_type id; // 8 bytes
-        force_t force; // 3*8 + 8 = 32 bytes
-        displacement_t displacement; // 32 + 8 = 40 bytes
-
+        bool deactivated; // 60 + 1 = 61 bytes
     private:
         friend class readdy::kernel::cpu_dense::model::ParticleData;
-        friend class NeighborList;
 
-        particle_type::pos_type pos; // 40 + 3*8 = 64 bytes
-    public:
-        particle_type::type_type type; // 64 + 4 = 68 bytes
-    private:
-        bool deactivated; // 68 + 1 = 69 bytes
-        char padding[3]; // 69 + 3 = 72 bytes
+        bool padding[3]; // 61 + 3 = 64 bytes
     };
 
+    using marked_count_t = std::atomic<std::size_t>;
+    using entries_t = std::vector<Entry>;
+    using index_t = entries_t::size_type;
+    using iterator = entries_t::iterator;
+    using const_iterator = entries_t::const_iterator;
+    using update_t = std::vector<Entry>;
+
     // ctor / dtor
-    ParticleData(readdy::model::KernelContext *const context);
+    ParticleData(const readdy::model::KernelContext*const);
+
+    ParticleData(const readdy::model::KernelContext*const, unsigned int capacity);
 
     ~ParticleData();
 
-    // delete move and copy
+    // move
     ParticleData(ParticleData &&rhs) = delete;
 
     ParticleData &operator=(ParticleData &&rhs) = delete;
 
+    // copy
     ParticleData(const ParticleData &rhs) = delete;
 
     ParticleData &operator=(const ParticleData &rhs) = delete;
 
+    iterator begin();
+
+    const_iterator begin() const;
+
+    const_iterator cbegin() const;
+
+    iterator end();
+
+    const_iterator end() const;
+
+    const_iterator cend() const;
+
     std::size_t size() const;
+
+    std::size_t max_size() const;
+
+    Entry& entry_at(const index_t);
+    const Entry& entry_at(const index_t) const;
+    const Entry& centry_at(const index_t) const;
+
+    readdy::model::Particle toParticle(const Entry& e) const;
 
     bool empty() const;
 
@@ -93,70 +103,50 @@ public:
 
     void addParticle(const particle_type &particle);
 
-    index_t addEntry(Entry &&entry);
-
     void addParticles(const std::vector<particle_type> &particles);
 
-    readdy::model::Particle getParticle(const index_t index) const;
-
-    readdy::model::Particle toParticle(const Entry& e) const;
-
-    void removeParticle(const particle_type &particle);
-
-    void removeParticle(const index_t index);
-
-    void removeEntry(index_t entry);
-
-    auto begin() -> decltype(std::declval<entries_t>().begin()) {
-        return entries.begin();
-    }
-    auto end() -> decltype(std::declval<entries_t>().end()) {
-        return entries.end();
-    }
-    auto cbegin() const -> decltype(std::declval<entries_t>().cbegin()) {
-        return entries.cbegin();
-    }
-    auto cend() const -> decltype(std::declval<entries_t>().cend()) {
-        return entries.cend();
-    }
-    auto begin() const -> decltype(std::declval<entries_t>().cbegin()) {
-        return cbegin();
-    }
-    auto end() const -> decltype(std::declval<entries_t>().cend()) {
-        return cend();
-    }
-
-    Entry& entry_at(index_t);
-    const Entry& entry_at(index_t) const;
-    const Entry& centry_at(index_t) const;
-
-    neighbors_t& neighbors_at(index_t);
-    const neighbors_t& neighbors_at(index_t) const;
-    const neighbors_t& cneighbors_at(index_t) const;
-
-    const particle_type::pos_type& pos(index_t) const;
-
-    void setFixPosFun(const ctx_t::fix_pos_fun&);
-
-    index_t getEntryIndex(const Entry *const entry) const;
-
-    index_t getNDeactivated() const;
-
-    /**
-     *
-     * @return vector of new entries
-     */
-    std::vector<index_t> update(update_t&&);
     void displace(Entry&, const particle_type::pos_type& delta);
 
+    void update(update_t&&);
+
+    /**
+     * Remove a particle via its unique id.
+     * @param particle the particle to be removed
+     */
+    void removeParticle(const particle_type &particle);
+
+    void removeParticle(const std::size_t index);
+
+    bool isMarkedForDeactivation(const std::size_t index);
+
+    std::size_t getDeactivatedIndex() const;
+
+    std::size_t getNDeactivated() const;
+
+    /**
+     * This method is the counterpart to markForDeactivation.
+     * The particles that were marked are now deactivated, i.e.,
+     * for each marked particle:
+     *   - If it is at the very end of the particle list, the
+     *     counters are updated.
+     *   - If not, the particle is swapped with the last active particle,
+     *     so that again, all deactivated particles reside at the end
+     *     of the internal data structure.
+     */
+    void deactivateMarked();
+
+    void deactivate(index_t);
+
+    void deactivate(Entry&);
+
 protected:
-
-
-    std::stack<index_t, std::vector<index_t>> blanks;
-    neighbor_list_t neighbors;
     entries_t entries;
-    ctx_t::fix_pos_fun fixPos;
+    size_t deactivated_index;
+    size_t n_deactivated;
+    const readdy::model::KernelContext*const ctx;
+    mutable marked_count_t n_marked;
 };
+
 
 }
 }

@@ -2,7 +2,7 @@
  * @file Compartments.h
  * @brief Header file of CPU program Compartments
  * @author chrisfroe
- * @date 18.10.16
+ * @date 22.11.16
  */
 
 #ifndef READDY_DENSE_COMPARTMENTS_H

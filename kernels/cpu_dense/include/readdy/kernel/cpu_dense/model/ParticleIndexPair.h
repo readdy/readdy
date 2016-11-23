@@ -4,7 +4,7 @@
  * @file ParticleIndexPair.h
  * @brief << brief description >>
  * @author clonker
- * @date 14.07.16
+ * @date 22.11.16
  */
 
 #ifndef READDY_DENSE_PARTICLEINDEXPAIR_H

@@ -4,7 +4,7 @@
  * @file CPUPotentialFactory.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 22.11.16
  */
 
 
