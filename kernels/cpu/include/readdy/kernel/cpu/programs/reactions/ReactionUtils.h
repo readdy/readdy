@@ -125,16 +125,16 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
             auto& entry1 = data.entry_at(idx1);
             auto n3 = readdy::model::rnd::normal3(0, 1);
             n3 /= sqrt(n3 * n3);
+
+            readdy::model::Particle p (entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
+            newEntries.push_back({p});
+
             entry1.type = reaction->getProducts()[0];
             data.displace(entry1, reaction->getWeight1() * reaction->getProductDistance() * n3);
-
-            readdy::model::Particle p (entry1.position(), reaction->getProducts()[1]);
-            newEntries.push_back({p});
             break;
         }
         case reaction_type::Fusion: {
             auto& entry1 = data.entry_at(idx1);
-            entry1.type = reaction->getProducts()[0];
             const auto e1Pos = data.pos(idx1);
             const auto e2Pos = data.pos(idx2);
             if (reaction->getEducts()[0] == entry1.type) {
@@ -142,6 +142,7 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
             } else {
                 data.displace(entry1, reaction->getWeight1() * (e1Pos - e2Pos));
             }
+            entry1.type = reaction->getProducts()[0];
             decayedEntries.push_back(idx2);
             break;
         }

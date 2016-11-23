@@ -162,7 +162,7 @@ void NeighborList::fillCells() {
                 cell.particleIndices.clear();
             }
             data.neighbors.clear();
-            data.neighbors.resize(data.size() + data.getNDeactivated());
+            data.neighbors.resize(data.size());
             data_t::index_t idx = 0;
 
             for (const auto &entry : data) {

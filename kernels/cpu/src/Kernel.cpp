@@ -10,7 +10,6 @@
 #include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/kernel/cpu/programs/ProgramFactory.h>
 #include <readdy/kernel/cpu/potentials/PotentialFactory.h>
-#include <readdy/kernel/cpu/reactions/ReactionFactory.h>
 #include <readdy/kernel/cpu/observables/ObservableFactory.h>
 
 namespace readdy {
@@ -21,7 +20,7 @@ const std::string Kernel::name = "CPU";
 struct Kernel::Impl {
     std::unique_ptr<programs::ProgramFactory> programFactory;
     std::unique_ptr<potentials::PotentialFactory> potentialFactory;
-    std::unique_ptr<reactions::ReactionFactory> reactionFactory;
+    std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory;
     std::unique_ptr<observables::ObservableFactory> observableFactory;
     std::unique_ptr<StateModel> stateModel;
     std::unique_ptr<readdy::model::KernelContext> context;
@@ -38,7 +37,7 @@ readdy::model::programs::ProgramFactory &Kernel::getProgramFactory() const {
 
 Kernel::Kernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()) {
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
-    pimpl->reactionFactory = std::make_unique<reactions::ReactionFactory>(this);
+    pimpl->reactionFactory = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->programFactory = std::make_unique<programs::ProgramFactory>(this);
     pimpl->stateModel = std::make_unique<StateModel>(pimpl->context.get(), pimpl->config.get());
@@ -80,7 +79,6 @@ void Kernel::setNThreads(readdy::util::thread::Config::n_threads_t n) {
 }
 
 Kernel::~Kernel() = default;
-
 
 }
 }
