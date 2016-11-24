@@ -36,9 +36,13 @@ public:
     using ctx_t = readdy::model::KernelContext;
     using container_t = std::vector<std::vector<neighbor_t>>;
     using skin_size_t = double;
-    using data_iter_t = decltype(std::declval<data_t>().entries.begin());
+    using data_iter_t = data_t::iterator;
     using hilbert_index_t = unsigned int;
     using cell_iter_t = decltype(std::declval<std::vector<Cell>>().begin());
+
+    using iterator = decltype(std::declval<data_t>().neighbors.begin());
+    using const_iterator = decltype(std::declval<data_t>().neighbors.cbegin());
+
 private: 
     std::vector<Cell> cells;
     skin_size_t skin_size;
@@ -93,22 +97,22 @@ public:
 
     void insert(const particle_index);
 
-    auto begin() -> decltype(std::declval<data_t>().neighbors.begin()) {
+    iterator begin() {
         return data.neighbors.begin();
     }
-    auto end() -> decltype(std::declval<data_t>().neighbors.end()) {
+    iterator end() {
         return data.neighbors.end();
     }
-    auto cbegin() const -> decltype(std::declval<data_t>().neighbors.cbegin()) {
+    const_iterator cbegin() const {
         return data.neighbors.cbegin();
     }
-    auto cend() const -> decltype(std::declval<data_t>().neighbors.cend()) {
+    const_iterator cend() const {
         return data.neighbors.cend();
     }
-    auto begin() const -> decltype(std::declval<data_t>().neighbors.cbegin()) {
+    const_iterator begin() const {
         return cbegin();
     }
-    auto end() const -> decltype(std::declval<data_t>().neighbors.cend()) {
+    const_iterator end() const {
         return cend();
     }
 

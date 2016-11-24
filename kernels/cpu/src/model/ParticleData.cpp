@@ -217,6 +217,34 @@ ParticleData::~ParticleData() = default;
 
 ParticleData::EntryUpdate::EntryUpdate(const ParticleData::particle_type &particle)
         : Entry(particle), id(particle.getId()) {}
+
+
+ParticleData::iterator ParticleData::begin() {
+    return entries.begin();
+}
+
+ParticleData::iterator ParticleData::end() {
+    return entries.end();
+}
+
+ParticleData::const_iterator ParticleData::cbegin() const {
+    return entries.cbegin();
+}
+
+ParticleData::const_iterator ParticleData::cend() const {
+    return entries.cend();
+}
+
+
+ParticleData::const_iterator ParticleData::begin() const {
+    return entries.cbegin();
+}
+
+
+ParticleData::const_iterator ParticleData::end() const {
+    return entries.cend();
+}
+
 }
 }
 }

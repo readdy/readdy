@@ -43,6 +43,9 @@ public:
     using force_t = readdy::model::Vec3;
     using displacement_t = double;
 
+    using iterator = decltype(std::declval<entries_t>().begin());
+    using const_iterator = decltype(std::declval<entries_t>().cbegin());
+
     /**
      * Particle data entry with padding such that it fits exactly into 64 bytes.
      */
@@ -114,24 +117,12 @@ public:
 
     void removeEntry(index_t entry);
 
-    auto begin() -> decltype(std::declval<entries_t>().begin()) {
-        return entries.begin();
-    }
-    auto end() -> decltype(std::declval<entries_t>().end()) {
-        return entries.end();
-    }
-    auto cbegin() const -> decltype(std::declval<entries_t>().cbegin()) {
-        return entries.cbegin();
-    }
-    auto cend() const -> decltype(std::declval<entries_t>().cend()) {
-        return entries.cend();
-    }
-    auto begin() const -> decltype(std::declval<entries_t>().cbegin()) {
-        return cbegin();
-    }
-    auto end() const -> decltype(std::declval<entries_t>().cend()) {
-        return cend();
-    }
+    iterator begin();
+    iterator end();
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    const_iterator begin() const;
+    const_iterator end() const;
 
     auto begin_ids() -> decltype(std::declval<ids_t>().begin()) {
         return ids.begin();

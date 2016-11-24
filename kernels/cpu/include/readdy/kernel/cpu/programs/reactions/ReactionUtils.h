@@ -103,7 +103,6 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
     switch(reaction->getType()) {
         case reaction_type::Decay: {
             decayedEntries.push_back(idx1);
-            //data.removeEntry(e1);
             break;
         }
         case reaction_type::Conversion: {
