@@ -132,8 +132,8 @@ TEST_P(TestObservables, TestForcesObservable) {
         m::Vec3 force0 = m::Vec3(0., 1., 0.);
         m::Vec3 force1 = m::Vec3(0., -1., 0.);
         EXPECT_EQ(resC.size(), 2);
-        EXPECT_TRUE(resC[0] == force0);
-        EXPECT_TRUE(resC[1] == force1);
+        EXPECT_TRUE(resC[0] == force0 || resC[1] == force0);
+        EXPECT_TRUE(resC[1] == force1 || resC[0] == force1);
     }
 }
 

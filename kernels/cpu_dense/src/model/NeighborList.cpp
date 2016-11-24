@@ -283,6 +283,30 @@ const double NeighborList::getMaxCutoff() const {
     return maxCutoff;
 }
 
+NeighborList::iterator NeighborList::begin() {
+        return neighbor_list.begin();
+}
+
+NeighborList::iterator NeighborList::end() {
+    return neighbor_list.end();
+}
+
+NeighborList::const_iterator NeighborList::cbegin() const {
+    return neighbor_list.cbegin();
+}
+
+NeighborList::const_iterator NeighborList::cend() const {
+    return neighbor_list.cend();
+}
+
+NeighborList::const_iterator NeighborList::begin() const {
+    return neighbor_list.cbegin();
+}
+
+NeighborList::const_iterator NeighborList::end() const {
+    return neighbor_list.cend();
+}
+
 }
 }
 }

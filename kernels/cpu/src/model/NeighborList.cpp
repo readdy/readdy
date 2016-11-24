@@ -9,14 +9,16 @@
 
 #include <set>
 #include <sstream>
+#include <future>
+
+#include <readdy/common/numeric.h>
+#include <readdy/common/thread/scoped_thread.h>
+#include <readdy/common/thread/barrier.h>
+#include <readdy/common/thread/semaphore.h>
+#include <readdy/common/Timer.h>
 
 #include <readdy/kernel/cpu/model/NeighborList.h>
 #include <readdy/kernel/cpu/util/hilbert.h>
-#include <readdy/common/numeric.h>
-#include <future>
-#include <readdy/common/thread/scoped_thread.h>
-#include <readdy/common/thread/barrier.h>
-#include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
@@ -24,6 +26,51 @@ namespace cpu {
 namespace model {
 
 namespace thd = readdy::util::thread;
+
+
+template<class OutputIterator, class Size, class Assignable>
+void iota_n(OutputIterator first, Size n, Assignable value)
+{
+    std::generate_n(first, n, [&value]() {
+        return value++;
+    });
+}
+
+struct NeighborList::Cell {
+    std::vector<Cell *> neighbors{};
+    double maximal_displacements[2];
+    cell_index contiguous_index;
+    bool enoughCells;
+
+
+    // dirty flag indicating whether the cell and its neighboring cells have to be re-created
+    bool dirty {false};
+
+    Cell(cell_index i, cell_index j, cell_index k, const std::array<cell_index, 3> &nCells);
+
+    void addNeighbor(Cell *cell);
+
+    void checkDirty(skin_size_t skin);
+
+    friend bool operator==(const Cell &lhs, const Cell &rhs);
+
+    friend bool operator!=(const Cell &lhs, const Cell &rhs);
+
+    void addParticleIndex(const particle_index idx) {
+        particleIndices.push_back(idx);
+    }
+
+    const std::vector<particle_index>& particles() const {
+        return particleIndices;
+    }
+
+    std::vector<particle_index>& particles() {
+        return particleIndices;
+    }
+
+private:
+    std::vector<particle_index> particleIndices{};
+};
 
 template<typename T, typename Dims>
 T get_contiguous_index(T i, T j, T k, Dims I, Dims J) {
@@ -130,7 +177,7 @@ bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const 
     cell.maximal_displacements[0] = 0;
     cell.maximal_displacements[1] = 0;
 
-    for (const auto idx : cell.particleIndices) {
+    for (const auto idx : cell.particles()) {
         const auto &entry = data.entry_at(idx);
         if (!entry.is_deactivated()) {
             const double disp = entry.displacement;
@@ -163,20 +210,41 @@ void NeighborList::fillCells() {
         if (initialSetup) {
 
             for (auto &cell : cells) {
-                cell.particleIndices.clear();
+                cell.particles().clear();
             }
             data.neighbors.clear();
             data.neighbors.resize(data.size());
-            data_t::index_t idx = 0;
 
-            for (const auto &entry : data) {
-                if (!entry.is_deactivated()) {
-                    auto cell = getCell(entry.pos);
-                    if (cell) {
-                        cell->particleIndices.push_back(idx);
-                    }
+            /*{
+                auto partition_begin = data.begin();
+                std::size_t offset = 0;
+                for (auto &cell : cells) {
+                    // this can be more efficient as in: first partition the data into two sets
+                    // (half contiguous index), then proceed on the two sets in parallel etc
+                    auto next = std::partition(partition_begin, data.end(), [&cell, this](const data_t::Entry &e) {
+                        return !e.is_deactivated() && isInCell(cell, e.position());
+                    });
+                    const auto groupSize = static_cast<std::size_t>(std::distance(partition_begin, next));
+                    std::vector<particle_index> indices;
+                    indices.reserve(groupSize);
+                    iota_n(std::back_inserter(indices), groupSize, offset);
+                    cell.particles() = std::move(indices);
+                    offset += groupSize;
+                    partition_begin = next;
                 }
-                ++idx;
+                data.blanks_moved_to_end();
+            }*/
+            {
+                data_t::index_t idx = 0;
+                for (const auto &entry : data) {
+                    if (!entry.is_deactivated()) {
+                        auto cell = getCell(entry.pos);
+                        if (cell) {
+                            cell->addParticleIndex(idx);
+                        }
+                    }
+                    ++idx;
+                }
             }
 
             using cell_it_t = decltype(cells.begin());
@@ -225,8 +293,8 @@ void NeighborList::fillCells() {
                             auto cell = *_b;
                             cellUpdates.push_back({});
                             auto &updatedIndices = cellUpdates.back();
-                            updatedIndices.reserve(cell->particleIndices.size());
-                            for (const auto idx : cell->particleIndices) {
+                            updatedIndices.reserve(cell->particles().size());
+                            for (const auto idx : cell->particles()) {
                                 const auto &entry = data.entry_at(idx);
                                 if (!entry.is_deactivated() &&
                                     cell->contiguous_index == getCellIndex(entry.position())) {
@@ -235,7 +303,7 @@ void NeighborList::fillCells() {
                             }
                             for (const auto neigh : cell->neighbors) {
                                 if (cell->dirty || neigh->dirty) {
-                                    for (const auto idx : neigh->particleIndices) {
+                                    for (const auto idx : neigh->particles()) {
                                         const auto &entry = data.entry_at(idx);
                                         if (!entry.is_deactivated()
                                             && cell->contiguous_index == getCellIndex(entry.position())) {
@@ -254,7 +322,7 @@ void NeighborList::fillCells() {
                         auto it = begin;
                         for (auto &&update : cellUpdates) {
                             auto cell = *it;
-                            cell->particleIndices = std::move(update);
+                            cell->particles() = std::move(update);
                             ++it;
                         }
                     }
@@ -349,9 +417,10 @@ void NeighborList::remove(const particle_index idx) {
                     neighbors_2nd.erase(it);
                 }
             }
-            auto find_it = std::find(cell->particleIndices.begin(), cell->particleIndices.end(), idx);
-            if (find_it != cell->particleIndices.end()) {
-                cell->particleIndices.erase(find_it);
+            auto& particles = cell->particles();
+            auto find_it = std::find(particles.begin(), particles.end(), idx);
+            if (find_it != particles.end()) {
+                particles.erase(find_it);
             }
         } catch (const std::out_of_range &) {
             log::console()->error("tried to remove particle with id {} but it was not in the neighbor list", idx);
@@ -365,9 +434,9 @@ void NeighborList::insert(const particle_index idx) {
     const auto cutoffSquared = maxCutoffPlusSkin * maxCutoffPlusSkin;
     auto cell = getCell(pos);
     if (cell) {
-        cell->particleIndices.push_back(idx);
+        cell->addParticleIndex(idx);
         auto &myNeighbors = data.neighbors.at(idx);
-        for (const auto pJ : cell->particleIndices) {
+        for (const auto pJ : cell->particles()) {
             if (idx != pJ) {
                 const auto distSquared = d2(pos, data.pos(pJ));
                 if (distSquared < cutoffSquared) {
@@ -377,7 +446,7 @@ void NeighborList::insert(const particle_index idx) {
             }
         }
         for (auto &neighboringCell : cell->neighbors) {
-            for (const auto &pJ : neighboringCell->particleIndices) {
+            for (const auto &pJ : neighboringCell->particles()) {
                 const auto distSquared = d2(pos, data.pos(pJ));
                 if (distSquared < cutoffSquared) {
                     myNeighbors.push_back(pJ);
@@ -572,12 +641,12 @@ void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquare
     cell.dirty = false;
     cell.maximal_displacements[0] = 0;
     cell.maximal_displacements[1] = 0;
-    for (const auto &pI : cell.particleIndices) {
+    for (const auto &pI : cell.particles()) {
         auto &entry_i = data.entry_at(pI);
         entry_i.displacement = 0;
         auto &neighbors_i = data.neighbors_at(pI);
         neighbors_i.clear();
-        for (const auto &pJ : cell.particleIndices) {
+        for (const auto &pJ : cell.particles()) {
             if (pI != pJ) {
                 const auto distSquared = d2(entry_i.position(), data.pos(pJ));
                 if (distSquared < cutoffSquared) {
@@ -586,7 +655,7 @@ void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquare
             }
         }
         for (const auto &neighboringCell : cell.neighbors) {
-            for (const auto pJ : neighboringCell->particleIndices) {
+            for (const auto pJ : neighboringCell->particles()) {
                 const auto distSquared = d2(entry_i.position(), data.pos(pJ));
                 if (distSquared < cutoffSquared) {
                     neighbors_i.push_back(pJ);
@@ -615,6 +684,13 @@ void NeighborList::setSkinSize(NeighborList::skin_size_t skin_size) {
     initialSetup = true;
     cells.clear();
     NeighborList::skin_size = skin_size;
+}
+
+bool NeighborList::isInCell(const NeighborList::Cell &cell, const data_t::particle_type::pos_type &pos) const {
+    const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
+    const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
+    const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
+    return (get_contiguous_index(i, j, k, nCells[1], nCells[2]) == cell.contiguous_index);
 }
 
 }

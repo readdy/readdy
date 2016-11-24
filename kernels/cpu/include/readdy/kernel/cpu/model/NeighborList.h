@@ -27,7 +27,7 @@ namespace model {
 
 class NeighborList {
 public: 
-    class Cell;
+    struct Cell;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
     using particle_index = ParticleData::index_t;
@@ -43,31 +43,11 @@ public:
     using iterator = decltype(std::declval<data_t>().neighbors.begin());
     using const_iterator = decltype(std::declval<data_t>().neighbors.cbegin());
 
-private: 
+private:
     std::vector<Cell> cells;
     skin_size_t skin_size;
     bool initialSetup = true;
 public:
-    struct Cell {
-        std::vector<Cell *> neighbors{};
-        std::vector<particle_index> particleIndices{};
-        double maximal_displacements[2];
-        cell_index contiguous_index;
-        bool enoughCells;
-
-        // dirty flag indicating whether the cell and its neighboring cells have to be re-created
-        bool dirty {false};
-
-        Cell(cell_index i, cell_index j, cell_index k, const std::array<cell_index, 3> &nCells);
-
-        void addNeighbor(Cell *cell);
-
-        void checkDirty(skin_size_t skin);
-
-        friend bool operator==(const Cell &lhs, const Cell &rhs);
-
-        friend bool operator!=(const Cell &lhs, const Cell &rhs);
-    };
 
     NeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config, skin_size_t = 0);
 
@@ -122,6 +102,8 @@ public:
 
     std::unordered_set<Cell*> findDirtyCells();
 protected:
+
+    bool isInCell(const Cell& cell, const data_t::particle_type::pos_type& pos) const;
 
     const readdy::model::KernelContext *const ctx;
 

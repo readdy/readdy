@@ -47,7 +47,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
     auto it = begin;
     auto it_nl = nl_begin;
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
-    for (; it != end; ++it, ++nl_begin, ++index) {
+    for (; it != end; ++it, ++it_nl, ++index) {
         const auto &entry = *it;
         // this being false should really not happen, though
         if (!entry.is_deactivated()) {
@@ -128,7 +128,7 @@ void UncontrolledApproximation::execute() {
             n_eventsFutures.push_back(n_events.get_future());
 
             threads.push_back(thd::scoped_thread(
-                    std::thread(findEvents, it, data.cend(), nl.cend(), kernel, true,
+                    std::thread(findEvents, it, data.cend(), it_nl, kernel, true,
                                 std::move(eventPromise), std::move(n_events))
             ));
         }

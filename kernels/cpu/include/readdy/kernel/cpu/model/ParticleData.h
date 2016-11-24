@@ -168,6 +168,7 @@ public:
      */
     std::vector<index_t> update(update_t&&);
     void displace(Entry&, const particle_type::pos_type& delta);
+    void blanks_moved_to_end();
 
 protected:
 

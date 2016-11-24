@@ -187,6 +187,15 @@ void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Par
     entry.displacement += std::sqrt(delta * delta);
 }
 
+void ParticleData::blanks_moved_to_end() {
+    auto n_blanks = blanks.size();
+    while(!blanks.empty()) blanks.pop();
+    auto start = size() - n_blanks - 1;
+    for(int i = 0; i < n_blanks; ++i) {
+        blanks.push(start++);
+    }
+}
+
 ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) {
     return entries.at(idx);
 }

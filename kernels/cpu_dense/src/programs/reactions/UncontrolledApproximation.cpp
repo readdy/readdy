@@ -7,7 +7,13 @@
  * @date 23.11.16
  */
 
+#include <future>
+
+#include <readdy/common/thread/scoped_thread.h>
+
 #include <readdy/kernel/cpu_dense/programs/reactions/UncontrolledApproximation.h>
+#include <readdy/kernel/cpu_dense/programs/reactions/Event.h>
+#include <readdy/kernel/cpu_dense/programs/reactions/ReactionUtils.h>
 
 namespace readdy {
 namespace kernel {
@@ -15,38 +21,160 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-using entry_type = readdy::kernel::cpu_dense::model::ParticleData::Entry;
+namespace thd = readdy::util::thread;
+
+using event_t = Event;
+using neighbor_list_t = model::NeighborList;
+using data_t = neighbor_list_t::data_t;
+using data_iter_t = data_t::const_iterator;
+using neighbor_list_iter_t = neighbor_list_t::const_iterator;
+using entry_type = data_t::Entry;
+
+using event_future_t = std::future<std::vector<event_t>>;
+using event_promise_t = std::promise<std::vector<event_t>>;
 
 UncontrolledApproximation::UncontrolledApproximation(const Kernel *const kernel)
         : kernel(kernel) {
 
 }
 
+void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const Kernel *const kernel,
+                bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
+    std::vector<event_t> eventsUpdate;
+    const auto &data = *kernel->getKernelStateModel().getParticleData();
+    const auto dt = kernel->getKernelContext().getTimeStep();
+    auto it = begin;
+    auto it_nl = nl_begin;
+    auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
+    for (; it != end; ++it, ++it_nl, ++index) {
+        const auto &entry = *it;
+        // this being false should really not happen, though
+        if (!entry.deactivated) {
+            // order 1
+            {
+                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(entry.type);
+                for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
+                    const auto rate = (*it_reactions)->getRate();
+                    if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
+                        eventsUpdate.push_back(
+                                {1, (*it_reactions)->getNProducts(), index, index, rate, 0,
+                                 static_cast<event_t::reaction_index_type>(it_reactions - reactions.begin()),
+                                 entry.type, 0});
+                    }
+                }
+            }
+            // order 2
+            for(auto it_neighbors = it_nl->cbegin(); it_neighbors != it_nl->cend(); ++it_neighbors) {
+                const auto neighbor_index = it_neighbors->idx;
+                if (index > neighbor_index) continue;
+                const auto &neighbor = data.entry_at(neighbor_index);
+                const auto &reactions = kernel->getKernelContext().getOrder2Reactions(entry.type, neighbor.type);
+                if (!reactions.empty()) {
+                    const auto distSquared = it_neighbors->d2;
+                    for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
+                        const auto &react = *it_reactions;
+                        const auto rate = react->getRate();
+                        if (rate > 0 && distSquared < react->getEductDistanceSquared()
+                            && shouldPerformEvent(rate, dt, approximateRate)) {
+                            const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                                  reactions.begin());
+                            eventsUpdate.push_back({2, react->getNProducts(), index, neighbor_index, rate, 0,
+                                                    reaction_index, entry.type, neighbor.type});
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    n_events.set_value(eventsUpdate.size());
+    events.set_value(std::move(eventsUpdate));
+}
+
 void UncontrolledApproximation::execute() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     const auto &dt = ctx.getTimeStep();
-    auto data = kernel->getKernelStateModel().getParticleData();
+    auto &data = *kernel->getKernelStateModel().getParticleData();
+    auto &nl = *kernel->getKernelStateModel().getNeighborList();
 
-    std::vector<entry_type> newParticles{};
-    std::vector<std::function<void()>> events{};
+    // gather events
+    std::vector<std::future<std::size_t>> n_eventsFutures;
+    std::vector<event_future_t> eventFutures;
+    {
+        const std::size_t grainSize = data.size() / kernel->getNThreads();
+
+        std::vector<thd::scoped_thread> threads;
+
+        auto it = data.cbegin();
+        auto it_nl = nl.cbegin();
+        for (unsigned int i = 0; i < kernel->getNThreads()-1; ++i) {
+            event_promise_t eventPromise;
+            eventFutures.push_back(eventPromise.get_future());
+            std::promise<std::size_t> n_events;
+            n_eventsFutures.push_back(n_events.get_future());
+
+            threads.push_back(thd::scoped_thread(
+                    std::thread(findEvents, it, it + grainSize, it_nl, kernel, true,
+                                std::move(eventPromise), std::move(n_events))
+            ));
+            std::advance(it, grainSize);
+            std::advance(it_nl, grainSize);
+        }
+        {
+            event_promise_t eventPromise;
+            eventFutures.push_back(eventPromise.get_future());
+            std::promise<std::size_t> n_events;
+            n_eventsFutures.push_back(n_events.get_future());
+
+            threads.push_back(thd::scoped_thread(
+                    std::thread(findEvents, it, data.cend(), it_nl, kernel, true,
+                                std::move(eventPromise), std::move(n_events))
+            ));
+        }
+    }
+
+    // collect events
+    std::vector<event_t> events;
+    {
+        std::size_t n_events = 0;
+        for (auto &&f : n_eventsFutures) {
+            n_events += f.get();
+        }
+        events.reserve(n_events);
+        for (auto &&f : eventFutures) {
+            auto eventUpdate = std::move(f.get());
+            auto mBegin = std::make_move_iterator(eventUpdate.begin());
+            auto mEnd = std::make_move_iterator(eventUpdate.end());
+            events.insert(events.end(), mBegin, mEnd);
+        }
+    }
 
     // shuffle reactions
     std::random_shuffle(events.begin(), events.end());
 
     // execute reactions
-    std::for_each(events.begin(), events.end(), [](const std::function<void()> &f) { f(); });
+    {
+        data_t::update_t newParticles{};
+        std::vector<data_t::index_t> decayedEntries {};
 
-    /**
-     * TODO: This needs to be reworked so that it can function with inplace reactions. Also, efficiency.
-     */
+        for(auto it = events.begin(); it != events.end(); ++it) {
+            auto& event = *it;
+            if(event.cumulativeRate == 0) {
+                auto entry1 = event.idx1;
+                if (event.nEducts == 1) {
+                    auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
+                    performReaction<true>(data, entry1, entry1, newParticles, reaction);
+                } else {
+                    auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
+                    performReaction<true>(data, entry1, event.idx2, newParticles, reaction);
+                }
+            }
+        }
 
-    // reposition particles to respect the periodic b.c.
-    /*std::for_each(newParticles.begin(), newParticles.end(),
-                  [&fixPos](particle_type &p) { fixPos(p.getPos()); });*/
-
-    // update data structure
-    /*data->addParticles(newParticles);*/
+        data.deactivateMarked();
+        data.update(std::move(newParticles));
+    }
 }
 }
 }
