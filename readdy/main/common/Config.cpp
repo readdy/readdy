@@ -31,7 +31,12 @@ Config::Config() {
 }
 
 Config::n_threads_t Config::nThreads() const {
+#ifdef READDY_DEBUG
     return m_nThreads;
+#else
+    // magic number 4 to enable some load balancing
+    return 4*m_nThreads;
+#endif
 }
 
 void Config::setNThreads(const Config::n_threads_t n) {

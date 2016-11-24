@@ -19,6 +19,7 @@
 
 #include <readdy/kernel/cpu/model/NeighborList.h>
 #include <readdy/kernel/cpu/util/hilbert.h>
+#include <readdy/common/thread/notification_barrier.h>
 
 namespace readdy {
 namespace kernel {
@@ -202,6 +203,63 @@ bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
     return false;
 }
 
+/**
+ * Groups portion of particles together
+ * @param begin the begin of the portion
+ * @param end end of the portion (exclusive)
+ * @param thread_number my number
+ * @param n_buckets number of cells in this case
+ * @param that the neighbor list
+ * @param data_entries entries vector of the underlying data structure
+ * @param allBucketSizes the bucket sizes of all threads, available after waiting for aggregation
+ * @param wait_for_aggregation notification barrier that waits until main thread has collected all bucket sizes
+ * @param bucketSizesPromise future promise of this thread's bucket sizes
+ */
+void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t end, std::size_t thread_number,
+                    std::size_t n_buckets, const NeighborList& that, NeighborList::data_t::entries_t& data_entries,
+                    const std::vector<std::vector<std::size_t>>& allBucketSizes,
+                    const thd::notification_barrier& wait_for_aggregation,
+                    std::promise<std::pair<std::size_t, std::vector<std::size_t>>> bucketSizesPromise) {
+    std::vector<NeighborList::data_t::Entry> grouped(std::make_move_iterator(begin), std::make_move_iterator(end));
+    {
+        std::vector<std::size_t> bucketSizes;
+        bucketSizes.resize(n_buckets);
+        auto partition_begin = grouped.begin();
+        for (unsigned int bucket = 0; bucket < n_buckets; ++bucket) {
+            auto next = std::partition(partition_begin, grouped.end(), [&that](const NeighborList::data_t::Entry &e) {
+                return !e.is_deactivated() && that.hash_pos(e.position());
+            });
+            const auto groupSize = static_cast<std::size_t>(std::distance(partition_begin, next));
+            bucketSizes.at(bucket) = groupSize;
+            partition_begin = next;
+        }
+        // main thread is waiting for this
+        bucketSizesPromise.set_value(std::make_pair(thread_number, std::move(bucketSizes)));
+    }
+    // now wait until main thread reports back that everything is aggregated
+    {
+        wait_for_aggregation.wait();
+    }
+    {
+        // the offsets are now in allBucketSizes, move own data into respective buckets (contained in
+        // allBucketSizes[thread_number]
+        std::size_t offset = 0;
+        std::size_t local_offset = 0;
+        for(std::size_t bucket = 0; bucket < n_buckets; ++bucket) {
+
+            auto mBegin = std::make_move_iterator(grouped.begin() + local_offset);
+            local_offset += allBucketSizes[thread_number][bucket];
+            auto mEnd = std::make_move_iterator(grouped.begin() + local_offset);
+
+            data_entries.insert(data_entries.begin() + offset, mBegin, mEnd);
+
+            for(const auto& bucketSizes : allBucketSizes) {
+                offset += bucketSizes[bucket];
+            }
+        }
+    }
+}
+
 void NeighborList::fillCells() {
     if (maxCutoff > 0) {
         const auto c2 = maxCutoffPlusSkin * maxCutoffPlusSkin;
@@ -215,26 +273,67 @@ void NeighborList::fillCells() {
             data.neighbors.clear();
             data.neighbors.resize(data.size());
 
-            /*{
-                auto partition_begin = data.begin();
-                std::size_t offset = 0;
-                for (auto &cell : cells) {
-                    // this can be more efficient as in: first partition the data into two sets
-                    // (half contiguous index), then proceed on the two sets in parallel etc
-                    auto next = std::partition(partition_begin, data.end(), [&cell, this](const data_t::Entry &e) {
-                        return !e.is_deactivated() && isInCell(cell, e.position());
-                    });
-                    const auto groupSize = static_cast<std::size_t>(std::distance(partition_begin, next));
-                    std::vector<particle_index> indices;
-                    indices.reserve(groupSize);
-                    iota_n(std::back_inserter(indices), groupSize, offset);
-                    cell.particles() = std::move(indices);
-                    offset += groupSize;
-                    partition_begin = next;
+            if(true){
+                const auto grainSize = data.size() / config->nThreads();
+                std::vector<std::vector<std::size_t>> allBucketSizes;
+                allBucketSizes.resize(config->nThreads());
+                {
+                    using future_content = std::pair<std::size_t, std::vector<std::size_t>>;
+                    std::vector<thd::scoped_thread> threads;
+                    thd::notification_barrier notify;
+                    std::vector<std::future<future_content>> futures;
+                    futures.reserve(config->nThreads());
+                    auto it = data.begin();
+                    for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
+                        std::promise<future_content> promise;
+                        futures.push_back(promise.get_future());
+                        threads.push_back(thd::scoped_thread(std::thread(
+                                groupParticles, it, it + grainSize, i, cells.size(), std::cref(*this), std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
+                        )));
+                        it += grainSize;
+                    }
+                    {
+                        std::promise<future_content> promise;
+                        futures.push_back(promise.get_future());
+                        threads.push_back(thd::scoped_thread(std::thread(
+                                groupParticles, it, data.end(), config->nThreads()-1, cells.size(), std::cref(*this), std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
+                        )));
+                    }
+
+                    std::vector<std::size_t> cellSizes;
+                    cellSizes.resize(cells.size());
+
+                    for(auto& future : futures) {
+                        future.wait();
+                        auto content = std::move(future.get());
+                        allBucketSizes[std::get<0>(content)] = std::move(std::get<1>(content));
+
+                        auto cellIt = cellSizes.begin();
+                        for(const auto cellSize : allBucketSizes.at(std::get<0>(content))) {
+                            *cellIt += cellSize;
+                            ++cellIt;
+                        }
+                    }
+
+                    notify.ready();
+
+                    {
+                        auto cellIt = cells.begin();
+                        auto cellSizeIt = cellSizes.begin();
+                        std::size_t offset = 0;
+                        for(; cellIt != cells.end(); ++cellIt, ++cellSizeIt) {
+                            std::vector<data_t::index_t> indices;
+                            indices.reserve(*cellSizeIt);
+                            iota_n(indices.begin(), *cellSizeIt, offset);
+                            cellIt->particles() = std::move(indices);
+                            offset += *cellSizeIt;
+                        }
+                    }
+
                 }
+
                 data.blanks_moved_to_end();
-            }*/
-            {
+            } else {
                 data_t::index_t idx = 0;
                 for (const auto &entry : data) {
                     if (!entry.is_deactivated()) {
@@ -687,10 +786,14 @@ void NeighborList::setSkinSize(NeighborList::skin_size_t skin_size) {
 }
 
 bool NeighborList::isInCell(const NeighborList::Cell &cell, const data_t::particle_type::pos_type &pos) const {
+    return hash_pos(pos) == cell.contiguous_index;
+}
+
+std::size_t NeighborList::hash_pos(const data_t::particle_type::pos_type &pos) const {
     const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
-    return (get_contiguous_index(i, j, k, nCells[1], nCells[2]) == cell.contiguous_index);
+    return get_contiguous_index(i, j, k, nCells[1], nCells[2]);
 }
 
 }

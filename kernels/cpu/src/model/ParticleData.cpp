@@ -56,7 +56,7 @@ bool ParticleData::empty() const {
 }
 
 void ParticleData::clear() {
-    while(!blanks.empty()) blanks.pop();
+    blanks.clear();
     entries.clear();
     ids.clear();
     neighbors.clear();
@@ -69,8 +69,8 @@ void ParticleData::addParticle(const ParticleData::particle_type &particle) {
 void ParticleData::addParticles(const std::vector<ParticleData::particle_type> &particles) {
     for(const auto& p : particles) {
         if(!blanks.empty()) {
-            const auto idx = blanks.top();
-            blanks.pop();
+            const auto idx = blanks.back();
+            blanks.pop_back();
             entries.at(idx) = {p};
             ids.at(idx) = p.getId();
         } else {
@@ -87,7 +87,7 @@ void ParticleData::removeParticle(const ParticleData::particle_type &particle) {
     std::size_t idx = 0;
     for(; it_entries != end(); ++it_entries, ++it_ids, ++idx) {
         if(!it_entries->is_deactivated() && *it_ids == particle.getId()) {
-            blanks.push(idx);
+            blanks.push_back(idx);
             it_entries->deactivated = true;
             return;
         }
@@ -98,7 +98,7 @@ void ParticleData::removeParticle(const ParticleData::particle_type &particle) {
 void ParticleData::removeParticle(const ParticleData::index_t index) {
     auto& p = *(entries.begin() + index);
     if(!p.deactivated) {
-        blanks.push(index);
+        blanks.push_back(index);
         p.deactivated = true;
         // neighbors.at(index).clear();
     } else {
@@ -124,8 +124,8 @@ readdy::model::Particle ParticleData::toParticle(const Entry &e, const particle_
 
 ParticleData::index_t ParticleData::addEntry(ParticleData::EntryUpdate &&entry) {
     if(!blanks.empty()) {
-        const auto idx = blanks.top();
-        blanks.pop();
+        const auto idx = blanks.back();
+        blanks.pop_back();
         ids.at(idx) = entry.id;
         entries.at(idx) = std::move(entry);
         neighbors.at(idx).clear();
@@ -142,7 +142,7 @@ void ParticleData::removeEntry(index_t idx) {
     auto &entry = entries.at(idx);
     if(!entry.is_deactivated()) {
         entry.deactivated = true;
-        blanks.push(idx);
+        blanks.push_back(idx);
     }
 }
 
@@ -189,11 +189,7 @@ void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Par
 
 void ParticleData::blanks_moved_to_end() {
     auto n_blanks = blanks.size();
-    while(!blanks.empty()) blanks.pop();
-    auto start = size() - n_blanks - 1;
-    for(int i = 0; i < n_blanks; ++i) {
-        blanks.push(start++);
-    }
+    std::iota(blanks.begin(), blanks.end(), size() - n_blanks - 1);
 }
 
 ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) {

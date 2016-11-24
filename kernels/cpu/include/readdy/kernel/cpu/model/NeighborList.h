@@ -101,6 +101,7 @@ public:
     hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
     std::unordered_set<Cell*> findDirtyCells();
+    std::size_t hash_pos(const data_t::particle_type::pos_type& pos) const;
 protected:
 
     bool isInCell(const Cell& cell, const data_t::particle_type::pos_type& pos) const;

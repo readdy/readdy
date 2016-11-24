@@ -172,7 +172,7 @@ public:
 
 protected:
 
-    std::stack<index_t, std::vector<index_t>> blanks;
+    std::vector<index_t> blanks;
     neighbor_list_t neighbors;
     entries_t entries;
     ids_t ids;
