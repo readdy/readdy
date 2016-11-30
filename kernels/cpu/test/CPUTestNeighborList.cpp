@@ -63,7 +63,7 @@ auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &
 
 auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList &pairs) {
     using val_t = decltype(*pairs.begin());
-    return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, const val_t &x) {
+    return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, val_t &x) {
         return acc + x.size();
     });
 };
