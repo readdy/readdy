@@ -226,8 +226,8 @@ void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t e
         bucketSizes.resize(n_buckets);
         auto partition_begin = grouped.begin();
         for (unsigned int bucket = 0; bucket < n_buckets; ++bucket) {
-            auto next = std::partition(partition_begin, grouped.end(), [&that](const NeighborList::data_t::Entry &e) {
-                return !e.is_deactivated() && that.hash_pos(e.position());
+            auto next = std::partition(partition_begin, grouped.end(), [&that, bucket](const NeighborList::data_t::Entry &e) {
+                return !e.is_deactivated() && that.hash_pos(e.position()) == bucket;
             });
             const auto groupSize = static_cast<std::size_t>(std::distance(partition_begin, next));
             bucketSizes.at(bucket) = groupSize;
@@ -244,15 +244,15 @@ void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t e
         // the offsets are now in allBucketSizes, move own data into respective buckets (contained in
         // allBucketSizes[thread_number]
         std::size_t offset = 0;
-        std::size_t local_offset = 0;
         for(std::size_t bucket = 0; bucket < n_buckets; ++bucket) {
+            const auto my_size = allBucketSizes[thread_number][bucket];
+            if(my_size > 0) {
+                std::size_t local_offset = offset + my_size;
+                auto mBegin = std::make_move_iterator(grouped.begin() + local_offset);
+                auto mEnd = std::make_move_iterator(grouped.begin() + local_offset);
 
-            auto mBegin = std::make_move_iterator(grouped.begin() + local_offset);
-            local_offset += allBucketSizes[thread_number][bucket];
-            auto mEnd = std::make_move_iterator(grouped.begin() + local_offset);
-
-            data_entries.insert(data_entries.begin() + offset, mBegin, mEnd);
-
+                data_entries.insert(data_entries.begin() + offset, mBegin, mEnd);
+            }
             for(const auto& bucketSizes : allBucketSizes) {
                 offset += bucketSizes[bucket];
             }
