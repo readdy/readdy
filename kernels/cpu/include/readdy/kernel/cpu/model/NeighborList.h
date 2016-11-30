@@ -98,6 +98,8 @@ public:
 
     void setSkinSize(skin_size_t skin_size);
 
+    void setGroupParticlesOnCreation(bool groupParticlesOnCreation);
+
     hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
     std::unordered_set<Cell*> findDirtyCells();
@@ -130,6 +132,8 @@ protected:
     void setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
 
     data_t& data;
+
+    bool groupParticlesOnCreation;
 };
 
 
