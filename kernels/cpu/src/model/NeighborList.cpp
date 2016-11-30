@@ -245,17 +245,23 @@ void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t e
         // the offsets are now in allBucketSizes, move own data into respective buckets (contained in
         // allBucketSizes[thread_number]
         std::size_t offset = 0;
+        std::size_t local_offset = 0;
         for (std::size_t bucket = 0; bucket < n_buckets; ++bucket) {
+            for(std::size_t i = 0; i < thread_number; ++i) {
+                offset += allBucketSizes[i][bucket];
+            }
             const auto my_size = allBucketSizes[thread_number][bucket];
             if (my_size > 0) {
-                std::size_t local_offset = offset + my_size;
+                log::console()->debug("inserting particles {} - {} in thread {}", local_offset, local_offset + my_size, thread_number);
                 auto mBegin = std::make_move_iterator(grouped.begin() + local_offset);
-                auto mEnd = std::make_move_iterator(grouped.begin() + local_offset);
+                auto mEnd = std::make_move_iterator(grouped.begin() + local_offset + my_size);
 
                 data_entries.insert(data_entries.begin() + offset, mBegin, mEnd);
+                local_offset += my_size;
+                offset += my_size;
             }
-            for (const auto &bucketSizes : allBucketSizes) {
-                offset += bucketSizes[bucket];
+            for(std::size_t i = thread_number+1; i < allBucketSizes.size(); ++i) {
+                offset += allBucketSizes[i][bucket];
             }
         }
     }
@@ -280,11 +286,12 @@ void NeighborList::fillCells() {
                 allBucketSizes.resize(config->nThreads());
                 {
                     using future_content = std::pair<std::size_t, std::vector<std::size_t>>;
-                    std::vector<thd::scoped_thread> threads;
                     thd::notification_barrier notify;
                     std::vector<std::future<future_content>> futures;
                     futures.reserve(config->nThreads());
                     auto it = data.begin();
+                    std::vector<thd::scoped_thread> threads;
+                    threads.reserve(config->nThreads());
                     for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
                         std::promise<future_content> promise;
                         futures.push_back(promise.get_future());
@@ -309,10 +316,11 @@ void NeighborList::fillCells() {
                     for (auto &future : futures) {
                         future.wait();
                         auto content = std::move(future.get());
-                        allBucketSizes[std::get<0>(content)] = std::move(std::get<1>(content));
+                        const auto t_id = std::get<0>(content);
+                        allBucketSizes[t_id] = std::move(std::get<1>(content));
 
                         auto cellIt = cellSizes.begin();
-                        for (const auto cellSize : allBucketSizes.at(std::get<0>(content))) {
+                        for (const auto cellSize : allBucketSizes.at(t_id)) {
                             *cellIt += cellSize;
                             ++cellIt;
                         }
@@ -339,6 +347,19 @@ void NeighborList::fillCells() {
                 }
 
                 data.blanks_moved_to_end();
+                {
+                    // sanity: all particles are in the correct boxes
+                    for(const auto& cell : cells) {
+                        for(const auto idx : cell.particles()) {
+                            auto refCell = getCell(data.entry_at(idx).pos);
+                            if(refCell && refCell->contiguous_index == cell.contiguous_index) {
+                                // allgood
+                            } else {
+                                log::console()->critical("shit");
+                            }
+                        }
+                    }
+                }
             } else {
                 data_t::index_t idx = 0;
                 for (const auto &entry : data) {

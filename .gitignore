@@ -46,3 +46,5 @@ bin/*
 
 # intellij resources
 .idea
+
+cmake-build-*

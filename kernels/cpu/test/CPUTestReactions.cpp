@@ -271,6 +271,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     // a box width in z direction of 12 should divide into two boxes of 5x5x6
     {
         fix_n_threads n_threads{kernel.get(), 2};
+        EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
         auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu::programs::reactions::GillespieParallel>();
         neighborList->execute();

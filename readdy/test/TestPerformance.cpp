@@ -136,7 +136,7 @@ TEST(TestPerformance, SingleCPU) {
 }
 
 TEST(TestPerformance, CPU) {
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU_Dense");
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     runPerformanceTest(*kernel, 20);
 }
 

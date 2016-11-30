@@ -34,7 +34,6 @@ public:
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
     using entries_update_t = std::vector<Entry>;
-    using ids_t = std::vector<particle_type::id_type>;
     using neighbors_t = std::vector<Neighbor>;
     using neighbor_list_t = std::vector<neighbors_t>;
     using index_t = entries_t::size_type;
@@ -50,7 +49,7 @@ public:
      */
     struct Entry {
         Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
-                                               deactivated(false), displacement(0) { }
+                                               deactivated(false), displacement(0), id(particle.getId()) { }
 
         Entry(const Entry&) = delete;
         Entry& operator=(const Entry&) = delete;
@@ -103,7 +102,7 @@ public:
 
     readdy::model::Particle getParticle(const index_t index) const;
 
-    readdy::model::Particle toParticle(const Entry& e, const particle_type::id_type id) const;
+    readdy::model::Particle toParticle(const Entry& e) const;
 
     void removeParticle(const particle_type &particle);
 
@@ -117,30 +116,6 @@ public:
     const_iterator cend() const;
     const_iterator begin() const;
     const_iterator end() const;
-
-    auto begin_ids() -> decltype(std::declval<ids_t>().begin()) {
-        return ids.begin();
-    }
-
-    auto end_ids() -> decltype(std::declval<ids_t>().begin()) {
-        return ids.end();
-    }
-
-    auto cbegin_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cbegin();
-    }
-
-    auto cend_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cend();
-    }
-
-    auto begin_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cbegin();
-    }
-
-    auto end_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cend();
-    }
 
     Entry& entry_at(index_t);
     const Entry& entry_at(index_t) const;
@@ -169,7 +144,6 @@ protected:
     std::vector<index_t> blanks;
     neighbor_list_t neighbors;
     entries_t entries;
-    ids_t ids;
     ctx_t::fix_pos_fun fixPos;
 };
 
