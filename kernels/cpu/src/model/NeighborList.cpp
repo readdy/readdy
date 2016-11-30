@@ -30,8 +30,7 @@ namespace thd = readdy::util::thread;
 
 
 template<class OutputIterator, class Size, class Assignable>
-void iota_n(OutputIterator first, Size n, Assignable value)
-{
+void iota_n(OutputIterator first, Size n, Assignable value) {
     std::generate_n(first, n, [&value]() {
         return value++;
     });
@@ -45,7 +44,7 @@ struct NeighborList::Cell {
 
 
     // dirty flag indicating whether the cell and its neighboring cells have to be re-created
-    bool dirty {false};
+    bool dirty{false};
 
     Cell(cell_index i, cell_index j, cell_index k, const std::array<cell_index, 3> &nCells);
 
@@ -61,11 +60,11 @@ struct NeighborList::Cell {
         particleIndices.push_back(idx);
     }
 
-    const std::vector<particle_index>& particles() const {
+    const std::vector<particle_index> &particles() const {
         return particleIndices;
     }
 
-    std::vector<particle_index>& particles() {
+    std::vector<particle_index> &particles() {
         return particleIndices;
     }
 
@@ -88,7 +87,7 @@ const static std::vector<NeighborList::neighbor_t> no_neighbors{};
 NeighborList::NeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config,
                            skin_size_t skin)
         : ctx(context), config(config), cells(std::vector<Cell>()),
-          simBoxSize(ctx->getBoxSize()), skin_size(skin), data(data) {}
+          simBoxSize(ctx->getBoxSize()), skin_size(skin), data(data), groupParticlesOnCreation(true) {}
 
 void NeighborList::setupCells() {
     if (cells.empty()) {
@@ -104,7 +103,8 @@ void NeighborList::setupCells() {
         NeighborList::maxCutoff = maxCutoff;
         NeighborList::maxCutoffPlusSkin = maxCutoff + skin_size;
 
-        log::console()->debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size, maxCutoff + skin_size);
+        log::console()->debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size,
+                              maxCutoff + skin_size);
 
         if (maxCutoff > 0) {
             const auto desiredCellWidth = .5 * maxCutoffPlusSkin;
@@ -183,7 +183,7 @@ bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const 
         if (!entry.is_deactivated()) {
             const double disp = entry.displacement;
             travelledTooFar = disp > r_c + r_s;
-            if(travelledTooFar) break;
+            if (travelledTooFar) break;
             if (disp > cell.maximal_displacements[0]) {
                 cell.maximal_displacements[0] = disp;
             } else if (disp > cell.maximal_displacements[1]) {
@@ -196,9 +196,9 @@ bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const 
 }
 
 bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
-    if(cell.dirty) return true;
-    for(const auto n : cell.neighbors) {
-        if(n->dirty) return true;
+    if (cell.dirty) return true;
+    for (const auto n : cell.neighbors) {
+        if (n->dirty) return true;
     }
     return false;
 }
@@ -216,9 +216,9 @@ bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
  * @param bucketSizesPromise future promise of this thread's bucket sizes
  */
 void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t end, std::size_t thread_number,
-                    std::size_t n_buckets, const NeighborList& that, NeighborList::data_t::entries_t& data_entries,
-                    const std::vector<std::vector<std::size_t>>& allBucketSizes,
-                    const thd::notification_barrier& wait_for_aggregation,
+                    std::size_t n_buckets, const NeighborList &that, NeighborList::data_t::entries_t &data_entries,
+                    const std::vector<std::vector<std::size_t>> &allBucketSizes,
+                    const thd::notification_barrier &wait_for_aggregation,
                     std::promise<std::pair<std::size_t, std::vector<std::size_t>>> bucketSizesPromise) {
     std::vector<NeighborList::data_t::Entry> grouped(std::make_move_iterator(begin), std::make_move_iterator(end));
     {
@@ -226,9 +226,10 @@ void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t e
         bucketSizes.resize(n_buckets);
         auto partition_begin = grouped.begin();
         for (unsigned int bucket = 0; bucket < n_buckets; ++bucket) {
-            auto next = std::partition(partition_begin, grouped.end(), [&that](const NeighborList::data_t::Entry &e) {
-                return !e.is_deactivated() && that.hash_pos(e.position());
-            });
+            auto next = std::partition(partition_begin, grouped.end(),
+                                       [&that, bucket](const NeighborList::data_t::Entry &e) {
+                                           return !e.is_deactivated() && that.hash_pos(e.position()) == bucket;
+                                       });
             const auto groupSize = static_cast<std::size_t>(std::distance(partition_begin, next));
             bucketSizes.at(bucket) = groupSize;
             partition_begin = next;
@@ -244,16 +245,16 @@ void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t e
         // the offsets are now in allBucketSizes, move own data into respective buckets (contained in
         // allBucketSizes[thread_number]
         std::size_t offset = 0;
-        std::size_t local_offset = 0;
-        for(std::size_t bucket = 0; bucket < n_buckets; ++bucket) {
+        for (std::size_t bucket = 0; bucket < n_buckets; ++bucket) {
+            const auto my_size = allBucketSizes[thread_number][bucket];
+            if (my_size > 0) {
+                std::size_t local_offset = offset + my_size;
+                auto mBegin = std::make_move_iterator(grouped.begin() + local_offset);
+                auto mEnd = std::make_move_iterator(grouped.begin() + local_offset);
 
-            auto mBegin = std::make_move_iterator(grouped.begin() + local_offset);
-            local_offset += allBucketSizes[thread_number][bucket];
-            auto mEnd = std::make_move_iterator(grouped.begin() + local_offset);
-
-            data_entries.insert(data_entries.begin() + offset, mBegin, mEnd);
-
-            for(const auto& bucketSizes : allBucketSizes) {
+                data_entries.insert(data_entries.begin() + offset, mBegin, mEnd);
+            }
+            for (const auto &bucketSizes : allBucketSizes) {
                 offset += bucketSizes[bucket];
             }
         }
@@ -273,7 +274,7 @@ void NeighborList::fillCells() {
             data.neighbors.clear();
             data.neighbors.resize(data.size());
 
-            if(true){
+            if (groupParticlesOnCreation) {
                 const auto grainSize = data.size() / config->nThreads();
                 std::vector<std::vector<std::size_t>> allBucketSizes;
                 allBucketSizes.resize(config->nThreads());
@@ -288,7 +289,8 @@ void NeighborList::fillCells() {
                         std::promise<future_content> promise;
                         futures.push_back(promise.get_future());
                         threads.push_back(thd::scoped_thread(std::thread(
-                                groupParticles, it, it + grainSize, i, cells.size(), std::cref(*this), std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
+                                groupParticles, it, it + grainSize, i, cells.size(), std::cref(*this),
+                                std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
                         )));
                         it += grainSize;
                     }
@@ -296,20 +298,21 @@ void NeighborList::fillCells() {
                         std::promise<future_content> promise;
                         futures.push_back(promise.get_future());
                         threads.push_back(thd::scoped_thread(std::thread(
-                                groupParticles, it, data.end(), config->nThreads()-1, cells.size(), std::cref(*this), std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
+                                groupParticles, it, data.end(), config->nThreads() - 1, cells.size(), std::cref(*this),
+                                std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
                         )));
                     }
 
                     std::vector<std::size_t> cellSizes;
                     cellSizes.resize(cells.size());
 
-                    for(auto& future : futures) {
+                    for (auto &future : futures) {
                         future.wait();
                         auto content = std::move(future.get());
                         allBucketSizes[std::get<0>(content)] = std::move(std::get<1>(content));
 
                         auto cellIt = cellSizes.begin();
-                        for(const auto cellSize : allBucketSizes.at(std::get<0>(content))) {
+                        for (const auto cellSize : allBucketSizes.at(std::get<0>(content))) {
                             *cellIt += cellSize;
                             ++cellIt;
                         }
@@ -321,12 +324,15 @@ void NeighborList::fillCells() {
                         auto cellIt = cells.begin();
                         auto cellSizeIt = cellSizes.begin();
                         std::size_t offset = 0;
-                        for(; cellIt != cells.end(); ++cellIt, ++cellSizeIt) {
-                            std::vector<data_t::index_t> indices;
-                            indices.reserve(*cellSizeIt);
-                            iota_n(indices.begin(), *cellSizeIt, offset);
-                            cellIt->particles() = std::move(indices);
-                            offset += *cellSizeIt;
+                        for (; cellIt != cells.end(); ++cellIt, ++cellSizeIt) {
+                            const auto cellSize = *cellSizeIt;
+                            if (cellSize > 0) {
+                                std::vector<data_t::index_t> indices;
+                                indices.reserve(cellSize);
+                                iota_n(std::back_inserter(indices), cellSize, offset);
+                                cellIt->particles() = std::move(indices);
+                                offset += cellSize;
+                            }
                         }
                     }
 
@@ -369,10 +375,10 @@ void NeighborList::fillCells() {
         } else {
             auto dirtyCells = findDirtyCells();
 
-            const double fraction = 1.;
-            if(dirtyCells.size() > cells.size() * fraction) {
+            const double fraction = 8.;
+            if (dirtyCells.size() > cells.size() * fraction) {
                 initialSetup = true;
-                log::console()->debug("had more than {}% dirty cells, recreate neighbor list", fraction*100);
+                log::console()->debug("had more than {}% dirty cells, recreate neighbor list", fraction * 100);
                 setupCells();
                 fillCells();
                 initialSetup = false;
@@ -472,7 +478,7 @@ void NeighborList::create() {
     bool redoFillCells = false;
     try {
         fillCells();
-    } catch(const ParticleTravelledTooFarException&) {
+    } catch (const ParticleTravelledTooFarException &) {
         initialSetup = true;
         redoFillCells = true;
         log::console()->warn("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
@@ -480,7 +486,7 @@ void NeighborList::create() {
                                      "very rarely and triggers a complete rebuild of the neighbor list.",
                              maxCutoff, skin_size, maxCutoffPlusSkin);
     }
-    if(redoFillCells) fillCells();
+    if (redoFillCells) fillCells();
     initialSetup = false;
 }
 
@@ -516,7 +522,7 @@ void NeighborList::remove(const particle_index idx) {
                     neighbors_2nd.erase(it);
                 }
             }
-            auto& particles = cell->particles();
+            auto &particles = cell->particles();
             auto find_it = std::find(particles.begin(), particles.end(), idx);
             if (find_it != particles.end()) {
                 particles.erase(find_it);
@@ -683,17 +689,17 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
 
 
     auto worker = [this](it_type begin, it_type end, promise_t update, const thd::barrier &barrier,
-                         std::atomic<bool>& interrupt) {
+                         std::atomic<bool> &interrupt) {
         // interrupt if there is a particle that travelled too far (r_c + r_s)
         bool shouldInterrupt = false;
         for (it_type it = begin; it != end; ++it) {
             shouldInterrupt |= markCell(*it, data, maxCutoff, skin_size);
-            if(shouldInterrupt) break;
+            if (shouldInterrupt) break;
         }
-        if(shouldInterrupt) interrupt = shouldInterrupt;
+        if (shouldInterrupt) interrupt = shouldInterrupt;
         barrier.wait();
         std::vector<Cell *> foundDirtyCells;
-        if(!interrupt.load()) {
+        if (!interrupt.load()) {
             for (it_type it = begin; it != end; ++it) {
                 if (cellOrNeighborDirty(*it)) {
                     foundDirtyCells.push_back(&*it);
@@ -717,16 +723,18 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
             dirtyCells.push_back(promise.get_future());
             threads.push_back(
                     thd::scoped_thread(
-                            std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b), std::ref(interrupt)))
+                            std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b),
+                                        std::ref(interrupt)))
             );
             it_cells += grainSize;
         }
         promise_t promise;
         dirtyCells.push_back(promise.get_future());
         threads.push_back(thd::scoped_thread(
-                std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b), std::ref(interrupt))));
+                std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b),
+                            std::ref(interrupt))));
     }
-    if(interrupt.load()) {
+    if (interrupt.load()) {
         throw ParticleTravelledTooFarException();
     }
     for (auto &&dirties : dirtyCells) {
@@ -794,6 +802,10 @@ std::size_t NeighborList::hash_pos(const data_t::particle_type::pos_type &pos) c
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     return get_contiguous_index(i, j, k, nCells[1], nCells[2]);
+}
+
+void NeighborList::setGroupParticlesOnCreation(bool groupParticlesOnCreation) {
+    NeighborList::groupParticlesOnCreation = groupParticlesOnCreation;
 }
 
 }

@@ -29,12 +29,11 @@ class ParticleData {
 public:
 
     struct Entry;
-    struct EntryUpdate;
     using Neighbor = std::size_t;
     using ctx_t = readdy::model::KernelContext;
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
-    using entries_update_t = std::vector<EntryUpdate>;
+    using entries_update_t = std::vector<Entry>;
     using ids_t = std::vector<particle_type::id_type>;
     using neighbors_t = std::vector<Neighbor>;
     using neighbor_list_t = std::vector<neighbors_t>;
@@ -70,17 +69,12 @@ public:
 
         particle_type::pos_type pos; // 32 + 3*8 = 56 bytes
     public:
+        particle_type::id_type id; // 56 + 8 = 64
         particle_type::type_type type; // 56 + 4 = 60 bytes
     private:
         bool deactivated; // 60 + 1 = 61 bytes
         char padding[3]; // 61 + 3 = 64 bytes
     };
-
-    struct EntryUpdate : public Entry {
-        EntryUpdate(const particle_type &particle);
-        particle_type::id_type id;
-    };
-
     // ctor / dtor
     ParticleData(readdy::model::KernelContext *const context);
 
@@ -103,7 +97,7 @@ public:
 
     void addParticle(const particle_type &particle);
 
-    index_t addEntry(EntryUpdate &&entry);
+    index_t addEntry(Entry &&entry);
 
     void addParticles(const std::vector<particle_type> &particles);
 
