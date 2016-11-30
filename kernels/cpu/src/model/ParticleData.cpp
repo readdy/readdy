@@ -122,16 +122,14 @@ readdy::model::Particle ParticleData::toParticle(const Entry &e, const particle_
     return readdy::model::Particle(e.pos, e.type, id);
 }
 
-ParticleData::index_t ParticleData::addEntry(ParticleData::EntryUpdate &&entry) {
+ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.back();
         blanks.pop_back();
-        ids.at(idx) = entry.id;
         entries.at(idx) = std::move(entry);
         neighbors.at(idx).clear();
         return idx;
     } else {
-        ids.push_back(entry.id);
         entries.push_back(std::move(entry));
         neighbors.push_back({});
         return entries.size()-1;
@@ -218,10 +216,6 @@ const ParticleData::neighbors_t &ParticleData::cneighbors_at(ParticleData::index
 
 
 ParticleData::~ParticleData() = default;
-
-
-ParticleData::EntryUpdate::EntryUpdate(const ParticleData::particle_type &particle)
-        : Entry(particle), id(particle.getId()) {}
 
 
 ParticleData::iterator ParticleData::begin() {

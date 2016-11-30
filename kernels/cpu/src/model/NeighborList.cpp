@@ -322,11 +322,14 @@ void NeighborList::fillCells() {
                         auto cellSizeIt = cellSizes.begin();
                         std::size_t offset = 0;
                         for(; cellIt != cells.end(); ++cellIt, ++cellSizeIt) {
-                            std::vector<data_t::index_t> indices;
-                            indices.reserve(*cellSizeIt);
-                            iota_n(indices.begin(), *cellSizeIt, offset);
-                            cellIt->particles() = std::move(indices);
-                            offset += *cellSizeIt;
+                            const auto cellSize = *cellSizeIt;
+                            if(cellSize > 0) {
+                                std::vector<data_t::index_t> indices;
+                                indices.reserve(cellSize);
+                                iota_n(std::back_inserter(indices), cellSize, offset);
+                                cellIt->particles() = std::move(indices);
+                                offset += cellSize;
+                            }
                         }
                     }
 
