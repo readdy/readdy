@@ -75,7 +75,7 @@ namespace readdy {
                     if (neighborList) neighborList->execute();
                     if (forces) forces->execute();
                     if (evaluateObservables) kernel->evaluateObservables(t + 1);
-                    if(t % progressOutputStride == 0) {
+                    if(progressOutputStride > 0 && t % progressOutputStride == 0) {
                         log::console()->debug("Simulation progress: {} / {} steps", t, steps);
                     }
                 }
