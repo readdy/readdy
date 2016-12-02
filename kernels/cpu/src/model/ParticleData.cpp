@@ -240,6 +240,20 @@ ParticleData::const_iterator ParticleData::end() const {
     return entries.cend();
 }
 
+void ParticleData::blanks_moved_to_front() {
+    std::iota(blanks.begin(), blanks.end(), 0);
+}
+
+ParticleData::index_t ParticleData::getIndexForId(const particle_type::id_type id) const {
+    auto find_it = std::find_if(entries.begin(), entries.end(), [id](const Entry& e) {
+        return !e.is_deactivated() && e.id == id;
+    });
+    if(find_it != entries.end()) {
+        return static_cast<index_t>(std::distance(entries.begin(), find_it));
+    }
+    throw std::out_of_range("requested id was not to be found in particle data");
+}
+
 }
 }
 }

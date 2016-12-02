@@ -110,6 +110,8 @@ public:
 
     void removeEntry(index_t entry);
 
+    index_t getIndexForId(const particle_type::id_type) const;
+
     iterator begin();
     iterator end();
     const_iterator cbegin() const;
@@ -138,6 +140,7 @@ public:
     std::vector<index_t> update(update_t&&);
     void displace(Entry&, const particle_type::pos_type& delta);
     void blanks_moved_to_end();
+    void blanks_moved_to_front();
 
 protected:
 

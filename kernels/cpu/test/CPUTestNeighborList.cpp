@@ -25,6 +25,7 @@ namespace m = readdy::model;
 namespace {
 
 using data_t = cpu::model::ParticleData;
+using nl_t = cpu::model::NeighborList;
 
 struct TestNeighborList : ::testing::Test {
 
@@ -44,7 +45,7 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
-auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &data,
+auto isPairInList = [](nl_t *pairs, data_t &data,
                        unsigned long idx1, unsigned long idx2) {
     const auto &neighbors1 = pairs->find_neighbors(idx1);
     for (auto &neigh_idx : neighbors1) {
@@ -59,6 +60,10 @@ auto isPairInList = [](readdy::kernel::cpu::model::NeighborList *pairs, data_t &
         }
     }
     return false;
+};
+
+auto isIdPairInList = [](nl_t *pairs, data_t &data, std::size_t id1, std::size_t id2) {
+    return isPairInList(pairs, data, data.getIndexForId(id1), data.getIndexForId(id2));
 };
 
 auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList &pairs) {
@@ -128,23 +133,25 @@ TEST_F(TestNeighborList, OneDirection) {
 
     readdy::util::thread::Config conf;
     readdy::kernel::cpu::model::ParticleData data {&ctx};
-    cpum::NeighborList list(&ctx, data, &conf);
-
-    list.setupCells();
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
+    std::vector<std::size_t> ids(particles.size());
+    std::transform(particles.begin(), particles.end(), ids.begin(), [](const m::Particle& p) {return p.getId();});
     data.addParticles(particles);
-    list.fillCells();
+
+    cpum::NeighborList list(&ctx, data, &conf);
+    list.create();
+
     int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 4);
-    EXPECT_TRUE(isPairInList(&list, data, 0, 2));
-    EXPECT_TRUE(isPairInList(&list, data, 2, 0));
-    EXPECT_TRUE(isPairInList(&list, data, 1, 2));
-    EXPECT_TRUE(isPairInList(&list, data, 2, 1));
-    EXPECT_FALSE(isPairInList(&list, data, 0, 1));
-    EXPECT_FALSE(isPairInList(&list, data, 1, 0));
+    EXPECT_TRUE(isIdPairInList(&list, data, ids.at(0), ids.at(2)));
+    EXPECT_TRUE(isIdPairInList(&list, data, ids.at(2), ids.at(0)));
+    EXPECT_TRUE(isIdPairInList(&list, data, ids.at(1), ids.at(2)));
+    EXPECT_TRUE(isIdPairInList(&list, data, ids.at(2), ids.at(1)));
+    EXPECT_FALSE(isIdPairInList(&list, data, ids.at(0), ids.at(1)));
+    EXPECT_FALSE(isIdPairInList(&list, data, ids.at(1), ids.at(0)));
 }
 
 TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {

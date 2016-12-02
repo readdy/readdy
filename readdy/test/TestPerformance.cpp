@@ -70,7 +70,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
 
     auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
-    neighborList->setSkinSize(20*readdy::model::util::getMaximumDisplacement(kernel.getKernelContext()));
+    neighborList->setSkinSize(2*readdy::model::util::getMaximumDisplacement(kernel.getKernelContext()));
     auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
     auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 

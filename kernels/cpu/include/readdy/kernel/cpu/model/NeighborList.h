@@ -104,6 +104,7 @@ public:
 
     std::unordered_set<Cell*> findDirtyCells();
     std::size_t hash_pos(const data_t::particle_type::pos_type& pos) const;
+    std::tuple<cell_index, cell_index, cell_index> mapPositionToCell(const data_t::particle_type::pos_type& pos) const;
 protected:
 
     bool isInCell(const Cell& cell, const data_t::particle_type::pos_type& pos) const;

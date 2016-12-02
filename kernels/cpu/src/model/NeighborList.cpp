@@ -20,6 +20,7 @@
 #include <readdy/kernel/cpu/model/NeighborList.h>
 #include <readdy/kernel/cpu/util/hilbert.h>
 #include <readdy/common/thread/notification_barrier.h>
+#include <readdy/common/Utils.h>
 
 namespace readdy {
 namespace kernel {
@@ -203,70 +204,6 @@ bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
     return false;
 }
 
-/**
- * Groups portion of particles together
- * @param begin the begin of the portion
- * @param end end of the portion (exclusive)
- * @param thread_number my number
- * @param n_buckets number of cells in this case
- * @param that the neighbor list
- * @param data_entries entries vector of the underlying data structure
- * @param allBucketSizes the bucket sizes of all threads, available after waiting for aggregation
- * @param wait_for_aggregation notification barrier that waits until main thread has collected all bucket sizes
- * @param bucketSizesPromise future promise of this thread's bucket sizes
- */
-void groupParticles(NeighborList::data_iter_t begin, NeighborList::data_iter_t end, std::size_t thread_number,
-                    std::size_t n_buckets, const NeighborList &that, NeighborList::data_t::entries_t &data_entries,
-                    const std::vector<std::vector<std::size_t>> &allBucketSizes,
-                    const thd::notification_barrier &wait_for_aggregation,
-                    std::promise<std::pair<std::size_t, std::vector<std::size_t>>> bucketSizesPromise) {
-    std::vector<NeighborList::data_t::Entry> grouped(std::make_move_iterator(begin), std::make_move_iterator(end));
-    {
-        std::vector<std::size_t> bucketSizes;
-        bucketSizes.resize(n_buckets);
-        auto partition_begin = grouped.begin();
-        for (unsigned int bucket = 0; bucket < n_buckets; ++bucket) {
-            auto next = std::partition(partition_begin, grouped.end(),
-                                       [&that, bucket](const NeighborList::data_t::Entry &e) {
-                                           return !e.is_deactivated() && that.hash_pos(e.position()) == bucket;
-                                       });
-            const auto groupSize = static_cast<std::size_t>(std::distance(partition_begin, next));
-            bucketSizes.at(bucket) = groupSize;
-            partition_begin = next;
-        }
-        // main thread is waiting for this
-        bucketSizesPromise.set_value(std::make_pair(thread_number, std::move(bucketSizes)));
-    }
-    // now wait until main thread reports back that everything is aggregated
-    {
-        wait_for_aggregation.wait();
-    }
-    {
-        // the offsets are now in allBucketSizes, move own data into respective buckets (contained in
-        // allBucketSizes[thread_number]
-        std::size_t offset = 0;
-        std::size_t local_offset = 0;
-        for (std::size_t bucket = 0; bucket < n_buckets; ++bucket) {
-            for(std::size_t i = 0; i < thread_number; ++i) {
-                offset += allBucketSizes[i][bucket];
-            }
-            const auto my_size = allBucketSizes[thread_number][bucket];
-            if (my_size > 0) {
-                log::console()->debug("inserting particles {} - {} in thread {}", local_offset, local_offset + my_size, thread_number);
-                auto mBegin = std::make_move_iterator(grouped.begin() + local_offset);
-                auto mEnd = std::make_move_iterator(grouped.begin() + local_offset + my_size);
-
-                data_entries.insert(data_entries.begin() + offset, mBegin, mEnd);
-                local_offset += my_size;
-                offset += my_size;
-            }
-            for(std::size_t i = thread_number+1; i < allBucketSizes.size(); ++i) {
-                offset += allBucketSizes[i][bucket];
-            }
-        }
-    }
-}
-
 void NeighborList::fillCells() {
     if (maxCutoff > 0) {
         const auto c2 = maxCutoffPlusSkin * maxCutoffPlusSkin;
@@ -281,83 +218,133 @@ void NeighborList::fillCells() {
             data.neighbors.resize(data.size());
 
             if (groupParticlesOnCreation) {
-                const auto grainSize = data.size() / config->nThreads();
-                std::vector<std::vector<std::size_t>> allBucketSizes;
-                allBucketSizes.resize(config->nThreads());
-                {
-                    using future_content = std::pair<std::size_t, std::vector<std::size_t>>;
-                    thd::notification_barrier notify;
-                    std::vector<std::future<future_content>> futures;
-                    futures.reserve(config->nThreads());
-                    auto it = data.begin();
-                    std::vector<thd::scoped_thread> threads;
-                    threads.reserve(config->nThreads());
-                    for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
-                        std::promise<future_content> promise;
-                        futures.push_back(promise.get_future());
-                        threads.push_back(thd::scoped_thread(std::thread(
-                                groupParticles, it, it + grainSize, i, cells.size(), std::cref(*this),
-                                std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
-                        )));
-                        it += grainSize;
-                    }
+                if(!data.empty()) {
+                    std::vector<unsigned int> hilbert_indices;
+                    std::vector<std::size_t> indices(data.size());
                     {
-                        std::promise<future_content> promise;
-                        futures.push_back(promise.get_future());
-                        threads.push_back(thd::scoped_thread(std::thread(
-                                groupParticles, it, data.end(), config->nThreads() - 1, cells.size(), std::cref(*this),
-                                std::ref(data.entries), std::cref(allBucketSizes), std::cref(notify), std::move(promise)
-                        )));
-                    }
+                        const auto grainSize = data.size() / config->nThreads();
+                        std::iota(indices.begin(), indices.end(), 0);
+                        hilbert_indices.resize(data.size());
 
-                    std::vector<std::size_t> cellSizes;
-                    cellSizes.resize(cells.size());
-
-                    for (auto &future : futures) {
-                        future.wait();
-                        auto content = std::move(future.get());
-                        const auto t_id = std::get<0>(content);
-                        allBucketSizes[t_id] = std::move(std::get<1>(content));
-
-                        auto cellIt = cellSizes.begin();
-                        for (const auto cellSize : allBucketSizes.at(t_id)) {
-                            *cellIt += cellSize;
-                            ++cellIt;
-                        }
-                    }
-
-                    notify.ready();
-
-                    {
-                        auto cellIt = cells.begin();
-                        auto cellSizeIt = cellSizes.begin();
-                        std::size_t offset = 0;
-                        for (; cellIt != cells.end(); ++cellIt, ++cellSizeIt) {
-                            const auto cellSize = *cellSizeIt;
-                            if (cellSize > 0) {
-                                std::vector<data_t::index_t> indices;
-                                indices.reserve(cellSize);
-                                iota_n(std::back_inserter(indices), cellSize, offset);
-                                cellIt->particles() = std::move(indices);
-                                offset += cellSize;
+                        auto worker = [&indices, &hilbert_indices, this, grainSize](data_iter_t begin, data_iter_t end,
+                                                                                    std::vector<unsigned int>::iterator hilberts_begin) {
+                            //auto worker_offset = std::distance(hilbert_indices.begin(), hilberts_begin);
+                            //auto worker_size = std::distance(begin, end);
+                            {
+                                auto it = begin;
+                                auto hilbert_it = hilberts_begin;
+                                for (; it != end; ++it, ++hilbert_it) {
+                                    if (!it->is_deactivated()) {
+                                        const auto &pos = it->position();
+                                        const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
+                                        const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
+                                        const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
+                                        bitmask_t coords[3]{i,j,k};
+                                        *hilbert_it = 1 + static_cast<unsigned int>(hilbert_c2i(3, CHAR_BIT, coords));
+                                    } else {
+                                        *hilbert_it = 0;
+                                    }
+                                }
                             }
+
+                            /*barrier.wait();
+                            // sort in subsets
+                            auto indices_begin = indices.begin() + worker_offset;
+                            std::sort(indices_begin, indices_begin + worker_size,
+                                      [&hilbert_indices](std::size_t i, std::size_t j) {
+                                          return hilbert_indices[i] < hilbert_indices[j];
+                                      });
+                            barrier.wait();
+                            // merge
+                            int k = 2;
+                            while (k <= config->nThreads()) {
+                                if (thread_id % k == 0) {
+                                    auto merge_begin = indices_begin;
+                                    auto merge_mid = std::min(indices_begin + (k/2) * grainSize, indices.end());
+                                    auto merge_end = std::min(indices_begin + k * grainSize, indices.end());
+                                    readdy::log::console()->debug("k={}, thread {} merging range {} - {} - {}",k, thread_id, std::distance(indices.begin(), merge_begin), std::distance(indices.begin(), merge_mid), std::distance(indices.begin(), merge_end));
+                                    if(merge_mid != merge_end) {
+                                        std::inplace_merge(merge_begin, merge_mid, merge_end,
+                                                           [&hilbert_indices](std::size_t i, std::size_t j) {
+                                                               return hilbert_indices[i] < hilbert_indices[j];
+                                                           });
+                                    }
+
+                                }
+                                k *= 2;
+                                barrier.wait();
+                            }*/
+                        };
+
+                        {
+                            std::vector<thd::scoped_thread> threads;
+                            threads.reserve(config->nThreads());
+                            auto data_it = data.begin();
+                            auto hilberts_it = hilbert_indices.begin();
+                            for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
+                                threads.push_back(
+                                        thd::scoped_thread(std::thread(
+                                                worker, data_it, data_it + grainSize, hilberts_it
+                                        )));
+                                data_it += grainSize;
+                                hilberts_it += grainSize;
+                            }
+                            threads.push_back(thd::scoped_thread(
+                                    std::thread(worker, data_it, data.end(), hilberts_it)));
                         }
+                        {
+                            std::sort(indices.begin(), indices.end(),
+                                      [&hilbert_indices](std::size_t i, std::size_t j) {
+                                          return hilbert_indices[i] < hilbert_indices[j];
+                                      });
+                        }
+                        /*{
+                            // sanity 1
+                            unsigned int lastHilbert = 0;
+                            for (std::size_t i = 0;i < data.size();++i) {
+                                const auto &pos = data.entry_at(indices[i]).position();
+                                const auto ijk = mapPositionToCell(pos);
+                                bitmask_t coords[3]{std::get<0>(ijk), std::get<1>(ijk), std::get<2>(ijk)};
+                                auto newHilbert = static_cast<unsigned int>(hilbert_c2i(3, CHAR_BIT, coords));
+                                if(newHilbert < lastHilbert) {
+                                    log::console()->critical("mist1: {} < {}", newHilbert, lastHilbert);
+                                }
+                                lastHilbert = newHilbert;
+                            }
+                        }*/
                     }
 
+                    data.blanks_moved_to_front();
+                    std::vector<std::size_t> inverseIndices(indices.size());
+                    for(std::size_t i = 0; i < indices.size(); ++i) {
+                        inverseIndices[indices[i]] = i;
+                    }
+                    readdy::util::collections::reorder_destructive(inverseIndices.begin(), inverseIndices.end(), data.begin());
                 }
-
-                data.blanks_moved_to_end();
-                {
-                    // sanity: all particles are in the correct boxes
-                    for(const auto& cell : cells) {
-                        for(const auto idx : cell.particles()) {
-                            auto refCell = getCell(data.entry_at(idx).pos);
-                            if(refCell && refCell->contiguous_index == cell.contiguous_index) {
-                                // allgood
-                            } else {
-                                log::console()->critical("shit");
-                            }
+                /*{
+                    // sanity 2
+                    unsigned int lastHilbert = 0;
+                    for (const auto& entry : data) {
+                        const auto &pos = entry.position();
+                        const auto ijk = mapPositionToCell(pos);
+                        bitmask_t coords[3]{std::get<0>(ijk), std::get<1>(ijk), std::get<2>(ijk)};
+                        auto newHilbert = entry.is_deactivated() ? 0 : static_cast<unsigned int>(hilbert_c2i(3, CHAR_BIT, coords));
+                        if(newHilbert >= lastHilbert) {
+                            // ok!
+                        } else {
+                            log::console()->critical("mist2: {} < {}", newHilbert, lastHilbert);
                         }
+                        lastHilbert = newHilbert;
+                    }
+                }*/
+                {
+                    data_t::index_t idx = 0;
+                    for (auto it = data.begin() + data.getNDeactivated(); it != data.end(); ++it) {
+                        auto cell = getCell(it->position());
+                        if (cell) {
+                            cell->addParticleIndex(idx);
+                        }
+                        ++idx;
                     }
                 }
             } else {
@@ -827,6 +814,14 @@ std::size_t NeighborList::hash_pos(const data_t::particle_type::pos_type &pos) c
 
 void NeighborList::setGroupParticlesOnCreation(bool groupParticlesOnCreation) {
     NeighborList::groupParticlesOnCreation = groupParticlesOnCreation;
+}
+
+std::tuple<NeighborList::cell_index, NeighborList::cell_index, NeighborList::cell_index> NeighborList::mapPositionToCell(
+        const readdy::model::Particle::pos_type &pos) const {
+    const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
+    const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
+    const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
+    return std::make_tuple(i, j, k);
 }
 
 }
