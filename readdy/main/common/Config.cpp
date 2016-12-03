@@ -22,7 +22,13 @@ namespace util {
 namespace thread {
 
 Config::Config() {
+    // magic number 4 to enable some load balancing
+#ifdef READDY_DEBUG
     m_nThreads = std::thread::hardware_concurrency();
+#else
+    m_nThreads = 4*std::thread::hardware_concurrency();
+#endif
+
     const char *env = std::getenv("READDY_N_CORES");
     if (env) {
         m_nThreads = static_cast<n_threads_t>(std::stol(env));

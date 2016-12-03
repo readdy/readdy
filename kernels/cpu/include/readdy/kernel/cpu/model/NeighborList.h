@@ -27,7 +27,7 @@ namespace model {
 
 class NeighborList {
 public: 
-    class Cell;
+    struct Cell;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
     using particle_index = ParticleData::index_t;
@@ -36,34 +36,18 @@ public:
     using ctx_t = readdy::model::KernelContext;
     using container_t = std::vector<std::vector<neighbor_t>>;
     using skin_size_t = double;
-    using data_iter_t = decltype(std::declval<data_t>().entries.begin());
+    using data_iter_t = data_t::iterator;
     using hilbert_index_t = unsigned int;
     using cell_iter_t = decltype(std::declval<std::vector<Cell>>().begin());
-private: 
+
+    using iterator = decltype(std::declval<data_t>().neighbors.begin());
+    using const_iterator = decltype(std::declval<data_t>().neighbors.cbegin());
+
+private:
     std::vector<Cell> cells;
     skin_size_t skin_size;
     bool initialSetup = true;
 public:
-    struct Cell {
-        std::vector<Cell *> neighbors{};
-        std::vector<particle_index> particleIndices{};
-        double maximal_displacements[2];
-        cell_index contiguous_index;
-        bool enoughCells;
-
-        // dirty flag indicating whether the cell and its neighboring cells have to be re-created
-        bool dirty {false};
-
-        Cell(cell_index i, cell_index j, cell_index k, const std::array<cell_index, 3> &nCells);
-
-        void addNeighbor(Cell *cell);
-
-        void checkDirty(skin_size_t skin);
-
-        friend bool operator==(const Cell &lhs, const Cell &rhs);
-
-        friend bool operator!=(const Cell &lhs, const Cell &rhs);
-    };
 
     NeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config, skin_size_t = 0);
 
@@ -93,31 +77,37 @@ public:
 
     void insert(const particle_index);
 
-    auto begin() -> decltype(std::declval<data_t>().neighbors.begin()) {
+    iterator begin() {
         return data.neighbors.begin();
     }
-    auto end() -> decltype(std::declval<data_t>().neighbors.end()) {
+    iterator end() {
         return data.neighbors.end();
     }
-    auto cbegin() const -> decltype(std::declval<data_t>().neighbors.cbegin()) {
+    const_iterator cbegin() const {
         return data.neighbors.cbegin();
     }
-    auto cend() const -> decltype(std::declval<data_t>().neighbors.cend()) {
+    const_iterator cend() const {
         return data.neighbors.cend();
     }
-    auto begin() const -> decltype(std::declval<data_t>().neighbors.cbegin()) {
+    const_iterator begin() const {
         return cbegin();
     }
-    auto end() const -> decltype(std::declval<data_t>().neighbors.cend()) {
+    const_iterator end() const {
         return cend();
     }
 
     void setSkinSize(skin_size_t skin_size);
 
+    void setGroupParticlesOnCreation(bool groupParticlesOnCreation);
+
     hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
     std::unordered_set<Cell*> findDirtyCells();
+    std::size_t hash_pos(const data_t::particle_type::pos_type& pos) const;
+    std::tuple<cell_index, cell_index, cell_index> mapPositionToCell(const data_t::particle_type::pos_type& pos) const;
 protected:
+
+    bool isInCell(const Cell& cell, const data_t::particle_type::pos_type& pos) const;
 
     const readdy::model::KernelContext *const ctx;
 
@@ -143,6 +133,8 @@ protected:
     void setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
 
     data_t& data;
+
+    bool groupParticlesOnCreation;
 };
 
 

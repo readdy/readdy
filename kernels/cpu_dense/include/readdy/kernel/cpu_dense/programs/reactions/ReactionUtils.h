@@ -97,8 +97,11 @@ void gatherEvents(Kernel const *const kernel, const ParticleIndexCollection &par
 
 }
 
-template<typename Reaction>
+template<bool checkDeactivated=false, typename Reaction>
 void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, data_t::update_t& newEntries, Reaction* reaction) {
+    if(checkDeactivated) {
+        if(data.entry_at(idx1).deactivated || data.entry_at(idx2).deactivated) return;
+    }
     switch(reaction->getType()) {
         case reaction_type::Decay: {
             data.deactivate(idx1);

@@ -70,12 +70,7 @@ unsigned long Kernel::getNThreads() const {
 }
 
 void Kernel::setNThreads(readdy::util::thread::Config::n_threads_t n) {
-    if (n > 0 && n <= std::thread::hardware_concurrency()) {
-        pimpl->config->setNThreads(n);
-    } else {
-        log::console()->error("Tried to set number of threads to {}, but there are only {} hardware thread contexts "
-                                      "available.", n, std::thread::hardware_concurrency());
-    }
+    pimpl->config->setNThreads(n);
 }
 
 Kernel::~Kernel() = default;

@@ -56,6 +56,27 @@ inline void for_each_value(const Collection& collection, Fun f)  {
     }
 }
 
+template<typename order_iterator, typename value_iterator>
+void reorder_destructive(order_iterator order_begin, order_iterator order_end, value_iterator v) {
+    typedef typename std::iterator_traits<value_iterator>::value_type value_t;
+    typedef typename std::iterator_traits<order_iterator>::value_type index_t;
+    typedef typename std::iterator_traits<order_iterator>::difference_type diff_t;
+
+    diff_t remaining = order_end - 1 - order_begin;
+    for (index_t s = index_t(); remaining > 0; ++s) {
+        index_t d = order_begin[s];
+        if (d == (diff_t) -1) continue;
+        --remaining;
+        value_t temp = std::move(v[s]);
+        for (index_t d2; d != s; d = d2) {
+            std::swap(temp, v[d]);
+            std::swap(order_begin[d], d2 = (diff_t) -1);
+            --remaining;
+        }
+        v[s] = std::move(temp);
+    }
+}
+
 template<typename T, typename Predicate>
 typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const &item, Predicate pred) {
     return vec.insert(std::upper_bound(vec.begin(), vec.end(), item, pred), item);

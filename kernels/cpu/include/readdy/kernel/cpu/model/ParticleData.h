@@ -29,13 +29,11 @@ class ParticleData {
 public:
 
     struct Entry;
-    struct EntryUpdate;
     using Neighbor = std::size_t;
     using ctx_t = readdy::model::KernelContext;
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
-    using entries_update_t = std::vector<EntryUpdate>;
-    using ids_t = std::vector<particle_type::id_type>;
+    using entries_update_t = std::vector<Entry>;
     using neighbors_t = std::vector<Neighbor>;
     using neighbor_list_t = std::vector<neighbors_t>;
     using index_t = entries_t::size_type;
@@ -43,12 +41,15 @@ public:
     using force_t = readdy::model::Vec3;
     using displacement_t = double;
 
+    using iterator = decltype(std::declval<entries_t>().begin());
+    using const_iterator = decltype(std::declval<entries_t>().cbegin());
+
     /**
      * Particle data entry with padding such that it fits exactly into 64 bytes.
      */
     struct Entry {
         Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
-                                               deactivated(false), displacement(0) { }
+                                               deactivated(false), displacement(0), id(particle.getId()) { }
 
         Entry(const Entry&) = delete;
         Entry& operator=(const Entry&) = delete;
@@ -67,17 +68,12 @@ public:
 
         particle_type::pos_type pos; // 32 + 3*8 = 56 bytes
     public:
+        particle_type::id_type id; // 56 + 8 = 64
         particle_type::type_type type; // 56 + 4 = 60 bytes
     private:
         bool deactivated; // 60 + 1 = 61 bytes
         char padding[3]; // 61 + 3 = 64 bytes
     };
-
-    struct EntryUpdate : public Entry {
-        EntryUpdate(const particle_type &particle);
-        particle_type::id_type id;
-    };
-
     // ctor / dtor
     ParticleData(readdy::model::KernelContext *const context);
 
@@ -100,13 +96,13 @@ public:
 
     void addParticle(const particle_type &particle);
 
-    index_t addEntry(EntryUpdate &&entry);
+    index_t addEntry(Entry &&entry);
 
     void addParticles(const std::vector<particle_type> &particles);
 
     readdy::model::Particle getParticle(const index_t index) const;
 
-    readdy::model::Particle toParticle(const Entry& e, const particle_type::id_type id) const;
+    readdy::model::Particle toParticle(const Entry& e) const;
 
     void removeParticle(const particle_type &particle);
 
@@ -114,48 +110,14 @@ public:
 
     void removeEntry(index_t entry);
 
-    auto begin() -> decltype(std::declval<entries_t>().begin()) {
-        return entries.begin();
-    }
-    auto end() -> decltype(std::declval<entries_t>().end()) {
-        return entries.end();
-    }
-    auto cbegin() const -> decltype(std::declval<entries_t>().cbegin()) {
-        return entries.cbegin();
-    }
-    auto cend() const -> decltype(std::declval<entries_t>().cend()) {
-        return entries.cend();
-    }
-    auto begin() const -> decltype(std::declval<entries_t>().cbegin()) {
-        return cbegin();
-    }
-    auto end() const -> decltype(std::declval<entries_t>().cend()) {
-        return cend();
-    }
+    index_t getIndexForId(const particle_type::id_type) const;
 
-    auto begin_ids() -> decltype(std::declval<ids_t>().begin()) {
-        return ids.begin();
-    }
-
-    auto end_ids() -> decltype(std::declval<ids_t>().begin()) {
-        return ids.end();
-    }
-
-    auto cbegin_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cbegin();
-    }
-
-    auto cend_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cend();
-    }
-
-    auto begin_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cbegin();
-    }
-
-    auto end_ids() const -> decltype(std::declval<ids_t>().cbegin()) {
-        return ids.cend();
-    }
+    iterator begin();
+    iterator end();
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    const_iterator begin() const;
+    const_iterator end() const;
 
     Entry& entry_at(index_t);
     const Entry& entry_at(index_t) const;
@@ -177,13 +139,14 @@ public:
      */
     std::vector<index_t> update(update_t&&);
     void displace(Entry&, const particle_type::pos_type& delta);
+    void blanks_moved_to_end();
+    void blanks_moved_to_front();
 
 protected:
 
-    std::stack<index_t, std::vector<index_t>> blanks;
+    std::vector<index_t> blanks;
     neighbor_list_t neighbors;
     entries_t entries;
-    ids_t ids;
     ctx_t::fix_pos_fun fixPos;
 };
 

@@ -266,9 +266,9 @@ void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquare
 }
 
 int NeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) const {
-    cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
-    cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
-    cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
+    signed_cell_index i = static_cast<const signed_cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
+    signed_cell_index j = static_cast<const signed_cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
+    signed_cell_index k = static_cast<const signed_cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     const auto &periodic = ctx->getPeriodicBoundary();
     if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nCells[0]);
     else if (i < 0 || i >= nCells[0]) return -1;
@@ -281,6 +281,30 @@ int NeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) con
 
 const double NeighborList::getMaxCutoff() const {
     return maxCutoff;
+}
+
+NeighborList::iterator NeighborList::begin() {
+        return neighbor_list.begin();
+}
+
+NeighborList::iterator NeighborList::end() {
+    return neighbor_list.end();
+}
+
+NeighborList::const_iterator NeighborList::cbegin() const {
+    return neighbor_list.cbegin();
+}
+
+NeighborList::const_iterator NeighborList::cend() const {
+    return neighbor_list.cend();
+}
+
+NeighborList::const_iterator NeighborList::begin() const {
+    return neighbor_list.cbegin();
+}
+
+NeighborList::const_iterator NeighborList::end() const {
+    return neighbor_list.cend();
 }
 
 }

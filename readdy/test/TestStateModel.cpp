@@ -83,10 +83,35 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     auto particlesB = std::vector<m::Particle> {
             m::Particle(0, 0, 0.1, typeIdB), m::Particle(-1.8, -4.0, 1.8, typeIdB), m::Particle(0.5, 0, 0, typeIdB)
     };
+    std::vector<m::Particle::id_type> ids;
+    {
+        std::for_each(particlesA.begin(), particlesA.end(), [&ids](const m::Particle& p) { ids.push_back(p.getId());});
+        std::for_each(particlesB.begin(), particlesB.end(), [&ids](const m::Particle& p) { ids.push_back(p.getId());});
+    }
     stateModel.addParticles(particlesA);
     stateModel.addParticles(particlesB);
+    {
+        const auto foo = stateModel.getParticles();
+        for(const auto& bar : foo) {
+            readdy::log::console()->debug("got particle: {}", bar);
+        }
+    }
     stateModel.updateNeighborList();
+    {
+        const auto foo = stateModel.getParticles();
+        for(const auto& bar : foo) {
+            readdy::log::console()->debug("-> got particle: {}", bar);
+        }
+    }
     stateModel.calculateForces();
+    {
+        {
+            const auto foo = stateModel.getParticles();
+            for(const auto& bar : foo) {
+                readdy::log::console()->debug("--> got particle: {}", bar);
+            }
+        }
+    }
     // handcalculated expectations
     const double energy03 = 4.205;
     const double energy05 = 3.125;
@@ -102,20 +127,39 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     const m::Vec3 force25(-2.1961508830135306, 0, -1.4641005886756873);
     // check results
     obs->evaluate();
-    auto forcesIt = obs->getResult().begin();
-    EXPECT_VEC3_EQ(*forcesIt, force03 + force05) << "force on particle 0 = force03 + force05";
-    ++forcesIt;
-    EXPECT_VEC3_EQ(*forcesIt, force13 + force15) << "force on particle 1 = force13 + force15";
-    ++forcesIt;
-    EXPECT_VEC3_EQ(*forcesIt, force23 + force25) << "force on particle 2 = force23 + force25";
-    ++forcesIt;
-    EXPECT_VEC3_EQ(*forcesIt, (-1. * force03) - force13 - force23)
-                        << "force on particle 3 = - force03 - force13 - force23";
-    ++forcesIt;
-    EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, 0)) << "force on particle 4 = 0";
-    ++forcesIt;
-    EXPECT_VEC3_EQ(*forcesIt, (-1. * force05) - force15 - force25)
-                        << "force on particle 5 = - force05 - force15 - force25";
+    const auto particles = stateModel.getParticles();
+    {
+        {
+            const auto foo = stateModel.getParticles();
+            for(const auto& bar : foo) {
+                readdy::log::console()->debug("---> got particle: {}", bar);
+            }
+        }
+    }
+    const auto& forces = obs->getResult();
+    std::size_t idx = 0;
+    for(const auto& particle : particles) {
+        if(particle.getId() == ids.at(0)) {
+            EXPECT_VEC3_EQ(forces.at(idx), force03 + force05) << "force on particle 0 = force03 + force05";
+        } else if(particle.getId() == ids.at(1)) {
+            EXPECT_VEC3_EQ(forces.at(idx), force13 + force15) << "force on particle 1 = force13 + force15";
+        } else if(particle.getId() == ids.at(2)) {
+            EXPECT_VEC3_EQ(forces.at(idx), force23 + force25) << "force on particle 2 = force23 + force25";
+        } else if(particle.getId() == ids.at(3)) {
+            EXPECT_VEC3_EQ(forces.at(idx), (-1. * force03) - force13 - force23)
+                                << "force on particle 3 = - force03 - force13 - force23";
+        } else if(particle.getId() == ids.at(4)) {
+            EXPECT_VEC3_EQ(forces.at(idx), m::Vec3(0, 0, 0)) << "force on particle 4 = 0";
+        } else if(particle.getId() == ids.at(5)) {
+            EXPECT_VEC3_EQ(forces.at(idx), (-1. * force05) - force15 - force25)
+                                << "force on particle 5 = - force05 - force15 - force25";
+        } else {
+            readdy::log::console()->error("Got an unexpected particle id: {}", particle.getId());
+            FAIL() << "Got an unexpected particle id: " << particle.getId();
+        }
+        ++idx;
+    }
+
     const double totalEnergy = energy03 + energy05 + energy13 + energy15 + energy23 + energy25;
     EXPECT_DOUBLE_EQ(stateModel.getEnergy(), totalEnergy);
 }

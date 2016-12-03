@@ -13,6 +13,8 @@
 #include <memory>
 #include <chrono>
 
+#include "logging.h"
+
 namespace readdy {
 namespace util {
 struct Timer {

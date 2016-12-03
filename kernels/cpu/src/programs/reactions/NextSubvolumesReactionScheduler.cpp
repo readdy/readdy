@@ -39,7 +39,7 @@ struct NextSubvolumes::ReactionEvent {
 };
 
 struct NextSubvolumes::GridCell {
-    using particle_index = readdy::kernel::cpu::model::ParticleData::Entry*;
+    using particle_index = data_t::index_t;
 
     const cell_index_t i, j, k, id;
     std::vector<const GridCell *> neighbors;
@@ -102,14 +102,16 @@ void NextSubvolumes::assignParticles() {
         cell.cellRate = 0;
     });
 
+    std::size_t idx = 0;
     for (auto& e : *data) {
         if(!e.is_deactivated()) {
             auto box = getCell(e.position());
             if (box) {
-                box->particles[e.type].push_back(&e);
+                box->particles[e.type].push_back(idx);
                 ++(box->typeCounts[e.type]);
             }
         }
+        ++idx;
     }
 
 }
@@ -139,18 +141,21 @@ void NextSubvolumes::evaluateReactions() {
                 if(findType1 != particles.end()) {
                     const auto& particlesType1 = findType1->second;
                     if (!particlesType1.empty()) {
-                        const auto p1_it = rnd::random_element(particlesType1.begin(), particlesType1.end());
-                        const auto p1 = *p1_it;
+                        //const auto pidx_it = particlesType1.begin() +
+                        //        static_cast<std::size_t>(rnd::uniform_int(0L, particlesType1.size()));
+                        //const auto particle_idx = *pidx_it;
                         // todo execute the reaction, and update cells and event queue (see slides)
                         switch (event.order) {
-                            case 1: {
+                            case 1: {/*
                                 // todo update neighbor list with this particle
-                                /*data_t::entries_t newEntries;
+                                data_t::entries_update_t newParticles{};
+                                std::vector<data_t::index_t> decayedEntries {};
+
                                 auto reaction = ctx.getOrder1Reactions(event.type1)[event.reactionIndex];
-                                performReaction(*data, p1, p1, newEntries, reaction);
+                                performReaction(*data, particle_idx, 0, newParticles, decayedEntries, reaction);
                                 performedSomething = true;
                                 --currentCell->typeCounts[event.type1];
-                                currentCell->particles[event.type1].erase(p1_it);
+                                currentCell->particles[event.type1].erase(pidx_it);
                                 if (reaction->getNProducts() > 0) {
                                     auto c1Out = getCell(p1->pos);
                                     ++c1Out->typeCounts[p1->type];
@@ -166,9 +171,9 @@ void NextSubvolumes::evaluateReactions() {
                                 } else {
                                     data->removeEntry(p1);
                                     neighbor_list->remove(p1);
-                                }*/
+                                }
                                 break;
-                            }
+                            */}
                             case 2: {
                                 /*auto reaction = ctx.getOrder2Reactions(event.type1, event.type2)[event.reactionIndex];
                                 const auto findType2 = particles.find(event.type2);
@@ -280,7 +285,7 @@ void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
     const auto &ctx = kernel->getKernelContext();
     std::vector<ReactionEvent> events;
     // order 1 reactions
-    for (const auto it : cell.particles) {
+    for (const auto& it : cell.particles) {
         const auto pType = it.first;
         for(auto i = 0; i < it.second.size(); ++i) {
             std::size_t reactionIdx = 0;

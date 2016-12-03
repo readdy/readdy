@@ -26,7 +26,7 @@ namespace cpu_dense {
 namespace model {
 
 class NeighborList {
-public: 
+public:
     class Cell;
     class Neighbor;
     using cell_index = unsigned int;
@@ -38,6 +38,10 @@ public:
     using container_t = std::vector<std::vector<neighbor_t>>;
     using data_iter_t = decltype(std::declval<data_t>().begin());
     using cell_iter_t = decltype(std::declval<std::vector<Cell>>().begin());
+    using neighbor_list_t = std::vector<std::vector<Neighbor>>;
+
+    using iterator = neighbor_list_t::iterator;
+    using const_iterator = neighbor_list_t::const_iterator;
 
     struct Neighbor {
         using index_t = data_t::entries_t::size_type;
@@ -54,7 +58,7 @@ public:
 
 private: 
     std::vector<Cell> cells;
-    std::vector<std::vector<Neighbor>> neighbor_list;
+    neighbor_list_t neighbor_list;
 public:
     struct Cell {
         std::vector<Cell *> neighbors{};
@@ -88,24 +92,12 @@ public:
 
     virtual void create();
 
-    auto begin() -> decltype(neighbor_list.begin()) {
-        return neighbor_list.begin();
-    }
-    auto end() -> decltype(neighbor_list.end()) {
-        return neighbor_list.end();
-    }
-    auto cbegin() const -> decltype(neighbor_list.cbegin()) {
-        return neighbor_list.cbegin();
-    }
-    auto cend() const -> decltype(neighbor_list.cend()) {
-        return neighbor_list.cend();
-    }
-    auto begin() const -> decltype(neighbor_list.cbegin()) {
-        return cbegin();
-    }
-    auto end() const -> decltype(neighbor_list.cend()) {
-        return cend();
-    }
+    iterator begin();
+    iterator end();
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    const_iterator begin() const;
+    const_iterator end() const;
 
     const double getMaxCutoff() const;
 

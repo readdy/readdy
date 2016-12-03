@@ -70,9 +70,9 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
 
     auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
     auto &&neighborList = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
-    neighborList->setSkinSize(20*readdy::model::util::getMaximumDisplacement(kernel.getKernelContext()));
+    neighborList->setSkinSize(2*readdy::model::util::getMaximumDisplacement(kernel.getKernelContext()));
     auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
-    auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::GillespieParallel>();
+    auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
     auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
     obs->setCallback([](const std::vector<unsigned long> n) {
