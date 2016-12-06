@@ -34,7 +34,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     // scenario: two particle types A and B, which can form a complex AB which after a time is going to dissolve back
     // into A and B. Therefore, the numbers #(A) + #(AB) and #(B) + #(AB) must remain constant.
 
-    using n_particles_obs = readdy::model::NParticlesObservable;
+    using n_particles_obs = readdy::model::observables::NParticles;
 
     auto stdRand = [](double lower = 0.0, double upper = 1.0) -> double {
         return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;

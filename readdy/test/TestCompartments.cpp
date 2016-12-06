@@ -31,7 +31,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     kernel->addParticle("A", m::Vec3(1, 0, 2));
 
     std::vector<std::string> typesToCount = {"A", "B"};
-    auto &&obs = kernel->createObservable<m::NParticlesObservable>(1, typesToCount);
+    auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
     obs->evaluate();
     const auto &resultBefore = obs->getResult();
     EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
@@ -73,7 +73,7 @@ TEST_P(TestCompartments, TwoCompartments) {
     comp->execute();
 
     std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-    auto &&obs = kernel->createObservable<m::NParticlesObservable>(1, typesToCount);
+    auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
     obs->evaluate();
     const auto &result = obs->getResult();
     EXPECT_EQ(result[0], 0) << "Expect no As";
@@ -81,8 +81,8 @@ TEST_P(TestCompartments, TwoCompartments) {
 
     const std::vector<std::string> typesC = {"C"};
     const std::vector<std::string> typesD = {"D"};
-    auto &&posC = kernel->createObservable<m::ParticlePositionObservable>(1, typesC);
-    auto &&posD = kernel->createObservable<m::ParticlePositionObservable>(1, typesD);
+    auto &&posC = kernel->createObservable<m::observables::ParticlePosition>(1, typesC);
+    auto &&posD = kernel->createObservable<m::observables::ParticlePosition>(1, typesD);
     posC->evaluate();
     posD->evaluate();
     const auto &resultC = posC->getResult();

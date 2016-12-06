@@ -195,8 +195,8 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::GillespieParallel>();
 
-    auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
-    pp_obs->setCallback([](const readdy::model::ParticlePositionObservable::result_t &t) {
+    auto pp_obs = kernel->createObservable<readdy::model::observables::ParticlePosition>(1);
+    pp_obs->setCallback([](const readdy::model::observables::ParticlePosition::result_t &t) {
         /* ignore */
     });
     auto connection = kernel->connectObservable(pp_obs.get());

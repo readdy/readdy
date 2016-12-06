@@ -24,7 +24,7 @@ namespace thd = readdy::util::thread;
 
 CPUDParticlePosition::CPUDParticlePosition(CPUDKernel *const kernel, unsigned int stride,
                                    const std::vector<std::string> &typesToCount) :
-        readdy::model::ParticlePositionObservable(kernel, stride, typesToCount), kernel(kernel) {}
+        readdy::model::observables::ParticlePosition(kernel, stride, typesToCount), kernel(kernel) {}
 
 void CPUDParticlePosition::evaluate() {
     result.clear();
@@ -43,7 +43,7 @@ void CPUDParticlePosition::evaluate() {
 CPUDHistogramAlongAxis::CPUDHistogramAlongAxis(CPUDKernel *const kernel, unsigned int stride,
                                        const std::vector<double> &binBorders,
                                        const std::vector<std::string> &typesToCount, unsigned int axis)
-        : readdy::model::HistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount, axis),
+        : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
           kernel(kernel) {
     size = result.size();
 }
@@ -110,7 +110,7 @@ void CPUDHistogramAlongAxis::evaluate() {
 
 
 CPUDNParticles::CPUDNParticles(CPUDKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
-        : readdy::model::NParticlesObservable(kernel, stride, typesToCount),
+        : readdy::model::observables::NParticles(kernel, stride, typesToCount),
           kernel(kernel) {}
 
 void CPUDNParticles::evaluate() {
@@ -131,7 +131,7 @@ void CPUDNParticles::evaluate() {
 }
 
 CPUDForces::CPUDForces(CPUDKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
-        readdy::model::ForcesObservable(kernel, stride, typesToCount),
+        readdy::model::observables::Forces(kernel, stride, typesToCount),
         kernel(kernel) {}
 
 void CPUDForces::evaluate() {

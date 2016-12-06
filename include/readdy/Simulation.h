@@ -105,7 +105,7 @@ namespace readdy {
          * @param observable the observable
          * @return a uuid with which the observable is associated
          */
-        unsigned long registerObservable(readdy::model::ObservableBase& observable);
+        unsigned long registerObservable(readdy::model::observables::ObservableBase& observable);
 
         /**
          * Gives all available predefined observable names.
@@ -359,7 +359,7 @@ namespace readdy {
 
 struct Simulation::Impl {
     std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections {};
-    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::ObservableBase>> observables {};
+    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables {};
     std::unique_ptr<readdy::model::Kernel> kernel;
     unsigned long counter = 0;
 };

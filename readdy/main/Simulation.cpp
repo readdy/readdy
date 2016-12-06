@@ -160,7 +160,7 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-unsigned long Simulation::registerObservable(readdy::model::ObservableBase &observable) {
+unsigned long Simulation::registerObservable(readdy::model::observables::ObservableBase &observable) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;
     auto &&connection = pimpl->kernel->connectObservable(&observable);

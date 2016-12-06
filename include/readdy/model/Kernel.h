@@ -20,7 +20,7 @@
 #include <readdy/model/programs/Program.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
-#include <readdy/model/_internal/ObservableFactory.h>
+#include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/programs/ProgramFactory.h>
@@ -101,7 +101,7 @@ public:
      *
      * @return A connection object that, once deleted, releases the connection of the observable.
      */
-    virtual readdy::signals::scoped_connection connectObservable(ObservableBase *const observable);
+    virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *const observable);
 
     /**
      * Evaluates all unblocked observables.
@@ -111,7 +111,7 @@ public:
     /**
      * Registers an observable to the kernel signal.
      */
-    virtual std::tuple<std::unique_ptr<ObservableWrapper>, readdy::signals::scoped_connection>
+    virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const observables::observable_type &observable, unsigned int stride);
 
     virtual readdy::model::programs::ProgramFactory &getProgramFactory() const = 0;
@@ -186,7 +186,7 @@ public:
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const = 0;
 
-    virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const;
+    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const;
 
     virtual unsigned int getTypeId(const std::string &) const;
 

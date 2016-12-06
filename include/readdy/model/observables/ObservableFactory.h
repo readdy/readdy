@@ -14,15 +14,15 @@
 
 #include <string>
 #include <unordered_map>
-#include <readdy/model/Observable.h>
+#include <readdy/model/observables/Observable.h>
 #include <readdy/common/Utils.h>
-#include <readdy/model/Observables.h>
+#include <readdy/model/observables/Observables.h>
 
 namespace readdy {
 namespace model {
 class Kernel;
 
-namespace _internal {
+namespace observables {
 
 class ObservableFactory {
 public:
@@ -39,29 +39,29 @@ public:
                 ObservableFactory::get_dispatcher<R, Args...>::impl(this, stride, std::forward<Args>(args)...));
     }
 
-    virtual HistogramAlongAxisObservable *
+    virtual HistogramAlongAxis *
     createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                   std::vector<std::string> typesToCount, unsigned int axis) const {
         // todo: provide default impl
         throw std::runtime_error("Should be overridden (or todo: provide default impl)");
     }
 
-    virtual NParticlesObservable *
+    virtual NParticles *
     createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
-    virtual ForcesObservable *
+    virtual Forces *
     createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
-    virtual ParticlePositionObservable *
+    virtual ParticlePosition *
     createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
-    virtual RadialDistributionObservable *
+    virtual RadialDistribution *
     createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom, std::string typeCountTo,
                                        double particleDensity) const {
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
@@ -82,36 +82,36 @@ protected:
     };
 
     template<typename... Args>
-    struct get_dispatcher<readdy::model::HistogramAlongAxisObservable, Args...> {
-        static HistogramAlongAxisObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+    struct get_dispatcher<readdy::model::observables::HistogramAlongAxis, Args...> {
+        static HistogramAlongAxis *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
             return self->createAxisHistogramObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
-    struct get_dispatcher<readdy::model::NParticlesObservable, Args...> {
-        static NParticlesObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+    struct get_dispatcher<readdy::model::observables::NParticles, Args...> {
+        static NParticles *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
             return self->createNParticlesObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
-    struct get_dispatcher<readdy::model::ForcesObservable, Args...> {
-        static ForcesObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+    struct get_dispatcher<readdy::model::observables::Forces, Args...> {
+        static Forces *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
             return self->createForcesObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
-    struct get_dispatcher<readdy::model::ParticlePositionObservable, Args...> {
-        static ParticlePositionObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+    struct get_dispatcher<readdy::model::observables::ParticlePosition, Args...> {
+        static ParticlePosition *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
             return self->createParticlePositionObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
-    struct get_dispatcher<readdy::model::RadialDistributionObservable, Args...> {
-        static RadialDistributionObservable *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+    struct get_dispatcher<readdy::model::observables::RadialDistribution, Args...> {
+        static RadialDistribution *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
             return self->createRadialDistributionObservable(stride, std::forward<Args>(args)...);
         }
     };

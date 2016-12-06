@@ -11,7 +11,7 @@
 #ifndef READDY_MAIN_SINGLECPUOBSERVABLES_H
 #define READDY_MAIN_SINGLECPUOBSERVABLES_H
 
-#include <readdy/model/Observables.h>
+#include <readdy/model/observables/Observables.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 
@@ -20,10 +20,10 @@ namespace kernel {
 namespace scpu {
 namespace observables {
 
-class SCPUParticlePosition : public readdy::model::ParticlePositionObservable {
+class SCPUParticlePosition : public readdy::model::observables::ParticlePosition {
 public:
     SCPUParticlePosition(SCPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
-            readdy::model::ParticlePositionObservable(kernel, stride, typesToCount), kernel(kernel) {}
+            readdy::model::observables::ParticlePosition(kernel, stride, typesToCount), kernel(kernel) {}
 
     virtual void evaluate() override {
         result.clear();
@@ -50,14 +50,14 @@ protected:
     SCPUKernel *const kernel;
 };
 
-class SCPUHistogramAlongAxis : public readdy::model::HistogramAlongAxisObservable {
+class SCPUHistogramAlongAxis : public readdy::model::observables::HistogramAlongAxis {
 
 public:
     SCPUHistogramAlongAxis(SCPUKernel *const kernel, unsigned int stride,
                                  const std::vector<double> &binBorders,
                                  const std::vector<std::string> &typesToCount,
                                  unsigned int axis)
-            : readdy::model::HistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount, axis),
+            : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
               kernel(kernel) {
         size = result.size();
     }
@@ -92,10 +92,10 @@ protected:
     size_t size;
 };
 
-class SCPUNParticles : public readdy::model::NParticlesObservable {
+class SCPUNParticles : public readdy::model::observables::NParticles {
 public:
     SCPUNParticles(SCPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
-            readdy::model::NParticlesObservable(kernel, stride, typesToCount),
+            readdy::model::observables::NParticles(kernel, stride, typesToCount),
             singleCPUKernel(kernel) {}
 
     virtual void evaluate() override {
@@ -125,10 +125,10 @@ protected:
     SCPUKernel *const singleCPUKernel;
 };
 
-class SCPUForces : public readdy::model::ForcesObservable {
+class SCPUForces : public readdy::model::observables::Forces {
 public:
     SCPUForces(SCPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
-            readdy::model::ForcesObservable(kernel, stride, typesToCount),
+            readdy::model::observables::Forces(kernel, stride, typesToCount),
             kernel(kernel) {}
 
     virtual ~SCPUForces() {}
@@ -164,11 +164,11 @@ protected:
 };
 
 template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
-class RadialDistributionObservable : public readdy::model::RadialDistributionObservable {
+class RadialDistributionObservable : public readdy::model::observables::RadialDistribution {
 public:
     RadialDistributionObservable(kernel_t *const kernel, unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
                                  std::string typeCountTo, double particleToDensity) :
-            readdy::model::RadialDistributionObservable(kernel, stride, binBorders, typeCountFrom,
+            readdy::model::observables::RadialDistribution(kernel, stride, binBorders, typeCountFrom,
                                                         typeCountTo, particleToDensity), kernel(kernel) {}
 
     virtual void evaluate() override {

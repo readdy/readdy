@@ -21,7 +21,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     m::KernelContext &ctx = kernel->getKernelContext();
     auto &stateModel = kernel->getKernelStateModel();
 
-    auto obs = kernel->createObservable<m::ForcesObservable>(1);
+    auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
     ctx.setDiffusionConstant("A", 1.0);
@@ -56,7 +56,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     auto &stateModel = kernel->getKernelStateModel();
 
     // similar situation as before but now with repulsion between A and B
-    auto obs = kernel->createObservable<m::ForcesObservable>(1);
+    auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
     ctx.setDiffusionConstant("A", 1.0);
     ctx.setDiffusionConstant("B", 1.0);
@@ -169,7 +169,7 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     auto &stateModel = kernel->getKernelStateModel();
 
     // several particles without potentials -> forces must all be zero
-    auto obs = kernel->createObservable<m::ForcesObservable>(1);
+    auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
     ctx.setDiffusionConstant("A", 1.0);
     ctx.setDiffusionConstant("B", 1.0);

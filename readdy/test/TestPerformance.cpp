@@ -74,7 +74,7 @@ void runPerformanceTest(readdy::model::Kernel &kernel, readdy::model::observable
     auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
     auto &&reactionsProgram = kernel.createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
 
-    auto obs = kernel.createObservable<readdy::model::NParticlesObservable>(0);
+    auto obs = kernel.createObservable<readdy::model::observables::NParticles>(0);
     obs->setCallback([](const std::vector<unsigned long> n) {
         readdy::log::console()->debug("have n particles = {}", n[0]);
     });

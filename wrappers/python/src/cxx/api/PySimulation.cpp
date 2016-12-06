@@ -34,21 +34,21 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
 unsigned long
 registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun,
                                      std::vector<std::string> types) {
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::ParticlePositionObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::ParticlePositionObservable>(std::move(pyFun), stride, types);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::ParticlePosition::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::observables::ParticlePosition>(std::move(pyFun), stride, types);
 }
 
 unsigned long
 registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::object callbackFun,
                                       py::array_t<double> &binBorders, std::string typeCountFrom,
                                       std::string typeCountTo, double particleDensity) {
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::RadialDistributionObservable::result_t)>(callbackFun);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::RadialDistribution::result_t)>(callbackFun);
     const auto info = binBorders.request();
     std::vector<double> binBordersVec{};
     binBordersVec.reserve(info.shape[0]);
     const auto data = static_cast<double *>(info.ptr);
     for (auto i = 0; i < info.shape[0]; ++i) binBordersVec.push_back(data[i]);
-    return self.registerObservable<readdy::model::RadialDistributionObservable>(std::move(pyFun), stride, binBordersVec,
+    return self.registerObservable<readdy::model::observables::RadialDistribution>(std::move(pyFun), stride, binBordersVec,
                                                                                 typeCountFrom, typeCountTo,
                                                                                 particleDensity);
 }
@@ -56,8 +56,8 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::
 unsigned long
 registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::object &callbackFun,
                                 std::vector<std::string> types) {
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::CenterOfMassObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::CenterOfMassObservable>(
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::CenterOfMass::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::observables::CenterOfMass>(
             std::move(pyFun), stride, types
     );
 }
@@ -74,22 +74,22 @@ registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, 
     for (auto i = 0; i < sizeBorders; ++i) {
         binBordersVec.push_back(binBordersData[i]);
     }
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::HistogramAlongAxisObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::HistogramAlongAxisObservable>(std::move(pyFun), stride, binBordersVec,
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::HistogramAlongAxis::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::observables::HistogramAlongAxis>(std::move(pyFun), stride, binBordersVec,
                                                                                 types, axis);
 }
 
 unsigned long
 registerObservable_NParticles(sim &self, unsigned int stride, const py::object &callbackFun,
                               std::vector<std::string> types) {
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::NParticlesObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::NParticlesObservable>(std::move(pyFun), stride, types);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::NParticles::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::observables::NParticles>(std::move(pyFun), stride, types);
 }
 
 unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride, py::object callbackFun,
                                                   std::vector<std::string> types) {
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::ForcesObservable::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::ForcesObservable>(std::move(pyFun), stride, types);
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Forces::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::observables::Forces>(std::move(pyFun), stride, types);
 }
 
 // module

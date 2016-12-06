@@ -12,10 +12,11 @@
 #ifndef READDY_MAIN_OBSERVABLEWRAPPER_H
 #define READDY_MAIN_OBSERVABLEWRAPPER_H
 
-#include <readdy/model/Observable.h>
+#include <readdy/model/observables/Observable.h>
 
 namespace readdy {
 namespace model {
+namespace observables {
 
 class ObservableWrapper : public ObservableBase {
 public:
@@ -30,6 +31,7 @@ protected:
     const observables::observable_type observable;
 };
 
+}
 }
 }
 #endif //READDY_MAIN_OBSERVABLEWRAPPER_H

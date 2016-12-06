@@ -41,7 +41,7 @@ public:
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
-    virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 
     unsigned long getNThreads() const;
 

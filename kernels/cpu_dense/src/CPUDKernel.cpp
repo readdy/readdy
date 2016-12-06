@@ -62,7 +62,7 @@ readdy::model::reactions::ReactionFactory &CPUDKernel::getReactionFactory() cons
     return *pimpl->reactionFactory;
 }
 
-readdy::model::_internal::ObservableFactory &CPUDKernel::getObservableFactory() const {
+readdy::model::observables::ObservableFactory &CPUDKernel::getObservableFactory() const {
     return *pimpl->observableFactory;
 }
 

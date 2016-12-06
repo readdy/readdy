@@ -20,29 +20,29 @@ SCPUObservableFactory::SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel *c
         : ObservableFactory(kernel), kernel(kernel) {
 }
 
-readdy::model::HistogramAlongAxisObservable *
+readdy::model::observables::HistogramAlongAxis *
 SCPUObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
                                                           std::vector<std::string> typesToCount,
                                                           unsigned int axis) const {
     return new SCPUHistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
 }
 
-readdy::model::NParticlesObservable *SCPUObservableFactory::createNParticlesObservable(
+readdy::model::observables::NParticles *SCPUObservableFactory::createNParticlesObservable(
         unsigned int stride, std::vector<std::string> typesToCount) const {
     return new SCPUNParticles(kernel, stride, typesToCount);
 }
 
-readdy::model::ForcesObservable *
+readdy::model::observables::Forces *
 SCPUObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
     return new SCPUForces(kernel, stride, typesToCount);
 }
 
-readdy::model::ParticlePositionObservable *
+readdy::model::observables::ParticlePosition *
 SCPUObservableFactory::createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
     return new SCPUParticlePosition(kernel, stride, typesToCount);
 }
 
-readdy::model::RadialDistributionObservable *
+readdy::model::observables::RadialDistribution *
 SCPUObservableFactory::createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
                                                                std::string typeCountTo, double particleToDensity) const {
     return new RadialDistributionObservable<>(kernel, stride, binBorders, typeCountFrom, typeCountTo, particleToDensity);

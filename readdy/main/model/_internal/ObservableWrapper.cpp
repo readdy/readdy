@@ -11,17 +11,17 @@
  */
 
 
-void readdy::model::ObservableWrapper::operator()(observables::time_step_type t) {
+void readdy::model::observables::ObservableWrapper::operator()(observables::time_step_type t) {
     callback(t);
 }
 
-readdy::model::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel,
-                                                    const observables::observable_type &observable,
-                                                    unsigned int stride)
+readdy::model::observables::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel,
+                                                                 const observables::observable_type &observable,
+                                                                 unsigned int stride)
         : ObservableBase(kernel, stride), observable(observable) {
 }
 
-void readdy::model::ObservableWrapper::evaluate() {
+void readdy::model::observables::ObservableWrapper::evaluate() {
     observable(t_current);
 }
 

@@ -43,13 +43,13 @@ public:
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
     virtual readdy::signals::scoped_connection
-    connectObservable(model::ObservableBase *const observable) override;
+    connectObservable(model::observables::ObservableBase *const observable) override;
 
     virtual std::unique_ptr<model::programs::Program> createProgram(const std::string &name) const override;
 
     virtual void evaluateObservables(readdy::model::observables::time_step_type t) override;
 
-    virtual std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
+    virtual std::tuple<std::unique_ptr<readdy::model::observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const model::observables::observable_type &observable, unsigned int stride) override;
 
     virtual std::vector<std::string> getAvailablePrograms() const override;
@@ -60,7 +60,7 @@ public:
 
 
 protected:
-    virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 
     virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
 

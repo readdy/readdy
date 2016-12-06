@@ -25,17 +25,17 @@
 
 namespace readdy {
 namespace model {
+class Kernel;
+
 namespace observables {
 using time_step_type = unsigned long;
 using signal_type = readdy::signals::signal<void(time_step_type)>;
 using observable_type = signal_type::slot_type;
-}
 
 template<typename T>
 struct ObservableName {
 };
 
-class Kernel;
 
 class ObservableBase {
 public:
@@ -110,16 +110,16 @@ protected:
 
 template<typename Res_t, typename Obs1_t, typename Obs2_t>
 class CombinerObservable : public Observable<Res_t> {
-    static_assert(std::is_base_of<readdy::model::ObservableBase, Obs1_t>::value,
+    static_assert(std::is_base_of<ObservableBase, Obs1_t>::value,
                   "Type of Observable 1 was not a subtype of ObservableBase");
-    static_assert(std::is_base_of<readdy::model::ObservableBase, Obs2_t>::value,
+    static_assert(std::is_base_of<ObservableBase, Obs2_t>::value,
                   "Type of Observable 2 was not a subtype of ObservableBase");
 public:
     typedef Obs1_t Observable1_type;
     typedef Obs2_t Observable2_type;
 
     CombinerObservable(Kernel *const kernel, Obs1_t *obs1, Obs2_t *obs2, unsigned int stride = 1)
-            : readdy::model::Observable<Res_t>::Observable(kernel, stride), obs1(obs1), obs2(obs2) {}
+            : Observable<Res_t>::Observable(kernel, stride), obs1(obs1), obs2(obs2) {}
 
     virtual void callback(observables::time_step_type t) override {
         if (obs1->getCurrentTimeStep() != ObservableBase::t_current) obs1->callback(ObservableBase::t_current);
@@ -131,6 +131,8 @@ protected:
     Obs1_t *obs1;
     Obs2_t *obs2;
 };
+
+}
 }
 }
 #endif //READDY_MAIN_OBSERVABLE_H

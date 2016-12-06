@@ -65,13 +65,13 @@ readdy::plugin::_internal::KernelPluginDecorator::getReactionFactory() const {
     return reference->getReactionFactory();
 }
 
-readdy::model::_internal::ObservableFactory &
+readdy::model::observables::ObservableFactory &
 readdy::plugin::_internal::KernelPluginDecorator::getObservableFactory() const {
     return reference->getObservableFactory();
 }
 
 readdy::signals::scoped_connection
-readdy::plugin::_internal::KernelPluginDecorator::connectObservable(readdy::model::ObservableBase *const observable) {
+readdy::plugin::_internal::KernelPluginDecorator::connectObservable(readdy::model::observables::ObservableBase *const observable) {
     return reference->connectObservable(observable);
 }
 
@@ -84,7 +84,7 @@ void readdy::plugin::_internal::KernelPluginDecorator::evaluateObservables(model
     reference->evaluateObservables(t);
 }
 
-std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
+std::tuple<std::unique_ptr<readdy::model::observables::ObservableWrapper>, readdy::signals::scoped_connection>
 readdy::plugin::_internal::KernelPluginDecorator::registerObservable(
         const model::observables::observable_type &observable, unsigned int stride
 ) {

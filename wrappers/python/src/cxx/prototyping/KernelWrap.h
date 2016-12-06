@@ -84,9 +84,9 @@ struct SCPUKernelWrap : public readdy::kernel::scpu::SCPUKernel {
                                "get_reaction_factory", getReactionFactory,);
     }
 
-    virtual model::_internal::ObservableFactory &getObservableFactory() const override {
+    virtual model::observables::ObservableFactory &getObservableFactory() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(model::_internal::ObservableFactory &, readdy::kernel::scpu::SCPUKernel,
+        PYBIND11_OVERLOAD_NAME(model::observables::ObservableFactory &, readdy::kernel::scpu::SCPUKernel,
                                "get_observable_factory", getObservableFactory,);
     }
 };
