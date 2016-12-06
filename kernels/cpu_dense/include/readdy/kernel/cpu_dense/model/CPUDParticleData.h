@@ -22,7 +22,7 @@ namespace kernel {
 namespace cpu_dense {
 namespace model {
 
-class ParticleData {
+class CPUDParticleData {
 public:
 
     using particle_type = readdy::model::Particle;
@@ -46,7 +46,7 @@ public:
 
         bool deactivated; // 60 + 1 = 61 bytes
     private:
-        friend class readdy::kernel::cpu_dense::model::ParticleData;
+        friend class readdy::kernel::cpu_dense::model::CPUDParticleData;
 
         bool padding[3]; // 61 + 3 = 64 bytes
     };
@@ -59,21 +59,21 @@ public:
     using update_t = std::vector<Entry>;
 
     // ctor / dtor
-    ParticleData(const readdy::model::KernelContext*const);
+    CPUDParticleData(const readdy::model::KernelContext*const);
 
-    ParticleData(const readdy::model::KernelContext*const, unsigned int capacity);
+    CPUDParticleData(const readdy::model::KernelContext*const, unsigned int capacity);
 
-    ~ParticleData();
+    ~CPUDParticleData();
 
     // move
-    ParticleData(ParticleData &&rhs) = delete;
+    CPUDParticleData(CPUDParticleData &&rhs) = delete;
 
-    ParticleData &operator=(ParticleData &&rhs) = delete;
+    CPUDParticleData &operator=(CPUDParticleData &&rhs) = delete;
 
     // copy
-    ParticleData(const ParticleData &rhs) = delete;
+    CPUDParticleData(const CPUDParticleData &rhs) = delete;
 
-    ParticleData &operator=(const ParticleData &rhs) = delete;
+    CPUDParticleData &operator=(const CPUDParticleData &rhs) = delete;
 
     iterator begin();
 

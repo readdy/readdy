@@ -16,11 +16,11 @@
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
-class Kernel;
+class CPUDKernel;
 namespace potentials {
-class PotentialFactory : public readdy::model::potentials::PotentialFactory {
+class CPUDPotentialFactory : public readdy::model::potentials::PotentialFactory {
 public:
-    PotentialFactory(Kernel *const kernel);
+    CPUDPotentialFactory(CPUDKernel *const kernel);
 };
 }
 }

@@ -12,7 +12,7 @@
 
 
 #include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu_dense/Kernel.h>
+#include <readdy/kernel/cpu_dense/CPUDKernel.h>
 #include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
 #include "ReactionUtils.h"
 
@@ -22,11 +22,11 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-class GillespieParallel : public readdy::model::programs::reactions::GillespieParallel {
+class CPUDGillespieParallel : public readdy::model::programs::reactions::GillespieParallel {
 public:
-    GillespieParallel(kernel_t const *const kernel);
+    CPUDGillespieParallel(kernel_t const *const kernel);
 
-    ~GillespieParallel();
+    ~CPUDGillespieParallel();
 
     virtual void execute() override;
 

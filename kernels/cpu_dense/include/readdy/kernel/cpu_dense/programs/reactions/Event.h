@@ -11,7 +11,7 @@
 #define READDY_MAIN_REACTIONEVENT_H
 
 #include <spdlog/fmt/ostr.h>
-#include <readdy/kernel/cpu_dense/model/SCPUParticleData.h>
+#include <readdy/kernel/cpu_dense/model/CPUDParticleData.h>
 
 namespace readdy {
 namespace kernel {
@@ -19,7 +19,7 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 struct Event {
-    using index_type = model::ParticleData::index_t;
+    using index_type = model::CPUDParticleData::index_t;
     using reaction_index_type = std::size_t;
     unsigned int nEducts;
     unsigned int nProducts;

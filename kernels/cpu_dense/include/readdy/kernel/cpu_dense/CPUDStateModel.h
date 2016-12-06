@@ -13,22 +13,22 @@
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu_dense/model/ParticleIndexPair.h>
-#include <readdy/kernel/cpu_dense/model/NeighborList.h>
+#include <readdy/kernel/cpu_dense/model/CPUDNeighborList.h>
 #include <readdy/common/thread/Config.h>
-#include <readdy/kernel/cpu_dense/model/SCPUParticleData.h>
+#include <readdy/kernel/cpu_dense/model/CPUDParticleData.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
-class StateModel : public readdy::model::KernelStateModel {
+class CPUDStateModel : public readdy::model::KernelStateModel {
 
 public:
 
-    using data_t = readdy::kernel::cpu_dense::model::ParticleData;
+    using data_t = readdy::kernel::cpu_dense::model::CPUDParticleData;
 
-    StateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
+    CPUDStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
 
-    ~StateModel();
+    ~CPUDStateModel();
 
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
@@ -50,7 +50,7 @@ public:
 
     data_t *const getParticleData() const;
 
-    model::NeighborList *const getNeighborList() const;
+    model::CPUDNeighborList *const getNeighborList() const;
 
     virtual void clearNeighborList() override;
 

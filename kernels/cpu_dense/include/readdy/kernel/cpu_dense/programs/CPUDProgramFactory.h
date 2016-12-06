@@ -11,16 +11,16 @@
 #ifndef READDY_DENSE_CPUPROGRAMFACTORY_H
 #define READDY_DENSE_CPUPROGRAMFACTORY_H
 
-#include <readdy/kernel/cpu_dense/Kernel.h>
+#include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
-class ProgramFactory : public readdy::model::programs::ProgramFactory {
+class CPUDProgramFactory : public readdy::model::programs::ProgramFactory {
 
 public:
-    ProgramFactory(Kernel *kernel);
+    CPUDProgramFactory(CPUDKernel *kernel);
 };
 
 }

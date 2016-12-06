@@ -10,7 +10,7 @@
 #include <readdy/common/numeric.h>
 #include <readdy/common/thread/scoped_thread.h>
 #include <readdy/common/thread/barrier.h>
-#include "readdy/kernel/cpu_dense/model/NeighborList.h"
+#include "readdy/kernel/cpu_dense/model/CPUDNeighborList.h"
 
 namespace readdy {
 namespace kernel {
@@ -18,7 +18,7 @@ namespace cpu_dense {
 namespace model {
 
 
-NeighborList::Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {
+CPUDNeighborList::Neighbor::Neighbor(const index_t idx, const double d2) : idx(idx), d2(d2) {
 }
 
 namespace thd = readdy::util::thread;
@@ -28,12 +28,12 @@ T get_contiguous_index(T i, T j, T k, Dims I, Dims J) {
     return k + j * J + i * I * J;
 };
 
-const static std::vector<NeighborList::neighbor_t> no_neighbors{};
+const static std::vector<CPUDNeighborList::neighbor_t> no_neighbors{};
 
-NeighborList::NeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config)
+CPUDNeighborList::CPUDNeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config)
         : ctx(context), config(config), cells(std::vector<Cell>()), simBoxSize(ctx->getBoxSize()), data(data) {}
 
-void NeighborList::setupCells() {
+void CPUDNeighborList::setupCells() {
     if (cells.empty()) {
         double maxCutoff = 0;
         for (auto &&e : ctx->getAllOrder2RegisteredPotentialTypes()) {
@@ -44,7 +44,7 @@ void NeighborList::setupCells() {
         for (auto &&e : ctx->getAllOrder2Reactions()) {
             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
         }
-        NeighborList::maxCutoff = maxCutoff;
+        CPUDNeighborList::maxCutoff = maxCutoff;
 
         if (maxCutoff > 0) {
             const auto desiredCellWidth = .5 * maxCutoff;
@@ -80,7 +80,7 @@ void NeighborList::setupCells() {
 }
 
 void
-NeighborList::setupNeighboringCells(const signed_cell_index i, const signed_cell_index j, const signed_cell_index k) {
+CPUDNeighborList::setupNeighboringCells(const signed_cell_index i, const signed_cell_index j, const signed_cell_index k) {
     auto me = getCell(i, j, k);
     for (signed_cell_index _i = -2; _i < 3; ++_i) {
         for (signed_cell_index _j = -2; _j < 3; ++_j) {
@@ -94,14 +94,14 @@ NeighborList::setupNeighboringCells(const signed_cell_index i, const signed_cell
     }
 }
 
-void NeighborList::clear() {
+void CPUDNeighborList::clear() {
     cells.clear();
     for (auto &list : neighbor_list) {
         list.clear();
     }
 }
 
-void NeighborList::fillCells() {
+void CPUDNeighborList::fillCells() {
     if (maxCutoff > 0) {
         const auto c2 = maxCutoff * maxCutoff;
         auto d2 = ctx->getDistSquaredFun();
@@ -144,13 +144,13 @@ void NeighborList::fillCells() {
     }
 }
 
-void NeighborList::create() {
+void CPUDNeighborList::create() {
     simBoxSize = ctx->getBoxSize();
     setupCells();
     fillCells();
 }
 
-NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) {
+CPUDNeighborList::Cell *CPUDNeighborList::getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) {
     const auto &periodic = ctx->getPeriodicBoundary();
     if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nCells[0]);
     else if (i < 0 || i >= nCells[0]) return nullptr;
@@ -162,36 +162,36 @@ NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("NeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
+        log::console()->critical("CPUDNeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::runtime_error("tried to get cell index that was too large");
     }
 }
 
-NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_type &pos) {
+CPUDNeighborList::Cell *CPUDNeighborList::getCell(const readdy::model::Particle::pos_type &pos) {
     const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     return getCell(i, j, k);
 }
 
-const std::vector<NeighborList::neighbor_t> &NeighborList::neighbors(NeighborList::particle_index const entry) const {
+const std::vector<CPUDNeighborList::neighbor_t> &CPUDNeighborList::neighbors(CPUDNeighborList::particle_index const entry) const {
     if (maxCutoff > 0) {
         return neighbor_list.at(entry);
     }
     return no_neighbors;
 }
 
-const NeighborList::Cell *const NeighborList::getCell(const readdy::model::Particle::pos_type &pos) const {
+const CPUDNeighborList::Cell *const CPUDNeighborList::getCell(const readdy::model::Particle::pos_type &pos) const {
     const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     return getCell(i, j, k);
 }
 
-const NeighborList::Cell *const NeighborList::getCell(NeighborList::signed_cell_index i,
-                                                      NeighborList::signed_cell_index j,
-                                                      NeighborList::signed_cell_index k) const {
+const CPUDNeighborList::Cell *const CPUDNeighborList::getCell(CPUDNeighborList::signed_cell_index i,
+                                                      CPUDNeighborList::signed_cell_index j,
+                                                      CPUDNeighborList::signed_cell_index k) const {
 
     const auto &periodic = ctx->getPeriodicBoundary();
     if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nCells[0]);
@@ -204,43 +204,43 @@ const NeighborList::Cell *const NeighborList::getCell(NeighborList::signed_cell_
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("NeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
+        log::console()->critical("CPUDNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::out_of_range("tried to access an invalid cell");
     }
 }
 
-const std::vector<NeighborList::neighbor_t> &NeighborList::find_neighbors(particle_index const entry) const {
+const std::vector<CPUDNeighborList::neighbor_t> &CPUDNeighborList::find_neighbors(particle_index const entry) const {
     if (maxCutoff > 0 && entry < neighbor_list.size()) {
         return neighbor_list.at(entry);
     }
     return no_neighbors;
 }
 
-NeighborList::~NeighborList() = default;
+CPUDNeighborList::~CPUDNeighborList() = default;
 
-void NeighborList::Cell::addNeighbor(NeighborList::Cell *cell) {
+void CPUDNeighborList::Cell::addNeighbor(CPUDNeighborList::Cell *cell) {
     if (cell && cell->contiguous_index != contiguous_index
         && (enoughCells || std::find(neighbors.begin(), neighbors.end(), cell) == neighbors.end())) {
         neighbors.push_back(cell);
     }
 }
 
-NeighborList::Cell::Cell(cell_index i, cell_index j, cell_index k,
-                         const std::array<NeighborList::cell_index, 3> &nCells)
+CPUDNeighborList::Cell::Cell(cell_index i, cell_index j, cell_index k,
+                         const std::array<CPUDNeighborList::cell_index, 3> &nCells)
         : contiguous_index(get_contiguous_index(i, j, k, nCells[1], nCells[2])),
           enoughCells(nCells[0] >= 5 && nCells[1] >= 5 && nCells[2] >= 5) {
 }
 
-bool operator==(const NeighborList::Cell &lhs, const NeighborList::Cell &rhs) {
+bool operator==(const CPUDNeighborList::Cell &lhs, const CPUDNeighborList::Cell &rhs) {
     return lhs.contiguous_index == rhs.contiguous_index;
 }
 
-bool operator!=(const NeighborList::Cell &lhs, const NeighborList::Cell &rhs) {
+bool operator!=(const CPUDNeighborList::Cell &lhs, const CPUDNeighborList::Cell &rhs) {
     return !(lhs == rhs);
 }
 
-void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun &d2) {
+void CPUDNeighborList::setUpCell(CPUDNeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun &d2) {
     for (const auto &pI : cell.particleIndices) {
         auto &entry_i = data.entry_at(pI);
         auto &neighbors_i = neighbor_list.at(pI);
@@ -265,7 +265,7 @@ void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquare
     }
 }
 
-int NeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) const {
+int CPUDNeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) const {
     signed_cell_index i = static_cast<const signed_cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     signed_cell_index j = static_cast<const signed_cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     signed_cell_index k = static_cast<const signed_cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
@@ -279,31 +279,31 @@ int NeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) con
     return get_contiguous_index(i, j, k, nCells[1], nCells[2]);
 }
 
-const double NeighborList::getMaxCutoff() const {
+const double CPUDNeighborList::getMaxCutoff() const {
     return maxCutoff;
 }
 
-NeighborList::iterator NeighborList::begin() {
+CPUDNeighborList::iterator CPUDNeighborList::begin() {
         return neighbor_list.begin();
 }
 
-NeighborList::iterator NeighborList::end() {
+CPUDNeighborList::iterator CPUDNeighborList::end() {
     return neighbor_list.end();
 }
 
-NeighborList::const_iterator NeighborList::cbegin() const {
+CPUDNeighborList::const_iterator CPUDNeighborList::cbegin() const {
     return neighbor_list.cbegin();
 }
 
-NeighborList::const_iterator NeighborList::cend() const {
+CPUDNeighborList::const_iterator CPUDNeighborList::cend() const {
     return neighbor_list.cend();
 }
 
-NeighborList::const_iterator NeighborList::begin() const {
+CPUDNeighborList::const_iterator CPUDNeighborList::begin() const {
     return neighbor_list.cbegin();
 }
 
-NeighborList::const_iterator NeighborList::end() const {
+CPUDNeighborList::const_iterator CPUDNeighborList::end() const {
     return neighbor_list.cend();
 }
 

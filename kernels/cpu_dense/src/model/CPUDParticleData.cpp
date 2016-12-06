@@ -10,67 +10,67 @@
 #include <algorithm>
 #include <readdy/common/logging.h>
 
-#include "readdy/kernel/cpu_dense/model/SCPUParticleData.h"
+#include "readdy/kernel/cpu_dense/model/CPUDParticleData.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace model {
 
-ParticleData::ParticleData(const readdy::model::KernelContext *const ctx) : ParticleData(ctx, 0) {}
+CPUDParticleData::CPUDParticleData(const readdy::model::KernelContext *const ctx) : CPUDParticleData(ctx, 0) {}
 
-ParticleData::ParticleData(const readdy::model::KernelContext *const ctx, unsigned int capacity)
+CPUDParticleData::CPUDParticleData(const readdy::model::KernelContext *const ctx, unsigned int capacity)
         : entries{}, n_marked(0), n_deactivated(0), deactivated_index(0), ctx(ctx) {
     entries.reserve(capacity);
 }
 
-ParticleData::iterator ParticleData::begin() {
+CPUDParticleData::iterator CPUDParticleData::begin() {
     return entries.begin();
 }
 
-ParticleData::const_iterator ParticleData::begin() const {
+CPUDParticleData::const_iterator CPUDParticleData::begin() const {
     return cbegin();
 }
 
-ParticleData::const_iterator ParticleData::cbegin() const {
+CPUDParticleData::const_iterator CPUDParticleData::cbegin() const {
     return entries.cbegin();
 }
 
-ParticleData::iterator ParticleData::end() {
+CPUDParticleData::iterator CPUDParticleData::end() {
     return entries.begin() + deactivated_index;
 }
 
-ParticleData::const_iterator ParticleData::end() const {
+CPUDParticleData::const_iterator CPUDParticleData::end() const {
     return cend();
 }
 
-ParticleData::const_iterator ParticleData::cend() const {
+CPUDParticleData::const_iterator CPUDParticleData::cend() const {
     return entries.cbegin() + deactivated_index;
 }
 
-std::size_t ParticleData::size() const {
+std::size_t CPUDParticleData::size() const {
     const auto s = n_marked.load();
     return s <= deactivated_index ? deactivated_index - s : 0;
 }
 
-std::size_t ParticleData::max_size() const {
+std::size_t CPUDParticleData::max_size() const {
     return entries.max_size();
 }
 
-bool ParticleData::empty() const {
+bool CPUDParticleData::empty() const {
     return size() == 0;
 }
 
-void ParticleData::clear() {
+void CPUDParticleData::clear() {
     deactivated_index = 0;
     n_deactivated = entries.size();
 }
 
-void ParticleData::addParticle(const ParticleData::particle_type &particle) {
+void CPUDParticleData::addParticle(const CPUDParticleData::particle_type &particle) {
     addParticles({particle});
 }
 
-void ParticleData::addParticles(const std::vector<ParticleData::particle_type> &particles) {
+void CPUDParticleData::addParticles(const std::vector<CPUDParticleData::particle_type> &particles) {
     auto added = particles.cbegin();
     auto it = entries.begin() + deactivated_index;
     while (added != particles.cend()) {
@@ -89,7 +89,7 @@ void ParticleData::addParticles(const std::vector<ParticleData::particle_type> &
     }
 }
 
-void ParticleData::removeParticle(const ParticleData::particle_type &particle) {
+void CPUDParticleData::removeParticle(const CPUDParticleData::particle_type &particle) {
     auto find_it = std::find_if(entries.begin(), entries.end(), [&](const Entry &e) {
         return !e.deactivated && e.id == particle.getId();
     });
@@ -100,7 +100,7 @@ void ParticleData::removeParticle(const ParticleData::particle_type &particle) {
     }
 }
 
-void ParticleData::removeParticle(const std::size_t index) {
+void CPUDParticleData::removeParticle(const std::size_t index) {
     entries.at(index).deactivated = true;
 
     std::swap(entries[index], entries[deactivated_index - 1]);
@@ -110,19 +110,19 @@ void ParticleData::removeParticle(const std::size_t index) {
     --deactivated_index;
 }
 
-bool ParticleData::isMarkedForDeactivation(const std::size_t index) {
+bool CPUDParticleData::isMarkedForDeactivation(const std::size_t index) {
     return entries.at(index).deactivated;
 }
 
-std::size_t ParticleData::getDeactivatedIndex() const {
+std::size_t CPUDParticleData::getDeactivatedIndex() const {
     return deactivated_index;
 }
 
-std::size_t ParticleData::getNDeactivated() const {
+std::size_t CPUDParticleData::getNDeactivated() const {
     return n_deactivated;
 }
 
-void ParticleData::deactivateMarked() {
+void CPUDParticleData::deactivateMarked() {
     if (n_marked == 0) return;
     // sanity check: the deactivated_index is pointing to the
     // first (real) deactivated particle, i.e., marks the end of the
@@ -168,23 +168,23 @@ void ParticleData::deactivateMarked() {
     n_marked = 0;
 }
 
-ParticleData::Entry &ParticleData::entry_at(const ParticleData::index_t idx) {
+CPUDParticleData::Entry &CPUDParticleData::entry_at(const CPUDParticleData::index_t idx) {
     return entries.at(idx);
 }
 
-const ParticleData::Entry &ParticleData::entry_at(const ParticleData::index_t idx) const {
+const CPUDParticleData::Entry &CPUDParticleData::entry_at(const CPUDParticleData::index_t idx) const {
     return entries.at(idx);
 }
 
-const ParticleData::Entry &ParticleData::centry_at(const ParticleData::index_t idx) const {
+const CPUDParticleData::Entry &CPUDParticleData::centry_at(const CPUDParticleData::index_t idx) const {
     return entries.at(idx);
 }
 
-readdy::model::Particle ParticleData::toParticle(const ParticleData::Entry &e) const {
+readdy::model::Particle CPUDParticleData::toParticle(const CPUDParticleData::Entry &e) const {
     return {e.pos, e.type, e.id};
 }
 
-void ParticleData::update(ParticleData::update_t &&updates) {
+void CPUDParticleData::update(CPUDParticleData::update_t &&updates) {
     const auto& fixPos = ctx->getFixPositionFun();
     auto added = updates.begin();
     auto it = entries.begin() + deactivated_index;
@@ -205,21 +205,21 @@ void ParticleData::update(ParticleData::update_t &&updates) {
     }
 }
 
-void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
+void CPUDParticleData::displace(CPUDParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
     entry.pos += delta;
     ctx->getFixPositionFun()(entry.pos);
 }
 
-void ParticleData::deactivate(ParticleData::Entry &e) {
+void CPUDParticleData::deactivate(CPUDParticleData::Entry &e) {
     e.deactivated = true;
     ++n_marked;
 }
 
-void ParticleData::deactivate(ParticleData::index_t idx) {
+void CPUDParticleData::deactivate(CPUDParticleData::index_t idx) {
     deactivate(entry_at(idx));
 }
 
-ParticleData::~ParticleData() = default;
+CPUDParticleData::~CPUDParticleData() = default;
 
 }
 }

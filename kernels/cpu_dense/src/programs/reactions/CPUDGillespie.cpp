@@ -7,7 +7,7 @@
  * @date 23.11.16
  */
 
-#include <readdy/kernel/cpu_dense/programs/reactions/Gillespie.h>
+#include <readdy/kernel/cpu_dense/programs/reactions/CPUDGillespie.h>
 
 
 namespace readdy {
@@ -16,9 +16,9 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-Gillespie::Gillespie(const Kernel *const kernel) : kernel(kernel) {}
+CPUDGillespie::CPUDGillespie(const CPUDKernel *const kernel) : kernel(kernel) {}
 
-void Gillespie::execute() {
+void CPUDGillespie::execute() {
     const auto &ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
     const auto &dist = ctx.getDistSquaredFun();

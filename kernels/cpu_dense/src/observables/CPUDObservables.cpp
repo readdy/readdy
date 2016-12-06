@@ -12,8 +12,8 @@
 
 #include <readdy/common/thread/scoped_thread.h>
 
-#include <readdy/kernel/cpu_dense/observables/Observables.h>
-#include <readdy/kernel/cpu_dense/Kernel.h>
+#include <readdy/kernel/cpu_dense/observables/CPUDObservables.h>
+#include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {
 namespace kernel {
@@ -22,11 +22,11 @@ namespace observables {
 
 namespace thd = readdy::util::thread;
 
-ParticlePosition::ParticlePosition(Kernel *const kernel, unsigned int stride,
+CPUDParticlePosition::CPUDParticlePosition(CPUDKernel *const kernel, unsigned int stride,
                                    const std::vector<std::string> &typesToCount) :
         readdy::model::ParticlePositionObservable(kernel, stride, typesToCount), kernel(kernel) {}
 
-void ParticlePosition::evaluate() {
+void CPUDParticlePosition::evaluate() {
     result.clear();
     const auto &pd = kernel->getKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
@@ -40,7 +40,7 @@ void ParticlePosition::evaluate() {
     }
 }
 
-HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride,
+CPUDHistogramAlongAxis::CPUDHistogramAlongAxis(CPUDKernel *const kernel, unsigned int stride,
                                        const std::vector<double> &binBorders,
                                        const std::vector<std::string> &typesToCount, unsigned int axis)
         : readdy::model::HistogramAlongAxisObservable(kernel, stride, binBorders, typesToCount, axis),
@@ -48,8 +48,8 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
     size = result.size();
 }
 
-void HistogramAlongAxis::evaluate() {
-    using Iter = readdy::kernel::cpu_dense::model::ParticleData::entries_t::const_iterator;
+void CPUDHistogramAlongAxis::evaluate() {
+    using Iter = readdy::kernel::cpu_dense::model::CPUDParticleData::entries_t::const_iterator;
 
     std::fill(result.begin(), result.end(), 0);
 
@@ -109,11 +109,11 @@ void HistogramAlongAxis::evaluate() {
 }
 
 
-NParticles::NParticles(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
+CPUDNParticles::CPUDNParticles(CPUDKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : readdy::model::NParticlesObservable(kernel, stride, typesToCount),
           kernel(kernel) {}
 
-void NParticles::evaluate() {
+void CPUDNParticles::evaluate() {
     std::vector<unsigned long> resultVec = {};
     if (typesToCount.empty()) {
         resultVec.push_back(kernel->getKernelStateModel().getParticleData()->size());
@@ -130,11 +130,11 @@ void NParticles::evaluate() {
     result = resultVec;
 }
 
-Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
+CPUDForces::CPUDForces(CPUDKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
         readdy::model::ForcesObservable(kernel, stride, typesToCount),
         kernel(kernel) {}
 
-void Forces::evaluate() {
+void CPUDForces::evaluate() {
     result.clear();
     const auto &pd = kernel->getKernelStateModel().getParticleData();
     if (typesToCount.empty()) {

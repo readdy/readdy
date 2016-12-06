@@ -11,7 +11,7 @@
 
 #include <readdy/common/thread/scoped_thread.h>
 
-#include <readdy/kernel/cpu_dense/programs/reactions/UncontrolledApproximation.h>
+#include <readdy/kernel/cpu_dense/programs/reactions/CPUDUncontrolledApproximation.h>
 #include <readdy/kernel/cpu_dense/programs/reactions/Event.h>
 #include <readdy/kernel/cpu_dense/programs/reactions/ReactionUtils.h>
 
@@ -24,7 +24,7 @@ namespace reactions {
 namespace thd = readdy::util::thread;
 
 using event_t = Event;
-using neighbor_list_t = model::NeighborList;
+using neighbor_list_t = model::CPUDNeighborList;
 using data_t = neighbor_list_t::data_t;
 using data_iter_t = data_t::const_iterator;
 using neighbor_list_iter_t = neighbor_list_t::const_iterator;
@@ -33,12 +33,12 @@ using entry_type = data_t::Entry;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-UncontrolledApproximation::UncontrolledApproximation(const Kernel *const kernel)
+CPUDUncontrolledApproximation::CPUDUncontrolledApproximation(const CPUDKernel *const kernel)
         : kernel(kernel) {
 
 }
 
-void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const Kernel *const kernel,
+void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const CPUDKernel *const kernel,
                 bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getKernelStateModel().getParticleData();
@@ -91,7 +91,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
     events.set_value(std::move(eventsUpdate));
 }
 
-void UncontrolledApproximation::execute() {
+void CPUDUncontrolledApproximation::execute() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     const auto &dt = ctx.getTimeStep();

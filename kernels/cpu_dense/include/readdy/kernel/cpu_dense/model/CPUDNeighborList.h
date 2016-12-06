@@ -18,22 +18,22 @@
 #include <readdy/kernel/cpu_dense/model/ParticleIndexPair.h>
 #include <readdy/common/thread/Config.h>
 
-#include "SCPUParticleData.h"
+#include "CPUDParticleData.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace model {
 
-class NeighborList {
+class CPUDNeighborList {
 public:
     class Cell;
     class Neighbor;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
-    using particle_index = ParticleData::index_t;
+    using particle_index = CPUDParticleData::index_t;
     using neighbor_t = Neighbor;
-    using data_t = readdy::kernel::cpu_dense::model::ParticleData;
+    using data_t = readdy::kernel::cpu_dense::model::CPUDParticleData;
     using ctx_t = readdy::model::KernelContext;
     using container_t = std::vector<std::vector<neighbor_t>>;
     using data_iter_t = decltype(std::declval<data_t>().begin());
@@ -75,9 +75,9 @@ public:
         friend bool operator!=(const Cell &lhs, const Cell &rhs);
     };
 
-    NeighborList(const ctx_t *const, data_t &, readdy::util::thread::Config const *const);
+    CPUDNeighborList(const ctx_t *const, data_t &, readdy::util::thread::Config const *const);
 
-    virtual ~NeighborList();
+    virtual ~CPUDNeighborList();
 
     virtual void setupCells();
 
@@ -123,7 +123,7 @@ protected:
 
     const Cell * const getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) const;
 
-    void setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
+    void setUpCell(CPUDNeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
 
     data_t& data;
 };

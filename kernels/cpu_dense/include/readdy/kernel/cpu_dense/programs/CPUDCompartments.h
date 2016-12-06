@@ -9,19 +9,19 @@
 #define READDY_DENSE_COMPARTMENTS_H
 
 #include <readdy/kernel/singlecpu/programs/SCPUCompartments.h>
-#include <readdy/kernel/cpu_dense/Kernel.h>
+#include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
 
-class Compartments : public readdy::model::programs::Compartments {
+class CPUDCompartments : public readdy::model::programs::Compartments {
 public:
     using compartmentIdx_t = size_t;
     using particleType_t = unsigned int;
 
-    Compartments(Kernel const *const kernel);
+    CPUDCompartments(CPUDKernel const *const kernel);
 
     virtual void execute() override;
 
@@ -32,7 +32,7 @@ public:
     virtual void registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to);
 
 protected:
-    Kernel const *const kernel;
+    CPUDKernel const *const kernel;
     std::vector<std::function<bool(readdy::model::Vec3)>> compartments;
     std::unordered_map<compartmentIdx_t, std::unordered_map<particleType_t, particleType_t>> conversions;
 };

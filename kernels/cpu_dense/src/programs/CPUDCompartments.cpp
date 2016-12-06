@@ -8,16 +8,16 @@
  */
 
 
-#include <readdy/kernel/cpu_dense/programs/Compartments.h>
+#include <readdy/kernel/cpu_dense/programs/CPUDCompartments.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
 
-Compartments::Compartments(const Kernel *const kernel) : kernel(kernel) {}
+CPUDCompartments::CPUDCompartments(const CPUDKernel *const kernel) : kernel(kernel) {}
 
-void Compartments::execute() {
+void CPUDCompartments::execute() {
     const auto &ctx = kernel->getKernelContext();
     long long idx = 0;
     for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
@@ -32,11 +32,11 @@ void Compartments::execute() {
     }
 }
 
-void Compartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
+void CPUDCompartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
     compartments.push_back(std::move(fun));
 }
 
-void Compartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
+void CPUDCompartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
     if (compartmentIdx >= compartments.size()) {
         throw std::runtime_error("Given compartment does not exist. Register it first.");
     }
@@ -46,7 +46,7 @@ void Compartments::registerConversion(compartmentIdx_t compartmentIdx, particleT
     conversions[compartmentIdx].emplace(from, to);
 }
 
-void Compartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
+void CPUDCompartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
     // Since this program is not part of the default readdy functionality it shall not be able to
     // create particleTypes, i.e. if 'from' or 'to' do not exist the conversion cannot be registered
     const auto typeMapping = kernel->getKernelContext().getTypeMapping();

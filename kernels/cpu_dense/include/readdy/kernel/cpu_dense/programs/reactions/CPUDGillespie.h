@@ -10,7 +10,7 @@
 #ifndef READDY_DENSE_GILLESPIE_H
 #define READDY_DENSE_GILLESPIE_H
 
-#include <readdy/kernel/cpu_dense/Kernel.h>
+#include <readdy/kernel/cpu_dense/CPUDKernel.h>
 #include <readdy/common/range.h>
 #include "ReactionUtils.h"
 
@@ -20,18 +20,18 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-class Gillespie : public readdy::model::programs::reactions::Gillespie {
+class CPUDGillespie : public readdy::model::programs::reactions::Gillespie {
     using event_t = Event;
     using reaction_idx_t = event_t::index_type;
 
 public:
 
-    Gillespie(Kernel const *const kernel);
+    CPUDGillespie(CPUDKernel const *const kernel);
 
     virtual void execute() override;
 
 protected:
-    Kernel const *const kernel;
+    CPUDKernel const *const kernel;
 };
 }
 }

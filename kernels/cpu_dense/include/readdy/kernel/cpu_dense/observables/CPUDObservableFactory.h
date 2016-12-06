@@ -16,12 +16,12 @@
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
-class Kernel;
+class CPUDKernel;
 namespace observables {
-class ObservableFactory : public readdy::model::_internal::ObservableFactory {
+class CPUDObservableFactory : public readdy::model::_internal::ObservableFactory {
 
 public:
-    ObservableFactory(Kernel *const kernel);
+    CPUDObservableFactory(CPUDKernel *const kernel);
 
     virtual readdy::model::NParticlesObservable *
     createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
@@ -38,7 +38,7 @@ public:
     createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
 private:
-    Kernel *const kernel;
+    CPUDKernel *const kernel;
 };
 }
 }

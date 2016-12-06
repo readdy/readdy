@@ -7,8 +7,8 @@
  * @date 23.11.16
  */
 
-#include <readdy/kernel/cpu_dense/potentials/PotentialFactory.h>
-#include <readdy/kernel/cpu_dense/Kernel.h>
+#include <readdy/kernel/cpu_dense/potentials/CPUDPotentialFactory.h>
+#include <readdy/kernel/cpu_dense/CPUDKernel.h>
 #include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder1.h>
 #include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder2.h>
 
@@ -16,7 +16,7 @@ namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace potentials {
-PotentialFactory::PotentialFactory(Kernel *const kernel) {
+CPUDPotentialFactory::CPUDPotentialFactory(CPUDKernel *const kernel) {
     namespace p = readdy::model::potentials;
     namespace singlecpu_pot = readdy::kernel::scpu::potentials;
     factory[p::getPotentialName<p::CubePotential>()] = [kernel] {

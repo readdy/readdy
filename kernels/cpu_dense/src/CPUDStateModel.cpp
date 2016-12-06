@@ -8,7 +8,7 @@
  */
 
 #include <future>
-#include <readdy/kernel/cpu_dense/StateModel.h>
+#include <readdy/kernel/cpu_dense/CPUDStateModel.h>
 #include <readdy/common/thread/scoped_thread.h>
 
 namespace readdy {
@@ -17,13 +17,13 @@ namespace cpu_dense {
 
 namespace thd = readdy::util::thread;
 
-using entries_it = StateModel::data_t::entries_t::iterator;
-using neighbors_it = decltype(std::declval<readdy::kernel::cpu_dense::model::NeighborList>().cbegin());
+using entries_it = CPUDStateModel::data_t::entries_t::iterator;
+using neighbors_it = decltype(std::declval<readdy::kernel::cpu_dense::model::CPUDNeighborList>().cbegin());
 using pot1Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder1Potentials());
 using pot2Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder2Potentials());
 
 void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighbors_it,
-                           std::promise<double> energyPromise, const StateModel::data_t &data,
+                           std::promise<double> energyPromise, const CPUDStateModel::data_t &data,
                            pot1Map pot1, pot2Map pot2, bool secondOrder) {
     double energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it, ++neighbors_it) {
@@ -67,29 +67,29 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
     energyPromise.set_value(energyUpdate);
 }
 
-struct StateModel::Impl {
+struct CPUDStateModel::Impl {
     readdy::model::KernelContext *context;
-    std::unique_ptr<readdy::kernel::cpu_dense::model::NeighborList> neighborList;
+    std::unique_ptr<readdy::kernel::cpu_dense::model::CPUDNeighborList> neighborList;
     double currentEnergy = 0;
 
-    const model::ParticleData &cdata() const {
+    const model::CPUDParticleData &cdata() const {
         return *particleData;
     }
 
-    model::ParticleData &data() {
+    model::CPUDParticleData &data() {
         return *particleData;
     }
 
     Impl(readdy::model::KernelContext *context) {
-        particleData = std::make_unique<StateModel::data_t>(context);
+        particleData = std::make_unique<CPUDStateModel::data_t>(context);
         this->context = context;
     }
 
 private:
-    std::unique_ptr<readdy::kernel::cpu_dense::model::ParticleData> particleData;
+    std::unique_ptr<readdy::kernel::cpu_dense::model::CPUDParticleData> particleData;
 };
 
-void StateModel::calculateForces() {
+void CPUDStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
     const auto &particleData = pimpl->cdata();
     const auto potOrder1 = pimpl->context->getAllOrder1Potentials();
@@ -141,7 +141,7 @@ void StateModel::calculateForces() {
     pimpl->currentEnergy /= 2.0;
 }
 
-const std::vector<readdy::model::Vec3> StateModel::getParticlePositions() const {
+const std::vector<readdy::model::Vec3> CPUDStateModel::getParticlePositions() const {
     const auto &data = pimpl->cdata();
     std::vector<readdy::model::Vec3> target{};
     target.reserve(data.size());
@@ -151,7 +151,7 @@ const std::vector<readdy::model::Vec3> StateModel::getParticlePositions() const 
     return target;
 }
 
-const std::vector<readdy::model::Particle> StateModel::getParticles() const {
+const std::vector<readdy::model::Particle> CPUDStateModel::getParticles() const {
     const auto &data = pimpl->cdata();
     std::vector<readdy::model::Particle> result;
     result.reserve(data.size());
@@ -161,48 +161,48 @@ const std::vector<readdy::model::Particle> StateModel::getParticles() const {
     return result;
 }
 
-void StateModel::updateNeighborList() {
+void CPUDStateModel::updateNeighborList() {
     pimpl->neighborList->create();
 }
 
-void StateModel::addParticle(const readdy::model::Particle &p) {
+void CPUDStateModel::addParticle(const readdy::model::Particle &p) {
     pimpl->data().addParticle(p);
 }
 
-void StateModel::addParticles(const std::vector<readdy::model::Particle> &p) {
+void CPUDStateModel::addParticles(const std::vector<readdy::model::Particle> &p) {
     pimpl->data().addParticles(p);
 }
 
-void StateModel::removeParticle(const readdy::model::Particle &p) {
+void CPUDStateModel::removeParticle(const readdy::model::Particle &p) {
     pimpl->data().removeParticle(p);
 }
 
-double StateModel::getEnergy() const {
+double CPUDStateModel::getEnergy() const {
     return pimpl->currentEnergy;
 }
 
-StateModel::StateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config)
+CPUDStateModel::CPUDStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config)
         : pimpl(std::make_unique<Impl>(context)), config(config) {
-    pimpl->neighborList = std::make_unique<model::NeighborList>(context, *getParticleData(), config);
+    pimpl->neighborList = std::make_unique<model::CPUDNeighborList>(context, *getParticleData(), config);
 }
 
-StateModel::data_t *const StateModel::getParticleData() const {
+CPUDStateModel::data_t *const CPUDStateModel::getParticleData() const {
     return &pimpl->data();
 }
 
-model::NeighborList *const StateModel::getNeighborList() const {
+model::CPUDNeighborList *const CPUDStateModel::getNeighborList() const {
     return pimpl->neighborList.get();
 }
 
-void StateModel::clearNeighborList() {
+void CPUDStateModel::clearNeighborList() {
     pimpl->neighborList->clear();
 }
 
-void StateModel::removeAllParticles() {
+void CPUDStateModel::removeAllParticles() {
     pimpl->data().clear();
 }
 
-StateModel::~StateModel() = default;
+CPUDStateModel::~CPUDStateModel() = default;
 
 
 }

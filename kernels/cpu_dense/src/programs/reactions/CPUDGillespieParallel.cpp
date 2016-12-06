@@ -13,7 +13,7 @@
 
 #include <readdy/common/thread/scoped_thread.h>
 
-#include <readdy/kernel/cpu_dense/programs/reactions/GillespieParallel.h>
+#include <readdy/kernel/cpu_dense/programs/reactions/CPUDGillespieParallel.h>
 
 using rdy_particle_t = readdy::model::Particle;
 
@@ -26,7 +26,7 @@ namespace reactions {
 namespace thd = readdy::util::thread;
 
 
-long GillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
+long CPUDGillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
     if (shellWidth > 0) {
         const auto mindist = std::min(
                 std::abs(pos[longestAxis] - leftBoundary),
@@ -38,7 +38,7 @@ long GillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
     }
 }
 
-GillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex,
+CPUDGillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex,
                                         double maxReactionRadius,
                                         unsigned int longestAxis)
         : id(id), lowerLeftVertex(lowerLeftVertex), upperRightVertex(upperRightVertex), longestAxis(longestAxis) {
@@ -52,11 +52,11 @@ GillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVertex, 
     particleIndices.resize(n_shells);
 }
 
-bool GillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
+bool CPUDGillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
     return particle[longestAxis] >= leftBoundary && particle[longestAxis] < rightBoundary;
 }
 
-void GillespieParallel::execute() {
+void CPUDGillespieParallel::execute() {
     {
         setupBoxes();
     }
@@ -68,9 +68,9 @@ void GillespieParallel::execute() {
     }
 }
 
-GillespieParallel::GillespieParallel(const kernel_t *const kernel) : kernel(kernel), boxes({}) {}
+CPUDGillespieParallel::CPUDGillespieParallel(const kernel_t *const kernel) : kernel(kernel), boxes({}) {}
 
-void GillespieParallel::setupBoxes() {
+void CPUDGillespieParallel::setupBoxes() {
     if (boxes.empty()) {
         double maxReactionRadius = 0.0;
         for (auto &&e : kernel->getKernelContext().getAllOrder2Reactions()) {
@@ -121,15 +121,15 @@ void GillespieParallel::setupBoxes() {
             upperRight[longestAxis] += boxWidth;
         }
 
-        GillespieParallel::maxReactionRadius = maxReactionRadius;
-        GillespieParallel::longestAxis = longestAxis;
-        GillespieParallel::otherAxis1 = otherAxis1;
-        GillespieParallel::otherAxis2 = otherAxis2;
-        GillespieParallel::boxWidth = boxWidth;
+        CPUDGillespieParallel::maxReactionRadius = maxReactionRadius;
+        CPUDGillespieParallel::longestAxis = longestAxis;
+        CPUDGillespieParallel::otherAxis1 = otherAxis1;
+        CPUDGillespieParallel::otherAxis2 = otherAxis2;
+        CPUDGillespieParallel::boxWidth = boxWidth;
     }
 }
 
-void GillespieParallel::fillBoxes() {
+void CPUDGillespieParallel::fillBoxes() {
     std::for_each(boxes.begin(), boxes.end(), [](SlicedBox &box) { box.particleIndices.clear(); });
     const auto particleData = kernel->getKernelStateModel().getParticleData();
     const auto simBoxSize = kernel->getKernelContext().getBoxSize();
@@ -147,12 +147,12 @@ void GillespieParallel::fillBoxes() {
     }
 }
 
-void GillespieParallel::clear() {
+void CPUDGillespieParallel::clear() {
     maxReactionRadius = 0;
     boxes.clear();
 }
 
-void GillespieParallel::handleBoxReactions() {
+void CPUDGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<data_t::index_t>>;
     using promise_new_particles_t = std::promise<data_t::update_t>;
 
@@ -238,7 +238,7 @@ void GillespieParallel::handleBoxReactions() {
 
 }
 
-void GillespieParallel::findProblematicParticles(
+void CPUDGillespieParallel::findProblematicParticles(
         data_t::index_t index, const SlicedBox &box, ctx_t ctx,
         const data_t &data, nl_t nl, std::set<data_t::index_t> &problematic,
         const readdy::model::KernelContext::dist_squared_fun& d2
@@ -320,31 +320,31 @@ void GillespieParallel::findProblematicParticles(
 
 }
 
-double GillespieParallel::getMaxReactionRadius() const {
+double CPUDGillespieParallel::getMaxReactionRadius() const {
     return maxReactionRadius;
 }
 
-double GillespieParallel::getBoxWidth() const {
+double CPUDGillespieParallel::getBoxWidth() const {
     return boxWidth;
 }
 
-unsigned int GillespieParallel::getLongestAxis() const {
+unsigned int CPUDGillespieParallel::getLongestAxis() const {
     return longestAxis;
 }
 
-unsigned int GillespieParallel::getOtherAxis1() const {
+unsigned int CPUDGillespieParallel::getOtherAxis1() const {
     return otherAxis1;
 }
 
-unsigned int GillespieParallel::getOtherAxis2() const {
+unsigned int CPUDGillespieParallel::getOtherAxis2() const {
     return otherAxis2;
 }
 
-void GillespieParallel::setApproximateRate(bool approximateRate) {
-    GillespieParallel::approximateRate = approximateRate;
+void CPUDGillespieParallel::setApproximateRate(bool approximateRate) {
+    CPUDGillespieParallel::approximateRate = approximateRate;
 }
 
-GillespieParallel::~GillespieParallel() = default;
+CPUDGillespieParallel::~CPUDGillespieParallel() = default;
 }
 
 }
