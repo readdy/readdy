@@ -15,7 +15,7 @@
 #include <readdy/kernel/cpu_dense/model/ParticleIndexPair.h>
 #include <readdy/kernel/cpu_dense/model/NeighborList.h>
 #include <readdy/common/thread/Config.h>
-#include <readdy/kernel/cpu_dense/model/ParticleData.h>
+#include <readdy/kernel/cpu_dense/model/SCPUParticleData.h>
 
 namespace readdy {
 namespace kernel {

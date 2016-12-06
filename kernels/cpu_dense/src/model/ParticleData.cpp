@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <readdy/common/logging.h>
 
-#include "readdy/kernel/cpu_dense/model/ParticleData.h"
+#include "readdy/kernel/cpu_dense/model/SCPUParticleData.h"
 
 namespace readdy {
 namespace kernel {

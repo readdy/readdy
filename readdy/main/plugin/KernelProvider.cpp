@@ -9,7 +9,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/plugin/_internal/KernelPluginDecorator.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace utl = readdy::util;
 namespace fs = utl::fs;
@@ -31,8 +31,8 @@ KernelProvider::KernelProvider() {
         log::console()->warn("initialized default console logger because there was none");
     }
     log::console()->debug("current path is {}", path);
-    add(readdy::kernel::singlecpu::SingleCPUKernel::name, [] {
-        return new readdy::kernel::singlecpu::SingleCPUKernel();
+    add(readdy::kernel::scpu::SCPUKernel::name, [] {
+        return new readdy::kernel::scpu::SCPUKernel();
     });
 }
 

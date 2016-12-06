@@ -18,7 +18,7 @@
 #include <readdy/kernel/cpu_dense/model/ParticleIndexPair.h>
 #include <readdy/common/thread/Config.h>
 
-#include "ParticleData.h"
+#include "SCPUParticleData.h"
 
 namespace readdy {
 namespace kernel {

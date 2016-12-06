@@ -8,7 +8,7 @@
 #ifndef READDY_DENSE_COMPARTMENTS_H
 #define READDY_DENSE_COMPARTMENTS_H
 
-#include <readdy/kernel/singlecpu/programs/Compartments.h>
+#include <readdy/kernel/singlecpu/programs/SCPUCompartments.h>
 #include <readdy/kernel/cpu_dense/Kernel.h>
 
 namespace readdy {

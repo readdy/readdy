@@ -13,8 +13,8 @@
 #include <pybind11/stl.h>
 
 #include <readdy/model/Particle.h>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
+#include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
+#include <readdy/kernel/singlecpu/SCPUStateModel.h>
 #include "ModelWrap.h"
 
 namespace py = pybind11;
@@ -25,12 +25,12 @@ using rvp = py::return_value_policy;
 using rdy_ctx_t = readdy::model::KernelContext;
 using rdy_particle_t = readdy::model::Particle;
 
-using rdy_scpu_model_t = readdy::kernel::singlecpu::SingleCPUKernelStateModel;
+using rdy_scpu_model_t = readdy::kernel::scpu::SCPUStateModel;
 using rdy_scpu_model_wrap_t = readdy::rpy::Model;
 
-using rdy_scpu_nl_t = readdy::kernel::singlecpu::model::SingleCPUNeighborList;
-using rdy_scpu_nl_box_t = readdy::kernel::singlecpu::model::Box;
-using rdy_scpu_pd_t = readdy::kernel::singlecpu::model::ParticleData;
+using rdy_scpu_nl_t = readdy::kernel::scpu::model::SCPUNeighborList;
+using rdy_scpu_nl_box_t = readdy::kernel::scpu::model::Box;
+using rdy_scpu_pd_t = readdy::kernel::scpu::model::SCPUParticleData;
 
 using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
 using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;

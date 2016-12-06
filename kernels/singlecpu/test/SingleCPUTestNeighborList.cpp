@@ -11,15 +11,15 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
+#include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
-namespace scpu = readdy::kernel::singlecpu;
+namespace scpu = readdy::kernel::scpu;
 namespace scpum = scpu::model;
 namespace m = readdy::model;
 
-using kernel_t = readdy::kernel::singlecpu::SingleCPUKernel;
+using kernel_t = readdy::kernel::scpu::SCPUKernel;
 
 struct NeighborListTest : ::testing::Test {
 
@@ -39,11 +39,11 @@ struct NeighborListTest : ::testing::Test {
 
 TEST(NeighborList, Naive) {
     unsigned int n_particles = 20;
-    scpum::ParticleData data;
+    scpum::SCPUParticleData data;
     for (unsigned int i = 0; i < n_particles; ++i) {
         data.addParticle({(double) i, (double) i, (double) i, 5});
     }
-    scpum::NaiveSingleCPUNeighborList list;
+    scpum::SCPUNaiveNeighborList list;
     list.create(data);
     EXPECT_EQ(((n_particles - 1) * n_particles) / 2, std::distance(list.begin(), list.end()));
 
@@ -59,7 +59,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(3.6, 2, 2);
     ctx.setPeriodicBoundary(true, false, false);
-    scpum::NotThatNaiveSingleCPUNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 3);
@@ -73,7 +73,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     // now create three particles. The resulting neighborlist should contain three pairs
     const auto threeParticles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA)};
-    scpum::ParticleData data;
+    scpum::SCPUParticleData data;
     data.addParticles(threeParticles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 3);
@@ -92,7 +92,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
-    scpum::NotThatNaiveSingleCPUNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 27);
@@ -104,7 +104,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(1.6, 0, 0, typeIdA),
             m::Particle(0, 1.6, -1.6, typeIdA), m::Particle(-1.6, 0, 1.6, typeIdA), m::Particle(1.6, -1.6, 0, typeIdA)
     };
-    scpum::ParticleData data;
+    scpum::SCPUParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 15);
@@ -120,7 +120,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4.8, 5, 5.1);
     ctx.setPeriodicBoundary(true, true, true);
-    scpum::NotThatNaiveSingleCPUNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 64);
@@ -131,7 +131,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(-2.1, -2.4, -2.4, typeIdA), m::Particle(1, 1, 1, typeIdA), m::Particle(2.1, 2.4, 2.4, typeIdA)
     };
-    scpum::ParticleData data;
+    scpum::SCPUParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 2);
@@ -147,7 +147,7 @@ TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(1.5, 4, 1.5);
     ctx.setPeriodicBoundary(false, false, false);
-    scpum::NotThatNaiveSingleCPUNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 3);
@@ -155,7 +155,7 @@ TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
-    scpum::ParticleData data;
+    scpum::SCPUParticleData data;
     data.addParticles(particles);
     list.fillBoxes(data);
     EXPECT_EQ(std::distance(list.cbegin(), list.cend()), 1);

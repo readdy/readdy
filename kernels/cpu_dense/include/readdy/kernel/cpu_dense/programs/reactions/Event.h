@@ -11,7 +11,7 @@
 #define READDY_MAIN_REACTIONEVENT_H
 
 #include <spdlog/fmt/ostr.h>
-#include <readdy/kernel/cpu_dense/model/ParticleData.h>
+#include <readdy/kernel/cpu_dense/model/SCPUParticleData.h>
 
 namespace readdy {
 namespace kernel {

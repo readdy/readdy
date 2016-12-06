@@ -10,7 +10,7 @@
 #include <readdy/kernel/cpu/observables/ObservableFactory.h>
 #include <readdy/kernel/cpu/Kernel.h>
 #include <readdy/kernel/cpu/observables/Observables.h>
-#include <readdy/kernel/singlecpu/observables/SingleCPUObservables.h>
+#include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
 
 namespace readdy {
 namespace kernel {
@@ -45,7 +45,7 @@ ObservableFactory::createParticlePositionObservable(unsigned int stride, std::ve
 readdy::model::RadialDistributionObservable *
 ObservableFactory::createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
                                                       std::string typeCountTo, double particleToDensity) const {
-    return new readdy::kernel::singlecpu::observables::RadialDistributionObservable<Kernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
+    return new readdy::kernel::scpu::observables::RadialDistributionObservable<Kernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
                                                                                                particleToDensity);
 }
 

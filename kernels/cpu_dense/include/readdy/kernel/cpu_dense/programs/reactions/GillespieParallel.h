@@ -13,7 +13,7 @@
 
 #include <readdy/model/programs/Programs.h>
 #include <readdy/kernel/cpu_dense/Kernel.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
+#include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
 #include "ReactionUtils.h"
 
 namespace readdy {

@@ -10,18 +10,18 @@
 #ifndef READDY_MAIN_MODELWRAP_H
 #define READDY_MAIN_MODELWRAP_H
 
-#include <readdy/kernel/singlecpu/SingleCPUKernelStateModel.h>
+#include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
 namespace py = pybind11;
 
 namespace readdy {
 namespace rpy {
-class Model : public readdy::kernel::singlecpu::SingleCPUKernelStateModel {
+class Model : public readdy::kernel::scpu::SCPUStateModel {
 
-    using super = readdy::kernel::singlecpu::SingleCPUKernelStateModel;
+    using super = readdy::kernel::scpu::SCPUStateModel;
 public:
 
-    using super::SingleCPUKernelStateModel;
+    using super::SCPUStateModel;
 
     virtual void removeParticle(const readdy::model::Particle &p) override {
         py::gil_scoped_acquire gil;
@@ -43,15 +43,15 @@ public:
         PYBIND11_OVERLOAD_NAME(void, super, "increase_energy", increaseEnergy, increase);
     }
 
-    virtual kernel::singlecpu::model::ParticleData *getParticleData() const override {
+    virtual kernel::scpu::model::SCPUParticleData *getParticleData() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(kernel::singlecpu::model::ParticleData*, super, "get_particle_data",
+        PYBIND11_OVERLOAD_NAME(kernel::scpu::model::SCPUParticleData*, super, "get_particle_data",
                                getParticleData,);
     }
 
-    virtual const readdy::kernel::singlecpu::model::SingleCPUNeighborList *getNeighborList() const override {
+    virtual const readdy::kernel::scpu::model::SCPUNeighborList *getNeighborList() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(const kernel::singlecpu::model::SingleCPUNeighborList*, super, "get_neighbor_list",
+        PYBIND11_OVERLOAD_NAME(const kernel::scpu::model::SCPUNeighborList*, super, "get_neighbor_list",
                                getNeighborList,);
     }
 

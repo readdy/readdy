@@ -11,7 +11,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
 #include "KernelWrap.h"
 #include "../api/PyFunction.h"
 
@@ -25,10 +25,10 @@ void exportModelClasses(py::module &);
 
 void exportPotentials(py::module &);
 
-namespace scpu = readdy::kernel::singlecpu;
+namespace scpu = readdy::kernel::scpu;
 
-using rdy_scpu_model_t = scpu::SingleCPUKernelStateModel;
-using scpu_kernel_t = scpu::SingleCPUKernel;
+using rdy_scpu_model_t = scpu::SCPUStateModel;
+using scpu_kernel_t = scpu::SCPUKernel;
 
 using scpu_kernel_wrap_t = scpu_kernel_t; // todo: do i need readdy::py::SingleCPUKernelWrap here?
 

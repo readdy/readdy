@@ -13,7 +13,7 @@
 #include <pybind11/cast.h>
 
 #include <vector>
-#include <readdy/kernel/singlecpu/model/SingleCPUNeighborList.h>
+#include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
 
 PYBIND11_MAKE_OPAQUE(std::vector<double>);
 PYBIND11_MAKE_OPAQUE(std::vector<unsigned long>);

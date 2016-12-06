@@ -8,7 +8,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/kernel/singlecpu/reactions/SingleCPUReactions.h>
+#include <readdy/kernel/singlecpu/reactions/SCPUReactions.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/programs/Programs.h>

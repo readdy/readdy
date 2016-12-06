@@ -9,15 +9,15 @@
 
 #include <gtest/gtest.h>
 #include <readdy/common/make_unique.h>
-#include <readdy/kernel/singlecpu/model/ParticleData.h>
+#include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 
 
-using namespace readdy::kernel::singlecpu::model;
+using namespace readdy::kernel::scpu::model;
 
 struct ParticleDataTest : public ::testing::TestWithParam<bool> {
 
-    std::unique_ptr<ParticleData> createDataObject(std::size_t capacity) {
-        return std::make_unique<ParticleData>(capacity, GetParam());
+    std::unique_ptr<SCPUParticleData> createDataObject(std::size_t capacity) {
+        return std::make_unique<SCPUParticleData>(capacity, GetParam());
     }
 };
 
