@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * << detailed description >>
  *
@@ -7,20 +29,24 @@
  * @date 26.04.16
  */
 
-#include <readdy/model/Observables.h>
+#include <readdy/model/observables/Observables.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/_internal/Util.h>
 
 namespace readdy {
 namespace model {
+namespace observables {
 
-ParticlePositionObservable::ParticlePositionObservable(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
-        ParticlePositionObservable(kernel, stride, _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
+ParticlePosition::ParticlePosition(Kernel *const kernel, unsigned int stride,
+                                   std::vector<std::string> typesToCount) :
+        ParticlePosition(kernel, stride,
+                         _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
 
-ParticlePositionObservable::ParticlePositionObservable(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount) :
+ParticlePosition::ParticlePosition(Kernel *const kernel, unsigned int stride,
+                                   std::vector<unsigned int> typesToCount) :
         Observable(kernel, stride), typesToCount(typesToCount) {}
 
-void TestCombinerObservable::evaluate() {
+void TestCombiner::evaluate() {
     std::vector<double> result;
     const auto &r1 = obs1->getResult();
     const auto &r2 = obs2->getResult();
@@ -34,18 +60,18 @@ void TestCombinerObservable::evaluate() {
         ++b2;
     }
 
-    TestCombinerObservable::result = result;
+    TestCombiner::result = result;
 }
 
-RadialDistributionObservable::RadialDistributionObservable(Kernel *const kernel, unsigned int stride,
-                                                           std::vector<double> binBorders, unsigned int typeCountFrom,
-                                                           unsigned int typeCountTo, double particleDensity)
+RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
+                                       std::vector<double> binBorders, unsigned int typeCountFrom,
+                                       unsigned int typeCountTo, double particleDensity)
         : Observable(kernel, stride), typeCountFrom(typeCountFrom), typeCountTo(typeCountTo),
           particleDensity(particleDensity) {
     setBinBorders(binBorders);
 }
 
-void RadialDistributionObservable::evaluate() {
+void RadialDistribution::evaluate() {
     if (binBorders.size() > 1) {
         std::fill(counts.begin(), counts.end(), 0);
         const auto particles = kernel->getKernelStateModel().getParticles();
@@ -89,13 +115,13 @@ void RadialDistributionObservable::evaluate() {
     }
 }
 
-const std::vector<double> &RadialDistributionObservable::getBinBorders() const {
+const std::vector<double> &RadialDistribution::getBinBorders() const {
     return binBorders;
 }
 
-void RadialDistributionObservable::setBinBorders(const std::vector<double> &binBorders) {
+void RadialDistribution::setBinBorders(const std::vector<double> &binBorders) {
     if (binBorders.size() > 1) {
-        RadialDistributionObservable::binBorders = binBorders;
+        RadialDistribution::binBorders = binBorders;
         auto nCenters = binBorders.size() - 1;
         result = std::make_pair(std::vector<double>(nCenters), std::vector<double>(nCenters));
         counts = std::vector<double>(nCenters);
@@ -114,11 +140,11 @@ void RadialDistributionObservable::setBinBorders(const std::vector<double> &binB
 
 }
 
-RadialDistributionObservable::RadialDistributionObservable(Kernel *const kernel, unsigned int stride,
-                                                           std::vector<double> binBorders,
-                                                           const std::string &typeCountFrom,
-                                                           const std::string &typeCountTo, double particleDensity)
-        : RadialDistributionObservable(
+RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
+                                       std::vector<double> binBorders,
+                                       const std::string &typeCountFrom,
+                                       const std::string &typeCountTo, double particleDensity)
+        : RadialDistribution(
         kernel, stride, binBorders,
         kernel->getKernelContext().getParticleTypeID(typeCountFrom),
         kernel->getKernelContext().getParticleTypeID(typeCountTo),
@@ -127,16 +153,16 @@ RadialDistributionObservable::RadialDistributionObservable(Kernel *const kernel,
 
 }
 
-CenterOfMassObservable::CenterOfMassObservable(readdy::model::Kernel *const kernel, unsigned int stride,
-                                               unsigned int particleType)
+CenterOfMass::CenterOfMass(readdy::model::Kernel *const kernel, unsigned int stride,
+                           unsigned int particleType)
         : Observable(kernel, stride), particleTypes({particleType}) {
 }
 
-CenterOfMassObservable::CenterOfMassObservable(Kernel *const kernel, unsigned int stride,
-                                               const std::string &particleType)
-        : CenterOfMassObservable(kernel, stride, kernel->getKernelContext().getParticleTypeID(particleType)) {}
+CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
+                           const std::string &particleType)
+        : CenterOfMass(kernel, stride, kernel->getKernelContext().getParticleTypeID(particleType)) {}
 
-void CenterOfMassObservable::evaluate() {
+void CenterOfMass::evaluate() {
     readdy::model::Vec3 com{0, 0, 0};
     unsigned long n_particles = 0;
     for (auto &&p : kernel->getKernelStateModel().getParticles()) {
@@ -149,67 +175,60 @@ void CenterOfMassObservable::evaluate() {
     result = com;
 }
 
-CenterOfMassObservable::CenterOfMassObservable(Kernel *const kernel, unsigned int stride,
-                                               const std::vector<unsigned int> &particleTypes)
+CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
+                           const std::vector<unsigned int> &particleTypes)
         : Observable(kernel, stride), particleTypes(particleTypes.begin(), particleTypes.end()) {
 }
 
-CenterOfMassObservable::CenterOfMassObservable(Kernel *const kernel, unsigned int stride,
-                                               const std::vector<std::string> &particleType) : Observable(kernel,
-                                                                                                          stride),
-                                                                                               particleTypes() {
+CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
+                           const std::vector<std::string> &particleType) : Observable(kernel,
+                                                                                      stride),
+                                                                           particleTypes() {
     for (auto &&pt : particleType) {
         particleTypes.emplace(kernel->getKernelContext().getParticleTypeID(pt));
     }
 
 }
 
-NParticlesObservable::NParticlesObservable(Kernel *const kernel, unsigned int stride,
-                                           std::vector<std::string> typesToCount)
-        : NParticlesObservable(kernel, stride,
-                               _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {
+NParticles::NParticles(Kernel *const kernel, unsigned int stride,
+                       std::vector<std::string> typesToCount)
+        : NParticles(kernel, stride,
+                     _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {
 
 }
 
-NParticlesObservable::NParticlesObservable(Kernel *const kernel, unsigned int stride,
-                                           std::vector<unsigned int> typesToCount)
+NParticles::NParticles(Kernel *const kernel, unsigned int stride,
+                       std::vector<unsigned int> typesToCount)
         : Observable(kernel, stride), typesToCount(typesToCount) {
 }
 
-ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
-        : ForcesObservable(kernel, stride,
-                           _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
+Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
+        : Forces(kernel, stride,
+                 _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
 
-ForcesObservable::ForcesObservable(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
+Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
         : Observable(kernel, stride), typesToCount(typesToCount) {}
 
-}
-
-
-}
-
-
-readdy::model::HistogramAlongAxisObservable::HistogramAlongAxisObservable(readdy::model::Kernel *const kernel,
-                                                                          unsigned int stride,
-                                                                          std::vector<double> binBorders,
-                                                                          std::set<unsigned int> typesToCount,
-                                                                          unsigned int axis)
+HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
+                                       std::vector<double> binBorders,
+                                       std::set<unsigned int> typesToCount, unsigned int axis)
         : Observable(kernel, stride), binBorders(binBorders), typesToCount(typesToCount), axis(axis) {
     auto nCenters = binBorders.size() - 1;
     result = std::vector<double>(nCenters);
 }
 
-readdy::model::HistogramAlongAxisObservable::HistogramAlongAxisObservable(Kernel *const kernel, unsigned int stride,
-                                                                          std::vector<double> binBorders,
-                                                                          std::vector<std::string> typesToCount,
-                                                                          unsigned int axis)
-        : HistogramAlongAxisObservable(kernel, stride, binBorders,
-                                       _internal::util::transformTypes(typesToCount, kernel->getKernelContext()),
-                                       axis) {
+
+HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride,
+                                       std::vector<double> binBorders,
+                                       std::vector<std::string> typesToCount,
+                                       unsigned int axis)
+        : HistogramAlongAxis(kernel, stride, binBorders,
+                             _internal::util::transformTypes(typesToCount, kernel->getKernelContext()),
+                             axis) {
 
 }
 
 
-
-
-
+}
+}
+}

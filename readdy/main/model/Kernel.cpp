@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * << detailed description >>
  *
@@ -26,7 +48,7 @@ struct Kernel::Impl {
     /**
      * todo
      */
-    std::unique_ptr<_internal::ObservableFactory> observableFactory;
+    std::unique_ptr<observables::ObservableFactory> observableFactory;
 
 };
 
@@ -36,27 +58,27 @@ const std::string &Kernel::getName() const {
 
 Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()) {
     pimpl->name = name;
-    pimpl->observableFactory = std::make_unique<_internal::ObservableFactory>(this);
+    pimpl->observableFactory = std::make_unique<observables::ObservableFactory>(this);
     pimpl->signal = std::make_unique<observables::signal_type>();
 }
 
 Kernel::~Kernel() {
 }
 
-readdy::signals::scoped_connection Kernel::connectObservable(ObservableBase *const observable) {
+readdy::signals::scoped_connection Kernel::connectObservable(observables::ObservableBase *const observable) {
     return pimpl->signal->connect_scoped([observable](const observables::time_step_type t) {
         observable->callback(t);
     });
 }
 
-std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
+std::tuple<std::unique_ptr<readdy::model::observables::ObservableWrapper>, readdy::signals::scoped_connection>
 Kernel::registerObservable(const observables::observable_type &observable, unsigned int stride) {
-    auto &&wrap = std::make_unique<ObservableWrapper>(this, observable, stride);
+    auto &&wrap = std::make_unique<observables::ObservableWrapper>(this, observable, stride);
     auto &&connection = connectObservable(wrap.get());
     return std::make_tuple(std::move(wrap), std::move(connection));
 }
 
-readdy::model::_internal::ObservableFactory &Kernel::getObservableFactory() const {
+readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() const {
     return *pimpl->observableFactory;
 }
 

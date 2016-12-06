@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * Test potentials of first and second order via small particle systems. First order potentials
  * often assure that particles stay in a certain volume of the simulation box, which is checked for.
@@ -67,9 +89,9 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
         kernel->getKernelContext().registerPotential(std::move(cubePot), t);
     }
 
-    auto ppObs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
+    auto ppObs = kernel->createObservable<readdy::model::observables::ParticlePosition>(1);
     readdy::model::Vec3 lowerBound{-2.5, -2.5, -2.5}, upperBound{2.5, 2.5, 2.5};
-    ppObs->setCallback([lowerBound, upperBound](readdy::model::ParticlePositionObservable::result_t currentResult) {
+    ppObs->setCallback([lowerBound, upperBound](readdy::model::observables::ParticlePosition::result_t currentResult) {
         readdy::model::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {
@@ -98,10 +120,10 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
         spherePot->setForceConstant(20);
         kernel->getKernelContext().registerPotential(std::move(spherePot), t);
     }
-    auto ppObs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
+    auto ppObs = kernel->createObservable<readdy::model::observables::ParticlePosition>(1);
     const double maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
     const double maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
-    ppObs->setCallback([maxDistFromOriginSquared](readdy::model::ParticlePositionObservable::result_t currentResult) {
+    ppObs->setCallback([maxDistFromOriginSquared](readdy::model::observables::ParticlePosition::result_t currentResult) {
         readdy::model::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {

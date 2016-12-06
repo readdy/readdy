@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * The KernelPluginDecorator class wraps a loaded kernel instance and the corresponding shared_library
  * instance by using the decorator pattern.
@@ -43,13 +65,13 @@ public:
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
     virtual readdy::signals::scoped_connection
-    connectObservable(model::ObservableBase *const observable) override;
+    connectObservable(model::observables::ObservableBase *const observable) override;
 
     virtual std::unique_ptr<model::programs::Program> createProgram(const std::string &name) const override;
 
     virtual void evaluateObservables(readdy::model::observables::time_step_type t) override;
 
-    virtual std::tuple<std::unique_ptr<readdy::model::ObservableWrapper>, readdy::signals::scoped_connection>
+    virtual std::tuple<std::unique_ptr<readdy::model::observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const model::observables::observable_type &observable, unsigned int stride) override;
 
     virtual std::vector<std::string> getAvailablePrograms() const override;
@@ -60,7 +82,7 @@ public:
 
 
 protected:
-    virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const override;
+    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 
     virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
 

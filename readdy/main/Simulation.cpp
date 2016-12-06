@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 //
 // Created by Moritz Hoffmann on 18/02/16.
 //
@@ -160,7 +182,7 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-unsigned long Simulation::registerObservable(readdy::model::ObservableBase &observable) {
+unsigned long Simulation::registerObservable(readdy::model::observables::ObservableBase &observable) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;
     auto &&connection = pimpl->kernel->connectObservable(&observable);

@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 //
 // Created by mho on 10/08/16.
 //
@@ -6,12 +28,12 @@
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/potentials/PotentialFactory.h>
-#include <readdy/kernel/singlecpu/potentials/PotentialsOrder1.h>
-#include <readdy/kernel/singlecpu/potentials/PotentialsOrder2.h>
+#include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder1.h>
+#include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder2.h>
 
 namespace py = pybind11;
 namespace pot = readdy::model::potentials;
-namespace spot = readdy::kernel::singlecpu::potentials;
+namespace spot = readdy::kernel::scpu::potentials;
 
 using rvp = py::return_value_policy;
 
@@ -112,12 +134,12 @@ public:
 void exportPotentials(py::module &proto) {
 
     py::class_<rdy_pot>(proto, "Potential");
-    py::class_<spot::CubePotential, rdy_pot>(proto, "CubePotential")
-            .def("get_name", &spot::CubePotential::getName);
-    py::class_<spot::HarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
-            .def("get_name", &spot::HarmonicRepulsion::getName);
-    py::class_<spot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
-            .def("get_name", &spot::WeakInteractionPiecewiseHarmonic::getName);
+    py::class_<spot::SCPUCubePotential, rdy_pot>(proto, "CubePotential")
+            .def("get_name", &spot::SCPUCubePotential::getName);
+    py::class_<spot::SCPUHarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
+            .def("get_name", &spot::SCPUHarmonicRepulsion::getName);
+    py::class_<spot::SCPUWeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
+            .def("get_name", &spot::SCPUWeakInteractionPiecewiseHarmonic::getName);
 
     py::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
             .def(py::init<std::string>())
@@ -134,9 +156,9 @@ void exportPotentials(py::module &proto) {
             .def("get_cutoff_radius", &rdy_pot2::getCutoffRadius)
             .def("get_maximal_force", &rdy_pot2::getMaximalForce);
 
-    auto f_create_cube_pot = &rdy_pot_factory::createPotential<spot::CubePotential>;
-    auto f_create_harmonic_pot = &rdy_pot_factory::createPotential<spot::HarmonicRepulsion>;
-    auto f_create_weak_inter_pot = &rdy_pot_factory::createPotential<spot::WeakInteractionPiecewiseHarmonic>;
+    auto f_create_cube_pot = &rdy_pot_factory::createPotential<spot::SCPUCubePotential>;
+    auto f_create_harmonic_pot = &rdy_pot_factory::createPotential<spot::SCPUHarmonicRepulsion>;
+    auto f_create_weak_inter_pot = &rdy_pot_factory::createPotential<spot::SCPUWeakInteractionPiecewiseHarmonic>;
     py::class_<rdy_pot_factory>(proto, "PotentialFactory")
             .def("create_cube_potential", f_create_cube_pot)
             .def("create_harmonic_repulsion", f_create_harmonic_pot)

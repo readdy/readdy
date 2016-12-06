@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * @file TestCompartments.cpp
  * @brief Test implementation-independent execution of program 'Compartments'
@@ -31,7 +53,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     kernel->addParticle("A", m::Vec3(1, 0, 2));
 
     std::vector<std::string> typesToCount = {"A", "B"};
-    auto &&obs = kernel->createObservable<m::NParticlesObservable>(1, typesToCount);
+    auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
     obs->evaluate();
     const auto &resultBefore = obs->getResult();
     EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
@@ -73,7 +95,7 @@ TEST_P(TestCompartments, TwoCompartments) {
     comp->execute();
 
     std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
-    auto &&obs = kernel->createObservable<m::NParticlesObservable>(1, typesToCount);
+    auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
     obs->evaluate();
     const auto &result = obs->getResult();
     EXPECT_EQ(result[0], 0) << "Expect no As";
@@ -81,8 +103,8 @@ TEST_P(TestCompartments, TwoCompartments) {
 
     const std::vector<std::string> typesC = {"C"};
     const std::vector<std::string> typesD = {"D"};
-    auto &&posC = kernel->createObservable<m::ParticlePositionObservable>(1, typesC);
-    auto &&posD = kernel->createObservable<m::ParticlePositionObservable>(1, typesD);
+    auto &&posC = kernel->createObservable<m::observables::ParticlePosition>(1, typesC);
+    auto &&posD = kernel->createObservable<m::observables::ParticlePosition>(1, typesD);
     posC->evaluate();
     posD->evaluate();
     const auto &resultC = posC->getResult();

@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * << detailed description >>
  *
@@ -11,7 +33,7 @@
 #define READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
 
 #include <readdy/model/programs/Programs.h>
-#include "readdy/kernel/cpu/Kernel.h"
+#include "readdy/kernel/cpu/CPUKernel.h"
 
 namespace readdy {
 namespace kernel {
@@ -23,7 +45,7 @@ class NextSubvolumes : public readdy::model::programs::reactions::NextSubvolumes
 using cell_index_t = unsigned int;
 using signed_cell_index_t = typename std::make_signed<cell_index_t>::type;
 public:
-    NextSubvolumes(const Kernel *const kernel);
+    NextSubvolumes(const CPUKernel *const kernel);
     ~NextSubvolumes();
 
     virtual void execute() override;
@@ -33,7 +55,7 @@ private:
     struct ReactionEvent;
     struct GridCell;
 
-    Kernel const* const kernel;
+    CPUKernel const* const kernel;
 
     // sets up a grid cell (rate, timestamp, next event)
     void setUpCell(GridCell& cell);

@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * This file contains the class definitions for Kernel and KernelProvider.
  * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
@@ -20,7 +42,7 @@
 #include <readdy/model/programs/Program.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
-#include <readdy/model/_internal/ObservableFactory.h>
+#include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/programs/ProgramFactory.h>
@@ -101,7 +123,7 @@ public:
      *
      * @return A connection object that, once deleted, releases the connection of the observable.
      */
-    virtual readdy::signals::scoped_connection connectObservable(ObservableBase *const observable);
+    virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *const observable);
 
     /**
      * Evaluates all unblocked observables.
@@ -111,7 +133,7 @@ public:
     /**
      * Registers an observable to the kernel signal.
      */
-    virtual std::tuple<std::unique_ptr<ObservableWrapper>, readdy::signals::scoped_connection>
+    virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const observables::observable_type &observable, unsigned int stride);
 
     virtual readdy::model::programs::ProgramFactory &getProgramFactory() const = 0;
@@ -186,7 +208,7 @@ public:
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const = 0;
 
-    virtual readdy::model::_internal::ObservableFactory &getObservableFactory() const;
+    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const;
 
     virtual unsigned int getTypeId(const std::string &) const;
 

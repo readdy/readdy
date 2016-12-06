@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * << detailed description >>
  *
@@ -28,7 +50,7 @@ TEST_P(TestObservables, TestParticlePositions) {
     const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->getKernelStateModel().addParticles(particles);
-    auto &&obs = kernel->createObservable<m::ParticlePositionObservable>(3);
+    auto &&obs = kernel->createObservable<m::observables::ParticlePosition>(3);
     auto &&connection = kernel->connectObservable(obs.get());
 
     auto &&integrator = kernel->createProgram("EulerBDIntegrator");
@@ -53,9 +75,9 @@ TEST_P(TestObservables, TestParticlePositions) {
 }
 
 TEST_P(TestObservables, TestCombinerObservable) {
-    auto &&o1 = kernel->createObservable<m::ParticlePositionObservable>(1);
-    auto &&o2 = kernel->createObservable<m::ParticlePositionObservable>(1);
-    auto &&o3 = kernel->createObservable<m::TestCombinerObservable>(o1.get(), o2.get());
+    auto &&o1 = kernel->createObservable<m::observables::ParticlePosition>(1);
+    auto &&o2 = kernel->createObservable<m::observables::ParticlePosition>(1);
+    auto &&o3 = kernel->createObservable<m::observables::TestCombiner>(o1.get(), o2.get());
     auto &&connection = kernel->connectObservable(o3.get());
     auto &&integrator = kernel->createProgram("EulerBDIntegrator");
     kernel->getKernelStateModel().updateNeighborList();
@@ -86,9 +108,9 @@ TEST_P(TestObservables, TestForcesObservable) {
     {
         // Check if result has correct size
         // Check that empty particleType argument gives correct object, namely all forces
-        auto &&obsA = kernel->createObservable<m::ForcesObservable>(1, std::vector<std::string>{"A"});
-        auto &&obsB = kernel->createObservable<m::ForcesObservable>(1, std::vector<std::string>{"B"});
-        auto &&obsBoth = kernel->createObservable<m::ForcesObservable>(1);
+        auto &&obsA = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"A"});
+        auto &&obsB = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"B"});
+        auto &&obsBoth = kernel->createObservable<m::observables::Forces>(1);
         auto &&connectionA = kernel->connectObservable(obsA.get());
         auto &&connectionB = kernel->connectObservable(obsB.get());
         auto &&connectionBoth = kernel->connectObservable(obsBoth.get());
@@ -123,7 +145,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
     kernel->getKernelContext().configure();
     {
-        auto obsC = kernel->createObservable<m::ForcesObservable>(1, std::vector<std::string>{"C"});
+        auto obsC = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"C"});
         auto connectionC = kernel->connectObservable(obsC.get());
         nl->execute();
         forces->execute();

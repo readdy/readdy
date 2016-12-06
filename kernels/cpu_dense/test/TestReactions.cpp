@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * << detailed description >>
  *
@@ -11,12 +33,12 @@
 
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/cpu_dense/programs/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu_dense/programs/reactions/GillespieParallel.h>
+#include <readdy/kernel/cpu_dense/programs/reactions/CPUDGillespieParallel.h>
 
 namespace reac = readdy::kernel::cpu_dense::programs::reactions;
 
 struct fix_n_threads {
-    fix_n_threads(readdy::kernel::cpu_dense::Kernel *const kernel, unsigned int n)
+    fix_n_threads(readdy::kernel::cpu_dense::CPUDKernel *const kernel, unsigned int n)
             : oldValue(static_cast<unsigned int>(kernel->getNThreads())), kernel(kernel) {
         kernel->setNThreads(n);
     }
@@ -27,7 +49,7 @@ struct fix_n_threads {
 
 private:
     const unsigned int oldValue;
-    readdy::kernel::cpu_dense::Kernel *const kernel;
+    readdy::kernel::cpu_dense::CPUDKernel *const kernel;
 };
 
 TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
@@ -37,7 +59,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    using data_t = readdy::kernel::cpu_dense::model::ParticleData;
+    using data_t = readdy::kernel::cpu_dense::model::CPUDParticleData;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(100, 100, 100);
@@ -187,8 +209,8 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
     auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::GillespieParallel>();
 
-    auto pp_obs = kernel->createObservable<readdy::model::ParticlePositionObservable>(1);
-    pp_obs->setCallback([](const readdy::model::ParticlePositionObservable::result_t &t) {
+    auto pp_obs = kernel->createObservable<readdy::model::observables::ParticlePosition>(1);
+    pp_obs->setCallback([](const readdy::model::observables::ParticlePosition::result_t &t) {
 /* ignore */
     });
     auto connection = kernel->connectObservable(pp_obs.get());
@@ -224,7 +246,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    auto kernel = std::make_unique<readdy::kernel::cpu_dense::Kernel>();
+    auto kernel = std::make_unique<readdy::kernel::cpu_dense::CPUDKernel>();
     kernel->getKernelContext().setBoxSize(10, 10, 30);
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);
@@ -264,7 +286,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     {
         fix_n_threads n_threads{kernel.get(), 2};
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-        auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu_dense::programs::reactions::GillespieParallel>();
+        auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu_dense::programs::reactions::CPUDGillespieParallel>();
         neighborList->execute();
         reactionsProgram->execute();
         EXPECT_EQ(1.0, reactionsProgram->getMaxReactionRadius());

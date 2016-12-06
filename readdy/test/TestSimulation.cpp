@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 #include "gtest/gtest.h"
 #include <readdy/Simulation.h>
 
@@ -12,7 +34,7 @@ struct MSDAggregator {
     std::vector<readdy::model::Vec3> initialPositions;
     std::shared_ptr<double> result = std::make_shared<double>(0);
 
-    void operator()(readdy::model::ParticlePositionObservable::result_t positions) {
+    void operator()(readdy::model::observables::ParticlePosition::result_t positions) {
         auto it_init = initialPositions.begin();
         auto it_pos = positions.begin();
         while (it_pos != positions.end()) {
@@ -68,7 +90,7 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
     double timestep = 1;
     MSDAggregator aggregator;
     aggregator.initialPositions = simulation.getAllParticlePositions();
-    simulation.registerObservable<readdy::model::ParticlePositionObservable>(aggregator, 1);
+    simulation.registerObservable<readdy::model::observables::ParticlePosition>(aggregator, 1);
     simulation.run(100, timestep);
     auto positions = simulation.getAllParticlePositions();
     double msd = 0;
@@ -93,8 +115,8 @@ TEST_F(TestSimulation, TestObservables) {
     double timestep = 1;
 
     int n_callbacks = 0;
-    simulation.registerObservable<readdy::model::ParticlePositionObservable>(
-            [&n_callbacks](const readdy::model::ParticlePositionObservable::result_t &result) -> void {
+    simulation.registerObservable<readdy::model::observables::ParticlePosition>(
+            [&n_callbacks](const readdy::model::observables::ParticlePosition::result_t &result) -> void {
                 ++n_callbacks;
                 EXPECT_EQ(103, result.size());
             }, 1);

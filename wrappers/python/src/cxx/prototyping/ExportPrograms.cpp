@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 /**
  * << detailed description >>
  *
@@ -10,12 +32,12 @@
 
 #include <pybind11/pybind11.h>
 
-#include <readdy/kernel/singlecpu/programs/SingleCPUProgramFactory.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUAddParticleProgram.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUEulerBDIntegrator.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUCalculateForces.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUUpdateNeighborList.h>
-#include <readdy/kernel/singlecpu/programs/SingleCPUReactionImpls.h>
+#include <readdy/kernel/singlecpu/programs/SCPUProgramFactory.h>
+#include <readdy/kernel/singlecpu/programs/SCPUAddParticle.h>
+#include <readdy/kernel/singlecpu/programs/SCPUEulerBDIntegrator.h>
+#include <readdy/kernel/singlecpu/programs/SCPUCalculateForces.h>
+#include <readdy/kernel/singlecpu/programs/SCPUUpdateNeighborList.h>
+#include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
 #include "ProgramWrap.h"
 
 namespace py = pybind11;
@@ -28,12 +50,12 @@ using prog_factory_t = readdy::model::programs::ProgramFactory;
 using program_t = readdy::model::programs::Program;
 using program_wrap_t = readdy::rpy::PyProgram;
 
-using add_particle_t = readdy::kernel::singlecpu::programs::SingleCPUAddParticleProgram;
-using euler_integrator_t = readdy::kernel::singlecpu::programs::SingleCPUEulerBDIntegrator;
-using forces_t = readdy::kernel::singlecpu::programs::SingleCPUCalculateForces;
-using neighbor_list_t = readdy::kernel::singlecpu::programs::SingleCPUUpdateNeighborList;
+using add_particle_t = readdy::kernel::scpu::programs::SCPUAddParticle;
+using euler_integrator_t = readdy::kernel::scpu::programs::SCPUEulerBDIntegrator;
+using forces_t = readdy::kernel::scpu::programs::SCPUCalculateForces;
+using neighbor_list_t = readdy::kernel::scpu::programs::SCPUUpdateNeighborList;
 
-using reactions_u_a_t = readdy::kernel::singlecpu::programs::reactions::UncontrolledApproximation;
+using reactions_u_a_t = readdy::kernel::scpu::programs::reactions::SCPUUncontrolledApproximation;
 
 void exportPrograms(py::module &proto) {
     auto f_add_particle = &prog_factory_t::createProgram<add_particle_t>;
@@ -42,7 +64,7 @@ void exportPrograms(py::module &proto) {
     auto f_neighbor_list = &prog_factory_t::createProgram<neighbor_list_t>;
     auto f_reactions_uncontrolled_approximation = &prog_factory_t::createProgram<reactions_u_a_t>;
 
-    using scpu_kernel_t = readdy::kernel::singlecpu::SingleCPUKernel;
+    using scpu_kernel_t = readdy::kernel::scpu::SCPUKernel;
 
     py::class_<prog_factory_t>(proto, "ProgramFactory")
             .def("create_add_particles", f_add_particle)

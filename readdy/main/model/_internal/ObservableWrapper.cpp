@@ -1,3 +1,25 @@
+/********************************************************************
+ * Copyright © 2016 Computational Molecular Biology Group,          *
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/Kernel.h>
 
@@ -11,17 +33,17 @@
  */
 
 
-void readdy::model::ObservableWrapper::operator()(observables::time_step_type t) {
+void readdy::model::observables::ObservableWrapper::operator()(observables::time_step_type t) {
     callback(t);
 }
 
-readdy::model::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel,
-                                                    const observables::observable_type &observable,
-                                                    unsigned int stride)
+readdy::model::observables::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel,
+                                                                 const observables::observable_type &observable,
+                                                                 unsigned int stride)
         : ObservableBase(kernel, stride), observable(observable) {
 }
 
-void readdy::model::ObservableWrapper::evaluate() {
+void readdy::model::observables::ObservableWrapper::evaluate() {
     observable(t_current);
 }
 
