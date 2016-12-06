@@ -1,6 +1,6 @@
 ## ReaDDy
 
-ReaDDy is a Python / C++ based particle reaction-diffusion simulator.
+ReaDDy is a Python / C++ based particle reaction-diffusion simulator. Its documentation can be found [here](https://readdy.github.io/readdy_documentation/).
 *Currently, it is under construction and should not be expected to be fully functional.* For a working and more feature complete software, please see the [Java implementation of ReaDDy](https://github.com/readdy/readdy_java).
 
 ### Status
