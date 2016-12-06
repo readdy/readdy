@@ -17,7 +17,7 @@
 #include <readdy/common/thread/semaphore.h>
 #include <readdy/common/Timer.h>
 
-#include <readdy/kernel/cpu/model/NeighborList.h>
+#include <readdy/kernel/cpu/model/CPUNeighborList.h>
 #include <readdy/kernel/cpu/util/hilbert.h>
 #include <readdy/common/thread/notification_barrier.h>
 #include <readdy/common/Utils.h>
@@ -37,7 +37,7 @@ void iota_n(OutputIterator first, Size n, Assignable value) {
     });
 }
 
-struct NeighborList::Cell {
+struct CPUNeighborList::Cell {
     std::vector<Cell *> neighbors{};
     double maximal_displacements[2];
     cell_index contiguous_index;
@@ -83,14 +83,14 @@ public:
     ParticleTravelledTooFarException() : runtime_error("") {}
 };
 
-const static std::vector<NeighborList::neighbor_t> no_neighbors{};
+const static std::vector<CPUNeighborList::neighbor_t> no_neighbors{};
 
-NeighborList::NeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config,
+CPUNeighborList::CPUNeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config,
                            skin_size_t skin)
         : ctx(context), config(config), cells(std::vector<Cell>()),
           simBoxSize(ctx->getBoxSize()), skin_size(skin), data(data), groupParticlesOnCreation(true) {}
 
-void NeighborList::setupCells() {
+void CPUNeighborList::setupCells() {
     if (cells.empty()) {
         double maxCutoff = 0;
         for (auto &&e : ctx->getAllOrder2RegisteredPotentialTypes()) {
@@ -101,8 +101,8 @@ void NeighborList::setupCells() {
         for (auto &&e : ctx->getAllOrder2Reactions()) {
             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
         }
-        NeighborList::maxCutoff = maxCutoff;
-        NeighborList::maxCutoffPlusSkin = maxCutoff + skin_size;
+        CPUNeighborList::maxCutoff = maxCutoff;
+        CPUNeighborList::maxCutoffPlusSkin = maxCutoff + skin_size;
 
         log::console()->debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size,
                               maxCutoff + skin_size);
@@ -141,7 +141,7 @@ void NeighborList::setupCells() {
 }
 
 void
-NeighborList::setupNeighboringCells(const signed_cell_index i, const signed_cell_index j, const signed_cell_index k) {
+CPUNeighborList::setupNeighboringCells(const signed_cell_index i, const signed_cell_index j, const signed_cell_index k) {
     auto me = getCell(i, j, k);
     for (signed_cell_index _i = -2; _i < 3; ++_i) {
         for (signed_cell_index _j = -2; _j < 3; ++_j) {
@@ -155,7 +155,7 @@ NeighborList::setupNeighboringCells(const signed_cell_index i, const signed_cell
     }
 }
 
-void NeighborList::clear() {
+void CPUNeighborList::clear() {
     cells.clear();
     for (auto &list : data.neighbors) {
         list.clear();
@@ -174,7 +174,7 @@ void NeighborList::clear() {
  * @param skin the skin width
  * @return true if everything is ok, false if a particle travelled too far
  */
-bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const double r_c, const double r_s) {
+bool markCell(CPUNeighborList::Cell &cell, const CPUNeighborList::data_t &data, const double r_c, const double r_s) {
     bool travelledTooFar = false;
     cell.maximal_displacements[0] = 0;
     cell.maximal_displacements[1] = 0;
@@ -196,7 +196,7 @@ bool markCell(NeighborList::Cell &cell, const NeighborList::data_t &data, const 
     return travelledTooFar;
 }
 
-bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
+bool cellOrNeighborDirty(const CPUNeighborList::Cell &cell) {
     if (cell.dirty) return true;
     for (const auto n : cell.neighbors) {
         if (n->dirty) return true;
@@ -204,7 +204,7 @@ bool cellOrNeighborDirty(const NeighborList::Cell &cell) {
     return false;
 }
 
-void NeighborList::fillCells() {
+void CPUNeighborList::fillCells() {
     if (maxCutoff > 0) {
         const auto c2 = maxCutoffPlusSkin * maxCutoffPlusSkin;
         auto d2 = ctx->getDistSquaredFun();
@@ -399,7 +399,7 @@ void NeighborList::fillCells() {
 
                 auto worker = [this, c2, d2, grainSize](cell_it_t begin, cell_it_t end, const thd::barrier &barrier) {
                     // first gather updates
-                    std::vector<std::vector<NeighborList::particle_index>> cellUpdates;
+                    std::vector<std::vector<CPUNeighborList::particle_index>> cellUpdates;
                     cellUpdates.reserve(grainSize);
                     {
                         for (cell_it_t _b = begin; _b != end; ++_b) {
@@ -477,7 +477,7 @@ void NeighborList::fillCells() {
     }
 }
 
-void NeighborList::create() {
+void CPUNeighborList::create() {
     simBoxSize = ctx->getBoxSize();
     data.setFixPosFun(ctx->getFixPositionFun());
     {
@@ -498,7 +498,7 @@ void NeighborList::create() {
     initialSetup = false;
 }
 
-NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) {
+CPUNeighborList::Cell *CPUNeighborList::getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) {
     const auto &periodic = ctx->getPeriodicBoundary();
     if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nCells[0]);
     else if (i < 0 || i >= nCells[0]) return nullptr;
@@ -510,16 +510,16 @@ NeighborList::Cell *NeighborList::getCell(signed_cell_index i, signed_cell_index
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("NeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
+        log::console()->critical("CPUNeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::runtime_error("tried to get cell index that was too large");
     }
 }
 
-void NeighborList::remove(const particle_index idx) {
+void CPUNeighborList::remove(const particle_index idx) {
     auto cell = getCell(data.pos(idx));
     if (cell != nullptr) {
-        auto remove_predicate = [idx](const ParticleData::Neighbor n) {
+        auto remove_predicate = [idx](const CPUParticleData::Neighbor n) {
             return n == idx;
         };
         try {
@@ -541,7 +541,7 @@ void NeighborList::remove(const particle_index idx) {
     }
 }
 
-void NeighborList::insert(const particle_index idx) {
+void CPUNeighborList::insert(const particle_index idx) {
     const auto &d2 = ctx->getDistSquaredFun();
     const auto &pos = data.pos(idx);
     const auto cutoffSquared = maxCutoffPlusSkin * maxCutoffPlusSkin;
@@ -572,14 +572,14 @@ void NeighborList::insert(const particle_index idx) {
     }
 }
 
-NeighborList::Cell *NeighborList::getCell(const readdy::model::Particle::pos_type &pos) {
+CPUNeighborList::Cell *CPUNeighborList::getCell(const readdy::model::Particle::pos_type &pos) {
     const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     return getCell(i, j, k);
 }
 
-void NeighborList::updateData(ParticleData::update_t &&update) {
+void CPUNeighborList::updateData(CPUParticleData::update_t &&update) {
     if (maxCutoff > 0) {
         for (const auto &p : std::get<1>(update)) {
             remove(p);
@@ -593,23 +593,23 @@ void NeighborList::updateData(ParticleData::update_t &&update) {
     }
 }
 
-const std::vector<NeighborList::neighbor_t> &NeighborList::neighbors(NeighborList::particle_index const entry) const {
+const std::vector<CPUNeighborList::neighbor_t> &CPUNeighborList::neighbors(CPUNeighborList::particle_index const entry) const {
     if (maxCutoff > 0) {
         return data.neighbors.at(entry);
     }
     return no_neighbors;
 }
 
-const NeighborList::Cell *const NeighborList::getCell(const readdy::model::Particle::pos_type &pos) const {
+const CPUNeighborList::Cell *const CPUNeighborList::getCell(const readdy::model::Particle::pos_type &pos) const {
     const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     return getCell(i, j, k);
 }
 
-const NeighborList::Cell *const NeighborList::getCell(NeighborList::signed_cell_index i,
-                                                      NeighborList::signed_cell_index j,
-                                                      NeighborList::signed_cell_index k) const {
+const CPUNeighborList::Cell *const CPUNeighborList::getCell(CPUNeighborList::signed_cell_index i,
+                                                      CPUNeighborList::signed_cell_index j,
+                                                      CPUNeighborList::signed_cell_index k) const {
 
     const auto &periodic = ctx->getPeriodicBoundary();
     if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nCells[0]);
@@ -622,78 +622,78 @@ const NeighborList::Cell *const NeighborList::getCell(NeighborList::signed_cell_
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("NeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
+        log::console()->critical("CPUNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::out_of_range("tried to access an invalid cell");
     }
 }
 
-const std::vector<NeighborList::neighbor_t> &NeighborList::find_neighbors(particle_index const entry) const {
+const std::vector<CPUNeighborList::neighbor_t> &CPUNeighborList::find_neighbors(particle_index const entry) const {
     if (maxCutoff > 0 && entry < data.neighbors.size()) {
         return data.neighbors.at(entry);
     }
     return no_neighbors;
 }
 
-NeighborList::~NeighborList() = default;
+CPUNeighborList::~CPUNeighborList() = default;
 
-void NeighborList::Cell::addNeighbor(NeighborList::Cell *cell) {
+void CPUNeighborList::Cell::addNeighbor(CPUNeighborList::Cell *cell) {
     if (cell && cell->contiguous_index != contiguous_index
         && (enoughCells || std::find(neighbors.begin(), neighbors.end(), cell) == neighbors.end())) {
         neighbors.push_back(cell);
     }
 }
 
-NeighborList::Cell::Cell(cell_index i, cell_index j, cell_index k,
-                         const std::array<NeighborList::cell_index, 3> &nCells)
+CPUNeighborList::Cell::Cell(cell_index i, cell_index j, cell_index k,
+                         const std::array<CPUNeighborList::cell_index, 3> &nCells)
         : contiguous_index(get_contiguous_index(i, j, k, nCells[1], nCells[2])),
           enoughCells(nCells[0] >= 5 && nCells[1] >= 5 && nCells[2] >= 5), maximal_displacements{0, 0} {
 }
 
-bool operator==(const NeighborList::Cell &lhs, const NeighborList::Cell &rhs) {
+bool operator==(const CPUNeighborList::Cell &lhs, const CPUNeighborList::Cell &rhs) {
     return lhs.contiguous_index == rhs.contiguous_index;
 }
 
-bool operator!=(const NeighborList::Cell &lhs, const NeighborList::Cell &rhs) {
+bool operator!=(const CPUNeighborList::Cell &lhs, const CPUNeighborList::Cell &rhs) {
     return !(lhs == rhs);
 }
 
-void NeighborList::Cell::checkDirty(skin_size_t skin) {
+void CPUNeighborList::Cell::checkDirty(skin_size_t skin) {
     dirty = maximal_displacements[0] + maximal_displacements[1] > skin;
 }
 
-NeighborList::hilbert_index_t NeighborList::getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const {
+CPUNeighborList::hilbert_index_t CPUNeighborList::getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const {
     bitmask_t coords[3]{i, j, k};
     return static_cast<unsigned int>(hilbert_c2i(3, CHAR_BIT, coords));
 }
 
-void NeighborList::displace(data_t::Entry &entry, const data_t::particle_type::pos_type &delta) {
+void CPUNeighborList::displace(data_t::Entry &entry, const data_t::particle_type::pos_type &delta) {
     data.displace(entry, delta);
 }
 
-void NeighborList::displace(data_iter_t iter, const readdy::model::Vec3 &vec) {
+void CPUNeighborList::displace(data_iter_t iter, const readdy::model::Vec3 &vec) {
     auto &entry = *iter;
     displace(entry, vec);
 }
 
-void NeighborList::displace(data_t::index_t idx, const data_t::particle_type::pos_type &delta) {
+void CPUNeighborList::displace(data_t::index_t idx, const data_t::particle_type::pos_type &delta) {
     auto &entry = data.entry_at(idx);
     displace(entry, delta);
 }
 
-void NeighborList::setPosition(data_t::index_t idx, data_t::particle_type::pos_type &&newPosition) {
+void CPUNeighborList::setPosition(data_t::index_t idx, data_t::particle_type::pos_type &&newPosition) {
     auto &entry = data.entry_at(idx);
     const auto delta = newPosition - entry.position();
     displace(entry, delta);
 }
 
-std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
+std::unordered_set<CPUNeighborList::Cell *> CPUNeighborList::findDirtyCells() {
     using it_type = decltype(cells.begin());
 
     using future_t = std::future<std::vector<Cell *>>;
     using promise_t = std::promise<std::vector<Cell *>>;
 
-    std::unordered_set<NeighborList::Cell *> result;
+    std::unordered_set<CPUNeighborList::Cell *> result;
 
 
     auto worker = [this](it_type begin, it_type end, promise_t update, const thd::barrier &barrier,
@@ -752,7 +752,7 @@ std::unordered_set<NeighborList::Cell *> NeighborList::findDirtyCells() {
     return std::move(result);
 }
 
-void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun &d2) {
+void CPUNeighborList::setUpCell(CPUNeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun &d2) {
     cell.dirty = false;
     cell.maximal_displacements[0] = 0;
     cell.maximal_displacements[1] = 0;
@@ -781,7 +781,7 @@ void NeighborList::setUpCell(NeighborList::Cell &cell, const double cutoffSquare
     }
 }
 
-int NeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) const {
+int CPUNeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) const {
     signed_cell_index i = static_cast<const signed_cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     signed_cell_index j = static_cast<const signed_cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     signed_cell_index k = static_cast<const signed_cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
@@ -795,28 +795,28 @@ int NeighborList::getCellIndex(const readdy::model::Particle::pos_type &pos) con
     return get_contiguous_index(i, j, k, nCells[1], nCells[2]);
 }
 
-void NeighborList::setSkinSize(NeighborList::skin_size_t skin_size) {
+void CPUNeighborList::setSkinSize(CPUNeighborList::skin_size_t skin_size) {
     initialSetup = true;
     cells.clear();
-    NeighborList::skin_size = skin_size;
+    CPUNeighborList::skin_size = skin_size;
 }
 
-bool NeighborList::isInCell(const NeighborList::Cell &cell, const data_t::particle_type::pos_type &pos) const {
+bool CPUNeighborList::isInCell(const CPUNeighborList::Cell &cell, const data_t::particle_type::pos_type &pos) const {
     return hash_pos(pos) == cell.contiguous_index;
 }
 
-std::size_t NeighborList::hash_pos(const data_t::particle_type::pos_type &pos) const {
+std::size_t CPUNeighborList::hash_pos(const data_t::particle_type::pos_type &pos) const {
     const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     return get_contiguous_index(i, j, k, nCells[1], nCells[2]);
 }
 
-void NeighborList::setGroupParticlesOnCreation(bool groupParticlesOnCreation) {
-    NeighborList::groupParticlesOnCreation = groupParticlesOnCreation;
+void CPUNeighborList::setGroupParticlesOnCreation(bool groupParticlesOnCreation) {
+    CPUNeighborList::groupParticlesOnCreation = groupParticlesOnCreation;
 }
 
-std::tuple<NeighborList::cell_index, NeighborList::cell_index, NeighborList::cell_index> NeighborList::mapPositionToCell(
+std::tuple<CPUNeighborList::cell_index, CPUNeighborList::cell_index, CPUNeighborList::cell_index> CPUNeighborList::mapPositionToCell(
         const readdy::model::Particle::pos_type &pos) const {
     const cell_index i = static_cast<const cell_index>(floor((pos[0] + .5 * simBoxSize[0]) / cellSize[0]));
     const cell_index j = static_cast<const cell_index>(floor((pos[1] + .5 * simBoxSize[1]) / cellSize[1]));

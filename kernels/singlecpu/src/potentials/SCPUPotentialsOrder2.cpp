@@ -16,7 +16,7 @@ namespace kernel {
 namespace scpu {
 namespace potentials {
 
-double HarmonicRepulsion::calculateEnergy(const vec_t &x_ij) const {
+double SCPUHarmonicRepulsion::calculateEnergy(const vec_t &x_ij) const {
     auto distanceSquared = x_ij * x_ij;
     if (distanceSquared < getSumOfParticleRadiiSquared()) {
         distanceSquared = std::sqrt(distanceSquared);
@@ -28,7 +28,7 @@ double HarmonicRepulsion::calculateEnergy(const vec_t &x_ij) const {
     }
 }
 
-void HarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_ij) const {
+void SCPUHarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_ij) const {
     auto squared = x_ij * x_ij;
     if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
         squared = std::sqrt(squared);
@@ -38,7 +38,7 @@ void HarmonicRepulsion::calculateForce(vec_t &force, const vec_t &x_ij) const {
     }
 }
 
-void HarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const {
+void SCPUHarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, const vec_t &x_ij) const {
     auto squared = x_ij * x_ij;
     if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
         squared = std::sqrt(squared);
@@ -49,22 +49,22 @@ void HarmonicRepulsion::calculateForceAndEnergy(vec_t &force, double &energy, co
     }
 }
 
-HarmonicRepulsion::HarmonicRepulsion(const readdy::model::Kernel *const kernel)
+SCPUHarmonicRepulsion::SCPUHarmonicRepulsion(const readdy::model::Kernel *const kernel)
         : readdy::model::potentials::HarmonicRepulsion(kernel) {}
 
-double HarmonicRepulsion::getCutoffRadius() const {
+double SCPUHarmonicRepulsion::getCutoffRadius() const {
     return sumOfParticleRadii;
 }
 
-double HarmonicRepulsion::getCutoffRadiusSquared() const {
+double SCPUHarmonicRepulsion::getCutoffRadiusSquared() const {
     return sumOfParticleRadiiSquared;
 }
 
 
-WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel)
+SCPUWeakInteractionPiecewiseHarmonic::SCPUWeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel)
         : readdy::model::potentials::WeakInteractionPiecewiseHarmonic(kernel) {}
 
-double WeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Vec3 &x_ij) const {
+double SCPUWeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Vec3 &x_ij) const {
     const auto dist = std::sqrt(x_ij * x_ij);
     const auto len_part2 = noInteractionDistance - desiredParticleDistance;
     if (dist < desiredParticleDistance) {
@@ -89,7 +89,7 @@ double WeakInteractionPiecewiseHarmonic::calculateEnergy(const readdy::model::Ve
 }
 
 void
-WeakInteractionPiecewiseHarmonic::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const {
+SCPUWeakInteractionPiecewiseHarmonic::calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const {
     const auto dist = std::sqrt(x_ij * x_ij);
     const auto len_part2 = noInteractionDistance - desiredParticleDistance;
     double factor = 0;
@@ -116,17 +116,17 @@ WeakInteractionPiecewiseHarmonic::calculateForce(readdy::model::Vec3 &force, con
     }
 }
 
-void WeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy,
+void SCPUWeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy,
                                                                const readdy::model::Vec3 &x_ij) const {
     energy += calculateEnergy(x_ij);
     calculateForce(force, x_ij);
 }
 
-double WeakInteractionPiecewiseHarmonic::getCutoffRadius() const {
+double SCPUWeakInteractionPiecewiseHarmonic::getCutoffRadius() const {
     return noInteractionDistance;
 }
 
-double WeakInteractionPiecewiseHarmonic::getCutoffRadiusSquared() const {
+double SCPUWeakInteractionPiecewiseHarmonic::getCutoffRadiusSquared() const {
     return noInteractionDistanceSquared;
 }
 

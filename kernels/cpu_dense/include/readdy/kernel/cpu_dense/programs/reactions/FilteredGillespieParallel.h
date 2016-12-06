@@ -10,7 +10,7 @@
 #ifndef READDY_DENSE_FILTEREDGILLESPIEPARALLEL_H
 #define READDY_DENSE_FILTEREDGILLESPIEPARALLEL_H
 
-#include "GillespieParallel.h"
+#include "CPUGillespieParallel.h"
 
 namespace readdy {
 namespace kernel {

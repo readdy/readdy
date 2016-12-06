@@ -114,10 +114,10 @@ void exportPotentials(py::module &proto) {
     py::class_<rdy_pot>(proto, "Potential");
     py::class_<spot::SCPUCubePotential, rdy_pot>(proto, "CubePotential")
             .def("get_name", &spot::SCPUCubePotential::getName);
-    py::class_<spot::HarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
-            .def("get_name", &spot::HarmonicRepulsion::getName);
-    py::class_<spot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
-            .def("get_name", &spot::WeakInteractionPiecewiseHarmonic::getName);
+    py::class_<spot::SCPUHarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
+            .def("get_name", &spot::SCPUHarmonicRepulsion::getName);
+    py::class_<spot::SCPUWeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
+            .def("get_name", &spot::SCPUWeakInteractionPiecewiseHarmonic::getName);
 
     py::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
             .def(py::init<std::string>())
@@ -135,8 +135,8 @@ void exportPotentials(py::module &proto) {
             .def("get_maximal_force", &rdy_pot2::getMaximalForce);
 
     auto f_create_cube_pot = &rdy_pot_factory::createPotential<spot::SCPUCubePotential>;
-    auto f_create_harmonic_pot = &rdy_pot_factory::createPotential<spot::HarmonicRepulsion>;
-    auto f_create_weak_inter_pot = &rdy_pot_factory::createPotential<spot::WeakInteractionPiecewiseHarmonic>;
+    auto f_create_harmonic_pot = &rdy_pot_factory::createPotential<spot::SCPUHarmonicRepulsion>;
+    auto f_create_weak_inter_pot = &rdy_pot_factory::createPotential<spot::SCPUWeakInteractionPiecewiseHarmonic>;
     py::class_<rdy_pot_factory>(proto, "PotentialFactory")
             .def("create_cube_potential", f_create_cube_pot)
             .def("create_harmonic_repulsion", f_create_harmonic_pot)

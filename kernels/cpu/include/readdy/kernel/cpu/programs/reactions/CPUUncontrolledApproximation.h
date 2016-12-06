@@ -10,7 +10,7 @@
 #ifndef READDY_CPUKERNEL_UNCONTROLLEDAPPROXIMATION_H
 #define READDY_CPUKERNEL_UNCONTROLLEDAPPROXIMATION_H
 
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
@@ -18,9 +18,9 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-class UncontrolledApproximation : public readdy::model::programs::reactions::UncontrolledApproximation {
+class CPUUncontrolledApproximation : public readdy::model::programs::reactions::UncontrolledApproximation {
 public:
-    UncontrolledApproximation(const Kernel *const kernel);
+    CPUUncontrolledApproximation(const CPUKernel *const kernel);
 
     virtual void execute() override;
 
@@ -42,7 +42,7 @@ public:
     }
 
 protected:
-    Kernel const *const kernel;
+    CPUKernel const *const kernel;
 };
 }
 }

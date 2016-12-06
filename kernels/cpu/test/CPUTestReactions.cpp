@@ -10,15 +10,15 @@
 #include <gtest/gtest.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/programs/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu/programs/reactions/GillespieParallel.h>
+#include <readdy/kernel/cpu/programs/reactions/CPUGillespieParallel.h>
 #include <readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h>
 
 namespace reac = readdy::kernel::cpu::programs::reactions;
 
 struct fix_n_threads {
-    fix_n_threads(readdy::kernel::cpu::Kernel *const kernel, unsigned int n)
+    fix_n_threads(readdy::kernel::cpu::CPUKernel *const kernel, unsigned int n)
             : oldValue(static_cast<unsigned int>(kernel->getNThreads())), kernel(kernel) {
         kernel->setNThreads(n);
     }
@@ -29,7 +29,7 @@ struct fix_n_threads {
 
 private:
     const unsigned int oldValue;
-    readdy::kernel::cpu::Kernel *const kernel;
+    readdy::kernel::cpu::CPUKernel *const kernel;
 };
 
 TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
@@ -39,7 +39,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    using data_t = readdy::kernel::cpu::model::ParticleData;
+    using data_t = readdy::kernel::cpu::model::CPUParticleData;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(100, 100, 100);
@@ -232,7 +232,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    auto kernel = std::make_unique<readdy::kernel::cpu::Kernel>();
+    auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->getKernelContext().setBoxSize(10, 10, 30);
     kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);
@@ -273,7 +273,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-        auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu::programs::reactions::GillespieParallel>();
+        auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu::programs::reactions::CPUGillespieParallel>();
         neighborList->execute();
         reactionsProgram->execute();
         EXPECT_EQ(1.0, reactionsProgram->getMaxReactionRadius());

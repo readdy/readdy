@@ -11,7 +11,7 @@
 #define READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
 
 #include <readdy/model/programs/Programs.h>
-#include "readdy/kernel/cpu/Kernel.h"
+#include "readdy/kernel/cpu/CPUKernel.h"
 
 namespace readdy {
 namespace kernel {
@@ -23,7 +23,7 @@ class NextSubvolumes : public readdy::model::programs::reactions::NextSubvolumes
 using cell_index_t = unsigned int;
 using signed_cell_index_t = typename std::make_signed<cell_index_t>::type;
 public:
-    NextSubvolumes(const Kernel *const kernel);
+    NextSubvolumes(const CPUKernel *const kernel);
     ~NextSubvolumes();
 
     virtual void execute() override;
@@ -33,7 +33,7 @@ private:
     struct ReactionEvent;
     struct GridCell;
 
-    Kernel const* const kernel;
+    CPUKernel const* const kernel;
 
     // sets up a grid cell (rate, timestamp, next event)
     void setUpCell(GridCell& cell);

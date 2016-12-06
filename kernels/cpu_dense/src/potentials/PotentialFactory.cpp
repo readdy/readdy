@@ -23,10 +23,10 @@ PotentialFactory::PotentialFactory(Kernel *const kernel) {
         return new singlecpu_pot::SCPUCubePotential(kernel);
     };
     factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] {
-        return new singlecpu_pot::HarmonicRepulsion(kernel);
+        return new singlecpu_pot::SCPUHarmonicRepulsion(kernel);
     };
     factory[p::getPotentialName<p::WeakInteractionPiecewiseHarmonic>()] = [kernel] {
-        return new singlecpu_pot::WeakInteractionPiecewiseHarmonic(kernel);
+        return new singlecpu_pot::SCPUWeakInteractionPiecewiseHarmonic(kernel);
     };
     factory[p::getPotentialName<p::SpherePotential>()] = [kernel] {
         return new singlecpu_pot::SCPUSpherePotential(kernel);

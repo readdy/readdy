@@ -13,13 +13,10 @@
 #include <gtest/gtest.h>
 #include <readdy/kernel/cpu_dense/model/NeighborList.h>
 #include <readdy/kernel/cpu_dense/Kernel.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
 namespace cpu = readdy::kernel::cpu_dense;
-namespace scpu = readdy::kernel::singlecpu;
 namespace cpum = cpu::model;
-namespace scpum = scpu::model;
 namespace m = readdy::model;
 
 namespace {

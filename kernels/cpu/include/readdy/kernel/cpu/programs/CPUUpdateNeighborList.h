@@ -12,16 +12,16 @@
 #define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
 
 #include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-class UpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
+class CPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
 public:
 
-    UpdateNeighborList(Kernel *kernel) : kernel(kernel) {
+    CPUUpdateNeighborList(CPUKernel *kernel) : kernel(kernel) {
     }
 
     virtual void execute() override {
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    Kernel *kernel;
+    CPUKernel *kernel;
 };
 }
 }

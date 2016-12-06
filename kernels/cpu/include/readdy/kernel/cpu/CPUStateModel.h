@@ -14,22 +14,22 @@
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/cpu/model/NeighborList.h>
+#include <readdy/kernel/cpu/model/CPUNeighborList.h>
 #include <readdy/common/thread/Config.h>
-#include <readdy/kernel/cpu/model/ParticleData.h>
+#include <readdy/kernel/cpu/model/CPUParticleData.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
-class StateModel : public readdy::model::KernelStateModel {
+class CPUStateModel : public readdy::model::KernelStateModel {
 
 public:
 
-    using data_t = readdy::kernel::cpu::model::ParticleData;
+    using data_t = readdy::kernel::cpu::model::CPUParticleData;
 
-    StateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
+    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
 
-    ~StateModel();
+    ~CPUStateModel();
 
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
@@ -51,7 +51,7 @@ public:
 
     data_t *const getParticleData() const;
 
-    model::NeighborList *const getNeighborList() const;
+    model::CPUNeighborList *const getNeighborList() const;
 
     virtual void clearNeighborList() override;
 

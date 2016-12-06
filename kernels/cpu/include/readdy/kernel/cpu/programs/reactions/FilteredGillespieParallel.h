@@ -10,7 +10,7 @@
 #ifndef READDY_CPUKERNEL_FILTEREDGILLESPIEPARALLEL_H
 #define READDY_CPUKERNEL_FILTEREDGILLESPIEPARALLEL_H
 
-#include "GillespieParallel.h"
+#include "CPUGillespieParallel.h"
 
 namespace readdy {
 namespace kernel {
@@ -18,7 +18,7 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-class FilteredGillespieParallel : public GillespieParallel {
+class FilteredGillespieParallel : public CPUGillespieParallel {
 public:
     FilteredGillespieParallel(const kernel_t *const kernel);
 

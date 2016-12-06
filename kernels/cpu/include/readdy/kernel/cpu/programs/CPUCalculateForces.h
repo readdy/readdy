@@ -12,24 +12,24 @@
 #define READDY_CPUKERNEL_CALCULATEFORCES_H
 
 #include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-class CalculateForces : public readdy::model::programs::CalculateForces {
+class CPUCalculateForces : public readdy::model::programs::CalculateForces {
 
 public:
 
-    CalculateForces(Kernel *kernel) : kernel(kernel) {}
+    CPUCalculateForces(CPUKernel *kernel) : kernel(kernel) {}
 
     virtual void execute() override {
         kernel->getKernelStateModel().calculateForces();
     }
 
 protected:
-    Kernel *kernel;
+    CPUKernel *kernel;
 };
 }
 }

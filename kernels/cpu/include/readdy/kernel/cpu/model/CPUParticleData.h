@@ -24,8 +24,8 @@ namespace kernel {
 namespace cpu {
 namespace model {
 
-class ParticleData {
-    friend class NeighborList;
+class CPUParticleData {
+    friend class CPUNeighborList;
 public:
 
     struct Entry;
@@ -63,8 +63,8 @@ public:
         displacement_t displacement; // 24 + 8 = 32 bytes
 
     private:
-        friend class readdy::kernel::cpu::model::ParticleData;
-        friend class NeighborList;
+        friend class readdy::kernel::cpu::model::CPUParticleData;
+        friend class CPUNeighborList;
 
         particle_type::pos_type pos; // 32 + 3*8 = 56 bytes
     public:
@@ -75,18 +75,18 @@ public:
         char padding[3]; // 61 + 3 = 64 bytes
     };
     // ctor / dtor
-    ParticleData(readdy::model::KernelContext *const context);
+    CPUParticleData(readdy::model::KernelContext *const context);
 
-    ~ParticleData();
+    ~CPUParticleData();
 
     // delete move and copy
-    ParticleData(ParticleData &&rhs) = delete;
+    CPUParticleData(CPUParticleData &&rhs) = delete;
 
-    ParticleData &operator=(ParticleData &&rhs) = delete;
+    CPUParticleData &operator=(CPUParticleData &&rhs) = delete;
 
-    ParticleData(const ParticleData &rhs) = delete;
+    CPUParticleData(const CPUParticleData &rhs) = delete;
 
-    ParticleData &operator=(const ParticleData &rhs) = delete;
+    CPUParticleData &operator=(const CPUParticleData &rhs) = delete;
 
     std::size_t size() const;
 

@@ -11,28 +11,25 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/kernel/cpu/model/NeighborList.h>
-#include <readdy/kernel/cpu/Kernel.h>
-#include <readdy/kernel/singlecpu/SingleCPUKernel.h>
+#include <readdy/kernel/cpu/model/CPUNeighborList.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/testing/NOOPPotential.h>
 
 namespace cpu = readdy::kernel::cpu;
-namespace scpu = readdy::kernel::singlecpu;
 namespace cpum = cpu::model;
-namespace scpum = scpu::model;
 namespace m = readdy::model;
 
 namespace {
 
-using data_t = cpu::model::ParticleData;
-using nl_t = cpu::model::NeighborList;
+using data_t = cpu::model::CPUParticleData;
+using nl_t = cpu::model::CPUNeighborList;
 
 struct TestNeighborList : ::testing::Test {
 
-    std::unique_ptr<cpu::Kernel> kernel;
+    std::unique_ptr<cpu::CPUKernel> kernel;
     unsigned int typeIdA;
 
-    TestNeighborList() : kernel(std::make_unique<cpu::Kernel>()) {
+    TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
         auto &ctx = kernel->getKernelContext();
         ctx.setDiffusionConstant("A", 1.0);
         double eductDistance = 1.2;
@@ -66,7 +63,7 @@ auto isIdPairInList = [](nl_t *pairs, data_t &data, std::size_t id1, std::size_t
     return isPairInList(pairs, data, data.getIndexForId(id1), data.getIndexForId(id2));
 };
 
-auto getNumberPairs = [](const readdy::kernel::cpu::model::NeighborList &pairs) {
+auto getNumberPairs = [](const readdy::kernel::cpu::model::CPUNeighborList &pairs) {
     using val_t = decltype(*pairs.begin());
     return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, val_t &x) {
         return acc + x.size();
@@ -79,8 +76,8 @@ TEST_F(TestNeighborList, TestCellsDirty) {
     ctx.configure();
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
-    cpum::NeighborList list(&ctx, data, &conf);
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
+    cpum::CPUNeighborList list(&ctx, data, &conf);
     list.setSkinSize(1.0);
 
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
@@ -108,8 +105,8 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     ctx.setPeriodicBoundary(false, false, false);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
-    cpum::NeighborList list(&ctx, data, &conf);
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
+    cpum::CPUNeighborList list(&ctx, data, &conf);
 
     list.setupCells();
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
@@ -132,7 +129,7 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.setPeriodicBoundary(false, false, true);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
@@ -141,7 +138,7 @@ TEST_F(TestNeighborList, OneDirection) {
     std::transform(particles.begin(), particles.end(), ids.begin(), [](const m::Particle& p) {return p.getId();});
     data.addParticles(particles);
 
-    cpum::NeighborList list(&ctx, data, &conf);
+    cpum::CPUNeighborList list(&ctx, data, &conf);
     list.create();
 
     int sum = getNumberPairs(list);
@@ -160,8 +157,8 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::ParticleData data {&ctx};
-    cpum::NeighborList list(&ctx, data, &conf);
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
+    cpum::CPUNeighborList list(&ctx, data, &conf);
     list.setupCells();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{

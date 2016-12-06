@@ -8,12 +8,12 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace {
 
 TEST(TestParallelGillespie, Sanity) {
-    readdy::kernel::cpu::Kernel kernel;
+    readdy::kernel::cpu::CPUKernel kernel;
     kernel.getKernelContext().setBoxSize(10, 10, 11);
     kernel.getKernelContext().setDiffusionConstant("A", 10.0);
     kernel.registerReaction<readdy::model::reactions::Fusion>("Fusion", "A", "A", "A", 10, 1.0);

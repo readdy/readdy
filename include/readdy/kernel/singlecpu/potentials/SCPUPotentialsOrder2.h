@@ -19,11 +19,11 @@ namespace kernel {
 namespace scpu {
 
 namespace potentials {
-class HarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion {
+class SCPUHarmonicRepulsion : public readdy::model::potentials::HarmonicRepulsion {
     using vec_t = readdy::model::Vec3;
 
 public:
-    HarmonicRepulsion(const readdy::model::Kernel *const kernel);
+    SCPUHarmonicRepulsion(const readdy::model::Kernel *const kernel);
 
     virtual double calculateEnergy(const vec_t &x_ij) const override;
 
@@ -37,10 +37,10 @@ public:
 
 };
 
-class WeakInteractionPiecewiseHarmonic : public readdy::model::potentials::WeakInteractionPiecewiseHarmonic {
+class SCPUWeakInteractionPiecewiseHarmonic : public readdy::model::potentials::WeakInteractionPiecewiseHarmonic {
     using vec_t = readdy::model::Vec3;
 public:
-    WeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel);
+    SCPUWeakInteractionPiecewiseHarmonic(const readdy::model::Kernel *const kernel);
 
     virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override;
 

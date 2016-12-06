@@ -10,7 +10,7 @@
 #ifndef READDY_CPUKERNEL_GILLESPIE_H
 #define READDY_CPUKERNEL_GILLESPIE_H
 
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/common/range.h>
 #include "ReactionUtils.h"
 
@@ -20,18 +20,18 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-class Gillespie : public readdy::model::programs::reactions::Gillespie {
+class CPUGillespie : public readdy::model::programs::reactions::Gillespie {
     using event_t = Event;
     using reaction_idx_t = event_t::index_type;
 
 public:
 
-    Gillespie(Kernel const *const kernel);
+    CPUGillespie(CPUKernel const *const kernel);
 
     virtual void execute() override;
 
 protected:
-    Kernel const *const kernel;
+    CPUKernel const *const kernel;
 };
 }
 }

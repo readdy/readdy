@@ -5,16 +5,16 @@
  * @date 18.10.16
  */
 
-#include <readdy/kernel/cpu/programs/Compartments.h>
+#include <readdy/kernel/cpu/programs/CPUCompartments.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
 
-Compartments::Compartments(const Kernel *const kernel) : kernel(kernel) {}
+CPUCompartments::CPUCompartments(const CPUKernel *const kernel) : kernel(kernel) {}
 
-void Compartments::execute() {
+void CPUCompartments::execute() {
     const auto &ctx = kernel->getKernelContext();
     long long idx = 0;
     for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
@@ -31,11 +31,11 @@ void Compartments::execute() {
     }
 }
 
-void Compartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
+void CPUCompartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
     compartments.push_back(std::move(fun));
 }
 
-void Compartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
+void CPUCompartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
     if (compartmentIdx >= compartments.size()) {
         throw std::runtime_error("Given compartment does not exist. Register it first.");
     }
@@ -45,7 +45,7 @@ void Compartments::registerConversion(compartmentIdx_t compartmentIdx, particleT
     conversions[compartmentIdx].emplace(from, to);
 }
 
-void Compartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
+void CPUCompartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
     // Since this program is not part of the default readdy functionality it shall not be able to
     // create particleTypes, i.e. if 'from' or 'to' do not exist the conversion cannot be registered
     const auto typeMapping = kernel->getKernelContext().getTypeMapping();

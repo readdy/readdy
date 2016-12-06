@@ -1,13 +1,13 @@
 /**
  * << detailed description >>
  *
- * @file ParticleData.cpp
+ * @file CPUParticleData.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 27.10.16
  */
 
-#include "readdy/kernel/cpu/model/ParticleData.h"
+#include "readdy/kernel/cpu/model/CPUParticleData.h"
 
 namespace readdy {
 namespace kernel {
@@ -18,11 +18,11 @@ namespace model {
 // Entry Impl
 //
 
-ParticleData::Entry::Entry(ParticleData::Entry &&rhs)
+CPUParticleData::Entry::Entry(CPUParticleData::Entry &&rhs)
         : pos(std::move(rhs.pos)), force(std::move(rhs.force)), type(std::move(rhs.type)), id(std::move(rhs.id)),
           deactivated(std::move(rhs.deactivated)), displacement(std::move(rhs.displacement)){ }
 
-ParticleData::Entry &ParticleData::Entry::operator=(ParticleData::Entry &&rhs) {
+CPUParticleData::Entry &CPUParticleData::Entry::operator=(CPUParticleData::Entry &&rhs) {
     pos = std::move(rhs.pos);
     force = std::move(rhs.force);
     type = std::move(rhs.type);
@@ -32,41 +32,41 @@ ParticleData::Entry &ParticleData::Entry::operator=(ParticleData::Entry &&rhs) {
     return *this;
 }
 
-const ParticleData::particle_type::pos_type &ParticleData::Entry::position() const {
+const CPUParticleData::particle_type::pos_type &CPUParticleData::Entry::position() const {
     return pos;
 }
 
-bool ParticleData::Entry::is_deactivated() const {
+bool CPUParticleData::Entry::is_deactivated() const {
     return deactivated;
 }
 
 //
-// ParticleData Impl
+// CPUCPUParticleData Impl
 //
 
 
-ParticleData::ParticleData(readdy::model::KernelContext*const context)
+CPUParticleData::CPUParticleData(readdy::model::KernelContext*const context)
         : blanks(std::vector<index_t>()), entries(), neighbors(), fixPos(context->getFixPositionFun())  { }
 
-std::size_t ParticleData::size() const {
+std::size_t CPUParticleData::size() const {
     return entries.size();
 }
 
-bool ParticleData::empty() const {
+bool CPUParticleData::empty() const {
     return size() == getNDeactivated();
 }
 
-void ParticleData::clear() {
+void CPUParticleData::clear() {
     blanks.clear();
     entries.clear();
     neighbors.clear();
 }
 
-void ParticleData::addParticle(const ParticleData::particle_type &particle) {
+void CPUParticleData::addParticle(const CPUParticleData::particle_type &particle) {
     addParticles({particle});
 }
 
-void ParticleData::addParticles(const std::vector<ParticleData::particle_type> &particles) {
+void CPUParticleData::addParticles(const std::vector<CPUParticleData::particle_type> &particles) {
     for(const auto& p : particles) {
         if(!blanks.empty()) {
             const auto idx = blanks.back();
@@ -79,7 +79,7 @@ void ParticleData::addParticles(const std::vector<ParticleData::particle_type> &
     }
 }
 
-void ParticleData::removeParticle(const ParticleData::particle_type &particle) {
+void CPUParticleData::removeParticle(const CPUParticleData::particle_type &particle) {
     auto it_entries = begin();
     std::size_t idx = 0;
     for(; it_entries != end(); ++it_entries, ++idx) {
@@ -92,7 +92,7 @@ void ParticleData::removeParticle(const ParticleData::particle_type &particle) {
     log::console()->error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
 }
 
-void ParticleData::removeParticle(const ParticleData::index_t index) {
+void CPUParticleData::removeParticle(const CPUParticleData::index_t index) {
     auto& p = *(entries.begin() + index);
     if(!p.deactivated) {
         blanks.push_back(index);
@@ -103,11 +103,11 @@ void ParticleData::removeParticle(const ParticleData::index_t index) {
     }
 }
 
-ParticleData::index_t ParticleData::getNDeactivated() const {
+CPUParticleData::index_t CPUParticleData::getNDeactivated() const {
     return blanks.size();
 }
 
-readdy::model::Particle ParticleData::getParticle(const index_t index) const {
+readdy::model::Particle CPUParticleData::getParticle(const index_t index) const {
     const auto& entry = *(entries.begin() + index);
     if(entry.deactivated) {
         log::console()->error("Requested deactivated particle at index {}!", index);
@@ -115,11 +115,11 @@ readdy::model::Particle ParticleData::getParticle(const index_t index) const {
     return toParticle(entry);
 }
 
-readdy::model::Particle ParticleData::toParticle(const Entry &e) const {
+readdy::model::Particle CPUParticleData::toParticle(const Entry &e) const {
     return readdy::model::Particle(e.pos, e.type, e.id);
 }
 
-ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
+CPUParticleData::index_t CPUParticleData::addEntry(CPUParticleData::Entry &&entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.back();
         blanks.pop_back();
@@ -133,7 +133,7 @@ ParticleData::index_t ParticleData::addEntry(ParticleData::Entry &&entry) {
     }
 }
 
-void ParticleData::removeEntry(index_t idx) {
+void CPUParticleData::removeEntry(index_t idx) {
     auto &entry = entries.at(idx);
     if(!entry.is_deactivated()) {
         entry.deactivated = true;
@@ -141,7 +141,7 @@ void ParticleData::removeEntry(index_t idx) {
     }
 }
 
-std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) {
+std::vector<CPUParticleData::index_t> CPUParticleData::update(update_t &&update_data) {
     std::vector<index_t> result;
 
     auto &&newEntries = std::move(std::get<0>(update_data));
@@ -167,84 +167,84 @@ std::vector<ParticleData::index_t> ParticleData::update(update_t &&update_data) 
     return result;
 }
 
-void ParticleData::setFixPosFun(const ctx_t::fix_pos_fun &f) {
+void CPUParticleData::setFixPosFun(const ctx_t::fix_pos_fun &f) {
     fixPos = f;
 }
 
-const ParticleData::particle_type::pos_type &ParticleData::pos(ParticleData::index_t idx) const {
+const CPUParticleData::particle_type::pos_type &CPUParticleData::pos(CPUParticleData::index_t idx) const {
     return entries.at(idx).pos;
 }
 
-void ParticleData::displace(ParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
+void CPUParticleData::displace(CPUParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
     entry.pos += delta;
     fixPos(entry.pos);
     entry.displacement += std::sqrt(delta * delta);
 }
 
-void ParticleData::blanks_moved_to_end() {
+void CPUParticleData::blanks_moved_to_end() {
     auto n_blanks = blanks.size();
     std::iota(blanks.begin(), blanks.end(), size() - n_blanks - 1);
 }
 
-ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) {
+CPUParticleData::Entry &CPUParticleData::entry_at(CPUParticleData::index_t idx) {
     return entries.at(idx);
 }
 
-const ParticleData::Entry &ParticleData::entry_at(ParticleData::index_t idx) const {
+const CPUParticleData::Entry &CPUParticleData::entry_at(CPUParticleData::index_t idx) const {
     return centry_at(idx);
 }
 
-const ParticleData::Entry &ParticleData::centry_at(ParticleData::index_t idx) const {
+const CPUParticleData::Entry &CPUParticleData::centry_at(CPUParticleData::index_t idx) const {
     return entries.at(idx);
 }
 
-ParticleData::neighbors_t &ParticleData::neighbors_at(ParticleData::index_t idx) {
+CPUParticleData::neighbors_t &CPUParticleData::neighbors_at(CPUParticleData::index_t idx) {
     return neighbors.at(idx);
 }
 
-const ParticleData::neighbors_t &ParticleData::neighbors_at(ParticleData::index_t idx) const {
+const CPUParticleData::neighbors_t &CPUParticleData::neighbors_at(CPUParticleData::index_t idx) const {
     return cneighbors_at(idx);
 }
 
-const ParticleData::neighbors_t &ParticleData::cneighbors_at(ParticleData::index_t idx) const {
+const CPUParticleData::neighbors_t &CPUParticleData::cneighbors_at(CPUParticleData::index_t idx) const {
     return neighbors.at(idx);
 }
 
 
-ParticleData::~ParticleData() = default;
+CPUParticleData::~CPUParticleData() = default;
 
 
-ParticleData::iterator ParticleData::begin() {
+CPUParticleData::iterator CPUParticleData::begin() {
     return entries.begin();
 }
 
-ParticleData::iterator ParticleData::end() {
+CPUParticleData::iterator CPUParticleData::end() {
     return entries.end();
 }
 
-ParticleData::const_iterator ParticleData::cbegin() const {
+CPUParticleData::const_iterator CPUParticleData::cbegin() const {
     return entries.cbegin();
 }
 
-ParticleData::const_iterator ParticleData::cend() const {
+CPUParticleData::const_iterator CPUParticleData::cend() const {
     return entries.cend();
 }
 
 
-ParticleData::const_iterator ParticleData::begin() const {
+CPUParticleData::const_iterator CPUParticleData::begin() const {
     return entries.cbegin();
 }
 
 
-ParticleData::const_iterator ParticleData::end() const {
+CPUParticleData::const_iterator CPUParticleData::end() const {
     return entries.cend();
 }
 
-void ParticleData::blanks_moved_to_front() {
+void CPUParticleData::blanks_moved_to_front() {
     std::iota(blanks.begin(), blanks.end(), 0);
 }
 
-ParticleData::index_t ParticleData::getIndexForId(const particle_type::id_type id) const {
+CPUParticleData::index_t CPUParticleData::getIndexForId(const particle_type::id_type id) const {
     auto find_it = std::find_if(entries.begin(), entries.end(), [id](const Entry& e) {
         return !e.is_deactivated() && e.id == id;
     });

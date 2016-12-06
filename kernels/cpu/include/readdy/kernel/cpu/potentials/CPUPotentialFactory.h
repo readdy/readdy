@@ -14,11 +14,11 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
-class Kernel;
+class CPUKernel;
 namespace potentials {
-class PotentialFactory : public readdy::model::potentials::PotentialFactory {
+class CPUPotentialFactory : public readdy::model::potentials::PotentialFactory {
 public:
-    PotentialFactory(Kernel *const kernel);
+    CPUPotentialFactory(CPUKernel *const kernel);
 };
 }
 }

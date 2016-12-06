@@ -13,27 +13,27 @@
 
 #include <readdy/model/Kernel.h>
 #include <readdy/common/dll.h>
-#include "StateModel.h"
+#include "CPUStateModel.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 
 
-class Kernel : public readdy::model::Kernel {
+class CPUKernel : public readdy::model::Kernel {
 public:
     static const std::string name;
 
-    Kernel();
+    CPUKernel();
 
-    ~Kernel();
+    ~CPUKernel();
 
     // factory method
     static readdy::model::Kernel* create();
 
     virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
 
-    virtual StateModel &getKernelStateModel() const override;
+    virtual CPUStateModel &getKernelStateModel() const override;
 
     virtual readdy::model::KernelContext &getKernelContext() const override;
 

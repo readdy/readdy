@@ -21,9 +21,9 @@ SCPUPotentialFactory::SCPUPotentialFactory(SCPUKernel *const kernel)
     factory[p::getPotentialName<p::CubePotential>()] = [kernel] { return new SCPUCubePotential(kernel); };
     factory[p::getPotentialName<p::SpherePotential>()] = [kernel] { return new SCPUSpherePotential(kernel); };
     // order 2
-    factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] { return new HarmonicRepulsion(kernel); };
+    factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] { return new SCPUHarmonicRepulsion(kernel); };
     factory[p::getPotentialName<p::WeakInteractionPiecewiseHarmonic>()] = [kernel] {
-        return new WeakInteractionPiecewiseHarmonic(kernel);
+        return new SCPUWeakInteractionPiecewiseHarmonic(kernel);
     };
 }
 

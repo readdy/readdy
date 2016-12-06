@@ -5,8 +5,8 @@
  * @date 13.07.16
  */
 
-#include <readdy/kernel/cpu/potentials/PotentialFactory.h>
-#include <readdy/kernel/cpu/Kernel.h>
+#include <readdy/kernel/cpu/potentials/CPUPotentialFactory.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder1.h>
 #include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder2.h>
 
@@ -14,7 +14,7 @@ namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace potentials {
-PotentialFactory::PotentialFactory(Kernel *const kernel) {
+CPUPotentialFactory::CPUPotentialFactory(CPUKernel *const kernel) {
     namespace p = readdy::model::potentials;
     namespace singlecpu_pot = readdy::kernel::scpu::potentials;
     factory[p::getPotentialName<p::CubePotential>()] = [kernel] {
@@ -24,10 +24,10 @@ PotentialFactory::PotentialFactory(Kernel *const kernel) {
         return new singlecpu_pot::SCPUSpherePotential(kernel);
     };
     factory[p::getPotentialName<p::HarmonicRepulsion>()] = [kernel] {
-        return new singlecpu_pot::HarmonicRepulsion(kernel);
+        return new singlecpu_pot::SCPUHarmonicRepulsion(kernel);
     };
     factory[p::getPotentialName<p::WeakInteractionPiecewiseHarmonic>()] = [kernel] {
-        return new singlecpu_pot::WeakInteractionPiecewiseHarmonic(kernel);
+        return new singlecpu_pot::SCPUWeakInteractionPiecewiseHarmonic(kernel);
     };
 }
 }

@@ -6,7 +6,7 @@
  * @author clonker
  * @date 20.10.16
  */
-#include <readdy/kernel/cpu/programs/reactions/Gillespie.h>
+#include <readdy/kernel/cpu/programs/reactions/CPUGillespie.h>
 
 
 namespace readdy {
@@ -15,9 +15,9 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-Gillespie::Gillespie(const Kernel *const kernel) : kernel(kernel) {}
+CPUGillespie::CPUGillespie(const CPUKernel *const kernel) : kernel(kernel) {}
 
-void Gillespie::execute() {
+void CPUGillespie::execute() {
     const auto &ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
     const auto &dist = ctx.getDistSquaredFun();
