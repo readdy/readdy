@@ -70,8 +70,11 @@
 #include <readdy/common/Timer.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
+#include <readdy/io/File.h>
 
 namespace {
+
+using file_t = readdy::io::File;
 
 /**
  * A performance scenario is an instance of a simulation that is run once for a few timesteps to record
@@ -324,25 +327,23 @@ void scaleNumbersAndBoxsize(const std::string kernelName) {
 
     /** Write the result vectors to one dataset each, all in a single file */
     const std::string filename = "numbersAndBoxlengths_" + scenario_t::name + "_" + kernelName + ".h5";
-    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-    hid_t input = H5Gcreate(file, "/input", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    hsize_t dimsNumbers[1] = {numbersSize};
-    hsize_t dimsBoxlengths[1] = {boxlengthsSize};
-    H5LTmake_dataset_double(input, "numbers", 1, dimsNumbers, numbers.data());
-    H5LTmake_dataset_double(input, "boxlengths", 1, dimsBoxlengths, boxlengths.data());
+    {
+        file_t file(filename, file_t::Action::CREATE, file_t::Flag::OVERWRITE);
+        auto inputGroup = file.createGroup("/input");
+        inputGroup.write("numbers", numbers);
+        inputGroup.write("boxlengths", boxlengths);
 
-    hid_t output = H5Gcreate(file, "/output", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    hsize_t dims_output[2] = {numbersSize, boxlengthsSize};
-    H5LTmake_dataset_double(output, "time_forces", 2, dims_output, &timeForces[0][0]);
-    H5LTmake_dataset_double(output, "time_integrator", 2, dims_output, &timeIntegrator[0][0]);
-    H5LTmake_dataset_double(output, "time_neighborlist", 2, dims_output, &timeNeighborlist[0][0]);
-    H5LTmake_dataset_double(output, "time_reactions", 2, dims_output, &timeReactions[0][0]);
-    H5LTmake_dataset_double(output, "particle_number", 2, dims_output, &particleNumber[0][0]);
-    H5LTmake_dataset_double(output, "system_size", 2, dims_output, &systemSize[0][0]);
-    H5LTmake_dataset_double(output, "relative_displacement", 2, dims_output, &relativeDisplacement[0][0]);
-    H5LTmake_dataset_double(output, "reactivity", 2, dims_output, &reactivity[0][0]);
-    H5Fclose(file);
+        auto outputGroup = file.createGroup("/output");
+        outputGroup.write("time_forces", {numbersSize, boxlengthsSize}, &timeForces[0][0]);
+        outputGroup.write("time_integrator", {numbersSize, boxlengthsSize}, &timeIntegrator[0][0]);
+        outputGroup.write("time_neighborlist", {numbersSize, boxlengthsSize}, &timeNeighborlist[0][0]);
+        outputGroup.write("time_reactions", {numbersSize, boxlengthsSize}, &timeReactions[0][0]);
+        outputGroup.write("particle_number", {numbersSize, boxlengthsSize}, &particleNumber[0][0]);
+        outputGroup.write("system_size", {numbersSize, boxlengthsSize}, &systemSize[0][0]);
+        outputGroup.write("relative_displacement", {numbersSize, boxlengthsSize}, &relativeDisplacement[0][0]);
+        outputGroup.write("reactivity", {numbersSize, boxlengthsSize}, &reactivity[0][0]);
+    }
 }
 
 template<typename Scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
@@ -378,25 +379,24 @@ void scaleNumbersConstDensity(const std::string kernelName) {
         reactivity[n] = scenario.getReactivity();
     }
 
-    /** Write the result vectors to one dataset each, all in a single file */
-    const std::string filename = "numbersConstDensity_" + Scenario_t::name + "_" + kernelName + ".h5";
-    hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    {
+        /** Write the result vectors to one dataset each, all in a single file */
+        const std::string filename = "numbersConstDensity_" + Scenario_t::name + "_" + kernelName + ".h5";
+        file_t file(filename, file_t::Action::CREATE, file_t::Flag::OVERWRITE);
+        
+        auto inputGroup = file.createGroup("/input");
+        inputGroup.write("numbers", numbers);
 
-    hid_t input = H5Gcreate(file, "/input", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    hsize_t dimsNumbers[1] = {numbersSize};
-    H5LTmake_dataset_double(input, "numbers", 1, dimsNumbers, numbers.data());
-
-    hid_t output = H5Gcreate(file, "/output", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    hsize_t dims_output[1] = {numbersSize};
-    H5LTmake_dataset_double(output, "time_forces", 1, dims_output, &timeForces[0]);
-    H5LTmake_dataset_double(output, "time_integrator", 1, dims_output, &timeIntegrator[0]);
-    H5LTmake_dataset_double(output, "time_neighborlist", 1, dims_output, &timeNeighborlist[0]);
-    H5LTmake_dataset_double(output, "time_reactions", 1, dims_output, &timeReactions[0]);
-    H5LTmake_dataset_double(output, "particle_number", 1, dims_output, &particleNumber[0]);
-    H5LTmake_dataset_double(output, "system_size", 1, dims_output, &systemSize[0]);
-    H5LTmake_dataset_double(output, "relative_displacement", 1, dims_output, &relativeDisplacement[0]);
-    H5LTmake_dataset_double(output, "reactivity", 1, dims_output, &reactivity[0]);
-    H5Fclose(file);
+        auto outputGroup = file.createGroup("/output");
+        outputGroup.write("time_forces", {numbersSize}, &timeForces[0]);
+        outputGroup.write("time_integrator", {numbersSize}, &timeIntegrator[0]);
+        outputGroup.write("time_neighborlist", {numbersSize}, &timeNeighborlist[0]);
+        outputGroup.write("time_reactions", {numbersSize}, &timeReactions[0]);
+        outputGroup.write("particle_number", {numbersSize}, &particleNumber[0]);
+        outputGroup.write("system_size", {numbersSize}, &systemSize[0]);
+        outputGroup.write("relative_displacement", {numbersSize}, &relativeDisplacement[0]);
+        outputGroup.write("reactivity", {numbersSize}, &reactivity[0]);
+    }
 }
 
 TEST(TestPerformance, ReactiveCPU) {
