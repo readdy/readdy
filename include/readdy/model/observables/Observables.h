@@ -139,12 +139,12 @@ protected:
 };
 
 class TestCombiner
-        : public CombinerObservable<std::vector<double>, ParticlePosition, ParticlePosition> {
+        : public Combiner<std::vector<double>, ParticlePosition, ParticlePosition> {
 public:
 
     TestCombiner(Kernel *const kernel, ParticlePosition *obs1, ParticlePosition *obs2,
                  unsigned int stride)
-            : CombinerObservable(kernel, obs1, obs2, stride) {
+            : Combiner(kernel, stride, obs1, obs2) {
     }
 
     virtual void evaluate() override;

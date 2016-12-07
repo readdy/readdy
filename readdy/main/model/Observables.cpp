@@ -48,8 +48,8 @@ ParticlePosition::ParticlePosition(Kernel *const kernel, unsigned int stride,
 
 void TestCombiner::evaluate() {
     std::vector<double> result;
-    const auto &r1 = obs1->getResult();
-    const auto &r2 = obs2->getResult();
+    const auto &r1 = std::get<0>(parentObservables)->getResult();
+    const auto &r2 = std::get<1>(parentObservables)->getResult();
 
     auto b1 = r1.begin();
     auto b2 = r2.begin();

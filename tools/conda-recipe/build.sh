@@ -30,7 +30,7 @@ CMAKE_FLAGS+=" -DCMAKE_CXX_COMPILER=${CXX}"
 #########################################################
 #                                                       #
 # environment variables                                 #
-#   - HDF5_DIR: is set to prefix (the find module       #
+#   - HDF5_ROOT: is set to prefix (the find module      #
 #     seems not to respect the prefix path of cmake)    #
 #   - PYTHON_INCLUDE_DIR: is set w.r.t. whatever python #
 #     interpreter was found first in PATH               #
@@ -38,7 +38,7 @@ CMAKE_FLAGS+=" -DCMAKE_CXX_COMPILER=${CXX}"
 #                                                       #
 #########################################################
 
-export HDF5_DIR=${PREFIX}
+export HDF5_ROOT=${PREFIX}
 
 # cant reliably determine cpu count in a docker container,
 # therefore fix this value.

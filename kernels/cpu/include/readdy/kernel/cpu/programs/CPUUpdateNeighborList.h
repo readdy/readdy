@@ -62,6 +62,10 @@ public:
         kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
     }
 
+    bool supportsSkin() const override {
+        return true;
+    }
+
 private:
     CPUKernel *kernel;
 };

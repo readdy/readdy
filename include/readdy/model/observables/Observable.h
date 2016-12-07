@@ -44,6 +44,7 @@
 #include <readdy/common/make_unique.h>
 #include <readdy/common/signals.h>
 #include <readdy/common/logging.h>
+#include <readdy/common/Utils.h>
 
 namespace readdy {
 namespace model {
@@ -130,29 +131,32 @@ protected:
     callback_function _callback_f = [](const Result) {};
 };
 
-template<typename Res_t, typename Obs1_t, typename Obs2_t>
-class CombinerObservable : public Observable<Res_t> {
-    static_assert(std::is_base_of<ObservableBase, Obs1_t>::value,
-                  "Type of Observable 1 was not a subtype of ObservableBase");
-    static_assert(std::is_base_of<ObservableBase, Obs2_t>::value,
-                  "Type of Observable 2 was not a subtype of ObservableBase");
+template<typename Res_t, typename... ParentObs_t>
+class Combiner : public Observable<Res_t> {
 public:
-    typedef Obs1_t Observable1_type;
-    typedef Obs2_t Observable2_type;
-
-    CombinerObservable(Kernel *const kernel, Obs1_t *obs1, Obs2_t *obs2, unsigned int stride = 1)
-            : Observable<Res_t>::Observable(kernel, stride), obs1(obs1), obs2(obs2) {}
+    Combiner(Kernel *const kernel, unsigned int stride, ParentObs_t*... parents)
+            : Observable<Res_t>(kernel, stride), parentObservables(std::forward<ParentObs_t*>(parents)...) {}
 
     virtual void callback(observables::time_step_type t) override {
-        if (obs1->getCurrentTimeStep() != ObservableBase::t_current) obs1->callback(ObservableBase::t_current);
-        if (obs2->getCurrentTimeStep() != ObservableBase::t_current) obs2->callback(ObservableBase::t_current);
+        readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
         ObservableBase::callback(t);
     }
 
 protected:
-    Obs1_t *obs1;
-    Obs2_t *obs2;
+    std::tuple<ParentObs_t*...> parentObservables;
+private:
+    struct CallbackFunctor {
+        observables::time_step_type currentTimeStep;
+
+        CallbackFunctor(observables::time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
+
+        template<typename T>
+        void operator()(T *const obs) {
+            if(obs->getCurrentTimeStep() != currentTimeStep) obs->callback(currentTimeStep);
+        }
+    };
 };
+
 
 }
 }

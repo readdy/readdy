@@ -43,6 +43,7 @@
 #include <tuple>
 #include <vector>
 #include <algorithm>
+#include "index_sequence.h"
 
 namespace readdy {
 namespace util {
@@ -55,6 +56,7 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 std::vector<std::string> split(const std::string &s, char delim);
 
 namespace collections {
+
 template<typename MapType, typename KeyType = std::string>
 inline bool hasKey(const MapType &map, const KeyType &key) {
     return map.find(key) != map.end();
@@ -67,6 +69,17 @@ inline const V &getOrDefault(const C<K, V, Args...> &m, const K &key, const V &d
         return defaultValue;
     }
     return it->second;
+}
+
+template<class F, class...Ts, std::size_t...Is>
+void for_each_in_tuple(const std::tuple<Ts...> & tuple, F func, std::index_sequence<Is...>){
+    using expander = int[];
+    (void)expander { 0, ((void)func(std::get<Is>(tuple)), 0)... };
+}
+
+template<class F, class...Ts>
+void for_each_in_tuple(const std::tuple<Ts...> & tuple, F func){
+    for_each_in_tuple(tuple, func, std::make_index_sequence<sizeof...(Ts)>());
 }
 
 template<typename Collection, typename Fun>

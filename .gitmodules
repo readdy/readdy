@@ -7,3 +7,6 @@
 [submodule "libraries/spdlog"]
 	path = libraries/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "libraries/h5xx"]
+	path = libraries/h5xx
+	url = https://github.com/halmd-org/h5xx.git
