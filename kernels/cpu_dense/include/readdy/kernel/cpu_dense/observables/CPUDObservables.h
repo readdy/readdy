@@ -41,9 +41,19 @@ class CPUDKernel;
 
 namespace observables {
 
-class CPUDParticlePosition : public readdy::model::observables::ParticlePosition {
+class CPUDPositions : public readdy::model::observables::Positions {
 public:
-    CPUDParticlePosition(CPUDKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+    CPUDPositions(CPUDKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+
+    virtual void evaluate() override;
+
+protected:
+    CPUDKernel *const kernel;
+};
+
+class CPUDParticles : public readdy::model::observables::Particles {
+public:
+    CPUDParticles(CPUDKernel *const kernel, unsigned int stride);
 
     virtual void evaluate() override;
 
@@ -55,9 +65,9 @@ class CPUDHistogramAlongAxis : public readdy::model::observables::HistogramAlong
 
 public:
     CPUDHistogramAlongAxis(CPUDKernel *const kernel, unsigned int stride,
-                       const std::vector<double> &binBorders,
-                       const std::vector<std::string> &typesToCount,
-                       unsigned int axis);
+                           const std::vector<double> &binBorders,
+                           const std::vector<std::string> &typesToCount,
+                           unsigned int axis);
 
     virtual void evaluate() override;
 

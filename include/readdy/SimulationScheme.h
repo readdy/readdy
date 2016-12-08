@@ -74,6 +74,7 @@ namespace readdy {
             std::unique_ptr<model::programs::Program> reactionScheduler = nullptr;
             std::unique_ptr<model::programs::UpdateNeighborList> neighborList = nullptr;
             bool evaluateObservables = true;
+            model::observables::time_step_type start = 0;
         };
 
         class ReaDDyScheme : public SimulationScheme {
@@ -85,10 +86,10 @@ namespace readdy {
 
                 if (neighborList) neighborList->execute();
                 if (forces) forces->execute();
-                if (evaluateObservables) kernel->evaluateObservables(0);
+                if (evaluateObservables) kernel->evaluateObservables(start);
                 // show every 1% of the simulation
                 const std::size_t progressOutputStride = static_cast<std::size_t>(steps / 100);
-                for (model::observables::time_step_type t = 0; t < steps; ++t) {
+                for (model::observables::time_step_type t = start; t < start+steps; ++t) {
                     if (integrator) integrator->execute();
                     if (neighborList) neighborList->execute();
                     if (forces) forces->execute();
@@ -97,13 +98,14 @@ namespace readdy {
                     if (neighborList) neighborList->execute();
                     if (forces) forces->execute();
                     if (evaluateObservables) kernel->evaluateObservables(t + 1);
-                    if(progressOutputStride > 0 && t % progressOutputStride == 0) {
-                        log::console()->debug("Simulation progress: {} / {} steps", t, steps);
+                    if(progressOutputStride > 0 && (t - start) % progressOutputStride == 0) {
+                        log::console()->debug("Simulation progress: {} / {} steps", (t - start), steps);
                     }
                 }
 
                 if (neighborList) neighborList->setAction(model::programs::UpdateNeighborList::Action::clear);
                 if (neighborList) neighborList->execute();
+                start += steps;
                 log::console()->debug("Simulation completed");
             }
         };

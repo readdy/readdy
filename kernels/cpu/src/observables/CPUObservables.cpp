@@ -43,11 +43,11 @@ namespace observables {
 
 namespace thd = readdy::util::thread;
 
-CPUParticlePosition::CPUParticlePosition(CPUKernel *const kernel, unsigned int stride,
+CPUPositions::CPUPositions(CPUKernel *const kernel, unsigned int stride,
                                    const std::vector<std::string> &typesToCount) :
-        readdy::model::observables::ParticlePosition(kernel, stride, typesToCount), kernel(kernel) {}
+        readdy::model::observables::Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
-void CPUParticlePosition::evaluate() {
+void CPUPositions::evaluate() {
     result.clear();
     const auto &pd = kernel->getKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
@@ -179,6 +179,29 @@ void CPUForces::evaluate() {
 }
 
 
+CPUParticles::CPUParticles(CPUKernel *const kernel, unsigned int stride)
+        : readdy::model::observables::Particles(kernel, stride), kernel(kernel) {}
+
+void CPUParticles::evaluate() {
+    auto &resultTypes = std::get<0>(result);
+    auto &resultIds = std::get<1>(result);
+    auto &resultPositions = std::get<2>(result);
+    resultTypes.clear();
+    resultIds.clear();
+    resultPositions.clear();
+    const auto &particleData = kernel->getKernelStateModel().getParticleData();
+    resultTypes.reserve(particleData->size());
+    resultIds.reserve(particleData->size());
+    resultPositions.reserve(particleData->size());
+    for (size_t i=0; i<particleData->size(); ++i) {
+        const auto & entry = particleData->entry_at(i);
+        if (!entry.is_deactivated()) {
+            resultTypes.push_back(entry.type);
+            resultIds.push_back(entry.id);
+            resultPositions.push_back(entry.position());
+        }
+    }
+}
 }
 }
 }

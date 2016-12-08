@@ -103,8 +103,8 @@ TEST_P(TestCompartments, TwoCompartments) {
 
     const std::vector<std::string> typesC = {"C"};
     const std::vector<std::string> typesD = {"D"};
-    auto &&posC = kernel->createObservable<m::observables::ParticlePosition>(1, typesC);
-    auto &&posD = kernel->createObservable<m::observables::ParticlePosition>(1, typesD);
+    auto &&posC = kernel->createObservable<m::observables::Positions>(1, typesC);
+    auto &&posD = kernel->createObservable<m::observables::Positions>(1, typesD);
     posC->evaluate();
     posD->evaluate();
     const auto &resultC = posC->getResult();

@@ -92,7 +92,7 @@ class TwoParticlesMiniExample(object):
         self.simulation.register_potential_box("C", 100., Vec(-.75, -.75, -.75), Vec(1.5, 1.5, 1.5), False)
         self.simulation.add_particle("A", Vec(-.0, -.0, -.0))
         self.simulation.add_particle("B", Vec(0.1, 0.1, 0.1))
-        self.simulation.register_observable_particle_positions(1, self.ppos_callback, [])
+        self.simulation.register_observable_positions(1, self.ppos_callback, [])
 
         self.simulation.run(self.T, .0001)
 

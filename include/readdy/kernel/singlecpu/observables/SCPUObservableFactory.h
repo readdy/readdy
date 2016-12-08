@@ -46,21 +46,24 @@ public:
     SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel *const kernel);
 
     virtual readdy::model::observables::HistogramAlongAxis *
-    createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
-                                  std::vector<std::string> typesToCount, unsigned int axis) const override;
+    createHistogramAlongAxis(unsigned int stride, std::vector<double> binBorders,
+                             std::vector<std::string> typesToCount, unsigned int axis) const override;
 
     virtual readdy::model::observables::NParticles *
-    createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+    createNParticles(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
     virtual readdy::model::observables::Forces *
-    createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+    createForces(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
-    virtual readdy::model::observables::ParticlePosition *
-    createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
+    virtual readdy::model::observables::Positions *
+    createPositions(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
     virtual readdy::model::observables::RadialDistribution *
-    createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
-                                        std::string typeCountTo, double particleToDensity) const override;
+    createRadialDistribution(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
+                             std::vector<std::string> typeCountTo, double particleToDensity) const override;
+
+    virtual readdy::model::observables::Particles *
+    createParticles(unsigned int stride) const override;
 
 private:
     readdy::kernel::scpu::SCPUKernel *const kernel;

@@ -22,12 +22,13 @@
 
 /**
  * Header file containing definitions for various observables. Currently:
- *  - ParticlePositionObservable,
- *  - RadialDistributionObservable,
- *  - CenterOfMassObservable,
- *  - HistogramAlongAxisObservable,
- *  - NParticlesObservable,
- *  - TestCombinerObservable
+ *  - Positions,
+ *  - RadialDistribution,
+ *  - CenterOfMass,
+ *  - HistogramAlongAxis,
+ *  - NParticles,
+ *  - TestCombiner,
+ *  - Forces
  *
  * @file Observables.h
  * @brief Header file containing definitions for various observables.
@@ -44,6 +45,7 @@
 #include <vector>
 #include <iostream>
 #include <set>
+#include <readdy/model/Particle.h>
 
 namespace readdy {
 namespace model {
@@ -51,13 +53,13 @@ namespace observables {
 
 class KernelContext;
 
-class ParticlePosition : public Observable<std::vector<Vec3>> {
+class Positions : public Observable<std::vector<Vec3>> {
 public:
-    ParticlePosition(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
+    Positions(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
 
-    ParticlePosition(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
+    Positions(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
-    ParticlePosition(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+    Positions(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
     virtual void evaluate() = 0;
 
@@ -65,14 +67,22 @@ protected:
     std::vector<unsigned int> typesToCount;
 };
 
+class Particles
+        : public Observable<std::tuple<std::vector<readdy::model::Particle::type_type>, std::vector<readdy::model::Particle::id_type>, std::vector<Vec3>>> {
+public:
+    Particles(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
+
+    virtual void evaluate() = 0;
+};
+
 class RadialDistribution : public Observable<std::pair<std::vector<double>, std::vector<double>>> {
 public:
     RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
-                       unsigned int typeCountFrom, unsigned int typeCountTo, double particleDensity);
+                       std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo, double particleToDensity);
 
     RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
-                       const std::string &typeCountFrom, const std::string &typeCountTo,
-                       double particleDensity);
+                       const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
+                       double particleToDensity);
 
     virtual void evaluate() = 0;
 
@@ -83,8 +93,8 @@ public:
 protected:
     std::vector<double> binBorders;
     std::vector<double> counts;
-    unsigned int typeCountFrom, typeCountTo;
-    double particleDensity;
+    std::vector<unsigned int> typeCountFrom, typeCountTo;
+    double particleToDensity;
 };
 
 class CenterOfMass : public Observable<readdy::model::Vec3> {
@@ -139,10 +149,10 @@ protected:
 };
 
 class TestCombiner
-        : public Combiner<std::vector<double>, ParticlePosition, ParticlePosition> {
+        : public Combiner<std::vector<double>, Positions, Positions> {
 public:
 
-    TestCombiner(Kernel *const kernel, ParticlePosition *obs1, ParticlePosition *obs2,
+    TestCombiner(Kernel *const kernel, Positions *obs1, Positions *obs2,
                  unsigned int stride)
             : Combiner(kernel, stride, obs1, obs2) {
     }

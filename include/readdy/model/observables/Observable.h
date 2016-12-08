@@ -29,8 +29,11 @@
  *
  * Observable derives from ObservableBase and is templateized to a certain result type.
  *
- * CombinerObservable takes two Observables and combines their results into a third result to avoid duplication of
+ * Combiner takes two Observables and combines their results into a third result to avoid duplication of
  * work.
+ *
+ * The callback methods are responsible for triggering the evaluation and forwarding the results to the external callback
+ * functions, which are optional.
  *
  * @file Observable.h
  * @brief Header file containing the definitions for ObservableName, ObservableBase, Observable and CombinerObservable.
@@ -115,20 +118,20 @@ public:
     }
 
     void setCallback(const callback_function& callbackFun) {
-        Observable::_callback_f = std::move(callbackFun);
+        Observable::externalCallback = std::move(callbackFun);
     }
 
     virtual void callback(observables::time_step_type t) override {
         if (should_execute_callback(t)) {
             ObservableBase::callback(t);
-            _callback_f(result);
+            externalCallback(result);
         }
     }
 
 
 protected:
     Result result;
-    callback_function _callback_f = [](const Result) {};
+    callback_function externalCallback = [](const Result) {};
 };
 
 template<typename Res_t, typename... ParentObs_t>
@@ -138,8 +141,10 @@ public:
             : Observable<Res_t>(kernel, stride), parentObservables(std::forward<ParentObs_t*>(parents)...) {}
 
     virtual void callback(observables::time_step_type t) override {
-        readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
-        ObservableBase::callback(t);
+        if (ObservableBase::should_execute_callback(t)) {
+            readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
+            ObservableBase::callback(t);
+        }
     }
 
 protected:

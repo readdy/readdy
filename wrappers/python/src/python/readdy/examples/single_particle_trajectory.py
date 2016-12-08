@@ -70,7 +70,7 @@ class TestPlot(unittest.TestCase):
         self.simulation.register_potential_harmonic_repulsion("A", "A", .1)
         self.simulation.register_potential_box("A", 10, Vec(-1, -1, -1), Vec(2, 2, 2), True)
         self.simulation.add_particle("A", Vec(0, 0, 0))
-        self.simulation.register_observable_particle_positions(1, self.position_callback)
+        self.simulation.register_observable_positions(1, self.position_callback)
         self.simulation.run(100, .1)
 
 if __name__ == '__main__':

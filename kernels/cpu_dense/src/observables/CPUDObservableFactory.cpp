@@ -33,6 +33,7 @@
 #include <readdy/kernel/cpu_dense/observables/CPUDObservableFactory.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 #include <readdy/kernel/cpu_dense/observables/CPUDObservables.h>
+#include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
 
 namespace readdy {
 namespace kernel {
@@ -43,25 +44,36 @@ CPUDObservableFactory::CPUDObservableFactory(CPUDKernel *const kernel) : readdy:
 }
 
 readdy::model::observables::NParticles *
-CPUDObservableFactory::createNParticlesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
+CPUDObservableFactory::createNParticles(unsigned int stride, std::vector<std::string> typesToCount) const {
     return new CPUDNParticles(kernel, stride, typesToCount);
 }
 
 readdy::model::observables::HistogramAlongAxis *
-CPUDObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
-                                                 std::vector<std::string> typesToCount,
-                                                 unsigned int axis) const {
+CPUDObservableFactory::createHistogramAlongAxis(unsigned int stride, std::vector<double> binBorders,
+                                                std::vector<std::string> typesToCount,
+                                                unsigned int axis) const {
     return new CPUDHistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
 }
 
 readdy::model::observables::Forces *
-CPUDObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
+CPUDObservableFactory::createForces(unsigned int stride, std::vector<std::string> typesToCount) const {
     return new CPUDForces(kernel, stride, typesToCount);
 }
 
-readdy::model::observables::ParticlePosition *
-CPUDObservableFactory::createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new CPUDParticlePosition(kernel, stride, typesToCount);
+readdy::model::observables::Positions *
+CPUDObservableFactory::createPositions(unsigned int stride, std::vector<std::string> typesToCount) const {
+    return new CPUDPositions(kernel, stride, typesToCount);
+}
+
+readdy::model::observables::Particles *CPUDObservableFactory::createParticles(unsigned int stride) const {
+    return new CPUDParticles(kernel, stride);
+}
+
+readdy::model::observables::RadialDistribution *
+CPUDObservableFactory::createRadialDistribution(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
+                                                std::vector<std::string> typeCountTo, double particleToDensity) const {
+    return new readdy::kernel::scpu::observables::SCPURadialDistribution<CPUDKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
+                                                                                    particleToDensity);
 }
 
 }
