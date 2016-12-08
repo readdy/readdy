@@ -56,7 +56,7 @@ public:
     };
 
     template<typename R, typename... Args>
-    inline std::unique_ptr<R> create(unsigned int stride, Args... args) const {
+    inline std::unique_ptr<R> create(unsigned int stride, Args&&... args) const {
         return std::unique_ptr<R>(
                 ObservableFactory::get_dispatcher<R, Args...>::impl(this, stride, std::forward<Args>(args)...));
     }
@@ -97,7 +97,7 @@ protected:
 
     template<typename T, typename... Args>
     struct get_dispatcher {
-        static T *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+        static T *impl(const ObservableFactory *self, unsigned int stride, Args&&... args) {
             // this only invokes the normal constructor
             return new T(self->kernel, stride, std::forward<Args>(args)...);
         };
@@ -105,35 +105,35 @@ protected:
 
     template<typename... Args>
     struct get_dispatcher<readdy::model::observables::HistogramAlongAxis, Args...> {
-        static HistogramAlongAxis *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+        static HistogramAlongAxis *impl(const ObservableFactory *self, unsigned int stride, Args&&... args) {
             return self->createAxisHistogramObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
     struct get_dispatcher<readdy::model::observables::NParticles, Args...> {
-        static NParticles *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+        static NParticles *impl(const ObservableFactory *self, unsigned int stride, Args&&... args) {
             return self->createNParticlesObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
     struct get_dispatcher<readdy::model::observables::Forces, Args...> {
-        static Forces *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+        static Forces *impl(const ObservableFactory *self, unsigned int stride, Args&&... args) {
             return self->createForcesObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
     struct get_dispatcher<readdy::model::observables::ParticlePosition, Args...> {
-        static ParticlePosition *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+        static ParticlePosition *impl(const ObservableFactory *self, unsigned int stride, Args&&... args) {
             return self->createParticlePositionObservable(stride, std::forward<Args>(args)...);
         }
     };
 
     template<typename... Args>
     struct get_dispatcher<readdy::model::observables::RadialDistribution, Args...> {
-        static RadialDistribution *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+        static RadialDistribution *impl(const ObservableFactory *self, unsigned int stride, Args&&... args) {
             return self->createRadialDistributionObservable(stride, std::forward<Args>(args)...);
         }
     };

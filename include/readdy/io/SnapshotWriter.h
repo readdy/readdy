@@ -23,54 +23,35 @@
 /**
  * << detailed description >>
  *
- * @file UpdateNeighborList.h
+ * @file SnapshotObservable.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 29.08.16
  */
 
+#ifndef READDY_MAIN_SNAPSHOTOBSERVABLE_H
+#define READDY_MAIN_SNAPSHOTOBSERVABLE_H
 
-#ifndef READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
-#define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
-
-#include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/model/observables/Observable.h>
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace programs {
-class CPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
-public:
-
-    CPUUpdateNeighborList(CPUKernel *kernel) : kernel(kernel) {
+    namespace io {
+        class SnapshotWriter : public readdy::model::observables::Observable<void> {
+        public:
+            SnapshotWriter(std::string fName,
+                               model::Kernel *const kernel, unsigned int stride) : Observable(kernel, stride),
+                                                                                   fileName(std::move(fName)) {
+                // todo write config (ie kernel context)
+            }
+            virtual void evaluate() override {
+                // todo write positions (virtual)
+                // todo write forces (virtual)
+            }
+            
+        protected:
+            std::string fileName;
+        };
     }
-
-    virtual void execute() override {
-        switch (action) {
-            case create:
-                kernel->getKernelStateModel().updateNeighborList();
-                break;
-            case clear:
-                kernel->getKernelStateModel().clearNeighborList();
-                break;
-        }
-
-    }
-
-    virtual void setSkinSize(double skinSize) override {
-        kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
-    }
-
-    bool supportsSkin() const override {
-        return true;
-    }
-
-private:
-    CPUKernel *kernel;
-};
 }
-}
-}
-}
-#endif //READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
+
+#endif //READDY_MAIN_SNAPSHOTOBSERVABLE_H

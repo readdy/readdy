@@ -177,6 +177,16 @@ public:
         return getPotentialFactory().createPotentialAs<T>(name);
     }
 
+    template<typename T, typename Obs1, typename Obs2>
+    inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
+        return getObservableFactory().create(obs1, obs2, stride);
+    };
+
+    template<typename R, typename... Args>
+    inline std::unique_ptr<R> createObservable(unsigned int stride, Args&&... args) const {
+        return getObservableFactory().create(stride, std::forward<Args>(args)...);
+    }
+
     template<typename T, typename... Args>
     const short registerReaction(Args &&... args) {
         return getKernelContext().registerReaction(

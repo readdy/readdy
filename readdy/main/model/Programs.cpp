@@ -40,6 +40,11 @@ namespace programs {
 void UpdateNeighborList::setSkinSize(double skinSize) {
     log::console()->warn("The selected kernel has no Verlet list implemented, thus ignoring the skin size");
 }
+
+bool UpdateNeighborList::supportsSkin() const {
+    return false;
+}
+
 }
 }
 }

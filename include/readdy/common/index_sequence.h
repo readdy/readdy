@@ -23,54 +23,47 @@
 /**
  * << detailed description >>
  *
- * @file UpdateNeighborList.h
+ * @file index_sequence.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 30.08.16
  */
 
+#ifndef READDY_MAIN_INDEX_SEQUENCE_H
+#define READDY_MAIN_INDEX_SEQUENCE_H
 
-#ifndef READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
-#define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
+#include <cstddef>
 
-#include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+namespace std {
+    template<size_t... Ints>
+    struct index_sequence {
+        using type = index_sequence;
+        using value_type = size_t;
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace programs {
-class CPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
-public:
+        static constexpr std::size_t size() noexcept { return sizeof...(Ints); }
+    };
 
-    CPUUpdateNeighborList(CPUKernel *kernel) : kernel(kernel) {
-    }
+    // --------------------------------------------------------------
 
-    virtual void execute() override {
-        switch (action) {
-            case create:
-                kernel->getKernelStateModel().updateNeighborList();
-                break;
-            case clear:
-                kernel->getKernelStateModel().clearNeighborList();
-                break;
-        }
+    template<class Sequence1, class Sequence2>
+    struct _merge_and_renumber;
 
-    }
+    template<size_t... I1, size_t... I2>
+    struct _merge_and_renumber<index_sequence<I1...>, index_sequence<I2...>>
+            : index_sequence<I1..., (sizeof...(I1) + I2)...> {
+    };
 
-    virtual void setSkinSize(double skinSize) override {
-        kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
-    }
+    // --------------------------------------------------------------
 
-    bool supportsSkin() const override {
-        return true;
-    }
+    template<size_t N>
+    struct make_index_sequence
+            : _merge_and_renumber<typename make_index_sequence<N / 2>::type,
+                    typename make_index_sequence<N - N / 2>::type> {
+    };
 
-private:
-    CPUKernel *kernel;
-};
+    template<>
+    struct make_index_sequence<0> : index_sequence<> { };
+    template<>
+    struct make_index_sequence<1> : index_sequence<0> { };
 }
-}
-}
-}
-#endif //READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
+#endif //READDY_MAIN_INDEX_SEQUENCE_H

@@ -23,54 +23,76 @@
 /**
  * << detailed description >>
  *
- * @file UpdateNeighborList.h
+ * @file File.h
  * @brief << brief description >>
  * @author clonker
- * @date 13.07.16
+ * @date 31.08.16
  */
 
+#ifndef READDY_MAIN_FILE_H
+#define READDY_MAIN_FILE_H
 
-#ifndef READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
-#define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
-
-#include <readdy/model/programs/Programs.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <string>
+#include <vector>
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace programs {
-class CPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
+namespace io {
+
+class Group {
+public:
+    using handle_t = int;
+    using dims_t = unsigned long long;
+
+    template<typename T>
+    void write(const std::string& dataSetName, const std::vector<T> &data) {
+        write(dataSetName, {data.size()}, data.data());
+    }
+
+    template<typename T>
+    void write(const std::string& dataSetName, const std::vector<dims_t> &dims, const T* data);
+
+protected:
+    friend class File;
+    Group() : Group(-1) {};
+    Group(handle_t handle);
+    handle_t handle;
+};
+class File {
 public:
 
-    CPUUpdateNeighborList(CPUKernel *kernel) : kernel(kernel) {
+    enum class Action {
+        CREATE, OPEN
+    };
+
+    enum class Flag {
+        READ_ONLY, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING
+    };
+
+    File(const std::string &path, const Action &action, const std::vector<Flag>& flag);
+    File(const std::string &path, const Action &action, const Flag& flag);
+
+    virtual ~File();
+
+    void flush();
+
+    void close();
+
+    Group createGroup(const std::string& path);
+
+    template<typename T>
+    void write(const std::string& dataSetName, const std::vector<T> &data) {
+        self.write(dataSetName, data.data(), {data.size()});
     }
 
-    virtual void execute() override {
-        switch (action) {
-            case create:
-                kernel->getKernelStateModel().updateNeighborList();
-                break;
-            case clear:
-                kernel->getKernelStateModel().clearNeighborList();
-                break;
-        }
-
-    }
-
-    virtual void setSkinSize(double skinSize) override {
-        kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
-    }
-
-    bool supportsSkin() const override {
-        return true;
+    template<typename T>
+    void write(const std::string& dataSetName, const std::vector<Group::dims_t> &dims, const T* data) {
+        self.write<T>(dataSetName, dims, data);
     }
 
 private:
-    CPUKernel *kernel;
+    std::string path_;
+    Group self;
 };
 }
 }
-}
-}
-#endif //READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
+#endif //READDY_MAIN_FILE_H
