@@ -23,31 +23,58 @@
 /**
  * << detailed description >>
  *
- * @file TrajectoryObservable.h
+ * @file TestIO.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 30.08.16
+ * @date 12.12.16
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TRAJECTORYOBSERVABLE_H
-#define READDY_MAIN_TRAJECTORYOBSERVABLE_H
+#include <numeric>
 
-#include <readdy/model/observables/Observables.h>
+#include <gtest/gtest.h>
 
-namespace readdy {
-    namespace io {
-        class TrajectoryWriter : public readdy::model::observables::Combiner<void, readdy::model::observables::Positions> {
-            using kernel_t = readdy::model::Kernel;
-            using ppObs_t = readdy::model::observables::Positions;
-        public:
-            TrajectoryWriter(const std::string& path, kernel_t *const kernel, unsigned int stride, ppObs_t* parent)
-                    : readdy::model::observables::Combiner(kernel, stride, parent) {};
+#include <readdy/io/File.h>
 
-            virtual void evaluate() = 0;
+namespace {
 
-        protected:
+using file = readdy::io::File;
 
-        };
+struct TestIO : public ::testing::Test {
+protected:
+    std::string tempFile;
+
+    void SetUp() override {
+        char out[4096];
+#if READDY_WINDOWS
+    if (GetTempFileName(".", "rdy", 0, out) != 0) {
+		// Strip the ".\\" prefix
+		if (strncmp(out, ".\\", 2) == 0)
+		{
+			memmove(out, out + 2, strlen(out));
+		}
+		// Create file
+		fclose(fopen(out, "w"));
+	}
+#else
+        close(mkstemp(out));
+#endif
+        tempFile = std::string(out);
+    }
+
+    void TearDown() override {
+        std::remove(tempFile.c_str());
+    }
+};
+
+TEST_F(TestIO, TestGroupWrite) {
+    std::vector<double> data;
+    data.resize(100);
+    std::iota(data.begin(), data.end(), 0);
+    {
+        file f(tempFile, file::Action::CREATE, file::Flag::OVERWRITE);
+        f.write("foo", data);
     }
 }
-#endif //READDY_MAIN_TRAJECTORYOBSERVABLE_H
+
+}
