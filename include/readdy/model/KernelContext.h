@@ -74,6 +74,7 @@ class KernelContext {
 public:
 
     using rdy_type_mapping = std::unordered_map<std::string, unsigned int>;
+    using rdy_reverse_type_mapping = std::unordered_map<unsigned int, std::string>;
 
     using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
     using rdy_pot_1_registry = std::unordered_map<unsigned int, std::vector<rdy_pot_1 *>>;
@@ -173,12 +174,12 @@ public:
         return id;
     }
 
-    const short registerExternalReaction(reactions::Reaction<1>* r) {
+    const short registerExternalReaction(reactions::Reaction<1> *r) {
         (*reactionOneEductRegistryExternal)[r->getEducts()[0]].push_back(r);
         return r->getId();
     }
 
-    const short registerExternalReaction(reactions::Reaction<2>* r) {
+    const short registerExternalReaction(reactions::Reaction<2> *r) {
         (*reactionTwoEductsRegistryExternal)[
                 readdy::util::ParticleTypePair(r->getEducts()[0], r->getEducts()[1])
         ].push_back(r);
@@ -260,9 +261,15 @@ public:
 
     std::string getParticleName(unsigned int id) const;
 
-    void configure(bool debugOutput=false);
+    void configure(bool debugOutput = false);
 
     const rdy_type_mapping &getTypeMapping() const;
+
+    /**
+     * Generate a map from particle_type_t to string. As there is no book-keeping of this reversed
+     * structure, it is generated in place and then returned.
+     */
+    const rdy_reverse_type_mapping generateReverseTypeMapping() const;
 
     // ctor and dtor
     KernelContext();

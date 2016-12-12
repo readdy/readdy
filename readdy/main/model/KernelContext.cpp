@@ -227,7 +227,7 @@ unsigned int KernelContext::getOrCreateTypeId(const std::string &particleType) {
     if (pimpl->typeMapping.find(particleType) != pimpl->typeMapping.end()) {
         t_id = pimpl->typeMapping[particleType];
     } else {
-        t_id = ++(pimpl->typeCounter);
+        t_id = (pimpl->typeCounter)++;
         pimpl->typeMapping.emplace(particleType, t_id);
     }
     return t_id;
@@ -509,6 +509,19 @@ std::tuple<readdy::model::Vec3, readdy::model::Vec3> KernelContext::getBoxBoundi
     readdy::model::Vec3 lowerLeft{-0.5 * boxSize[0], -0.5 * boxSize[1], -0.5 * boxSize[2]};
     readdy::model::Vec3 upperRight = lowerLeft + readdy::model::Vec3(boxSize);
     return std::make_tuple(std::move(lowerLeft), std::move(upperRight));
+}
+
+const KernelContext::rdy_reverse_type_mapping KernelContext::generateReverseTypeMapping() const {
+    const auto &typeMapping = getTypeMapping();
+    rdy_reverse_type_mapping reverseTypeMapping;
+    auto it = typeMapping.cbegin();
+    while (it != typeMapping.cend()) {
+        auto key = (*it).first;
+        auto value = (*it).second;
+        reverseTypeMapping.emplace(std::make_pair(value, key));
+        ++it;
+    }
+    return reverseTypeMapping;
 }
 
 KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
