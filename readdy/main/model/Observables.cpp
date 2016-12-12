@@ -21,11 +21,12 @@
 
 
 /**
- * << detailed description >>
+ * Core library implementation of observables. Since every kernel usually has its own implementation, there are mostly constructors here.
  *
  * @file Observables.cpp
- * @brief << brief description >>
+ * @brief Implementation of observables
  * @author clonker
+ * @author chrisfroe
  * @date 26.04.16
  */
 
@@ -37,13 +38,13 @@ namespace readdy {
 namespace model {
 namespace observables {
 
-ParticlePosition::ParticlePosition(Kernel *const kernel, unsigned int stride,
-                                   std::vector<std::string> typesToCount) :
-        ParticlePosition(kernel, stride,
-                         _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
+Positions::Positions(Kernel *const kernel, unsigned int stride,
+                     std::vector<std::string> typesToCount) :
+        Positions(kernel, stride,
+                  _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
 
-ParticlePosition::ParticlePosition(Kernel *const kernel, unsigned int stride,
-                                   std::vector<unsigned int> typesToCount) :
+Positions::Positions(Kernel *const kernel, unsigned int stride,
+                     std::vector<unsigned int> typesToCount) :
         Observable(kernel, stride), typesToCount(typesToCount) {}
 
 void TestCombiner::evaluate() {
@@ -64,10 +65,10 @@ void TestCombiner::evaluate() {
 }
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
-                                       std::vector<double> binBorders, unsigned int typeCountFrom,
-                                       unsigned int typeCountTo, double particleDensity)
+                                       std::vector<double> binBorders, std::vector<unsigned int> typeCountFrom,
+                                       std::vector<unsigned int> typeCountTo, double particleToDensity)
         : Observable(kernel, stride), typeCountFrom(typeCountFrom), typeCountTo(typeCountTo),
-          particleDensity(particleDensity) {
+          particleToDensity(particleToDensity) {
     setBinBorders(binBorders);
 }
 
@@ -75,17 +76,20 @@ void RadialDistribution::evaluate() {
     if (binBorders.size() > 1) {
         std::fill(counts.begin(), counts.end(), 0);
         const auto particles = kernel->getKernelStateModel().getParticles();
-        const auto n_from_particles = std::count_if(particles.begin(), particles.end(),
-                                                    [this](const readdy::model::Particle &p) {
-                                                        return p.getType() == typeCountFrom;
-                                                    });
+        auto isInCollection = [](const readdy::model::Particle &p, const std::vector<unsigned int> &collection) {
+            return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
+        };
+        const auto nFromParticles = std::count_if(particles.begin(), particles.end(),
+                                                  [this, isInCollection](const readdy::model::Particle &p) {
+                                                      return isInCollection(p, typeCountFrom);
+                                                  });
         {
             const auto &distSquared = kernel->getKernelContext().getDistSquaredFun();
             for (auto &&pFrom : particles) {
-                if (pFrom.getType() == typeCountFrom) {
+                if (isInCollection(pFrom, typeCountFrom)) {
                     for (auto &&pTo : particles) {
-                        if (pTo.getType() == typeCountTo && pFrom.getId() != pTo.getId()) {
-                            const auto dist = std::sqrt(distSquared(pFrom.getPos(), pTo.getPos()));
+                        if (isInCollection(pTo, typeCountTo) && pFrom.getId() != pTo.getId()) {
+                            const auto dist = sqrt(distSquared(pFrom.getPos(), pTo.getPos()));
                             auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), dist);
                             if (upperBound != binBorders.end()) {
                                 const auto binBordersIdx = upperBound - binBorders.begin();
@@ -104,10 +108,11 @@ void RadialDistribution::evaluate() {
             auto &&it_distribution = radialDistribution.begin();
             for (auto &&it_counts = counts.begin(); it_counts != counts.end(); ++it_counts) {
                 const auto idx = it_centers - binCenters.begin();
-                const auto r = *it_centers;
-                const auto dr = binBorders[idx + 1] - binBorders[idx];
-                *it_distribution = (*it_counts) / (4 * M_PI * r * r * dr * n_from_particles * particleDensity);
-
+                const auto lowerRadius = binBorders[idx];
+                const auto upperRadius = binBorders[idx + 1];
+                *it_distribution =
+                        (*it_counts) /
+                        (4 / 3 * M_PI * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) * nFromParticles * particleToDensity);
                 ++it_distribution;
                 ++it_centers;
             }
@@ -142,16 +147,13 @@ void RadialDistribution::setBinBorders(const std::vector<double> &binBorders) {
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
                                        std::vector<double> binBorders,
-                                       const std::string &typeCountFrom,
-                                       const std::string &typeCountTo, double particleDensity)
-        : RadialDistribution(
-        kernel, stride, binBorders,
-        kernel->getKernelContext().getParticleTypeID(typeCountFrom),
-        kernel->getKernelContext().getParticleTypeID(typeCountTo),
-        particleDensity
-) {
-
-}
+                                       const std::vector<std::string> &typeCountFrom,
+                                       const std::vector<std::string> &typeCountTo, double particleToDensity)
+        : RadialDistribution(kernel, stride, binBorders,
+                             _internal::util::transformTypes2(typeCountFrom, kernel->getKernelContext()),
+                             _internal::util::transformTypes2(typeCountTo, kernel->getKernelContext()),
+                             particleToDensity
+) {}
 
 CenterOfMass::CenterOfMass(readdy::model::Kernel *const kernel, unsigned int stride,
                            unsigned int particleType)

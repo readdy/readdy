@@ -89,9 +89,9 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
         kernel->getKernelContext().registerPotential(std::move(cubePot), t);
     }
 
-    auto ppObs = kernel->createObservable<readdy::model::observables::ParticlePosition>(1);
+    auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
     readdy::model::Vec3 lowerBound{-2.5, -2.5, -2.5}, upperBound{2.5, 2.5, 2.5};
-    ppObs->setCallback([lowerBound, upperBound](readdy::model::observables::ParticlePosition::result_t currentResult) {
+    ppObs->setCallback([lowerBound, upperBound](readdy::model::observables::Positions::result_t currentResult) {
         readdy::model::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {
@@ -120,10 +120,10 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
         spherePot->setForceConstant(20);
         kernel->getKernelContext().registerPotential(std::move(spherePot), t);
     }
-    auto ppObs = kernel->createObservable<readdy::model::observables::ParticlePosition>(1);
+    auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
     const double maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
     const double maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
-    ppObs->setCallback([maxDistFromOriginSquared](readdy::model::observables::ParticlePosition::result_t currentResult) {
+    ppObs->setCallback([maxDistFromOriginSquared](readdy::model::observables::Positions::result_t currentResult) {
         readdy::model::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {

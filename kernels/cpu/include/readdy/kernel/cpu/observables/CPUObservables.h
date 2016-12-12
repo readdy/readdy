@@ -41,9 +41,19 @@ class CPUKernel;
 
 namespace observables {
 
-class CPUParticlePosition : public readdy::model::observables::ParticlePosition {
+class CPUPositions : public readdy::model::observables::Positions {
 public:
-    CPUParticlePosition(CPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+    CPUPositions(CPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+
+    virtual void evaluate() override;
+
+protected:
+    CPUKernel *const kernel;
+};
+
+class CPUParticles : public readdy::model::observables::Particles {
+public:
+    CPUParticles(CPUKernel *const kernel, unsigned int stride);
 
     virtual void evaluate() override;
 

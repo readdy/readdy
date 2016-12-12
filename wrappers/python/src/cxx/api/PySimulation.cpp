@@ -54,16 +54,16 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
 }
 
 unsigned long
-registerObservable_ParticlePositions(sim &self, unsigned int stride, pybind11::object callbackFun,
-                                     std::vector<std::string> types) {
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::ParticlePosition::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::observables::ParticlePosition>(std::move(pyFun), stride, types);
+registerObservable_Positions(sim &self, unsigned int stride, pybind11::object callbackFun,
+                             std::vector<std::string> types) {
+    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Positions::result_t)>(callbackFun);
+    return self.registerObservable<readdy::model::observables::Positions>(std::move(pyFun), stride, types);
 }
 
 unsigned long
 registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::object callbackFun,
-                                      py::array_t<double> &binBorders, std::string typeCountFrom,
-                                      std::string typeCountTo, double particleDensity) {
+                                      py::array_t<double> &binBorders, std::vector<std::string> typeCountFrom,
+                                      std::vector<std::string> typeCountTo, double particleToDensity) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::RadialDistribution::result_t)>(callbackFun);
     const auto info = binBorders.request();
     std::vector<double> binBordersVec{};
@@ -72,7 +72,7 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::
     for (auto i = 0; i < info.shape[0]; ++i) binBordersVec.push_back(data[i]);
     return self.registerObservable<readdy::model::observables::RadialDistribution>(std::move(pyFun), stride, binBordersVec,
                                                                                 typeCountFrom, typeCountTo,
-                                                                                particleDensity);
+                                                                                particleToDensity);
 }
 
 unsigned long
@@ -146,7 +146,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_potential_box", &sim::registerBoxPotential)
             .def("register_potential_sphere", &sim::registerSpherePotential)
             .def("get_particle_positions", &sim::getParticlePositions)
-            .def("register_observable_particle_positions", &registerObservable_ParticlePositions)
+            .def("register_observable_particle_positions", &registerObservable_Positions)
             .def("register_observable_radial_distribution", &registerObservable_RadialDistribution)
             .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable)
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)

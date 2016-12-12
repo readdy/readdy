@@ -42,10 +42,10 @@ namespace kernel {
 namespace scpu {
 namespace observables {
 
-class SCPUParticlePosition : public readdy::model::observables::ParticlePosition {
+class SCPUPositions : public readdy::model::observables::Positions {
 public:
-    SCPUParticlePosition(SCPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
-            readdy::model::observables::ParticlePosition(kernel, stride, typesToCount), kernel(kernel) {}
+    SCPUPositions(SCPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
+            readdy::model::observables::Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
     virtual void evaluate() override {
         result.clear();
@@ -72,13 +72,41 @@ protected:
     SCPUKernel *const kernel;
 };
 
+class SCPUParticles : public readdy::model::observables::Particles {
+public:
+    SCPUParticles(SCPUKernel *const kernel, unsigned int stride)
+            : readdy::model::observables::Particles(kernel, stride), kernel(kernel) {};
+
+    virtual void evaluate() override {
+        auto &resultTypes = std::get<0>(result);
+        auto &resultIds = std::get<1>(result);
+        auto &resultPositions = std::get<2>(result);
+        resultTypes.clear();
+        resultIds.clear();
+        resultPositions.clear();
+        const auto &particleData = kernel->getKernelStateModel().getParticleData();
+        auto typesIt = particleData->cbegin_types();
+        auto idsIt = particleData->cbegin_ids();
+        auto positionsIt = particleData->cbegin_positions();
+        resultTypes.reserve(particleData->size());
+        resultIds.reserve(particleData->size());
+        resultPositions.reserve(particleData->size());
+        std::copy(typesIt, particleData->cend_types(), std::back_inserter(resultTypes));
+        std::copy(idsIt, particleData->cend_ids(), std::back_inserter(resultIds));
+        std::copy(positionsIt, particleData->cend_positions(), std::back_inserter(resultPositions));
+    };
+
+protected:
+    SCPUKernel *const kernel;
+};
+
 class SCPUHistogramAlongAxis : public readdy::model::observables::HistogramAlongAxis {
 
 public:
     SCPUHistogramAlongAxis(SCPUKernel *const kernel, unsigned int stride,
-                                 const std::vector<double> &binBorders,
-                                 const std::vector<std::string> &typesToCount,
-                                 unsigned int axis)
+                           const std::vector<double> &binBorders,
+                           const std::vector<std::string> &typesToCount,
+                           unsigned int axis)
             : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
               kernel(kernel) {
         size = result.size();
@@ -186,27 +214,30 @@ protected:
 };
 
 template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
-class RadialDistributionObservable : public readdy::model::observables::RadialDistribution {
+class SCPURadialDistribution : public readdy::model::observables::RadialDistribution {
 public:
-    RadialDistributionObservable(kernel_t *const kernel, unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
-                                 std::string typeCountTo, double particleToDensity) :
+    SCPURadialDistribution(kernel_t *const kernel, unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
+                                 std::vector<std::string> typeCountTo, double particleToDensity) :
             readdy::model::observables::RadialDistribution(kernel, stride, binBorders, typeCountFrom,
-                                                        typeCountTo, particleToDensity), kernel(kernel) {}
+                                                           typeCountTo, particleToDensity), kernel(kernel) {}
 
     virtual void evaluate() override {
         if (binBorders.size() > 1) {
             std::fill(counts.begin(), counts.end(), 0);
             const auto particles = kernel->getKernelStateModel().getParticles();
-            const auto n_from_particles = std::count_if(particles.begin(), particles.end(),
-                                                        [this](const readdy::model::Particle &p) {
-                                                            return p.getType() == typeCountFrom;
-                                                        });
+            auto isInCollection = [](const readdy::model::Particle &p, const std::vector<unsigned int> &collection) {
+                return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
+            };
+            const auto nFromParticles = std::count_if(particles.begin(), particles.end(),
+                                                      [this, isInCollection](const readdy::model::Particle &p) {
+                                                          return isInCollection(p, typeCountFrom);
+                                                      });
             {
                 const auto &distSquared = kernel->getKernelContext().getDistSquaredFun();
                 for (auto &&pFrom : particles) {
-                    if (pFrom.getType() == typeCountFrom) {
+                    if (isInCollection(pFrom, typeCountFrom)) {
                         for (auto &&pTo : particles) {
-                            if (pTo.getType() == typeCountTo && pFrom.getId() != pTo.getId()) {
+                            if (isInCollection(pTo, typeCountTo) && pFrom.getId() != pTo.getId()) {
                                 const auto dist = sqrt(distSquared(pFrom.getPos(), pTo.getPos()));
                                 auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), dist);
                                 if (upperBound != binBorders.end()) {
@@ -226,10 +257,11 @@ public:
                 auto &&it_distribution = radialDistribution.begin();
                 for (auto &&it_counts = counts.begin(); it_counts != counts.end(); ++it_counts) {
                     const auto idx = it_centers - binCenters.begin();
-                    const auto r = *it_centers;
-                    const auto dr = binBorders[idx + 1] - binBorders[idx];
-                    *it_distribution = (*it_counts) / (4 * M_PI * r * r * dr * n_from_particles * particleDensity);
-
+                    const auto lowerRadius = binBorders[idx];
+                    const auto upperRadius = binBorders[idx + 1];
+                    *it_distribution =
+                            (*it_counts) /
+                            (4 / 3 * M_PI * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) * nFromParticles * particleToDensity);
                     ++it_distribution;
                     ++it_centers;
                 }

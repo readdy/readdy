@@ -33,6 +33,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
+#include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
 namespace readdy {
 namespace kernel {
@@ -43,32 +44,43 @@ SCPUObservableFactory::SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel *c
 }
 
 readdy::model::observables::HistogramAlongAxis *
-SCPUObservableFactory::createAxisHistogramObservable(unsigned int stride, std::vector<double> binBorders,
-                                                          std::vector<std::string> typesToCount,
-                                                          unsigned int axis) const {
+SCPUObservableFactory::createHistogramAlongAxis(unsigned int stride, std::vector<double> binBorders,
+                                                std::vector<std::string> typesToCount,
+                                                unsigned int axis) const {
     return new SCPUHistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
 }
 
-readdy::model::observables::NParticles *SCPUObservableFactory::createNParticlesObservable(
+readdy::model::observables::NParticles *SCPUObservableFactory::createNParticles(
         unsigned int stride, std::vector<std::string> typesToCount) const {
     return new SCPUNParticles(kernel, stride, typesToCount);
 }
 
 readdy::model::observables::Forces *
-SCPUObservableFactory::createForcesObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
+SCPUObservableFactory::createForces(unsigned int stride, std::vector<std::string> typesToCount) const {
     return new SCPUForces(kernel, stride, typesToCount);
 }
 
-readdy::model::observables::ParticlePosition *
-SCPUObservableFactory::createParticlePositionObservable(unsigned int stride, std::vector<std::string> typesToCount) const {
-    return new SCPUParticlePosition(kernel, stride, typesToCount);
+readdy::model::observables::Positions *
+SCPUObservableFactory::createPositions(unsigned int stride, std::vector<std::string> typesToCount) const {
+    return new SCPUPositions(kernel, stride, typesToCount);
 }
 
 readdy::model::observables::RadialDistribution *
-SCPUObservableFactory::createRadialDistributionObservable(unsigned int stride, std::vector<double> binBorders, std::string typeCountFrom,
-                                                               std::string typeCountTo, double particleToDensity) const {
-    return new RadialDistributionObservable<>(kernel, stride, binBorders, typeCountFrom, typeCountTo, particleToDensity);
+SCPUObservableFactory::createRadialDistribution(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
+                                                std::vector<std::string> typeCountTo, double particleToDensity) const {
+    return new SCPURadialDistribution<SCPUKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo, particleToDensity);
 }
+
+readdy::model::observables::Particles *SCPUObservableFactory::createParticles(unsigned int stride) const {
+    return new SCPUParticles(kernel, stride);
+}
+
+readdy::model::observables::MeanSquaredDisplacement *
+SCPUObservableFactory::createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount,
+                                                     readdy::model::observables::Particles *particlesObservable) const {
+    return new SCPUMeanSquaredDisplacement<>(kernel, stride, typesToCount, particlesObservable);
+}
+
 }
 }
 }

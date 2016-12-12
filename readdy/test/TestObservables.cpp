@@ -50,7 +50,7 @@ TEST_P(TestObservables, TestParticlePositions) {
     const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->getKernelStateModel().addParticles(particles);
-    auto &&obs = kernel->createObservable<m::observables::ParticlePosition>(3);
+    auto &&obs = kernel->createObservable<m::observables::Positions>(3);
     auto &&connection = kernel->connectObservable(obs.get());
 
     auto &&integrator = kernel->createProgram("EulerBDIntegrator");
@@ -75,8 +75,8 @@ TEST_P(TestObservables, TestParticlePositions) {
 }
 
 TEST_P(TestObservables, TestCombinerObservable) {
-    auto &&o1 = kernel->createObservable<m::observables::ParticlePosition>(1);
-    auto &&o2 = kernel->createObservable<m::observables::ParticlePosition>(1);
+    auto &&o1 = kernel->createObservable<m::observables::Positions>(1);
+    auto &&o2 = kernel->createObservable<m::observables::Positions>(1);
     auto &&o3 = kernel->createObservable<m::observables::TestCombiner>(o1.get(), o2.get());
     auto &&connection = kernel->connectObservable(o3.get());
     auto &&integrator = kernel->createProgram("EulerBDIntegrator");

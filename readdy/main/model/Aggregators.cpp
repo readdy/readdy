@@ -19,35 +19,32 @@
  * <http://www.gnu.org/licenses/>.                                  *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
- *
- * @file TrajectoryObservable.h
- * @brief << brief description >>
- * @author clonker
- * @date 30.08.16
+ * @file Aggregators.cpp
+ * @brief Definition of several aggregators.
+ * @author chrisfroe
+ * @date 15.11.16
  */
 
-#ifndef READDY_MAIN_TRAJECTORYOBSERVABLE_H
-#define READDY_MAIN_TRAJECTORYOBSERVABLE_H
-
-#include <readdy/model/observables/Observables.h>
+#include <readdy/model/observables/Aggregators.h>
+#include <readdy/model/Kernel.h>
+#include <readdy/model/_internal/Util.h>
 
 namespace readdy {
-    namespace io {
-        class TrajectoryWriter : public readdy::model::observables::Combiner<void, readdy::model::observables::Positions> {
-            using kernel_t = readdy::model::Kernel;
-            using ppObs_t = readdy::model::observables::Positions;
-        public:
-            TrajectoryWriter(const std::string& path, kernel_t *const kernel, unsigned int stride, ppObs_t* parent)
-                    : readdy::model::observables::Combiner(kernel, stride, parent) {};
+namespace model {
+namespace observables {
 
-            virtual void evaluate() = 0;
+MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride,
+                                                 std::vector<std::string> typesToCount,
+                                                 Particles *particlesObservable)
+        : MeanSquaredDisplacement(kernel, stride, readdy::model::_internal::util::transformTypes2(typesToCount, kernel->getKernelContext()),
+                                  particlesObservable) {}
 
-        protected:
+MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride,
+                                                 std::vector<unsigned int> typesToCount,
+                                                 Particles *particlesObservable)
+        : Combiner(kernel, stride, particlesObservable), typesToCount(typesToCount) {}
 
-        };
-    }
 }
-#endif //READDY_MAIN_TRAJECTORYOBSERVABLE_H
+}
+}

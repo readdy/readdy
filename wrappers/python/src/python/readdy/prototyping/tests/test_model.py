@@ -117,7 +117,7 @@ class TestModel(unittest.TestCase):
         pot = MyPot1()
         self.ctx.register_potential_order_1(pot, "A")
         add_particles_program = self.progs.create_add_particles()
-        add_particles_program.add_particle(pr.Particle(0, 0, .5, 1))
+        add_particles_program.add_particle(pr.Particle(0, 0, .5, self.ctx.get_particle_type_id("A"))) # x y z type_id
         add_particles_program.execute()
         self.ctx.configure()
         updforces = self.progs.create_update_forces()

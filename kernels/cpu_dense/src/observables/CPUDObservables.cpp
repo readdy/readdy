@@ -44,11 +44,11 @@ namespace observables {
 
 namespace thd = readdy::util::thread;
 
-CPUDParticlePosition::CPUDParticlePosition(CPUDKernel *const kernel, unsigned int stride,
-                                   const std::vector<std::string> &typesToCount) :
-        readdy::model::observables::ParticlePosition(kernel, stride, typesToCount), kernel(kernel) {}
+CPUDPositions::CPUDPositions(CPUDKernel *const kernel, unsigned int stride,
+                             const std::vector<std::string> &typesToCount) :
+        readdy::model::observables::Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
-void CPUDParticlePosition::evaluate() {
+void CPUDPositions::evaluate() {
     result.clear();
     const auto &pd = kernel->getKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
@@ -63,8 +63,8 @@ void CPUDParticlePosition::evaluate() {
 }
 
 CPUDHistogramAlongAxis::CPUDHistogramAlongAxis(CPUDKernel *const kernel, unsigned int stride,
-                                       const std::vector<double> &binBorders,
-                                       const std::vector<std::string> &typesToCount, unsigned int axis)
+                                               const std::vector<double> &binBorders,
+                                               const std::vector<std::string> &typesToCount, unsigned int axis)
         : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
           kernel(kernel) {
     size = result.size();
@@ -176,6 +176,27 @@ void CPUDForces::evaluate() {
     }
 }
 
+
+CPUDParticles::CPUDParticles(CPUDKernel *const kernel, unsigned int stride)
+        : readdy::model::observables::Particles(kernel, stride), kernel(kernel) {}
+
+void CPUDParticles::evaluate() {
+    auto &resultTypes = std::get<0>(result);
+    auto &resultIds = std::get<1>(result);
+    auto &resultPositions = std::get<2>(result);
+    resultTypes.clear();
+    resultIds.clear();
+    resultPositions.clear();
+    const auto &particleData = kernel->getKernelStateModel().getParticleData();
+    resultTypes.reserve(particleData->size());
+    resultIds.reserve(particleData->size());
+    resultPositions.reserve(particleData->size());
+    for (const auto &entry : *particleData) {
+        resultTypes.push_back(entry.type);
+        resultIds.push_back(entry.id);
+        resultPositions.push_back(entry.position());
+    }
+}
 
 }
 }

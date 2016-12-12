@@ -34,7 +34,7 @@ struct MSDAggregator {
     std::vector<readdy::model::Vec3> initialPositions;
     std::shared_ptr<double> result = std::make_shared<double>(0);
 
-    void operator()(readdy::model::observables::ParticlePosition::result_t positions) {
+    void operator()(readdy::model::observables::Positions::result_t positions) {
         auto it_init = initialPositions.begin();
         auto it_pos = positions.begin();
         while (it_pos != positions.end()) {
@@ -90,7 +90,7 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
     double timestep = 1;
     MSDAggregator aggregator;
     aggregator.initialPositions = simulation.getAllParticlePositions();
-    simulation.registerObservable<readdy::model::observables::ParticlePosition>(aggregator, 1);
+    simulation.registerObservable<readdy::model::observables::Positions>(aggregator, 1);
     simulation.run(100, timestep);
     auto positions = simulation.getAllParticlePositions();
     double msd = 0;
@@ -115,8 +115,8 @@ TEST_F(TestSimulation, TestObservables) {
     double timestep = 1;
 
     int n_callbacks = 0;
-    simulation.registerObservable<readdy::model::observables::ParticlePosition>(
-            [&n_callbacks](const readdy::model::observables::ParticlePosition::result_t &result) -> void {
+    simulation.registerObservable<readdy::model::observables::Positions>(
+            [&n_callbacks](const readdy::model::observables::Positions::result_t &result) -> void {
                 ++n_callbacks;
                 EXPECT_EQ(103, result.size());
             }, 1);

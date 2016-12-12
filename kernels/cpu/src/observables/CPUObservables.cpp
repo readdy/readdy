@@ -43,11 +43,11 @@ namespace observables {
 
 namespace thd = readdy::util::thread;
 
-CPUParticlePosition::CPUParticlePosition(CPUKernel *const kernel, unsigned int stride,
-                                   const std::vector<std::string> &typesToCount) :
-        readdy::model::observables::ParticlePosition(kernel, stride, typesToCount), kernel(kernel) {}
+CPUPositions::CPUPositions(CPUKernel *const kernel, unsigned int stride,
+                           const std::vector<std::string> &typesToCount) :
+        readdy::model::observables::Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
-void CPUParticlePosition::evaluate() {
+void CPUPositions::evaluate() {
     result.clear();
     const auto &pd = kernel->getKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
@@ -63,8 +63,8 @@ void CPUParticlePosition::evaluate() {
 }
 
 CPUHistogramAlongAxis::CPUHistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
-                                       const std::vector<double> &binBorders,
-                                       const std::vector<std::string> &typesToCount, unsigned int axis)
+                                             const std::vector<double> &binBorders,
+                                             const std::vector<std::string> &typesToCount, unsigned int axis)
         : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
           kernel(kernel) {
     size = result.size();
@@ -107,22 +107,22 @@ void CPUHistogramAlongAxis::evaluate() {
 
         std::vector<thd::scoped_thread> threads;
         Iter workIter = data->cbegin();
-        for (unsigned int i = 0; i < kernel->getNThreads()-1; ++i) {
+        for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             std::promise<result_t> promise;
             updates.push_back(promise.get_future());
-            threads.push_back(thd::scoped_thread(std::thread(worker, workIter, workIter+grainSize, std::move(promise))));
-            workIter+=grainSize;
+            threads.push_back(thd::scoped_thread(std::thread(worker, workIter, workIter + grainSize, std::move(promise))));
+            workIter += grainSize;
         }
         std::promise<result_t> promise;
         updates.push_back(promise.get_future());
         threads.push_back(thd::scoped_thread(std::thread(worker, workIter, data->cend(), std::move(promise))));
     }
 
-    for(auto& update : updates) {
+    for (auto &update : updates) {
         auto vec = std::move(update.get());
         auto it1 = vec.begin();
         auto it2 = result.begin();
-        for(;it1 != vec.end(); ++it1, ++it2) {
+        for (; it1 != vec.end(); ++it1, ++it2) {
             *it2 += *it1;
         }
     }
@@ -179,6 +179,28 @@ void CPUForces::evaluate() {
 }
 
 
+CPUParticles::CPUParticles(CPUKernel *const kernel, unsigned int stride)
+        : readdy::model::observables::Particles(kernel, stride), kernel(kernel) {}
+
+void CPUParticles::evaluate() {
+    auto &resultTypes = std::get<0>(result);
+    auto &resultIds = std::get<1>(result);
+    auto &resultPositions = std::get<2>(result);
+    resultTypes.clear();
+    resultIds.clear();
+    resultPositions.clear();
+    const auto &particleData = kernel->getKernelStateModel().getParticleData();
+    resultTypes.reserve(particleData->size());
+    resultIds.reserve(particleData->size());
+    resultPositions.reserve(particleData->size());
+    for (const auto &entry : *particleData) {
+        if (!entry.is_deactivated()) {
+            resultTypes.push_back(entry.type);
+            resultIds.push_back(entry.id);
+            resultPositions.push_back(entry.position());
+        }
+    }
+}
 }
 }
 }

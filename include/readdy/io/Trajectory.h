@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,31 +23,37 @@
 /**
  * << detailed description >>
  *
- * @file TrajectoryObservable.h
+ * @file Trajectory.h
  * @brief << brief description >>
- * @author clonker
- * @date 30.08.16
+ * @author chrisfroe
+ * @date 12.12.16
+ * @copyright GNU Lesser General Public License v3.0
  */
+#ifndef READDY_MAIN_TRAJECTORY_H
+#define READDY_MAIN_TRAJECTORY_H
 
-#ifndef READDY_MAIN_TRAJECTORYOBSERVABLE_H
-#define READDY_MAIN_TRAJECTORYOBSERVABLE_H
-
-#include <readdy/model/observables/Observables.h>
+#include <array>
+#include <readdy/model/Kernel.h>
 
 namespace readdy {
-    namespace io {
-        class TrajectoryWriter : public readdy::model::observables::Combiner<void, readdy::model::observables::Positions> {
-            using kernel_t = readdy::model::Kernel;
-            using ppObs_t = readdy::model::observables::Positions;
-        public:
-            TrajectoryWriter(const std::string& path, kernel_t *const kernel, unsigned int stride, ppObs_t* parent)
-                    : readdy::model::observables::Combiner(kernel, stride, parent) {};
+namespace io {
 
-            virtual void evaluate() = 0;
+class Trajectory
+        : public model::observables::Combiner<std::pair<std::vector<model::observables::time_step_type>, std::vector<model::observables::Particles::result_t>>, model::observables::Particles> {
 
-        protected:
+public:
+    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int flushStride, model::observables::Particles *particlesObservable);
 
-        };
-    }
+    virtual void evaluate();
+
+    virtual void flush();
+
+protected:
+    unsigned int flushStride;
+    unsigned int count = 0;
+};
+
 }
-#endif //READDY_MAIN_TRAJECTORYOBSERVABLE_H
+}
+
+#endif //READDY_MAIN_TRAJECTORY_H
