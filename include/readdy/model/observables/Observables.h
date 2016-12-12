@@ -23,6 +23,7 @@
 /**
  * Header file containing definitions for various observables. Currently:
  *  - Positions,
+ *  - Particles,
  *  - RadialDistribution,
  *  - CenterOfMass,
  *  - HistogramAlongAxis,

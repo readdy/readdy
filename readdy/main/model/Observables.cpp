@@ -26,6 +26,7 @@
  * @file Observables.cpp
  * @brief Implementation of observables
  * @author clonker
+ * @author chrisfroe
  * @date 26.04.16
  */
 

@@ -191,8 +191,7 @@ void CPUDParticles::evaluate() {
     resultTypes.reserve(particleData->size());
     resultIds.reserve(particleData->size());
     resultPositions.reserve(particleData->size());
-    for (size_t i = 0; i < particleData->size(); ++i) {
-        const auto &entry = particleData->entry_at(i);
+    for (const auto &entry : *particleData) {
         resultTypes.push_back(entry.type);
         resultIds.push_back(entry.id);
         resultPositions.push_back(entry.position());

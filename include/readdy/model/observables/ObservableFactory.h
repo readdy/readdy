@@ -39,6 +39,7 @@
 #include <readdy/model/observables/Observable.h>
 #include <readdy/common/Utils.h>
 #include <readdy/model/observables/Observables.h>
+#include "Aggregators.h"
 
 namespace readdy {
 namespace model {
@@ -95,6 +96,11 @@ public:
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
+    virtual MeanSquaredDisplacement *
+    createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount, Particles *particlesObservable) const {
+        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+    }
+
 protected:
     Kernel *const kernel;
 
@@ -148,6 +154,13 @@ protected:
     struct get_dispatcher<readdy::model::observables::Particles, Args...> {
         static Particles *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
             return self->createParticles(stride, std::forward<Args>(args)...);
+        }
+    };
+
+    template<typename... Args>
+    struct get_dispatcher<readdy::model::observables::MeanSquaredDisplacement, Args...> {
+        static MeanSquaredDisplacement *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
+            return self->createMeanSquaredDisplacement(stride, std::forward<Args>(args)...);
         }
     };
 };

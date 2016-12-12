@@ -72,36 +72,7 @@ public:
     };
 };
 
-class Trajectory : public Combiner<std::pair<std::vector<time_step_type>, std::vector<Particles::result_t>>, Particles> {
-public:
-    Trajectory(Kernel *const kernel, unsigned int stride, unsigned int flushStride, Particles *particlesObservable)
-            : Combiner<std::pair<std::vector<time_step_type>, std::vector<Particles::result_t>>, Particles>(kernel, stride,
-                                                                                                            particlesObservable) {};
 
-    virtual void evaluate() {
-        const auto &currentInput = std::get<0>(this->parentObservables)->getResult();
-        auto &resultTimes = std::get<0>(this->result);
-        auto &resultValues = std::get<1>(this->result);
-        resultTimes.push_back(this->getCurrentTimeStep());
-        resultValues.push_back(currentInput);
-        if (count % flushStride == 0) {
-            //flush();
-        }
-        ++count;
-    };
-
-    virtual void flush() {
-        //writer.write(this->result);
-        auto &resultTimes = std::get<0>(this->result);
-        auto &resultValues = std::get<1>(this->result);
-        resultTimes.clear();
-        resultValues.clear();
-    }
-
-protected:
-    unsigned int flushStride;
-    unsigned int count = 0;
-};
 
 }
 }

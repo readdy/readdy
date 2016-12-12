@@ -33,6 +33,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
+#include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
 namespace readdy {
 namespace kernel {
@@ -73,6 +74,13 @@ SCPUObservableFactory::createRadialDistribution(unsigned int stride, std::vector
 readdy::model::observables::Particles *SCPUObservableFactory::createParticles(unsigned int stride) const {
     return new SCPUParticles(kernel, stride);
 }
+
+readdy::model::observables::MeanSquaredDisplacement *
+SCPUObservableFactory::createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount,
+                                                     readdy::model::observables::Particles *particlesObservable) const {
+    return new SCPUMeanSquaredDisplacement<>(kernel, stride, typesToCount, particlesObservable);
+}
+
 }
 }
 }

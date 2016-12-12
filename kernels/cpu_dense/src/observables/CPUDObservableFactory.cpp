@@ -34,6 +34,7 @@
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 #include <readdy/kernel/cpu_dense/observables/CPUDObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
+#include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>
 
 namespace readdy {
 namespace kernel {
@@ -74,6 +75,12 @@ CPUDObservableFactory::createRadialDistribution(unsigned int stride, std::vector
                                                 std::vector<std::string> typeCountTo, double particleToDensity) const {
     return new readdy::kernel::scpu::observables::SCPURadialDistribution<CPUDKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
                                                                                     particleToDensity);
+}
+
+readdy::model::observables::MeanSquaredDisplacement *
+CPUDObservableFactory::createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount,
+                                                     readdy::model::observables::Particles *particlesObservable) const {
+    return new readdy::kernel::scpu::observables::SCPUMeanSquaredDisplacement<CPUDKernel>(kernel, stride, typesToCount, particlesObservable);
 }
 
 }

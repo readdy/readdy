@@ -157,7 +157,7 @@ private:
 
         template<typename T>
         void operator()(T *const obs) {
-            if(obs->getCurrentTimeStep() != currentTimeStep) obs->callback(currentTimeStep);
+            obs->callback(currentTimeStep);
         }
     };
 };

@@ -43,9 +43,10 @@ namespace observables {
  * for those particle ids. I.e. if all initial particles vanished, there is nothing to compute anymore.
  */
 
+template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
 class SCPUMeanSquaredDisplacement : public readdy::model::observables::MeanSquaredDisplacement {
 public:
-    SCPUMeanSquaredDisplacement(SCPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount,
+    SCPUMeanSquaredDisplacement(kernel_t *const kernel, unsigned int stride, std::vector<std::string> typesToCount,
                             readdy::model::observables::Particles *particlesObservable)
             : readdy::model::observables::MeanSquaredDisplacement(kernel, stride, typesToCount, particlesObservable), kernel(kernel) {};
 
@@ -65,33 +66,32 @@ public:
                 }
             }
             resultMsd.push_back(0);
+            numberOfParticles.push_back(initialPositions.size());
             return;
         }
         double msd = 0;
-        unsigned int numberParticles = 0;
-        auto initPos = initialPositions.begin();
-        while (initPos != initialPositions.end()) {
-            auto it = std::find(ids.begin(), ids.end(), (*initPos).first);
-            if (it != ids.end()) {
-                // idx is the position in the current(!) result of the particle with a certain id
-                auto idx = it - ids.begin();
-                const auto displacement = positions[idx] - (*initPos).second;
+        unsigned long currentNumberParticles = 0;
+        auto posIt = positions.begin();
+        auto idsIt = ids.begin();
+        for(; idsIt != ids.end(); ++idsIt, ++posIt) {
+            auto it = initialPositions.find(*idsIt);
+            if (it != initialPositions.end()) {
+                const auto displacement = *posIt - it->second;
                 msd += displacement * displacement;
-                ++numberParticles;
-                ++initPos;
-            } else {
-                // particle does not exist anymore -> remove it from map and DO NOT increment the iterator
-                initPos = initialPositions.erase(initPos);
+                ++currentNumberParticles;
             }
         }
-        if (numberParticles == 0) numberParticles = 1;
-        msd /= static_cast<double>(numberParticles);
+        if (currentNumberParticles > 0) {
+            msd /= static_cast<double>(currentNumberParticles);
+        };
         resultMsd.push_back(msd);
+        numberOfParticles.push_back(currentNumberParticles);
     }
 
 protected:
     std::unordered_map<readdy::model::Particle::id_type, readdy::model::Vec3> initialPositions;
-    SCPUKernel *const kernel;
+    std::vector<unsigned long> numberOfParticles;
+    kernel_t *const kernel;
 };
 
 }

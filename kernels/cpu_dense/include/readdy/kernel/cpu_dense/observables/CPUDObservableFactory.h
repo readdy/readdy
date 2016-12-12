@@ -67,6 +67,10 @@ public:
                              std::vector<std::string> typeCountTo,
                              double particleToDensity) const override;
 
+    virtual readdy::model::observables::MeanSquaredDisplacement *
+    createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount,
+                                  readdy::model::observables::Particles *particlesObservable) const override;
+
 private:
     CPUDKernel *const kernel;
 };
