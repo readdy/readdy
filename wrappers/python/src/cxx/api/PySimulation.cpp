@@ -117,13 +117,6 @@ unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride
 // module
 PYBIND11_PLUGIN (api) {
 
-    if (!readdy::log::console()) {
-        spdlog::set_sync_mode();
-        auto console = spdlog::stdout_color_mt("console");
-        console->set_level(spdlog::level::debug);
-        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-    }
-
     py::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");

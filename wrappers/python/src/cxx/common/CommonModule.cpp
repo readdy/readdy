@@ -42,14 +42,30 @@ namespace py = pybind11;
 // module
 PYBIND11_PLUGIN (common) {
 
-    if(!readdy::log::console()) {
-        spdlog::set_sync_mode();
-        auto console = spdlog::stdout_color_mt("console");
-        console->set_level(spdlog::level::debug);
-        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-    }
-
     py::module common("common", "ReaDDy common python module");
+
+    common.def("set_logging_level", [](const std::string &level) -> void {
+        readdy::log::console()->set_level([&level] {
+            if (level == "trace") {
+                return spdlog::level::trace;
+            } else if (level == "debug") {
+                return spdlog::level::debug;
+            } else if (level == "info") {
+                return spdlog::level::info;
+            } else if (level == "warn") {
+                return spdlog::level::warn;
+            } else if (level == "err" || level == "error") {
+                return spdlog::level::err;
+            } else if (level == "critical") {
+                return spdlog::level::critical;
+            } else if (level == "off") {
+                return spdlog::level::off;
+            }
+            readdy::log::console()->warn("Did not select a valid logging level!");
+            return spdlog::level::debug;
+        }());
+    }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
+                       "\"err\", \"error\", \"critical\", \"off\".");
 
     py::class_<readdy::model::Vec3>(common, "Vec")
             .def(py::init<double, double, double>())
