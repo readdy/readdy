@@ -20,6 +20,7 @@
 #####################################################################
 
 
+LIST(APPEND COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ExportIO.cpp)
 LIST(APPEND COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/CommonModule.cpp)
 
 PYBIND11_ADD_MODULE(common ${COMMON_SOURCES})

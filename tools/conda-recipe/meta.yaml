@@ -38,7 +38,7 @@ test:
   requires:
     - python
     - numpy
-    - ipython
     - nose
+    - h5py
     - hdf5 ==1.8.15.1 # [osx]
     - hdf5 >=1.8.15.1 # [not osx]

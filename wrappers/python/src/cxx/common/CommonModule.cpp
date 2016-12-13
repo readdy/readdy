@@ -39,6 +39,8 @@ namespace py = pybind11;
  * class to use be exported (preferably by the READDY_EXPORT macro defined in common/macros.h).
  */
 
+void exportIO(py::module &);
+
 // module
 PYBIND11_PLUGIN (common) {
 
@@ -61,11 +63,16 @@ PYBIND11_PLUGIN (common) {
             } else if (level == "off") {
                 return spdlog::level::off;
             }
-            readdy::log::console()->warn("Did not select a valid logging level!");
+            readdy::log::console()->warn("Did not select a valid logging level, setting to debug!");
             return spdlog::level::debug;
         }());
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
                        "\"err\", \"error\", \"critical\", \"off\".");
+
+    {
+        py::module io = common.def_submodule("io", "ReaDDy IO module");
+        exportIO(io);
+    }
 
     py::class_<readdy::model::Vec3>(common, "Vec")
             .def(py::init<double, double, double>())

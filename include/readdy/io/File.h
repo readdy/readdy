@@ -38,50 +38,68 @@
 namespace readdy {
 namespace io {
 
+template<typename T>
 class DataSet;
+
 class DataSetType;
+
 class File;
+
 class Group;
-template<typename T> class NativeDataSetType;
-template<typename T> class STDDataSetType;
+
+template<typename T>
+class NativeDataSetType;
+
+template<typename T>
+class STDDataSetType;
 
 
 class DataSetType {
+    template<typename T>
     friend class DataSet;
+
 public:
     using data_set_type_t = int;
-    bool operator==(const DataSetType&) const;
-    bool operator!=(const DataSetType&) const;
+
+    bool operator==(const DataSetType &) const;
+
+    bool operator!=(const DataSetType &) const;
+
     using type = void;
 
     template<typename T>
-    static data_set_type_t of_native(const std::vector<T>&) {
+    static data_set_type_t of_native(const std::vector<T> &) {
         return NativeDataSetType<T>().tid;
     }
 
     template<typename T>
-    static data_set_type_t of_native(const T*const) {
+    static data_set_type_t of_native(const T *const) {
         return NativeDataSetType<T>().tid;
     }
 
     template<typename T>
-    static data_set_type_t of_std(const std::vector<T>&) {
+    static data_set_type_t of_std(const std::vector<T> &) {
         return STDDataSetType<T>().tid;
     }
 
     template<typename T>
-    static data_set_type_t of_std(const T*const) {
+    static data_set_type_t of_std(const T *const) {
         return STDDataSetType<T>().tid;
     }
+
+    data_set_type_t getTID() const;
+
 protected:
     DataSetType();
+
     data_set_type_t tid;
 };
 
 template<typename T>
-class NativeDataSetType : public DataSetType{
+class NativeDataSetType : public DataSetType {
 public:
     NativeDataSetType();
+
     using type = T;
 };
 
@@ -89,19 +107,20 @@ template<typename T>
 class STDDataSetType : public DataSetType {
 public:
     STDDataSetType();
+
     using type = T;
 };
 
+template<typename T>
 class DataSet {
 public:
     using handle_t = int;
     using dims_t = unsigned long long;
     static const dims_t UNLIMITED_DIMS;
 
-    DataSet(const std::string& name, const Group& group, const std::vector<dims_t> &dims,
-            const std::vector<dims_t> &maxDims, DataSetType::data_set_type_t type);
+    DataSet(const std::string &name, const Group &group, const std::vector<dims_t> &dims,
+            const std::vector<dims_t> &maxDims);
 
-    template<typename T>
     void append(const std::vector<dims_t> &dims, const T *data);
 
 private:
@@ -115,6 +134,8 @@ private:
 
 class Group {
     friend class File;
+
+    template<typename T>
     friend class DataSet;
 
 public:
@@ -131,19 +152,23 @@ public:
     template<typename T>
     void write(const std::string &dataSetName, const std::vector<dims_t> &dims, const T *data);
 
+    Group createGroup(const std::string &path);
+
 protected:
 
-    Group(const File& file) : Group(file, -1, "/") {};
+    Group(const File &file) : Group(file, -1, "/") {};
 
-    Group(const File& file, handle_t handle, const std::string &);
+    Group(const File &file, handle_t handle, const std::string &);
 
     handle_t handle;
     std::string path;
-    const File& file;
+    const File &file;
 };
 
 class File {
+    template<typename T>
     friend class DataSet;
+
 public:
 
     enum class Action {
@@ -151,12 +176,16 @@ public:
     };
 
     enum class Flag {
-        READ_ONLY, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING
+        READ_ONLY = 0, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING, DEFAULT /* = rw, create, truncate */
     };
 
     File(const std::string &path, const Action &action, const std::vector<Flag> &flag);
 
-    File(const std::string &path, const Action &action, const Flag &flag);
+    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
+
+    File(const File &) = delete;
+
+    File &operator=(const File &) = delete;
 
     virtual ~File();
 
@@ -165,6 +194,8 @@ public:
     void close();
 
     Group createGroup(const std::string &path);
+
+    void write(const std::string &dataSetName, const std::string &data);
 
     template<typename T>
     void write(const std::string &dataSetName, const std::vector<T> &data) {
