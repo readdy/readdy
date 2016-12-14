@@ -42,20 +42,21 @@ namespace io = readdy::io;
 template<typename T>
 void exportDataSet(py::module &io, const std::string &name) {
     using group_t = io::Group;
+    using object_t = io::Object;
     using dataset_t = io::DataSet<T>;
     std::string base_name = "DataSet_";
-    py::class_<dataset_t>(io, (base_name + name).c_str())
+    py::class_<dataset_t, object_t>(io, (base_name + name).c_str())
             .def(py::init<const std::string &, const group_t &, const std::vector<typename dataset_t::dims_t> &,
                     const std::vector<typename dataset_t::dims_t> &>())
             .def("append", [](dataset_t &self, const py::array_t <T> &arr) {
                 self.append(std::vector<io::Group::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
-            })
-            .def_readonly_static("UNLIMITED_DIMS", &dataset_t::UNLIMITED_DIMS);
+            });
 }
 
 void exportIO(py::module &io) {
     using file_t = io::File;
     using group_t = io::Group;
+    using object_t = io::Object;
 
     io.def("get_type", [](const std::string &name) {
         if (name == "short") {
@@ -69,7 +70,13 @@ void exportIO(py::module &io) {
         } else if (name == "double") {
             return io::STDDataSetType<double>().getTID();
         }
+        return io::STDDataSetType<int>().getTID();
     });
+
+    io.def("unlimited_dims", [] { return object_t::UNLIMITED_DIMS; });
+
+    py::class_<object_t>(io, "H5Object")
+            .def_readonly_static("UNLIMITED_DIMS", &object_t::UNLIMITED_DIMS);
 
     py::enum_<file_t::Action>(io, "FileAction")
             .value("CREATE", file_t::Action::CREATE)
@@ -84,7 +91,7 @@ void exportIO(py::module &io) {
             .value("CREATE_NON_EXISTING", file_t::Flag::CREATE_NON_EXISTING)
             .export_values();
 
-    py::class_<file_t>(io, "File")
+    py::class_<file_t, object_t>(io, "File")
             .def(py::init<const std::string &, file_t::Action, file_t::Flag>(), py::arg("path"), py::arg("action"),
                  py::arg("flag") = file_t::Flag::OVERWRITE)
             .def(py::init<const std::string &, file_t::Action, const std::vector<file_t::Flag> &>())
@@ -108,9 +115,10 @@ void exportIO(py::module &io) {
             })
             .def("flush", &file_t::flush)
             .def("close", &file_t::close)
-            .def("create_group", &file_t::createGroup, rvp::move);
+            .def("create_group", &file_t::createGroup, rvp::move)
+            .def("get_root_group", &file_t::getRootGroup, rvp::reference_internal);
 
-    py::class_<group_t>(io, "Group")
+    py::class_<group_t, object_t>(io, "Group")
             .def("write_short", [](group_t &self, const std::string &name, const py::array_t<short> &arr) {
                 self.write(name, std::vector<io::Group::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })

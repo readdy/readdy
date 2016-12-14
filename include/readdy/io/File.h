@@ -53,13 +53,19 @@ class NativeDataSetType;
 template<typename T>
 class STDDataSetType;
 
+struct Object {
+    using handle_t = int;
+    using dims_t = unsigned long long;
+    using data_set_type_t = int;
+    const static unsigned long long UNLIMITED_DIMS;
+};
 
-class DataSetType {
+
+class DataSetType : public Object {
     template<typename T>
     friend class DataSet;
 
 public:
-    using data_set_type_t = int;
 
     bool operator==(const DataSetType &) const;
 
@@ -111,36 +117,15 @@ public:
     using type = T;
 };
 
-template<typename T>
-class DataSet {
-public:
-    using handle_t = int;
-    using dims_t = unsigned long long;
-    static const dims_t UNLIMITED_DIMS;
 
-    DataSet(const std::string &name, const Group &group, const std::vector<dims_t> &dims,
-            const std::vector<dims_t> &maxDims);
 
-    void append(const std::vector<dims_t> &dims, const T *data);
-
-private:
-    const std::vector<dims_t> &dims;
-    const std::vector<dims_t> &maxDims;
-    const Group &group;
-    dims_t extensionDim;
-    handle_t handle;
-    handle_t memorySpace;
-};
-
-class Group {
+class Group : public Object {
     friend class File;
 
     template<typename T>
     friend class DataSet;
 
 public:
-    using handle_t = int;
-    using dims_t = unsigned long long;
 
     template<typename T>
     void write(const std::string &dataSetName, const std::vector<T> &data) {
@@ -162,10 +147,11 @@ protected:
 
     handle_t handle;
     std::string path;
-    const File &file;
+    const File& file;
 };
 
-class File {
+
+class File : public Object {
     template<typename T>
     friend class DataSet;
 
@@ -195,6 +181,8 @@ public:
 
     Group createGroup(const std::string &path);
 
+    const Group& getRootGroup() const;
+
     void write(const std::string &dataSetName, const std::string &data);
 
     template<typename T>
@@ -203,7 +191,7 @@ public:
     }
 
     template<typename T>
-    void write(const std::string &dataSetName, const std::vector<Group::dims_t> &dims, const T *data) {
+    void write(const std::string &dataSetName, const std::vector<Object::dims_t> &dims, const T *data) {
         root.write<T>(dataSetName, dims, data);
     }
 
@@ -211,6 +199,28 @@ private:
     std::string path_;
     Group root;
 };
+
+template<typename T>
+class DataSet : public Object {
+public:
+
+    DataSet(const std::string &name, const Group &group, const std::vector<dims_t> &chunkSize,
+            const std::vector<dims_t> &maxDims);
+
+    ~DataSet();
+
+    void close();
+
+    void append(const std::vector<dims_t> &dims, const T *data);
+
+private:
+    const std::vector<dims_t> maxDims;
+    const Group group;
+    dims_t extensionDim;
+    handle_t handle;
+    handle_t memorySpace;
+};
+
 }
 }
 #endif //READDY_MAIN_FILE_H

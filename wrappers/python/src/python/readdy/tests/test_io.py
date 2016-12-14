@@ -70,10 +70,16 @@ class TestSchemeApi(unittest.TestCase):
         f = io.File(fname, io.FileAction.CREATE)
         g = f.create_group("/append_group")
 
-        ds_double = io.DataSet_double("doubleds", g, [io.DataSet_double.UNLIMITED_DIMS], [0])
+        full_data = [[3.3, 2.2], [1, 1], [3.4, 2.4], [14, 14], [5.5, 5.5]]
+
+        ds_double = io.DataSet_double("doubleds", g, [2, 2], [io.unlimited_dims(), 2])
+        ds_double.append(np.array([[3.3, 2.2], [1, 1]], dtype=np.float64))
+        ds_double.append(np.array([[3.4, 2.4], [14, 14], [5.5, 5.5]], dtype=np.float64))
 
         f.close()
-        pass
+
+        with h5py.File(fname, "r") as f2:
+            np.testing.assert_equal(f2.get("append_group")["doubleds"][:], full_data)
 
 if __name__ == '__main__':
     common.set_logging_level("debug")
