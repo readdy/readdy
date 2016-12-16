@@ -67,38 +67,30 @@ class DataSetType : public Object {
 
 public:
 
-    bool operator==(const DataSetType &) const;
-
-    bool operator!=(const DataSetType &) const;
-
     using type = void;
 
     template<typename T>
     static data_set_type_t of_native(const std::vector<T> &) {
-        return NativeDataSetType<T>().tid;
+        return NativeDataSetType<T>::tid;
     }
 
     template<typename T>
     static data_set_type_t of_native(const T *const) {
-        return NativeDataSetType<T>().tid;
+        return NativeDataSetType<T>::tid;
     }
 
     template<typename T>
     static data_set_type_t of_std(const std::vector<T> &) {
-        return STDDataSetType<T>().tid;
+        return STDDataSetType<T>::tid;
     }
 
     template<typename T>
     static data_set_type_t of_std(const T *const) {
-        return STDDataSetType<T>().tid;
+        return STDDataSetType<T>::tid;
     }
-
-    data_set_type_t getTID() const;
 
 protected:
     DataSetType();
-
-    data_set_type_t tid;
 };
 
 template<typename T>
@@ -106,6 +98,7 @@ class NativeDataSetType : public DataSetType {
 public:
     NativeDataSetType();
 
+    static const data_set_type_t tid;
     using type = T;
 };
 
@@ -114,6 +107,7 @@ class STDDataSetType : public DataSetType {
 public:
     STDDataSetType();
 
+    static const data_set_type_t tid;
     using type = T;
 };
 
@@ -138,6 +132,8 @@ public:
     void write(const std::string &dataSetName, const std::vector<dims_t> &dims, const T *data);
 
     Group createGroup(const std::string &path);
+
+    handle_t getHandle() const;
 
 protected:
 
@@ -210,6 +206,11 @@ public:
     ~DataSet();
 
     void close();
+
+    template<typename = typename std::enable_if<std::is_fundamental<T>::value>::type>
+    void append(const std::vector<T> &data) {
+        append({1, data.size()}, data.data());
+    }
 
     void append(const std::vector<dims_t> &dims, const T *data);
 
