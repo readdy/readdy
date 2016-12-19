@@ -58,21 +58,6 @@ void exportIO(py::module &io) {
     using group_t = io::Group;
     using object_t = io::Object;
 
-    io.def("get_type", [](const std::string &name) {
-        if (name == "short") {
-            return io::STDDataSetType<short>::tid;
-        } else if (name == "int") {
-            return io::STDDataSetType<int>::tid;
-        } else if (name == "long") {
-            return io::STDDataSetType<long>::tid;
-        } else if (name == "float") {
-            return io::STDDataSetType<float>::tid;
-        } else if (name == "double") {
-            return io::STDDataSetType<double>::tid;
-        }
-        return io::STDDataSetType<int>::tid;
-    });
-
     io.def("unlimited_dims", [] { return object_t::UNLIMITED_DIMS; });
 
     py::class_<object_t>(io, "H5Object")
