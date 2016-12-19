@@ -38,26 +38,119 @@
 namespace readdy {
 namespace io {
 
-class Group {
-public:
+template<typename T>
+class DataSet;
+
+class DataSetType;
+
+class File;
+
+class Group;
+
+template<typename T>
+class NativeDataSetType;
+
+template<typename T>
+class STDDataSetType;
+
+struct Object {
     using handle_t = int;
     using dims_t = unsigned long long;
+    using data_set_type_t = int;
+    const static unsigned long long UNLIMITED_DIMS;
+};
+
+
+class DataSetType : public Object {
+    template<typename T>
+    friend class DataSet;
+
+public:
+
+    using type = void;
 
     template<typename T>
-    void write(const std::string& dataSetName, const std::vector<T> &data) {
-        write(dataSetName, {data.size()}, data.data());
+    static data_set_type_t of_native(const std::vector<T> &) {
+        return NativeDataSetType<T>::tid;
     }
 
     template<typename T>
-    void write(const std::string& dataSetName, const std::vector<dims_t> &dims, const T* data);
+    static data_set_type_t of_native(const T *const) {
+        return NativeDataSetType<T>::tid;
+    }
+
+    template<typename T>
+    static data_set_type_t of_std(const std::vector<T> &) {
+        return STDDataSetType<T>::tid;
+    }
+
+    template<typename T>
+    static data_set_type_t of_std(const T *const) {
+        return STDDataSetType<T>::tid;
+    }
 
 protected:
-    friend class File;
-    Group() : Group(-1) {};
-    Group(handle_t handle);
-    handle_t handle;
+    DataSetType();
 };
-class File {
+
+template<typename T>
+class NativeDataSetType : public DataSetType {
+public:
+    NativeDataSetType();
+
+    static const data_set_type_t tid;
+    using type = T;
+};
+
+template<typename T>
+class STDDataSetType : public DataSetType {
+public:
+    STDDataSetType();
+
+    static const data_set_type_t tid;
+    using type = T;
+};
+
+
+
+class Group : public Object {
+    friend class File;
+
+    template<typename T>
+    friend class DataSet;
+
+public:
+
+    template<typename T>
+    void write(const std::string &dataSetName, const std::vector<T> &data) {
+        write(dataSetName, {data.size()}, data.data());
+    }
+
+    void write(const std::string &dataSetName, const std::string &string);
+
+    template<typename T>
+    void write(const std::string &dataSetName, const std::vector<dims_t> &dims, const T *data);
+
+    Group createGroup(const std::string &path);
+
+    handle_t getHandle() const;
+
+protected:
+
+    Group(const File &file) : Group(file, -1, "/") {};
+
+    Group(const File &file, handle_t handle, const std::string &);
+
+    handle_t handle;
+    std::string path;
+    const File& file;
+};
+
+
+class File : public Object {
+    template<typename T>
+    friend class DataSet;
+
 public:
 
     enum class Action {
@@ -65,11 +158,16 @@ public:
     };
 
     enum class Flag {
-        READ_ONLY, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING
+        READ_ONLY = 0, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING, DEFAULT /* = rw, create, truncate */
     };
 
-    File(const std::string &path, const Action &action, const std::vector<Flag>& flag);
-    File(const std::string &path, const Action &action, const Flag& flag);
+    File(const std::string &path, const Action &action, const std::vector<Flag> &flag);
+
+    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
+
+    File(const File &) = delete;
+
+    File &operator=(const File &) = delete;
 
     virtual ~File();
 
@@ -77,22 +175,53 @@ public:
 
     void close();
 
-    Group createGroup(const std::string& path);
+    Group createGroup(const std::string &path);
+
+    const Group& getRootGroup() const;
+
+    void write(const std::string &dataSetName, const std::string &data);
 
     template<typename T>
-    void write(const std::string& dataSetName, const std::vector<T> &data) {
-        self.write(dataSetName, data.data(), {data.size()});
+    void write(const std::string &dataSetName, const std::vector<T> &data) {
+        root.write(dataSetName, {data.size()}, data.data());
     }
 
     template<typename T>
-    void write(const std::string& dataSetName, const std::vector<Group::dims_t> &dims, const T* data) {
-        self.write<T>(dataSetName, dims, data);
+    void write(const std::string &dataSetName, const std::vector<Object::dims_t> &dims, const T *data) {
+        root.write<T>(dataSetName, dims, data);
     }
 
 private:
     std::string path_;
-    Group self;
+    Group root;
 };
+
+template<typename T>
+class DataSet : public Object {
+public:
+
+    DataSet(const std::string &name, const Group &group, const std::vector<dims_t> &chunkSize,
+            const std::vector<dims_t> &maxDims);
+
+    ~DataSet();
+
+    void close();
+
+    template<typename = typename std::enable_if<std::is_fundamental<T>::value>::type>
+    void append(const std::vector<T> &data) {
+        append({1, data.size()}, data.data());
+    }
+
+    void append(const std::vector<dims_t> &dims, const T *data);
+
+private:
+    const std::vector<dims_t> maxDims;
+    const Group group;
+    dims_t extensionDim;
+    handle_t handle;
+    handle_t memorySpace;
+};
+
 }
 }
 #endif //READDY_MAIN_FILE_H

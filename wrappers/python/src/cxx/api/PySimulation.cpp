@@ -117,13 +117,6 @@ unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride
 // module
 PYBIND11_PLUGIN (api) {
 
-    if (!readdy::log::console()) {
-        spdlog::set_sync_mode();
-        auto console = spdlog::stdout_color_mt("console");
-        console->set_level(spdlog::level::debug);
-        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-    }
-
     py::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
@@ -139,6 +132,8 @@ PYBIND11_PLUGIN (api) {
             })
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
+            .def("record_trajectory", &sim::recordTrajectory)
+            .def("close_trajectory_file", &sim::closeTrajectoryFile)
             .def("register_potential_order_2", &registerPotentialOrder2)
             .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential)
             .def("register_potential_piecewise_weak_interaction",

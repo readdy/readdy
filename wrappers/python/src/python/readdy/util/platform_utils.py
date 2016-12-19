@@ -31,9 +31,11 @@ def is_readdy_installed():
     """
     return os.path.exists(os.path.join(get_environment_root_dir(), "readdy", "readdy_plugins"))
 
+
 def get_readdy_plugin_dir():
     assert is_readdy_installed(), "readdy needs to be installed"
     return os.path.join(get_environment_root_dir(), "readdy", "readdy_plugins")
+
 
 def get_environment_root_dir():
     """

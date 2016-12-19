@@ -34,23 +34,59 @@
 
 #include <array>
 #include <readdy/model/Kernel.h>
+#include "File.h"
 
 namespace readdy {
 namespace io {
 
-class Trajectory
-        : public model::observables::Combiner<std::pair<std::vector<model::observables::time_step_type>, std::vector<model::observables::Particles::result_t>>, model::observables::Particles> {
+struct TrajectoryEntry {
+    using pos_t = readdy::model::Vec3::entry_t;
+
+    TrajectoryEntry(const readdy::model::Particle &p, readdy::model::observables::time_step_type t) : typeId(
+            p.getType()), id(p.getId()), px(p.getPos()[0]), py(p.getPos()[1]), pz(p.getPos()[2]), t(t) {}
+
+    TrajectoryEntry(const model::Particle::type_type typeId, const model::Particle::id_type id,
+                    const model::Vec3 &position, readdy::model::observables::time_step_type t)
+            : typeId(typeId), id(id), px(position[0]), py(position[1]), pz(position[2]), t(t) {}
+
+    readdy::model::Particle::type_type typeId;
+    readdy::model::observables::time_step_type t;
+    readdy::model::Particle::id_type id;
+    pos_t px, py, pz;
+};
+
+class Trajectory : public model::observables::Observable<std::vector<std::vector<TrajectoryEntry>>> {
+
+    using observable_entry_t = std::vector<std::vector<TrajectoryEntry>>;
+    using base_t = model::observables::Observable<observable_entry_t>;
 
 public:
-    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int flushStride, model::observables::Particles *particlesObservable);
+
+    const static std::string TRAJECTORY_GROUP_PATH;
+    const static std::string TRAJECTORY_DATA_SET_NAME;
+
+    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fs, File &file);
+
+    ~Trajectory();
 
     virtual void evaluate();
 
+    virtual void append(observable_entry_t &);
+
     virtual void flush();
 
+    static Object::data_set_type_t getEntryTypeMemory();
+
+    static Object::data_set_type_t getEntryTypeFile();
+
 protected:
-    unsigned int flushStride;
     unsigned int count = 0;
+    unsigned int flushStride = 0;
+    File &file;
+    //Group trajectoryGroup;
+    Object::handle_t dataSetHandle;
+    Object::handle_t memorySpace;
+    Object::handle_t entriesTypeMemory, entriesTypeFile;
 };
 
 }

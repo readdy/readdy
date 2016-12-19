@@ -93,12 +93,7 @@ unsigned long CPUDKernel::getNThreads() const {
 }
 
 void CPUDKernel::setNThreads(readdy::util::thread::Config::n_threads_t n) {
-    if (n > 0 && n <= std::thread::hardware_concurrency()) {
-        pimpl->config->setNThreads(n);
-    } else {
-        log::console()->error("Tried to set number of threads to {}, but there are only {} hardware thread contexts "
-                                      "available.", n, std::thread::hardware_concurrency());
-    }
+    pimpl->config->setNThreads(n);
 }
 
 CPUDKernel::~CPUDKernel() = default;
