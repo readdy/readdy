@@ -132,6 +132,8 @@ PYBIND11_PLUGIN (api) {
             })
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
+            .def("record_trajectory", &sim::recordTrajectory)
+            .def("close_trajectory_file", &sim::closeTrajectoryFile)
             .def("register_potential_order_2", &registerPotentialOrder2)
             .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential)
             .def("register_potential_piecewise_weak_interaction",

@@ -19,6 +19,10 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
+"""
+@author: clonker
+"""
+
 import os
 import unittest
 import tempfile
@@ -27,6 +31,8 @@ import h5py
 import numpy as np
 import readdy._internal.common as common
 import readdy._internal.common.io as io
+from readdy._internal.api import Simulation
+from readdy.util.trajectory_utils import TrajectoryReader
 
 
 class TestSchemeApi(unittest.TestCase):
@@ -37,6 +43,33 @@ class TestSchemeApi(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.dir, ignore_errors=True)
+
+    def test_write_trajectory(self):
+        common.set_logging_level("error")
+        traj_fname = os.path.join(self.dir, "traj.h5")
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+        simulation.set_time_step(1)
+        simulation.box_size = common.Vec(5,5,5)
+        simulation.register_particle_type("A", 0.0, 0.0)
+
+        def callback(_):
+            simulation.add_particle("A", common.Vec(0, 0, 0))
+
+        simulation.register_observable_n_particles(1, callback, ["A"])
+        simulation.record_trajectory(traj_fname, 0, 1)
+        simulation.run_scheme_readdy(True).configure().run(20)
+        simulation.close_trajectory_file()
+
+        r = TrajectoryReader(traj_fname)
+        trajectory_items = r[:]
+        for idx, items in enumerate(trajectory_items):
+            np.testing.assert_equal(len(items), idx+1)
+            for item in items:
+                np.testing.assert_equal(item.t, idx)
+                np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
+
+        common.set_logging_level("debug")
 
     def test_readwrite_double_and_string(self):
         fname = os.path.join(self.dir, "test_readwrite_double_and_string.h5")
@@ -80,6 +113,7 @@ class TestSchemeApi(unittest.TestCase):
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get("append_group")["doubleds"][:], full_data)
+
 
 if __name__ == '__main__':
     common.set_logging_level("debug")

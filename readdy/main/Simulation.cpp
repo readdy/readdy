@@ -26,6 +26,7 @@
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
+#include <readdy/io/Trajectory.h>
 
 namespace rmr = readdy::model::reactions;
 namespace rmp = readdy::model::programs;
@@ -162,7 +163,9 @@ Simulation::registerBoxPotential(std::string particleType, double forceConstant,
     return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
 }
 
-const short Simulation::registerSpherePotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, double radius) {
+const short
+Simulation::registerSpherePotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin,
+                                    double radius) {
     ensureKernelSelected();
     auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::SpherePotential>();
     ptr->setOrigin(origin);
@@ -278,6 +281,24 @@ void Simulation::setTimeStep(const double timeStep) {
 
 readdy::model::Kernel *const Simulation::getSelectedKernel() const {
     return pimpl->kernel.get();
+}
+
+void
+Simulation::recordTrajectory(const std::string &fileName, const unsigned int stride, const unsigned int flushStride) {
+    ensureKernelSelected();
+    auto uuid = pimpl->counter++;
+    pimpl->trajectoryFileId = uuid;
+    pimpl->trajectoryFile.reset(new io::File(fileName, io::File::Action::CREATE));
+    std::unique_ptr<io::Trajectory> trajectory = std::make_unique<io::Trajectory>(pimpl->kernel.get(), stride,
+                                                                                  flushStride, *pimpl->trajectoryFile);
+    auto &&connection = pimpl->kernel->connectObservable(trajectory.get());
+    pimpl->observables.emplace(uuid, std::move(trajectory));
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+}
+
+void Simulation::closeTrajectoryFile() {
+    deregisterObservable(pimpl->trajectoryFileId);
+    pimpl->trajectoryFile.reset();
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};
