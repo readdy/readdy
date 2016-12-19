@@ -81,7 +81,7 @@ class TestSchemeApi(unittest.TestCase):
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get('/sowas'), data)
-            np.testing.assert_equal(f2.get("/maeh").value, u"hierstehtwas")
+            np.testing.assert_equal(f2.get("/maeh").value.decode(), u"hierstehtwas")
 
     def test_groups_readwrite(self):
         fname = os.path.join(self.dir, "test_groups_readwrite.h5")
@@ -95,8 +95,8 @@ class TestSchemeApi(unittest.TestCase):
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get("/my_super_group")["doubleds"], data)
-            np.testing.assert_equal(f2.get("/my_super_group").get("my_super_subgroup")["stringds"].value, u"jap")
-            np.testing.assert_equal(f2.get("/my_super_group/my_super_subgroup")["stringds"].value, u"jap")
+            np.testing.assert_equal(f2.get("/my_super_group").get("my_super_subgroup")["stringds"].value.decode(), u"jap")
+            np.testing.assert_equal(f2.get("/my_super_group/my_super_subgroup")["stringds"].value.decode(), u"jap")
 
     def test_append(self):
         fname = os.path.join(self.dir, "test_append.h5")
