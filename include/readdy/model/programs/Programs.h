@@ -47,7 +47,7 @@
 #include <readdy/model/Particle.h>
 #include <type_traits>
 
-#if READDY_OSX
+#if READDY_OSX || READDY_WINDOWS
 #include <functional>
 #endif
 

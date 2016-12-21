@@ -261,7 +261,7 @@ public:
                     const auto upperRadius = binBorders[idx + 1];
                     *it_distribution =
                             (*it_counts) /
-                            (4 / 3 * M_PI * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) * nFromParticles * particleToDensity);
+                            (4 / 3 * util::numeric::pi() * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) * nFromParticles * particleToDensity);
                     ++it_distribution;
                     ++it_centers;
                 }

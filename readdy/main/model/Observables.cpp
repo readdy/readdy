@@ -33,9 +33,7 @@
 #include <readdy/model/observables/Observables.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/_internal/Util.h>
-
-/* pi */
-# define READDY_PI        3.14159265358979323846
+#include <readdy/common/numeric.h>
 
 namespace readdy {
 namespace model {
@@ -115,7 +113,7 @@ void RadialDistribution::evaluate() {
                 const auto upperRadius = binBorders[idx + 1];
                 *it_distribution =
                         (*it_counts) /
-                        (4 / 3 * READDY_PI * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) * nFromParticles * particleToDensity);
+                        (4 / 3 * util::numeric::pi() * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) * nFromParticles * particleToDensity);
                 ++it_distribution;
                 ++it_centers;
             }
