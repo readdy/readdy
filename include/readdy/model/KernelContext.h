@@ -25,9 +25,18 @@
  * and periodicity of the simulation box, definitions of particle species and the potentials
  * and reactions affecting them.
  *
+ * Reactions and potentials come in two variants:
+ *   - Internal, created by the responsible kernel
+ *   - External, inserted from the 'outside', e.g. python prototypes
+ *
+ * The context registers both of them in separate maps. Before the simulation can start the
+ * content of both of these maps is unified into a single map, which is referred to during the actual
+ * run of the simulation.
+ *
  * @file KernelContext.h
  * @brief Container class for time independent information of the KernelContext.
  * @author clonker
+ * @author chrisfroe
  * @date 18.04.16
  * @todo write docs, is kbt really time indep (or should be treated as such)?
  */
@@ -54,13 +63,15 @@ public:
 };
 
 class KernelContext {
+    using particle_t = readdy::model::Particle;
+
     using rea_ptr_vec1 = std::vector<std::unique_ptr<reactions::Reaction<1>>>;
     using rea_ptr_vec2 = std::vector<std::unique_ptr<reactions::Reaction<2>>>;
 
     using rdy_ptp = readdy::util::ParticleTypePair;
     using rdy_ptp_hasher = readdy::util::ParticleTypePairHasher;
 
-    using reaction_o1_registry_internal = std::unordered_map<unsigned int, rea_ptr_vec1>;
+    using reaction_o1_registry_internal = std::unordered_map<particle_t::type_type, rea_ptr_vec1>;
     using reaction_o2_registry_internal = std::unordered_map<rdy_ptp, rea_ptr_vec2, rdy_ptp_hasher>;
 
     using pot_ptr_vec1 = std::vector<std::unique_ptr<potentials::PotentialOrder1>>;
@@ -68,21 +79,21 @@ class KernelContext {
     using pot_ptr_vec2 = std::vector<std::unique_ptr<potentials::PotentialOrder2>>;
     using pot_ptr_vec2_external = std::vector<potentials::PotentialOrder2 *>;
 
-    using potential_o1_registry_internal = std::unordered_map<unsigned int, pot_ptr_vec1>;
+    using potential_o1_registry_internal = std::unordered_map<particle_t::type_type, pot_ptr_vec1>;
     using potential_o2_registry_internal = std::unordered_map<rdy_ptp, pot_ptr_vec2, rdy_ptp_hasher>;
 
 public:
 
-    using rdy_type_mapping = std::unordered_map<std::string, unsigned int>;
-    using rdy_reverse_type_mapping = std::unordered_map<unsigned int, std::string>;
+    using rdy_type_mapping = std::unordered_map<std::string, particle_t::type_type>;
+    using rdy_reverse_type_mapping = std::unordered_map<particle_t::type_type, std::string>;
 
     using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
-    using rdy_pot_1_registry = std::unordered_map<unsigned int, std::vector<rdy_pot_1 *>>;
+    using rdy_pot_1_registry = std::unordered_map<particle_t::type_type, std::vector<rdy_pot_1 *>>;
 
     using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
     using rdy_pot_2_registry = std::unordered_map<rdy_ptp, std::vector<rdy_pot_2 *>, rdy_ptp_hasher>;
 
-    using reaction_o1_registry = std::unordered_map<unsigned int, std::vector<reactions::Reaction<1> *>>;
+    using reaction_o1_registry = std::unordered_map<particle_t::type_type, std::vector<reactions::Reaction<1> *>>;
     using reaction_o2_registry = std::unordered_map<rdy_ptp, std::vector<reactions::Reaction<2> *>, rdy_ptp_hasher>;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
@@ -101,7 +112,7 @@ public:
 
     const std::array<bool, 3> &getPeriodicBoundary() const;
 
-    unsigned int getParticleTypeID(const std::string &name) const;
+    particle_t::type_type getParticleTypeID(const std::string &name) const;
 
     void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
 
@@ -113,13 +124,13 @@ public:
 
     double getDiffusionConstant(const std::string &particleType) const;
 
-    double getDiffusionConstant(const unsigned int particleType) const;
+    double getDiffusionConstant(const particle_t::type_type particleType) const;
 
     void setDiffusionConstant(const std::string &particleType, double D);
 
     double getParticleRadius(const std::string &type) const;
 
-    double getParticleRadius(const unsigned int type) const;
+    double getParticleRadius(const particle_t::type_type type) const;
 
     void setParticleRadius(const std::string &type, const double r);
 
@@ -133,7 +144,7 @@ public:
 
     const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const std::string &type) const;
 
-    const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const unsigned int type) const;
+    const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const particle_t::type_type type) const;
 
     const std::vector<const reactions::Reaction<2> *> getAllOrder2Reactions() const;
 
@@ -142,8 +153,8 @@ public:
     const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const std::string &type1,
                                                                     const std::string &type2) const;
 
-    const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const unsigned int type1,
-                                                                    const unsigned int type2) const;
+    const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const particle_t::type_type type1,
+                                                                    const particle_t::type_type type2) const;
 
     template<typename R>
     const short registerReaction(std::unique_ptr<R> r,
@@ -238,29 +249,35 @@ public:
 
     std::vector<rdy_pot_1 *> getOrder1Potentials(const std::string &type) const;
 
-    std::vector<rdy_pot_1 *> getOrder1Potentials(const unsigned int type) const;
+    std::vector<rdy_pot_1 *> getOrder1Potentials(const particle_t::type_type type) const;
 
     const rdy_pot_1_registry getAllOrder1Potentials() const;
 
-    std::unordered_set<unsigned int> getAllOrder1RegisteredPotentialTypes() const;
+    std::unordered_set<particle_t::type_type> getAllOrder1RegisteredPotentialTypes() const;
 
     const std::vector<rdy_pot_2 *> &getOrder2Potentials(const std::string &, const std::string &) const;
 
-    const std::vector<rdy_pot_2 *> &getOrder2Potentials(const unsigned int, const unsigned int) const;
+    const std::vector<rdy_pot_2 *> &getOrder2Potentials(const particle_t::type_type, const particle_t::type_type) const;
 
     const rdy_pot_2_registry getAllOrder2Potentials() const;
 
-    std::vector<std::tuple<unsigned int, unsigned int>> getAllOrder2RegisteredPotentialTypes() const;
+    std::vector<std::tuple<particle_t::type_type, particle_t::type_type>> getAllOrder2RegisteredPotentialTypes() const;
 
     /**
      * Get an unstructured list of all second order potentials. Useful in neighborlists, where maxcutoff is required.
      */
     const std::vector<potentials::PotentialOrder2 *> getVectorAllOrder2Potentials() const;
 
-    std::vector<unsigned int> getAllRegisteredParticleTypes() const;
+    std::vector<particle_t::type_type> getAllRegisteredParticleTypes() const;
 
-    std::string getParticleName(unsigned int id) const;
+    std::string getParticleName(particle_t::type_type id) const;
 
+    /**
+     * Copy the reactions and potentials of the internal and external registries into the actual registries, which
+     * is used during the run of the simulation. This step is necessary before the simulation can start. Otherwise the
+     * registered reactions and potentials will not take effect. The context is optionally logged in text format.
+     * @param debugOutput decide if context information will be logged
+     */
     void configure(bool debugOutput = false);
 
     const rdy_type_mapping &getTypeMapping() const;
@@ -290,7 +307,7 @@ private:
     struct Impl;
     std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
 
-    unsigned int getOrCreateTypeId(const std::string &name);
+    particle_t::type_type getOrCreateTypeId(const std::string &name);
 
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
