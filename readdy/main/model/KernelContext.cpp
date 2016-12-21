@@ -21,11 +21,10 @@
 
 
 /**
- * << detailed description >>
- *
  * @file KernelContext.cpp
  * @brief Implementation file of the KernelContext.
  * @author clonker
+ * @author chrisfroe
  * @date 18.04.16
  * @todo make proper reference to KernelContext.h, is kBT really indepdendent of t?
  */
@@ -35,14 +34,18 @@
 
 namespace readdy {
 namespace model {
+
+using particle_t = readdy::model::Particle;
+
 struct KernelContext::Impl {
-    unsigned int typeCounter;
-    std::unordered_map<std::string, unsigned int> typeMapping;
+
+    particle_t::type_type typeCounter;
+    std::unordered_map<std::string, particle_t::type_type> typeMapping;
     double kBT = 1;
     std::array<double, 3> box_size{{1, 1, 1}};
     std::array<bool, 3> periodic_boundary{{true, true, true}};
-    std::unordered_map<unsigned int, double> diffusionConstants{};
-    std::unordered_map<unsigned int, double> particleRadii{};
+    std::unordered_map<particle_t::type_type, double> diffusionConstants{};
+    std::unordered_map<particle_t::type_type, double> particleRadii{};
 
     double timeStep;
 
@@ -198,11 +201,11 @@ void KernelContext::setTimeStep(double dt) {
 }
 
 // todo respect const correctness, dont create new entries, thx
-unsigned int KernelContext::getParticleTypeID(const std::string &name) const {
+particle_t::type_type KernelContext::getParticleTypeID(const std::string &name) const {
     return pimpl->typeMapping[name];
 }
 
-double KernelContext::getDiffusionConstant(unsigned int particleType) const {
+double KernelContext::getDiffusionConstant(particle_t::type_type particleType) const {
     return pimpl->diffusionConstants[particleType];
 }
 
@@ -210,7 +213,7 @@ double KernelContext::getParticleRadius(const std::string &type) const {
     return getParticleRadius(pimpl->typeMapping[type]);
 }
 
-double KernelContext::getParticleRadius(const unsigned int type) const {
+double KernelContext::getParticleRadius(const particle_t::type_type type) const {
     if (pimpl->particleRadii.find(type) == pimpl->particleRadii.end()) {
         log::console()->warn("No particle radius was set for the particle type id {}, setting r=1", type);
         pimpl->particleRadii[type] = 1;
@@ -222,12 +225,12 @@ void KernelContext::setParticleRadius(const std::string &particleType, const dou
     pimpl->particleRadii[getOrCreateTypeId(particleType)] = r;
 }
 
-unsigned int KernelContext::getOrCreateTypeId(const std::string &particleType) {
-    unsigned int t_id;
+particle_t::type_type KernelContext::getOrCreateTypeId(const std::string &particleType) {
+    particle_t::type_type t_id;
     if (pimpl->typeMapping.find(particleType) != pimpl->typeMapping.end()) {
         t_id = pimpl->typeMapping[particleType];
     } else {
-        t_id = ++(pimpl->typeCounter);
+        t_id = (pimpl->typeCounter)++;
         pimpl->typeMapping.emplace(particleType, t_id);
     }
     return t_id;
@@ -239,14 +242,14 @@ KernelContext::getOrder2Potentials(const std::string &type1, const std::string &
 }
 
 const std::vector<potentials::PotentialOrder2 *> &
-KernelContext::getOrder2Potentials(const unsigned int type1, const unsigned int type2) const {
+KernelContext::getOrder2Potentials(const particle_t::type_type type1, const particle_t::type_type type2) const {
     return readdy::util::collections::getOrDefault(*potentialO2Registry, {type1, type2},
                                                    pimpl->defaultPotentialsO2);
 }
 
-std::vector<std::tuple<unsigned int, unsigned int>>
+std::vector<std::tuple<particle_t::type_type, particle_t::type_type>>
 KernelContext::getAllOrder2RegisteredPotentialTypes() const {
-    std::vector<std::tuple<unsigned int, unsigned int>> result{};
+    std::vector<std::tuple<particle_t::type_type, particle_t::type_type>> result{};
     for (auto it = potentialO2Registry->begin();
          it != potentialO2Registry->end(); ++it) {
         result.push_back(std::make_tuple(it->first.t1, it->first.t2));
@@ -258,12 +261,12 @@ std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(co
     return getOrder1Potentials(pimpl->typeMapping[type]);
 }
 
-std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(const unsigned int type) const {
+std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(const particle_t::type_type type) const {
     return readdy::util::collections::getOrDefault(*potentialO1Registry, type, pimpl->defaultPotentialsO1);
 }
 
-std::unordered_set<unsigned int> KernelContext::getAllOrder1RegisteredPotentialTypes() const {
-    std::unordered_set<unsigned int> result{};
+std::unordered_set<particle_t::type_type> KernelContext::getAllOrder1RegisteredPotentialTypes() const {
+    std::unordered_set<particle_t::type_type> result{};
     for (auto it = potentialO1RegistryInternal->begin();
          it != potentialO1RegistryInternal->end(); ++it) {
         result.insert(it->first);
@@ -306,7 +309,7 @@ const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(c
     return getOrder1Reactions(pimpl->typeMapping[type]);
 }
 
-const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const unsigned int type) const {
+const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const particle_t::type_type type) const {
     return readdy::util::collections::getOrDefault(*reactionOneEductRegistry, type, pimpl->defaultReactionsO1);
 }
 
@@ -316,7 +319,7 @@ KernelContext::getOrder2Reactions(const std::string &type1, const std::string &t
 }
 
 const std::vector<reactions::Reaction<2> *> &
-KernelContext::getOrder2Reactions(const unsigned int type1, const unsigned int type2) const {
+KernelContext::getOrder2Reactions(const particle_t::type_type type1, const particle_t::type_type type2) const {
     return readdy::util::collections::getOrDefault(*reactionTwoEductsRegistry, {type1, type2},
                                                    pimpl->defaultReactionsO2);
 }
@@ -387,25 +390,25 @@ void KernelContext::configure(bool debugOutput) {
     reactionOneEductRegistry->clear();
     reactionTwoEductsRegistry->clear();
 
-    coll::for_each_value(*potentialO1RegistryInternal, [&](const unsigned int type, const pot1_ptr& ptr) {
+    coll::for_each_value(*potentialO1RegistryInternal, [&](const particle_t::type_type type, const pot1_ptr& ptr) {
         ptr->configureForType(type); (*potentialO1Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(*potentialO2RegistryInternal, [&](const pair& type, const pot2_ptr& ptr) {
         ptr->configureForTypes(type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr.get());
     });
-    coll::for_each_value(*potentialO1RegistryExternal, [&](const unsigned int type, pot1* ptr) {
+    coll::for_each_value(*potentialO1RegistryExternal, [&](const particle_t::type_type type, pot1* ptr) {
         ptr->configureForType(type); (*potentialO1Registry)[type].push_back(ptr);
     });
     coll::for_each_value(*potentialO2RegistryExternal, [&](const pair& type, pot2* ptr) {
         ptr->configureForTypes(type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr);
     });
-    coll::for_each_value(*reactionOneEductRegistryInternal, [&](const unsigned int type, const reaction1ptr& ptr) {
+    coll::for_each_value(*reactionOneEductRegistryInternal, [&](const particle_t::type_type type, const reaction1ptr& ptr) {
         (*reactionOneEductRegistry)[type].push_back(ptr.get());
     });
     coll::for_each_value(*reactionTwoEductsRegistryInternal, [&](const pair& type, const reaction2ptr& r) {
         (*reactionTwoEductsRegistry)[type].push_back(r.get());
     });
-    coll::for_each_value(*reactionOneEductRegistryExternal, [&](const unsigned int type, reactions::Reaction<1>* ptr) {
+    coll::for_each_value(*reactionOneEductRegistryExternal, [&](const particle_t::type_type type, reactions::Reaction<1>* ptr) {
         (*reactionOneEductRegistry)[type].push_back(ptr);
     });
     coll::for_each_value(*reactionTwoEductsRegistryExternal, [&](const pair& type, reactions::Reaction<2>* r) {
@@ -416,7 +419,7 @@ void KernelContext::configure(bool debugOutput) {
      * Info output
      */
     if(debugOutput) {
-        auto find_pot_name = [this](unsigned int type) -> const std::string {
+        auto find_pot_name = [this](particle_t::type_type type) -> const std::string {
             for (auto &&t : pimpl->typeMapping) {
                 if (t.second == type) return t.first;
             }
@@ -465,22 +468,22 @@ void KernelContext::configure(bool debugOutput) {
 
 }
 
-std::vector<unsigned int> KernelContext::getAllRegisteredParticleTypes() const {
-    std::vector<unsigned int> v;
+std::vector<particle_t::type_type> KernelContext::getAllRegisteredParticleTypes() const {
+    std::vector<particle_t::type_type> v;
     for (auto &&entry : pimpl->typeMapping) {
         v.push_back(entry.second);
     }
     return v;
 }
 
-std::string KernelContext::getParticleName(unsigned int id) const {
+std::string KernelContext::getParticleName(particle_t::type_type id) const {
     for (auto &&e : pimpl->typeMapping) {
         if (e.second == id) return e.first;
     }
     return "";
 }
 
-const std::unordered_map<unsigned int, std::vector<potentials::PotentialOrder1 *>>
+const std::unordered_map<particle_t::type_type, std::vector<potentials::PotentialOrder1 *>>
 KernelContext::getAllOrder1Potentials() const {
     return *potentialO1Registry;
 }
@@ -509,6 +512,19 @@ std::tuple<readdy::model::Vec3, readdy::model::Vec3> KernelContext::getBoxBoundi
     readdy::model::Vec3 lowerLeft{-0.5 * boxSize[0], -0.5 * boxSize[1], -0.5 * boxSize[2]};
     readdy::model::Vec3 upperRight = lowerLeft + readdy::model::Vec3(boxSize);
     return std::make_tuple(std::move(lowerLeft), std::move(upperRight));
+}
+
+const KernelContext::rdy_reverse_type_mapping KernelContext::generateReverseTypeMapping() const {
+    const auto &typeMapping = getTypeMapping();
+    rdy_reverse_type_mapping reverseTypeMapping;
+    auto it = typeMapping.cbegin();
+    while (it != typeMapping.cend()) {
+        auto key = (*it).first;
+        auto value = (*it).second;
+        reverseTypeMapping.emplace(std::make_pair(value, key));
+        ++it;
+    }
+    return reverseTypeMapping;
 }
 
 KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
