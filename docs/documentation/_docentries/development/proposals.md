@@ -1,7 +1,8 @@
 ---
-layout: page
 title: Proposals
 ---
+
+Loose ideas for future implementations shall be summoned here.
 
 ### Topology reaction scheduling on GPUs
 
@@ -16,7 +17,7 @@ occur rarely. The actual problem is, that the __GPU cannot halt on its own__ whe
 a topology reaction should be performed. There are two ways of determining how long the GPU
 should execute:
 1. with a fixed time `\tau`
-    - the GPU executes diffusion and normal reactions for a time `\tau` which is much smaller
+    - the GPU executes diffusion and normal reactions for a time `\tau` which is much larger
     than the integration step and then returns
     - the CPU performs all possible topology reaction events based on its current state, 
     where reaction probabilities are `rate * \tau`. This could be done with the fixed timestep

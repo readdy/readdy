@@ -56,9 +56,11 @@ function make_website_doc {
     # insert the reference documentation
     cp -r $HOME/_readdy_docs/reference/docs/html/* reference_manual/
     # insert the content/pages and move the index.md to the jekyll root
-    mkdir _pages || true
-    cp -r ${TRAVIS_BUILD_DIR}/docs/documentation/* _pages/
-    mv _pages/index.md ./index.md
+    mkdir _docpages || true
+    mkdir _docentries || true
+    cp -r ${TRAVIS_BUILD_DIR}/docs/documentation/_docpages/* _docpages/
+    cp -r ${TRAVIS_BUILD_DIR}/docs/documentation/_docentries/* _docentries/
+    cp ${TRAVIS_BUILD_DIR}/docs/documentation/index.md ./index.md
     # build
     bundle exec jekyll build
     cd _site
@@ -68,6 +70,8 @@ function make_website_doc {
 
 function setup_docs_repo {
     cd $HOME/readdy_documentation/readdy_documentation/_site
+    # this is already pure html, no further jekyll action needed by github
+    touch .nojekyll
     git init
     git config user.name "Christoph Froehner"
     git config user.email "chrisfroe@users.noreply.github.com"

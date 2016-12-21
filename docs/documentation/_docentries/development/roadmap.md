@@ -1,9 +1,6 @@
 ---
-layout: page
-title: Development
+title: Roadmap
 ---
-
-### Todos:
 
 - [ ] update API as below (and create top level python api):
 
