@@ -38,7 +38,7 @@ namespace readdy {
 namespace util {
 namespace numeric {
 
-constexpr double pi() { return std::atan(1)*4; }
+inline constexpr double pi() { return 3.141592653589793238462643383279502884e+00; }
 
 template<typename T, typename D, typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<D>::value, int>::type = 0>
 inline typename std::make_unsigned<T>::type positive_modulo(T i, D n) {

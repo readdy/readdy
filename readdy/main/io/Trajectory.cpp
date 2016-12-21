@@ -99,17 +99,14 @@ void Trajectory::append(observable_entry_t &result) {
                 H5Sset_extent_simple(memorySpace, 1, &size, nullptr);
             }
         }
-        hvl_t traj[result.size()];
+        std::vector<hvl_t> traj;
         {
-            auto valuesIt = result.begin();
-            auto trajIt = &traj[0];
-            for (std::size_t i = 0; i < result.size(); ++i) {
-
-                trajIt->len = valuesIt->size();
-                trajIt->p = valuesIt->data();
-
-                ++trajIt;
-                ++valuesIt;
+            traj.reserve(result.size());
+            for (auto &val : result) {
+                hvl_t entry;
+                entry.len = val.size();
+                entry.p = val.data();
+                traj.push_back(std::move(entry));
             }
         }
         Object::dims_t currentExtent;
@@ -124,7 +121,7 @@ void Trajectory::append(observable_entry_t &result) {
         }
         auto fileSpace = H5Dget_space(dataSetHandle);
         H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, &currentExtent, nullptr, &size, nullptr);
-        H5Dwrite(dataSetHandle, entriesTypeMemory, memorySpace, fileSpace, H5P_DEFAULT, traj);
+        H5Dwrite(dataSetHandle, entriesTypeMemory, memorySpace, fileSpace, H5P_DEFAULT, traj.data());
         H5Sclose(fileSpace);
     }
 }

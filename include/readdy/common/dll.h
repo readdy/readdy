@@ -34,6 +34,7 @@
 #define READDY_MAIN_DLL_H
 
 #include <string>
+#if READDY_OSX || READDY_LINUX
 #include <dlfcn.h>
 
 namespace readdy {
@@ -82,13 +83,6 @@ struct shared_library {
 }
 }
 }
-
-#if READDY_LINUX || READDY_OSX
-#define READDY_EXPORT_FUNCTION_AS(FunctionName, ExportName) extern "C" const void* ExportName();
-#define READDY_EXPORT_FUNCTION_AS_IMPL(FunctionName, ExportName) \
-     const void* ExportName() { return reinterpret_cast<const void*>(reinterpret_cast<intptr_t>(&FunctionName)); }
-#else
-// todo msvc
-#endif // if readdy_linux || readdy_osx
+#endif
 
 #endif //READDY_MAIN_DLL_H
