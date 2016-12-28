@@ -1,6 +1,8 @@
 ---
 title: Development
 entries: 
+    - "development/structure"
+    - "development/build"
     - "development/roadmap"
     - "development/proposals"
 ---
