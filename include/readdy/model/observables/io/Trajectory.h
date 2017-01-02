@@ -34,10 +34,11 @@
 
 #include <array>
 #include <readdy/model/Kernel.h>
-#include "File.h"
+#include "readdy/io/File.h"
 
 namespace readdy {
-namespace io {
+namespace model {
+namespace observables {
 
 struct TrajectoryEntry {
     using pos_t = readdy::model::Vec3::entry_t;
@@ -59,13 +60,14 @@ class Trajectory : public model::observables::Observable<std::vector<std::vector
 
     using observable_entry_t = std::vector<std::vector<TrajectoryEntry>>;
     using base_t = model::observables::Observable<observable_entry_t>;
+    using blub = std::string;
 
 public:
 
     const static std::string TRAJECTORY_GROUP_PATH;
     const static std::string TRAJECTORY_DATA_SET_NAME;
 
-    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fs, File &file);
+    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fs, readdy::io::File &file);
 
     ~Trajectory();
 
@@ -75,20 +77,21 @@ public:
 
     virtual void flush();
 
-    static Object::data_set_type_t getEntryTypeMemory();
+    static readdy::io::Object::data_set_type_t getEntryTypeMemory();
 
-    static Object::data_set_type_t getEntryTypeFile();
+    static readdy::io::Object::data_set_type_t getEntryTypeFile();
 
 protected:
     unsigned int count = 0;
     unsigned int flushStride = 0;
-    File &file;
+    readdy::io::File &file;
     //Group trajectoryGroup;
-    Object::handle_t dataSetHandle;
-    Object::handle_t memorySpace;
-    Object::handle_t entriesTypeMemory, entriesTypeFile;
+    readdy::io::Object::handle_t dataSetHandle;
+    readdy::io::Object::handle_t memorySpace;
+    readdy::io::Object::handle_t entriesTypeMemory, entriesTypeFile;
 };
 
+}
 }
 }
 

@@ -28,31 +28,32 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/io/Trajectory.h>
+#include <readdy/model/observables/io/Trajectory.h>
 #include <hdf5.h>
 
-namespace obs = readdy::model::observables;
+namespace io = readdy::io;
 
 using particle_t = readdy::model::Particle;
 using vec_t = readdy::model::Vec3;
 
 namespace readdy {
-namespace io {
+namespace model {
+namespace observables {
 
 const std::string Trajectory::TRAJECTORY_GROUP_PATH = "/readdy";
 const std::string Trajectory::TRAJECTORY_DATA_SET_NAME = "/readdy/trajectory";
 
-Trajectory::Trajectory(readdy::model::Kernel *const kernel, unsigned int stride, unsigned int fs, File &file)
+Trajectory::Trajectory(readdy::model::Kernel *const kernel, unsigned int stride, unsigned int fs, io::File &file)
         : base_t(kernel, stride), flushStride(fs), file(file) {
     auto trajectoryGroup = file.createGroup(TRAJECTORY_GROUP_PATH);
     entriesTypeMemory = H5Tvlen_create(getEntryTypeMemory());
     entriesTypeFile = H5Tvlen_create(getEntryTypeFile());
     std::vector<unsigned long long> vec{0};
-    auto fileSpace = H5Screate_simple(static_cast<int>(1), vec.data(), &Object::UNLIMITED_DIMS);
+    auto fileSpace = H5Screate_simple(static_cast<int>(1), vec.data(), &io::Object::UNLIMITED_DIMS);
     auto plist = H5Pcreate(H5P_DATASET_CREATE);
     H5Pset_layout(plist, H5D_CHUNKED);
     {
-        Object::dims_t _fs = flushStride;
+        io::Object::dims_t _fs = flushStride;
         H5Pset_chunk(plist, 1, &_fs);
     }
     dataSetHandle = H5Dcreate(trajectoryGroup.getHandle(), TRAJECTORY_DATA_SET_NAME.c_str(),
@@ -90,7 +91,7 @@ void Trajectory::flush() {
 
 void Trajectory::append(observable_entry_t &result) {
     const hsize_t size = result.size();
-    if(size > 0) {
+    if (size > 0) {
         // resize / create memory space
         {
             if (memorySpace == -1) {
@@ -109,14 +110,14 @@ void Trajectory::append(observable_entry_t &result) {
                 traj.push_back(std::move(entry));
             }
         }
-        Object::dims_t currentExtent;
+        io::Object::dims_t currentExtent;
         {
             auto fileSpace = H5Dget_space(dataSetHandle);
             H5Sget_simple_extent_dims(fileSpace, &currentExtent, nullptr);
             H5Sclose(fileSpace);
         }
         {
-            Object::dims_t newExtent = currentExtent + result.size();
+            io::Object::dims_t newExtent = currentExtent + result.size();
             H5Dset_extent(dataSetHandle, &newExtent);
         }
         auto fileSpace = H5Dget_space(dataSetHandle);
@@ -126,7 +127,7 @@ void Trajectory::append(observable_entry_t &result) {
     }
 }
 
-Object::data_set_type_t Trajectory::getEntryTypeMemory() {
+io::Object::data_set_type_t Trajectory::getEntryTypeMemory() {
     static hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(TrajectoryEntry));
     static bool initialized = false;
     if (!initialized) {
@@ -134,18 +135,18 @@ Object::data_set_type_t Trajectory::getEntryTypeMemory() {
         // init vec pod
         // init trajectory entry pod
         H5Tinsert(entryTypeMemory, "typeId", HOFFSET(TrajectoryEntry, typeId),
-                  NativeDataSetType<particle_t::type_type>::tid);
+                  io::NativeDataSetType<particle_t::type_type>::tid);
         H5Tinsert(entryTypeMemory, "t", HOFFSET(TrajectoryEntry, t),
-                  NativeDataSetType<readdy::model::observables::time_step_type>::tid);
-        H5Tinsert(entryTypeMemory, "id", HOFFSET(TrajectoryEntry, id), NativeDataSetType<particle_t::id_type>::tid);
-        H5Tinsert(entryTypeMemory, "px", HOFFSET(TrajectoryEntry, px), NativeDataSetType<TrajectoryEntry::pos_t>::tid);
-        H5Tinsert(entryTypeMemory, "py", HOFFSET(TrajectoryEntry, py), NativeDataSetType<TrajectoryEntry::pos_t>::tid);
-        H5Tinsert(entryTypeMemory, "pz", HOFFSET(TrajectoryEntry, pz), NativeDataSetType<TrajectoryEntry::pos_t>::tid);
+                  io::NativeDataSetType<readdy::model::observables::time_step_type>::tid);
+        H5Tinsert(entryTypeMemory, "id", HOFFSET(TrajectoryEntry, id), io::NativeDataSetType<particle_t::id_type>::tid);
+        H5Tinsert(entryTypeMemory, "px", HOFFSET(TrajectoryEntry, px), io::NativeDataSetType<TrajectoryEntry::pos_t>::tid);
+        H5Tinsert(entryTypeMemory, "py", HOFFSET(TrajectoryEntry, py), io::NativeDataSetType<TrajectoryEntry::pos_t>::tid);
+        H5Tinsert(entryTypeMemory, "pz", HOFFSET(TrajectoryEntry, pz), io::NativeDataSetType<TrajectoryEntry::pos_t>::tid);
     }
     return entryTypeMemory;
 }
 
-Object::data_set_type_t Trajectory::getEntryTypeFile() {
+io::Object::data_set_type_t Trajectory::getEntryTypeFile() {
     static bool initialized = false;
     std::size_t size = sizeof(particle_t::type_type) + sizeof(readdy::model::observables::time_step_type) +
                        sizeof(particle_t::id_type) + 3 * sizeof(TrajectoryEntry::pos_t);
@@ -154,17 +155,17 @@ Object::data_set_type_t Trajectory::getEntryTypeFile() {
     if (!initialized) {
         initialized = true;
         // init trajectory pod
-        H5Tinsert(entryTypeFile, "typeId", 0, STDDataSetType<particle_t::type_type>::tid);
+        H5Tinsert(entryTypeFile, "typeId", 0, io::STDDataSetType<particle_t::type_type>::tid);
         auto cumsize = sizeof(particle_t::type_type);
-        H5Tinsert(entryTypeFile, "t", cumsize, STDDataSetType<readdy::model::observables::time_step_type>::tid);
+        H5Tinsert(entryTypeFile, "t", cumsize, io::STDDataSetType<readdy::model::observables::time_step_type>::tid);
         cumsize += sizeof(readdy::model::observables::time_step_type);
-        H5Tinsert(entryTypeFile, "id", cumsize, STDDataSetType<particle_t::id_type>::tid);
+        H5Tinsert(entryTypeFile, "id", cumsize, io::STDDataSetType<particle_t::id_type>::tid);
         cumsize += sizeof(particle_t::id_type);
-        H5Tinsert(entryTypeFile, "px", cumsize, STDDataSetType<TrajectoryEntry::pos_t>::tid);
+        H5Tinsert(entryTypeFile, "px", cumsize, io::STDDataSetType<TrajectoryEntry::pos_t>::tid);
         cumsize += sizeof(TrajectoryEntry::pos_t);
-        H5Tinsert(entryTypeFile, "py", cumsize, STDDataSetType<TrajectoryEntry::pos_t>::tid);
+        H5Tinsert(entryTypeFile, "py", cumsize, io::STDDataSetType<TrajectoryEntry::pos_t>::tid);
         cumsize += sizeof(TrajectoryEntry::pos_t);
-        H5Tinsert(entryTypeFile, "pz", cumsize, STDDataSetType<TrajectoryEntry::pos_t>::tid);
+        H5Tinsert(entryTypeFile, "pz", cumsize, io::STDDataSetType<TrajectoryEntry::pos_t>::tid);
     }
     return entryTypeFile;
 }
@@ -190,5 +191,6 @@ Trajectory::~Trajectory() {
 
 }
 
+}
 }
 }

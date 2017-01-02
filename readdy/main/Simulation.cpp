@@ -26,7 +26,7 @@
 #include <readdy/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
-#include <readdy/io/Trajectory.h>
+#include <readdy/model/observables/io/Trajectory.h>
 
 namespace rmr = readdy::model::reactions;
 namespace rmp = readdy::model::programs;
@@ -289,8 +289,9 @@ Simulation::recordTrajectory(const std::string &fileName, const unsigned int str
     auto uuid = pimpl->counter++;
     pimpl->trajectoryFileId = uuid;
     pimpl->trajectoryFile.reset(new io::File(fileName, io::File::Action::CREATE));
-    std::unique_ptr<io::Trajectory> trajectory = std::make_unique<io::Trajectory>(pimpl->kernel.get(), stride,
-                                                                                  flushStride, *pimpl->trajectoryFile);
+    std::unique_ptr<model::observables::Trajectory> trajectory = std::make_unique<model::observables::Trajectory>(
+            pimpl->kernel.get(), stride, flushStride, *pimpl->trajectoryFile
+    );
     auto &&connection = pimpl->kernel->connectObservable(trajectory.get());
     pimpl->observables.emplace(uuid, std::move(trajectory));
     pimpl->observableConnections.emplace(uuid, std::move(connection));
