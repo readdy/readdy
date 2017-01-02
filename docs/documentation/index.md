@@ -1,8 +1,6 @@
 ---
-layout: default
-title: Home
+layout: homepage
+title: ReaDDy - Reaction Diffusion Dynamics
 ---
 
-### ReaDDy documentation
-
-This is the "home" section
+Welcome to the website of ReaDDy - a particle-based reaction-diffusion simulator
