@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,25 +21,58 @@
 
 
 /**
- * Todo: We do not have any IO module for, e.g., storing trajectories yet.
+ * << detailed description >>
  *
- * @file ObservableFactory.h
- * @brief Header file containing the definitions of IOUtils.
+ * @file DataSetType.h
+ * @brief << brief description >>
  * @author clonker
- * @date 19.02.16
+ * @date 04/01/2017
+ * @copyright GNU Lesser General Public License v3.0
  */
+#ifndef READDY_MAIN_DATASETTYPE_H
+#define READDY_MAIN_DATASETTYPE_H
 
-#ifndef READDY_IO_H
-#define READDY_IO_H
+#include <vector>
 
 namespace readdy {
 namespace io {
-class IOUtils {
+
+template<typename T>
+class NativeDataSetType;
+
+template<typename T>
+class STDDataSetType;
+
+
+class DataSetType {
+
+    template<typename T>
+    friend
+    class DataSet;
 public:
-    IOUtils();
+
+    h5::data_set_type_t tid;
+
 };
+
+template<typename T>
+class NativeDataSetType : public DataSetType {
+public:
+    NativeDataSetType();
+    using type = T;
+};
+
+template<typename T>
+class STDDataSetType : public DataSetType {
+public:
+    STDDataSetType();
+    using type = T;
+};
+
+
 }
 }
 
+#include "bits/DataSetType_bits.h"
 
-#endif //READDY_IO_H
+#endif //READDY_MAIN_DATASETTYPE_H

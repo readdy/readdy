@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,74 +23,58 @@
 /**
  * << detailed description >>
  *
- * @file File.h
+ * @file Group.h
  * @brief << brief description >>
  * @author clonker
- * @date 31.08.16
+ * @date 04/01/2017
+ * @copyright GNU Lesser General Public License v3.0
  */
-
-#ifndef READDY_MAIN_FILE_H
-#define READDY_MAIN_FILE_H
+#ifndef READDY_MAIN_GROUP_H
+#define READDY_MAIN_GROUP_H
 
 #include <string>
 #include <vector>
-#include "Group.h"
+#include "H5Types.h"
+#include "DataSetType.h"
 
 namespace readdy {
 namespace io {
 
-class File {
+class Group {
+    friend class File;
+
     template<typename T>
     friend class DataSet;
 
 public:
 
-    enum class Action {
-        CREATE, OPEN
-    };
+    template<typename T>
+    void write(const std::string &dataSetName, const std::vector<T> &data) {
+        write(dataSetName, {data.size()}, data.data());
+    }
 
-    enum class Flag {
-        READ_ONLY = 0, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING, DEFAULT /* = rw, create, truncate */
-    };
+    void write(const std::string &dataSetName, const std::string &string);
 
-    File(const std::string &path, const Action &action, const std::vector<Flag> &flag);
-
-    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
-
-    File(const File &) = delete;
-
-    File &operator=(const File &) = delete;
-
-    virtual ~File();
-
-    void flush();
-
-    void close();
+    template<typename T>
+    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data);
 
     Group createGroup(const std::string &path);
 
-    const Group& getRootGroup() const;
+    h5::handle_t getHandle() const;
 
-    void write(const std::string &dataSetName, const std::string &data);
+protected:
 
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<T> &data) {
-        root.write(dataSetName, {data.size()}, data.data());
-    }
+    Group();
 
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data) {
-        root.write<T>(dataSetName, dims, data);
-    }
+    Group(h5::handle_t handle, const std::string &);
 
-private:
-    std::string path_;
-    Group root;
+    h5::handle_t handle;
+    std::string path;
 };
 
 }
 }
 
-#include "bits/File_bits.h"
+#include "bits/Group_bits.h"
 
-#endif //READDY_MAIN_FILE_H
+#endif //READDY_MAIN_GROUP_H

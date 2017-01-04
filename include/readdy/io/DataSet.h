@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -20,19 +20,54 @@
  ********************************************************************/
 
 
-//
-// Created by Moritz Hoffmann on 19/02/16.
-//
+/**
+ * << detailed description >>
+ *
+ * @file DataSet.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 04/01/2017
+ * @copyright GNU Lesser General Public License v3.0
+ */
+#ifndef READDY_MAIN_DATASET_H
+#define READDY_MAIN_DATASET_H
 
-#include <iostream>
-#include <readdy/io/IOUtils.h>
-#include <hdf5.h>
-#include <readdy/common/logging.h>
+#include "H5Types.h"
+#include "Group.h"
 
-readdy::io::IOUtils::IOUtils() {
-    log::console()->debug("ioutils instantiated");
-    hsize_t dim2[] = {10};  /* Dimension size of the second dataset
-                                       (in memory */
-    auto x = H5S_UNLIMITED;
-    std::cout << x << std::endl;
+namespace readdy {
+namespace io {
+
+template<typename T>
+class DataSet {
+public:
+
+    DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
+            const std::vector<h5::dims_t> &maxDims);
+
+    ~DataSet();
+
+    void close();
+
+    template<typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
+    void append(const std::vector<T> &data) {
+        append({1, data.size()}, data.data());
+    }
+
+    void append(const std::vector<h5::dims_t> &dims, const T *data);
+
+private:
+    const std::vector<h5::dims_t> maxDims;
+    const Group group;
+    h5::dims_t extensionDim;
+    h5::handle_t handle;
+    h5::handle_t memorySpace;
+    STDDataSetType<T> stdType {};
+};
+
 }
+}
+
+#include "bits/DataSet_bits.h"
+
+#endif //READDY_MAIN_DATASET_H

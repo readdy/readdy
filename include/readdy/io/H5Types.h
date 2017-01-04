@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,74 +23,27 @@
 /**
  * << detailed description >>
  *
- * @file File.h
+ * @file Types.h
  * @brief << brief description >>
  * @author clonker
- * @date 31.08.16
+ * @date 04/01/2017
+ * @copyright GNU Lesser General Public License v3.0
  */
+#ifndef READDY_MAIN_TYPES_H
+#define READDY_MAIN_TYPES_H
 
-#ifndef READDY_MAIN_FILE_H
-#define READDY_MAIN_FILE_H
-
-#include <string>
-#include <vector>
-#include "Group.h"
+#include <hdf5.h>
 
 namespace readdy {
 namespace io {
+namespace h5 {
 
-class File {
-    template<typename T>
-    friend class DataSet;
-
-public:
-
-    enum class Action {
-        CREATE, OPEN
-    };
-
-    enum class Flag {
-        READ_ONLY = 0, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING, DEFAULT /* = rw, create, truncate */
-    };
-
-    File(const std::string &path, const Action &action, const std::vector<Flag> &flag);
-
-    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
-
-    File(const File &) = delete;
-
-    File &operator=(const File &) = delete;
-
-    virtual ~File();
-
-    void flush();
-
-    void close();
-
-    Group createGroup(const std::string &path);
-
-    const Group& getRootGroup() const;
-
-    void write(const std::string &dataSetName, const std::string &data);
-
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<T> &data) {
-        root.write(dataSetName, {data.size()}, data.data());
-    }
-
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data) {
-        root.write<T>(dataSetName, dims, data);
-    }
-
-private:
-    std::string path_;
-    Group root;
-};
+using handle_t = int;
+using dims_t = unsigned long long;
+using data_set_type_t = int;
+const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
 
 }
 }
-
-#include "bits/File_bits.h"
-
-#endif //READDY_MAIN_FILE_H
+}
+#endif //READDY_MAIN_TYPES_H

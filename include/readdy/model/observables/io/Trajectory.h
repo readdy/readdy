@@ -33,8 +33,8 @@
 #define READDY_MAIN_TRAJECTORY_H
 
 #include <array>
-#include <readdy/model/Kernel.h>
 #include "readdy/io/File.h"
+#include "readdy/model/Kernel.h"
 
 namespace readdy {
 namespace model {
@@ -77,18 +77,19 @@ public:
 
     virtual void flush();
 
-    static readdy::io::Object::data_set_type_t getEntryTypeMemory();
+    static readdy::io::h5::data_set_type_t getEntryTypeMemory();
 
-    static readdy::io::Object::data_set_type_t getEntryTypeFile();
+    static readdy::io::h5::data_set_type_t getEntryTypeFile();
 
 protected:
     unsigned int count = 0;
     unsigned int flushStride = 0;
     readdy::io::File &file;
     //Group trajectoryGroup;
-    readdy::io::Object::handle_t dataSetHandle;
-    readdy::io::Object::handle_t memorySpace;
-    readdy::io::Object::handle_t entriesTypeMemory, entriesTypeFile;
+    readdy::io::h5::handle_t dataSetHandle;
+    readdy::io::h5::handle_t memorySpace;
+    readdy::io::h5::handle_t entriesTypeMemory, entriesTypeFile;
+
 };
 
 }
