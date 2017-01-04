@@ -46,7 +46,7 @@ class STDDataSetType;
 
 class DataSetType {
 
-    template<typename T>
+    template<typename T, bool VLEN>
     friend
     class DataSet;
 public:

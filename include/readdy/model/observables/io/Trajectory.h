@@ -33,10 +33,12 @@
 #define READDY_MAIN_TRAJECTORY_H
 
 #include <array>
-#include "readdy/io/File.h"
 #include "readdy/model/Kernel.h"
 
 namespace readdy {
+
+namespace io { class File; }
+
 namespace model {
 namespace observables {
 
@@ -60,7 +62,6 @@ class Trajectory : public model::observables::Observable<std::vector<std::vector
 
     using observable_entry_t = std::vector<std::vector<TrajectoryEntry>>;
     using base_t = model::observables::Observable<observable_entry_t>;
-    using blub = std::string;
 
 public:
 
@@ -77,19 +78,11 @@ public:
 
     virtual void flush();
 
-    static readdy::io::h5::data_set_type_t getEntryTypeMemory();
-
-    static readdy::io::h5::data_set_type_t getEntryTypeFile();
-
 protected:
     unsigned int count = 0;
     unsigned int flushStride = 0;
-    readdy::io::File &file;
-    //Group trajectoryGroup;
-    readdy::io::h5::handle_t dataSetHandle;
-    readdy::io::h5::handle_t memorySpace;
-    readdy::io::h5::handle_t entriesTypeMemory, entriesTypeFile;
-
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 }

@@ -43,7 +43,7 @@ namespace io = readdy::io;
 template<typename T>
 void exportDataSet(py::module &io, const std::string &name) {
     using group_t = io::Group;
-    using dataset_t = io::DataSet<T>;
+    using dataset_t = io::DataSet<T, false>;
     std::string base_name = "DataSet_";
     py::class_<dataset_t>(io, (base_name + name).c_str())
             .def(py::init<const std::string &, const group_t &, const std::vector<io::h5::dims_t> &,

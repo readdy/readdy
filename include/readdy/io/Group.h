@@ -43,7 +43,7 @@ namespace io {
 class Group {
     friend class File;
 
-    template<typename T>
+    template<typename T, bool VLEN>
     friend class DataSet;
 
 public:

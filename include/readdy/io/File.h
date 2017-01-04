@@ -40,8 +40,9 @@ namespace readdy {
 namespace io {
 
 class File {
-    template<typename T>
-    friend class DataSet;
+    template<typename T, bool VLEN>
+    friend
+    class DataSet;
 
 public:
 
@@ -69,7 +70,7 @@ public:
 
     Group createGroup(const std::string &path);
 
-    const Group& getRootGroup() const;
+    const Group &getRootGroup() const;
 
     void write(const std::string &dataSetName, const std::string &data);
 

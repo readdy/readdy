@@ -83,7 +83,7 @@ inline File::~File() {
 }
 
 inline File::File(const std::string &path, const Action &action, const Flag &flag) : File(path, action,
-                                                                                   std::vector<Flag>{flag}) {}
+                                                                                          std::vector<Flag>{flag}) {}
 
 inline File::File(const std::string &path, const File::Action &action, const std::vector<File::Flag> &flags)
         : path_(path), root() {

@@ -38,23 +38,31 @@
 namespace readdy {
 namespace io {
 
-template<typename T>
+template<typename T, bool VLEN=false>
 class DataSet {
 public:
 
     DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
             const std::vector<h5::dims_t> &maxDims);
 
+    DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
+            const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType);
+
     ~DataSet();
 
     void close();
 
-    template<typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
-    void append(const std::vector<T> &data) {
-        append({1, data.size()}, data.data());
-    }
+    template<bool enabled = !VLEN>
+    void append(std::vector<T> &data, typename std::enable_if<enabled, bool>::type* = 0);
 
-    void append(const std::vector<h5::dims_t> &dims, const T *data);
+    template<bool enabled = !VLEN>
+    void append(const std::vector<h5::dims_t> &dims, const T *const data, typename std::enable_if<enabled, bool>::type* = 0);
+
+    template<bool enabled = VLEN>
+    void append(std::vector<std::vector<T>> &data, typename std::enable_if<enabled, bool>::type* = 0);
+
+    template<bool enabled = VLEN>
+    void append(const std::vector<h5::dims_t> &dims, const std::vector<T> *const data, typename std::enable_if<enabled, bool>::type* = 0);
 
 private:
     const std::vector<h5::dims_t> maxDims;
@@ -62,7 +70,8 @@ private:
     h5::dims_t extensionDim;
     h5::handle_t handle;
     h5::handle_t memorySpace;
-    STDDataSetType<T> stdType {};
+    DataSetType memoryType {};
+    DataSetType fileType {};
 };
 
 }

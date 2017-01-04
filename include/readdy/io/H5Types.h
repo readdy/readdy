@@ -40,7 +40,7 @@ namespace h5 {
 
 using handle_t = int;
 using dims_t = unsigned long long;
-using data_set_type_t = int;
+using data_set_type_t = hid_t;
 const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
 
 }
