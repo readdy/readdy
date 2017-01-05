@@ -56,16 +56,26 @@ class KernelContext;
 
 class Positions : public Observable<std::vector<Vec3>> {
 public:
-    Positions(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
+
+    Positions(Kernel *const kernel, unsigned int stride = 1);
 
     Positions(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
     Positions(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
+    virtual ~Positions();
+
     virtual void evaluate() = 0;
 
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     std::vector<unsigned int> typesToCount;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 class Particles

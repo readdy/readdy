@@ -33,6 +33,7 @@
 #define READDY_MAIN_TRAJECTORY_H
 
 #include <array>
+#include <memory>
 #include "readdy/model/Kernel.h"
 
 namespace readdy {

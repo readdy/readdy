@@ -34,10 +34,55 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/model/_internal/Util.h>
 #include <readdy/common/numeric.h>
+#include <readdy/io/DataSet.h>
+
+const std::string OBSERVABLES_GROUP_PATH = "/readdy/observables";
 
 namespace readdy {
 namespace model {
 namespace observables {
+
+class Vec3MemoryType : public readdy::io::DataSetType {
+public:
+    Vec3MemoryType() {
+        using entry_t = readdy::model::Vec3;
+        tid = []() -> hid_t {
+            hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
+            // init vec pod
+            io::NativeDataSetType<entry_t::entry_t> posType{};
+            H5Tinsert(entryTypeMemory, "x", 0, posType.tid);
+            H5Tinsert(entryTypeMemory, "y", sizeof(entry_t::entry_t), posType.tid);
+            H5Tinsert(entryTypeMemory, "z", 2*sizeof(entry_t::entry_t), posType.tid);
+            return entryTypeMemory;
+        }();
+    }
+};
+
+class Vec3FileType : public readdy::io::DataSetType {
+public:
+    Vec3FileType() {
+        using entry_t = readdy::model::Vec3;
+        tid = []() -> hid_t {
+            std::size_t size = 3 * sizeof(entry_t::entry_t);
+            hid_t entryTypeFile = H5Tcreate(H5T_COMPOUND, size);
+            // data types
+            io::STDDataSetType<entry_t::entry_t> posType{};
+            // init trajectory pod
+            std::size_t cumsize = 0;
+            H5Tinsert(entryTypeFile, "px", cumsize, posType.tid);
+            cumsize += sizeof(entry_t::entry_t);
+            H5Tinsert(entryTypeFile, "py", cumsize, posType.tid);
+            cumsize += sizeof(entry_t::entry_t);
+            H5Tinsert(entryTypeFile, "pz", cumsize, posType.tid);
+            return entryTypeFile;
+        }();
+    }
+};
+
+
+struct Positions::Impl {
+    std::unique_ptr<io::DataSet<readdy::model::Vec3, true>> dataSet;
+};
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
                      std::vector<std::string> typesToCount) :
@@ -46,7 +91,27 @@ Positions::Positions(Kernel *const kernel, unsigned int stride,
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
                      std::vector<unsigned int> typesToCount) :
-        Observable(kernel, stride), typesToCount(typesToCount) {}
+        Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
+
+void Positions::append() {
+    // todo take flush stride into account
+    pimpl->dataSet->append({1}, &result);
+}
+
+Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) { }
+
+void Positions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->dataSet) {
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        pimpl->dataSet = std::move(std::make_unique<io::DataSet<readdy::model::Vec3, true>>(
+                dataSetName, file.createGroup(OBSERVABLES_GROUP_PATH), fs, dims,
+                Vec3MemoryType(), Vec3FileType()
+        ));
+    }
+}
+
+Positions::~Positions() = default;
 
 void TestCombiner::evaluate() {
     std::vector<double> result;

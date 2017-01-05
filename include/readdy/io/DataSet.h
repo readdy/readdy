@@ -48,7 +48,7 @@ public:
     DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
             const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType);
 
-    ~DataSet();
+    virtual ~DataSet();
 
     void close();
 
