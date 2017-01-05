@@ -45,7 +45,7 @@ class TestSchemeApi(unittest.TestCase):
         shutil.rmtree(cls.dir, ignore_errors=True)
 
     def test_write_trajectory(self):
-        common.set_logging_level("error")
+        common.set_logging_level("debug")
         traj_fname = os.path.join(self.dir, "traj.h5")
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
@@ -57,7 +57,7 @@ class TestSchemeApi(unittest.TestCase):
             simulation.add_particle("A", common.Vec(0, 0, 0))
 
         simulation.register_observable_n_particles(1, callback, ["A"])
-        simulation.record_trajectory(traj_fname, 0, 1)
+        simulation.record_trajectory(traj_fname, 0, 3)
         simulation.run_scheme_readdy(True).configure().run(20)
         simulation.close_trajectory_file()
 

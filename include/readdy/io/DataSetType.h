@@ -37,22 +37,9 @@
 namespace readdy {
 namespace io {
 
-template<typename T>
-class NativeDataSetType;
-
-template<typename T>
-class STDDataSetType;
-
-
 class DataSetType {
-
-    template<typename T, bool VLEN>
-    friend
-    class DataSet;
 public:
-
-    h5::data_set_type_t tid;
-
+    h5::data_set_type_t tid = -1;
 };
 
 template<typename T>

@@ -37,6 +37,7 @@
 #include <H5Ppublic.h>
 #include <readdy/common/logging.h>
 #include <readdy/io/DataSetType.h>
+#include <iterator>
 
 namespace readdy {
 namespace io {
@@ -47,10 +48,16 @@ inline void DataSet<T, VLEN>::close() {
     } else {
         memorySpace = -1;
     }
-    if (handle >= 0 && H5Dclose(handle) < 0) {
+    if (dataSetHandle >= 0 && H5Dclose(dataSetHandle) < 0) {
         throw std::runtime_error("error on closing data set!");
     } else {
-        handle = -1;
+        dataSetHandle = -1;
+    }
+    if (memoryType.tid >= 0 && H5Tclose(memoryType.tid) < 0) {
+        log::console()->error("error on closing entries type memory");
+    }
+    if (fileType.tid >= 0 && H5Tclose(fileType.tid) < 0) {
+        log::console()->error("error on closing entries type file");
     }
 }
 
@@ -62,12 +69,21 @@ inline DataSet<T, VLEN>::~DataSet() {
 template<typename T, bool VLEN>
 inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
                                  const std::vector<h5::dims_t> &maxDims)
-        : DataSet(name, group, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>()) { };
+        : DataSet(name, group, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>()) {};
 
 template<typename T, bool VLEN>
 inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
                                  const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType)
         : maxDims(maxDims), group(group), memoryType(memoryType), fileType(fileType) {
+    if (VLEN) {
+        log::console()->trace("making the types {} and {} vlen", memoryType.tid, fileType.tid);
+        DataSetType vlenMemoryType;
+        vlenMemoryType.tid = H5Tvlen_create(memoryType.tid);
+        this->memoryType = vlenMemoryType;
+        DataSetType vlenFileType;
+        vlenFileType.tid = H5Tvlen_create(fileType.tid);
+        this->fileType = vlenFileType;
+    }
     // validate and find extension dim
     {
         auto unlimited_it = std::find(maxDims.begin(), maxDims.end(), h5::UNLIMITED_DIMS);
@@ -86,7 +102,8 @@ inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, co
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
         H5Pset_layout(plist, H5D_CHUNKED);
         H5Pset_chunk(plist, static_cast<int>(chunkSize.size()), chunkSize.data());
-        handle = H5Dcreate(group.handle, name.c_str(), fileType.tid, fileSpace, H5P_DEFAULT, plist, H5P_DEFAULT);
+        dataSetHandle = H5Dcreate(group.handle, name.c_str(), this->fileType.tid, fileSpace, H5P_DEFAULT, plist,
+                                  H5P_DEFAULT);
         memorySpace = -1;
         H5Pclose(plist);
         H5Pclose(fileSpace);
@@ -94,54 +111,21 @@ inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, co
 }
 
 template<typename T, bool VLEN>
-template<bool enabled>
-inline void DataSet<T, VLEN>::append(std::vector<T> &data, typename std::enable_if<enabled, bool>::type*) {
-    append({1, data.size()}, data.data());
+template<bool no_vlen>
+inline void DataSet<T, VLEN>::append(std::vector<T> &data, typename std::enable_if<no_vlen, bool>::type *) {
+    if (!data.empty()) append({1, data.size()}, data.data());
+}
+
+template<typename T, bool VLEN>
+template<bool vlen>
+inline void DataSet<T, VLEN>::append(std::vector<std::vector<T>> &data, typename std::enable_if<vlen, bool>::type *) {
+    if (!data.empty()) append({data.size()}, data.data());
 }
 
 template<typename T, bool VLEN>
 template<bool enabled>
-inline void DataSet<T, VLEN>::append(std::vector<std::vector<T>> &data, typename std::enable_if<enabled, bool>::type*) {
-    append({data.size()}, data.data());
-}
-
-template<typename T, bool>
-struct writer { };
-
-
-template<typename T>
-struct writer<T, true> {
-    static void
-    write(h5::handle_t handle, h5::data_set_type_t memType, h5::handle_t memSpace, hid_t fSpace, const std::vector<T> *const data,
-          h5::dims_t extensionDim, const std::vector<h5::dims_t> &dims) {
-        std::vector<hvl_t> traj;
-        {
-            const auto n = dims[extensionDim];
-            traj.reserve(n);
-            for (auto i = 0; i < n; ++i) {
-                auto val = data[i];
-                hvl_t entry;
-                entry.len = val.size();
-                entry.p = val.data();
-                traj.push_back(std::move(entry));
-            }
-        }
-        H5Dwrite(handle, memType, memSpace, fSpace, H5P_DEFAULT, traj.data());
-    };
-};
-
-template<typename T>
-struct writer<T, false> {
-    static void
-    write(h5::handle_t handle, h5::data_set_type_t memType, h5::handle_t memSpace, hid_t fSpace, const T *const data,
-          h5::dims_t extensionDim, const std::vector<h5::dims_t> &dims) {
-        H5Dwrite(handle, memType, memSpace, fSpace, H5P_DEFAULT, data);
-    };
-};
-
-template<typename T, bool VLEN>
-template<bool enabled>
-inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const std::vector<T> *const data, typename std::enable_if<enabled, bool>::type*) {
+inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data,
+                                     typename std::enable_if<enabled, bool>::type *) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
@@ -157,31 +141,65 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const 
         H5Sset_extent_simple(memorySpace, static_cast<int>(dims.size()), dims.data(), nullptr);
     }
     std::vector<h5::dims_t> currentExtent;
-    std::vector<h5::dims_t> offset;
-    offset.resize(dims.size());
     {
         currentExtent.resize(dims.size());
+        auto fileSpace = H5Dget_space(dataSetHandle);
+        H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
+        H5Dclose(fileSpace);
+    }
+    std::vector<h5::dims_t> offset;
+    {
+        offset.resize(dims.size());
+        offset[extensionDim] = currentExtent[extensionDim];
+    }
+    std::vector<h5::dims_t> newExtent(currentExtent);
+    {
+        newExtent[extensionDim] += dims[extensionDim];
+        H5Dset_extent(dataSetHandle, newExtent.data());
         {
-            auto fileSpace = H5Dget_space(handle);
-            H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
-            H5Dclose(fileSpace);
+            log::console()->trace("setting new extent to:");
+            std::stringstream result;
+            std::copy(newExtent.begin(), newExtent.end(), std::ostream_iterator<int>(result, ", "));
+            log::console()->trace("    size = {}", result.str());
         }
     }
-    offset[extensionDim] = currentExtent[extensionDim];
+    log::console()->trace("selecting hyperslab with:");
     {
-        std::vector<h5::dims_t> newExtent(currentExtent);
-        newExtent[extensionDim] += dims[extensionDim];
-        H5Dset_extent(handle, newExtent.data());
+        std::stringstream result;
+        std::copy(offset.begin(), offset.end(), std::ostream_iterator<int>(result, ", "));
+        log::console()->trace("    current extent = {}", result.str());
     }
-    auto fileSpace = H5Dget_space(handle);
-    H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    writer<T, VLEN>::write(handle, memoryType.tid, memorySpace, fileSpace, data, extensionDim, dims);
-    H5Sclose(fileSpace);
+    {
+        std::stringstream result;
+        std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
+        log::console()->trace("    size = {}", result.str());
+    }
+    std::vector<hvl_t> traj;
+    {
+        const auto n = dims[extensionDim];
+        log::console()->trace("appending n={} vlen entries", n);
+        traj.reserve(n);
+        for (auto i = 0; i < n; ++i) {
+            auto val = &data[i];
+            log::console()->trace(" - i = {}, val.size={}", i, val->size());
+            hvl_t entry;
+            entry.len = val->size();
+            entry.p = val->data();
+            traj.push_back(std::move(entry));
+        }
+    }
+    {
+        auto fileSpace = H5Dget_space(dataSetHandle);
+        H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
+        H5Dwrite(dataSetHandle, memoryType.tid, memorySpace, fileSpace, H5P_DEFAULT, traj.data());
+        H5Sclose(fileSpace);
+    }
 };
 
 template<typename T, bool VLEN>
 template<bool enabled>
-inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const T *const data, typename std::enable_if<enabled, bool>::type*) {
+inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const T *const data,
+                                     typename std::enable_if<enabled, bool>::type *) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
@@ -202,7 +220,7 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const 
     {
         currentExtent.resize(dims.size());
         {
-            auto fileSpace = H5Dget_space(handle);
+            auto fileSpace = H5Dget_space(dataSetHandle);
             H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
             H5Dclose(fileSpace);
         }
@@ -211,12 +229,11 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const 
     {
         std::vector<h5::dims_t> newExtent(currentExtent);
         newExtent[extensionDim] += dims[extensionDim];
-        H5Dset_extent(handle, newExtent.data());
+        H5Dset_extent(dataSetHandle, newExtent.data());
     }
-    auto fileSpace = H5Dget_space(handle);
+    auto fileSpace = H5Dget_space(dataSetHandle);
     H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    //H5Dwrite(handle, memoryType.tid, memorySpace, fileSpace, H5P_DEFAULT, data);
-    writer<T, VLEN>::write(handle, memoryType.tid, memorySpace, fileSpace, data, extensionDim, dims);
+    H5Dwrite(dataSetHandle, memoryType.tid, memorySpace, fileSpace, H5P_DEFAULT, data);
     H5Sclose(fileSpace);
 }
 

@@ -52,23 +52,23 @@ public:
 
     void close();
 
-    template<bool enabled = !VLEN>
-    void append(std::vector<T> &data, typename std::enable_if<enabled, bool>::type* = 0);
+    template<bool no_vlen = !VLEN>
+    void append(std::vector<T> &data, typename std::enable_if<no_vlen, bool>::type* = 0);
 
-    template<bool enabled = !VLEN>
-    void append(const std::vector<h5::dims_t> &dims, const T *const data, typename std::enable_if<enabled, bool>::type* = 0);
+    template<bool no_vlen = !VLEN>
+    void append(const std::vector<h5::dims_t> &dims, const T *const data, typename std::enable_if<no_vlen, bool>::type* = 0);
 
-    template<bool enabled = VLEN>
-    void append(std::vector<std::vector<T>> &data, typename std::enable_if<enabled, bool>::type* = 0);
+    template<bool vlen = VLEN>
+    void append(std::vector<std::vector<T>> &data, typename std::enable_if<vlen, bool>::type* = 0);
 
-    template<bool enabled = VLEN>
-    void append(const std::vector<h5::dims_t> &dims, const std::vector<T> *const data, typename std::enable_if<enabled, bool>::type* = 0);
+    template<bool vlen = VLEN>
+    void append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data, typename std::enable_if<vlen, bool>::type* = 0);
 
 private:
     const std::vector<h5::dims_t> maxDims;
     const Group group;
     h5::dims_t extensionDim;
-    h5::handle_t handle;
+    h5::handle_t dataSetHandle;
     h5::handle_t memorySpace;
     DataSetType memoryType {};
     DataSetType fileType {};
