@@ -47,6 +47,17 @@ struct Simulation::Impl {
 };
 
 template<typename T, typename... Args>
+inline ObservableHandle Simulation::registerObservable(unsigned int stride, Args... args) {
+    ensureKernelSelected();
+    auto uuid = pimpl->counter++;
+    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
+    auto connection = pimpl->kernel->connectObservable(obs.get());
+    pimpl->observables.emplace(uuid, std::move(obs));
+    pimpl->observableConnections.emplace(uuid, std::move(connection));
+    return {uuid, pimpl->observables.at(uuid).get()};
+}
+
+template<typename T, typename... Args>
 inline ObservableHandle Simulation::registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
                                              unsigned int stride, Args... args) {
     ensureKernelSelected();

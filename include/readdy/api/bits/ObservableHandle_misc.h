@@ -52,5 +52,12 @@ inline ObservableHandle::enableWriteToFile(readdy::io::File &file, const std::st
 inline ObservableHandle::id_t ObservableHandle::getId() const {
     return id;
 }
+
+inline void ObservableHandle::flush() {
+    if(observable) {
+        observable->flush();
+    }
+}
+
 }
 #endif //READDY_MAIN_OBSERVABLEHANDLE_MISC_H

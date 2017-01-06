@@ -43,17 +43,30 @@ namespace readdy {
 namespace model {
 namespace observables {
 
+struct Vec3POD {
+    using entry_t = readdy::model::Vec3::entry_t;
+    Vec3POD(Vec3::entry_t x, Vec3::entry_t y, Vec3::entry_t z) : x(x), y(y), z(z) {}
+    Vec3POD(const Vec3& v) : x(v[0]), y(v[1]), z(v[2]) {}
+
+    entry_t x,y,z;
+
+    friend std::ostream &operator<<(std::ostream &os, const Vec3POD& v) {
+        os << "Vec3POD(" << v.x << ", " << v.y << ", " << v.z << ")";
+        return os;
+    }
+};
+
 class Vec3MemoryType : public readdy::io::DataSetType {
 public:
     Vec3MemoryType() {
-        using entry_t = readdy::model::Vec3;
+        using entry_t = Vec3POD;
         tid = []() -> hid_t {
             hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
             // init vec pod
             io::NativeDataSetType<entry_t::entry_t> posType{};
-            H5Tinsert(entryTypeMemory, "x", 0, posType.tid);
-            H5Tinsert(entryTypeMemory, "y", sizeof(entry_t::entry_t), posType.tid);
-            H5Tinsert(entryTypeMemory, "z", 2*sizeof(entry_t::entry_t), posType.tid);
+            H5Tinsert(entryTypeMemory, "x", HOFFSET(entry_t, x), posType.tid);
+            H5Tinsert(entryTypeMemory, "y", HOFFSET(entry_t, y), posType.tid);
+            H5Tinsert(entryTypeMemory, "z", HOFFSET(entry_t, z), posType.tid);
             return entryTypeMemory;
         }();
     }
@@ -62,7 +75,7 @@ public:
 class Vec3FileType : public readdy::io::DataSetType {
 public:
     Vec3FileType() {
-        using entry_t = readdy::model::Vec3;
+        using entry_t = Vec3POD;
         tid = []() -> hid_t {
             std::size_t size = 3 * sizeof(entry_t::entry_t);
             hid_t entryTypeFile = H5Tcreate(H5T_COMPOUND, size);
@@ -70,11 +83,11 @@ public:
             io::STDDataSetType<entry_t::entry_t> posType{};
             // init trajectory pod
             std::size_t cumsize = 0;
-            H5Tinsert(entryTypeFile, "px", cumsize, posType.tid);
+            H5Tinsert(entryTypeFile, "x", cumsize, posType.tid);
             cumsize += sizeof(entry_t::entry_t);
-            H5Tinsert(entryTypeFile, "py", cumsize, posType.tid);
+            H5Tinsert(entryTypeFile, "y", cumsize, posType.tid);
             cumsize += sizeof(entry_t::entry_t);
-            H5Tinsert(entryTypeFile, "pz", cumsize, posType.tid);
+            H5Tinsert(entryTypeFile, "z", cumsize, posType.tid);
             return entryTypeFile;
         }();
     }
@@ -82,7 +95,7 @@ public:
 
 
 struct Positions::Impl {
-    using writer_t = AccumulativeWriter<io::DataSet<readdy::model::Vec3, true>, Positions::result_t>;
+    using writer_t = AccumulativeWriter<io::DataSet<Vec3POD, true>, std::vector<Vec3POD>>;
     std::unique_ptr<writer_t> dataSet;
 };
 
@@ -96,7 +109,8 @@ Positions::Positions(Kernel *const kernel, unsigned int stride,
         Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
 
 void Positions::append() {
-    pimpl->dataSet->append(result);
+    std::vector<Vec3POD> podVec(result.begin(), result.end());
+    pimpl->dataSet->append(podVec);
 }
 
 Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) { }
@@ -105,12 +119,16 @@ void Positions::initializeDataSet(io::File &file, const std::string &dataSetName
     if(!pimpl->dataSet) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto dataSet = std::make_unique<io::DataSet<readdy::model::Vec3, true>>(
+        auto dataSet = std::make_unique<io::DataSet<Vec3POD, true>>(
                 dataSetName, file.createGroup(OBSERVABLES_GROUP_PATH), fs, dims,
                 Vec3MemoryType(), Vec3FileType()
         );
         pimpl->dataSet = std::make_unique<Impl::writer_t>(flushStride, std::move(dataSet));
     }
+}
+
+void Positions::flush() {
+    pimpl->dataSet->flush();
 }
 
 Positions::~Positions() = default;

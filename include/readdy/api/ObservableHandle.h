@@ -48,6 +48,8 @@ public:
 
     id_t getId() const;
 
+    void flush();
+
 private:
     id_t id;
     readdy::model::observables::ObservableBase *const observable;

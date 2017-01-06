@@ -33,6 +33,7 @@
 #define READDY_MAIN_GROUP_BITS_H
 
 #include "../Group.h"
+#include "Util_bits.h"
 #include <hdf5_hl.h>
 #include <readdy/io/DataSetType.h>
 #include <readdy/io/File.h>
@@ -52,8 +53,14 @@ inline void Group::write(const std::string &dataSetName, const std::string &stri
 }
 
 inline Group Group::createGroup(const std::string &path) {
-    auto handle = H5Gcreate(this->handle, path.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    return Group(handle, path);
+    if(util::groupExists(*this, path)) {
+        return Group(H5Gopen(this->handle, path.c_str(), H5P_DEFAULT), path);
+    } else {
+        auto plist = H5Pcreate(H5P_LINK_CREATE);
+        H5Pset_create_intermediate_group(plist, 1);
+        auto handle = H5Gcreate(this->handle, path.c_str(), plist, H5P_DEFAULT, H5P_DEFAULT);
+        return Group(handle, path);
+    }
 }
 
 inline h5::handle_t Group::getHandle() const {

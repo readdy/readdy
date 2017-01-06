@@ -33,6 +33,7 @@
 #define READDY_MAIN_FILE_BITS_H
 
 #include "../File.h"
+#include "Util_bits.h"
 
 namespace readdy {
 namespace io {
@@ -74,8 +75,14 @@ inline void File::flush() {
 }
 
 inline Group File::createGroup(const std::string &path) {
-    auto handle = H5Gcreate(root.handle, path.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    return Group(handle, path);
+    if(util::groupExists(root, path)) {
+        return Group(H5Gopen(root.getHandle(), path.c_str(), H5P_DEFAULT), path);
+    } else {
+        auto plist = H5Pcreate(H5P_LINK_CREATE);
+        H5Pset_create_intermediate_group(plist, 1);
+        auto handle = H5Gcreate(root.handle, path.c_str(), plist, H5P_DEFAULT, H5P_DEFAULT);
+        return Group(handle, path);
+    }
 }
 
 inline File::~File() {

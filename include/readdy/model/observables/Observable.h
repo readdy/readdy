@@ -106,11 +106,16 @@ public:
         initializeDataSet(file, dataSetName, flushStride);
     }
 
+    // todo needs to be purely virtual
+    virtual void flush() {}
+
 protected:
 
+    // todo needs to be purely virtual
     virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) {
 
     };
+    // todo needs to be purely virtual
     virtual void append() {
 
     };

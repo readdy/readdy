@@ -23,59 +23,34 @@
 /**
  * << detailed description >>
  *
- * @file AccumulativeWriter_bits.h
+ * @file Util_bits.h
  * @brief << brief description >>
  * @author clonker
  * @date 06.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_ACCUMULATIVEWRITER_BITS_H
-#define READDY_MAIN_ACCUMULATIVEWRITER_BITS_H
+#ifndef READDY_MAIN_UTIL_BITS_H
+#define READDY_MAIN_UTIL_BITS_H
 
-#include "../AccumulativeWriter.h"
+#include <readdy/io/Group.h>
 
 namespace readdy {
-namespace model {
-namespace observables {
-
-template<typename DataSetType, typename AppendType>
-inline AccumulativeWriter<DataSetType, AppendType>::AccumulativeWriter(unsigned int flushStride,
-                                                                       std::unique_ptr<DataSetType> &&dataSet)
-        : flushStride(flushStride), count(0), dataSet(std::move(dataSet)), appends{} {
-    appends.reserve(flushStride);
-}
-
-template<typename DataSetType, typename AppendType>
-inline void AccumulativeWriter<DataSetType, AppendType>::append(AppendType &data) {
-    if(flushStride == 0 || flushStride == 1) {
-        dataSet->append({1}, &data);
-    } else {
-        appends.push_back(data);
-        ++count;
-        if (count % flushStride == 0) {
-            count = 0;
-            dataSet->append({appends.size()}, appends.data());
-            appends.clear();
+namespace io {
+namespace util {
+inline bool groupExists(const Group &cwd, const std::string &name) {
+    hid_t hid = cwd.getHandle();
+    H5E_BEGIN_TRY
+        {
+            hid = H5Gopen(hid, name.c_str(), H5P_DEFAULT);
+            if (hid > 0) {
+                H5Gclose(hid);
+            }
         }
-    }
-}
-
-template<typename DataSetType, typename AppendType>
-inline AccumulativeWriter<DataSetType, AppendType>::~AccumulativeWriter() {
-    flush();
-}
-
-template<typename DataSetType, typename AppendType>
-inline void AccumulativeWriter<DataSetType, AppendType>::flush() {
-    if(!appends.empty()) {
-        dataSet->append({appends.size()}, appends.data());
-        count = 0;
-        appends.clear();
-    }
-}
-
+    H5E_END_TRY
+    return (hid > 0);
 }
 }
 }
-#endif //READDY_MAIN_ACCUMULATIVEWRITER_BITS_H
+}
+#endif //READDY_MAIN_UTIL_BITS_H

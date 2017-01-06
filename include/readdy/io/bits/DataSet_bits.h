@@ -181,7 +181,6 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, std::v
         traj.reserve(n);
         for (auto i = 0; i < n; ++i) {
             auto val = &data[i];
-            log::console()->trace(" - i = {}, val.size={}", i, val->size());
             hvl_t entry;
             entry.len = val->size();
             entry.p = val->data();

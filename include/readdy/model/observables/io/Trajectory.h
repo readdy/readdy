@@ -57,6 +57,8 @@ struct TrajectoryEntry {
     readdy::model::observables::time_step_type t;
     readdy::model::Particle::id_type id;
     pos_t px, py, pz;
+
+    friend std::ostream &operator<<(std::ostream &, const TrajectoryEntry&);
 };
 
 class Trajectory : public model::observables::Observable<std::vector<std::vector<TrajectoryEntry>>> {

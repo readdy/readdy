@@ -46,7 +46,11 @@ class AccumulativeWriter {
 public:
     AccumulativeWriter(unsigned int flushStride, std::unique_ptr<DataSetType> &&dataSet);
 
+    virtual ~AccumulativeWriter();
+
     void append(AppendDataType&);
+
+    void flush();
 
 private:
     unsigned int count;

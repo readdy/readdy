@@ -27,6 +27,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
 #include <readdy/model/observables/io/Trajectory.h>
+#include <readdy/io/File.h>
 
 namespace rmr = readdy::model::reactions;
 namespace rmp = readdy::model::programs;
@@ -216,7 +217,10 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 
 Simulation::Simulation(Simulation &&rhs) = default;
 
-Simulation::~Simulation() = default;
+Simulation::~Simulation() {
+    // close trajectory file if present
+    closeTrajectoryFile();
+};
 
 const short
 Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,

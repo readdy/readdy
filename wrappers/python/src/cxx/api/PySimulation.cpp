@@ -25,6 +25,7 @@
 #include <pybind11/numpy.h>
 
 #include <readdy/api/Simulation.h>
+#include <readdy/io/File.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/common/nodelete.h>
 #include "ExportSchemeApi.h"
@@ -57,8 +58,12 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
 obs_handle_t
 registerObservable_Positions(sim &self, unsigned int stride, pybind11::object callbackFun,
                              std::vector<std::string> types) {
-    auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Positions::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::observables::Positions>(std::move(pyFun), stride, types);
+    if(callbackFun.is_none()) {
+        return self.registerObservable<readdy::model::observables::Positions>(stride, types);
+    } else {
+        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Positions::result_t)>(callbackFun);
+        return self.registerObservable<readdy::model::observables::Positions>(std::move(pyFun), stride, types);
+    }
 }
 
 obs_handle_t
@@ -125,7 +130,11 @@ PYBIND11_PLUGIN (api) {
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
 
     py::class_<obs_handle_t>(api, "ObservableHandle")
-            .def("enable_write_to_file", &obs_handle_t::enableWriteToFile);
+            .def("enable_write_to_file", &obs_handle_t::enableWriteToFile)
+            .def("flush", &obs_handle_t::flush)
+            .def("__repr__", [](const obs_handle_t& self) {
+                return "ObservableHandle(id=" + std::to_string(self.getId()) + ")";
+            });
 
     py::class_<sim>(api, "Simulation")
             .def(py::init<>())

@@ -40,6 +40,11 @@ namespace readdy {
 namespace model {
 namespace observables {
 
+std::ostream &operator<<(std::ostream &os, const TrajectoryEntry &p) {
+    os << "TrajectoryEntry(id=" << p.id << ")";
+    return os;
+}
+
 class TrajectoryEntryMemoryType : public readdy::io::DataSetType {
 public:
     TrajectoryEntryMemoryType() {

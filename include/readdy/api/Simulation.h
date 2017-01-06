@@ -36,7 +36,6 @@
 
 #include <readdy/model/Kernel.h>
 #include <readdy/api/SimulationScheme.h>
-#include <readdy/io/File.h>
 #include "ObservableHandle.h"
 
 namespace readdy {
@@ -125,6 +124,16 @@ public:
      * @param periodic an array of length three with the corresponding entries.
      */
     void setPeriodicBoundary(std::array<bool, 3> periodic);
+
+    /**
+     * Registers a predefined observable with the kernel. A list of available observables can be obtained by
+     * getAvailableObservables().
+     * @param stride the stride argument which decides how often the observable gets called
+     * @param args arguments for creation of the observable
+     * @return a uuid with which the observable is associated
+     */
+    template<typename T, typename... Args>
+    ObservableHandle registerObservable(unsigned int stride, Args... args);
 
     /**
      * Registers a predefined observable with the kernel. A list of available observables can be obtained by
