@@ -44,6 +44,9 @@ template<typename DataSetType, typename AppendDataType>
 class AccumulativeWriter {
 
 public:
+    using data_set_t = DataSetType;
+    using append_t = AppendDataType;
+
     AccumulativeWriter(unsigned int flushStride, std::unique_ptr<DataSetType> &&dataSet);
 
     virtual ~AccumulativeWriter();

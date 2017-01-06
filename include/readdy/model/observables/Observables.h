@@ -83,9 +83,21 @@ protected:
 class Particles
         : public Observable<std::tuple<std::vector<readdy::model::Particle::type_type>, std::vector<readdy::model::Particle::id_type>, std::vector<Vec3>>> {
 public:
-    Particles(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
+    Particles(Kernel *const kernel, unsigned int stride = 1);
+
+    virtual ~Particles();
 
     virtual void evaluate() = 0;
+
+    void flush() override;
+
+protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride);
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 class RadialDistribution : public Observable<std::pair<std::vector<double>, std::vector<double>>> {
