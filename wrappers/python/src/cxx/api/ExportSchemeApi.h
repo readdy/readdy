@@ -33,7 +33,7 @@
 #define READDY_MAIN_EXPORTSCHEMEAPI_H
 
 #include <pybind11/pybind11.h>
-#include <readdy/SimulationScheme.h>
+#include <readdy/api/SimulationScheme.h>
 
 
 template<typename SchemeType>

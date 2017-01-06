@@ -100,10 +100,26 @@ public:
 
     virtual void evaluate() = 0;
 
+    void enableWriteToFile(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+        this->flushStride = flushStride;
+        writeToFile = true;
+        initializeDataSet(file, dataSetName, flushStride);
+    }
+
 protected:
+
+    virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) {
+
+    };
+    virtual void append() {
+
+    };
+
     unsigned int stride;
+    unsigned int flushStride = 1;
     readdy::model::Kernel *const kernel;
     observables::time_step_type t_current = 0;
+    bool writeToFile = false;
     bool firstCall = true;
 };
 
@@ -114,7 +130,7 @@ public:
     typedef Result result_t;
 
     Observable(Kernel *const kernel, unsigned int stride)
-            : ObservableBase(kernel, stride), result(), writeToFile(false) {
+            : ObservableBase(kernel, stride), result() {
     }
 
     const result_t &getResult() {
@@ -123,12 +139,6 @@ public:
 
     void setCallback(const callback_function &callbackFun) {
         Observable::externalCallback = std::move(callbackFun);
-    }
-
-    void enableWriteToFile(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-        this->flushStride = flushStride;
-        writeToFile = true;
-        initializeDataSet(file, dataSetName, flushStride);
     }
 
     virtual void callback(observables::time_step_type t) override {
@@ -140,13 +150,8 @@ public:
     }
 
 protected:
-    virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) = 0;
-    virtual void append() = 0;
-
     Result result;
     callback_function externalCallback = [](const Result) {};
-    bool writeToFile;
-    unsigned int flushStride = 1;
 };
 
 template<typename Res_t, typename... ParentObs_t>

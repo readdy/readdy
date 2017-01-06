@@ -35,8 +35,9 @@
 #define READDY_SIMULATION_H
 
 #include <readdy/model/Kernel.h>
-#include <readdy/SimulationScheme.h>
+#include <readdy/api/SimulationScheme.h>
 #include <readdy/io/File.h>
+#include "ObservableHandle.h"
 
 namespace readdy {
 /**
@@ -134,7 +135,7 @@ public:
      * @return a uuid with which the observable is associated
      */
     template<typename T, typename... Args>
-    unsigned long registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
+    ObservableHandle registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
                                      unsigned int stride, Args... args);
 
     /**
@@ -142,7 +143,7 @@ public:
      * @param observable the observable
      * @return a uuid with which the observable is associated
      */
-    unsigned long registerObservable(readdy::model::observables::ObservableBase &observable);
+    ObservableHandle registerObservable(readdy::model::observables::ObservableBase &observable);
 
     /**
      * Gives all available predefined observable names.
@@ -155,7 +156,8 @@ public:
      * Removes an observable by uuid.
      * @param uuid the uuid of the observable to be removed.
      */
-    void deregisterObservable(const unsigned long uuid);
+    void deregisterObservable(const ObservableHandle::id_t uuid);
+    void deregisterObservable(const ObservableHandle& uuid);
 
     /**
      * A method to access the particle positions of a certain type.
@@ -399,36 +401,8 @@ public:
     NoKernelSelectedException(const std::string &__arg);
 };
 
-struct Simulation::Impl {
-    std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
-    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables{};
-    std::unique_ptr<readdy::model::Kernel> kernel;
-    std::unique_ptr<io::File> trajectoryFile;
-    unsigned long trajectoryFileId;
-    unsigned long counter = 0;
-};
-
-
-template<typename T, typename... Args>
-unsigned long
-Simulation::registerObservable(const std::function<void(typename T::result_t)> &callbackFun, unsigned int stride,
-                               Args... args) {
-    ensureKernelSelected();
-    auto uuid = pimpl->counter++;
-    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
-    obs->setCallback(callbackFun);
-    auto connection = pimpl->kernel->connectObservable(obs.get());
-    pimpl->observables.emplace(uuid, std::move(obs));
-    pimpl->observableConnections.emplace(uuid, std::move(connection));
-    return uuid;
 }
 
-template<typename SchemeType>
-readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool useDefaults) {
-    ensureKernelSelected();
-    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
-}
-
-}
+#include "bits/Simulation_misc.h"
 
 #endif //READDY_SIMULATION_H

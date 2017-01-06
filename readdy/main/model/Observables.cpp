@@ -31,6 +31,7 @@
  */
 
 #include <readdy/model/observables/Observables.h>
+#include <readdy/model/observables/io/AccumulativeWriter.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/_internal/Util.h>
 #include <readdy/common/numeric.h>
@@ -81,7 +82,8 @@ public:
 
 
 struct Positions::Impl {
-    std::unique_ptr<io::DataSet<readdy::model::Vec3, true>> dataSet;
+    using writer_t = AccumulativeWriter<io::DataSet<readdy::model::Vec3, true>, Positions::result_t>;
+    std::unique_ptr<writer_t> dataSet;
 };
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
@@ -94,8 +96,7 @@ Positions::Positions(Kernel *const kernel, unsigned int stride,
         Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
 
 void Positions::append() {
-    // todo take flush stride into account
-    pimpl->dataSet->append({1}, &result);
+    pimpl->dataSet->append(result);
 }
 
 Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) { }
@@ -104,10 +105,11 @@ void Positions::initializeDataSet(io::File &file, const std::string &dataSetName
     if(!pimpl->dataSet) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        pimpl->dataSet = std::move(std::make_unique<io::DataSet<readdy::model::Vec3, true>>(
+        auto dataSet = std::make_unique<io::DataSet<readdy::model::Vec3, true>>(
                 dataSetName, file.createGroup(OBSERVABLES_GROUP_PATH), fs, dims,
                 Vec3MemoryType(), Vec3FileType()
-        ));
+        );
+        pimpl->dataSet = std::make_unique<Impl::writer_t>(flushStride, std::move(dataSet));
     }
 }
 

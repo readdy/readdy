@@ -24,7 +24,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include <readdy/Simulation.h>
+#include <readdy/api/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/common/nodelete.h>
 #include "ExportSchemeApi.h"
@@ -35,6 +35,7 @@ namespace py = pybind11;
 
 using rvp = py::return_value_policy;
 using sim = readdy::Simulation;
+using obs_handle_t = readdy::ObservableHandle;
 using kp = readdy::plugin::KernelProvider;
 using vec = readdy::model::Vec3;
 using pot2 = readdy::rpy::PotentialOrder2Wrapper;
@@ -53,14 +54,14 @@ void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std:
     self.registerPotentialOrder2(potential, type1, type2);
 }
 
-unsigned long
+obs_handle_t
 registerObservable_Positions(sim &self, unsigned int stride, pybind11::object callbackFun,
                              std::vector<std::string> types) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Positions::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::observables::Positions>(std::move(pyFun), stride, types);
 }
 
-unsigned long
+obs_handle_t
 registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::object callbackFun,
                                       py::array_t<double> &binBorders, std::vector<std::string> typeCountFrom,
                                       std::vector<std::string> typeCountTo, double particleToDensity) {
@@ -70,12 +71,13 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::
     binBordersVec.reserve(info.shape[0]);
     const auto data = static_cast<double *>(info.ptr);
     for (auto i = 0; i < info.shape[0]; ++i) binBordersVec.push_back(data[i]);
-    return self.registerObservable<readdy::model::observables::RadialDistribution>(std::move(pyFun), stride, binBordersVec,
-                                                                                typeCountFrom, typeCountTo,
-                                                                                particleToDensity);
+    return self.registerObservable<readdy::model::observables::RadialDistribution>(std::move(pyFun), stride,
+                                                                                   binBordersVec,
+                                                                                   typeCountFrom, typeCountTo,
+                                                                                   particleToDensity);
 }
 
-unsigned long
+obs_handle_t
 registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::object &callbackFun,
                                 std::vector<std::string> types) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::CenterOfMass::result_t)>(callbackFun);
@@ -84,7 +86,7 @@ registerObservable_CenterOfMass(sim &self, unsigned int stride, const pybind11::
     );
 }
 
-unsigned long
+obs_handle_t
 registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, const py::object &callbackFun,
                                                 py::array_t<double> binBorders, unsigned int axis,
                                                 std::vector<std::string> types) {
@@ -97,19 +99,20 @@ registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, 
         binBordersVec.push_back(binBordersData[i]);
     }
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::HistogramAlongAxis::result_t)>(callbackFun);
-    return self.registerObservable<readdy::model::observables::HistogramAlongAxis>(std::move(pyFun), stride, binBordersVec,
-                                                                                types, axis);
+    return self.registerObservable<readdy::model::observables::HistogramAlongAxis>(std::move(pyFun), stride,
+                                                                                   binBordersVec,
+                                                                                   types, axis);
 }
 
-unsigned long
+obs_handle_t
 registerObservable_NParticles(sim &self, unsigned int stride, const py::object &callbackFun,
                               std::vector<std::string> types) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::NParticles::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::observables::NParticles>(std::move(pyFun), stride, types);
 }
 
-unsigned long registerObservable_ForcesObservable(sim &self, unsigned int stride, py::object callbackFun,
-                                                  std::vector<std::string> types) {
+obs_handle_t registerObservable_ForcesObservable(sim &self, unsigned int stride, py::object callbackFun,
+                                                 std::vector<std::string> types) {
     auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Forces::result_t)>(callbackFun);
     return self.registerObservable<readdy::model::observables::Forces>(std::move(pyFun), stride, types);
 }
@@ -120,6 +123,9 @@ PYBIND11_PLUGIN (api) {
     py::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
+
+    py::class_<obs_handle_t>(api, "ObservableHandle")
+            .def("enable_write_to_file", &obs_handle_t::enableWriteToFile);
 
     py::class_<sim>(api, "Simulation")
             .def(py::init<>())
@@ -147,7 +153,9 @@ PYBIND11_PLUGIN (api) {
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
             .def("register_observable_forces", &registerObservable_ForcesObservable)
-            .def("deregister_observable", &sim::deregisterObservable)
+            .def("deregister_observable", [](sim& self, const obs_handle_t& handle) {
+                self.deregisterObservable(handle.getId());
+            })
             .def("register_reaction_conversion", &sim::registerConversionReaction, rvp::reference_internal)
             .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, rvp::reference_internal)
             .def("register_reaction_fission", &sim::registerFissionReaction, rvp::reference_internal)

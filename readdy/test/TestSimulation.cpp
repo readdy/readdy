@@ -21,7 +21,7 @@
 
 
 #include "gtest/gtest.h"
-#include <readdy/Simulation.h>
+#include <readdy/api/Simulation.h>
 
 using namespace readdy;
 

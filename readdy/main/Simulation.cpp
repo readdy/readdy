@@ -23,7 +23,7 @@
 //
 // Created by Moritz Hoffmann on 18/02/16.
 //
-#include <readdy/Simulation.h>
+#include <readdy/api/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
 #include <readdy/model/observables/io/Trajectory.h>
@@ -185,12 +185,12 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-unsigned long Simulation::registerObservable(readdy::model::observables::ObservableBase &observable) {
+ObservableHandle Simulation::registerObservable(readdy::model::observables::ObservableBase &observable) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;
     auto &&connection = pimpl->kernel->connectObservable(&observable);
     pimpl->observableConnections.emplace(uuid, std::move(connection));
-    return uuid;
+    return {uuid, nullptr};
 }
 
 void Simulation::deregisterObservable(const unsigned long uuid) {
@@ -199,6 +199,11 @@ void Simulation::deregisterObservable(const unsigned long uuid) {
         pimpl->observables.erase(uuid);
     }
 }
+
+void Simulation::deregisterObservable(const ObservableHandle &uuid) {
+    deregisterObservable(uuid.getId());
+}
+
 
 std::vector<std::string> Simulation::getAvailableObservables() {
     ensureKernelSelected();
