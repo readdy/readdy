@@ -90,9 +90,9 @@ TEST_P(TestAggregators, TestTrivial) {
         EXPECT_EQ(resultTime.size(), 2);
         EXPECT_EQ(resultPos.size(), 2);
         EXPECT_THAT(resultTime, ::testing::ElementsAre(0, 1));
-        EXPECT_EQ(resultPos[0].size(), 5);
+        EXPECT_EQ(resultPos[1].size(), 5);
         for (auto j=0; j<5; ++j) {
-            EXPECT_VEC3_EQ(resultPos[0][j], readdy::model::Vec3(4, 2, 0));
+            EXPECT_VEC3_EQ(resultPos[1][j], readdy::model::Vec3(4, 2, 0));
         }
     }
 }

@@ -335,21 +335,22 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
     if (!pimpl->dataSetTypes) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        auto group = file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName);
         {
             auto dataSetTypes = std::make_unique<Impl::types_writer_t::data_set_t>(
-                    "types", file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName), fs, dims
+                    "types", group, fs, dims
             );
             pimpl->dataSetTypes = std::make_unique<Impl::types_writer_t>(flushStride, std::move(dataSetTypes));
         }
         {
             auto dataSetIds = std::make_unique<Impl::ids_writer_t::data_set_t>(
-                    "ids", file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName), fs, dims
+                    "ids", group, fs, dims
             );
             pimpl->dataSetIds = std::make_unique<Impl::ids_writer_t>(flushStride, std::move(dataSetIds));
         }
         {
             auto dataSetPositions = std::make_unique<Impl::pos_writer_t::data_set_t>(
-                    "positions", file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName), fs, dims,
+                    "positions", group, fs, dims,
                     Vec3MemoryType(), Vec3FileType()
             );
             pimpl->dataSetPositions = std::make_unique<Impl::pos_writer_t>(flushStride, std::move(dataSetPositions));

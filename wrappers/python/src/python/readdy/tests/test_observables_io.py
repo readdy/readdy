@@ -85,27 +85,19 @@ class TestSchemeApi(unittest.TestCase):
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(0, 0, 0))
         # every time step, add one particle
-        sim.register_observable_(1, lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)), ["A"])
-        handle = sim.register_observable_particle_positions(1, None, [])
+        sim.register_observable_n_particles(1, lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)), ["A"])
+        handle = sim.register_observable_particles(1, None)
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
-            handle.enable_write_to_file(f, "particle_positions", 3)
+            handle.enable_write_to_file(f, "particles", 3)
             sim.run_scheme_readdy(True).configure().run(n_timesteps)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
-            data = f2["readdy/observables/particle_positions"][:]
-            np.testing.assert_equal(len(data), n_timesteps+1)
-            for t, positions in enumerate(data):
-                # we begin with two particles
-                np.testing.assert_equal(len(positions), t+2)
-                np.testing.assert_equal(positions[0]["x"], 0)
-                np.testing.assert_equal(positions[0]["y"], 0)
-                np.testing.assert_equal(positions[0]["z"], 0)
-                for i in range(1, len(positions)):
-                    np.testing.assert_equal(positions[i]["x"], 1.5)
-                    np.testing.assert_equal(positions[i]["y"], 2.5)
-                    np.testing.assert_equal(positions[i]["z"], 3.5)
+            types = f2["readdy/observables/particles/types"][:]
+            ids = f2["readdy/observables/particles/ids"][:]
+            positions = f2["readdy/observables/particles/positions"][:]
+            pass
         common.set_logging_level("error")
 
 

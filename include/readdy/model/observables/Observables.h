@@ -67,8 +67,6 @@ public:
 
     virtual ~Positions();
 
-    virtual void evaluate() = 0;
-
 protected:
     void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
@@ -87,12 +85,10 @@ public:
 
     virtual ~Particles();
 
-    virtual void evaluate() = 0;
-
     void flush() override;
 
 protected:
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride);
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     void append() override;
 
@@ -109,11 +105,11 @@ public:
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        double particleToDensity);
 
-    virtual void evaluate() = 0;
-
     const std::vector<double> &getBinBorders() const;
 
     void setBinBorders(const std::vector<double> &binBorders);
+
+    void evaluate() override;
 
 protected:
     std::vector<double> binBorders;
@@ -133,7 +129,7 @@ public:
 
     CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType);
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 protected:
     std::set<unsigned int> particleTypes;
@@ -148,8 +144,6 @@ public:
 
     HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
                        std::vector<std::string> typesToCount, unsigned int axis);
-
-    virtual void evaluate() = 0;
 
 protected:
     std::vector<double> binBorders;

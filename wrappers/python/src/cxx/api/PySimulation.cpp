@@ -66,6 +66,16 @@ registerObservable_Positions(sim &self, unsigned int stride, pybind11::object ca
     }
 }
 
+obs_handle_t registerObservable_Particles(sim &self, unsigned int stride, pybind11::object callbackFun) {
+    if(callbackFun.is_none()) {
+        return self.registerObservable<readdy::model::observables::Particles>(stride);
+    } else {
+        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Particles::result_t)>(callbackFun);
+        return self.registerObservable<readdy::model::observables::Particles>(std::move(pyFun), stride);
+    }
+}
+
+
 obs_handle_t
 registerObservable_RadialDistribution(sim &self, unsigned int stride, pybind11::object callbackFun,
                                       py::array_t<double> &binBorders, std::vector<std::string> typeCountFrom,
@@ -180,6 +190,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_potential_sphere", &sim::registerSpherePotential)
             .def("get_particle_positions", &sim::getParticlePositions)
             .def("register_observable_particle_positions", &registerObservable_Positions)
+            .def("register_observable_particles", &registerObservable_Particles)
             .def("register_observable_radial_distribution", &registerObservable_RadialDistribution)
             .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable)
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
