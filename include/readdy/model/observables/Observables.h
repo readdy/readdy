@@ -99,7 +99,8 @@ protected:
 class RadialDistribution : public Observable<std::pair<std::vector<double>, std::vector<double>>> {
 public:
     RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
-                       std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo, double particleToDensity);
+                       std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo,
+                       double particleToDensity);
 
     RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
@@ -110,6 +111,8 @@ public:
     const std::vector<double> &getBinBorders() const;
 
     void evaluate() override;
+
+    void flush() override;
 
 protected:
 
@@ -140,6 +143,8 @@ public:
 
     virtual ~CenterOfMass();
 
+    void flush() override;
+
     void evaluate() override;
 
 protected:
@@ -161,6 +166,8 @@ public:
 
     HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
                        std::vector<std::string> typesToCount, unsigned int axis);
+
+    void flush() override;
 
     virtual ~HistogramAlongAxis();
 
@@ -187,6 +194,8 @@ public:
 
     NParticles(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
+    void flush() override;
+
     virtual ~NParticles();
 
     virtual void evaluate() = 0;
@@ -205,15 +214,26 @@ protected:
 class Forces : public Observable<std::vector<readdy::model::Vec3>> {
 
 public:
-    Forces(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride), typesToCount({}) {}
+    Forces(Kernel *const kernel, unsigned int stride);
 
     Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
     Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
+    virtual ~Forces();
+
     virtual void evaluate() = 0;
 
+    void flush() override;
+
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
     std::vector<unsigned int> typesToCount;
 };
 

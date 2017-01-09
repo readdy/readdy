@@ -267,5 +267,36 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(n_a_b_particles[t][1], callback_n_particles_a_b[t][1])
                 np.testing.assert_equal(n_particles[t][0], callback_n_particles_all[t][0])
 
+    def test_forces_observable(self):
+        fname = os.path.join(self.dir, "test_observables_particle_forces.h5")
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+        sim.box_size = common.Vec(13, 13, 13)
+        sim.register_particle_type("A", .1, .1)
+        sim.add_particle("A", common.Vec(0, 0, 0))
+        # every time step, add one particle
+        sim.register_observable_n_particles(1, lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)), ["A"])
+        handle = sim.register_observable_forces(1, None, [])
+        n_timesteps = 19
+        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            handle.enable_write_to_file(f, u"forces", int(3))
+            sim.run_scheme_readdy(True).configure().run(n_timesteps)
+            handle.flush()
+
+        with h5py.File(fname, "r") as f2:
+            data = f2["readdy/observables/forces"][:]
+            np.testing.assert_equal(len(data), n_timesteps + 1)
+            for t, forces in enumerate(data):
+                # we begin with two particles
+                np.testing.assert_equal(len(forces), t + 2)
+                np.testing.assert_equal(forces[0]["x"], 0)
+                np.testing.assert_equal(forces[0]["y"], 0)
+                np.testing.assert_equal(forces[0]["z"], 0)
+                for i in range(1, len(forces)):
+                    np.testing.assert_equal(forces[i]["x"], 0)
+                    np.testing.assert_equal(forces[i]["y"], 0)
+                    np.testing.assert_equal(forces[i]["z"], 0)
+
+
 if __name__ == '__main__':
     unittest.main()

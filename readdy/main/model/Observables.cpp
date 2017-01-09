@@ -252,6 +252,10 @@ void RadialDistribution::append() {
     pimpl->writerRadialDistribution->append({1, dist.size()}, dist.data());
 }
 
+void RadialDistribution::flush() {
+    if (pimpl->writerRadialDistribution) pimpl->writerRadialDistribution->flush();
+}
+
 RadialDistribution::~RadialDistribution() = default;
 
 struct CenterOfMass::Impl {
@@ -313,6 +317,10 @@ void CenterOfMass::append() {
     pimpl->ds->append({1}, &pod);
 }
 
+void CenterOfMass::flush() {
+    if (pimpl->ds) pimpl->ds->flush();
+}
+
 CenterOfMass::~CenterOfMass() = default;
 
 NParticles::NParticles(Kernel *const kernel, unsigned int stride,
@@ -335,15 +343,15 @@ struct NParticles::Impl {
 };
 
 NParticles::NParticles(Kernel *const kernel, unsigned int stride)
-        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {  }
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
 void NParticles::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->ds) {
+    if (!pimpl->ds) {
         const auto size = typesToCount.empty() ? 1 : typesToCount.size();
         std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
-        auto dataSet = std::make_unique<Impl::data_set_t >(
+        auto dataSet = std::make_unique<Impl::data_set_t>(
                 dataSetName, group, fs, dims
         );
         log::console()->debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
@@ -355,12 +363,47 @@ void NParticles::append() {
     pimpl->ds->append({1, result.size()}, result.data());
 }
 
+void NParticles::flush() {
+    if (pimpl->ds) pimpl->ds->flush();
+}
+
+struct Forces::Impl {
+    using data_set_t = io::DataSet<Vec3POD, true>;
+    std::unique_ptr<data_set_t> dataSet;
+};
+
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : Forces(kernel, stride,
                  _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
-        : Observable(kernel, stride), typesToCount(typesToCount) {}
+        : Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
+
+Forces::Forces(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride), typesToCount({}),
+                                                            pimpl(std::make_unique<Impl>()) {}
+
+void Forces::flush() {
+    if (pimpl->dataSet) pimpl->dataSet->flush();
+}
+
+void Forces::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if (!pimpl->dataSet) {
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        auto dataSet = std::make_unique<io::DataSet<Vec3POD, true>>(
+                dataSetName, file.createGroup(OBSERVABLES_GROUP_PATH), fs, dims,
+                Vec3MemoryType(), Vec3FileType()
+        );
+        pimpl->dataSet = std::move(dataSet);
+    }
+}
+
+void Forces::append() {
+    std::vector<Vec3POD> podVec(result.begin(), result.end());
+    pimpl->dataSet->append({1}, &podVec);
+}
+
+Forces::~Forces() = default;
 
 struct HistogramAlongAxis::Impl {
     using data_set_t = io::DataSet<double, false>;
@@ -388,7 +431,7 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
 }
 
 void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->dataSet) {
+    if (!pimpl->dataSet) {
         const auto size = result.size();
         std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
@@ -402,6 +445,10 @@ void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &da
 
 void HistogramAlongAxis::append() {
     pimpl->dataSet->append({1, result.size()}, result.data());
+}
+
+void HistogramAlongAxis::flush() {
+    if (pimpl->dataSet) pimpl->dataSet->flush();
 }
 
 HistogramAlongAxis::~HistogramAlongAxis() = default;
