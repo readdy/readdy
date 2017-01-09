@@ -271,9 +271,14 @@ void RadialDistribution::append() {
 
 RadialDistribution::~RadialDistribution() = default;
 
+struct CenterOfMass::Impl {
+    using writer_t = io::DataSet<Vec3POD, false>;
+    std::unique_ptr<writer_t> ds;
+};
+
 CenterOfMass::CenterOfMass(readdy::model::Kernel *const kernel, unsigned int stride,
                            unsigned int particleType)
-        : Observable(kernel, stride), particleTypes({particleType}) {
+        : Observable(kernel, stride), particleTypes({particleType}), pimpl(std::make_unique<Impl>()) {
 }
 
 CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
@@ -295,18 +300,37 @@ void CenterOfMass::evaluate() {
 
 CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
                            const std::vector<unsigned int> &particleTypes)
-        : Observable(kernel, stride), particleTypes(particleTypes.begin(), particleTypes.end()) {
+        : Observable(kernel, stride), particleTypes(particleTypes.begin(), particleTypes.end()),
+          pimpl(std::make_unique<Impl>()) {
 }
 
-CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
-                           const std::vector<std::string> &particleType) : Observable(kernel,
-                                                                                      stride),
-                                                                           particleTypes() {
+CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType)
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()), particleTypes() {
     for (auto &&pt : particleType) {
         particleTypes.emplace(kernel->getKernelContext().getParticleTypeID(pt));
     }
 
 }
+
+void CenterOfMass::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->ds) {
+            std::vector<readdy::io::h5::dims_t> fs = {flushStride};
+            std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+            auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
+            auto dataSet = std::make_unique<Impl::writer_t>(
+                    dataSetName, group, fs, dims, Vec3MemoryType(), Vec3FileType()
+            );
+            log::console()->debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
+            pimpl->ds = std::move(dataSet);
+    }
+}
+
+void CenterOfMass::append() {
+    auto pod = Vec3POD(result);
+    pimpl->ds->append({1}, &pod);
+}
+
+CenterOfMass::~CenterOfMass() = default;
 
 NParticles::NParticles(Kernel *const kernel, unsigned int stride,
                        std::vector<std::string> typesToCount)

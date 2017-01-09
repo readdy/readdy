@@ -137,10 +137,18 @@ public:
     CenterOfMass(Kernel *const kernel, unsigned int stride, const std::string &particleType);
 
     CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType);
+    
+    virtual ~CenterOfMass();
 
     void evaluate() override;
 
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
     std::set<unsigned int> particleTypes;
 };
 

@@ -42,6 +42,8 @@ class ObservableHandle {
 public:
     using id_t = unsigned long;
 
+    ObservableHandle();
+
     ObservableHandle(id_t id, model::observables::ObservableBase *const observable);
 
     void enableWriteToFile(readdy::io::File &file, const std::string &dataSetName, unsigned int flushStride);

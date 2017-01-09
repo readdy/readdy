@@ -56,7 +56,7 @@ class TestObservablesIO(unittest.TestCase):
         handle = sim.register_observable_particle_positions(1, None, [])
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
-            handle.enable_write_to_file(f, u"particle_positions", 3)
+            handle.enable_write_to_file(f, u"particle_positions", int(3))
             sim.run_scheme_readdy(True).configure().run(n_timesteps)
             handle.flush()
 
@@ -89,7 +89,7 @@ class TestObservablesIO(unittest.TestCase):
         handle = sim.register_observable_particles(1, None)
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
-            handle.enable_write_to_file(f, u"particles", 3)
+            handle.enable_write_to_file(f, u"particles", int(3))
             sim.run_scheme_readdy(True).configure().run(n_timesteps)
             handle.flush()
 
@@ -143,7 +143,7 @@ class TestObservablesIO(unittest.TestCase):
 
         handle = simulation.register_observable_radial_distribution(1, rdf_callback, bin_borders, ["A"], ["B"], density)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
-            handle.enable_write_to_file(f, u"radial_distribution", 3)
+            handle.enable_write_to_file(f, u"radial_distribution", int(3))
             simulation.run(n_time_steps, 0.02)
             handle.flush()
 
@@ -153,6 +153,40 @@ class TestObservablesIO(unittest.TestCase):
             for t in range(n_time_steps):
                 np.testing.assert_equal(bin_centers, np.array(callback_centers[t]))
                 np.testing.assert_equal(distribution[t], np.array(callback_rdf[t]))
+
+    def test_center_of_mass_observable(self):
+        common.set_logging_level("error")
+        fname = os.path.join(self.dir, "test_observables_com.h5")
+
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+
+        box_size = common.Vec(10, 10, 10)
+        simulation.kbt = 2
+        simulation.periodic_boundary = [True, True, True]
+        simulation.box_size = box_size
+        simulation.register_particle_type("A", .2, 1.)
+        simulation.register_particle_type("B", .2, 1.)
+        simulation.add_particle("A", common.Vec(-2.5, 0, 0))
+        simulation.add_particle("B", common.Vec(0, 0, 0))
+        n_time_steps = 50
+        callback_com = []
+
+        def com_callback(vec):
+            callback_com.append(vec)
+
+        handle = simulation.register_observable_center_of_mass(1, com_callback, ["A", "B"])
+        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            handle.enable_write_to_file(f, u"com", 3)
+            simulation.run(n_time_steps, 0.02)
+            handle.flush()
+
+        with h5py.File(fname, "r") as f2:
+            com = f2["readdy/observables/com"][:]
+            for t in range(n_time_steps):
+                np.testing.assert_equal(com[t]["x"], callback_com[t][0])
+                np.testing.assert_equal(com[t]["y"], callback_com[t][1])
+                np.testing.assert_equal(com[t]["z"], callback_com[t][2])
 
 
 if __name__ == '__main__':

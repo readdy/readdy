@@ -59,5 +59,7 @@ inline void ObservableHandle::flush() {
     }
 }
 
+inline ObservableHandle::ObservableHandle() : ObservableHandle(0, nullptr) { }
+
 }
 #endif //READDY_MAIN_OBSERVABLEHANDLE_MISC_H

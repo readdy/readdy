@@ -163,6 +163,7 @@ PYBIND11_PLUGIN (api) {
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
 
     py::class_<obs_handle_t>(api, "ObservableHandle")
+            .def(py::init<>())
             .def("enable_write_to_file", &obs_handle_t::enableWriteToFile)
             .def("flush", &obs_handle_t::flush)
             .def("__repr__", [](const obs_handle_t& self) {
