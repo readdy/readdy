@@ -33,6 +33,7 @@ import readdy._internal.common as common
 import readdy._internal.common.io as io
 from readdy._internal.api import Simulation
 from readdy.util.trajectory_utils import TrajectoryReader
+from contextlib import closing
 
 
 class TestSchemeApi(unittest.TestCase):
@@ -45,7 +46,7 @@ class TestSchemeApi(unittest.TestCase):
         shutil.rmtree(cls.dir, ignore_errors=True)
 
     def test_write_trajectory(self):
-        common.set_logging_level("error")
+        common.set_logging_level("debug")
         traj_fname = os.path.join(self.dir, "traj.h5")
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
@@ -57,7 +58,7 @@ class TestSchemeApi(unittest.TestCase):
             simulation.add_particle("A", common.Vec(0, 0, 0))
 
         simulation.register_observable_n_particles(1, callback, ["A"])
-        simulation.record_trajectory(traj_fname, 0, 1)
+        simulation.record_trajectory(traj_fname, 0, 3)
         simulation.run_scheme_readdy(True).configure().run(20)
         simulation.close_trajectory_file()
 
@@ -74,10 +75,9 @@ class TestSchemeApi(unittest.TestCase):
     def test_readwrite_double_and_string(self):
         fname = os.path.join(self.dir, "test_readwrite_double_and_string.h5")
         data = np.array([[2.222, 3, 4, 5], [3.3, 3, 3, 3]], dtype=np.float64)
-        f = io.File(fname, io.FileAction.CREATE)
-        f.write_double("/sowas", data)
-        f.write_string("/maeh", u"hierstehtwas")
-        f.close()
+        with closing(io.File(fname, io.FileAction.CREATE)) as f:
+            f.write_double("/sowas", data)
+            f.write_string("/maeh", u"hierstehtwas")
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get('/sowas'), data)
@@ -86,12 +86,11 @@ class TestSchemeApi(unittest.TestCase):
     def test_groups_readwrite(self):
         fname = os.path.join(self.dir, "test_groups_readwrite.h5")
         data = np.array([[2.222, 3, 4, 5], [3.3, 3, 3, 3]], dtype=np.float64)
-        f = io.File(fname, io.FileAction.CREATE)
-        g = f.create_group("/my_super_group")
-        subg = g.create_group("my_super_subgroup")
-        g.write_double("doubleds", data)
-        subg.write_string("stringds", u"jap")
-        f.close()
+        with closing(io.File(fname, io.FileAction.CREATE)) as f:
+            g = f.create_group("/my_super_group")
+            subg = g.create_group("my_super_subgroup")
+            g.write_double("doubleds", data)
+            subg.write_string("stringds", u"jap")
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get("/my_super_group")["doubleds"], data)
@@ -100,16 +99,14 @@ class TestSchemeApi(unittest.TestCase):
 
     def test_append(self):
         fname = os.path.join(self.dir, "test_append.h5")
-        f = io.File(fname, io.FileAction.CREATE)
-        g = f.create_group("/append_group")
+        with closing(io.File(fname, io.FileAction.CREATE)) as f:
+            g = f.create_group("/append_group")
 
-        full_data = [[3.3, 2.2], [1, 1], [3.4, 2.4], [14, 14], [5.5, 5.5]]
+            full_data = [[3.3, 2.2], [1, 1], [3.4, 2.4], [14, 14], [5.5, 5.5]]
 
-        ds_double = io.DataSet_double("doubleds", g, [2, 2], [io.unlimited_dims(), 2])
-        ds_double.append(np.array([[3.3, 2.2], [1, 1]], dtype=np.float64))
-        ds_double.append(np.array([[3.4, 2.4], [14, 14], [5.5, 5.5]], dtype=np.float64))
-
-        f.close()
+            ds_double = io.DataSet_double("doubleds", g, [2, 2], [io.unlimited_dims(), 2])
+            ds_double.append(np.array([[3.3, 2.2], [1, 1]], dtype=np.float64))
+            ds_double.append(np.array([[3.4, 2.4], [14, 14], [5.5, 5.5]], dtype=np.float64))
 
         with h5py.File(fname, "r") as f2:
             np.testing.assert_equal(f2.get("append_group")["doubleds"][:], full_data)

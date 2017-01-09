@@ -100,6 +100,7 @@ SET(BUILD_SHARED_LIBS ON)
 SET(READDY_GLOBAL_DIR "${PROJECT_SOURCE_DIR}")
 SET(READDY_GLOBAL_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
+INCLUDE(CheckCXXCompilerFlag)
 IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     # Compile in debug mode by default
     IF (NOT CMAKE_BUILD_TYPE)
@@ -140,6 +141,17 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
     # extra compile and link flags
     SET(READDY_STANDARD 11)
+    IF(NOT MSVC)
+        check_cxx_compiler_flag("-std=c++14" HAS_CPP14_FLAG)
+        IF(HAS_CPP14_FLAG)
+            SET(READDY_STANDARD 14)
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_CPP14")
+        ELSE()
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_CPP11")
+        ENDIF()
+    ELSE()
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_CPP14")
+    ENDIF()
     SET(EXTRA_COMPILE_FLAGS "")
     SET(EXTRA_LINK_FLAGS ${EXTRA_COMPILE_FLAGS})
     IF(APPLE)
@@ -182,8 +194,10 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
         SET(BUILD_GTEST ON)
         SET(BUILD_GMOCK ON)
-        SET(gtest_force_shared_crt ON)
-        SET(BUILD_SHARED_LIBS ON)
+        #IF(MSVC)
+        #    ADD_DEFINITIONS(-DGTEST_CREATE_SHARED_LIBRARY=1 -DGTEST_LINKED_AS_SHARED_LIBRARY=1)
+        #    SET(gtest_disable_pthreads ON)
+        #ENDIF()
         ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
         SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
@@ -214,25 +228,27 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
     IF(READDY_BUILD_SHARED_COMBINED)
         INCLUDE(cmake/sources/sources_common.cmake)
-        INCLUDE(cmake/sources/sources_model.cmake)
         INCLUDE(cmake/sources/sources_io.cmake)
+        INCLUDE(cmake/sources/sources_model.cmake)
         INCLUDE(cmake/sources/sources_plugin.cmake)
         INCLUDE(cmake/sources/kernels/singlecpu.cmake)
         INCLUDE(cmake/sources/sources_readdy.cmake)
         # create library
         ADD_LIBRARY(${READDY_PROJECT_NAME} ${READDY_ALL_SOURCES} ${READDY_GLOBAL_INCLUDE_DIR})
         TARGET_INCLUDE_DIRECTORIES(${READDY_PROJECT_NAME} PUBLIC ${READDY_INCLUDE_DIRS})
+        TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${READDY_DEPENDENT_LIBRARIES})
         SET_TARGET_PROPERTIES(${READDY_PROJECT_NAME} PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
                 COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-        )
-        TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${READDY_DEPENDENT_LIBRARIES})
+                CXX_STANDARD ${READDY_STANDARD}
+                CXX_STANDARD_REQUIRED ON
+                )
     ELSE(READDY_BUILD_SHARED_COMBINED)
         # include directories from least dependent to most dependent
         # i.e.: A depends on B -> add subdirectory of B first
         ADD_SUBDIRECTORY(readdy/main/common)
+        INCLUDE(cmake/sources/sources_io.cmake)
         ADD_SUBDIRECTORY(readdy/main/model)
-        ADD_SUBDIRECTORY(readdy/main/io)
         ADD_SUBDIRECTORY(readdy/main/plugin)
         ADD_SUBDIRECTORY(kernels/singlecpu)
         ADD_SUBDIRECTORY(readdy/main)

@@ -33,11 +33,15 @@
 #define READDY_MAIN_TRAJECTORY_H
 
 #include <array>
-#include <readdy/model/Kernel.h>
-#include "File.h"
+#include <memory>
+#include "readdy/model/Kernel.h"
 
 namespace readdy {
-namespace io {
+
+namespace io { class File; }
+
+namespace model {
+namespace observables {
 
 struct TrajectoryEntry {
     using pos_t = readdy::model::Vec3::entry_t;
@@ -53,6 +57,8 @@ struct TrajectoryEntry {
     readdy::model::observables::time_step_type t;
     readdy::model::Particle::id_type id;
     pos_t px, py, pz;
+
+    friend std::ostream &operator<<(std::ostream &, const TrajectoryEntry&);
 };
 
 class Trajectory : public model::observables::Observable<std::vector<std::vector<TrajectoryEntry>>> {
@@ -65,7 +71,7 @@ public:
     const static std::string TRAJECTORY_GROUP_PATH;
     const static std::string TRAJECTORY_DATA_SET_NAME;
 
-    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fs, File &file);
+    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fs, readdy::io::File &file);
 
     ~Trajectory();
 
@@ -75,20 +81,19 @@ public:
 
     virtual void flush();
 
-    static Object::data_set_type_t getEntryTypeMemory();
+protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
-    static Object::data_set_type_t getEntryTypeFile();
+    void append() override;
 
 protected:
     unsigned int count = 0;
     unsigned int flushStride = 0;
-    File &file;
-    //Group trajectoryGroup;
-    Object::handle_t dataSetHandle;
-    Object::handle_t memorySpace;
-    Object::handle_t entriesTypeMemory, entriesTypeFile;
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
+}
 }
 }
 

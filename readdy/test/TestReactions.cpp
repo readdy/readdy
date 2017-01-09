@@ -30,7 +30,7 @@
  */
 
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/SimulationScheme.h>
+#include <readdy/api/SimulationScheme.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 

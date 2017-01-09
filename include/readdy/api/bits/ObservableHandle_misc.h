@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,25 +21,45 @@
 
 
 /**
- * Todo: We do not have any IO module for, e.g., storing trajectories yet.
+ * << detailed description >>
  *
- * @file ObservableFactory.h
- * @brief Header file containing the definitions of IOUtils.
+ * @file ObservableHandle_misc.h
+ * @brief << brief description >>
  * @author clonker
- * @date 19.02.16
+ * @date 06.01.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_IO_H
-#define READDY_IO_H
+#ifndef READDY_MAIN_OBSERVABLEHANDLE_MISC_H
+#define READDY_MAIN_OBSERVABLEHANDLE_MISC_H
+
+#include "../ObservableHandle.h"
 
 namespace readdy {
-namespace io {
-class IOUtils {
-public:
-    IOUtils();
-};
-}
+inline ObservableHandle::ObservableHandle(id_t id, model::observables::ObservableBase *const observable)
+        : id(id), observable(observable) {}
+
+void
+inline ObservableHandle::enableWriteToFile(readdy::io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if (observable) {
+        observable->enableWriteToFile(file, dataSetName, flushStride);
+    } else {
+        readdy::log::console()->warn("You just tried to enable write to file on a user-provided observable instance, "
+                                             "this is not supported!");
+    }
 }
 
+inline ObservableHandle::id_t ObservableHandle::getId() const {
+    return id;
+}
 
-#endif //READDY_IO_H
+inline void ObservableHandle::flush() {
+    if(observable) {
+        observable->flush();
+    }
+}
+
+inline ObservableHandle::ObservableHandle() : ObservableHandle(0, nullptr) { }
+
+}
+#endif //READDY_MAIN_OBSERVABLEHANDLE_MISC_H

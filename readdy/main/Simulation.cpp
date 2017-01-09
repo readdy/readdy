@@ -23,10 +23,11 @@
 //
 // Created by Moritz Hoffmann on 18/02/16.
 //
-#include <readdy/Simulation.h>
+#include <readdy/api/Simulation.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
-#include <readdy/io/Trajectory.h>
+#include <readdy/model/observables/io/Trajectory.h>
+#include <readdy/io/File.h>
 
 namespace rmr = readdy::model::reactions;
 namespace rmp = readdy::model::programs;
@@ -107,11 +108,13 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
 
 }
 
-void
+Simulation::particle_t::type_type
 Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().setDiffusionConstant(name, diffusionCoefficient);
-    pimpl->kernel->getKernelContext().setParticleRadius(name, radius);
+    auto& context = pimpl->kernel->getKernelContext();
+    context.setDiffusionConstant(name, diffusionCoefficient);
+    context.setParticleRadius(name, radius);
+    return context.getParticleTypeID(name);
 }
 
 const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() const {
@@ -185,12 +188,12 @@ void Simulation::setBoxSize(double dx, double dy, double dz) {
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
 
-unsigned long Simulation::registerObservable(readdy::model::observables::ObservableBase &observable) {
+ObservableHandle Simulation::registerObservable(readdy::model::observables::ObservableBase &observable) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;
     auto &&connection = pimpl->kernel->connectObservable(&observable);
     pimpl->observableConnections.emplace(uuid, std::move(connection));
-    return uuid;
+    return {uuid, nullptr};
 }
 
 void Simulation::deregisterObservable(const unsigned long uuid) {
@@ -199,6 +202,11 @@ void Simulation::deregisterObservable(const unsigned long uuid) {
         pimpl->observables.erase(uuid);
     }
 }
+
+void Simulation::deregisterObservable(const ObservableHandle &uuid) {
+    deregisterObservable(uuid.getId());
+}
+
 
 std::vector<std::string> Simulation::getAvailableObservables() {
     ensureKernelSelected();
@@ -211,7 +219,10 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 
 Simulation::Simulation(Simulation &&rhs) = default;
 
-Simulation::~Simulation() = default;
+Simulation::~Simulation() {
+    // close trajectory file if present
+    closeTrajectoryFile();
+};
 
 const short
 Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,
@@ -289,8 +300,9 @@ Simulation::recordTrajectory(const std::string &fileName, const unsigned int str
     auto uuid = pimpl->counter++;
     pimpl->trajectoryFileId = uuid;
     pimpl->trajectoryFile.reset(new io::File(fileName, io::File::Action::CREATE));
-    std::unique_ptr<io::Trajectory> trajectory = std::make_unique<io::Trajectory>(pimpl->kernel.get(), stride,
-                                                                                  flushStride, *pimpl->trajectoryFile);
+    std::unique_ptr<model::observables::Trajectory> trajectory = std::make_unique<model::observables::Trajectory>(
+            pimpl->kernel.get(), stride, flushStride, *pimpl->trajectoryFile
+    );
     auto &&connection = pimpl->kernel->connectObservable(trajectory.get());
     pimpl->observables.emplace(uuid, std::move(trajectory));
     pimpl->observableConnections.emplace(uuid, std::move(connection));

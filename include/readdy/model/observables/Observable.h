@@ -50,6 +50,9 @@
 #include <readdy/common/Utils.h>
 
 namespace readdy {
+
+namespace io { class File; }
+
 namespace model {
 class Kernel;
 
@@ -84,50 +87,66 @@ public:
     virtual ~ObservableBase() = default;
 
     virtual void callback(observables::time_step_type t) {
-        if (should_execute_callback(t)) {
+        if (shouldExecuteCallback(t)) {
             firstCall = false;
             t_current = t;
             evaluate();
         }
     };
 
-    virtual bool should_execute_callback(observables::time_step_type t) const {
+    virtual bool shouldExecuteCallback(observables::time_step_type t) const {
         return (t_current != t || firstCall) && (stride == 0 || t % stride == 0);
     }
 
     virtual void evaluate() = 0;
 
+    void enableWriteToFile(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+        this->flushStride = flushStride;
+        writeToFile = true;
+        initializeDataSet(file, dataSetName, flushStride);
+    }
+
+    virtual void flush() = 0;
+
 protected:
+
+    virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) = 0;
+
+    virtual void append() = 0;
+
     unsigned int stride;
+    unsigned int flushStride = 1;
     readdy::model::Kernel *const kernel;
     observables::time_step_type t_current = 0;
+    bool writeToFile = false;
     bool firstCall = true;
 };
 
 template<typename Result>
 class Observable : public ObservableBase {
 public:
-    using callback_function = std::function<void(const Result&)>;
+    using callback_function = std::function<void(const Result &)>;
     typedef Result result_t;
 
-    Observable(Kernel *const kernel, unsigned int stride) : ObservableBase(kernel, stride), result() {
+    Observable(Kernel *const kernel, unsigned int stride)
+            : ObservableBase(kernel, stride), result() {
     }
 
     const result_t &getResult() {
         return result;
     }
 
-    void setCallback(const callback_function& callbackFun) {
+    void setCallback(const callback_function &callbackFun) {
         Observable::externalCallback = std::move(callbackFun);
     }
 
     virtual void callback(observables::time_step_type t) override {
-        if (should_execute_callback(t)) {
+        if (shouldExecuteCallback(t)) {
             ObservableBase::callback(t);
+            if (writeToFile) append();
             externalCallback(result);
         }
     }
-
 
 protected:
     Result result;
@@ -137,18 +156,31 @@ protected:
 template<typename Res_t, typename... ParentObs_t>
 class Combiner : public Observable<Res_t> {
 public:
-    Combiner(Kernel *const kernel, unsigned int stride, ParentObs_t*... parents)
-            : Observable<Res_t>(kernel, stride), parentObservables(std::forward<ParentObs_t*>(parents)...) {}
+    Combiner(Kernel *const kernel, unsigned int stride, ParentObs_t *... parents)
+            : Observable<Res_t>(kernel, stride), parentObservables(std::forward<ParentObs_t *>(parents)...) {}
 
     virtual void callback(observables::time_step_type t) override {
-        if (ObservableBase::should_execute_callback(t)) {
+        if (ObservableBase::shouldExecuteCallback(t)) {
             readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::callback(t);
         }
     }
 
+    void flush() override {
+        throw std::runtime_error("flush not supported for combiner observables");
+    }
+
 protected:
-    std::tuple<ParentObs_t*...> parentObservables;
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override {
+        throw std::runtime_error("not supported for combiner observables");
+    }
+
+    void append() override {
+        throw std::runtime_error("not supported for combiner observables");
+    }
+
+protected:
+    std::tuple<ParentObs_t *...> parentObservables;
 private:
     struct CallbackFunctor {
         observables::time_step_type currentTimeStep;

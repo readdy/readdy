@@ -35,8 +35,8 @@
 #define READDY_SIMULATION_H
 
 #include <readdy/model/Kernel.h>
-#include <readdy/SimulationScheme.h>
-#include <readdy/io/File.h>
+#include <readdy/api/SimulationScheme.h>
+#include "ObservableHandle.h"
 
 namespace readdy {
 /**
@@ -47,6 +47,7 @@ namespace readdy {
  * context and are given to the kernel when run() is called.
  */
 class Simulation {
+    using particle_t = readdy::model::Particle;
 public:
     /**
      * The default constructor. Currently only instantiates the pimpl.
@@ -128,21 +129,31 @@ public:
     /**
      * Registers a predefined observable with the kernel. A list of available observables can be obtained by
      * getAvailableObservables().
+     * @param stride the stride argument which decides how often the observable gets called
+     * @param args arguments for creation of the observable
+     * @return a uuid with which the observable is associated
+     */
+    template<typename T, typename... Args>
+    ObservableHandle registerObservable(unsigned int stride, Args... args);
+
+    /**
+     * Registers a predefined observable with the kernel. A list of available observables can be obtained by
+     * getAvailableObservables().
      * @param callbackFun a function which gets called upon evaluation of the observable
      * @param stride the stride argument which decides how often the observable gets called
      * @param args arguments for creation of the observable
      * @return a uuid with which the observable is associated
      */
     template<typename T, typename... Args>
-    unsigned long registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
-                                     unsigned int stride, Args... args);
+    ObservableHandle registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
+                                        unsigned int stride, Args... args);
 
     /**
      * Registers an observable that implements the readdy::model::ObservableBase interface.
      * @param observable the observable
      * @return a uuid with which the observable is associated
      */
-    unsigned long registerObservable(readdy::model::observables::ObservableBase &observable);
+    ObservableHandle registerObservable(readdy::model::observables::ObservableBase &observable);
 
     /**
      * Gives all available predefined observable names.
@@ -155,7 +166,9 @@ public:
      * Removes an observable by uuid.
      * @param uuid the uuid of the observable to be removed.
      */
-    void deregisterObservable(const unsigned long uuid);
+    void deregisterObservable(const ObservableHandle::id_t uuid);
+
+    void deregisterObservable(const ObservableHandle &uuid);
 
     /**
      * A method to access the particle positions of a certain type.
@@ -170,7 +183,8 @@ public:
      * @param diffusionCoefficient the diffusion coefficient
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      */
-    void registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius);
+    particle_t::type_type
+    registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius);
 
     /**
      * A method that allows to remove a certain potential type.
@@ -399,36 +413,8 @@ public:
     NoKernelSelectedException(const std::string &__arg);
 };
 
-struct Simulation::Impl {
-    std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
-    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables{};
-    std::unique_ptr<readdy::model::Kernel> kernel;
-    std::unique_ptr<io::File> trajectoryFile;
-    unsigned long trajectoryFileId;
-    unsigned long counter = 0;
-};
-
-
-template<typename T, typename... Args>
-unsigned long
-Simulation::registerObservable(const std::function<void(typename T::result_t)> &callbackFun, unsigned int stride,
-                               Args... args) {
-    ensureKernelSelected();
-    auto uuid = pimpl->counter++;
-    auto obs = pimpl->kernel->createObservable<T>(stride, std::forward<Args>(args)...);
-    obs->setCallback(callbackFun);
-    auto connection = pimpl->kernel->connectObservable(obs.get());
-    pimpl->observables.emplace(uuid, std::move(obs));
-    pimpl->observableConnections.emplace(uuid, std::move(connection));
-    return uuid;
 }
 
-template<typename SchemeType>
-readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool useDefaults) {
-    ensureKernelSelected();
-    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
-}
-
-}
+#include "bits/Simulation_misc.h"
 
 #endif //READDY_SIMULATION_H

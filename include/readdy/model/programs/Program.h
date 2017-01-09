@@ -50,14 +50,6 @@ public:
     virtual void execute() = 0;
 };
 
-namespace _internal {
-
-template<typename T>
-struct ProgramName {
-    static const std::string value;
-};
-}
-
 }
 }
 }

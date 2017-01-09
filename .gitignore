@@ -1,6 +1,9 @@
 # ignore external libraries
 libraries/external
 
+# ignore notebook checkpoints
+/*/.ipynb_checkpoints
+
 # Compiled Object files
 *.slo
 *.lo

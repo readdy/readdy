@@ -27,7 +27,6 @@
 
 #include <readdy/testing/Utils.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <spdlog/spdlog.h>
 
 #include "gtest/gtest.h"
 
@@ -39,7 +38,6 @@ int perform_tests(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-    //spdlog::set_async_mode(256);
     auto console = spdlog::stdout_color_mt("console");
     console->set_level(spdlog::level::debug);
     console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");

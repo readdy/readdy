@@ -41,7 +41,7 @@ namespace readdy {
 namespace kernel {
 namespace scpu {
 namespace model {
-struct ParticleIndexPair {
+struct READDY_API ParticleIndexPair {
     size_t idx1, idx2;
 
     ParticleIndexPair(size_t idx1, size_t idx2) {
@@ -73,14 +73,14 @@ struct ParticleIndexPair {
     }
 };
 
-struct ParticleIndexPairHasher {
+struct READDY_API ParticleIndexPairHasher {
     size_t operator()(const ParticleIndexPair &pip) const {
         return hash_value(pip);
     }
 };
 
 template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
-struct SCPUNeighborListContainer {
+struct READDY_API SCPUNeighborListContainer {
     typedef typename container::iterator iter_type;
     typedef typename container::const_iterator const_iter_type;
 
@@ -102,7 +102,7 @@ protected:
     std::unique_ptr<container> pairs = std::make_unique<container>();
 };
 
-struct SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
+struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
     virtual void create(const SCPUParticleData &data) override;
 
     // ctor and dtor
@@ -122,7 +122,7 @@ struct SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
 
 };
 
-struct Box {
+struct READDY_API Box {
     std::vector<Box *> neighbors{};
     std::vector<unsigned long> particleIndices{};
     long i, j, k;
@@ -148,7 +148,7 @@ struct Box {
 };
 
 template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
-class SCPUNotThatNaiveNeighborList : public SCPUNeighborListContainer<container> {
+class READDY_API SCPUNotThatNaiveNeighborList : public SCPUNeighborListContainer<container> {
     using super = readdy::kernel::scpu::model::SCPUNeighborListContainer<container>;
     using context_t = readdy::model::KernelContext;
 public:
@@ -206,10 +206,12 @@ public:
                         }
                     }
                 }
-                for (unsigned long i = 0; i < nBoxes[0]; ++i) {
-                    for (unsigned long j = 0; j < nBoxes[1]; ++j) {
-                        for (unsigned long k = 0; k < nBoxes[2]; ++k) {
-                            setupNeighboringBoxes(i, j, k);
+                for (auto i = 0; i < nBoxes[0]; ++i) {
+                    for (auto j = 0; j < nBoxes[1]; ++j) {
+                        for (auto k = 0; k < nBoxes[2]; ++k) {
+                            setupNeighboringBoxes(static_cast<unsigned long>(i),
+                                                  static_cast<unsigned long>(j),
+                                                  static_cast<unsigned long>(k));
                         }
                     }
                 }
@@ -284,7 +286,7 @@ protected:
     const context_t *const ctx;
 };
 
-struct SCPUNeighborList : public SCPUNotThatNaiveNeighborList<std::vector<ParticleIndexPair>> {
+struct READDY_API SCPUNeighborList : public SCPUNotThatNaiveNeighborList<std::vector<ParticleIndexPair>> {
     SCPUNeighborList(const readdy::model::KernelContext *const ctx)
             : SCPUNotThatNaiveNeighborList(ctx) {}
 };

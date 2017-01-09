@@ -34,122 +34,15 @@
 
 #include <string>
 #include <vector>
+#include "Group.h"
 
 namespace readdy {
 namespace io {
 
-template<typename T>
-class DataSet;
-
-class DataSetType;
-
-class File;
-
-class Group;
-
-template<typename T>
-class NativeDataSetType;
-
-template<typename T>
-class STDDataSetType;
-
-struct Object {
-    using handle_t = int;
-    using dims_t = unsigned long long;
-    using data_set_type_t = int;
-    const static unsigned long long UNLIMITED_DIMS;
-};
-
-
-class DataSetType : public Object {
-    template<typename T>
-    friend class DataSet;
-
-public:
-
-    using type = void;
-
-    template<typename T>
-    static data_set_type_t of_native(const std::vector<T> &) {
-        return NativeDataSetType<T>::tid;
-    }
-
-    template<typename T>
-    static data_set_type_t of_native(const T *const) {
-        return NativeDataSetType<T>::tid;
-    }
-
-    template<typename T>
-    static data_set_type_t of_std(const std::vector<T> &) {
-        return STDDataSetType<T>::tid;
-    }
-
-    template<typename T>
-    static data_set_type_t of_std(const T *const) {
-        return STDDataSetType<T>::tid;
-    }
-
-protected:
-    DataSetType();
-};
-
-template<typename T>
-class NativeDataSetType : public DataSetType {
-public:
-    NativeDataSetType();
-
-    static const data_set_type_t tid;
-    using type = T;
-};
-
-template<typename T>
-class STDDataSetType : public DataSetType {
-public:
-    STDDataSetType();
-
-    static const data_set_type_t tid;
-    using type = T;
-};
-
-
-
-class Group : public Object {
-    friend class File;
-
-    template<typename T>
-    friend class DataSet;
-
-public:
-
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<T> &data) {
-        write(dataSetName, {data.size()}, data.data());
-    }
-
-    void write(const std::string &dataSetName, const std::string &string);
-
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<dims_t> &dims, const T *data);
-
-    Group createGroup(const std::string &path);
-
-    handle_t getHandle() const;
-
-protected:
-
-    Group(const File &file) : Group(file, -1, "/") {};
-
-    Group(const File &file, handle_t handle, const std::string &);
-
-    handle_t handle;
-    std::string path;
-    const File& file;
-};
-
-
-class File : public Object {
-    template<typename T>
-    friend class DataSet;
+class READDY_API File {
+    template<typename T, bool VLEN>
+    friend
+    class DataSet;
 
 public:
 
@@ -177,7 +70,7 @@ public:
 
     Group createGroup(const std::string &path);
 
-    const Group& getRootGroup() const;
+    const Group &getRootGroup() const;
 
     void write(const std::string &dataSetName, const std::string &data);
 
@@ -187,7 +80,7 @@ public:
     }
 
     template<typename T>
-    void write(const std::string &dataSetName, const std::vector<Object::dims_t> &dims, const T *data) {
+    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data) {
         root.write<T>(dataSetName, dims, data);
     }
 
@@ -196,32 +89,9 @@ private:
     Group root;
 };
 
-template<typename T>
-class DataSet : public Object {
-public:
-
-    DataSet(const std::string &name, const Group &group, const std::vector<dims_t> &chunkSize,
-            const std::vector<dims_t> &maxDims);
-
-    ~DataSet();
-
-    void close();
-
-    template<typename = typename std::enable_if<std::is_fundamental<T>::value>::type>
-    void append(const std::vector<T> &data) {
-        append({1, data.size()}, data.data());
-    }
-
-    void append(const std::vector<dims_t> &dims, const T *data);
-
-private:
-    const std::vector<dims_t> maxDims;
-    const Group group;
-    dims_t extensionDim;
-    handle_t handle;
-    handle_t memorySpace;
-};
-
 }
 }
+
+#include "bits/File_bits.h"
+
 #endif //READDY_MAIN_FILE_H

@@ -47,6 +47,20 @@ void readdy::model::observables::ObservableWrapper::evaluate() {
     observable(t_current);
 }
 
+void readdy::model::observables::ObservableWrapper::flush() {
+    throw std::runtime_error("not supported");
+}
+
+void
+readdy::model::observables::ObservableWrapper::initializeDataSet(readdy::io::File &file, const std::string &dataSetName,
+                                                                 unsigned int flushStride) {
+    throw std::runtime_error("not supported");
+}
+
+void readdy::model::observables::ObservableWrapper::append() {
+    throw std::runtime_error("not supported");
+}
+
 
 
 

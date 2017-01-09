@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -20,19 +20,21 @@
  ********************************************************************/
 
 
-//
-// Created by Moritz Hoffmann on 19/02/16.
-//
+/**
+ * << detailed description >>
+ *
+ * @file readdy.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 06.01.17
+ * @copyright GNU Lesser General Public License v3.0
+ */
 
-#include <iostream>
-#include <readdy/io/IOUtils.h>
-#include <hdf5.h>
-#include <readdy/common/logging.h>
+#ifndef READDY_MAIN_READDY_H
+#define READDY_MAIN_READDY_H
 
-readdy::io::IOUtils::IOUtils() {
-    log::console()->debug("ioutils instantiated");
-    hsize_t dim2[] = {10};  /* Dimension size of the second dataset
-                                       (in memory */
-    auto x = H5S_UNLIMITED;
-    std::cout << x << std::endl;
-}
+#include "api/ObservableHandle.h"
+#include "api/Simulation.h"
+#include "api/SimulationScheme.h"
+
+#endif //READDY_MAIN_READDY_H

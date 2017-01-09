@@ -32,6 +32,12 @@
 #ifndef READDY_MAIN_INDEX_SEQUENCE_H
 #define READDY_MAIN_INDEX_SEQUENCE_H
 
+#ifdef READDY_CPP14
+
+#include <utility>
+
+#else
+
 #include <cstddef>
 
 namespace std {
@@ -66,4 +72,6 @@ namespace std {
     template<>
     struct make_index_sequence<1> : index_sequence<0> { };
 }
+#endif
+
 #endif //READDY_MAIN_INDEX_SEQUENCE_H

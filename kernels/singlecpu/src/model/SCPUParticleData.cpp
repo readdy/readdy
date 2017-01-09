@@ -326,7 +326,7 @@ std::vector<unsigned int>::const_iterator SCPUParticleData::cend_types() const {
 }
 
 bool SCPUParticleData::isMarkedForDeactivation(const size_t index) {
-    return (*deactivated)[index];
+    return (*deactivated)[index] != 0;
 }
 
 size_t SCPUParticleData::getDeactivatedIndex() const {
@@ -389,7 +389,7 @@ void SCPUParticleData::deactivateMarkedNoSet() {
     // (which is a set and thus sorted)
     for (auto it = begin_deactivated(); it < end_deactivated(); ++it) {
         if (*it) {
-            const auto idx = it - begin_deactivated();
+            const std::size_t idx = static_cast<std::size_t>(it - begin_deactivated());
             // if there are marked particles at the very end,
             // just shift the deactivated_index and increase n_deactivated
             while (*deactivatedIt && deactivatedIt != deactivated->begin()) {

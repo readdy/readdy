@@ -32,6 +32,12 @@
 #ifndef READDY_MAIN_MAKE_UNIQUE_H_H
 #define READDY_MAIN_MAKE_UNIQUE_H_H
 
+#ifdef READDY_CPP14
+
+#include <memory>
+
+#else
+
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -70,5 +76,7 @@ template<class T, class... Args>
 typename _Unique_if<T>::_Known_bound
 make_unique(Args &&...) = delete;
 }
+
+#endif
 
 #endif //READDY_MAIN_MAKE_UNIQUE_H_H

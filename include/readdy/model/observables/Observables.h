@@ -56,42 +56,74 @@ class KernelContext;
 
 class Positions : public Observable<std::vector<Vec3>> {
 public:
-    Positions(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
+
+    Positions(Kernel *const kernel, unsigned int stride = 1);
+
+    void flush() override;
 
     Positions(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
     Positions(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
-    virtual void evaluate() = 0;
+    virtual ~Positions();
 
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     std::vector<unsigned int> typesToCount;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 class Particles
         : public Observable<std::tuple<std::vector<readdy::model::Particle::type_type>, std::vector<readdy::model::Particle::id_type>, std::vector<Vec3>>> {
 public:
-    Particles(Kernel *const kernel, unsigned int stride = 1) : Observable(kernel, stride) {}
+    Particles(Kernel *const kernel, unsigned int stride = 1);
 
-    virtual void evaluate() = 0;
+    virtual ~Particles();
+
+    void flush() override;
+
+protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 };
 
 class RadialDistribution : public Observable<std::pair<std::vector<double>, std::vector<double>>> {
 public:
     RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
-                       std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo, double particleToDensity);
+                       std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo,
+                       double particleToDensity);
 
     RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        double particleToDensity);
 
-    virtual void evaluate() = 0;
+    virtual ~RadialDistribution();
 
     const std::vector<double> &getBinBorders() const;
 
-    void setBinBorders(const std::vector<double> &binBorders);
+    void evaluate() override;
+
+    void flush() override;
 
 protected:
+
+    void setBinBorders(const std::vector<double> &binBorders);
+
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
     std::vector<double> binBorders;
     std::vector<double> counts;
     std::vector<unsigned int> typeCountFrom, typeCountTo;
@@ -109,9 +141,19 @@ public:
 
     CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType);
 
-    virtual void evaluate() override;
+    virtual ~CenterOfMass();
+
+    void flush() override;
+
+    void evaluate() override;
 
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
     std::set<unsigned int> particleTypes;
 };
 
@@ -125,9 +167,18 @@ public:
     HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
                        std::vector<std::string> typesToCount, unsigned int axis);
 
-    virtual void evaluate() = 0;
+    void flush() override;
+
+    virtual ~HistogramAlongAxis();
 
 protected:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     std::vector<double> binBorders;
     std::set<unsigned int> typesToCount;
 
@@ -137,42 +188,52 @@ protected:
 class NParticles : public Observable<std::vector<unsigned long>> {
 
 public:
-    NParticles(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {}
+    NParticles(Kernel *const kernel, unsigned int stride);
 
     NParticles(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
     NParticles(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
+    void flush() override;
+
+    virtual ~NParticles();
+
     virtual void evaluate() = 0;
 
 protected:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     std::vector<unsigned int> typesToCount;
-};
-
-class TestCombiner
-        : public Combiner<std::vector<double>, Positions, Positions> {
-public:
-
-    TestCombiner(Kernel *const kernel, Positions *obs1, Positions *obs2,
-                 unsigned int stride)
-            : Combiner(kernel, stride, obs1, obs2) {
-    }
-
-    virtual void evaluate() override;
 };
 
 class Forces : public Observable<std::vector<readdy::model::Vec3>> {
 
 public:
-    Forces(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride), typesToCount({}) {}
+    Forces(Kernel *const kernel, unsigned int stride);
 
     Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
     Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
+    virtual ~Forces();
+
     virtual void evaluate() = 0;
 
+    void flush() override;
+
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
     std::vector<unsigned int> typesToCount;
 };
 

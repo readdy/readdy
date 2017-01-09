@@ -31,7 +31,7 @@
 
 #include <gtest/gtest.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/Simulation.h>
+#include <readdy/api/Simulation.h>
 
 namespace api = readdy::api;
 
