@@ -158,6 +158,14 @@ Trajectory::~Trajectory() {
     flush();
 }
 
+void Trajectory::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    throw std::runtime_error("not supported for trajectory");
+}
+
+void Trajectory::append() {
+    throw std::runtime_error("not supported for trajectory");
+}
+
 }
 }
 }

@@ -49,7 +49,13 @@ public:
 
     virtual void evaluate() override;
 
+    void flush() override;
+
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     const observables::observable_type observable;
 };
 

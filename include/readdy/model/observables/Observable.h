@@ -106,19 +106,13 @@ public:
         initializeDataSet(file, dataSetName, flushStride);
     }
 
-    // todo needs to be purely virtual
-    virtual void flush() {}
+    virtual void flush() = 0;
 
 protected:
 
-    // todo needs to be purely virtual
-    virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) {
+    virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) = 0;
 
-    };
-    // todo needs to be purely virtual
-    virtual void append() {
-
-    };
+    virtual void append() = 0;
 
     unsigned int stride;
     unsigned int flushStride = 1;
@@ -170,6 +164,19 @@ public:
             readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::callback(t);
         }
+    }
+
+    void flush() override {
+        throw std::runtime_error("flush not supported for combiner observables");
+    }
+
+protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override {
+        throw std::runtime_error("not supported for combiner observables");
+    }
+
+    void append() override {
+        throw std::runtime_error("not supported for combiner observables");
     }
 
 protected:

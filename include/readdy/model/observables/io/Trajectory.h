@@ -82,6 +82,11 @@ public:
     virtual void flush();
 
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+protected:
     unsigned int count = 0;
     unsigned int flushStride = 0;
     struct Impl;
