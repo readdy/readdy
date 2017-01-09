@@ -37,20 +37,20 @@
 namespace readdy {
 namespace io {
 
-class DataSetType {
+class READDY_API DataSetType {
 public:
     h5::data_set_type_t tid = -1;
 };
 
 template<typename T>
-class NativeDataSetType : public DataSetType {
+class READDY_API NativeDataSetType : public DataSetType {
 public:
     NativeDataSetType();
     using type = T;
 };
 
 template<typename T>
-class STDDataSetType : public DataSetType {
+class READDY_API STDDataSetType : public DataSetType {
 public:
     STDDataSetType();
     using type = T;

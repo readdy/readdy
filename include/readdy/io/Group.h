@@ -34,13 +34,14 @@
 
 #include <string>
 #include <vector>
+#include <readdy/common/macros.h>
 #include "H5Types.h"
 #include "DataSetType.h"
 
 namespace readdy {
 namespace io {
 
-class Group {
+class READDY_API Group {
     friend class File;
 
     template<typename T, bool VLEN>

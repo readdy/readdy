@@ -188,6 +188,43 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(com[t]["y"], callback_com[t][1])
                 np.testing.assert_equal(com[t]["z"], callback_com[t][2])
 
+    def test_histogram_along_axis_observable(self):
+        common.set_logging_level("error")
+        fname = os.path.join(self.dir, "test_observables_hist_along_axis.h5")
+
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+
+        box_size = common.Vec(10, 10, 10)
+        simulation.kbt = 2
+        simulation.periodic_boundary = [True, True, True]
+        simulation.box_size = box_size
+        simulation.register_particle_type("A", .2, 1.)
+        simulation.register_particle_type("B", .2, 1.)
+        simulation.register_potential_harmonic_repulsion("A", "B", 10)
+        simulation.add_particle("A", common.Vec(-2.5, 0, 0))
+        simulation.add_particle("B", common.Vec(0, 0, 0))
+        bin_borders = np.arange(0, 5, .01)
+        n_time_steps = 50
+        callback_hist = []
+
+        def hist_callback(hist):
+            callback_hist.append(hist)
+
+        handle = simulation.register_observable_histogram_along_axis(1, hist_callback, bin_borders, 0, ["A", "B"])
+        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            handle.enable_write_to_file(f, u"hist_along_x_axis", int(3))
+            simulation.run(n_time_steps, 0.02)
+            handle.flush()
+
+        with h5py.File(fname, "r") as f2:
+            histogram = f2["readdy/observables/hist_along_x_axis"][:]
+            for t in range(n_time_steps):
+                np.testing.assert_equal(histogram[t], np.array(callback_hist[t]))
+
+    def test_write_multiple_observables_at_once(self):
+        # todo
+        pass
 
 if __name__ == '__main__':
     unittest.main()

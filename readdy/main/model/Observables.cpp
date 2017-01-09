@@ -134,23 +134,6 @@ void Positions::flush() {
 
 Positions::~Positions() = default;
 
-void TestCombiner::evaluate() {
-    std::vector<double> result;
-    const auto &r1 = std::get<0>(parentObservables)->getResult();
-    const auto &r2 = std::get<1>(parentObservables)->getResult();
-
-    auto b1 = r1.begin();
-    auto b2 = r2.begin();
-
-    for (; b1 != r1.end();) {
-        result.push_back((*b1) * (*b2));
-        ++b1;
-        ++b2;
-    }
-
-    TestCombiner::result = result;
-}
-
 struct RadialDistribution::Impl {
     using writer_t = io::DataSet<double, false>;
     std::unique_ptr<writer_t> writerRadialDistribution;
@@ -249,8 +232,8 @@ RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride
 ) {}
 
 void RadialDistribution::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->writerRadialDistribution) {
-        auto& centers = std::get<0>(result);
+    if (!pimpl->writerRadialDistribution) {
+        auto &centers = std::get<0>(result);
         std::vector<readdy::io::h5::dims_t> fs = {flushStride, centers.size()};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, centers.size()};
         const auto path = OBSERVABLES_GROUP_PATH + "/" + dataSetName;
@@ -265,7 +248,7 @@ void RadialDistribution::initializeDataSet(io::File &file, const std::string &da
 }
 
 void RadialDistribution::append() {
-    auto& dist = std::get<1>(result);
+    auto &dist = std::get<1>(result);
     pimpl->writerRadialDistribution->append({1, dist.size()}, dist.data());
 }
 
@@ -313,15 +296,15 @@ CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride, const std:
 }
 
 void CenterOfMass::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->ds) {
-            std::vector<readdy::io::h5::dims_t> fs = {flushStride};
-            std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-            auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
-            auto dataSet = std::make_unique<Impl::writer_t>(
-                    dataSetName, group, fs, dims, Vec3MemoryType(), Vec3FileType()
-            );
-            log::console()->debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
-            pimpl->ds = std::move(dataSet);
+    if (!pimpl->ds) {
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
+        auto dataSet = std::make_unique<Impl::writer_t>(
+                dataSetName, group, fs, dims, Vec3MemoryType(), Vec3FileType()
+        );
+        log::console()->debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
+        pimpl->ds = std::move(dataSet);
     }
 }
 
@@ -351,10 +334,16 @@ Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::strin
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
         : Observable(kernel, stride), typesToCount(typesToCount) {}
 
+struct HistogramAlongAxis::Impl {
+    using data_set_t = io::DataSet<double, false>;
+    std::unique_ptr<data_set_t> dataSet;
+};
+
 HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
-                                       std::vector<double> binBorders,
-                                       std::set<unsigned int> typesToCount, unsigned int axis)
-        : Observable(kernel, stride), binBorders(binBorders), typesToCount(typesToCount), axis(axis) {
+                                       std::vector<double> binBorders, std::set<unsigned int> typesToCount,
+                                       unsigned int axis)
+        : Observable(kernel, stride), binBorders(binBorders), typesToCount(typesToCount), axis(axis),
+          pimpl(std::make_unique<Impl>()) {
     auto nCenters = binBorders.size() - 1;
     result = std::vector<double>(nCenters);
 }
@@ -369,6 +358,25 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
                              axis) {
 
 }
+
+void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->dataSet) {
+        const auto size = result.size();
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
+        const auto path = OBSERVABLES_GROUP_PATH + "/" + dataSetName;
+        auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
+        log::console()->debug("created data set with path {}", path);
+        auto dataSet = std::make_unique<Impl::data_set_t>(dataSetName, group, fs, dims);
+        pimpl->dataSet = std::move(dataSet);
+    }
+}
+
+void HistogramAlongAxis::append() {
+    pimpl->dataSet->append({1, result.size()}, result.data());
+}
+
+HistogramAlongAxis::~HistogramAlongAxis() = default;
 
 struct Particles::Impl {
     using particle_t = readdy::model::Particle;
@@ -389,21 +397,16 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName);
         {
-            auto dataSetTypes = std::make_unique<Impl::types_writer_t>(
-                    "types", group, fs, dims
-            );
+            auto dataSetTypes = std::make_unique<Impl::types_writer_t>("types", group, fs, dims);
             pimpl->dataSetTypes = std::move(dataSetTypes);
         }
         {
-            auto dataSetIds = std::make_unique<Impl::ids_writer_t>(
-                    "ids", group, fs, dims
-            );
+            auto dataSetIds = std::make_unique<Impl::ids_writer_t>("ids", group, fs, dims);
             pimpl->dataSetIds = std::move(dataSetIds);
         }
         {
             auto dataSetPositions = std::make_unique<Impl::pos_writer_t>(
-                    "positions", group, fs, dims,
-                    Vec3MemoryType(), Vec3FileType()
+                    "positions", group, fs, dims, Vec3MemoryType(), Vec3FileType()
             );
             pimpl->dataSetPositions = std::move(dataSetPositions);
         }

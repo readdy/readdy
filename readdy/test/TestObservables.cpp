@@ -74,26 +74,6 @@ TEST_P(TestObservables, TestParticlePositions) {
     connection.disconnect();
 }
 
-TEST_P(TestObservables, TestCombinerObservable) {
-    auto &&o1 = kernel->createObservable<m::observables::Positions>(1);
-    auto &&o2 = kernel->createObservable<m::observables::Positions>(1);
-    auto &&o3 = kernel->createObservable<m::observables::TestCombiner>(o1.get(), o2.get());
-    auto &&connection = kernel->connectObservable(o3.get());
-    auto &&integrator = kernel->createProgram("EulerBDIntegrator");
-    kernel->getKernelStateModel().updateNeighborList();
-    for (readdy::model::observables::time_step_type t = 0; t < 100; t++) {
-        integrator->execute();
-        kernel->getKernelStateModel().updateNeighborList();
-    }
-
-    const auto &result = o3->getResult();
-    for (auto &&p : result) {
-        // todo
-    }
-
-    connection.disconnect();
-}
-
 TEST_P(TestObservables, TestForcesObservable) {
     // Setup particles
     kernel->getKernelContext().setDiffusionConstant("A", 42.);

@@ -137,7 +137,7 @@ public:
     CenterOfMass(Kernel *const kernel, unsigned int stride, const std::string &particleType);
 
     CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType);
-    
+
     virtual ~CenterOfMass();
 
     void evaluate() override;
@@ -162,7 +162,16 @@ public:
     HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
                        std::vector<std::string> typesToCount, unsigned int axis);
 
+    virtual ~HistogramAlongAxis();
+
 protected:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     std::vector<double> binBorders;
     std::set<unsigned int> typesToCount;
 
@@ -182,18 +191,6 @@ public:
 
 protected:
     std::vector<unsigned int> typesToCount;
-};
-
-class TestCombiner
-        : public Combiner<std::vector<double>, Positions, Positions> {
-public:
-
-    TestCombiner(Kernel *const kernel, Positions *obs1, Positions *obs2,
-                 unsigned int stride)
-            : Combiner(kernel, stride, obs1, obs2) {
-    }
-
-    virtual void evaluate() override;
 };
 
 class Forces : public Observable<std::vector<readdy::model::Vec3>> {

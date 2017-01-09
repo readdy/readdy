@@ -39,7 +39,7 @@
 namespace readdy {
 namespace io {
 
-class File {
+class READDY_API File {
     template<typename T, bool VLEN>
     friend
     class DataSet;

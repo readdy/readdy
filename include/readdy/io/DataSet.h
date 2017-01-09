@@ -39,7 +39,7 @@ namespace readdy {
 namespace io {
 
 template<typename T, bool VLEN=false>
-class DataSet {
+class READDY_API DataSet {
 public:
 
     DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
