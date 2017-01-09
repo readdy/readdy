@@ -222,9 +222,50 @@ class TestObservablesIO(unittest.TestCase):
             for t in range(n_time_steps):
                 np.testing.assert_equal(histogram[t], np.array(callback_hist[t]))
 
-    def test_write_multiple_observables_at_once(self):
-        # todo
-        pass
+    def test_n_particles_observable(self):
+        common.set_logging_level("error")
+        fname = os.path.join(self.dir, "test_observables_n_particles.h5")
+
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+
+        box_size = common.Vec(10, 10, 10)
+        simulation.kbt = 2
+        simulation.periodic_boundary = [True, True, True]
+        simulation.box_size = box_size
+        simulation.register_particle_type("A", .2, 1.)
+        simulation.register_particle_type("B", .2, 1.)
+        simulation.add_particle("A", common.Vec(-2.5, 0, 0))
+        simulation.add_particle("B", common.Vec(0, 0, 0))
+        n_time_steps = 50
+        callback_n_particles_a_b = []
+        callback_n_particles_all = []
+
+        def callback_ab(value):
+            callback_n_particles_a_b.append(value)
+            simulation.add_particle("A", common.Vec(-1, -1, -1))
+
+        def callback_all(hist):
+            callback_n_particles_all.append(hist)
+            simulation.add_particle("A", common.Vec(-1, -1, -1))
+            simulation.add_particle("B", common.Vec(-1, -1, -1))
+
+        handle_a_b_particles = simulation.register_observable_n_particles(1, callback_ab, ["A", "B"])
+        handle_all = simulation.register_observable_n_particles(1, callback_all, [])
+        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            handle_a_b_particles.enable_write_to_file(f, u"n_a_b_particles", int(3))
+            handle_all.enable_write_to_file(f, u"n_particles", int(5))
+            simulation.run(n_time_steps, 0.02)
+            handle_all.flush()
+            handle_a_b_particles.flush()
+
+        with h5py.File(fname, "r") as f2:
+            n_a_b_particles = f2["readdy/observables/n_a_b_particles"][:]
+            n_particles = f2["readdy/observables/n_particles"][:]
+            for t in range(n_time_steps):
+                np.testing.assert_equal(n_a_b_particles[t][0], callback_n_particles_a_b[t][0])
+                np.testing.assert_equal(n_a_b_particles[t][1], callback_n_particles_a_b[t][1])
+                np.testing.assert_equal(n_particles[t][0], callback_n_particles_all[t][0])
 
 if __name__ == '__main__':
     unittest.main()

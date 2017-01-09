@@ -149,7 +149,7 @@ void CPUNParticles::evaluate() {
             }
         }
     }
-    result = resultVec;
+    result = std::move(resultVec);
 }
 
 CPUForces::CPUForces(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :

@@ -324,7 +324,35 @@ NParticles::NParticles(Kernel *const kernel, unsigned int stride,
 
 NParticles::NParticles(Kernel *const kernel, unsigned int stride,
                        std::vector<unsigned int> typesToCount)
-        : Observable(kernel, stride), typesToCount(typesToCount) {
+        : Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {
+}
+
+NParticles::~NParticles() = default;
+
+struct NParticles::Impl {
+    using data_set_t = io::DataSet<unsigned long, false>;
+    std::unique_ptr<data_set_t> ds;
+};
+
+NParticles::NParticles(Kernel *const kernel, unsigned int stride)
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {  }
+
+void NParticles::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->ds) {
+        const auto size = typesToCount.empty() ? 1 : typesToCount.size();
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
+        auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
+        auto dataSet = std::make_unique<Impl::data_set_t >(
+                dataSetName, group, fs, dims
+        );
+        log::console()->debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
+        pimpl->ds = std::move(dataSet);
+    }
+}
+
+void NParticles::append() {
+    pimpl->ds->append({1, result.size()}, result.data());
 }
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)

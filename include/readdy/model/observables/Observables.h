@@ -181,15 +181,24 @@ protected:
 class NParticles : public Observable<std::vector<unsigned long>> {
 
 public:
-    NParticles(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {}
+    NParticles(Kernel *const kernel, unsigned int stride);
 
     NParticles(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
     NParticles(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
+    virtual ~NParticles();
+
     virtual void evaluate() = 0;
 
 protected:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     std::vector<unsigned int> typesToCount;
 };
 
