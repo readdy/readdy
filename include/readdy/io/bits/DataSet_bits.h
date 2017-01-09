@@ -75,6 +75,11 @@ template<typename T, bool VLEN>
 inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
                                  const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType)
         : maxDims(maxDims), group(group), memoryType(memoryType), fileType(fileType) {
+    {
+        std::stringstream result;
+        std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
+        log::console()->trace("creating data set (vlen={}) with maxDims={}", VLEN, result.str());
+    }
     if (VLEN) {
         log::console()->trace("making the types {} and {} vlen", memoryType.tid, fileType.tid);
         DataSetType vlenMemoryType;
@@ -104,6 +109,10 @@ inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, co
         H5Pset_chunk(plist, static_cast<int>(chunkSize.size()), chunkSize.data());
         dataSetHandle = H5Dcreate(group.handle, name.c_str(), this->fileType.tid, fileSpace, H5P_DEFAULT, plist,
                                   H5P_DEFAULT);
+        if(dataSetHandle < 0) {
+            log::console()->error("Error on creating data set {}", dataSetHandle);
+            H5Eprint (H5Eget_current_stack(), stderr);
+        }
         memorySpace = -1;
         H5Pclose(plist);
         H5Pclose(fileSpace);
@@ -230,10 +239,31 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const 
         newExtent[extensionDim] += dims[extensionDim];
         H5Dset_extent(dataSetHandle, newExtent.data());
     }
+    log::console()->trace("selecting hyperslab with:");
+    {
+        std::stringstream result;
+        std::copy(offset.begin(), offset.end(), std::ostream_iterator<int>(result, ", "));
+        log::console()->trace("    current extent = {}", result.str());
+    }
+    {
+        std::stringstream result;
+        std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
+        log::console()->trace("    size = {}", result.str());
+    }
     auto fileSpace = H5Dget_space(dataSetHandle);
     H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    H5Dwrite(dataSetHandle, memoryType.tid, memorySpace, fileSpace, H5P_DEFAULT, data);
+    if(H5Dwrite(dataSetHandle, memoryType.tid, memorySpace, fileSpace, H5P_DEFAULT, data) < 0) {
+        log::console()->error("Error with data set {}", dataSetHandle);
+        H5Eprint (H5Eget_current_stack(), stderr);
+    }
     H5Sclose(fileSpace);
+}
+
+template<typename T, bool VLEN>
+inline void DataSet<T, VLEN>::flush() {
+    if (dataSetHandle >= 0 && H5Fflush(dataSetHandle, H5F_SCOPE_LOCAL) < 0) {
+        throw std::runtime_error("error when flushing HDF5 data set with handle " + std::to_string(dataSetHandle));
+    }
 }
 
 }

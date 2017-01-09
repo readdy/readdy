@@ -31,7 +31,6 @@
  */
 
 #include <readdy/model/observables/Observables.h>
-#include <readdy/model/observables/io/AccumulativeWriter.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/_internal/Util.h>
 #include <readdy/common/numeric.h>
@@ -97,8 +96,8 @@ public:
 
 
 struct Positions::Impl {
-    using writer_t = AccumulativeWriter<io::DataSet<Vec3POD, true>, std::vector<Vec3POD>>;
-    std::unique_ptr<writer_t> dataSet;
+    using writer_t = io::DataSet<Vec3POD, true>;
+    std::unique_ptr<writer_t> writer;
 };
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
@@ -112,25 +111,25 @@ Positions::Positions(Kernel *const kernel, unsigned int stride,
 
 void Positions::append() {
     std::vector<Vec3POD> podVec(result.begin(), result.end());
-    pimpl->dataSet->append(podVec);
+    pimpl->writer->append({1}, &podVec);
 }
 
 Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {}
 
 void Positions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->dataSet) {
+    if (!pimpl->writer) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto dataSet = std::make_unique<io::DataSet<Vec3POD, true>>(
                 dataSetName, file.createGroup(OBSERVABLES_GROUP_PATH), fs, dims,
                 Vec3MemoryType(), Vec3FileType()
         );
-        pimpl->dataSet = std::make_unique<Impl::writer_t>(flushStride, std::move(dataSet));
+        pimpl->writer = std::move(dataSet);
     }
 }
 
 void Positions::flush() {
-    pimpl->dataSet->flush();
+    pimpl->writer->flush();
 }
 
 Positions::~Positions() = default;
@@ -152,11 +151,16 @@ void TestCombiner::evaluate() {
     TestCombiner::result = result;
 }
 
+struct RadialDistribution::Impl {
+    using writer_t = io::DataSet<double, false>;
+    std::unique_ptr<writer_t> writerRadialDistribution;
+};
+
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
                                        std::vector<double> binBorders, std::vector<unsigned int> typeCountFrom,
                                        std::vector<unsigned int> typeCountTo, double particleToDensity)
         : Observable(kernel, stride), typeCountFrom(typeCountFrom), typeCountTo(typeCountTo),
-          particleToDensity(particleToDensity) {
+          particleToDensity(particleToDensity), pimpl(std::make_unique<Impl>()) {
     setBinBorders(binBorders);
 }
 
@@ -244,6 +248,29 @@ RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride
                              particleToDensity
 ) {}
 
+void RadialDistribution::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->writerRadialDistribution) {
+        auto& centers = std::get<0>(result);
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride, centers.size()};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, centers.size()};
+        const auto path = OBSERVABLES_GROUP_PATH + "/" + dataSetName;
+        auto group = file.createGroup(path);
+        log::console()->debug("created group with path {}", path);
+        group.write("bin_centers", centers);
+        auto dataSet = std::make_unique<Impl::writer_t>(
+                "distribution", group, fs, dims
+        );
+        pimpl->writerRadialDistribution = std::move(dataSet);
+    }
+}
+
+void RadialDistribution::append() {
+    auto& dist = std::get<1>(result);
+    pimpl->writerRadialDistribution->append({1, dist.size()}, dist.data());
+}
+
+RadialDistribution::~RadialDistribution() = default;
+
 CenterOfMass::CenterOfMass(readdy::model::Kernel *const kernel, unsigned int stride,
                            unsigned int particleType)
         : Observable(kernel, stride), particleTypes({particleType}) {
@@ -321,9 +348,9 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
 
 struct Particles::Impl {
     using particle_t = readdy::model::Particle;
-    using types_writer_t = AccumulativeWriter<io::DataSet<particle_t::type_type, true>, std::vector<particle_t::type_type>>;
-    using ids_writer_t = AccumulativeWriter<io::DataSet<particle_t::id_type, true>, std::vector<particle_t::id_type>>;
-    using pos_writer_t = AccumulativeWriter<io::DataSet<Vec3POD, true>, std::vector<Vec3POD>>;
+    using types_writer_t = io::DataSet<particle_t::type_type, true>;
+    using ids_writer_t = io::DataSet<particle_t::id_type, true>;
+    using pos_writer_t = io::DataSet<Vec3POD, true>;
     std::unique_ptr<types_writer_t> dataSetTypes;
     std::unique_ptr<ids_writer_t> dataSetIds;
     std::unique_ptr<pos_writer_t> dataSetPositions;
@@ -338,23 +365,23 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName);
         {
-            auto dataSetTypes = std::make_unique<Impl::types_writer_t::data_set_t>(
+            auto dataSetTypes = std::make_unique<Impl::types_writer_t>(
                     "types", group, fs, dims
             );
-            pimpl->dataSetTypes = std::make_unique<Impl::types_writer_t>(flushStride, std::move(dataSetTypes));
+            pimpl->dataSetTypes = std::move(dataSetTypes);
         }
         {
-            auto dataSetIds = std::make_unique<Impl::ids_writer_t::data_set_t>(
+            auto dataSetIds = std::make_unique<Impl::ids_writer_t>(
                     "ids", group, fs, dims
             );
-            pimpl->dataSetIds = std::make_unique<Impl::ids_writer_t>(flushStride, std::move(dataSetIds));
+            pimpl->dataSetIds = std::move(dataSetIds);
         }
         {
-            auto dataSetPositions = std::make_unique<Impl::pos_writer_t::data_set_t>(
+            auto dataSetPositions = std::make_unique<Impl::pos_writer_t>(
                     "positions", group, fs, dims,
                     Vec3MemoryType(), Vec3FileType()
             );
-            pimpl->dataSetPositions = std::make_unique<Impl::pos_writer_t>(flushStride, std::move(dataSetPositions));
+            pimpl->dataSetPositions = std::move(dataSetPositions);
         }
     }
 }
@@ -362,16 +389,16 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
 void Particles::append() {
     {
         auto &types = std::get<0>(result);
-        pimpl->dataSetTypes->append(types);
+        pimpl->dataSetTypes->append({1}, &types);
     }
     {
         auto &ids = std::get<1>(result);
-        pimpl->dataSetIds->append(ids);
+        pimpl->dataSetIds->append({1}, &ids);
     }
     {
         const auto &positions = std::get<2>(result);
         std::vector<Vec3POD> podVec(positions.begin(), positions.end());
-        pimpl->dataSetPositions->append(podVec);
+        pimpl->dataSetPositions->append({1}, &podVec);
     }
 }
 

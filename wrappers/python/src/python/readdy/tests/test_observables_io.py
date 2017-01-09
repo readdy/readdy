@@ -115,7 +115,44 @@ class TestSchemeApi(unittest.TestCase):
                     np.testing.assert_equal(positions[t][others]["y"], 2.5)
                     np.testing.assert_equal(positions[t][others]["z"], 3.5)
 
-        common.set_logging_level("error")
+    def test_radial_distribution_observable(self):
+        common.set_logging_level("trace")
+        fname = os.path.join(self.dir, "test_observables_radial_distribution.h5")
+
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+
+        box_size = common.Vec(10, 10, 10)
+        simulation.kbt = 2
+        simulation.periodic_boundary = [True, True, True]
+        simulation.box_size = box_size
+        simulation.register_particle_type("A", .2, 1.)
+        simulation.register_particle_type("B", .2, 1.)
+        simulation.register_potential_harmonic_repulsion("A", "B", 10)
+        simulation.add_particle("A", common.Vec(-2.5, 0, 0))
+        simulation.add_particle("B", common.Vec(0, 0, 0))
+        bin_borders = np.arange(0, 5, .01)
+        density = 1. / (box_size[0] * box_size[1] * box_size[2])
+        n_time_steps = 50
+        callback_centers = []
+        callback_rdf = []
+        def rdf_callback(pair):
+            callback_centers.append(pair[0])
+            callback_rdf.append(pair[1])
+        handle = simulation.register_observable_radial_distribution(1, rdf_callback, bin_borders, ["A"], ["B"], density)
+        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            handle.enable_write_to_file(f, "radial_distribution", 3)
+            simulation.run(n_time_steps, 0.02)
+            handle.flush()
+
+        with h5py.File(fname, "r") as f2:
+            bin_centers = f2["readdy/observables/radial_distribution/bin_centers"][:]
+            distribution = f2["readdy/observables/radial_distribution/distribution"][:]
+            for t in range(n_time_steps):
+                np.testing.assert_equal(bin_centers, np.array(callback_centers[t]))
+                np.testing.assert_equal(distribution[t], np.array(callback_rdf[t]))
+
+
 
 
 if __name__ == '__main__':

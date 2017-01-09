@@ -50,6 +50,7 @@ inline bool groupExists(const Group &cwd, const std::string &name) {
     H5E_END_TRY
     return (hid > 0);
 }
+
 }
 }
 }

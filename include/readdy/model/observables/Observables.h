@@ -105,13 +105,22 @@ public:
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        double particleToDensity);
 
-    const std::vector<double> &getBinBorders() const;
+    virtual ~RadialDistribution();
 
-    void setBinBorders(const std::vector<double> &binBorders);
+    const std::vector<double> &getBinBorders() const;
 
     void evaluate() override;
 
 protected:
+
+    void setBinBorders(const std::vector<double> &binBorders);
+
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
     std::vector<double> binBorders;
     std::vector<double> counts;
     std::vector<unsigned int> typeCountFrom, typeCountTo;

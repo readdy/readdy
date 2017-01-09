@@ -64,6 +64,8 @@ public:
     template<bool vlen = VLEN>
     void append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data, typename std::enable_if<vlen, bool>::type* = 0);
 
+    void flush();
+
 private:
     const std::vector<h5::dims_t> maxDims;
     const Group group;
