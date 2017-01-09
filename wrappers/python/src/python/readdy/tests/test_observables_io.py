@@ -80,8 +80,8 @@ class TestSchemeApi(unittest.TestCase):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
         sim.box_size = common.Vec(13, 13, 13)
-        sim.register_particle_type("A", .1, .1)
-        sim.register_particle_type("B", .1, .1)
+        typeid_A = sim.register_particle_type("A", .1, .1)
+        typeid_B = sim.register_particle_type("B", .1, .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(0, 0, 0))
         # every time step, add one particle
@@ -97,7 +97,24 @@ class TestSchemeApi(unittest.TestCase):
             types = f2["readdy/observables/particles/types"][:]
             ids = f2["readdy/observables/particles/ids"][:]
             positions = f2["readdy/observables/particles/positions"][:]
-            pass
+            for t in range(n_timesteps):
+                np.testing.assert_equal(len(types[t]), t+3)
+                np.testing.assert_equal(len(ids[t]), t+3)
+                np.testing.assert_equal(len(positions[t]), t+3)
+                np.testing.assert_equal(types[t][0], typeid_A)
+                np.testing.assert_equal(positions[t][0]["x"], 0)
+                np.testing.assert_equal(positions[t][0]["y"], 0)
+                np.testing.assert_equal(positions[t][0]["z"], 0)
+                np.testing.assert_equal(positions[t][1]["x"], 0)
+                np.testing.assert_equal(positions[t][1]["y"], 0)
+                np.testing.assert_equal(positions[t][1]["z"], 0)
+                np.testing.assert_equal(types[t][1], typeid_B)
+                for others in range(2, len(types[t])):
+                    np.testing.assert_equal(types[t][others], typeid_A)
+                    np.testing.assert_equal(positions[t][others]["x"], 1.5)
+                    np.testing.assert_equal(positions[t][others]["y"], 2.5)
+                    np.testing.assert_equal(positions[t][others]["z"], 3.5)
+
         common.set_logging_level("error")
 
 

@@ -329,7 +329,8 @@ struct Particles::Impl {
     std::unique_ptr<pos_writer_t> dataSetPositions;
 };
 
-Particles::Particles(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {}
+Particles::Particles(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride),
+                                                                  pimpl(std::make_unique<Impl>()) {}
 
 void Particles::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSetTypes) {

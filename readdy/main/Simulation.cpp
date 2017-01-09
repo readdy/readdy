@@ -108,11 +108,13 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
 
 }
 
-void
+Simulation::particle_t::type_type
 Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().setDiffusionConstant(name, diffusionCoefficient);
-    pimpl->kernel->getKernelContext().setParticleRadius(name, radius);
+    auto& context = pimpl->kernel->getKernelContext();
+    context.setDiffusionConstant(name, diffusionCoefficient);
+    context.setParticleRadius(name, radius);
+    return context.getParticleTypeID(name);
 }
 
 const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() const {

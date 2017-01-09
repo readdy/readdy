@@ -47,6 +47,7 @@ namespace readdy {
  * context and are given to the kernel when run() is called.
  */
 class Simulation {
+    using particle_t = readdy::model::Particle;
 public:
     /**
      * The default constructor. Currently only instantiates the pimpl.
@@ -145,7 +146,7 @@ public:
      */
     template<typename T, typename... Args>
     ObservableHandle registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
-                                     unsigned int stride, Args... args);
+                                        unsigned int stride, Args... args);
 
     /**
      * Registers an observable that implements the readdy::model::ObservableBase interface.
@@ -166,7 +167,8 @@ public:
      * @param uuid the uuid of the observable to be removed.
      */
     void deregisterObservable(const ObservableHandle::id_t uuid);
-    void deregisterObservable(const ObservableHandle& uuid);
+
+    void deregisterObservable(const ObservableHandle &uuid);
 
     /**
      * A method to access the particle positions of a certain type.
@@ -181,7 +183,8 @@ public:
      * @param diffusionCoefficient the diffusion coefficient
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      */
-    void registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius);
+    particle_t::type_type
+    registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius);
 
     /**
      * A method that allows to remove a certain potential type.
