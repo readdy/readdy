@@ -35,7 +35,7 @@ from contextlib import closing
 import numpy as np
 
 
-class TestSchemeApi(unittest.TestCase):
+class TestObservablesIO(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.dir = tempfile.mkdtemp("test-observables-io")
@@ -56,16 +56,16 @@ class TestSchemeApi(unittest.TestCase):
         handle = sim.register_observable_particle_positions(1, None, [])
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
-            handle.enable_write_to_file(f, "particle_positions", 3)
+            handle.enable_write_to_file(f, u"particle_positions", 3)
             sim.run_scheme_readdy(True).configure().run(n_timesteps)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/particle_positions"][:]
-            np.testing.assert_equal(len(data), n_timesteps+1)
+            np.testing.assert_equal(len(data), n_timesteps + 1)
             for t, positions in enumerate(data):
                 # we begin with two particles
-                np.testing.assert_equal(len(positions), t+2)
+                np.testing.assert_equal(len(positions), t + 2)
                 np.testing.assert_equal(positions[0]["x"], 0)
                 np.testing.assert_equal(positions[0]["y"], 0)
                 np.testing.assert_equal(positions[0]["z"], 0)
@@ -89,7 +89,7 @@ class TestSchemeApi(unittest.TestCase):
         handle = sim.register_observable_particles(1, None)
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
-            handle.enable_write_to_file(f, "particles", 3)
+            handle.enable_write_to_file(f, u"particles", 3)
             sim.run_scheme_readdy(True).configure().run(n_timesteps)
             handle.flush()
 
@@ -98,9 +98,9 @@ class TestSchemeApi(unittest.TestCase):
             ids = f2["readdy/observables/particles/ids"][:]
             positions = f2["readdy/observables/particles/positions"][:]
             for t in range(n_timesteps):
-                np.testing.assert_equal(len(types[t]), t+3)
-                np.testing.assert_equal(len(ids[t]), t+3)
-                np.testing.assert_equal(len(positions[t]), t+3)
+                np.testing.assert_equal(len(types[t]), t + 3)
+                np.testing.assert_equal(len(ids[t]), t + 3)
+                np.testing.assert_equal(len(positions[t]), t + 3)
                 np.testing.assert_equal(types[t][0], typeid_A)
                 np.testing.assert_equal(positions[t][0]["x"], 0)
                 np.testing.assert_equal(positions[t][0]["y"], 0)
@@ -116,7 +116,7 @@ class TestSchemeApi(unittest.TestCase):
                     np.testing.assert_equal(positions[t][others]["z"], 3.5)
 
     def test_radial_distribution_observable(self):
-        common.set_logging_level("trace")
+        common.set_logging_level("error")
         fname = os.path.join(self.dir, "test_observables_radial_distribution.h5")
 
         simulation = Simulation()
@@ -136,12 +136,14 @@ class TestSchemeApi(unittest.TestCase):
         n_time_steps = 50
         callback_centers = []
         callback_rdf = []
+
         def rdf_callback(pair):
             callback_centers.append(pair[0])
             callback_rdf.append(pair[1])
+
         handle = simulation.register_observable_radial_distribution(1, rdf_callback, bin_borders, ["A"], ["B"], density)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
-            handle.enable_write_to_file(f, "radial_distribution", 3)
+            handle.enable_write_to_file(f, u"radial_distribution", 3)
             simulation.run(n_time_steps, 0.02)
             handle.flush()
 
@@ -151,8 +153,6 @@ class TestSchemeApi(unittest.TestCase):
             for t in range(n_time_steps):
                 np.testing.assert_equal(bin_centers, np.array(callback_centers[t]))
                 np.testing.assert_equal(distribution[t], np.array(callback_rdf[t]))
-
-
 
 
 if __name__ == '__main__':
