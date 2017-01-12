@@ -73,17 +73,61 @@ should execute:
     - the GPU executes diffusion and normal reactions for a time $\tau$ which is much larger
     than the integration step and then returns
     - the CPU performs all possible topology reaction events based on its current state, 
-    where reaction probabilities are $\mathrm{rate} * \tau$. This could be done with the fixed timestep
+    where reaction probabilities are $\mathrm{rate}\cdot \tau$. This could be done with the fixed timestep
     version of our reaction schedulers
 2. with a time $\tau$ sampled from a Gillespie algorithm
     - given one system state with a number of possible topology reactions events, 
-    choose __one__ event and a corresponding $\tau
+    choose __one__ event and a corresponding $\tau$
     - perform this reaction and then let the GPU run for $\tau$
 
-### Aggregators and files
+### Aggregators and files (edit: now implemented)
 
 As of now observables describe only one point in time. Aggregators are observables that accumulate
 data. Suggestion:
 - Since aggregators accumulate the data, only they can clear the data. Thus the aggregator should also
 be responsible for the file-writing process.
-- Aggregators hold a file object, which is optional.
+- Aggregators (edit: observables in general) hold a file object, which is optional.
+
+### Compartments
+
+Compartments are defined as regions of the simulation box. Within those compartments certain instantaneous
+conversions are defined. Those are different from actual reactions implementation wise but they
+basically do the same thing. For example:
+- A compartment is defined via $r > 10$, i.e. if a particle is more than 10 length units away from the origin
+it is considered to be in the compartment.
+- Associated with this compartment is a conversion `A -> B`, i.e. if an A particle travels into this compartment
+it will be converted to a B particle instantaneously.
+- One could define a second complementary compartment $r < 10$ with a conversion `B -> A`.
+ 
+Why is this useful? For example:
+- If one is only interested in setting up an observable for particles close to a certain point. E.g. I want to
+know the pair correlation radial distribution of `A` particles around some other static particle, but I only need the 
+radial distribution in close proximity (because the static particle might induce some crowding effects), 
+I can set up a compartment that converts the `A` particles to `A_close` particles when they come close to the 
+static particle. Then my observable only records the pair correlation of `A_close` particles.
+- Absorbing boundary conditions can easily be implemented. Imagine I have a non-periodic system in x-direction and
+I want to construct an absorbing boundary in the halfspace defined by $x < 0$ for a certain particle type `A`. One could
+define the compartment $x < 0$ with the conversion `A -> N`, where `N` is a species that rapidly decays 
+in the next timestep (i.e. `N` has an _actual_ decay reaction with a very high rate). 
+Note that there is no second complementary compartment with a reverse conversion, i.e. `N` particles cannot become
+`A` particles again. 
+
+The execution of those conversions can be put into a Program, which is executed on the kernels. To
+have full flexibility and accessibility from the Python layer, it makes sense to construct those compartments
+similar to potentials.
+Another nice feature is, that the computational complexity of applying the conversions is $O(N)$ when $N$ is the
+total number of particles. So it should not take longer than the evaluation of first order potentials.
+
+What types of compartments are easily implemented?:
+- Radial, $|r-r_0| >\text{or}< R$, with three parameters
+    - Vec3 origin $r_0$
+    - double radius $R$
+    - bool largerOrLess
+- Hyperplane, $a_0 x_0 + a_1 x_1 + a_2 x_2 >\text{or}< d$, with three parameters
+    - Vec3 coefficients $a$
+    - double distanceFromOrigin $d$
+    - bool largerOrLess
+
+Issues can arise if compartments overlap. Then it is implementation-dependent, which conversions get executed first
+and thus which particle-type you end up with. There would be no _efficient_ way of determining if compartments overlap.
+But when a particle is found to be in two compartments during run-time, warnings can be printed.
