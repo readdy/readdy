@@ -24,6 +24,7 @@
  * @file Trajectory.cpp
  * @brief Core library impl for Trajectory.h
  * @author chrisfroe
+ * @author clonker
  * @date 12.12.16
  * @copyright GNU Lesser General Public License v3.0
  */
@@ -120,8 +121,8 @@ struct Trajectory::Impl {
 };
 
 
-Trajectory::Trajectory(readdy::model::Kernel *const kernel, unsigned int stride, unsigned int fs, io::File &file)
-        : base_t(kernel, stride), pimpl(std::make_unique<Impl>(file, fs)), flushStride(fs) {
+Trajectory::Trajectory(readdy::model::Kernel *const kernel, unsigned int stride, unsigned int fStride, io::File &file)
+        : base_t(kernel, stride), pimpl(std::make_unique<Impl>(file, fStride)), flushStride(fStride) {
 };
 
 void Trajectory::evaluate() {
