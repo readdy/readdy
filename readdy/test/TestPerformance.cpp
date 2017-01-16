@@ -634,7 +634,6 @@ void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) 
     }
 
     {
-        /** Write the result vectors to one dataset each, all in a single file */
         const std::string filename = "cpus=24.h5";
         file_t file(filename, file_t::Action::CREATE, file_t::Flag::OVERWRITE);
 
