@@ -373,6 +373,81 @@ private:
 
 const std::string ReactiveCollisiveUniformHomogeneous::name = "ReactiveCollisiveUniformHomogeneous";
 
+class CollisiveUniformHomogeneous : public PerformanceScenario {
+public:
+    static const std::string name;
+
+    CollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
+            : PerformanceScenario(kernelName) {
+        numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
+        numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
+        boxLength *= factors.at(BOXLENGTHS_FACTOR);
+        // set (N,L,S,R) observables
+        particleNumber = 2 * numberA + numberC;
+        systemSize = std::pow(boxLength, 3.) / std::pow(4.5, 3.);
+        relativeDisplacement = std::sqrt(2 * diffusionConstants["A"] * timeStep) / 4.5;
+        reactivity = 0;
+
+        neighborList->setSkinSize(skin * factors.at(SKIN_FACTOR));
+    };
+
+    virtual void configure() override {
+        auto &ctx = kernel->getKernelContext();
+        ctx.setKBT(1.);
+        ctx.setBoxSize(boxLength, boxLength, boxLength);
+        ctx.setPeriodicBoundary(true, true, true);
+        for (const std::string &type : {"A", "B", "C"}) {
+            ctx.setParticleRadius(type, radii[type]);
+            ctx.setDiffusionConstant(type, diffusionConstants[type]);
+        }
+        ctx.setTimeStep(timeStep);
+
+        std::vector<std::pair<std::string, std::string>> pairs = {{"A", "B"},
+                                                                  {"B", "C"},
+                                                                  {"A", "C"}};
+        for (const auto &typePair : pairs) {
+            auto pot = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
+            pot->setForceConstant(forceConstant);
+            kernel->getKernelContext().registerPotential(std::move(pot), std::get<0>(typePair), std::get<1>(typePair));
+        }
+
+        /** Distribute particles uniformly in box */
+        std::vector<readdy::model::Particle> particles;
+        {
+            particles.reserve(2 * numberA + numberC);
+            auto uniform = [this]() {
+                return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
+            };
+            const auto &typeMapping = ctx.getTypeMapping();
+            const auto typeA = typeMapping.at("A");
+            const auto typeB = typeMapping.at("B");
+            const auto typeC = typeMapping.at("C");
+            for (auto i = 0; i < numberA; ++i) {
+                readdy::model::Particle particleA(uniform(), uniform(), uniform(), typeA);
+                particles.push_back(particleA);
+                readdy::model::Particle particleB(uniform(), uniform(), uniform(), typeB);
+                particles.push_back(particleB);
+            }
+            for (auto i = 0; i < numberC; ++i) {
+                readdy::model::Particle particleC(uniform(), uniform(), uniform(), typeC);
+                particles.push_back(particleC);
+            }
+        }
+        kernel->getKernelStateModel().addParticles(particles);
+    }
+
+private:
+    unsigned long numberA = 500, numberC = 1800;
+    double boxLength = 100., timeStep = 0.1, skin = 4.5, forceConstant = 10.;
+    std::map<std::string, double> radii{{"A", 1.5},
+                                        {"B", 3},
+                                        {"C", 3.12}};
+    std::map<std::string, double> diffusionConstants{{"A", .14},
+                                                     {"B", .07},
+                                                     {"C", .06}};
+};
+
+const std::string CollisiveUniformHomogeneous::name = "CollisiveUniformHomogeneous";
 
 template<typename scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
 void scaleNumbersAndBoxsize(const std::string &kernelName) {
