@@ -146,9 +146,12 @@ protected:
 
         using timer = readdy::util::Timer;
         double timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0;
-
         neighborList->execute();
-        forces->execute();
+        {
+            timer c("forces", verbose);
+            forces->execute();
+            timeForces += c.getSeconds();
+        }
         for (readdy::model::observables::time_step_type t = 0; t < steps; ++t) {
             if (verbose) {
                 readdy::log::console()->debug("----------");
@@ -182,9 +185,10 @@ protected:
         }
         neighborList->setAction(readdy::model::programs::UpdateNeighborList::Action::clear);
         neighborList->execute();
-        timeForces /= steps;
+        readdy::log::console()->critical("DONE!");
+        timeForces /= steps + 1;
         timeIntegrator /= steps;
-        timeNeighborList /= steps;
+        timeNeighborList /= 2*steps;
         timeReactions /= steps;
         if (verbose) {
             std::cout << "--------------------------------------------------------------" << std::endl;
@@ -512,68 +516,24 @@ void scaleNumbersAndBoxsize(const std::string &kernelName) {
 }
 
 template<typename Scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
-void scaleNumbers(const std::string &kernelName) {
+void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
+    readdy::log::console()->debug("using reduced numbers: {}", reducedNumbers);
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
-    const std::vector<double> numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
-                                         3., 4., 5., 6., 7., 8., 9.,
-                                         10., 12., 15., 20.};
-    const auto numbersSize = numbers.size();
-
-    // results are performance times and the (N,L,S,R) observables
-    double timeForces[numbersSize];
-    double timeIntegrator[numbersSize];
-    double timeNeighborList[numbersSize];
-    double timeReactions[numbersSize];
-    double particleNumber[numbersSize];
-    double systemSize[numbersSize];
-    double relativeDisplacement[numbersSize];
-    double reactivity[numbersSize];
-
-    for (auto n = 0; n < numbers.size(); ++n) {
-        std::map<std::string, double> factors;
-        factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[n]));
-        factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[n])));
-        Scenario_t scenario(kernelName, factors);
-        scenario.template perform<ReactionScheduler>(20);
-        timeForces[n] = scenario.getTimeForces();
-        timeIntegrator[n] = scenario.getTimeIntegrator();
-        timeNeighborList[n] = scenario.getTimeNeighborlist();
-        timeReactions[n] = scenario.getTimeReactions();
-        particleNumber[n] = scenario.getParticleNumber();
-        systemSize[n] = scenario.getSystemSize();
-        relativeDisplacement[n] = scenario.getRelativeDisplacement();
-        reactivity[n] = scenario.getReactivity();
+    std::vector<double> numbers;
+    if(reducedNumbers) {
+      numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
+                 3., 4., 5., 6., 7., 8., 9.,
+                 10., 12., 15., 20., 40.};
+    } else {
+       numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
+                  3., 4., 5., 6., 7., 8., 9.,
+                  10., 12., 15., 20., 40., 60, 80, 100};
     }
-
-    {
-        /** Write the result vectors to one dataset each, all in a single file */
-        const std::string filename = "numbersConstDensity_" + Scenario_t::name + "_" + kernelName + ".h5";
-        file_t file(filename, file_t::Action::CREATE, file_t::Flag::OVERWRITE);
-
-        auto inputGroup = file.createGroup("/input");
-        inputGroup.write(NUMBERS_FACTOR, numbers);
-
-        auto outputGroup = file.createGroup("/output");
-        outputGroup.write("time_forces", {numbersSize}, &timeForces[0]);
-        outputGroup.write("time_integrator", {numbersSize}, &timeIntegrator[0]);
-        outputGroup.write("time_neighborlist", {numbersSize}, &timeNeighborList[0]);
-        outputGroup.write("time_reactions", {numbersSize}, &timeReactions[0]);
-        outputGroup.write("particle_number", {numbersSize}, &particleNumber[0]);
-        outputGroup.write("system_size", {numbersSize}, &systemSize[0]);
-        outputGroup.write("relative_displacement", {numbersSize}, &relativeDisplacement[0]);
-        outputGroup.write("reactivity", {numbersSize}, &reactivity[0]);
-    }
-}
-
-template<typename Scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
-void scaleNumbersAndSkin(const std::string kernelName) {
-    /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
-    const std::vector<double> numbers = {50.};
     std::vector<double> skinSizes;
-    {
-        skinSizes.resize(10);
-        std::iota(skinSizes.begin(), skinSizes.end(), 0);
-        std::for_each(skinSizes.begin(), skinSizes.end(), [](const double size) { return size / 40.; });
+    if(readdy::plugin::KernelProvider::getInstance().create(kernelName)->createProgram<readdy::model::programs::UpdateNeighborList>()->supportsSkin()){
+        skinSizes = {.0, .1, .2, .3, .4, .5, 1, 2, 3, 4, 5, 10};
+    } else {
+        skinSizes = {-1};
     }
 
     const auto numbersSize = numbers.size();
@@ -589,14 +549,17 @@ void scaleNumbersAndSkin(const std::string kernelName) {
     double relativeDisplacement[numbersSize][skinSizesSize];
     double reactivity[numbersSize][skinSizesSize];
 
+    readdy::log::console()->set_level(spdlog::level::warn);
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
+            readdy::log::console()->error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j, skinSizesSize, skinSizes[j]);
             std::map<std::string, double> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
             factors.emplace(std::make_pair(SKIN_FACTOR, skinSizes[j]));
             Scenario_t scenario(kernelName, factors);
-            scenario.template perform<ReactionScheduler>(20, true);
+            readdy::log::console()->warn("this places us at {} particles", scenario.getParticleNumber());
+            scenario.template perform<ReactionScheduler>(10, true);
             timeForces[i][j] = scenario.getTimeForces();
             timeIntegrator[i][j] = scenario.getTimeIntegrator();
             timeNeighborList[i][j] = scenario.getTimeNeighborlist();
@@ -607,10 +570,11 @@ void scaleNumbersAndSkin(const std::string kernelName) {
             reactivity[i][j] = scenario.getReactivity();
         }
     }
+    readdy::log::console()->set_level(spdlog::level::debug);
 
     {
         /** Write the result vectors to one dataset each, all in a single file */
-        const std::string filename = "numbersSkinsConstDensity2_" + Scenario_t::name + "_" + kernelName + ".h5";
+        const std::string filename = "numbersSkinsConstDensity_" + Scenario_t::name + "_" + kernelName + ".h5";
         file_t file(filename, file_t::Action::CREATE, file_t::Flag::OVERWRITE);
 
         auto inputGroup = file.createGroup("/input");
@@ -629,8 +593,71 @@ void scaleNumbersAndSkin(const std::string kernelName) {
     }
 }
 
+/*template<typename Scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
+void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) {
+    readdy::log::console()->debug("using reduced numbers: {}", reducedNumbers);
+    std::vector<double> numbers = {80};
+    std::vector<double> skinSizes = {1.0};
+
+    const auto numbersSize = numbers.size();
+    const auto skinSizesSize = skinSizes.size();
+
+    // results are performance times and the (N,L,S,R) observables
+    double timeForces[numbersSize][skinSizesSize];
+    double timeIntegrator[numbersSize][skinSizesSize];
+    double timeNeighborList[numbersSize][skinSizesSize];
+    double timeReactions[numbersSize][skinSizesSize];
+    double particleNumber[numbersSize][skinSizesSize];
+    double systemSize[numbersSize][skinSizesSize];
+    double relativeDisplacement[numbersSize][skinSizesSize];
+    double reactivity[numbersSize][skinSizesSize];
+
+    for (auto i = 0; i < numbersSize; ++i) {
+        for (auto j = 0; j < skinSizesSize; ++j) {
+            readdy::log::console()->error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j, skinSizesSize, skinSizes[j]);
+            std::map<std::string, double> factors;
+            factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
+            factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
+            factors.emplace(std::make_pair(SKIN_FACTOR, skinSizes[j]));
+            Scenario_t scenario(kernelName, factors);
+            readdy::log::console()->warn("this places us at {} particles", scenario.getParticleNumber());
+            scenario.template perform<ReactionScheduler>(20, true);
+            timeForces[i][j] = scenario.getTimeForces();
+            timeIntegrator[i][j] = scenario.getTimeIntegrator();
+            timeNeighborList[i][j] = scenario.getTimeNeighborlist();
+            timeReactions[i][j] = scenario.getTimeReactions();
+            particleNumber[i][j] = scenario.getParticleNumber();
+            systemSize[i][j] = scenario.getSystemSize();
+            relativeDisplacement[i][j] = scenario.getRelativeDisplacement();
+            reactivity[i][j] = scenario.getReactivity();
+        }
+    }
+
+    {
+        /** Write the result vectors to one dataset each, all in a single file */
+        const std::string filename = "cpus=24.h5";
+        file_t file(filename, file_t::Action::CREATE, file_t::Flag::OVERWRITE);
+
+        auto inputGroup = file.createGroup("/input");
+        inputGroup.write(NUMBERS_FACTOR, numbers);
+        inputGroup.write(SKIN_FACTOR, skinSizes);
+
+        auto outputGroup = file.createGroup("/output");
+        outputGroup.write("time_forces", {numbersSize, skinSizesSize}, &timeForces[0][0]);
+        outputGroup.write("time_integrator", {numbersSize, skinSizesSize}, &timeIntegrator[0][0]);
+        outputGroup.write("time_neighborlist", {numbersSize, skinSizesSize}, &timeNeighborList[0][0]);
+        outputGroup.write("time_reactions", {numbersSize, skinSizesSize}, &timeReactions[0][0]);
+        outputGroup.write("particle_number", {numbersSize, skinSizesSize}, &particleNumber[0][0]);
+        outputGroup.write("system_size", {numbersSize, skinSizesSize}, &systemSize[0][0]);
+        outputGroup.write("relative_displacement", {numbersSize, skinSizesSize}, &relativeDisplacement[0][0]);
+        outputGroup.write("reactivity", {numbersSize, skinSizesSize}, &reactivity[0][0]);
+    }
+}*/
+
 TEST(TestPerformance, ReactiveCPU) {
-    scaleNumbersAndSkin<ReactiveUniformHomogeneous, readdy::model::programs::reactions::GillespieParallel>("CPU");
+    //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::programs::reactions::Gillespie>("SingleCPU", true);
+    //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::programs::reactions::GillespieParallel>("CPU_Dense", false);
+    scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::programs::reactions::GillespieParallel>("CPU", false);
 }
 
 }

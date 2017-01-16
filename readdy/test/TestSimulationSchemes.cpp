@@ -65,6 +65,7 @@ TEST(TestSchemes, SimulationObject) {
      * default: readdy scheme, use defaults = true
      */
     sim.runScheme()
+            .includeForces(false)
             .withIntegrator<readdy::model::programs::EulerBDIntegrator>()
             .withReactionScheduler<readdy::model::programs::reactions::UncontrolledApproximation>()
             .configureAndRun(100);
