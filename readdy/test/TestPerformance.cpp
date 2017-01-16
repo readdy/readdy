@@ -83,9 +83,9 @@ const std::string BOXLENGTHS_FACTOR = "boxlengths";
  */
 class PerformanceScenario {
 public:
-    PerformanceScenario(const std::string kernelName) {
-        kernel = readdy::plugin::KernelProvider::getInstance().create(kernelName);
-        neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
+    PerformanceScenario(const std::string &kernelName) :
+            kernel(readdy::plugin::KernelProvider::getInstance().create(kernelName)),
+            neighborList(kernel->createProgram<readdy::model::programs::UpdateNeighborList>()) {
     }
 
     template<typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
@@ -94,7 +94,7 @@ public:
         const auto result = runPerformanceTest<ReactionScheduler>(steps, verbose);
         timeForces = std::get<0>(result);
         timeIntegrator = std::get<1>(result);
-        timeNeighborlist = std::get<2>(result);
+        timeNeighborList = std::get<2>(result);
         timeReactions = std::get<3>(result);
         hasPerformed = true;
     };
@@ -110,7 +110,7 @@ public:
     }
 
     double getTimeNeighborlist() const {
-        if (hasPerformed) return timeNeighborlist;
+        if (hasPerformed) return timeNeighborList;
         else throw std::runtime_error("scenario has not performed yet");
     }
 
@@ -201,8 +201,8 @@ protected:
     /** This is where the actual system gets set up: define reactions/potentials, add particles ... */
     virtual void configure() = 0;
 
-    double timeForces, timeIntegrator, timeNeighborlist, timeReactions; // main result
-    double particleNumber, systemSize, relativeDisplacement, reactivity;
+    double timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0; // main result
+    double particleNumber = 0, systemSize = 0, relativeDisplacement = 0, reactivity = 0;
 
 protected:
     // the (N,L,S,R) observables defined above
@@ -213,7 +213,7 @@ protected:
 
 /**
  * The following scenario shall simulate a purely reactive system. Particles are uniformly distributed and
- * particle-radii/reaction-radii are homogeneous, i.e. there is only one lengthscale involved, the reaction radius = 4.5.
+ * particle-radii/reaction-radii are homogeneous, i.e. there is only one length scale involved, the reaction radius = 4.5.
  * Reactions are A + B <--> C, with rates 'on' for the fusion and 'off' for the fission.
  * Parameter values resemble a biological cell in the cytosol where particles are proteins. To obtain real units the following
  * rescaling units are used:
@@ -225,7 +225,7 @@ class ReactiveUniformHomogeneous : public PerformanceScenario {
 public:
     static const std::string name;
 
-    ReactiveUniformHomogeneous(const std::string kernelName, const std::map<std::string, double> factors)
+    ReactiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
             : PerformanceScenario(kernelName) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
         numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
@@ -253,24 +253,28 @@ public:
         kernel->registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", rateOff, 4.5);
 
         /** Distribute particles uniformly in box */
-        auto &state = kernel->getKernelStateModel();
         std::vector<readdy::model::Particle> particles;
-        particles.reserve(2*numberA + numberC);
-        auto uniform = [this]() {
-            return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxlength, 0.5 * boxlength);
-        };
-        const auto &typeMapping = ctx.getTypeMapping();
-        for (auto i = 0; i < numberA; ++i) {
-            readdy::model::Particle particleA(uniform(), uniform(), uniform(), typeMapping.at("A"));
-            particles.push_back(particleA);
-            readdy::model::Particle particleB(uniform(), uniform(), uniform(), typeMapping.at("B"));
-            particles.push_back(particleB);
+        {
+            particles.reserve(2 * numberA + numberC);
+            auto uniform = [this]() {
+                return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxlength, 0.5 * boxlength);
+            };
+            const auto &typeMapping = ctx.getTypeMapping();
+            const auto typeA = typeMapping.at("A");
+            const auto typeB = typeMapping.at("B");
+            const auto typeC = typeMapping.at("C");
+            for (auto i = 0; i < numberA; ++i) {
+                readdy::model::Particle particleA(uniform(), uniform(), uniform(), typeA);
+                particles.push_back(particleA);
+                readdy::model::Particle particleB(uniform(), uniform(), uniform(), typeB);
+                particles.push_back(particleB);
+            }
+            for (auto i = 0; i < numberC; ++i) {
+                readdy::model::Particle particleC(uniform(), uniform(), uniform(), typeC);
+                particles.push_back(particleC);
+            }
         }
-        for (auto i = 0; i < numberC; ++i) {
-            readdy::model::Particle particleC(uniform(), uniform(), uniform(), typeMapping.at("C"));
-            particles.push_back(particleC);
-        }
-        state.addParticles(particles);
+        kernel->getKernelStateModel().addParticles(particles);
     }
 
 private:
@@ -281,7 +285,7 @@ private:
 const std::string ReactiveUniformHomogeneous::name = "ReactiveUniformHomogeneous";
 
 template<typename scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
-void scaleNumbersAndBoxsize(const std::string kernelName) {
+void scaleNumbersAndBoxsize(const std::string &kernelName) {
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
     const std::vector<double> numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5, 3., 4., 5., 6., 7.};
     std::vector<double> boxlengths(numbers.size());
@@ -342,7 +346,7 @@ void scaleNumbersAndBoxsize(const std::string kernelName) {
 }
 
 template<typename Scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
-void scaleNumbers(const std::string kernelName) {
+void scaleNumbers(const std::string &kernelName) {
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
     const std::vector<double> numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5, 3., 4., 5., 6., 7., 8., 9.,
                                          10., 12., 15., 20.};

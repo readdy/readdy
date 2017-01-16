@@ -92,7 +92,7 @@ namespace readdy {
                 for (model::observables::time_step_type t = start; t < start+steps; ++t) {
                     if (integrator) integrator->execute();
                     if (neighborList) neighborList->execute();
-                    if (forces) forces->execute();
+                    // if (forces) forces->execute();
 
                     if (reactionScheduler) reactionScheduler->execute();
                     if (neighborList) neighborList->execute();
