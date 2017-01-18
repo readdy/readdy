@@ -188,7 +188,7 @@ protected:
         readdy::log::console()->critical("DONE!");
         timeForces /= steps + 1;
         timeIntegrator /= steps;
-        timeNeighborList /= 2*steps;
+        timeNeighborList /= steps;
         timeReactions /= steps;
         if (verbose) {
             std::cout << "--------------------------------------------------------------" << std::endl;
