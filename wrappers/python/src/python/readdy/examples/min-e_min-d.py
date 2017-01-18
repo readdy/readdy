@@ -172,7 +172,7 @@ class MinEMinDSimulation(object):
         kernel_provider = KernelProvider.get()
         kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
         simulation = Simulation()
-        simulation.set_kernel("CPU")
+        simulation.set_kernel("CPU_Dense")
 
         ###################################
         #
@@ -210,7 +210,7 @@ class MinEMinDSimulation(object):
         ###################################
 
         reaction_radius = 4*(0.01 + 0.01)  # = sum of the particle radii * 5 (5 - magic number such that k_fusion makes sense, sort of) 5 *
-        k_fusion = brentq(lambda x: self.erban_chapman(.093, 2.5 + .01, reaction_radius, x), 1, 5000000)
+        # k_fusion = brentq(lambda x: self.erban_chapman(.093, 2.5 + .01, reaction_radius, x), 1, 5000000)
         k_fusion = 1.0
         print("k_fusion=%s" % k_fusion)
         simulation.register_reaction_conversion("Phosphorylation", "D", "D_P", .5)
@@ -247,30 +247,10 @@ class MinEMinDSimulation(object):
             dx = np.linspace(origin[0] + layer[0], -1 * origin[0] - layer[0], int(float(membrane_size[0]) / membrane_particle_size), endpoint=True)
             dy = np.linspace(origin[1] + layer[1], -1 * origin[1] - layer[1], int(float(membrane_size[1]) / membrane_particle_size), endpoint=True)
             dz = np.linspace(origin[2] + layer[2], -1 * origin[2] - layer[2], int(float(membrane_size[2]) / membrane_particle_size), endpoint=True)
-            # front and back
-            # for x in dx:
-            #    for y in dy:
-            #        simulation.add_particle("M", Vec(x, y, origin[2] + layer[2]))
-            #        simulation.add_particle("M", Vec(x, y, -1 * origin[2] - layer[2]))
-            # for x in dx:
-            #    for z in dz:
-            #        simulation.add_particle("M", Vec(x, origin[1] + layer[1], z))
-            #        simulation.add_particle("M", Vec(x, -1 * origin[1] - layer[1], z))
             for y in dy:
                 for z in dz:
-                    #        simulation.add_particle("M", Vec(origin[0] + layer[0], y, z))
                     simulation.add_particle("M", Vec(-1 * origin[0] - layer[0], y, z))
             print("done adding membrane particles")
-            # ax = self.fig.add_subplot(111, projection='3d')
-            # plt.xlabel("x")
-            # plt.ylabel("y")
-
-            # membrane_positions = simulation.get_particle_positions("M")
-            # xs,ys,zs = np.array([v[0] for v in membrane_positions]), np.array([v[1] for v in membrane_positions]), np.array([v[2] for v in membrane_positions])
-            # fig = plt.figure()
-            # ax = fig.add_subplot(111, projection='3d')
-            # ax.scatter(xs,ys,zs)
-            # plt.show()
         else:
             simulation.register_reaction_conversion("Phosphorylation", "D_P", "D_PB", .5)
             simulation.register_reaction_enzymatic("Enzymatic DP+DPB->DPB + DPB", "D_PB", "D_P", "D_PB", .5, .02)
@@ -313,7 +293,7 @@ class MinEMinDSimulation(object):
         print("histogram start")
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minD, np.arange(-3, 3, .1), ["D", "D_P", "D_PB"], 2)
         # simulation.register_observable_histogram_along_axis(100, self.histrogram_callback_minE, np.arange(-3, 3, .1), ["D_PB", "DE"], 2)
-        stride = int(20./self.timestep)
+        stride = int(.01/self.timestep)
         self.stride = stride
         print("using stride=%s" % stride)
         bins = np.linspace(-7, 7, 80)
