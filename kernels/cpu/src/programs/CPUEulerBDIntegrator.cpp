@@ -40,7 +40,7 @@ namespace programs {
 namespace rnd = readdy::model::rnd;
 namespace thd = readdy::util::thread;
 
-void CPUEulerBDIntegrator::execute() {
+void CPUEulerBDIntegrator::perform() {
     auto& pd = *kernel->getKernelStateModel().getParticleData();
     const auto size = pd.size();
     std::vector<thd::scoped_thread> threads;
@@ -50,10 +50,11 @@ void CPUEulerBDIntegrator::execute() {
     const auto &context = kernel->getKernelContext();
     using iter_t = decltype(pd.begin());
 
-    auto worker = [&context, &pd](iter_t entry_begin, iter_t entry_end)  {
+    const auto dt = timeStep;
+
+    auto worker = [&context, &pd, dt](iter_t entry_begin, iter_t entry_end)  {
         const auto &fixPos = context.getFixPositionFun();
         const auto kbt = context.getKBT();
-        const auto dt = context.getTimeStep();
         for (iter_t it = entry_begin; it != entry_end; ++it) {
             if(!it->is_deactivated()) {
                 const double D = context.getDiffusionConstant(it->type);
@@ -75,7 +76,8 @@ void CPUEulerBDIntegrator::execute() {
 
 }
 
-CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel) : kernel(kernel) {}
+CPUEulerBDIntegrator::CPUEulerBDIntegrator(CPUKernel *kernel, double timeStep)
+        : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {}
 
 }
 }

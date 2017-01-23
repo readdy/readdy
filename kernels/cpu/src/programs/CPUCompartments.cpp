@@ -36,7 +36,7 @@ namespace programs {
 
 CPUCompartments::CPUCompartments(const CPUKernel *const kernel) : kernel(kernel) {}
 
-void CPUCompartments::execute() {
+void CPUCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
     long long idx = 0;
     for(auto& e : *kernel->getKernelStateModel().getParticleData()) {

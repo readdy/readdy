@@ -27,20 +27,38 @@
 #ifndef READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 #define READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 
-#include <readdy/model/programs/ProgramFactory.h>
+#include <readdy/model/programs/ActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
 class SCPUKernel;
-namespace programs {
-class SCPUProgramFactory : public readdy::model::programs::ProgramFactory {
+namespace actions {
+class SCPUActionFactory : public readdy::model::actions::ActionFactory {
 public:
-    SCPUProgramFactory(SCPUKernel *kernel);
+    SCPUActionFactory(SCPUKernel *const kernel);
+
+    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override;
+
+    readdy::model::actions::CalculateForces *createCalculateForces() const override;
+
+    readdy::model::actions::UpdateNeighborList *
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation, double) const override;
+
+    readdy::model::actions::Compartments *createCompartments() const override;
+
+    readdy::model::actions::reactions::UncontrolledApproximation *
+    createUncontrolledApproximation(double timeStep) const override;
+
+    readdy::model::actions::reactions::Gillespie *createGillespie(double timeStep) const override;
+
+    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(double timeStep) const override;
+
+    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override;
 
 private:
-    SCPUKernel *kernel;
+    SCPUKernel *const kernel;
 };
 }
 }

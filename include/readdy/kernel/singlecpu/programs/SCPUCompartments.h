@@ -34,22 +34,22 @@
 #ifndef READDY_MAIN_SINGLECPUCOMPARTMENTS_H
 #define READDY_MAIN_SINGLECPUCOMPARTMENTS_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
+namespace actions {
 
-class SCPUCompartments : public readdy::model::programs::Compartments {
+class SCPUCompartments : public readdy::model::actions::Compartments {
 public:
     using compartmentIdx_t = size_t;
     using particleType_t = unsigned int;
 
     SCPUCompartments(SCPUKernel const *const kernel);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
     virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) override;
 

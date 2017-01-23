@@ -44,7 +44,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     auto &ctx = kernel->getKernelContext();
     ctx.setDiffusionConstant("A", 1.);
     ctx.setDiffusionConstant("B", 1.);
-    auto &&comp = kernel->createProgram<m::programs::Compartments>();
+    auto &&comp = kernel->createAction<m::actions::Compartments>();
     auto fun = [](m::Vec3 position) {
         return true;
     };
@@ -58,7 +58,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     const auto &resultBefore = obs->getResult();
     EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
 
-    comp->execute();
+    comp->perform();
 
     obs->evaluate();
     const auto &resultAfter = obs->getResult();
@@ -73,7 +73,7 @@ TEST_P(TestCompartments, TwoCompartments) {
     ctx.setDiffusionConstant("B", 1.);
     ctx.setDiffusionConstant("C", 1.);
     ctx.setDiffusionConstant("D", 1.);
-    auto &&comp = kernel->createProgram<m::programs::Compartments>();
+    auto &&comp = kernel->createAction<m::actions::Compartments>();
     auto funXPos = [](m::Vec3 position) {
         return position[0] >= 0;
     };
@@ -92,7 +92,7 @@ TEST_P(TestCompartments, TwoCompartments) {
         kernel->addParticle("B", readdy::model::rnd::normal3());
     }
 
-    comp->execute();
+    comp->perform();
 
     std::vector<std::string> typesToCount = {"A", "B", "C", "D"};
     auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);

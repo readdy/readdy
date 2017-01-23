@@ -32,20 +32,20 @@
 #ifndef READDY_MAIN_SingleCPUEulerBDIntegrator_H
 #define READDY_MAIN_SingleCPUEulerBDIntegrator_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
 
-namespace programs {
-class SCPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
+namespace actions {
+class SCPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 
 public:
-    SCPUEulerBDIntegrator(SCPUKernel *kernel);
+    SCPUEulerBDIntegrator(SCPUKernel *kernel, double timeStep);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
 private:
     SCPUKernel *kernel;

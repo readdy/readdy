@@ -39,7 +39,7 @@ namespace programs {
 
 CPUDCompartments::CPUDCompartments(const CPUDKernel *const kernel) : kernel(kernel) {}
 
-void CPUDCompartments::execute() {
+void CPUDCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
     long long idx = 0;
     for(auto& e : *kernel->getKernelStateModel().getParticleData()) {

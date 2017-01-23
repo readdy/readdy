@@ -41,7 +41,7 @@ namespace programs {
 namespace rnd = readdy::model::rnd;
 namespace thd = readdy::util::thread;
 
-void CPUDEulerBDIntegrator::execute() {
+void CPUDEulerBDIntegrator::perform() {
     auto& pd = *kernel->getKernelStateModel().getParticleData();
     const auto size = pd.size();
     std::vector<thd::scoped_thread> threads;
@@ -51,10 +51,11 @@ void CPUDEulerBDIntegrator::execute() {
     const auto &context = kernel->getKernelContext();
     using iter_t = decltype(pd.begin());
 
-    auto worker = [&context, &pd](iter_t entry_begin, iter_t entry_end)  {
+    const auto dt = timeStep;
+
+    auto worker = [&context, &pd, dt](iter_t entry_begin, iter_t entry_end)  {
         const auto &fixPos = context.getFixPositionFun();
         const auto kbt = context.getKBT();
-        const auto dt = context.getTimeStep();
         for (iter_t it = entry_begin; it != entry_end; ++it) {
             const double D = context.getDiffusionConstant(it->type);
             const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3(0, 1);
@@ -74,7 +75,8 @@ void CPUDEulerBDIntegrator::execute() {
 
 }
 
-CPUDEulerBDIntegrator::CPUDEulerBDIntegrator(CPUDKernel *kernel) : kernel(kernel) {}
+CPUDEulerBDIntegrator::CPUDEulerBDIntegrator(CPUDKernel *const kernel, double timeStep)
+        : super(timeStep), kernel(kernel) {}
 
 }
 }

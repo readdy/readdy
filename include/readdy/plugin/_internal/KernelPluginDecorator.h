@@ -60,14 +60,12 @@ public:
 
     virtual std::vector<std::string> getAvailablePotentials() const override;
 
-    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
     virtual readdy::signals::scoped_connection
     connectObservable(model::observables::ObservableBase *const observable) override;
-
-    virtual std::unique_ptr<model::programs::Program> createProgram(const std::string &name) const override;
 
     virtual void evaluateObservables(readdy::model::observables::time_step_type t) override;
 

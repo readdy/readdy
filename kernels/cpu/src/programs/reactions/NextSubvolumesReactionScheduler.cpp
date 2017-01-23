@@ -42,7 +42,7 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-struct NextSubvolumes::ReactionEvent {
+struct CPUNextSubvolumes::ReactionEvent {
     int order;
     unsigned int type1, type2;
     std::size_t reactionIndex;
@@ -60,7 +60,7 @@ struct NextSubvolumes::ReactionEvent {
     }
 };
 
-struct NextSubvolumes::GridCell {
+struct CPUNextSubvolumes::GridCell {
     using particle_index = data_t::index_t;
 
     const cell_index_t i, j, k, id;
@@ -81,7 +81,7 @@ struct NextSubvolumes::GridCell {
     }
 };
 
-void NextSubvolumes::execute() {
+void CPUNextSubvolumes::perform() {
     eventQueue.clear();
     setUpGrid();
     assignParticles();
@@ -89,10 +89,10 @@ void NextSubvolumes::execute() {
     evaluateReactions();
 }
 
-NextSubvolumes::NextSubvolumes(const CPUKernel *const kernel)
-        : kernel(kernel), cells({}), nCells({}), cellSize(), eventQueue({}) {}
+CPUNextSubvolumes::CPUNextSubvolumes(const CPUKernel *const kernel, double timeStep)
+        : super(timeStep), kernel(kernel), cells({}), nCells({}), cellSize(), eventQueue({}) {}
 
-void NextSubvolumes::setUpGrid() {
+void CPUNextSubvolumes::setUpGrid() {
     if (cells.empty()) {
         const auto &simBoxSize = kernel->getKernelContext().getBoxSize();
         const auto minCellWidth = getMaxReactionRadius();
@@ -115,7 +115,7 @@ void NextSubvolumes::setUpGrid() {
     }
 }
 
-void NextSubvolumes::assignParticles() {
+void CPUNextSubvolumes::assignParticles() {
     // todo this can be easily parallelized
     const auto data = kernel->getKernelStateModel().getParticleData();
     std::for_each(cells.begin(), cells.end(), [](GridCell &cell) {
@@ -138,7 +138,7 @@ void NextSubvolumes::assignParticles() {
 
 }
 
-void NextSubvolumes::evaluateReactions() {
+void CPUNextSubvolumes::evaluateReactions() {
     std::vector<GridCell *>::size_type n_cells_done = 0;
     const auto& ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
@@ -155,7 +155,7 @@ void NextSubvolumes::evaluateReactions() {
         std::pop_heap(eventQueue.begin(), get_event_queue_end(), comparator);
         auto currentCell = eventQueue.back();
         bool performedSomething = false;
-        if (currentCell->timestamp < kernel->getKernelContext().getTimeStep()) {
+        if (currentCell->timestamp < timeStep) {
             const auto& particles = currentCell->particles;
             const auto& event = currentCell->nextEvent;
             if(event.isValid()) {
@@ -247,7 +247,7 @@ void NextSubvolumes::evaluateReactions() {
     }
 }
 
-double NextSubvolumes::getMaxReactionRadius() const {
+double CPUNextSubvolumes::getMaxReactionRadius() const {
     double maxReactionRadius = 0.0;
     for (auto &&e : kernel->getKernelContext().getAllOrder2Reactions()) {
         maxReactionRadius = std::max(maxReactionRadius, e->getEductDistance());
@@ -255,7 +255,7 @@ double NextSubvolumes::getMaxReactionRadius() const {
     return maxReactionRadius;
 }
 
-void NextSubvolumes::setUpNeighbors(NextSubvolumes::GridCell &cell) {
+void CPUNextSubvolumes::setUpNeighbors(CPUNextSubvolumes::GridCell &cell) {
     for (int _i = -1; _i < 2; ++_i) {
         for (int _j = -1; _j < 2; ++_j) {
             for (int _k = -1; _k < 2; ++_k) {
@@ -268,8 +268,8 @@ void NextSubvolumes::setUpNeighbors(NextSubvolumes::GridCell &cell) {
     }
 }
 
-NextSubvolumes::GridCell *
-NextSubvolumes::getCell(signed_cell_index_t i, signed_cell_index_t j, signed_cell_index_t k) {
+CPUNextSubvolumes::GridCell *
+CPUNextSubvolumes::getCell(signed_cell_index_t i, signed_cell_index_t j, signed_cell_index_t k) {
     const auto &periodic = kernel->getKernelContext().getPeriodicBoundary();
     if (periodic[0]) i = static_cast<cell_index_t>(readdy::util::numeric::positive_modulo(i, nCells[0]));
     else if (i < 0 || i >= nCells[0]) return nullptr;
@@ -280,9 +280,9 @@ NextSubvolumes::getCell(signed_cell_index_t i, signed_cell_index_t j, signed_cel
     return &*(cells.begin() + k + j * nCells[2] + i * nCells[2] * nCells[1]);
 }
 
-void NextSubvolumes::setUpEventQueue() {
+void CPUNextSubvolumes::setUpEventQueue() {
     const auto &ctx = kernel->getKernelContext();
-    const auto dt = ctx.getTimeStep();
+    const auto dt = timeStep;
     {
         // todo: this can easily be parallelized
         for (auto &cell : cells) {
@@ -303,7 +303,7 @@ void NextSubvolumes::setUpEventQueue() {
     std::make_heap(eventQueue.begin(), eventQueue.end(), comparator);
 }
 
-void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
+void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
     const auto &ctx = kernel->getKernelContext();
     std::vector<ReactionEvent> events;
     // order 1 reactions
@@ -366,7 +366,7 @@ void NextSubvolumes::setUpCell(NextSubvolumes::GridCell &cell) {
     }
 }
 
-NextSubvolumes::GridCell *NextSubvolumes::getCell(const readdy::model::Vec3 &particlePosition) {
+CPUNextSubvolumes::GridCell *CPUNextSubvolumes::getCell(const readdy::model::Vec3 &particlePosition) {
     const auto& simBoxSize = kernel->getKernelContext().getBoxSize();
     const auto i = static_cast<cell_index_t>(floor((particlePosition[0] + .5*simBoxSize[0]) / cellSize[0]));
     const auto j = static_cast<cell_index_t>(floor((particlePosition[1] + .5*simBoxSize[1]) / cellSize[1]));
@@ -374,7 +374,7 @@ NextSubvolumes::GridCell *NextSubvolumes::getCell(const readdy::model::Vec3 &par
     return getCell(i, j, k);
 }
 
-NextSubvolumes::~NextSubvolumes() = default;
+CPUNextSubvolumes::~CPUNextSubvolumes() = default;
 
 
 }

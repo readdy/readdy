@@ -78,8 +78,8 @@ readdy::plugin::_internal::KernelPluginDecorator::getPotentialFactory() const {
     return reference->getPotentialFactory();
 }
 
-readdy::model::programs::ProgramFactory &readdy::plugin::_internal::KernelPluginDecorator::getProgramFactory() const {
-    return reference->getProgramFactory();
+readdy::model::actions::ActionFactory &readdy::plugin::_internal::KernelPluginDecorator::getActionFactory() const {
+    return reference->getActionFactory();
 }
 
 readdy::model::reactions::ReactionFactory &
@@ -95,11 +95,6 @@ readdy::plugin::_internal::KernelPluginDecorator::getObservableFactory() const {
 readdy::signals::scoped_connection
 readdy::plugin::_internal::KernelPluginDecorator::connectObservable(readdy::model::observables::ObservableBase *const observable) {
     return reference->connectObservable(observable);
-}
-
-std::unique_ptr<readdy::model::programs::Program>
-readdy::plugin::_internal::KernelPluginDecorator::createProgram(const std::string &name) const {
-    return reference->createProgram(name);
 }
 
 void readdy::plugin::_internal::KernelPluginDecorator::evaluateObservables(model::observables::time_step_type t) {

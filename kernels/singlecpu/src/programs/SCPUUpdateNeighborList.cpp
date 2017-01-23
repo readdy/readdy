@@ -30,14 +30,15 @@
  */
 #include <readdy/kernel/singlecpu/programs/SCPUUpdateNeighborList.h>
 
+namespace core_actions = readdy::model::actions;
+
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
-SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *kernel) : kernel(kernel) {}
+namespace actions {
 
-void SCPUUpdateNeighborList::execute() {
-    switch (action) {
+void SCPUUpdateNeighborList::perform() {
+    switch (operation) {
         case create:
             kernel->getKernelStateModel().updateNeighborList();
             break;
@@ -46,6 +47,10 @@ void SCPUUpdateNeighborList::execute() {
             break;
     }
 }
+
+SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *const kernel, core_actions::UpdateNeighborList::Operation op,
+                                               double skinSize)
+        : UpdateNeighborList(op, skinSize), kernel(kernel){ }
 }
 }
 }

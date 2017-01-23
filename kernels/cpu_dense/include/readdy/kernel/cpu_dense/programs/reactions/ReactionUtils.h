@@ -68,7 +68,7 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
 }
 
 data_t::update_t handleEventsGillespie(
-        CPUDKernel const *const kernel,
+        CPUDKernel const *const kernel, double timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events);
 

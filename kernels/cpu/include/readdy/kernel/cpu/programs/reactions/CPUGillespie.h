@@ -42,15 +42,16 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-class CPUGillespie : public readdy::model::programs::reactions::Gillespie {
+class CPUGillespie : public readdy::model::actions::reactions::Gillespie {
     using event_t = Event;
     using reaction_idx_t = event_t::index_type;
+    using super = readdy::model::actions::reactions::Gillespie;
 
 public:
 
-    CPUGillespie(CPUKernel const *const kernel);
+    CPUGillespie(CPUKernel const *const kernel, double timeStep);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
 protected:
     CPUKernel const *const kernel;

@@ -38,14 +38,14 @@ namespace kernel {
 namespace cpu_dense {
 namespace programs {
 
-class CPUDCompartments : public readdy::model::programs::Compartments {
+class CPUDCompartments : public readdy::model::actions::Compartments {
 public:
     using compartmentIdx_t = size_t;
     using particleType_t = unsigned int;
 
     CPUDCompartments(CPUDKernel const *const kernel);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
     virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) override;
 

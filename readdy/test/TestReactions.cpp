@@ -67,7 +67,6 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     kernel->getKernelContext().setDiffusionConstant("AB", 0.0);
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->getKernelContext().setBoxSize(5, 5, 5);
-    kernel->getKernelContext().setTimeStep(1);
     kernel->registerReaction<readdy::model::reactions::Fusion>("Form complex", "A", "B", "AB", .5, 1.0);
     kernel->registerReaction<readdy::model::reactions::Fission>("Dissolve", "AB", "A", "B", .5, 1.0);
 
@@ -97,9 +96,9 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
         const auto progs = kernel->getAvailablePrograms();
         if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
-            conf = std::move(conf.withReactionScheduler<readdy::model::programs::reactions::GillespieParallel>());
+            conf = std::move(conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>());
         }
-        conf.configureAndRun(10);
+        conf.configureAndRun(1, 10);
     }
 
 }

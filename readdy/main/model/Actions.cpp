@@ -29,22 +29,50 @@
  * @date 17.11.16
  */
 
-#include <readdy/model/programs/Programs.h>
-#include <readdy/common/logging.h>
+#include <readdy/model/programs/Actions.h>
+#include <readdy/model/Kernel.h>
 
 namespace readdy {
 namespace model {
-namespace programs {
+namespace actions {
 
-
-void UpdateNeighborList::setSkinSize(double skinSize) {
-    log::console()->warn("The selected kernel has no Verlet list implemented, thus ignoring the skin size");
-}
 
 bool UpdateNeighborList::supportsSkin() const {
     return false;
 }
 
+UpdateNeighborList::UpdateNeighborList(UpdateNeighborList::Operation operation, double skinSize)
+        : operation(operation), skinSize(skinSize) {
+    if(skinSize >= 0 && !supportsSkin()) {
+        log::console()->warn("The selected kernel has no Verlet list implemented, thus ignoring the skin size");
+    }
+}
+
+EulerBDIntegrator::EulerBDIntegrator(double timeStep) : TimeStepDependentAction(timeStep) {}
+
+reactions::UncontrolledApproximation::UncontrolledApproximation(double timeStep) : TimeStepDependentAction(timeStep) {}
+
+reactions::Gillespie::Gillespie(double timeStep) : TimeStepDependentAction(timeStep) {}
+
+reactions::GillespieParallel::GillespieParallel(double timeStep) : TimeStepDependentAction(timeStep) {}
+
+reactions::NextSubvolumes::NextSubvolumes(double timeStep) : TimeStepDependentAction(timeStep) {}
+
+AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
+        : particles(particles), kernel(kernel) {}
+
+AddParticles::AddParticles(Kernel *const kernel, const Particle &particle)
+        : AddParticles(kernel, std::vector<Particle>{particle}) {}
+
+void AddParticles::perform() {
+    if(kernel) {
+        kernel->getKernelStateModel().addParticles(particles);
+    } else {
+        log::console()->critical("Tried to perform {} without providing a valid kernel!", getActionName<AddParticles>());
+    }
+}
+
+CalculateForces::CalculateForces() : Action() {}
 }
 }
 }

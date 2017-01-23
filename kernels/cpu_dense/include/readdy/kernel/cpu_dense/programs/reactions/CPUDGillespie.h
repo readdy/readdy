@@ -42,15 +42,15 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-class CPUDGillespie : public readdy::model::programs::reactions::Gillespie {
+class CPUDGillespie : public readdy::model::actions::reactions::Gillespie {
     using event_t = Event;
     using reaction_idx_t = event_t::index_type;
-
+    using super = readdy::model::actions::reactions::Gillespie;
 public:
 
-    CPUDGillespie(CPUDKernel const *const kernel);
+    CPUDGillespie(CPUDKernel const *const kernel, double timeStep);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
 protected:
     CPUDKernel const *const kernel;

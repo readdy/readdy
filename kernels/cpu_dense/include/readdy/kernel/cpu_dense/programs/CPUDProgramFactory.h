@@ -39,10 +39,28 @@ namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
-class CPUDProgramFactory : public readdy::model::programs::ProgramFactory {
-
+class CPUDProgramFactory : public readdy::model::actions::ActionFactory {
+    CPUDKernel *const kernel;
 public:
-    CPUDProgramFactory(CPUDKernel *kernel);
+    CPUDProgramFactory(CPUDKernel *const kernel);
+
+    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override;
+
+    readdy::model::actions::CalculateForces *createCalculateForces() const override;
+
+    readdy::model::actions::UpdateNeighborList *
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation, double) const override;
+
+    readdy::model::actions::Compartments *createCompartments() const override;
+
+    readdy::model::actions::reactions::UncontrolledApproximation *
+    createUncontrolledApproximation(double timeStep) const override;
+
+    readdy::model::actions::reactions::Gillespie *createGillespie(double timeStep) const override;
+
+    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(double timeStep) const override;
+
+    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override;
 };
 
 }

@@ -56,22 +56,22 @@ void setupParticles(readdy::model::Kernel &kernel) {
     for (auto i = 0; i < nParticlesB; ++i) kernel.addParticle("B", readdy::model::rnd::normal3());
 }
 
-void run(readdy::model::Kernel &kernel) {
+void run(readdy::model::Kernel &kernel, double timeStep) {
     unsigned int nSteps = 2000;
-    auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&nl = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
-    nl->execute();
+    auto &&integrator = kernel.createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
+    auto &&nl = kernel.createAction<readdy::model::actions::UpdateNeighborList>();
+    auto &&forces = kernel.createAction<readdy::model::actions::CalculateForces>();
+    nl->perform();
     for (readdy::model::observables::time_step_type &&t = 0; t < nSteps; ++t) {
-        forces->execute();
-        integrator->execute();
-        nl->execute();
+        forces->perform();
+        integrator->perform();
+        nl->perform();
     }
 }
 
 TEST_P(TestPotentials, TestParticlesStayInBox) {
     kernel->getKernelContext().setBoxSize(5, 5, 5);
-    kernel->getKernelContext().setTimeStep(.005);
+    const double timeStep = .005;
 
     setupParticles(*kernel);
 
@@ -103,12 +103,12 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
         ASSERT_TRUE(allWithinBounds);
     });
     auto connection = kernel->connectObservable(ppObs.get());
-    run(*kernel);
+    run(*kernel, timeStep);
 }
 
 TEST_P(TestPotentials, TestParticleStayInSphere) {
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().setTimeStep(.005);
+    const double timeStep = .005;
 
     setupParticles(*kernel);
 
@@ -136,7 +136,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
         ASSERT_TRUE(allWithinBounds);
     });
     auto connection = kernel->connectObservable(ppObs.get());
-    run(*kernel);
+    run(*kernel, timeStep);
 }
 
 INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,

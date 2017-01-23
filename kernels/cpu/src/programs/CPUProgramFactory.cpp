@@ -39,37 +39,47 @@
 #include <readdy/kernel/cpu/programs/reactions/CPUGillespieParallel.h>
 #include <readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h>
 
-namespace core_p = readdy::model::programs;
+namespace core_p = readdy::model::actions;
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-CPUProgramFactory::CPUProgramFactory(CPUKernel *kernel) {
-    factory[core_p::getProgramName<core_p::reactions::UncontrolledApproximation>()] = [kernel] {
-        return new reactions::CPUUncontrolledApproximation(kernel);
-    };
-    factory[core_p::getProgramName<core_p::EulerBDIntegrator>()] = [kernel] {
-        return new CPUEulerBDIntegrator(kernel);
-    };
-    factory[core_p::getProgramName<core_p::UpdateNeighborList>()] = [kernel] {
-        return new CPUUpdateNeighborList(kernel);
-    };
-    factory[core_p::getProgramName<core_p::CalculateForces>()] = [kernel] {
-        return new CPUCalculateForces(kernel);
-    };
-    factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
-        return new reactions::CPUGillespie(kernel);
-    };
-    factory[core_p::getProgramName<core_p::reactions::GillespieParallel>()] = [kernel] {
-        return new reactions::CPUGillespieParallel(kernel);
-    };
-    factory[core_p::getProgramName<core_p::reactions::NextSubvolumes>()] = [kernel] {
-        return new reactions::NextSubvolumes(kernel);
-    };
-    factory[core_p::getProgramName<core_p::Compartments>()] = [kernel] {
-        return new CPUCompartments(kernel);
-    };
+CPUProgramFactory::CPUProgramFactory(CPUKernel *const kernel) : kernel(kernel) { }
+
+core_p::EulerBDIntegrator *CPUProgramFactory::createEulerBDIntegrator(double timeStep) const {
+    return new CPUEulerBDIntegrator(kernel, timeStep);
+}
+
+core_p::CalculateForces *CPUProgramFactory::createCalculateForces() const {
+    return new CPUCalculateForces(kernel);
+}
+
+core_p::UpdateNeighborList *
+CPUProgramFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
+                                            double skinSize) const {
+    return new CPUUpdateNeighborList(kernel, operation, skinSize);
+}
+
+core_p::Compartments *CPUProgramFactory::createCompartments() const {
+    return new CPUCompartments(kernel);
+}
+
+core_p::reactions::UncontrolledApproximation *
+CPUProgramFactory::createUncontrolledApproximation(double timeStep) const {
+    return new reactions::CPUUncontrolledApproximation(kernel, timeStep);
+}
+
+core_p::reactions::Gillespie *CPUProgramFactory::createGillespie(double timeStep) const {
+    return new reactions::CPUGillespie(kernel, timeStep);
+}
+
+core_p::reactions::GillespieParallel *CPUProgramFactory::createGillespieParallel(double timeStep) const {
+    return new reactions::CPUGillespieParallel(kernel, timeStep);
+}
+
+core_p::reactions::NextSubvolumes *CPUProgramFactory::createNextSubvolumes(double timeStep) const {
+    return new reactions::CPUNextSubvolumes(kernel, timeStep);
 }
 }
 }

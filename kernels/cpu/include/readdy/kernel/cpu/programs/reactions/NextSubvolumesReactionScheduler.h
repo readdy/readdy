@@ -32,7 +32,7 @@
 #ifndef READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
 #define READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include "readdy/kernel/cpu/CPUKernel.h"
 
 namespace readdy {
@@ -41,14 +41,15 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-class NextSubvolumes : public readdy::model::programs::reactions::NextSubvolumes {
+class CPUNextSubvolumes : public readdy::model::actions::reactions::NextSubvolumes {
 using cell_index_t = unsigned int;
 using signed_cell_index_t = typename std::make_signed<cell_index_t>::type;
+    using super = readdy::model::actions::reactions::NextSubvolumes;
 public:
-    NextSubvolumes(const CPUKernel *const kernel);
-    ~NextSubvolumes();
+    CPUNextSubvolumes(const CPUKernel *const kernel, double timeStep);
+    ~CPUNextSubvolumes();
 
-    virtual void execute() override;
+    virtual void perform() override;
 
     double getMaxReactionRadius() const;
 private:

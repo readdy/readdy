@@ -33,25 +33,25 @@
 #ifndef READDY_DENSE_CALCULATEFORCES_H
 #define READDY_DENSE_CALCULATEFORCES_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
-class CPUDCalculateForces : public readdy::model::programs::CalculateForces {
+class CPUDCalculateForces : public readdy::model::actions::CalculateForces {
 
 public:
 
-    CPUDCalculateForces(CPUDKernel *kernel) : kernel(kernel) {}
+    CPUDCalculateForces(CPUDKernel *const kernel) : kernel(kernel) {}
 
-    virtual void execute() override {
+    virtual void perform() override {
         kernel->getKernelStateModel().calculateForces();
     }
 
 protected:
-    CPUDKernel *kernel;
+    const CPUDKernel *const kernel;
 };
 }
 }

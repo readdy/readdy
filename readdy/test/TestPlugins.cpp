@@ -81,9 +81,4 @@ TEST(KernelProvider, TestFoo) {
     readdy::log::console()->debug("foo name: {}", name);
 }
 
-TEST(KernelProvider, TestTestProgram) {
-    auto single_cpu_kernel = plug::KernelProvider::getInstance().create("SingleCPU");
-    auto test_program = single_cpu_kernel.get()->createProgram("Test");
-    test_program.get()->execute();
-}
 }

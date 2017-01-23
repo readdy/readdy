@@ -390,8 +390,6 @@ public:
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
                                       const double rate);
 
-    void setTimeStep(const double);
-
     virtual void run(const readdy::model::observables::time_step_type steps, const double timeStep);
 
     double getRecommendedTimeStep(unsigned int N) const;

@@ -34,10 +34,10 @@
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
+namespace actions {
 SCPUCalculateForces::SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {}
 
-void SCPUCalculateForces::execute() {
+void SCPUCalculateForces::perform() {
     kernel->getKernelStateModel().calculateForces();
 }
 

@@ -207,7 +207,6 @@ PYBIND11_PLUGIN (api) {
             .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal)
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
-            .def("set_time_step", &sim::setTimeStep)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)

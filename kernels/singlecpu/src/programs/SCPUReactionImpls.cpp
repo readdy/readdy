@@ -36,18 +36,17 @@ using rdy_particle_t = readdy::model::Particle;
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
+namespace actions {
 
 namespace reactions {
-SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel const *const kernel)
-        : kernel(kernel) {
+SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel const *const kernel, double timeStep)
+        : readdy::model::actions::reactions::UncontrolledApproximation(timeStep), kernel(kernel) {
 }
 
-void SCPUUncontrolledApproximation::execute() {
+void SCPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &dist = ctx.getDistSquaredFun();
     const auto &fixPos = ctx.getFixPositionFun();
-    const auto &dt = ctx.getTimeStep();
     auto data = kernel->getKernelStateModel().getParticleData();
     std::vector<rdy_particle_t> newParticles{};
     std::vector<std::function<void()>> events{};
@@ -60,7 +59,7 @@ void SCPUUncontrolledApproximation::execute() {
             // gather reactions
             const auto &reactions = ctx.getOrder1Reactions(*it_type);
             for (const auto &reaction : reactions) {
-                auto r = reaction->getRate() * dt;
+                auto r = reaction->getRate() * timeStep;
                 if (readdy::model::rnd::uniform_real() < r) {
                     const size_t particleIdx = (const size_t) (it_type - data->begin_types());
                     events.push_back([particleIdx, &newParticles, &reaction, this] {
@@ -129,7 +128,7 @@ void SCPUUncontrolledApproximation::execute() {
             for (const auto &reaction : reactions) {
                 // if close enough and coin flip successful
                 if (distSquared < reaction->getEductDistance() * reaction->getEductDistance()
-                    && readdy::model::rnd::uniform_real() < reaction->getRate() * dt) {
+                    && readdy::model::rnd::uniform_real() < reaction->getRate() * timeStep) {
                     events.push_back([idx1, idx2, this, &newParticles, &reaction] {
                         auto &&_data = kernel->getKernelStateModel().getParticleData();
                         if (_data->isMarkedForDeactivation(idx1)) return;
@@ -274,7 +273,6 @@ std::vector<readdy::model::Particle> SCPUGillespie::handleEvents(std::vector<Rea
 
     const auto &ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
-    const auto &dt = ctx.getTimeStep();
     /**
      * Handle gathered reaction events
      */
@@ -294,7 +292,7 @@ std::vector<readdy::model::Particle> SCPUGillespie::handleEvents(std::vector<Rea
             if (eventIt == events.end() - nDeactivated) {
                 throw std::runtime_error("this should not happen (event not found)");
             }
-            if (readdy::model::rnd::uniform_real() < event.reactionRate * dt) {
+            if (readdy::model::rnd::uniform_real() < event.reactionRate * timeStep) {
                 /**
                  * Perform reaction
                  */

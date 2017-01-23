@@ -20,28 +20,59 @@
  ********************************************************************/
 
 
-//
-// Created by clonker on 11.04.16.
-//
+/**
+ * This file contains the declaration of the base class of all programs. They
+ * have a name and potentially a templatized ProgramName struct.
+ *
+ * @file Program.h
+ * @brief Declaration of the program base class.
+ * @author clonker
+ * @date 08.04.16
+ */
 
-#include <readdy/kernel/singlecpu/programs/SCPUTestProgram.h>
-#include <readdy/common/logging.h>
+#ifndef READDY_MAIN_PROGRAM_H
+#define READDY_MAIN_PROGRAM_H
 
-namespace sctp = readdy::kernel::scpu::programs;
+#include <memory>
 
-sctp::SCPUTestProgram::SCPUTestProgram() : readdy::model::programs::Test() {
+#if READDY_OSX
+#include <string>
+#endif
+
+namespace readdy {
+namespace model {
+namespace actions {
+
+class Action {
+public:
+    Action() {}
+
+    virtual ~Action() = default;
+
+    virtual void perform() = 0;
+};
+
+class TimeStepDependentAction : public Action {
+public:
+    TimeStepDependentAction(double timeStep) : timeStep(timeStep) {}
+
+    virtual ~TimeStepDependentAction() = default;
+
+    double getTimeStep() const {
+        return timeStep;
+    }
+
+    void setTimeStep(double timeStep) {
+        TimeStepDependentAction::timeStep = timeStep;
+    }
+
+protected:
+    double timeStep;
+};
 
 }
-
-void sctp::SCPUTestProgram::execute() {
-    log::console()->debug("execute called!");
+}
 }
 
-sctp::SCPUTestProgram::~SCPUTestProgram() = default;
 
-
-
-
-
-
-
+#endif //READDY_MAIN_PROGRAM_H

@@ -47,8 +47,6 @@ struct KernelContext::Impl {
     std::unordered_map<particle_t::type_type, double> diffusionConstants{};
     std::unordered_map<particle_t::type_type, double> particleRadii{};
 
-    double timeStep;
-
     std::function<void(Vec3 &)> fixPositionFun = [](
             Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, 1., 1., 1.); };
     std::function<Vec3(const Vec3 &, const Vec3 &)> diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
@@ -192,14 +190,6 @@ double KernelContext::getDiffusionConstant(const std::string &particleType) cons
 
 void KernelContext::setDiffusionConstant(const std::string &particleType, double D) {
     pimpl->diffusionConstants[getOrCreateTypeId(particleType)] = D;
-}
-
-double KernelContext::getTimeStep() const {
-    return pimpl->timeStep;
-}
-
-void KernelContext::setTimeStep(double dt) {
-    pimpl->timeStep = dt;
 }
 
 // todo respect const correctness, dont create new entries, thx
@@ -430,7 +420,6 @@ void KernelContext::configure(bool debugOutput) {
         log::console()->debug("Configured kernel context with: ");
         log::console()->debug("--------------------------------");
         log::console()->debug(" - kBT = {}", getKBT());
-        log::console()->debug(" - tau = {}", getTimeStep());
         log::console()->debug(" - periodic b.c. = ({}, {}, {})", getPeriodicBoundary()[0], getPeriodicBoundary()[1],
                               getPeriodicBoundary()[2]);
         log::console()->debug(" - box size = ({}, {}, {})", getBoxSize()[0], getBoxSize()[1], getBoxSize()[2]);

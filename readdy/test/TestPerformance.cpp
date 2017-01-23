@@ -72,6 +72,7 @@
 namespace {
 
 using file_t = readdy::io::File;
+using update_neighbor_list_t = readdy::model::actions::UpdateNeighborList;
 
 const std::string SKIN_FACTOR = "skin";
 const std::string NUMBERS_FACTOR = "numbers";
@@ -83,12 +84,13 @@ const std::string BOXLENGTHS_FACTOR = "boxlengths";
  */
 class PerformanceScenario {
 public:
-    PerformanceScenario(const std::string &kernelName) :
-            kernel(readdy::plugin::KernelProvider::getInstance().create(kernelName)),
-            neighborList(kernel->createProgram<readdy::model::programs::UpdateNeighborList>()) {
+    PerformanceScenario(const std::string &kernelName, double timeStep, double skin = -1) :
+            kernel(readdy::plugin::KernelProvider::getInstance().create(kernelName)), timeStep(timeStep),
+            neighborList(kernel->createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skin)),
+            clearNeighborList(kernel->createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear)) {
     }
 
-    template<typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
+    template<typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
     void perform(const readdy::model::observables::time_step_type steps = 5, bool verbose = false) {
         this->configure();
         const auto result = runPerformanceTest<ReactionScheduler>(steps, verbose);
@@ -136,20 +138,20 @@ protected:
      * @param verbose decides if to print information on context and performance
      * @return computation time per timestep for {forces, integrator, neighborlist, reactions}
      */
-    template<typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
+    template<typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
     std::array<double, 4>
     runPerformanceTest(readdy::model::observables::time_step_type steps, const bool verbose = false) {
-        auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-        auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
-        auto &&reactionsProgram = kernel->createProgram<ReactionScheduler>();
+        auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
+        auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
+        auto &&reactionsProgram = kernel->createAction<ReactionScheduler>(timeStep);
         kernel->getKernelContext().configure(verbose);
 
         using timer = readdy::util::Timer;
         double timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0;
-        neighborList->execute();
+        neighborList->perform();
         {
             timer c("forces", verbose);
-            forces->execute();
+            forces->perform();
             timeForces += c.getSeconds();
         }
         for (readdy::model::observables::time_step_type t = 0; t < steps; ++t) {
@@ -159,32 +161,31 @@ protected:
             }
             {
                 timer c("integrator", verbose);
-                integrator->execute();
+                integrator->perform();
                 timeIntegrator += c.getSeconds();
             }
             {
                 timer c("neighbor list 1", verbose);
-                neighborList->execute();
+                neighborList->perform();
                 timeNeighborList += c.getSeconds();
             }
             {
                 timer c("reactions", verbose);
-                reactionsProgram->execute();
+                reactionsProgram->perform();
                 timeReactions += c.getSeconds();
             }
             {
                 timer c("neighbor list 2", verbose);
-                neighborList->execute();
+                neighborList->perform();
                 timeNeighborList += c.getSeconds();
             }
             {
                 timer c("forces", verbose);
-                forces->execute();
+                forces->perform();
                 timeForces += c.getSeconds();
             }
         }
-        neighborList->setAction(readdy::model::programs::UpdateNeighborList::Action::clear);
-        neighborList->execute();
+        clearNeighborList->perform();
         readdy::log::console()->critical("DONE!");
         timeForces /= steps + 1;
         timeIntegrator /= steps;
@@ -207,11 +208,13 @@ protected:
 
     double timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0; // main result
     double particleNumber = 0, systemSize = 0, relativeDisplacement = 0, reactivity = 0;
+    double timeStep;
 
 protected:
     // the (N,L,S,R) observables defined above
     std::unique_ptr<readdy::model::Kernel> kernel;
-    std::unique_ptr<readdy::model::programs::UpdateNeighborList> neighborList;
+    std::unique_ptr<readdy::model::actions::UpdateNeighborList> neighborList;
+    std::unique_ptr<readdy::model::actions::UpdateNeighborList> clearNeighborList;
     bool hasPerformed = false;
 };
 
@@ -230,7 +233,7 @@ public:
     static const std::string name;
 
     ReactiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
-            : PerformanceScenario(kernelName) {
+            : PerformanceScenario(kernelName, .1, skin * factors.at(SKIN_FACTOR)) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
         numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
         boxLength *= factors.at(BOXLENGTHS_FACTOR);
@@ -239,8 +242,6 @@ public:
         systemSize = std::pow(boxLength, 3.) / std::pow(4.5, 3.);
         relativeDisplacement = std::sqrt(2 * diffusionConstants["A"] * timeStep) / 4.5;
         reactivity = rateOn * timeStep;
-
-        neighborList->setSkinSize(skin * factors.at(SKIN_FACTOR));
     };
 
     virtual void configure() override {
@@ -252,7 +253,6 @@ public:
             ctx.setParticleRadius(type, radii[type]);
             ctx.setDiffusionConstant(type, diffusionConstants[type]);
         }
-        ctx.setTimeStep(timeStep);
 
         kernel->registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", rateOn, 4.5);
         kernel->registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", rateOff, 4.5);
@@ -284,7 +284,7 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, timeStep = 0.1, skin = 4.5;
+    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, skin = 4.5;
     std::map<std::string, double> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
@@ -303,7 +303,7 @@ public:
     static const std::string name;
 
     ReactiveCollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
-            : PerformanceScenario(kernelName) {
+            : PerformanceScenario(kernelName, .1, skin * factors.at(SKIN_FACTOR)) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
         numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
         boxLength *= factors.at(BOXLENGTHS_FACTOR);
@@ -312,8 +312,6 @@ public:
         systemSize = std::pow(boxLength, 3.) / std::pow(4.5, 3.);
         relativeDisplacement = std::sqrt(2 * diffusionConstants["A"] * timeStep) / 4.5;
         reactivity = rateOn * timeStep;
-
-        neighborList->setSkinSize(skin * factors.at(SKIN_FACTOR));
     };
 
     virtual void configure() override {
@@ -325,8 +323,6 @@ public:
             ctx.setParticleRadius(type, radii[type]);
             ctx.setDiffusionConstant(type, diffusionConstants[type]);
         }
-        ctx.setTimeStep(timeStep);
-
         kernel->registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", rateOn, 4.5);
         kernel->registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", rateOff, 4.5);
 
@@ -366,7 +362,7 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, timeStep = 0.1, skin = 4.5, forceConstant = 10.;
+    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, skin = 4.5, forceConstant = 10.;
     std::map<std::string, double> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
@@ -382,7 +378,7 @@ public:
     static const std::string name;
 
     CollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
-            : PerformanceScenario(kernelName) {
+            : PerformanceScenario(kernelName, .1, skin * factors.at(SKIN_FACTOR)) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
         numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
         boxLength *= factors.at(BOXLENGTHS_FACTOR);
@@ -391,8 +387,6 @@ public:
         systemSize = std::pow(boxLength, 3.) / std::pow(4.5, 3.);
         relativeDisplacement = std::sqrt(2 * diffusionConstants["A"] * timeStep) / 4.5;
         reactivity = 0;
-
-        neighborList->setSkinSize(skin * factors.at(SKIN_FACTOR));
     };
 
     virtual void configure() override {
@@ -404,8 +398,6 @@ public:
             ctx.setParticleRadius(type, radii[type]);
             ctx.setDiffusionConstant(type, diffusionConstants[type]);
         }
-        ctx.setTimeStep(timeStep);
-
         std::vector<std::pair<std::string, std::string>> pairs = {{"A", "B"},
                                                                   {"B", "C"},
                                                                   {"A", "C"}};
@@ -453,7 +445,7 @@ private:
 
 const std::string CollisiveUniformHomogeneous::name = "CollisiveUniformHomogeneous";
 
-template<typename scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
+template<typename scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
 void scaleNumbersAndBoxsize(const std::string &kernelName) {
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
     const std::vector<double> numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
@@ -515,7 +507,7 @@ void scaleNumbersAndBoxsize(const std::string &kernelName) {
     }
 }
 
-template<typename Scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
+template<typename Scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
 void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     readdy::log::console()->debug("using reduced numbers: {}", reducedNumbers);
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
@@ -530,7 +522,8 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
                   10., 12., 15., 20., 40., 60, 80, 100};
     }
     std::vector<double> skinSizes;
-    if(readdy::plugin::KernelProvider::getInstance().create(kernelName)->createProgram<readdy::model::programs::UpdateNeighborList>()->supportsSkin()){
+    if(readdy::plugin::KernelProvider::getInstance().create(
+            kernelName)->createAction<readdy::model::actions::UpdateNeighborList>()->supportsSkin()){
         skinSizes = {.0, .1, .2, .3, .4, .5, 1, 2, 3, 4, 5, 10};
     } else {
         skinSizes = {-1};
@@ -593,7 +586,7 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     }
 }
 
-/*template<typename Scenario_t, typename ReactionScheduler=readdy::model::programs::reactions::Gillespie>
+/*template<typename Scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
 void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) {
     readdy::log::console()->debug("using reduced numbers: {}", reducedNumbers);
     std::vector<double> numbers = {80};
@@ -654,9 +647,9 @@ void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) 
 }*/
 
 TEST(TestPerformance, ReactiveCPU) {
-    //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::programs::reactions::Gillespie>("SingleCPU", true);
-    //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::programs::reactions::GillespieParallel>("CPU_Dense", false);
-    scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::programs::reactions::GillespieParallel>("CPU", false);
+    //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::Gillespie>("SingleCPU", true);
+    //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>("CPU_Dense", false);
+    scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>("CPU", false);
 }
 
 }

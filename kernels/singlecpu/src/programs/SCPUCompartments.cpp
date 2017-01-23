@@ -32,11 +32,11 @@
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
+namespace actions {
 
 SCPUCompartments::SCPUCompartments(SCPUKernel const *const kernel) : kernel(kernel) {}
 
-void SCPUCompartments::execute() {
+void SCPUCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
     auto posIt = data->begin_positions();

@@ -134,10 +134,6 @@ public:
 
     void setParticleRadius(const std::string &type, const double r);
 
-    double getTimeStep() const;
-
-    void setTimeStep(double dt);
-
     const std::vector<const reactions::Reaction<1> *> getAllOrder1Reactions() const;
 
     const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string &name) const;

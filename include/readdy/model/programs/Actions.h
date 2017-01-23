@@ -43,9 +43,10 @@
 #ifndef READDY_MAIN_PROGRAMS_H_H
 #define READDY_MAIN_PROGRAMS_H_H
 
-#include <readdy/model/programs/Program.h>
+#include <readdy/model/programs/Action.h>
 #include <readdy/model/Particle.h>
 #include <type_traits>
+#include <readdy/model/observables/Observable.h>
 
 #if READDY_OSX || READDY_WINDOWS
 #include <functional>
@@ -53,48 +54,50 @@
 
 namespace readdy {
 namespace model {
-namespace programs {
+namespace actions {
 
-class Test : public Program {
+class AddParticles : public Action {
 
 public:
-    Test() : Program() {}
+    AddParticles(Kernel *const kernel, const std::vector<Particle> &particles);
+    AddParticles(Kernel *const kernel, const Particle& particle);
+
+    void perform() override;
+
+protected:
+    std::vector<Particle> particles;
+    Kernel *const kernel;
 };
 
-class AddParticle : public Program {
-
+class EulerBDIntegrator : public TimeStepDependentAction {
 public:
-    AddParticle() : Program() {}
+    EulerBDIntegrator(double timeStep);
 };
 
-class EulerBDIntegrator : public Program {
+class CalculateForces : public Action {
 public:
-    EulerBDIntegrator() : Program() {}
+    CalculateForces();
 };
 
-class CalculateForces : public Program {
+class UpdateNeighborList : public Action {
 public:
-    CalculateForces() : Program() {}
-};
-
-class UpdateNeighborList : public Program {
-public:
-    enum Action {
+    enum Operation {
         create, clear
     };
 
-    UpdateNeighborList() : Program() {}
+    UpdateNeighborList(Operation operation = Operation::create, double skinSize = -1);
 
-    void setAction(Action action) { UpdateNeighborList::action = action; }
-    virtual void setSkinSize(double skinSize);
     virtual bool supportsSkin() const;
 
+
 protected:
-    Action action = Action::create;
+    const Operation operation;
+    const double skinSize;
 };
 
 namespace reactions {
-class UncontrolledApproximation : public Program {
+
+class UncontrolledApproximation : public TimeStepDependentAction {
 
 public:
     using reaction_11 = std::function<model::Particle(const model::Particle &)>;
@@ -103,7 +106,7 @@ public:
     using reaction_22 = std::function<void(const model::Particle &, const model::Particle &, model::Particle &,
                                            model::Particle &)>;
 
-    UncontrolledApproximation() : Program() {}
+    UncontrolledApproximation(double timeStep);
 
     virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) = 0;
 
@@ -112,25 +115,27 @@ public:
     virtual void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) = 0;
 
     virtual void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) = 0;
+
 };
 
-class Gillespie : public Program {
+class Gillespie : public TimeStepDependentAction {
 public:
-    Gillespie() : Program() {}
+    Gillespie(double timeStep);
 };
 
-class GillespieParallel : public Program {
+class GillespieParallel : public TimeStepDependentAction {
 public:
-    GillespieParallel() : Program() {}
+    GillespieParallel(double timeStep);
 };
-struct NextSubvolumes : Program {
-    NextSubvolumes() : Program() {}
+
+struct NextSubvolumes : public TimeStepDependentAction {
+    NextSubvolumes(double timeStep);
 };
 }
 
-class Compartments : public Program {
+class Compartments : public Action {
 public:
-    Compartments() : Program() {}
+    Compartments() : Action() {}
 
     virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> characteristicFun) = 0;
 
@@ -138,56 +143,51 @@ public:
 };
 
 template<typename T>
-const std::string getProgramName(typename std::enable_if<std::is_base_of<Test, T>::value>::type * = 0) {
-    return "Test";
+const std::string getActionName(typename std::enable_if<std::is_base_of<AddParticles, T>::value>::type * = 0) {
+    return "AddParticles";
 };
 
 template<typename T>
-const std::string getProgramName(typename std::enable_if<std::is_base_of<AddParticle, T>::value>::type * = 0) {
-    return "AddParticle";
-};
-
-template<typename T>
-const std::string getProgramName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type * = 0) {
+const std::string getActionName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type * = 0) {
     return "EulerBDIntegrator";
 };
 
 template<typename T>
-const std::string getProgramName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type * = 0) {
+const std::string getActionName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type * = 0) {
     return "Calculate forces";
 };
 
 template<typename T>
-const std::string getProgramName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type * = 0) {
+const std::string getActionName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type * = 0) {
     return "Update neighbor list";
 };
 
 template<typename T>
 const std::string
-getProgramName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type * = 0) {
+getActionName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type * = 0) {
     return "UncontrolledApproximation";
 };
 
 template<typename T>
-const std::string getProgramName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
+const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
     return "Gillespie";
 };
 
 template<typename T>
 const std::string
-getProgramName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type * = 0) {
+getActionName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type * = 0) {
     return "GillespieParallel";
 };
 
 template<typename T>
 const std::string
-getProgramName(typename std::enable_if<std::is_base_of<reactions::NextSubvolumes, T>::value>::type * = 0) {
+getActionName(typename std::enable_if<std::is_base_of<reactions::NextSubvolumes, T>::value>::type * = 0) {
     return "NextSubvolumes";
 };
 
 
 template<typename T>
-const std::string getProgramName(typename std::enable_if<std::is_base_of<Compartments, T>::value>::type * = 0) {
+const std::string getActionName(typename std::enable_if<std::is_base_of<Compartments, T>::value>::type * = 0) {
     return "Compartments";
 };
 

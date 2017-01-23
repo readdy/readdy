@@ -25,44 +25,59 @@
 //
 
 #include <readdy/common/make_unique.h>
-#include <readdy/kernel/singlecpu/programs/SCPUProgramFactory.h>
-#include <readdy/kernel/singlecpu/programs/SCPUTestProgram.h>
-#include <readdy/kernel/singlecpu/programs/SCPUAddParticle.h>
+#include <readdy/kernel/singlecpu/programs/SCPUActionFactory.h>
 #include <readdy/kernel/singlecpu/programs/SCPUEulerBDIntegrator.h>
 #include <readdy/kernel/singlecpu/programs/SCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
 #include <readdy/kernel/singlecpu/programs/SCPUUpdateNeighborList.h>
 #include <readdy/kernel/singlecpu/programs/SCPUCompartments.h>
 
+namespace core_actions = readdy::model::actions;
+
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
-SCPUProgramFactory::SCPUProgramFactory(SCPUKernel *kernel) : kernel(kernel) {
-    namespace core_p = readdy::model::programs;
-    factory[core_p::getProgramName<SCPUTestProgram>()] = [] { return new SCPUTestProgram(); };
-    factory[core_p::getProgramName<SCPUAddParticle>()] = [kernel] {
-        return new SCPUAddParticle(kernel);
-    };
-    factory[core_p::getProgramName<SCPUEulerBDIntegrator>()] = [kernel] {
-        return new SCPUEulerBDIntegrator(kernel);
-    };
-    factory[core_p::getProgramName<SCPUUpdateNeighborList>()] = [kernel] {
-        return new SCPUUpdateNeighborList(kernel);
-    };
-    factory[core_p::getProgramName<SCPUCalculateForces>()] = [kernel] {
-        return new SCPUCalculateForces(kernel);
-    };
-    factory[core_p::getProgramName<reactions::SCPUUncontrolledApproximation>()] = [kernel] {
-        return new reactions::SCPUUncontrolledApproximation(kernel);
-    };
-    factory[core_p::getProgramName<core_p::reactions::Gillespie>()] = [kernel] {
-        return new reactions::SCPUGillespie(kernel);
-    };
-    factory[core_p::getProgramName<SCPUCompartments>()] = [kernel] {
-        return new SCPUCompartments(kernel);
-    };
+namespace actions {
+SCPUActionFactory::SCPUActionFactory(SCPUKernel *const kernel) : kernel(kernel) {}
+
+core_actions::EulerBDIntegrator *SCPUActionFactory::createEulerBDIntegrator(double timeStep) const {
+    return new SCPUEulerBDIntegrator(kernel, timeStep);
 }
+
+core_actions::CalculateForces *SCPUActionFactory::createCalculateForces() const {
+    return new SCPUCalculateForces(kernel);
+}
+
+core_actions::UpdateNeighborList *
+SCPUActionFactory::createUpdateNeighborList(core_actions::UpdateNeighborList::Operation op, double skinSize) const {
+    return new SCPUUpdateNeighborList(kernel, op, skinSize);
+}
+
+core_actions::Compartments *SCPUActionFactory::createCompartments() const {
+    return new SCPUCompartments(kernel);
+}
+
+core_actions::reactions::UncontrolledApproximation *
+SCPUActionFactory::createUncontrolledApproximation(double timeStep) const {
+    return new reactions::SCPUUncontrolledApproximation(kernel, timeStep);
+}
+
+core_actions::reactions::Gillespie *SCPUActionFactory::createGillespie(double timeStep) const {
+    return new reactions::SCPUGillespie(kernel, timeStep);
+}
+
+core_actions::reactions::GillespieParallel *SCPUActionFactory::createGillespieParallel(double) const {
+    log::console()->critical("SingleCPU kernel does not support the \"{}\" action",
+                             core_actions::getActionName<core_actions::reactions::GillespieParallel>());
+    return nullptr;
+}
+
+core_actions::reactions::NextSubvolumes *SCPUActionFactory::createNextSubvolumes(double) const {
+    log::console()->critical("SingleCPU kernel does not support the \"{}\" action",
+                             core_actions::getActionName<core_actions::reactions::NextSubvolumes>());
+    return nullptr;
+}
+
 }
 }
 }

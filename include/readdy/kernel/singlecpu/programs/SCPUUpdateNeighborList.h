@@ -32,23 +32,24 @@
 #ifndef READDY_MAIN_SINGLECPUUPDATENEIGHBORLIST_H
 #define READDY_MAIN_SINGLECPUUPDATENEIGHBORLIST_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
+namespace actions {
 
-class SCPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
+class SCPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
 
 public:
-    SCPUUpdateNeighborList(SCPUKernel *kernel);
+    SCPUUpdateNeighborList(SCPUKernel *const kernel,
+                           readdy::model::actions::UpdateNeighborList::Operation op = Operation::create, double = -1);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
 private:
-    SCPUKernel *kernel;
+    SCPUKernel *const kernel;
 };
 
 }

@@ -38,9 +38,9 @@ namespace cpu_dense {
 namespace programs {
 namespace reactions {
 
-CPUDGillespie::CPUDGillespie(const CPUDKernel *const kernel) : kernel(kernel) {}
+CPUDGillespie::CPUDGillespie(const CPUDKernel *const kernel, double timeStep) : super(timeStep), kernel(kernel) {}
 
-void CPUDGillespie::execute() {
+void CPUDGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
     const auto &dist = ctx.getDistSquaredFun();
@@ -51,7 +51,7 @@ void CPUDGillespie::execute() {
     std::vector<event_t> events;
     gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()),
                  nl, *data, alpha, events, dist);
-    auto particlesUpdate = handleEventsGillespie(kernel, false, true, std::move(events));
+    auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events));
 
     // update data structure
     data->deactivateMarked();

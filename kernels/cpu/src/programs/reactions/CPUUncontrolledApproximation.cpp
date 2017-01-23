@@ -55,17 +55,16 @@ using entry_type = data_t::Entry;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-CPUUncontrolledApproximation::CPUUncontrolledApproximation(const CPUKernel *const kernel)
-        : kernel(kernel) {
+CPUUncontrolledApproximation::CPUUncontrolledApproximation(const CPUKernel *const kernel, double timeStep)
+        : super(timeStep), kernel(kernel) {
 
 }
 
 void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const CPUKernel *const kernel,
-                bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
+                double dt, bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getKernelStateModel().getParticleData();
     const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
-    const auto dt = kernel->getKernelContext().getTimeStep();
     auto it = begin;
     auto it_nl = nl_begin;
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
@@ -113,10 +112,9 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
     events.set_value(std::move(eventsUpdate));
 }
 
-void CPUUncontrolledApproximation::execute() {
+void CPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
-    const auto &dt = ctx.getTimeStep();
     auto &data = *kernel->getKernelStateModel().getParticleData();
     auto &nl = *kernel->getKernelStateModel().getNeighborList();
 
@@ -137,7 +135,7 @@ void CPUUncontrolledApproximation::execute() {
             n_eventsFutures.push_back(n_events.get_future());
 
             threads.push_back(thd::scoped_thread(
-                    std::thread(findEvents, it, it + grainSize, it_nl, kernel, true,
+                    std::thread(findEvents, it, it + grainSize, it_nl, kernel, timeStep, true,
                                 std::move(eventPromise), std::move(n_events))
             ));
             it += grainSize;
@@ -150,7 +148,7 @@ void CPUUncontrolledApproximation::execute() {
             n_eventsFutures.push_back(n_events.get_future());
 
             threads.push_back(thd::scoped_thread(
-                    std::thread(findEvents, it, data.cend(), it_nl, kernel, true,
+                    std::thread(findEvents, it, data.cend(), it_nl, kernel, timeStep, true,
                                 std::move(eventPromise), std::move(n_events))
             ));
         }

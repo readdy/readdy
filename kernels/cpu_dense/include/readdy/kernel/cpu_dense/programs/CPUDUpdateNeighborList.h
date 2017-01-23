@@ -33,21 +33,22 @@
 #ifndef READDY_DENSE_UPDATENEIGHBORLIST_H
 #define READDY_DENSE_UPDATENEIGHBORLIST_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
-class CPUDUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
+class CPUDUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
+    using super = readdy::model::actions::UpdateNeighborList;
 public:
 
-    CPUDUpdateNeighborList(CPUDKernel *kernel) : kernel(kernel) {
-    }
+    CPUDUpdateNeighborList(CPUDKernel *const kernel, super::Operation op, double skin)
+            : super(op, skin), kernel(kernel) { }
 
-    virtual void execute() override {
-        switch (action) {
+    virtual void perform() override {
+        switch (operation) {
             case create:
                 kernel->getKernelStateModel().updateNeighborList();
                 break;
@@ -59,7 +60,7 @@ public:
     }
 
 private:
-    CPUDKernel *kernel;
+    CPUDKernel *const kernel;
 };
 }
 }

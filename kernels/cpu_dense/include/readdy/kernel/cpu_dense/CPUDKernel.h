@@ -52,7 +52,7 @@ public:
     // factory method
     static readdy::model::Kernel* create();
 
-    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
 
     virtual CPUDStateModel &getKernelStateModel() const override;
 

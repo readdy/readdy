@@ -32,18 +32,18 @@
 #ifndef READDY_MAIN_SINGLECPUCALCULATEFORCES_H
 #define READDY_MAIN_SINGLECPUCALCULATEFORCES_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
-class SCPUCalculateForces : public readdy::model::programs::CalculateForces {
+namespace actions {
+class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
 public:
     SCPUCalculateForces(SCPUKernel *kernel);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
 private:
     SCPUKernel *kernel;

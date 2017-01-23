@@ -46,18 +46,18 @@ TEST_P(TestObservables, TestParticlePositions) {
     const double diffusionConstant = 1;
     kernel->getKernelContext().setDiffusionConstant("type", diffusionConstant);
     const double timeStep = 1.0;
-    kernel->getKernelContext().setTimeStep(timeStep);
     const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->getKernelStateModel().addParticles(particles);
     auto &&obs = kernel->createObservable<m::observables::Positions>(3);
     auto &&connection = kernel->connectObservable(obs.get());
 
-    auto &&integrator = kernel->createProgram("EulerBDIntegrator");
-    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
+    auto &&integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", timeStep);
+    using update_nl = readdy::model::actions::UpdateNeighborList;
+    auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::create, -1);
     for (readdy::model::observables::time_step_type t = 0; t < 100; t++) {
-        integrator->execute();
-        neighborList->execute();
+        integrator->perform();
+        neighborList->perform();
         kernel->evaluateObservables(t);
     }
 
@@ -121,14 +121,15 @@ TEST_P(TestObservables, TestForcesObservable) {
     harmonicRepulsion->setForceConstant(2.);
     kernel->getKernelContext().registerPotential(std::move(harmonicRepulsion), "C", "C");
 
-    auto &&nl = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
+    using update_nl = readdy::model::actions::UpdateNeighborList;
+    auto &&nl = kernel->createAction<update_nl>();
+    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     kernel->getKernelContext().configure();
     {
         auto obsC = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"C"});
         auto connectionC = kernel->connectObservable(obsC.get());
-        nl->execute();
-        forces->execute();
+        nl->perform();
+        forces->perform();
         kernel->evaluateObservables(2);
         const auto &resC = obsC->getResult();
         m::Vec3 force0 = m::Vec3(0., 1., 0.);

@@ -55,7 +55,7 @@ public:
     enum ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
 
     using rnd_normal = std::function<Vec3(const double, const double)>;
-    static constexpr unsigned int n_educts = N_EDUCTS;
+    // static constexpr unsigned int n_educts = N_EDUCTS;
 
     Reaction(const std::string &name, const double rate, const double eductDistance,
              const double productDistance, const unsigned int n_products) :
@@ -164,7 +164,7 @@ protected:
     const double eductDistance, eductDistanceSquared;
     const double productDistance;
 
-    double weight1, weight2;
+    double weight1 = .5, weight2 = .5;
 };
 
 }

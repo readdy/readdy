@@ -54,7 +54,7 @@ readdy::model::Kernel* CPUDKernel::create() {
     return new CPUDKernel();
 }
 
-readdy::model::programs::ProgramFactory &CPUDKernel::getProgramFactory() const {
+readdy::model::actions::ActionFactory &CPUDKernel::getActionFactory() const {
     return *pimpl->programFactory;
 }
 

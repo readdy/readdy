@@ -32,20 +32,20 @@
 #ifndef READDY_MAIN_SINGLECPUDEFAULTREACTIONPROGRAM_H
 #define READDY_MAIN_SINGLECPUDEFAULTREACTIONPROGRAM_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
-namespace programs {
+namespace actions {
 namespace reactions {
-class SCPUUncontrolledApproximation : public readdy::model::programs::reactions::UncontrolledApproximation {
+class SCPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
 
 public:
-    SCPUUncontrolledApproximation(SCPUKernel const *const kernel);
+    SCPUUncontrolledApproximation(SCPUKernel const *const kernel, double timeStep);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
     virtual void registerReactionScheme_11(const std::string &name, reaction_11 fun) override;
 
@@ -80,13 +80,14 @@ struct ReactionEvent {
 
 };
 
-class SCPUGillespie : public readdy::model::programs::reactions::Gillespie {
+class SCPUGillespie : public readdy::model::actions::reactions::Gillespie {
     using reaction_idx_t = ReactionEvent::index_type;
 public:
 
-    SCPUGillespie(SCPUKernel const *const kernel) : kernel(kernel) {};
+    SCPUGillespie(SCPUKernel const *const kernel, double timeStep)
+            : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
 
-    virtual void execute() override {
+    virtual void perform() override {
         const auto &ctx = kernel->getKernelContext();
         auto data = kernel->getKernelStateModel().getParticleData();
         const auto &dist = ctx.getDistSquaredFun();

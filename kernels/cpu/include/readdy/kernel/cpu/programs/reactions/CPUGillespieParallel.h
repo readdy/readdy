@@ -33,7 +33,7 @@
 #define READDY_CPUKERNEL_GILLESPIEPARALLEL_H
 
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
 #include "ReactionUtils.h"
@@ -44,13 +44,14 @@ namespace cpu {
 namespace programs {
 namespace reactions {
 
-class CPUGillespieParallel : public readdy::model::programs::reactions::GillespieParallel {
+class CPUGillespieParallel : public readdy::model::actions::reactions::GillespieParallel {
+    using super = readdy::model::actions::reactions::GillespieParallel;
 public:
-    CPUGillespieParallel(kernel_t const *const kernel);
+    CPUGillespieParallel(kernel_t const *const kernel, double timeStep);
 
     ~CPUGillespieParallel();
 
-    virtual void execute() override;
+    virtual void perform() override;
 
     void clear();
 

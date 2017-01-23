@@ -33,33 +33,31 @@
 #ifndef READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
 #define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
 
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-class CPUUpdateNeighborList : public readdy::model::programs::UpdateNeighborList {
+class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
+    using super = readdy::model::actions::UpdateNeighborList;
 public:
 
-    CPUUpdateNeighborList(CPUKernel *kernel) : kernel(kernel) {
-    }
+    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, double skin) : super(op, skin), kernel(kernel) { }
 
-    virtual void execute() override {
-        switch (action) {
+    virtual void perform() override {
+        switch (operation) {
             case create:
                 kernel->getKernelStateModel().updateNeighborList();
+                if(skinSize >= 0) kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
                 break;
             case clear:
                 kernel->getKernelStateModel().clearNeighborList();
+                if(skinSize >= 0) kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
                 break;
         }
 
-    }
-
-    virtual void setSkinSize(double skinSize) override {
-        kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
     }
 
     bool supportsSkin() const override {

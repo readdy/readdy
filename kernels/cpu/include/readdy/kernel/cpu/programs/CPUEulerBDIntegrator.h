@@ -33,18 +33,18 @@
 #define READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
 
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace programs {
-class CPUEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
+class CPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 
 public:
-    CPUEulerBDIntegrator(CPUKernel *kernel);
+    CPUEulerBDIntegrator(CPUKernel *kernel, double timeStep);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
 private:
     CPUKernel *kernel;

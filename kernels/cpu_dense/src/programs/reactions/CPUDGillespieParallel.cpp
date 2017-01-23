@@ -78,7 +78,7 @@ bool CPUDGillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
     return particle[longestAxis] >= leftBoundary && particle[longestAxis] < rightBoundary;
 }
 
-void CPUDGillespieParallel::execute() {
+void CPUDGillespieParallel::perform() {
     {
         setupBoxes();
     }
@@ -90,7 +90,8 @@ void CPUDGillespieParallel::execute() {
     }
 }
 
-CPUDGillespieParallel::CPUDGillespieParallel(const kernel_t *const kernel) : kernel(kernel), boxes({}) {}
+CPUDGillespieParallel::CPUDGillespieParallel(const kernel_t *const kernel, double timeStep)
+        : super(timeStep), kernel(kernel), boxes({}) {}
 
 void CPUDGillespieParallel::setupBoxes() {
     if (boxes.empty()) {
@@ -203,7 +204,7 @@ void CPUDGillespieParallel::handleBoxReactions() {
             gatherEvents(kernel, box.particleIndices, nl, *data, localAlpha, localEvents, d2);
             // handle events
             {
-                auto result = handleEventsGillespie(kernel, false, approximateRate, std::move(localEvents));
+                auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(localEvents));
                 newParticles.set_value(std::move(result));
             }
 
@@ -248,7 +249,7 @@ void CPUDGillespieParallel::handleBoxReactions() {
             gatherEvents(kernel, std::move(local_problematic), &neighbor_list, data, alpha, evilEvents, d2);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
-        auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
+        auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
         data.deactivateMarked();

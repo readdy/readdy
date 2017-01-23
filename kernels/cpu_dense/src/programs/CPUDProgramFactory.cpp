@@ -39,34 +39,49 @@
 #include <readdy/kernel/cpu_dense/programs/reactions/CPUDUncontrolledApproximation.h>
 #include <readdy/kernel/cpu_dense/programs/reactions/CPUDGillespieParallel.h>
 
-namespace core_p = readdy::model::programs;
+namespace core_p = readdy::model::actions;
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
-CPUDProgramFactory::CPUDProgramFactory(CPUDKernel *kernel) {
-    factory[core_p::getProgramName<reactions::CPUDUncontrolledApproximation>()] = [kernel] {
-        return new reactions::CPUDUncontrolledApproximation(kernel);
-    };
-    factory[core_p::getProgramName<CPUDEulerBDIntegrator>()] = [kernel] {
-        return new CPUDEulerBDIntegrator(kernel);
-    };
-    factory[core_p::getProgramName<CPUDUpdateNeighborList>()] = [kernel] {
-        return new CPUDUpdateNeighborList(kernel);
-    };
-    factory[core_p::getProgramName<CPUDCalculateForces>()] = [kernel] {
-        return new CPUDCalculateForces(kernel);
-    };
-    factory[core_p::getProgramName<reactions::CPUDGillespie>()] = [kernel] {
-        return new reactions::CPUDGillespie(kernel);
-    };
-    factory[core_p::getProgramName<reactions::CPUDGillespieParallel>()] = [kernel] {
-        return new reactions::CPUDGillespieParallel(kernel);
-    };
-    factory[core_p::getProgramName<CPUDCompartments>()] = [kernel] {
-        return new CPUDCompartments(kernel);
-    };
+CPUDProgramFactory::CPUDProgramFactory(CPUDKernel *const kernel) : kernel(kernel) {}
+
+core_p::EulerBDIntegrator *CPUDProgramFactory::createEulerBDIntegrator(double timeStep) const {
+    return new CPUDEulerBDIntegrator(kernel, timeStep);
+}
+
+core_p::CalculateForces *CPUDProgramFactory::createCalculateForces() const {
+    return new CPUDCalculateForces(kernel);
+}
+
+core_p::UpdateNeighborList *
+CPUDProgramFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
+                                             double skinSize) const {
+    return new CPUDUpdateNeighborList(kernel, operation, skinSize);
+}
+
+core_p::Compartments *CPUDProgramFactory::createCompartments() const {
+    return new CPUDCompartments(kernel);
+}
+
+core_p::reactions::UncontrolledApproximation *
+CPUDProgramFactory::createUncontrolledApproximation(double timeStep) const {
+    return new reactions::CPUDUncontrolledApproximation(kernel, timeStep);
+}
+
+core_p::reactions::Gillespie *CPUDProgramFactory::createGillespie(double timeStep) const {
+    return new reactions::CPUDGillespie(kernel, timeStep);
+}
+
+core_p::reactions::GillespieParallel *CPUDProgramFactory::createGillespieParallel(double timeStep) const {
+    return new reactions::CPUDGillespieParallel(kernel, timeStep);
+}
+
+core_p::reactions::NextSubvolumes *CPUDProgramFactory::createNextSubvolumes(double) const {
+    log::console()->critical("CPU_Dense kernel does not support the \"{}\" action",
+                             core_p::getActionName<core_p::reactions::NextSubvolumes>());
+    return nullptr;
 }
 }
 }

@@ -30,7 +30,7 @@
 #include <readdy/io/File.h>
 
 namespace rmr = readdy::model::reactions;
-namespace rmp = readdy::model::programs;
+namespace rmp = readdy::model::actions;
 
 namespace readdy {
 double Simulation::getKBT() const {
@@ -71,13 +71,12 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
 void Simulation::run(const readdy::model::observables::time_step_type steps, const double timeStep) {
     ensureKernelSelected();
     {
-        log::console()->debug("available programs: ");
+        log::console()->debug("available actions: ");
         for (auto &&p : pimpl->kernel->getAvailablePrograms()) {
             log::console()->debug("\t {}", p);
         }
     }
-    pimpl->kernel->getKernelContext().setTimeStep(timeStep);
-    runScheme().configure()->run(steps);
+    runScheme().configure(timeStep)->run(steps);
 }
 
 void Simulation::setKernel(const std::string &kernel) {
@@ -283,11 +282,6 @@ std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string ty
 
 double Simulation::getRecommendedTimeStep(unsigned int N) const {
     return readdy::model::util::getRecommendedTimeStep(N, pimpl->kernel->getKernelContext());
-}
-
-void Simulation::setTimeStep(const double timeStep) {
-    ensureKernelSelected();
-    pimpl->kernel->getKernelContext().setTimeStep(timeStep);
 }
 
 readdy::model::Kernel *const Simulation::getSelectedKernel() const {

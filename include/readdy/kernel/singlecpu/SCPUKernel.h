@@ -56,7 +56,7 @@ public:
 
     virtual readdy::model::KernelContext &getKernelContext() const override;
 
-    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
 
     virtual std::vector<std::string> getAvailablePotentials() const override;
 

@@ -55,16 +55,15 @@ using entry_type = data_t::Entry;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-CPUDUncontrolledApproximation::CPUDUncontrolledApproximation(const CPUDKernel *const kernel)
-        : kernel(kernel) {
+CPUDUncontrolledApproximation::CPUDUncontrolledApproximation(const CPUDKernel *const kernel, double timeStep)
+        : super(timeStep), kernel(kernel) {
 
 }
 
 void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const CPUDKernel *const kernel,
-                bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
+                double timeStep, bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getKernelStateModel().getParticleData();
-    const auto dt = kernel->getKernelContext().getTimeStep();
     auto it = begin;
     auto it_nl = nl_begin;
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
@@ -77,7 +76,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
                 const auto &reactions = kernel->getKernelContext().getOrder1Reactions(entry.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
-                    if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
+                    if (rate > 0 && shouldPerformEvent(rate, timeStep, approximateRate)) {
                         eventsUpdate.push_back(
                                 {1, (*it_reactions)->getNProducts(), index, index, rate, 0,
                                  static_cast<event_t::reaction_index_type>(it_reactions - reactions.begin()),
@@ -97,7 +96,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
                         const auto &react = *it_reactions;
                         const auto rate = react->getRate();
                         if (rate > 0 && distSquared < react->getEductDistanceSquared()
-                            && shouldPerformEvent(rate, dt, approximateRate)) {
+                            && shouldPerformEvent(rate, timeStep, approximateRate)) {
                             const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                                   reactions.begin());
                             eventsUpdate.push_back({2, react->getNProducts(), index, neighbor_index, rate, 0,
@@ -113,10 +112,10 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
     events.set_value(std::move(eventsUpdate));
 }
 
-void CPUDUncontrolledApproximation::execute() {
+void CPUDUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
-    const auto &dt = ctx.getTimeStep();
+    const auto &dt = timeStep;
     auto &data = *kernel->getKernelStateModel().getParticleData();
     auto &nl = *kernel->getKernelStateModel().getNeighborList();
 
@@ -137,7 +136,7 @@ void CPUDUncontrolledApproximation::execute() {
             n_eventsFutures.push_back(n_events.get_future());
 
             threads.push_back(thd::scoped_thread(
-                    std::thread(findEvents, it, it + grainSize, it_nl, kernel, true,
+                    std::thread(findEvents, it, it + grainSize, it_nl, kernel, timeStep, true,
                                 std::move(eventPromise), std::move(n_events))
             ));
             std::advance(it, grainSize);
@@ -150,7 +149,7 @@ void CPUDUncontrolledApproximation::execute() {
             n_eventsFutures.push_back(n_events.get_future());
 
             threads.push_back(thd::scoped_thread(
-                    std::thread(findEvents, it, data.cend(), it_nl, kernel, true,
+                    std::thread(findEvents, it, data.cend(), it_nl, kernel, timeStep, true,
                                 std::move(eventPromise), std::move(n_events))
             ));
         }

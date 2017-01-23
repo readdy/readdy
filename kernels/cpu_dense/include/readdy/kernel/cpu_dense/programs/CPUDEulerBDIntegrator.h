@@ -33,21 +33,21 @@
 #define READDY_DENSE_CPUEULERBDINTEGRATOR_H
 
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/programs/Actions.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace programs {
-class CPUDEulerBDIntegrator : public readdy::model::programs::EulerBDIntegrator {
-
+class CPUDEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
+    using super = readdy::model::actions::EulerBDIntegrator;
 public:
-    CPUDEulerBDIntegrator(CPUDKernel *kernel);
+    CPUDEulerBDIntegrator(CPUDKernel *const kernel, double timeStep);
 
-    virtual void execute() override;
+    virtual void perform() override;
 
 private:
-    CPUDKernel *kernel;
+    CPUDKernel *const kernel;
 };
 }
 }

@@ -32,21 +32,21 @@
 #ifndef READDY_MAIN_PROGRAMWRAP_H
 #define READDY_MAIN_PROGRAMWRAP_H
 
-#include <readdy/model/programs/Program.h>
+#include <readdy/model/programs/Action.h>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace readdy {
 namespace rpy {
-class PyProgram : public readdy::model::programs::Program {
-    using super = readdy::model::programs::Program;
+class PyProgram : public readdy::model::actions::Action {
+    using super = readdy::model::actions::Action;
 public:
-    using super::Program;
+    using super::Action;
 
-    virtual void execute() override {
+    virtual void perform() override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(void, readdy::model::programs::Program, execute,)
+        PYBIND11_OVERLOAD_PURE(void, readdy::model::actions::Action, perform,)
     }
 };
 }

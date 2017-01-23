@@ -39,7 +39,7 @@ namespace programs {
 namespace reactions {
 
 data_t::update_t handleEventsGillespie(
-        CPUDKernel const *const kernel,
+        CPUDKernel const *const kernel, double timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events) {
     using rdy_particle_t = readdy::model::Particle;
@@ -49,7 +49,6 @@ data_t::update_t handleEventsGillespie(
     if(!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
         const auto data = kernel->getKernelStateModel().getParticleData();
-        const auto dt = ctx.getTimeStep();
         /**
          * Handle gathered reaction events
          */
@@ -69,7 +68,7 @@ data_t::update_t handleEventsGillespie(
                 if (eventIt == events.end() - nDeactivated) {
                     throw std::runtime_error("this should not happen (event not found)");
                 }
-                if (filterEventsInAdvance || shouldPerformEvent(event.reactionRate, dt, approximateRate)) {
+                if (filterEventsInAdvance || shouldPerformEvent(event.reactionRate, timeStep, approximateRate)) {
                     /**
                      * Perform reaction
                      */
