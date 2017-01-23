@@ -32,7 +32,7 @@
 #include "readdy/kernel/cpu_dense/CPUDKernel.h"
 #include <readdy/kernel/cpu_dense/observables/CPUDObservableFactory.h>
 #include <readdy/kernel/cpu_dense/potentials/CPUDPotentialFactory.h>
-#include <readdy/kernel/cpu_dense/programs/CPUDProgramFactory.h>
+#include <readdy/kernel/cpu_dense/actions/CPUDProgramFactory.h>
 
 namespace readdy {
 namespace kernel {
@@ -41,7 +41,7 @@ namespace cpu_dense {
 const std::string CPUDKernel::name = "CPU_Dense";
 
 struct CPUDKernel::Impl {
-    std::unique_ptr<programs::CPUDProgramFactory> programFactory;
+    std::unique_ptr<actions::CPUDProgramFactory> programFactory;
     std::unique_ptr<potentials::CPUDPotentialFactory> potentialFactory;
     std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory;
     std::unique_ptr<observables::CPUDObservableFactory> observableFactory;
@@ -62,7 +62,7 @@ CPUDKernel::CPUDKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<I
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
     pimpl->reactionFactory = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
-    pimpl->programFactory = std::make_unique<programs::CPUDProgramFactory>(this);
+    pimpl->programFactory = std::make_unique<actions::CPUDProgramFactory>(this);
     pimpl->stateModel = std::make_unique<CPUDStateModel>(pimpl->context.get(), pimpl->config.get());
     pimpl->potentialFactory = std::make_unique<potentials::CPUDPotentialFactory>(this);
     pimpl->observableFactory = std::make_unique<observables::CPUDObservableFactory>(this);

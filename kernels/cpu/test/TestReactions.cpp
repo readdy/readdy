@@ -33,11 +33,11 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/programs/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu/programs/reactions/CPUGillespieParallel.h>
-#include <readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h>
+#include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
+#include <readdy/kernel/cpu/actions/reactions/NextSubvolumesReactionScheduler.h>
 
-namespace reac = readdy::kernel::cpu::programs::reactions;
+namespace reac = readdy::kernel::cpu::actions::reactions;
 
 struct fix_n_threads {
     fix_n_threads(readdy::kernel::cpu::CPUKernel *const kernel, unsigned int n)
@@ -293,7 +293,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-        auto &&reactionsProgram = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::programs::reactions::CPUGillespieParallel>(
+        auto &&reactionsProgram = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
                 kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1)
         );
         neighborList->perform();
@@ -351,7 +351,7 @@ TEST(TestNextSubvolumes, ReactionRadii) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->getKernelContext().setDiffusionConstant("A", 1.0);
 
-    auto nextSubvolumes = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::programs::reactions::CPUNextSubvolumes>(
+    auto nextSubvolumes = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUNextSubvolumes>(
             kernel->createAction<readdy::model::actions::reactions::NextSubvolumes>(1)
     );
     kernel->getKernelContext().configure();

@@ -32,10 +32,10 @@
 #include "gtest/gtest.h"
 
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/kernel/cpu_dense/programs/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu_dense/programs/reactions/CPUDGillespieParallel.h>
+#include <readdy/kernel/cpu_dense/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu_dense/actions/reactions/CPUDGillespieParallel.h>
 
-namespace reac = readdy::kernel::cpu_dense::programs::reactions;
+namespace reac = readdy::kernel::cpu_dense::actions::reactions;
 
 struct fix_n_threads {
     fix_n_threads(readdy::kernel::cpu_dense::CPUDKernel *const kernel, unsigned int n)
@@ -285,7 +285,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
         auto &&reactionsProgram = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
-        auto cpudReactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu_dense::programs::reactions::CPUDGillespieParallel>(std::move(reactionsProgram));
+        auto cpudReactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu_dense::actions::reactions::CPUDGillespieParallel>(std::move(reactionsProgram));
         neighborList->perform();
         cpudReactions->perform();
         EXPECT_EQ(1.0, cpudReactions->getMaxReactionRadius());
