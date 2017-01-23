@@ -86,6 +86,11 @@ public:
     }
 
 protected:
+    
+    virtual AddParticles *createAddParticles(const std::vector<Particle> &particles) const = 0;
+    AddParticles *createAddParticles(const Particle &particle) const {
+        return createAddParticles(std::vector<Particle>{particle});
+    };
 
     virtual EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const = 0;
 
@@ -120,6 +125,8 @@ protected:
         };
     };
 };
+
+READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, AddParticles)
 
 READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, EulerBDIntegrator)
 

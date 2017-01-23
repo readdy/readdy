@@ -43,8 +43,6 @@ class TestKernelExtension(unittest.TestCase):
     def test_load_prototyping_module(self):
         scpu = SingleCPUExtension()
         program_factory = scpu.get_program_factory()
-        addp = program_factory.create_add_particles()
-        addp.execute()
 
 
 if __name__ == '__main__':

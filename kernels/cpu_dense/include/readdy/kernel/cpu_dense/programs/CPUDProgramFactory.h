@@ -44,6 +44,10 @@ class CPUDProgramFactory : public readdy::model::actions::ActionFactory {
 public:
     CPUDProgramFactory(CPUDKernel *const kernel);
 
+protected:
+
+    readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
+
     readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override;
 
     readdy::model::actions::CalculateForces *createCalculateForces() const override;

@@ -57,7 +57,7 @@ class TestObservablesIO(unittest.TestCase):
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"particle_positions", int(3))
-            sim.run_scheme_readdy(True).configure().run(n_timesteps)
+            sim.run_scheme_readdy(True).configure(0).run(n_timesteps)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
@@ -90,7 +90,7 @@ class TestObservablesIO(unittest.TestCase):
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"particles", int(3))
-            sim.run_scheme_readdy(True).configure().run(n_timesteps)
+            sim.run_scheme_readdy(True).configure(0).run(n_timesteps)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
@@ -280,7 +280,7 @@ class TestObservablesIO(unittest.TestCase):
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"forces", int(3))
-            sim.run_scheme_readdy(True).configure().run(n_timesteps)
+            sim.run_scheme_readdy(True).configure(1).run(n_timesteps)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:

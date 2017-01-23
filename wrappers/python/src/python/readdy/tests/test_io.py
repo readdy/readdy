@@ -50,7 +50,6 @@ class TestSchemeApi(unittest.TestCase):
         traj_fname = os.path.join(self.dir, "traj.h5")
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
-        simulation.set_time_step(1)
         simulation.box_size = common.Vec(5,5,5)
         simulation.register_particle_type("A", 0.0, 0.0)
 
@@ -59,7 +58,7 @@ class TestSchemeApi(unittest.TestCase):
 
         simulation.register_observable_n_particles(1, callback, ["A"])
         simulation.record_trajectory(traj_fname, 0, 3)
-        simulation.run_scheme_readdy(True).configure().run(20)
+        simulation.run_scheme_readdy(True).configure(1).run(20)
         simulation.close_trajectory_file()
 
         r = TrajectoryReader(traj_fname)

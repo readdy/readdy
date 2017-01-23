@@ -83,6 +83,11 @@ core_p::reactions::NextSubvolumes *CPUDProgramFactory::createNextSubvolumes(doub
                              core_p::getActionName<core_p::reactions::NextSubvolumes>());
     return nullptr;
 }
+
+readdy::model::actions::AddParticles *
+CPUDProgramFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
+    return new readdy::model::actions::AddParticles(kernel, particles);
+}
 }
 }
 }

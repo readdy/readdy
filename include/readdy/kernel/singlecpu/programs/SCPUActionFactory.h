@@ -39,6 +39,9 @@ class SCPUActionFactory : public readdy::model::actions::ActionFactory {
 public:
     SCPUActionFactory(SCPUKernel *const kernel);
 
+protected:
+    readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
+
     readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override;
 
     readdy::model::actions::CalculateForces *createCalculateForces() const override;

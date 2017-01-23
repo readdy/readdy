@@ -81,6 +81,11 @@ core_p::reactions::GillespieParallel *CPUProgramFactory::createGillespieParallel
 core_p::reactions::NextSubvolumes *CPUProgramFactory::createNextSubvolumes(double timeStep) const {
     return new reactions::CPUNextSubvolumes(kernel, timeStep);
 }
+
+readdy::model::actions::AddParticles *
+CPUProgramFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
+    return new readdy::model::actions::AddParticles(kernel, particles);
+}
 }
 }
 }

@@ -31,6 +31,7 @@
 
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include <readdy/kernel/singlecpu/programs/SCPUActionFactory.h>
 #include <readdy/kernel/singlecpu/programs/SCPUEulerBDIntegrator.h>
@@ -40,13 +41,14 @@
 #include "ProgramWrap.h"
 
 namespace py = pybind11;
+using rvp = py::return_value_policy;
 namespace rpy = readdy::rpy;
 
 using rdy_particle_t = readdy::model::Particle;
 
 using prog_factory_t = readdy::model::actions::ActionFactory;
 
-using program_t = readdy::model::actions::Action;
+using action_t = readdy::model::actions::Action;
 using program_wrap_t = readdy::rpy::PyProgram;
 
 using add_particle_t = readdy::model::actions::AddParticles;
@@ -59,41 +61,48 @@ using reactions_u_a_t = readdy::kernel::scpu::actions::reactions::SCPUUncontroll
 void exportPrograms(py::module &proto) {
     using scpu_kernel_t = readdy::kernel::scpu::SCPUKernel;
     py::class_<prog_factory_t>(proto, "ActionFactory")
-            .def("create_add_particles", [](const prog_factory_t& self, readdy::model::Kernel* kernel, const std::vector<readdy::model::Particle> &p) {
-                return self.createAction<add_particle_t>(kernel, p);
-            })
+            .def("create_add_particles", [](const prog_factory_t& self, const std::vector<readdy::model::Particle> &p) {
+                std::unique_ptr<action_t> action = self.createAction<add_particle_t>(p);
+                return action.release();
+            }, rvp::take_ownership)
             .def("create_euler_integrator", [](const prog_factory_t& self, double dt) {
-                return self.createAction<readdy::model::actions::EulerBDIntegrator>(dt);
-            })
+                std::unique_ptr<action_t> action = self.createAction<readdy::model::actions::EulerBDIntegrator>(dt);
+                return action.release();
+            }, rvp::take_ownership)
             .def("create_update_forces", [](const prog_factory_t& self) {
-                return self.createAction<readdy::model::actions::CalculateForces>();
-            })
+                std::unique_ptr<action_t> action = self.createAction<readdy::model::actions::CalculateForces>();
+                return action.release();
+            }, rvp::take_ownership)
             .def("create_update_neighbor_list", [](const prog_factory_t& self) {
-                return self.createAction<readdy::model::actions::UpdateNeighborList>();
-            })
+                std::unique_ptr<action_t> action = self.createAction<readdy::model::actions::UpdateNeighborList>();
+                return action.release();
+            }, rvp::take_ownership)
             .def("create_reactions_uncontrolled_approximation", [](const prog_factory_t & self, double dt) {
-                return self.createAction<readdy::model::actions::reactions::UncontrolledApproximation>(dt);
-            });
+                std::unique_ptr<action_t> action = self.createAction<readdy::model::actions::reactions::UncontrolledApproximation>(dt);
+                return action.release();
+            }, rvp::take_ownership);
 
-    py::class_ <program_t, program_wrap_t> program(proto, "Action");
+    py::class_ <action_t, program_wrap_t> program(proto, "Action");
     program
             .def(py::init<>())
-            .def("perform", &program_t::perform);
+            .def("perform", &action_t::perform);
 
     py::class_<add_particle_t>(proto, "AddParticles", program)
-            .def(py::init<scpu_kernel_t *, readdy::model::Particle>())
-            .def(py::init<scpu_kernel_t *, std::vector<readdy::model::Particle>>())
             .def("perform", &add_particle_t::perform);
 
-    py::class_<euler_integrator_t>(proto, "EulerBDIntegrator", program)
+    py::class_<readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegratorBase", program);
+    py::class_<euler_integrator_t, readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegrator")
             .def(py::init<scpu_kernel_t *, double>())
             .def("perform", &euler_integrator_t::perform);
 
-    py::class_<forces_t>(proto, "CalculateForces", program)
+    py::class_<readdy::model::actions::CalculateForces>(proto, "CalculateForcesBase", program)
+            .def("perform", &readdy::model::actions::CalculateForces::perform);
+    py::class_<forces_t, readdy::model::actions::CalculateForces>(proto, "CalculateForces")
             .def(py::init<scpu_kernel_t *>())
             .def("perform", &forces_t::perform);
 
-    py::class_<neighbor_list_t>(proto, "UpdateNeighborList", program)
+    py::class_<readdy::model::actions::UpdateNeighborList>(proto, "UpdateNeighborListBase", program);
+    py::class_<neighbor_list_t, readdy::model::actions::UpdateNeighborList>(proto, "UpdateNeighborList")
             .def(py::init<scpu_kernel_t *>())
             .def("perform", &neighbor_list_t::perform);
 
@@ -104,7 +113,8 @@ void exportPrograms(py::module &proto) {
                  })
      */
 
-    py::class_<reactions_u_a_t>(proto, "ReactionsUncontrolledApproximation", program)
+    py::class_<readdy::model::actions::reactions::UncontrolledApproximation>(proto, "UncontrolledApproxBase", program);
+    py::class_<reactions_u_a_t, readdy::model::actions::reactions::UncontrolledApproximation>(proto, "ReactionsUncontrolledApproximation", program)
             .def(py::init<scpu_kernel_t *, double>())
             .def("perform", &reactions_u_a_t::perform)
             .def("register_reaction_scheme_11", &reactions_u_a_t::registerReactionScheme_11)

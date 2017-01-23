@@ -86,10 +86,6 @@ class TestModel(unittest.TestCase):
         self.ctx.set_particle_radius("A", 5.0)
         np.testing.assert_equal(self.ctx.get_particle_radius("A"), 5.0)
 
-    def test_kernel_context_time_step(self):
-        self.ctx.timestep = 111.0
-        np.testing.assert_equal(self.ctx.timestep, 111.0)
-
     def test_potential_order_1(self):
         self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
@@ -116,12 +112,12 @@ class TestModel(unittest.TestCase):
         self.ctx.set_diffusion_constant("A", 1.0)
         pot = MyPot1()
         self.ctx.register_potential_order_1(pot, "A")
-        add_particles_program = self.progs.create_add_particles()
-        add_particles_program.add_particle(pr.Particle(0, 0, .5, self.ctx.get_particle_type_id("A"))) # x y z type_id
-        add_particles_program.execute()
+        particles = [pr.Particle(0, 0, .5, self.ctx.get_particle_type_id("A"))]
+        add_particles_program = self.progs.create_add_particles(particles)
+        add_particles_program.perform()
         self.ctx.configure()
         updforces = self.progs.create_update_forces()
-        updforces.execute()
+        updforces.perform()
 
         np.testing.assert_equal(self.model.get_energy(), 5.0, err_msg="the user defined potential returns energy=5.0")
 
@@ -160,13 +156,13 @@ class TestModel(unittest.TestCase):
         self.ctx.set_diffusion_constant("B", 1.0)
         pot = MyPot2()
         self.ctx.register_potential_order_2(pot, "A", "B")
-        add_particles_program = self.progs.create_add_particles()
-        add_particles_program.add_particle(pr.Particle(0, 0, 0, self.ctx.get_particle_type_id("A")))
-        add_particles_program.add_particle(pr.Particle(1, 1, 1, self.ctx.get_particle_type_id("B")))
-        add_particles_program.execute()
+        particles = [pr.Particle(0, 0, 0, self.ctx.get_particle_type_id("A")),
+                     pr.Particle(1, 1, 1, self.ctx.get_particle_type_id("B"))]
+        add_particles_program = self.progs.create_add_particles(particles)
+        add_particles_program.perform()
         self.ctx.configure()
-        self.progs.create_update_neighbor_list().execute()
-        self.progs.create_update_forces().execute()
+        self.progs.create_update_neighbor_list().perform()
+        self.progs.create_update_forces().perform()
 
         np.testing.assert_almost_equal(self.model.get_energy(), np.sqrt(3))
 

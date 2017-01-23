@@ -48,7 +48,7 @@ class TestPrograms(unittest.TestCase):
         assert pos[0] == cmn.Vec(-1, -1, -1)
 
     def test_custom_program(self):
-        class CustomProgram(pr.Program):
+        class CustomProgram(pr.Action):
             def __init__(self, kernel):
                 self._executed = False
 
@@ -69,15 +69,13 @@ class TestPrograms(unittest.TestCase):
         kernel.get_kernel_context().set_diffusion_constant("A", 1.0)
         factory = kernel.get_program_factory()
 
-        add_particles = factory.create_add_particles()
-        integrator = factory.create_euler_integrator()
+        add_particles = factory.create_add_particles([pr.Particle(0, 0, 0, 0), pr.Particle(1, 1, 1, 0)])
+        integrator = factory.create_euler_integrator(1)
         forces = factory.create_update_forces()
         neighbor_list = factory.create_update_neighbor_list()
-        reactions = factory.create_reactions_uncontrolled_approximation()
+        reactions = factory.create_reactions_uncontrolled_approximation(1)
 
-        add_particles.add_particle(pr.Particle(0, 0, 0, 0))
-        add_particles.add_particle(pr.Particle(1, 1, 1, 0))
-        add_particles.execute()
+        add_particles.perform()
 
         state_model = kernel.get_kernel_state_model()
         positions = state_model.get_particle_positions()

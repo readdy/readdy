@@ -78,6 +78,11 @@ core_actions::reactions::NextSubvolumes *SCPUActionFactory::createNextSubvolumes
     return nullptr;
 }
 
+readdy::model::actions::AddParticles *
+SCPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
+    return new readdy::model::actions::AddParticles(kernel, particles);
+}
+
 }
 }
 }
