@@ -73,6 +73,12 @@ struct FACTORY::get_dispatcher<NS::TYPE, Args...> { \
         return self->create##TYPE(std::forward<Args>(args)...); \
     } \
 };
+#define READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(TYPE) template<typename... Args> \
+struct ObservableFactory::get_dispatcher<TYPE, Args...> { \
+    static TYPE *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) { \
+        return self->create##TYPE(stride, std::forward<Args>(args)...); \
+    } \
+};
 
 #if !defined(NAMESPACE_BEGIN)
 #  define NAMESPACE_BEGIN(name) namespace name {
