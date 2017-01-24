@@ -30,8 +30,8 @@
  * @date 08.04.16
  */
 
-#ifndef READDY_MAIN_PROGRAMFACTORY_H
-#define READDY_MAIN_PROGRAMFACTORY_H
+#ifndef READDY_MAIN_ACTIONFACTORY_H
+#define READDY_MAIN_ACTIONFACTORY_H
 
 #include <type_traits>
 #include <unordered_map>
@@ -51,7 +51,7 @@ public:
         return std::unique_ptr<R>(get_dispatcher<R, Args...>::impl(this, std::forward<Args>(args)...));
     }
 
-    std::vector<std::string> getAvailablePrograms() const {
+    std::vector<std::string> getAvailableActions() const {
         return {
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
                 getActionName<UpdateNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
@@ -148,4 +148,4 @@ READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, NextSubvolumes)
 }
 }
 
-#endif //READDY_MAIN_PROGRAMFACTORY_H
+#endif //READDY_MAIN_ACTIONFACTORY_H

@@ -40,8 +40,8 @@
  * @todo provide more detailed descriptions for some of the programs
  */
 
-#ifndef READDY_MAIN_PROGRAMS_H_H
-#define READDY_MAIN_PROGRAMS_H_H
+#ifndef READDY_MAIN_ACTIONS_H
+#define READDY_MAIN_ACTIONS_H
 
 #include <type_traits>
 #include <readdy/model/Particle.h>
@@ -195,4 +195,4 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<Compartm
 }
 }
 
-#endif //READDY_MAIN_PROGRAMS_H_H
+#endif //READDY_MAIN_ACTIONS_H

@@ -108,8 +108,8 @@ readdy::plugin::_internal::KernelPluginDecorator::registerObservable(
     return reference->registerObservable(observable, stride);
 }
 
-std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAvailablePrograms() const {
-    return reference->getAvailablePrograms();
+std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAvailableActions() const {
+    return reference->getAvailableActions();
 }
 
 void

@@ -30,7 +30,7 @@
  */
 
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/actions/CPUProgramFactory.h>
+#include <readdy/kernel/cpu/actions/CPUActionFactory.h>
 #include <readdy/kernel/cpu/potentials/CPUPotentialFactory.h>
 #include <readdy/kernel/cpu/observables/CPUObservableFactory.h>
 
@@ -40,7 +40,7 @@ namespace cpu {
 const std::string CPUKernel::name = "CPU";
 
 struct CPUKernel::Impl {
-    std::unique_ptr<actions::CPUProgramFactory> programFactory;
+    std::unique_ptr<actions::CPUActionFactory> actionFactory;
     std::unique_ptr<potentials::CPUPotentialFactory> potentialFactory;
     std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory;
     std::unique_ptr<observables::CPUObservableFactory> observableFactory;
@@ -54,14 +54,14 @@ readdy::model::Kernel* CPUKernel::create() {
 }
 
 readdy::model::actions::ActionFactory &CPUKernel::getActionFactory() const {
-    return *pimpl->programFactory;
+    return *pimpl->actionFactory;
 }
 
 CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()) {
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
     pimpl->reactionFactory = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
-    pimpl->programFactory = std::make_unique<actions::CPUProgramFactory>(this);
+    pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
     pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get(), pimpl->config.get());
     pimpl->potentialFactory = std::make_unique<potentials::CPUPotentialFactory>(this);
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);

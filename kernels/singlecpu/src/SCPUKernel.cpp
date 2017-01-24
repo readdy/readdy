@@ -39,13 +39,13 @@ struct SCPUKernel::Impl {
     std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<SCPUStateModel> model;
     std::unique_ptr<potentials::SCPUPotentialFactory> potentials;
-    std::unique_ptr<actions::SCPUActionFactory> programs;
+    std::unique_ptr<actions::SCPUActionFactory> actionFactory;
     std::unique_ptr<reactions::SCPUReactionFactory> reactions;
     std::unique_ptr<observables::SCPUObservableFactory> observables;
 };
 
 SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<SCPUKernel::Impl>()) {
-    pimpl->programs = std::make_unique<actions::SCPUActionFactory>(this);
+    pimpl->actionFactory = std::make_unique<actions::SCPUActionFactory>(this);
     pimpl->potentials = std::make_unique<potentials::SCPUPotentialFactory>(this);
     pimpl->reactions = std::make_unique<reactions::SCPUReactionFactory>(this);
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
@@ -86,7 +86,7 @@ readdy::model::potentials::PotentialFactory &SCPUKernel::getPotentialFactory() c
 }
 
 readdy::model::actions::ActionFactory &SCPUKernel::getActionFactory() const {
-    return *pimpl->programs;
+    return *pimpl->actionFactory;
 }
 
 readdy::model::reactions::ReactionFactory &SCPUKernel::getReactionFactory() const {

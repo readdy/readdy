@@ -214,7 +214,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_t &t) {
@@ -233,7 +233,7 @@ TEST(CPUTestReactions, TestDecay) {
         forces->perform();
         integrator->perform();
         neighborList->perform();
-        reactionsProgram->perform();
+        reactions->perform();
 
         kernel->evaluateObservables(t);
 
@@ -293,19 +293,19 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-        auto &&reactionsProgram = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
+        auto &&reactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
                 kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1)
         );
         neighborList->perform();
-        reactionsProgram->perform();
-        EXPECT_EQ(1.0, reactionsProgram->getMaxReactionRadius());
-        EXPECT_EQ(15.0, reactionsProgram->getBoxWidth());
-        EXPECT_EQ(2, reactionsProgram->getLongestAxis());
-        EXPECT_TRUE(reactionsProgram->getOtherAxis1() == 0 || reactionsProgram->getOtherAxis1() == 1);
-        if (reactionsProgram->getOtherAxis1() == 0) {
-            EXPECT_EQ(1, reactionsProgram->getOtherAxis2());
+        reactions->perform();
+        EXPECT_EQ(1.0, reactions->getMaxReactionRadius());
+        EXPECT_EQ(15.0, reactions->getBoxWidth());
+        EXPECT_EQ(2, reactions->getLongestAxis());
+        EXPECT_TRUE(reactions->getOtherAxis1() == 0 || reactions->getOtherAxis1() == 1);
+        if (reactions->getOtherAxis1() == 0) {
+            EXPECT_EQ(1, reactions->getOtherAxis2());
         } else {
-            EXPECT_EQ(0, reactionsProgram->getOtherAxis2());
+            EXPECT_EQ(0, reactions->getOtherAxis2());
         }
     }
     // we have two boxes, left and right, which can be projected into a line with (index, type):

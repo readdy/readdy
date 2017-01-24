@@ -131,8 +131,8 @@ public:
      * @see createProgram(name)
      * @return The program names.
      */
-    virtual std::vector<std::string> getAvailablePrograms() const {
-        return getActionFactory().getAvailablePrograms();
+    virtual std::vector<std::string> getAvailableActions() const {
+        return getActionFactory().getAvailableActions();
     }
 
     /**

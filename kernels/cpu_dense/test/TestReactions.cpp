@@ -206,7 +206,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_t &t) {
@@ -225,7 +225,7 @@ TEST(CPUTestReactions, TestDecay) {
         forces->perform();
         integrator->perform();
         neighborList->perform();
-        reactionsProgram->perform();
+        reactions->perform();
 
         kernel->evaluateObservables(t);
 
@@ -284,8 +284,8 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     {
         fix_n_threads n_threads{kernel.get(), 2};
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-        auto &&reactionsProgram = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
-        auto cpudReactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu_dense::actions::reactions::CPUDGillespieParallel>(std::move(reactionsProgram));
+        auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+        auto cpudReactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu_dense::actions::reactions::CPUDGillespieParallel>(std::move(reactions));
         neighborList->perform();
         cpudReactions->perform();
         EXPECT_EQ(1.0, cpudReactions->getMaxReactionRadius());

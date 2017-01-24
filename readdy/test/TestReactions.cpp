@@ -94,7 +94,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     {
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
-        const auto progs = kernel->getAvailablePrograms();
+        const auto progs = kernel->getAvailableActions();
         if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
             conf = std::move(conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>());
         }

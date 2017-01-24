@@ -72,7 +72,7 @@ public:
     virtual std::tuple<std::unique_ptr<readdy::model::observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const model::observables::observable_type &observable, unsigned int stride) override;
 
-    virtual std::vector<std::string> getAvailablePrograms() const override;
+    virtual std::vector<std::string> getAvailableActions() const override;
 
     virtual void addParticle(const std::string &type, const model::Vec3 &pos) override;
 

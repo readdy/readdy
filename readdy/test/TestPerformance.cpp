@@ -143,7 +143,7 @@ protected:
     runPerformanceTest(readdy::model::observables::time_step_type steps, const bool verbose = false) {
         auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
         auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-        auto &&reactionsProgram = kernel->createAction<ReactionScheduler>(timeStep);
+        auto &&reactions = kernel->createAction<ReactionScheduler>(timeStep);
         kernel->getKernelContext().configure(verbose);
 
         using timer = readdy::util::Timer;
@@ -171,7 +171,7 @@ protected:
             }
             {
                 timer c("reactions", verbose);
-                reactionsProgram->perform();
+                reactions->perform();
                 timeReactions += c.getSeconds();
             }
             {

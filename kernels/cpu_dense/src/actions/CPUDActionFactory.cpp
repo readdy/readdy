@@ -30,7 +30,7 @@
  */
 
 
-#include <readdy/kernel/cpu_dense/actions/CPUDProgramFactory.h>
+#include <readdy/kernel/cpu_dense/actions/CPUDActionFactory.h>
 #include <readdy/kernel/cpu_dense/actions/CPUDEulerBDIntegrator.h>
 #include <readdy/kernel/cpu_dense/actions/CPUDUpdateNeighborList.h>
 #include <readdy/kernel/cpu_dense/actions/CPUDCalculateForces.h>
@@ -45,47 +45,47 @@ namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace actions {
-CPUDProgramFactory::CPUDProgramFactory(CPUDKernel *const kernel) : kernel(kernel) {}
+CPUDActionFactory::CPUDActionFactory(CPUDKernel *const kernel) : kernel(kernel) {}
 
-core_p::EulerBDIntegrator *CPUDProgramFactory::createEulerBDIntegrator(double timeStep) const {
+core_p::EulerBDIntegrator *CPUDActionFactory::createEulerBDIntegrator(double timeStep) const {
     return new CPUDEulerBDIntegrator(kernel, timeStep);
 }
 
-core_p::CalculateForces *CPUDProgramFactory::createCalculateForces() const {
+core_p::CalculateForces *CPUDActionFactory::createCalculateForces() const {
     return new CPUDCalculateForces(kernel);
 }
 
 core_p::UpdateNeighborList *
-CPUDProgramFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
+CPUDActionFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
                                              double skinSize) const {
     return new CPUDUpdateNeighborList(kernel, operation, skinSize);
 }
 
-core_p::Compartments *CPUDProgramFactory::createCompartments() const {
+core_p::Compartments *CPUDActionFactory::createCompartments() const {
     return new CPUDCompartments(kernel);
 }
 
 core_p::reactions::UncontrolledApproximation *
-CPUDProgramFactory::createUncontrolledApproximation(double timeStep) const {
+CPUDActionFactory::createUncontrolledApproximation(double timeStep) const {
     return new reactions::CPUDUncontrolledApproximation(kernel, timeStep);
 }
 
-core_p::reactions::Gillespie *CPUDProgramFactory::createGillespie(double timeStep) const {
+core_p::reactions::Gillespie *CPUDActionFactory::createGillespie(double timeStep) const {
     return new reactions::CPUDGillespie(kernel, timeStep);
 }
 
-core_p::reactions::GillespieParallel *CPUDProgramFactory::createGillespieParallel(double timeStep) const {
+core_p::reactions::GillespieParallel *CPUDActionFactory::createGillespieParallel(double timeStep) const {
     return new reactions::CPUDGillespieParallel(kernel, timeStep);
 }
 
-core_p::reactions::NextSubvolumes *CPUDProgramFactory::createNextSubvolumes(double) const {
+core_p::reactions::NextSubvolumes *CPUDActionFactory::createNextSubvolumes(double) const {
     log::console()->critical("CPU_Dense kernel does not support the \"{}\" action",
                              core_p::getActionName<core_p::reactions::NextSubvolumes>());
     return nullptr;
 }
 
 readdy::model::actions::AddParticles *
-CPUDProgramFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
+CPUDActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
     return new readdy::model::actions::AddParticles(kernel, particles);
 }
 }

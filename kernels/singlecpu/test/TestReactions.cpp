@@ -159,7 +159,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     using update_nl = readdy::model::actions::UpdateNeighborList;
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(update_nl::Operation::create, -1);
-    auto &&reactionsProgram = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(timeStep);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(timeStep);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_t &t) {
@@ -178,7 +178,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
         forces->perform();
         integrator->perform();
         neighborList->perform();
-        reactionsProgram->perform();
+        reactions->perform();
 
         kernel->evaluateObservables(t);
 
@@ -240,7 +240,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
 
     const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
     const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
@@ -310,7 +310,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
         integrator->perform();
 
         neighborList->perform();
-        reactionsProgram->perform();
+        reactions->perform();
         kernel->evaluateObservables(t);
     }
 }

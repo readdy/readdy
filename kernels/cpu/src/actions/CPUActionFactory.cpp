@@ -29,7 +29,7 @@
  * @date 23.06.16
  */
 
-#include <readdy/kernel/cpu/actions/CPUProgramFactory.h>
+#include <readdy/kernel/cpu/actions/CPUActionFactory.h>
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
 #include <readdy/kernel/cpu/actions/CPUUpdateNeighborList.h>
 #include <readdy/kernel/cpu/actions/CPUCalculateForces.h>
@@ -45,45 +45,45 @@ namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace actions {
-CPUProgramFactory::CPUProgramFactory(CPUKernel *const kernel) : kernel(kernel) { }
+CPUActionFactory::CPUActionFactory(CPUKernel *const kernel) : kernel(kernel) { }
 
-core_p::EulerBDIntegrator *CPUProgramFactory::createEulerBDIntegrator(double timeStep) const {
+core_p::EulerBDIntegrator *CPUActionFactory::createEulerBDIntegrator(double timeStep) const {
     return new CPUEulerBDIntegrator(kernel, timeStep);
 }
 
-core_p::CalculateForces *CPUProgramFactory::createCalculateForces() const {
+core_p::CalculateForces *CPUActionFactory::createCalculateForces() const {
     return new CPUCalculateForces(kernel);
 }
 
 core_p::UpdateNeighborList *
-CPUProgramFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
+CPUActionFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
                                             double skinSize) const {
     return new CPUUpdateNeighborList(kernel, operation, skinSize);
 }
 
-core_p::Compartments *CPUProgramFactory::createCompartments() const {
+core_p::Compartments *CPUActionFactory::createCompartments() const {
     return new CPUCompartments(kernel);
 }
 
 core_p::reactions::UncontrolledApproximation *
-CPUProgramFactory::createUncontrolledApproximation(double timeStep) const {
+CPUActionFactory::createUncontrolledApproximation(double timeStep) const {
     return new reactions::CPUUncontrolledApproximation(kernel, timeStep);
 }
 
-core_p::reactions::Gillespie *CPUProgramFactory::createGillespie(double timeStep) const {
+core_p::reactions::Gillespie *CPUActionFactory::createGillespie(double timeStep) const {
     return new reactions::CPUGillespie(kernel, timeStep);
 }
 
-core_p::reactions::GillespieParallel *CPUProgramFactory::createGillespieParallel(double timeStep) const {
+core_p::reactions::GillespieParallel *CPUActionFactory::createGillespieParallel(double timeStep) const {
     return new reactions::CPUGillespieParallel(kernel, timeStep);
 }
 
-core_p::reactions::NextSubvolumes *CPUProgramFactory::createNextSubvolumes(double timeStep) const {
+core_p::reactions::NextSubvolumes *CPUActionFactory::createNextSubvolumes(double timeStep) const {
     return new reactions::CPUNextSubvolumes(kernel, timeStep);
 }
 
 readdy::model::actions::AddParticles *
-CPUProgramFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
+CPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
     return new readdy::model::actions::AddParticles(kernel, particles);
 }
 }

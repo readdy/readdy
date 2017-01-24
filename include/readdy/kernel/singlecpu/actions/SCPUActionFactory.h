@@ -24,8 +24,8 @@
 // Created by clonker on 08.04.16.
 //
 
-#ifndef READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
-#define READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
+#ifndef READDY_MAIN_SINGLECPUACTIONFACTORY_H
+#define READDY_MAIN_SINGLECPUACTIONFACTORY_H
 
 #include <readdy/model/actions/ActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
@@ -69,4 +69,4 @@ private:
 }
 
 
-#endif //READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
+#endif //READDY_MAIN_SINGLECPUACTIONFACTORY_H

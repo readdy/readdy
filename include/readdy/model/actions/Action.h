@@ -30,8 +30,8 @@
  * @date 08.04.16
  */
 
-#ifndef READDY_MAIN_PROGRAM_H
-#define READDY_MAIN_PROGRAM_H
+#ifndef READDY_MAIN_ACTION_H
+#define READDY_MAIN_ACTION_H
 
 #include <memory>
 
@@ -75,4 +75,4 @@ protected:
 }
 
 
-#endif //READDY_MAIN_PROGRAM_H
+#endif //READDY_MAIN_ACTION_H

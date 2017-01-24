@@ -48,7 +48,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &&reactionsProgram = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     auto connection = kernel->connectObservable(pp_obs.get());
@@ -68,7 +68,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
         integrator->perform();
         neighborList->perform();
 
-        reactionsProgram->perform();
+        reactions->perform();
 
         pp_obs->evaluate();
         readdy::log::console()->debug("\tcurrently n particles: {}", pp_obs->getResult().size());

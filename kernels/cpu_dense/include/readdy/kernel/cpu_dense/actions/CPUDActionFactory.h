@@ -30,8 +30,8 @@
  */
 
 
-#ifndef READDY_DENSE_CPUPROGRAMFACTORY_H
-#define READDY_DENSE_CPUPROGRAMFACTORY_H
+#ifndef READDY_DENSE_CPUACTIONFACTORY_H
+#define READDY_DENSE_CPUACTIONFACTORY_H
 
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
@@ -39,10 +39,10 @@ namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace actions {
-class CPUDProgramFactory : public readdy::model::actions::ActionFactory {
+class CPUDActionFactory : public readdy::model::actions::ActionFactory {
     CPUDKernel *const kernel;
 public:
-    CPUDProgramFactory(CPUDKernel *const kernel);
+    CPUDActionFactory(CPUDKernel *const kernel);
 
 protected:
 
@@ -72,4 +72,4 @@ protected:
 }
 }
 
-#endif //READDY_DENSE_CPUPROGRAMFACTORY_H
+#endif //READDY_DENSE_CPUACTIONFACTORY_H

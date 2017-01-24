@@ -72,7 +72,7 @@ void Simulation::run(const readdy::model::observables::time_step_type steps, con
     ensureKernelSelected();
     {
         log::console()->debug("available actions: ");
-        for (auto &&p : pimpl->kernel->getAvailablePrograms()) {
+        for (auto &&p : pimpl->kernel->getAvailableActions()) {
             log::console()->debug("\t {}", p);
         }
     }

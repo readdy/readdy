@@ -30,8 +30,8 @@
  */
 
 
-#ifndef READDY_CPUKERNEL_CPUPROGRAMFACTORY_H
-#define READDY_CPUKERNEL_CPUPROGRAMFACTORY_H
+#ifndef READDY_CPUKERNEL_CPUACTIONFACTORY_H
+#define READDY_CPUKERNEL_CPUACTIONFACTORY_H
 
 #include <readdy/kernel/cpu/CPUKernel.h>
 
@@ -39,10 +39,10 @@ namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace actions {
-class CPUProgramFactory : public readdy::model::actions::ActionFactory {
+class CPUActionFactory : public readdy::model::actions::ActionFactory {
     CPUKernel *const kernel;
 public:
-    CPUProgramFactory(CPUKernel *const kernel);
+    CPUActionFactory(CPUKernel *const kernel);
 
 protected:
     readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
@@ -71,4 +71,4 @@ protected:
 }
 }
 
-#endif //READDY_CPUKERNEL_CPUPROGRAMFACTORY_H
+#endif //READDY_CPUKERNEL_CPUACTIONFACTORY_H

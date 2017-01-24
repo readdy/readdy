@@ -33,7 +33,7 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservableFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 
 # --- actions ---
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUProgramFactory.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEulerBDIntegrator.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUCompartments.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/ReactionUtils.cpp")
