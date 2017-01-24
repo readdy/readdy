@@ -28,7 +28,7 @@
  * @author clonker
  * @date 11.07.16
  */
-#include <readdy/kernel/singlecpu/programs/SCPUUpdateNeighborList.h>
+#include <readdy/kernel/singlecpu/actions/SCPUUpdateNeighborList.h>
 
 namespace core_actions = readdy::model::actions;
 

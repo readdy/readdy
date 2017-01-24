@@ -29,7 +29,7 @@
  * @date 21.06.16
  */
 
-#include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
+#include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
 
 using rdy_particle_t = readdy::model::Particle;
 

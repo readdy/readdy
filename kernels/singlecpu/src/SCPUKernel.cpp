@@ -25,7 +25,7 @@
 //
 
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
-#include <readdy/kernel/singlecpu/programs/SCPUActionFactory.h>
+#include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
 #include <readdy/kernel/singlecpu/potentials/SCPUPotentialFactory.h>
 #include <readdy/kernel/singlecpu/reactions/SCPUReactionFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>

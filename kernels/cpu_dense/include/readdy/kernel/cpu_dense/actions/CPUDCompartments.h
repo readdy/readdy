@@ -30,7 +30,7 @@
 #ifndef READDY_DENSE_COMPARTMENTS_H
 #define READDY_DENSE_COMPARTMENTS_H
 
-#include <readdy/kernel/singlecpu/programs/SCPUCompartments.h>
+#include <readdy/kernel/singlecpu/actions/SCPUCompartments.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {

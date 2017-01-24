@@ -29,7 +29,7 @@
  * @date 19.04.16
  */
 
-#include <readdy/kernel/singlecpu/programs/SCPUEulerBDIntegrator.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEulerBDIntegrator.h>
 
 namespace readdy {
 namespace kernel {

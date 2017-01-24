@@ -33,11 +33,11 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <readdy/kernel/singlecpu/programs/SCPUActionFactory.h>
-#include <readdy/kernel/singlecpu/programs/SCPUEulerBDIntegrator.h>
-#include <readdy/kernel/singlecpu/programs/SCPUCalculateForces.h>
-#include <readdy/kernel/singlecpu/programs/SCPUUpdateNeighborList.h>
-#include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
+#include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEulerBDIntegrator.h>
+#include <readdy/kernel/singlecpu/actions/SCPUCalculateForces.h>
+#include <readdy/kernel/singlecpu/actions/SCPUUpdateNeighborList.h>
+#include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
 #include "ProgramWrap.h"
 
 namespace py = pybind11;

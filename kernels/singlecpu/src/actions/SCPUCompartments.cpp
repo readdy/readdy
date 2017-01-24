@@ -27,7 +27,7 @@
  * @date 13.10.16
  */
 
-#include <readdy/kernel/singlecpu/programs/SCPUCompartments.h>
+#include <readdy/kernel/singlecpu/actions/SCPUCompartments.h>
 
 namespace readdy {
 namespace kernel {

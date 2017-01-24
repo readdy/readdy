@@ -29,7 +29,7 @@
  * @date 11.07.16
  */
 
-#include <readdy/kernel/singlecpu/programs/SCPUCalculateForces.h>
+#include <readdy/kernel/singlecpu/actions/SCPUCalculateForces.h>
 
 namespace readdy {
 namespace kernel {

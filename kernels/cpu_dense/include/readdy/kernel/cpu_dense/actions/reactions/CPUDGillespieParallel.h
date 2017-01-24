@@ -35,7 +35,7 @@
 
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
-#include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
+#include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
 #include "ReactionUtils.h"
 
 namespace readdy {
