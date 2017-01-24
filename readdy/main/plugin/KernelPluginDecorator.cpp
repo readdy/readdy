@@ -64,11 +64,6 @@ readdy::model::KernelContext &readdy::plugin::_internal::KernelPluginDecorator::
     return reference->getKernelContext();
 }
 
-std::unique_ptr<readdy::model::potentials::Potential>
-readdy::plugin::_internal::KernelPluginDecorator::createPotential(std::string &name) const {
-    return reference->createPotential(name);
-}
-
 std::vector<std::string> readdy::plugin::_internal::KernelPluginDecorator::getAvailablePotentials() const {
     return reference->getAvailablePotentials();
 }

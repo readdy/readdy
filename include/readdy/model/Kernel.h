@@ -152,17 +152,11 @@ public:
 
     virtual std::vector<std::string> getAvailablePotentials() const;
 
-    virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const;
-
-    template<typename T>
-    std::unique_ptr<T> createPotentialAs() const {
-        return createPotentialAs<T>(readdy::model::potentials::getPotentialName<T>());
-    }
-
-    template<typename T>
-    std::unique_ptr<T> createPotentialAs(const std::string &name) const {
-        return getPotentialFactory().createPotentialAs<T>(name);
-    }
+    template<typename T, typename... Args>
+    potentials::Potential::id_t registerPotential(Args &&... args) {
+        auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
+        return getKernelContext().registerPotential(std::move(pot));
+    };
 
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {

@@ -330,9 +330,7 @@ public:
                                                                   {"B", "C"},
                                                                   {"A", "C"}};
         for (const auto &typePair : pairs) {
-            auto pot = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-            pot->setForceConstant(forceConstant);
-            kernel->getKernelContext().registerPotential(std::move(pot), std::get<0>(typePair), std::get<1>(typePair));
+            kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>(std::get<0>(typePair), std::get<1>(typePair), forceConstant);
         }
 
         /** Distribute particles uniformly in box */
@@ -402,9 +400,7 @@ public:
                                                                   {"B", "C"},
                                                                   {"A", "C"}};
         for (const auto &typePair : pairs) {
-            auto pot = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-            pot->setForceConstant(forceConstant);
-            kernel->getKernelContext().registerPotential(std::move(pot), std::get<0>(typePair), std::get<1>(typePair));
+            kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>(std::get<0>(typePair), std::get<1>(typePair), forceConstant);
         }
 
         /** Distribute particles uniformly in box */
@@ -434,7 +430,7 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., timeStep = 0.1, skin = 4.5, forceConstant = 10.;
+    double boxLength = 100., skin = 4.5, forceConstant = 10.;
     std::map<std::string, double> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};

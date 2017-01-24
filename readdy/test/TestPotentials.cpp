@@ -75,18 +75,14 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 
     setupParticles(*kernel);
 
-    auto harmonicRepulsion = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    harmonicRepulsion->setForceConstant(.01);
-    kernel->getKernelContext().registerPotential(std::move(harmonicRepulsion), "A", "B");
+    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("A", "B", .01);
+
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
-        auto cubePot = kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
-        cubePot->setOrigin({-1, -1, -1});
-        cubePot->setConsiderParticleRadius(true);
-        cubePot->setExtent({2, 2, 2});
-        cubePot->setForceConstant(10);
         // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
-        kernel->getKernelContext().registerPotential(std::move(cubePot), t);
+        readdy::model::Vec3 origin {-1, -1, -1};
+        readdy::model::Vec3 extent {2, 2, 2};
+        kernel->registerPotential<readdy::model::potentials::CubePotential>(t, 10, origin, extent, true);
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
@@ -114,11 +110,8 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
 
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
-        auto spherePot = kernel->createPotentialAs<readdy::model::potentials::SpherePotential>();
-        spherePot->setOrigin(readdy::model::Vec3(0, 0, 0));
-        spherePot->setRadius(3);
-        spherePot->setForceConstant(20);
-        kernel->getKernelContext().registerPotential(std::move(spherePot), t);
+        readdy::model::Vec3 origin (0, 0, 0);
+        kernel->registerPotential<readdy::model::potentials::SpherePotential>(t, 20, origin, 3);
     }
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
     const double maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2

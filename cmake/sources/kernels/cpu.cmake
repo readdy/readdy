@@ -28,7 +28,6 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUKernel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUStateModel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/CPUNeighborList.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/CPUParticleData.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/potentials/CPUPotentialFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservableFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 

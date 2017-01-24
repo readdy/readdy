@@ -117,9 +117,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
     kernel->getKernelStateModel().addParticles(particlesC);
 
-    auto harmonicRepulsion = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    harmonicRepulsion->setForceConstant(2.);
-    kernel->getKernelContext().registerPotential(std::move(harmonicRepulsion), "C", "C");
+    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("C", "C", 2.0);
 
     using update_nl = readdy::model::actions::UpdateNeighborList;
     auto &&nl = kernel->createAction<update_nl>();

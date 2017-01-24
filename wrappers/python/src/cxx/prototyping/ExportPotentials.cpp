@@ -28,12 +28,9 @@
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/potentials/PotentialFactory.h>
-#include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder1.h>
-#include <readdy/kernel/singlecpu/potentials/SCPUPotentialsOrder2.h>
 
 namespace py = pybind11;
 namespace pot = readdy::model::potentials;
-namespace spot = readdy::kernel::scpu::potentials;
 
 using rvp = py::return_value_policy;
 
@@ -46,16 +43,19 @@ using rdy_pot2 = pot::PotentialOrder2;
 using rdy_pot_factory = pot::PotentialFactory;
 
 class PyPotentialO1 : public rdy_pot1 {
-private:
 public:
     using rdy_pot1::PotentialOrder1;
+
+    std::string describe() override {
+        return "User defined potential order 1 for type " + particleType;
+    }
 
     virtual double calculateEnergy(const rdy_vec &position) const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "calculate_energy", calculateEnergy, position);
     }
 
-    virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
+    virtual rdy_vec calculateForceInternal(const rdy_vec &pos) const {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO1, "calculate_force", calculateForce, pos);
     }
@@ -69,11 +69,6 @@ public:
         energy += calculateEnergy(position);
     }
 
-    virtual void configureForType(const unsigned int type) override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(void, PyPotentialO1, "configure_for_type", configureForType, type);
-    }
-
     virtual double getRelevantLengthScale() const noexcept override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_relevant_length_scale", getRelevantLengthScale,);
@@ -84,12 +79,22 @@ public:
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
     }
 
+protected:
+    void configureForType(const readdy::model::KernelContext *const context, const unsigned int type) override {
+        py::gil_scoped_acquire gil;
+        PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot1, "configure_for_type", configureForType, type);
+    }
+
 };
 
 class PyPotentialO2 : public rdy_pot2 {
 public:
 
     using rdy_pot2::PotentialOrder2;
+
+    std::string describe() override {
+        return "User defined potential for types " + particleType1 + " and " + particleType2;
+    }
 
     virtual double getMaximalForce(double kbt) const noexcept override {
         py::gil_scoped_acquire gil;
@@ -101,7 +106,7 @@ public:
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "calculate_energy", calculateEnergy, x_ij);
     }
 
-    virtual rdy_vec calculateForceInternal(const rdy_vec& pos) const {
+    virtual rdy_vec calculateForceInternal(const rdy_vec &pos) const {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO2, "calculate_force", calculateForce, pos);
     }
@@ -120,47 +125,62 @@ public:
         return cutoff * cutoff;
     }
 
-    virtual void configureForTypes(unsigned int type1, unsigned int type2) override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot2, "configure_for_types", configureForType, type1, type2);
-    }
-
     virtual double getCutoffRadius() const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
     }
+
+protected:
+    void configureForTypes(const readdy::model::KernelContext *const context, unsigned int type1,
+                           unsigned int type2) override {
+        py::gil_scoped_acquire gil;
+        PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot2, "configure_for_types", configureForType, type1, type2);
+    }
+
+
 };
 
 void exportPotentials(py::module &proto) {
 
     py::class_<rdy_pot>(proto, "Potential");
-    py::class_<spot::SCPUCubePotential, rdy_pot>(proto, "CubePotential")
-            .def("get_name", &spot::SCPUCubePotential::getName);
-    py::class_<spot::SCPUHarmonicRepulsion, rdy_pot>(proto, "HarmonicRepulsion")
-            .def("get_name", &spot::SCPUHarmonicRepulsion::getName);
-    py::class_<spot::SCPUWeakInteractionPiecewiseHarmonic, rdy_pot>(proto, "WeakInteractionPiecewiseHarmonic")
-            .def("get_name", &spot::SCPUWeakInteractionPiecewiseHarmonic::getName);
+    py::class_<pot::CubePotential, rdy_pot>(proto, pot::getPotentialName<pot::CubePotential>().c_str())
+            .def("get_name", &pot::getPotentialName < pot::CubePotential > );
+    py::class_<pot::HarmonicRepulsion, rdy_pot>(proto, pot::getPotentialName<pot::HarmonicRepulsion>().c_str())
+            .def("get_name", &pot::getPotentialName < pot::HarmonicRepulsion > );
+    py::class_<pot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto,
+                                                               pot::getPotentialName<pot::WeakInteractionPiecewiseHarmonic>().c_str())
+            .def("get_name", &pot::getPotentialName < pot::WeakInteractionPiecewiseHarmonic > );
 
     py::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
             .def(py::init<std::string>())
             .def("calculate_energy", &rdy_pot1::calculateEnergy)
             .def("calculate_force", &rdy_pot1::calculateForce)
-            .def("configure_for_type", &rdy_pot1::configureForType)
             .def("get_relevant_length_scale", &rdy_pot1::getRelevantLengthScale)
             .def("get_maximal_force", &rdy_pot1::getMaximalForce);
     py::class_<rdy_pot2, PyPotentialO2>(proto, "PotentialOrder2")
-            .def(py::init<std::string>())
+            .def(py::init<std::string, std::string>())
             .def("calculate_energy", &rdy_pot2::calculateEnergy)
             .def("calculate_force", &rdy_pot2::calculateForce)
-            .def("configure_for_types", &rdy_pot2::configureForTypes)
             .def("get_cutoff_radius", &rdy_pot2::getCutoffRadius)
             .def("get_maximal_force", &rdy_pot2::getMaximalForce);
 
-    auto f_create_cube_pot = &rdy_pot_factory::createPotential<spot::SCPUCubePotential>;
-    auto f_create_harmonic_pot = &rdy_pot_factory::createPotential<spot::SCPUHarmonicRepulsion>;
-    auto f_create_weak_inter_pot = &rdy_pot_factory::createPotential<spot::SCPUWeakInteractionPiecewiseHarmonic>;
     py::class_<rdy_pot_factory>(proto, "PotentialFactory")
-            .def("create_cube_potential", f_create_cube_pot)
-            .def("create_harmonic_repulsion", f_create_harmonic_pot)
-            .def("create_weak_interaction", f_create_weak_inter_pot);
+            .def("create_cube_potential",
+                 [](rdy_pot_factory &self, const std::string &particleType, double forceConstant,
+                    const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
+                    bool considerParticleRadius) {
+                     return self.createPotential<pot::CubePotential>(particleType, forceConstant, origin, extent,
+                                                                     considerParticleRadius).release();
+                 }, rvp::take_ownership)
+            .def("create_harmonic_repulsion",
+                 [](rdy_pot_factory &self, const std::string &type1, const std::string &type2, double forceConstant) {
+                     return self.createPotential<pot::HarmonicRepulsion>(type1, type2, forceConstant).release();
+                 }, rvp::take_ownership)
+            .def("create_weak_interaction",
+                 [](rdy_pot_factory &self, const std::string &type1, const std::string &type2,
+                    const double forceConstant, const double desiredDist, const double depth, const double cutoff) {
+                     return self.createPotential<pot::WeakInteractionPiecewiseHarmonic>(
+                             type1, type2, forceConstant, desiredDist, depth, cutoff
+                     ).release();
+                 }, rvp::take_ownership);
 }

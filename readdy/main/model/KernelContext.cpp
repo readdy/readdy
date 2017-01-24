@@ -383,16 +383,16 @@ void KernelContext::configure(bool debugOutput) {
     reactionTwoEductsRegistry->clear();
 
     coll::for_each_value(*potentialO1RegistryInternal, [&](const particle_t::type_type type, const pot1_ptr& ptr) {
-        ptr->configureForType(type); (*potentialO1Registry)[type].push_back(ptr.get());
+        ptr->configureForType(this, type); (*potentialO1Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(*potentialO2RegistryInternal, [&](const pair& type, const pot2_ptr& ptr) {
-        ptr->configureForTypes(type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr.get());
+        ptr->configureForTypes(this, type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(*potentialO1RegistryExternal, [&](const particle_t::type_type type, pot1* ptr) {
-        ptr->configureForType(type); (*potentialO1Registry)[type].push_back(ptr);
+        ptr->configureForType(this, type); (*potentialO1Registry)[type].push_back(ptr);
     });
     coll::for_each_value(*potentialO2RegistryExternal, [&](const pair& type, pot2* ptr) {
-        ptr->configureForTypes(type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr);
+        ptr->configureForTypes(this, type.t1, type.t2); (*potentialO2Registry)[type].push_back(ptr);
     });
     coll::for_each_value(*reactionOneEductRegistryInternal, [&](const particle_t::type_type type, const reaction1ptr& ptr) {
         (*reactionOneEductRegistry)[type].push_back(ptr.get());
@@ -426,32 +426,32 @@ void KernelContext::configure(bool debugOutput) {
 
         if (!getAllOrder1Potentials().empty()) {
             log::console()->debug(" - potentials of order 1:");
-            for (auto types : getAllOrder1Potentials()) {
+            for (const auto& types : getAllOrder1Potentials()) {
                 log::console()->debug("     * for type {}", find_pot_name(types.first));
                 for (auto pot : types.second) {
-                    log::console()->debug("         * {}", pot->getName());
+                    log::console()->debug("         * {}", pot->describe());
                 }
             }
         }
         if (!getAllOrder2Potentials().empty()) {
             log::console()->debug(" - potentials of order 2:");
-            for (auto types : getAllOrder2Potentials()) {
+            for (const auto& types : getAllOrder2Potentials()) {
                 log::console()->debug("     * for types {} and {}", find_pot_name(types.first.t1),
                                       find_pot_name(types.first.t2));
                 for (auto pot : types.second) {
-                    log::console()->debug("         * {}", pot->getName());
+                    log::console()->debug("         * {}", pot->describe());
                 }
             }
         }
         if (!getAllOrder1Reactions().empty()) {
             log::console()->debug(" - reactions of order 1:");
-            for (auto reaction : getAllOrder1Reactions()) {
+            for (const auto& reaction : getAllOrder1Reactions()) {
                 log::console()->debug("     * reaction {}", *reaction);
             }
         }
         if (!getAllOrder2Reactions().empty()) {
             log::console()->debug(" - reactions of order 2:");
-            for (auto reaction : getAllOrder2Reactions()) {
+            for (const auto& reaction : getAllOrder2Reactions()) {
                 log::console()->debug("     * reaction {}", *reaction);
             }
         }

@@ -223,7 +223,7 @@ PYBIND11_PLUGIN (api) {
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
 
     py::class_<pot2>(api, "Pot2")
-            .def(py::init<std::string, py::object, py::object>())
+            .def(py::init<std::string, std::string, py::object, py::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);
 

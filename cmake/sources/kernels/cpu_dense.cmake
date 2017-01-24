@@ -32,8 +32,6 @@ LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/model/CPUDNeighborList.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/observables/CPUDObservableFactory.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/observables/CPUDObservables.cpp")
 
-LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/potentials/CPUDPotentialFactory.cpp")
-
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/reactions/Event.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/reactions/CPUDGillespie.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/reactions/CPUDGillespieParallel.cpp")

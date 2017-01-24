@@ -38,11 +38,6 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUCalculateForces.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUReactionImpls.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUCompartments.cpp")
 
-# --- potentials ---
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/SCPUPotentialFactory.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/SCPUPotentialsOrder1.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/potentials/SCPUPotentialsOrder2.cpp")
-
 # --- reactions ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/reactions/SCPUReactionFactory.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/reactions/SCPUReactions.cpp")

@@ -46,16 +46,12 @@ class Potential {
 public:
     using id_t = short;
     
-    Potential(const std::string &name, const int order) : name(name), order(order), id(counter++) { }
+    Potential(const int order) : order(order), id(counter++) { }
 
     virtual ~Potential() = default;
 
     const id_t getId() const {
         return id;
-    }
-
-    const std::string &getName() const {
-        return name;
     }
 
     const int getOrder() const {
@@ -64,10 +60,11 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept = 0;
 
+    virtual std::string describe() = 0;
+
 private:
     static id_t counter;
 
-    const std::string name;
     const int order;
     const id_t id;
 };

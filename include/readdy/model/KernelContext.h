@@ -216,10 +216,11 @@ public:
     }
 
     template<typename R>
-    const short registerPotential(std::unique_ptr<R> potential, const std::string &type,
+    const short registerPotential(std::unique_ptr<R> potential,
                                   typename std::enable_if<std::is_base_of<potentials::PotentialOrder1, R>::value>::type * = 0) {
+        log::console()->critical("registering order 1 potential: {}", potential->describe());
         const auto id = potential->getId();
-        auto typeId = getOrCreateTypeId(type);
+        auto typeId = getOrCreateTypeId(potential->particleType);
         if (potentialO1RegistryInternal->find(typeId) == potentialO1RegistryInternal->end()) {
             potentialO1RegistryInternal->insert(std::make_pair(typeId, pot_ptr_vec1()));
         }
@@ -228,11 +229,12 @@ public:
     }
 
     template<typename R>
-    const short registerPotential(std::unique_ptr<R> potential, const std::string &type1, const std::string &type2,
+    const short registerPotential(std::unique_ptr<R> potential,
                                   typename std::enable_if<std::is_base_of<potentials::PotentialOrder2, R>::value>::type * = 0) {
+        log::console()->critical("registering order 2 potential: {}", potential->describe());
         const auto id = potential->getId();
-        auto type1Id = getOrCreateTypeId(type1);
-        auto type2Id = getOrCreateTypeId(type2);
+        auto type1Id = getOrCreateTypeId(potential->particleType1);
+        auto type2Id = getOrCreateTypeId(potential->particleType2);
         readdy::util::ParticleTypePair pp{type1Id, type2Id};
         if (potentialO2RegistryInternal->find(pp) == potentialO2RegistryInternal->end()) {
             potentialO2RegistryInternal->emplace(pp, pot_ptr_vec2());

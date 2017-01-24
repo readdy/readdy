@@ -34,16 +34,15 @@
 namespace readdy {
 
 namespace rpy {
-PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &name, pybind11::object o1, pybind11::object o2)
-        : PotentialOrder2(name),
-          calcEnergyFun(new pybind11::object(o1), [](pybind11::object *o) {
-              pybind11::gil_scoped_acquire lock;
-              delete o;
-          }),
-          calcForceFun(new pybind11::object(o2), [](pybind11::object *o) {
-              pybind11::gil_scoped_acquire lock;
-              delete o;
-          }) {};
+PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &particleType1, const std::string &particleType2,
+                                               pybind11::object o1, pybind11::object o2)
+        : PotentialOrder2(particleType1, particleType2), calcEnergyFun(new pybind11::object(o1), [](pybind11::object *o) {
+                      pybind11::gil_scoped_acquire lock;
+                      delete o;
+                  }), calcForceFun(new pybind11::object(o2), [](pybind11::object *o) {
+                      pybind11::gil_scoped_acquire lock;
+                      delete o;
+                  }) {};
 
 double PotentialOrder2Wrapper::calculateEnergy(const model::Vec3 &x_ij) const {
     pybind11::gil_scoped_acquire lock;
@@ -64,6 +63,14 @@ PotentialOrder2Wrapper::calculateForceAndEnergy(model::Vec3 &force, double &ener
 
 double PotentialOrder2Wrapper::getCutoffRadiusSquared() const {
     return getCutoffRadius() * getCutoffRadius();
+}
+
+void PotentialOrder2Wrapper::configureForTypes(const model::KernelContext *const context, unsigned int type1,
+                                               unsigned int type2) {
+}
+
+std::string PotentialOrder2Wrapper::describe() {
+    return "Python wrapped potential order 2";
 }
 
 

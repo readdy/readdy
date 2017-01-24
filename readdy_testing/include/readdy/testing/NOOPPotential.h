@@ -38,9 +38,13 @@
 namespace readdy {
 namespace testing {
 struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
-    NOOPPotentialOrder2(double cutoff = 0, double force = 0, double energy = 0) : PotentialOrder2("no op"),
-                                                                                  cutoff(cutoff), force(force),
-                                                                                  energy(energy) {}
+    NOOPPotentialOrder2(const std::string &particleType1, const std::string &particleType2,
+                        double cutoff = 0, double force = 0, double energy = 0)
+            : PotentialOrder2(particleType1, particleType2), cutoff(cutoff), force(force), energy(energy) {}
+
+    virtual std::string describe() override {
+        return "NOOPPotential with types " + particleType1 + ", " + particleType2;
+    }
 
     virtual double getCutoffRadius() const override {
         return cutoff;
@@ -69,6 +73,10 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
     }
 
     double cutoff, force, energy;
+protected:
+    friend class readdy::model::KernelContext;
+    void configureForTypes(const model::KernelContext *const context, unsigned int type1, unsigned int type2) override {
+    }
 };
 }
 }

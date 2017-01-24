@@ -132,48 +132,40 @@ void Simulation::deregisterPotential(const short uuid) {
 };
 
 const short
-Simulation::registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB,
+Simulation::registerHarmonicRepulsionPotential(const std::string& particleTypeA, const std::string& particleTypeB,
                                                double forceConstant) {
+    using potential_t = readdy::model::potentials::HarmonicRepulsion;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleTypeA, particleTypeB);
+    return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant);
 }
 
 const short
-Simulation::registerWeakInteractionPiecewiseHarmonicPotential(std::string particleTypeA, std::string particleTypeB,
-                                                              double forceConstant, double desiredParticleDistance,
-                                                              double depth, double noInteractionDistance) {
+Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string& particleTypeA,
+                                                              const std::string& particleTypeB, double forceConstant,
+                                                              double desiredParticleDistance, double depth,
+                                                              double noInteractionDistance) {
+    using potential_t = readdy::model::potentials::WeakInteractionPiecewiseHarmonic;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::WeakInteractionPiecewiseHarmonic>();
-    ptr->setForceConstant(forceConstant);
-    ptr->setDesiredParticleDistance(desiredParticleDistance);
-    ptr->setDepthAtDesiredDistance(depth);
-    ptr->setNoInteractionDistance(noInteractionDistance);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleTypeA, particleTypeB);
+    return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant,
+                                                         desiredParticleDistance, depth, noInteractionDistance);
 }
 
 const short
-Simulation::registerBoxPotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin,
-                                 readdy::model::Vec3 extent, bool considerParticleRadius) {
+Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
+                                 const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
+                                 bool considerParticleRadius) {
+    using potential_t = readdy::model::potentials::CubePotential;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
-    ptr->setOrigin(origin);
-    ptr->setExtent(extent);
-    ptr->setConsiderParticleRadius(considerParticleRadius);
-    ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
+    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, extent,
+                                                         considerParticleRadius);
 }
 
 const short
-Simulation::registerSpherePotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin,
+Simulation::registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
                                     double radius) {
+    using potential_t = readdy::model::potentials::SpherePotential;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::SpherePotential>();
-    ptr->setOrigin(origin);
-    ptr->setRadius(radius);
-    ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
+    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
 
 void Simulation::ensureKernelSelected() const {

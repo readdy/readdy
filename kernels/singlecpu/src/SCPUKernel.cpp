@@ -26,7 +26,6 @@
 
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 #include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
-#include <readdy/kernel/singlecpu/potentials/SCPUPotentialFactory.h>
 #include <readdy/kernel/singlecpu/reactions/SCPUReactionFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 
@@ -38,7 +37,7 @@ const std::string SCPUKernel::name = "SingleCPU";
 struct SCPUKernel::Impl {
     std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<SCPUStateModel> model;
-    std::unique_ptr<potentials::SCPUPotentialFactory> potentials;
+    std::unique_ptr<readdy::model::potentials::PotentialFactory> potentials;
     std::unique_ptr<actions::SCPUActionFactory> actionFactory;
     std::unique_ptr<reactions::SCPUReactionFactory> reactions;
     std::unique_ptr<observables::SCPUObservableFactory> observables;
@@ -46,7 +45,7 @@ struct SCPUKernel::Impl {
 
 SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<SCPUKernel::Impl>()) {
     pimpl->actionFactory = std::make_unique<actions::SCPUActionFactory>(this);
-    pimpl->potentials = std::make_unique<potentials::SCPUPotentialFactory>(this);
+    pimpl->potentials = std::make_unique<readdy::model::potentials::PotentialFactory>();
     pimpl->reactions = std::make_unique<reactions::SCPUReactionFactory>(this);
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->model = std::make_unique<SCPUStateModel>(pimpl->context.get());
@@ -75,10 +74,6 @@ readdy::model::KernelContext &SCPUKernel::getKernelContext() const {
 
 std::vector<std::string> SCPUKernel::getAvailablePotentials() const {
     return pimpl->potentials->getAvailablePotentials();
-}
-
-std::unique_ptr<readdy::model::potentials::Potential> SCPUKernel::createPotential(std::string &name) const {
-    return pimpl->potentials->createPotential(name);
 }
 
 readdy::model::potentials::PotentialFactory &SCPUKernel::getPotentialFactory() const {

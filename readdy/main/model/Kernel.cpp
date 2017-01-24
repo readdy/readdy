@@ -94,10 +94,6 @@ void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
     getKernelStateModel().addParticle({pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)});
 }
 
-std::unique_ptr<readdy::model::potentials::Potential> Kernel::createPotential(std::string &name) const {
-    return getPotentialFactory().createPotential(name);
-}
-
 unsigned int Kernel::getTypeId(const std::string &name) const {
     return getKernelContext().getTypeMapping().find(name)->second;
 }

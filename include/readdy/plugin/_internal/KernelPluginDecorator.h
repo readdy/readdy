@@ -56,8 +56,6 @@ public:
 
     virtual const std::string &getName() const override;
 
-    virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
-
     virtual std::vector<std::string> getAvailablePotentials() const override;
 
     virtual readdy::model::actions::ActionFactory &getActionFactory() const override;

@@ -77,19 +77,22 @@ TEST_F(TestKernelContext, BoxSize) {
 
 TEST_F(TestKernelContext, PotentialOrder2Map) {
     m::KernelContext ctx;
-    ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>(), "a", "b");
-    ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>(), "b", "a");
+    auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>("a", "b");
+    readdy::log::console()->critical("noop: {}", noop->describe());
+    ctx.registerPotential(std::move(noop));
+    ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("b", "a"));
     ctx.configure();
     auto vector = ctx.getOrder2Potentials("b", "a");
     EXPECT_EQ(vector.size(), 2);
 }
 
 TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
+    using vec_t = readdy::model::Vec3;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
 
     namespace rmp = readdy::model::potentials;
-    
-    auto& ctx = kernel->getKernelContext();
+
+    auto &ctx = kernel->getKernelContext();
 
     ctx.setDiffusionConstant("A", 1.0);
     ctx.setDiffusionConstant("B", 3.0);
@@ -103,20 +106,20 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     std::vector<short> idsToRemove;
     short uuid2_1, uuid2_2;
     {
-        auto id1 = ctx.registerPotential(kernel->createPotentialAs<rmp::CubePotential>(), "A");
-        auto id2 = ctx.registerPotential(kernel->createPotentialAs<rmp::CubePotential>(), "C");
-        auto id3 = ctx.registerPotential(kernel->createPotentialAs<rmp::CubePotential>(), "D");
-        auto id4 = ctx.registerPotential(kernel->createPotentialAs<rmp::CubePotential>(), "C");
-        
+        auto id1 = kernel->registerPotential<rmp::CubePotential>("A", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id2 = kernel->registerPotential<rmp::CubePotential>("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id3 = kernel->registerPotential<rmp::CubePotential>("D", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id4 = kernel->registerPotential<rmp::CubePotential>("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+
         idsToRemove.push_back(id1);
         idsToRemove.push_back(id2);
         idsToRemove.push_back(id3);
         idsToRemove.push_back(id4);
 
-        ctx.registerPotential(kernel->createPotentialAs<rmp::CubePotential>(), "B");
+        kernel->registerPotential<rmp::CubePotential>("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
-        uuid2_1 = ctx.registerPotential(kernel->createPotentialAs<rmp::HarmonicRepulsion>(), "A", "C");
-        uuid2_2 = ctx.registerPotential(kernel->createPotentialAs<rmp::HarmonicRepulsion>(), "B", "C");
+        uuid2_1 = kernel->registerPotential<rmp::HarmonicRepulsion>("A", "C", 0);
+        uuid2_2 = kernel->registerPotential<rmp::HarmonicRepulsion>("B", "C", 0);
         ctx.configure();
     }
     // test that order 1 potentials are set up correctly
@@ -124,27 +127,23 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
         {
             const auto &pot1_A = ctx.getOrder1Potentials("A");
             EXPECT_EQ(pot1_A.size(), 1);
-            EXPECT_EQ(pot1_A[0]->getName(), rmp::getPotentialName<rmp::CubePotential>());
             EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_A[0])->getParticleRadius(), 1.0);
         }
         {
             const auto &pot1_B = ctx.getOrder1Potentials("B");
             EXPECT_EQ(pot1_B.size(), 1);
-            EXPECT_EQ(pot1_B[0]->getName(), rmp::getPotentialName<rmp::CubePotential>());
             EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_B[0])->getParticleRadius(), 2.0);
         }
         {
             const auto &pot1_C = ctx.getOrder1Potentials("C");
             EXPECT_EQ(pot1_C.size(), 2);
             for (auto &&ptr : pot1_C) {
-                EXPECT_EQ(ptr->getName(), rmp::getPotentialName<rmp::CubePotential>());
                 EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(ptr)->getParticleRadius(), 3.0);
             }
         }
         {
             const auto &pot1_D = ctx.getOrder1Potentials("D");
             EXPECT_EQ(pot1_D.size(), 1);
-            EXPECT_EQ(pot1_D[0]->getName(), rmp::getPotentialName<rmp::CubePotential>());
             EXPECT_EQ(dynamic_cast<rmp::CubePotential *>(pot1_D[0])->getParticleRadius(), 4.0);
         }
     }
@@ -161,19 +160,17 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
         {
             const auto &pot2_AC = ctx.getOrder2Potentials("A", "C");
             EXPECT_EQ(pot2_AC[0]->getId(), uuid2_1);
-            EXPECT_EQ(pot2_AC[0]->getName(), rmp::getPotentialName<rmp::HarmonicRepulsion>());
             EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_AC[0])->getSumOfParticleRadii(), 1 + 3);
         }
         {
             const auto &pot2_BC = ctx.getOrder2Potentials("B", "C");
             EXPECT_EQ(pot2_BC[0]->getId(), uuid2_2);
-            EXPECT_EQ(pot2_BC[0]->getName(), rmp::getPotentialName<rmp::HarmonicRepulsion>());
             EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_BC[0])->getSumOfParticleRadii(), 2 + 3);
         }
     }
 
     // now remove
-    std::for_each(idsToRemove.begin(), idsToRemove.end(), [&](const short id) {ctx.deregisterPotential(id);});
+    std::for_each(idsToRemove.begin(), idsToRemove.end(), [&](const short id) { ctx.deregisterPotential(id); });
     {
         // only one potential for particle type B has a different uuid
         ctx.configure();

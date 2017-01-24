@@ -46,35 +46,75 @@ class Kernel;
 namespace potentials {
 class PotentialFactory {
 public:
+
+    template<typename R, typename... Args>
+    std::unique_ptr<R> createPotential(Args &&... args) const {
+        return std::unique_ptr<R>(get_dispatcher<R, Args...>::impl(this, std::forward<Args>(args)...));
+    }
+
     std::vector<std::string> getAvailablePotentials() const {
-        std::vector<std::string> names{factory.size()};
-        for (auto &&e : factory) {
-            names.push_back(e.first);
-        }
-        return names;
-    }
-
-    template<typename T>
-    std::unique_ptr<T> createPotentialAs(const std::string &name) const {
-        auto &&it = factory.find(name);
-        if (it != factory.end()) {
-            return std::unique_ptr<T>(dynamic_cast<T *>(it->second()));
-        }
-        throw std::runtime_error("Could not find requested potential \"" + name + "\" in factory.");
-    }
-
-    template<typename T>
-    std::unique_ptr<T> createPotential() const {
-        return createPotentialAs<T>(getPotentialName<T>());
-    }
-
-    std::unique_ptr<Potential> createPotential(std::string name) const {
-        return createPotentialAs<Potential>(name);
+        return {getPotentialName<CubePotential>(), getPotentialName<SpherePotential>(),
+                getPotentialName<HarmonicRepulsion>(), getPotentialName<WeakInteractionPiecewiseHarmonic>()};
     }
 
 protected:
-    std::unordered_map<std::string, std::function<Potential *()>> factory;
+    template<typename T, typename... Args>
+    struct get_dispatcher;
+
+    template<typename T, typename... Args>
+    struct get_dispatcher {
+        static T *impl(const PotentialFactory *self, Args &&... args) {
+            return new T(std::forward<Args>(args)...);
+        };
+    };
+
+    virtual CubePotential *createCubePotential(const std::string &particleType, double forceConstant,
+                                               const Vec3 &origin, const Vec3 &extent,
+                                               bool considerParticleRadius) const {
+        return new CubePotential(particleType, forceConstant, origin, extent, considerParticleRadius);
+    };
+
+    CubePotential *createCubePotential(const std::string &particleType, double forceConstant,
+                                       const Vec3 &origin, const Vec3 &extent) const {
+        return createCubePotential(particleType, forceConstant, origin, extent, true);
+    }
+
+    virtual SpherePotential *createSpherePotential(const std::string &particleType, double forceConstant,
+                                                   const Vec3 &origin, double radius) const {
+        return new SpherePotential(particleType, forceConstant, origin, radius);
+    };
+
+    virtual HarmonicRepulsion *
+    createHarmonicRepulsion(const std::string &type1, const std::string &type2, double forceConstant) const {
+        return new HarmonicRepulsion(type1, type2, forceConstant);
+    };
+
+    virtual WeakInteractionPiecewiseHarmonic *
+    createWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
+                                           const double forceConstant,
+                                           const WeakInteractionPiecewiseHarmonic::Configuration &config) const {
+        return new WeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, config);
+    };
+
+    WeakInteractionPiecewiseHarmonic *
+    createWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
+                                           const double forceConstant, const double desiredDist,
+                                           const double depth,
+                                           const double cutoff) const {
+        using config = WeakInteractionPiecewiseHarmonic::Configuration;
+        return createWeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, config{desiredDist, depth, cutoff});
+    };
+
+
 };
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, CubePotential)
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SpherePotential)
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, HarmonicRepulsion)
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, WeakInteractionPiecewiseHarmonic)
 
 }
 }
