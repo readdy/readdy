@@ -20,6 +20,6 @@
 #####################################################################
 
 
-PROJECT(ReaDDy_testing C CXX)
+PROJECT(readdy_testing C CXX)
 
 SET(TESTING_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE INTERNAL "Readdy testing include dir")

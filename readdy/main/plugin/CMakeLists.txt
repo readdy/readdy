@@ -20,7 +20,7 @@
 #####################################################################
 
 
-PROJECT(ReaDDy_plugin)
+PROJECT(readdy_plugin)
 
 # sources
 INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_plugin.cmake")
@@ -37,7 +37,7 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
     COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 
 # link
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${READDY_PLUGIN_LIBRARIES} ReaDDy_kernel_singlecpu)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${READDY_PLUGIN_LIBRARIES} readdy_kernel_singlecpu)
 
 INSTALL(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION bin

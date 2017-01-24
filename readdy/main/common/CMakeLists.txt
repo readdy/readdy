@@ -21,7 +21,7 @@
 
 
 # general utilities.
-PROJECT(ReaDDy_common CXX)
+PROJECT(readdy_common CXX)
 
 INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_common.cmake")
 

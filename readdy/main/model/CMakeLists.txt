@@ -20,7 +20,7 @@
 #####################################################################
 
 
-PROJECT(ReaDDy_model CXX)
+PROJECT(readdy_model CXX)
 
 INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_model.cmake")
 
