@@ -193,8 +193,8 @@ public:
         return r->getId();
     }
 
-    const short registerExternalPotential(potentials::PotentialOrder1 *potential, const std::string &type) {
-        auto typeId = getOrCreateTypeId(type);
+    const short registerExternalPotential(potentials::PotentialOrder1 *potential) {
+        auto typeId = getOrCreateTypeId(potential->particleType);
         if (potentialO1RegistryExternal->find(typeId) == potentialO1RegistryExternal->end()) {
             potentialO1RegistryExternal->emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
         }
@@ -202,11 +202,10 @@ public:
         return potential->getId();
     }
 
-    const short registerExternalPotential(potentials::PotentialOrder2 *potential,
-                                          const std::string &type1, const std::string &type2) {
+    const short registerExternalPotential(potentials::PotentialOrder2 *potential) {
         const auto id = potential->getId();
-        auto type1Id = getOrCreateTypeId(type1);
-        auto type2Id = getOrCreateTypeId(type2);
+        auto type1Id = getOrCreateTypeId(potential->particleType1);
+        auto type2Id = getOrCreateTypeId(potential->particleType2);
         readdy::util::ParticleTypePair pp{type1Id, type2Id};
         if (potentialO2RegistryExternal->find(pp) == potentialO2RegistryExternal->end()) {
             potentialO2RegistryExternal->emplace(pp, pot_ptr_vec2_external());
@@ -218,7 +217,6 @@ public:
     template<typename R>
     const short registerPotential(std::unique_ptr<R> potential,
                                   typename std::enable_if<std::is_base_of<potentials::PotentialOrder1, R>::value>::type * = 0) {
-        log::console()->critical("registering order 1 potential: {}", potential->describe());
         const auto id = potential->getId();
         auto typeId = getOrCreateTypeId(potential->particleType);
         if (potentialO1RegistryInternal->find(typeId) == potentialO1RegistryInternal->end()) {
@@ -231,7 +229,6 @@ public:
     template<typename R>
     const short registerPotential(std::unique_ptr<R> potential,
                                   typename std::enable_if<std::is_base_of<potentials::PotentialOrder2, R>::value>::type * = 0) {
-        log::console()->critical("registering order 2 potential: {}", potential->describe());
         const auto id = potential->getId();
         auto type1Id = getOrCreateTypeId(potential->particleType1);
         auto type2Id = getOrCreateTypeId(potential->particleType2);

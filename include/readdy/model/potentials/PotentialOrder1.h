@@ -58,7 +58,7 @@ protected:
     friend class readdy::model::KernelContext;
     virtual void configureForType(const KernelContext* const, const unsigned int type) = 0;
 
-    const std::string& particleType;
+    const std::string particleType;
 
 };
 }

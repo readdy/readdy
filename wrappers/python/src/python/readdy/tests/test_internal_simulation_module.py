@@ -80,12 +80,12 @@ class TestInternalSimulationModule(unittest.TestCase):
         if not self.simulation.is_kernel_selected():
             self.simulation.set_kernel("SingleCPU")
 
-        pot = Pot2("mypot", self.py_harmonic_repulsion_energy, self.py_harmonic_repulsion_force)
         self.simulation.register_particle_type("ParticleTypeA", 1.0, 1.0)
         self.simulation.register_particle_type("ParticleTypeB", 3.0, 1.0)
         self.simulation.register_particle_type("ParticleTypeA_internal", 1.0, 1.0)
         self.simulation.register_particle_type("ParticleTypeB_internal", 3.0, 1.0)
-        self.simulation.register_potential_order_2(pot, "ParticleTypeA", "ParticleTypeB")
+        pot = Pot2("ParticleTypeA", "ParticleTypeB", self.py_harmonic_repulsion_energy, self.py_harmonic_repulsion_force)
+        self.simulation.register_potential_order_2(pot)
         self.simulation.register_potential_harmonic_repulsion("ParticleTypeA_internal", "ParticleTypeB_internal", 1.0)
         self.simulation.add_particle("ParticleTypeA", Vec(0,0,0))
         self.simulation.add_particle("ParticleTypeB", Vec(1,1,1))

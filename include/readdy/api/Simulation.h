@@ -265,6 +265,11 @@ public:
             const std::string& particleTypeA, const std::string& particleTypeB, double forceConstant,
             double desiredParticleDistance, double depth, double noInteractionDistance);
 
+    void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
+        ensureKernelSelected();
+        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+    }
+
     /**
      * Register a potential of order 2, i.e., a potential that depends on the positions of a particle pair.
      * @param ptr a const pointer to a PotentialOrder2 instance that is to be evaluated
@@ -272,11 +277,11 @@ public:
      * @param type2 one of the two types for which this potential should be registered
      * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
      */
-    void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr,
-                                 const std::string &type1, const std::string &type2) {
+    void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
         ensureKernelSelected();
-        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr, type1, type2);
+        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
     };
+
 
     //void registerReaction(const Reaction& reaction);
     //void registerReactionByDescriptor(const std::string descriptor);

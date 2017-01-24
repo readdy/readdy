@@ -63,7 +63,7 @@ protected:
 
     virtual void configureForTypes(const KernelContext* const, unsigned int type1, unsigned int type2) = 0;
 
-    const std::string& particleType1, particleType2;
+    const std::string particleType1, particleType2;
 };
 
 }

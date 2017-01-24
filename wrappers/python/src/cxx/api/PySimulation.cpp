@@ -51,8 +51,8 @@ std::string getSelectedKernelType(sim &self) { /* discard const reference */ ret
 
 void addParticle(sim &self, const std::string &type, const vec &pos) { self.addParticle(pos[0], pos[1], pos[2], type); }
 
-void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std::string type2) {
-    self.registerPotentialOrder2(potential, type1, type2);
+void registerPotentialOrder2(sim &self, pot2 *potential) {
+    self.registerPotentialOrder2(potential);
 }
 
 obs_handle_t

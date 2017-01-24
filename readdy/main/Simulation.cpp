@@ -121,12 +121,6 @@ const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() con
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
 
-void Simulation::registerExternalPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr,
-                                                 const std::string &type) {
-    ensureKernelSelected();
-    pimpl->kernel->getKernelContext().registerExternalPotential(ptr, type);
-}
-
 void Simulation::deregisterPotential(const short uuid) {
     pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };

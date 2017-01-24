@@ -107,12 +107,12 @@ void exportModelClasses(py::module &proto) {
                      return self.registerExternalReaction(r);
                  }, rvp::reference_internal)
             .def("register_potential_order_1",
-                 [](rdy_ctx_t &self, rdy_pot_1 &pot, std::string type) -> const short {
-                     return self.registerExternalPotential(&pot, type);
+                 [](rdy_ctx_t &self, rdy_pot_1 &pot) -> const short {
+                     return self.registerExternalPotential(&pot);
                  }, rvp::reference_internal)
             .def("register_potential_order_2",
-                 [](rdy_ctx_t &self, rdy_pot_2 *p, std::string t1, std::string t2) -> const short {
-                     return self.registerExternalPotential(p, t1, t2);
+                 [](rdy_ctx_t &self, rdy_pot_2 *p) -> const short {
+                     return self.registerExternalPotential(p);
                  }, rvp::reference_internal)
             .def("get_particle_type_id", &rdy_ctx_t::getParticleTypeID)
             .def("configure", &rdy_ctx_t::configure, py::arg("debugOutput") = false);
