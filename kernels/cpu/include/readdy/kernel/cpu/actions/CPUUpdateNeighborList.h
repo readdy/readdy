@@ -33,7 +33,7 @@
 #ifndef READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
 #define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
 
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {

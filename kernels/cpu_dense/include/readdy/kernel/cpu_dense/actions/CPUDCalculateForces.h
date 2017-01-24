@@ -33,7 +33,7 @@
 #ifndef READDY_DENSE_CALCULATEFORCES_H
 #define READDY_DENSE_CALCULATEFORCES_H
 
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {

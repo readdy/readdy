@@ -43,18 +43,14 @@ namespace model {
 namespace potentials {
 
 class Potential {
-    static short counter;
-
-    const std::string name;
-    const int order;
-    const short id;
-
 public:
+    using id_t = short;
+    
     Potential(const std::string &name, const int order) : name(name), order(order), id(counter++) { }
 
     virtual ~Potential() = default;
 
-    const short getId() const {
+    const id_t getId() const {
         return id;
     }
 
@@ -68,6 +64,12 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept = 0;
 
+private:
+    static id_t counter;
+
+    const std::string name;
+    const int order;
+    const id_t id;
 };
 
 }

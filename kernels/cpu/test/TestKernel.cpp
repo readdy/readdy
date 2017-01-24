@@ -31,7 +31,7 @@
 
 #include <gtest/gtest.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 #include <readdy/model/RandomProvider.h>
 
 namespace {

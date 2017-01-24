@@ -36,8 +36,8 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <readdy/model/programs/Action.h>
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Action.h>
+#include <readdy/model/actions/Actions.h>
 
 namespace readdy {
 namespace model {

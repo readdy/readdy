@@ -33,7 +33,7 @@
 #define READDY_DENSE_CPUEULERBDINTEGRATOR_H
 
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 
 namespace readdy {
 namespace kernel {

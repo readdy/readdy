@@ -39,13 +39,13 @@
 #include <iostream>
 #include <readdy/common/signals.h>
 #include <readdy/model/Plugin.h>
-#include <readdy/model/programs/Action.h>
+#include <readdy/model/actions/Action.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/potentials/PotentialFactory.h>
-#include <readdy/model/programs/ActionFactory.h>
+#include <readdy/model/actions/ActionFactory.h>
 #include <readdy/model/reactions/ReactionFactory.h>
 
 namespace readdy {

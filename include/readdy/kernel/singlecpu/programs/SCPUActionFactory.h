@@ -27,7 +27,7 @@
 #ifndef READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 #define READDY_MAIN_SINGLECPUPROGRAMFACTORY_H
 
-#include <readdy/model/programs/ActionFactory.h>
+#include <readdy/model/actions/ActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
 namespace readdy {

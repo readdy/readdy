@@ -33,7 +33,7 @@
 #define READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
 
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 
 namespace readdy {
 namespace kernel {

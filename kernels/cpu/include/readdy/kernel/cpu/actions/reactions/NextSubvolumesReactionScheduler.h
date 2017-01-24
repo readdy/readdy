@@ -32,7 +32,7 @@
 #ifndef READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
 #define READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
 
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 #include "readdy/kernel/cpu/CPUKernel.h"
 
 namespace readdy {

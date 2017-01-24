@@ -33,7 +33,7 @@
 #include <readdy/kernel/singlecpu/reactions/SCPUReactions.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 
 TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     using fusion_t = readdy::model::reactions::Fusion;

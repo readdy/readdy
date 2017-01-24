@@ -33,7 +33,7 @@
 #define READDY_CPUKERNEL_GILLESPIEPARALLEL_H
 
 
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/singlecpu/programs/SCPUReactionImpls.h>
 #include "ReactionUtils.h"

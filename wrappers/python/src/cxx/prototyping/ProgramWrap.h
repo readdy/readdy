@@ -32,7 +32,7 @@
 #ifndef READDY_MAIN_PROGRAMWRAP_H
 #define READDY_MAIN_PROGRAMWRAP_H
 
-#include <readdy/model/programs/Action.h>
+#include <readdy/model/actions/Action.h>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;

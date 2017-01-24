@@ -43,9 +43,9 @@
 #ifndef READDY_MAIN_PROGRAMS_H_H
 #define READDY_MAIN_PROGRAMS_H_H
 
-#include <readdy/model/programs/Action.h>
-#include <readdy/model/Particle.h>
 #include <type_traits>
+#include <readdy/model/Particle.h>
+#include <readdy/model/actions/Action.h>
 #include <readdy/model/observables/Observable.h>
 
 #if READDY_OSX || READDY_WINDOWS

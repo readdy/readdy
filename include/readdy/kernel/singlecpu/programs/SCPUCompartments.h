@@ -34,7 +34,7 @@
 #ifndef READDY_MAIN_SINGLECPUCOMPARTMENTS_H
 #define READDY_MAIN_SINGLECPUCOMPARTMENTS_H
 
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
 namespace readdy {

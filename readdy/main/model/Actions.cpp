@@ -29,7 +29,7 @@
  * @date 17.11.16
  */
 
-#include <readdy/model/programs/Actions.h>
+#include <readdy/model/actions/Actions.h>
 #include <readdy/model/Kernel.h>
 
 namespace readdy {
