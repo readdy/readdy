@@ -20,12 +20,7 @@
 #####################################################################
 
 
-#####################################
-#                                   #
-# ReaDDy                           #
-#                                   #
-#####################################
-PROJECT(ReaDDy_Main C CXX)
+PROJECT(readdy_main C CXX)
 
 #####################################
 #                                   #
@@ -136,16 +131,15 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         ENDIF(NOT READDY_INSTALL_PREFIX)
     ENDIF(WIN32)
     IF(${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT})
-        SET(CMAKE_INSTALL_PREFIX ${READDY_INSTALL_PREFIX} CACHE PATH "Where to install ReaDDy" FORCE)
+        SET(CMAKE_INSTALL_PREFIX ${READDY_INSTALL_PREFIX} CACHE PATH "Where to install readdy" FORCE)
     ENDIF(${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT})
 
     # extra compile and link flags
-    SET(READDY_STANDARD 11)
     IF(NOT MSVC)
         check_cxx_compiler_flag("-std=c++14" HAS_CPP14_FLAG)
         IF(HAS_CPP14_FLAG)
-            SET(READDY_STANDARD 14)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_CPP14")
+            SET(CMAKE_CXX_STANDARD 14)
         ELSE()
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREADDY_CPP11")
         ENDIF()
@@ -168,7 +162,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
     # main project name
-    SET(READDY_PROJECT_NAME "ReaDDy")
+    SET(READDY_PROJECT_NAME "readdy")
 
     IF (READDY_LOG_CMAKE_CONFIGURATION)
         INCLUDE(LogConfiguration)
@@ -234,10 +228,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         TARGET_LINK_LIBRARIES(${READDY_PROJECT_NAME} ${READDY_DEPENDENT_LIBRARIES})
         SET_TARGET_PROPERTIES(${READDY_PROJECT_NAME} PROPERTIES
                 LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-                COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-                CXX_STANDARD ${READDY_STANDARD}
-                CXX_STANDARD_REQUIRED ON
-                )
+                COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
     ELSE(READDY_BUILD_SHARED_COMBINED)
         # include directories from least dependent to most dependent
         # i.e.: A depends on B -> add subdirectory of B first
