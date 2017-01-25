@@ -94,7 +94,7 @@ SET(READDY_PATCH_VERSION 1)
 SET(READDY_VERSION "${READDY_MAJOR_VERSION}.${READDY_MINOR_VERSION}.${READDY_PATCH_VERSION}")
 
 # always build readdy as shared lib
-SET(BUILD_SHARED_LIBS ON)
+SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)
 
 # dir vars
 SET(READDY_GLOBAL_DIR "${PROJECT_SOURCE_DIR}")
@@ -182,33 +182,28 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
     IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_CREATE_TEST_TARGET)
 
-        SET(GOOGLETEST_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
-        SET(GOOGLETEST_INCLUDE ${GOOGLETEST_ROOT}/googletest/include)
-        SET(GOOGLETEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
-        SET(GOOGLETEST_LIBRARY ${GOOGLETEST_BINARY_DIR}/googletest)
+       if (CMAKE_VERSION VERSION_LESS 3.2)
+           set(UPDATE_DISCONNECTED_IF_AVAILABLE "")
+       else()
+           set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED 1")
+       endif()
 
-        SET(GOOGLEMOCK_ROOT ${CMAKE_SOURCE_DIR}/libraries/googletest)
-        SET(GOOGLEMOCK_INCLUDE ${GOOGLEMOCK_ROOT}/googlemock/include)
-        SET(GOOGLEMOCK_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libraries/googletest)
-        SET(GOOGLEMOCK_LIBRARY ${GOOGLEMOCK_BINARY_DIR}/googlemock)
+       include(cmake/Modules/DownloadProject.cmake)
+       download_project(PROJ googletest
+               GIT_REPOSITORY https://github.com/google/googletest.git
+               GIT_TAG release-1.8.0
+               ${UPDATE_DISCONNECTED_IF_AVAILABLE}
+               )
 
-        SET(BUILD_GTEST ON)
-        SET(BUILD_GMOCK ON)
-        #IF(MSVC)
-        #    ADD_DEFINITIONS(-DGTEST_CREATE_SHARED_LIBRARY=1 -DGTEST_LINKED_AS_SHARED_LIBRARY=1)
-        #    SET(gtest_disable_pthreads ON)
-        #ENDIF()
-        ADD_SUBDIRECTORY(${GOOGLETEST_ROOT})
-        SET_TARGET_PROPERTIES(gmock gmock_main gtest gtest_main PROPERTIES
-                LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-                COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-                CXX_STANDARD ${READDY_STANDARD}
-                CXX_STANDARD_REQUIRED ON
-        )
+       # Prevent GoogleTest from overriding our compiler/linker options
+       # when building with Visual Studio
+       set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-        ENABLE_TESTING()
+       add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
 
-        ADD_SUBDIRECTORY(readdy_testing)
+       ENABLE_TESTING()
+
+       ADD_SUBDIRECTORY(readdy_testing)
 
     ELSE()
         MESSAGE(STATUS "The submodule googletest was not initialized or READDY_CREATE_TEST_TARGET was OFF, thus no testing.")
