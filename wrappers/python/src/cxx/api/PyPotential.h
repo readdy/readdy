@@ -38,9 +38,11 @@
 namespace readdy {
 namespace rpy {
 class PotentialOrder2Wrapper : public readdy::model::potentials::PotentialOrder2 {
-
 public:
-    PotentialOrder2Wrapper(const std::string &name, pybind11::object o1, pybind11::object o2);
+    std::string describe() override;
+
+    PotentialOrder2Wrapper(const std::string &particleType1, const std::string &particleType2,
+                           pybind11::object o1, pybind11::object o2);
 
     virtual double calculateEnergy(const model::Vec3 &x_ij) const override;
 
@@ -62,6 +64,8 @@ public:
 
 
 protected:
+    void configureForTypes(const model::KernelContext *const context, unsigned int type1, unsigned int type2) override;
+
     std::shared_ptr<pybind11::object> calcEnergyFun;
     std::shared_ptr<pybind11::object> calcForceFun;
 };

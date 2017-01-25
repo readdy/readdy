@@ -52,9 +52,7 @@ class ReactionFactory {
 public:
     template<typename R, typename... Args>
     std::unique_ptr<R> createReaction(Args &&... args) const {
-        return std::unique_ptr<R>(ReactionFactory::get_dispatcher<R, Args...>::impl(
-                this, std::forward<Args>(args)...)
-        );
+        return std::unique_ptr<R>(get_dispatcher<R, Args...>::impl(this, std::forward<Args>(args)...));
     }
 
 protected:
@@ -86,41 +84,20 @@ protected:
 
     template<typename T, typename... Args>
     struct get_dispatcher {
-        static T *impl(const ReactionFactory *self, Args&&... args) {
+        static T *impl(const ReactionFactory *self, Args &&... args) {
             // this only invokes the normal constructor
             return new T(std::forward<Args>(args)...);
         };
     };
 };
 
+READDY_CREATE_FACTORY_DISPATCHER(ReactionFactory, Conversion)
 
-template<typename... Args>
-struct ReactionFactory::get_dispatcher<Conversion, Args...> {
-    static Conversion *impl(const ReactionFactory *self, Args &&... args) {
-        return self->createConversion(std::forward<Args>(args)...);
-    }
-};
+READDY_CREATE_FACTORY_DISPATCHER(ReactionFactory, Enzymatic)
 
-template<typename... Args>
-struct ReactionFactory::get_dispatcher<Enzymatic, Args...> {
-    static Enzymatic *impl(const ReactionFactory *self, Args &&... args) {
-        return self->createEnzymatic(std::forward<Args>(args)...);
-    }
-};
+READDY_CREATE_FACTORY_DISPATCHER(ReactionFactory, Fission)
 
-template<typename... Args>
-struct ReactionFactory::get_dispatcher<Fission, Args...> {
-    static Fission *impl(const ReactionFactory *self, Args &&... args) {
-        return self->createFission(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct ReactionFactory::get_dispatcher<Fusion, Args...> {
-    static Fusion *impl(const ReactionFactory *self, Args &&... args) {
-        return self->createFusion(std::forward<Args>(args)...);
-    }
-};
+READDY_CREATE_FACTORY_DISPATCHER(ReactionFactory, Fusion)
 
 }
 }

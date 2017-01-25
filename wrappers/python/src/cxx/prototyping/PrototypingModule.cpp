@@ -56,8 +56,8 @@ using scpu_kernel_wrap_t = scpu_kernel_t; // todo: do i need readdy::py::SingleC
 
 using core_kernel_t = readdy::model::Kernel;
 using core_kernel_wrap_t = readdy::rpy::KernelWrap;
-using core_program_factory = readdy::model::programs::ProgramFactory;
-using core_program_t = readdy::model::programs::Program;
+using core_program_factory = readdy::model::actions::ActionFactory;
+using core_program_t = readdy::model::actions::Action;
 
 
 // module
@@ -77,7 +77,7 @@ PYBIND11_PLUGIN (prototyping) {
             .def("get_potential_factory", &scpu_kernel_wrap_t::getPotentialFactory, rvp::reference_internal)
             .def("get_reaction_factory", &scpu_kernel_wrap_t::getReactionFactory, rvp::reference_internal)
             .def("get_observable_factory", &scpu_kernel_wrap_t::getObservableFactory, rvp::reference_internal)
-            .def("get_program_factory", &scpu_kernel_wrap_t::getProgramFactory, rvp::reference_internal);
+            .def("get_program_factory", &scpu_kernel_wrap_t::getActionFactory, rvp::reference_internal);
 
     return proto.ptr();
 }

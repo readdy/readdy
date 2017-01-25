@@ -42,32 +42,32 @@ TEST(TestSchemes, Sanity) {
     api::SchemeConfigurator <api::ReaDDyScheme> c(kernel.get());
     c.evaluateObservables(false)
             .includeForces(false)
-            .withIntegrator(kernel->createProgram<readdy::model::programs::EulerBDIntegrator>())
-            .configure()->run(10);
+            .withIntegrator(kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1))
+            .configure(1)->run(10);
 }
 
 TEST(TestSchemes, SimulationObject) {
     readdy::Simulation sim;
     sim.setKernel("SingleCPU");
-    sim.setTimeStep(.5);
     sim.setBoxSize(1, 1, 1);
-    sim.runScheme().configureAndRun(5);
+    sim.runScheme().configureAndRun(.5, 5);
 
     /**
      * use ReaDDyScheme without defaults
      */
     sim.runScheme<readdy::api::ReaDDyScheme>(false)
-            .withIntegrator<readdy::model::programs::EulerBDIntegrator>()
-            .withReactionScheduler<readdy::model::programs::reactions::UncontrolledApproximation>()
-            .configureAndRun(100);
+            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
+            .configureAndRun(.5, 100);
 
     /**
      * default: readdy scheme, use defaults = true
      */
     sim.runScheme()
-            .withIntegrator<readdy::model::programs::EulerBDIntegrator>()
-            .withReactionScheduler<readdy::model::programs::reactions::UncontrolledApproximation>()
-            .configureAndRun(100);
+            .includeForces(false)
+            .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+            .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
+            .configureAndRun(.5, 100);
 }
 
 }

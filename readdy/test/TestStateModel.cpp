@@ -51,11 +51,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     ctx.setBoxSize(4., 4., 4.);
     ctx.setPeriodicBoundary(false, false, false);
 
-    {
-        auto pot = kernel->createPotentialAs<m::potentials::HarmonicRepulsion>();
-        pot->setForceConstant(1.);
-        ctx.registerPotential(std::move(pot), "A", "A");
-    }
+    kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "A", 1.0);
 
     ctx.configure();
     auto typeIdA = ctx.getParticleTypeID("A");
@@ -86,11 +82,9 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     ctx.setParticleRadius("B", 2.0);
     ctx.setBoxSize(10., 10., 10.);
     ctx.setPeriodicBoundary(true, true, false);
-    {
-        auto pot = kernel->createPotentialAs<m::potentials::HarmonicRepulsion>();
-        pot->setForceConstant(1.);
-        ctx.registerPotential(std::move(pot), "A", "B");
-    }
+
+    kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "B", 1.0);
+
     ctx.configure();
     auto typeIdA = ctx.getParticleTypeID("A");
     auto typeIdB = ctx.getParticleTypeID("B");

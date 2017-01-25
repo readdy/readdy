@@ -55,8 +55,7 @@ struct TestNeighborList : ::testing::Test {
         ctx.setDiffusionConstant("A", 1.0);
         double eductDistance = 1.2;
         ctx.registerReaction(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
-
-        ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>(1.1, 0., 0.), "A", "A");
+        ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
         typeIdA = ctx.getParticleTypeID("A");
         ctx.configure();
     }

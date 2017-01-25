@@ -127,7 +127,7 @@ void CPUStateModel::calculateForces() {
     const auto potOrder2 = pimpl->context->getAllOrder2Potentials();
     auto d = pimpl->context->getShortestDifferenceFun();
     {
-    std::vector<std::future<double>> energyFutures;
+        std::vector<std::future<double>> energyFutures;
         energyFutures.reserve(config->nThreads());
         {
             std::vector<thd::scoped_thread> threads;

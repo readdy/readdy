@@ -51,8 +51,8 @@ std::string getSelectedKernelType(sim &self) { /* discard const reference */ ret
 
 void addParticle(sim &self, const std::string &type, const vec &pos) { self.addParticle(pos[0], pos[1], pos[2], type); }
 
-void registerPotentialOrder2(sim &self, pot2 *potential, std::string type1, std::string type2) {
-    self.registerPotentialOrder2(potential, type1, type2);
+void registerPotentialOrder2(sim &self, pot2 *potential) {
+    self.registerPotentialOrder2(potential);
 }
 
 obs_handle_t
@@ -207,7 +207,6 @@ PYBIND11_PLUGIN (api) {
             .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal)
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
-            .def("set_time_step", &sim::setTimeStep)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)
@@ -224,7 +223,7 @@ PYBIND11_PLUGIN (api) {
             .def("load_from_dir", &kp::loadKernelsFromDirectory);
 
     py::class_<pot2>(api, "Pot2")
-            .def(py::init<std::string, py::object, py::object>())
+            .def(py::init<std::string, std::string, py::object, py::object>())
             .def("calc_energy", &pot2::calculateEnergy)
             .def("calc_force", &pot2::calculateForce);
 

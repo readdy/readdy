@@ -69,10 +69,11 @@ namespace readdy {
             friend class SchemeConfigurator;
 
             model::Kernel *const kernel;
-            std::unique_ptr<model::programs::Program> integrator = nullptr;
-            std::unique_ptr<model::programs::Program> forces = nullptr;
-            std::unique_ptr<model::programs::Program> reactionScheduler = nullptr;
-            std::unique_ptr<model::programs::UpdateNeighborList> neighborList = nullptr;
+            std::unique_ptr<model::actions::TimeStepDependentAction> integrator = nullptr;
+            std::unique_ptr<model::actions::Action> forces = nullptr;
+            std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler = nullptr;
+            std::unique_ptr<model::actions::UpdateNeighborList> neighborList = nullptr;
+            std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList = nullptr;
             bool evaluateObservables = true;
             model::observables::time_step_type start = 0;
         };
@@ -84,27 +85,26 @@ namespace readdy {
             virtual void run(const model::observables::time_step_type steps) override {
                 kernel->getKernelContext().configure(true);
 
-                if (neighborList) neighborList->execute();
-                if (forces) forces->execute();
+                if (neighborList) neighborList->perform();
+                if (forces) forces->perform();
                 if (evaluateObservables) kernel->evaluateObservables(start);
                 // show every 1% of the simulation
                 const std::size_t progressOutputStride = static_cast<std::size_t>(steps / 100);
                 for (model::observables::time_step_type t = start; t < start+steps; ++t) {
-                    if (integrator) integrator->execute();
-                    if (neighborList) neighborList->execute();
-                    if (forces) forces->execute();
+                    if (integrator) integrator->perform();
+                    if (neighborList) neighborList->perform();
+                    // if (forces) forces->perform();
 
-                    if (reactionScheduler) reactionScheduler->execute();
-                    if (neighborList) neighborList->execute();
-                    if (forces) forces->execute();
+                    if (reactionScheduler) reactionScheduler->perform();
+                    if (neighborList) neighborList->perform();
+                    if (forces) forces->perform();
                     if (evaluateObservables) kernel->evaluateObservables(t + 1);
                     if(progressOutputStride > 0 && (t - start) % progressOutputStride == 0) {
                         log::console()->debug("Simulation progress: {} / {} steps", (t - start), steps);
                     }
                 }
 
-                if (neighborList) neighborList->setAction(model::programs::UpdateNeighborList::Action::clear);
-                if (neighborList) neighborList->execute();
+                if (clearNeighborList) clearNeighborList->perform();
                 start += steps;
                 log::console()->debug("Simulation completed");
             }
@@ -118,35 +118,35 @@ namespace readdy {
 
             SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<SchemeType>(kernel)),
                                                                                        useDefaults(useDefaults) {}
-            SchemeConfigurator& withIntegrator(std::unique_ptr<model::programs::Program> integrator) {
+            SchemeConfigurator& withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
                 scheme->integrator = std::move(integrator);
                 return *this;
             }
 
             template<typename IntegratorType>
             SchemeConfigurator& withIntegrator() {
-                scheme->integrator = scheme->kernel->template createProgram<IntegratorType>();
+                scheme->integrator = scheme->kernel->template createAction<IntegratorType>(0.);
                 return *this;
             }
 
             SchemeConfigurator& withIntegrator(const std::string &integratorName) {
-                scheme->integrator = scheme->kernel->createProgram(integratorName);
+                scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
                 return *this;
             }
 
             template<typename ReactionSchedulerType>
             SchemeConfigurator& withReactionScheduler() {
-                scheme->reactionScheduler = scheme->kernel->template createProgram<ReactionSchedulerType>();
+                scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
                 return *this;
             }
 
-            SchemeConfigurator& withReactionScheduler(std::unique_ptr<model::programs::Program> reactionScheduler) {
+            SchemeConfigurator& withReactionScheduler(std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
                 scheme->reactionScheduler = std::move(reactionScheduler);
                 return *this;
             }
 
-            SchemeConfigurator& withReactionScheduler(const std::string &schedulerName) {
-                scheme->reactionScheduler = scheme->kernel->createProgram(schedulerName);
+            SchemeConfigurator& withReactionScheduler(const std::string &name) {
+                scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
                 return *this;
             }
 
@@ -158,7 +158,7 @@ namespace readdy {
 
             SchemeConfigurator& includeForces(bool include = true) {
                 if (include) {
-                    scheme->forces = scheme->kernel->template createProgram<readdy::model::programs::CalculateForces>();
+                    scheme->forces = scheme->kernel->template createAction<readdy::model::actions::CalculateForces>();
                 } else {
                     scheme->forces = nullptr;
                 }
@@ -166,32 +166,40 @@ namespace readdy {
                 return *this;
             }
 
-            std::unique_ptr<SchemeType> configure() {
+            std::unique_ptr<SchemeType> configure(double timeStep) {
+                using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
+                using default_reactions_t = readdy::model::actions::reactions::Gillespie;
+                using calculate_forces_t = readdy::model::actions::CalculateForces;
+                using update_neighbor_list_t = readdy::model::actions::UpdateNeighborList;
                 if (useDefaults) {
                     if (!scheme->integrator) {
-                        scheme->integrator = scheme->kernel->template createProgram<readdy::model::programs::EulerBDIntegrator>();
+                        scheme->integrator = scheme->kernel->template createAction<default_integrator_t>(timeStep);
                     }
                     if (!scheme->reactionScheduler) {
-                        scheme->reactionScheduler = scheme->kernel->template createProgram<readdy::model::programs::reactions::Gillespie>();
+                        scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions_t>(timeStep);
                     }
                     if (!evaluateObservablesSet) {
                         scheme->evaluateObservables = true;
                     }
                     if (!scheme->forces && !includeForcesSet) {
-                        scheme->forces = scheme->kernel->template createProgram<readdy::model::programs::CalculateForces>();
+                        scheme->forces = scheme->kernel->template createAction<calculate_forces_t>();
                     }
                 }
                 if (scheme->forces || scheme->reactionScheduler) {
                     scheme->neighborList = scheme->kernel
-                            ->template createProgram<readdy::model::programs::UpdateNeighborList>();
+                            ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, -1);
+                    scheme->clearNeighborList = scheme->kernel
+                            ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
                 }
+                if(scheme->integrator) scheme->integrator->setTimeStep(timeStep);
+                if(scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
                 std::unique_ptr<SchemeType> ptr = std::move(scheme);
                 scheme = nullptr;
                 return ptr;
             }
 
-            void configureAndRun(const model::observables::time_step_type steps) {
-                configure()->run(steps);
+            void configureAndRun(double timeStep, const model::observables::time_step_type steps) {
+                configure(timeStep)->run(steps);
             }
 
         private:

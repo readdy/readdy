@@ -58,9 +58,9 @@ void exportSchemeApi(pybind11::module &module, std::string schemeName) {
                  py::return_value_policy::reference_internal)
             .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal)
             .def("configure", &conf::configure)
-            .def("configure_and_run", [](conf& self, const readdy::model::observables::time_step_type steps) {
+            .def("configure_and_run", [](conf& self, double dt, const readdy::model::observables::time_step_type steps) {
                 py::gil_scoped_release release;
-                self.configureAndRun(steps);
+                self.configureAndRun(dt, steps);
             });
 }
 

@@ -32,6 +32,7 @@
  * @date 15.06.16
  */
 
+#include <ostream>
 #include "PotentialOrder1.h"
 
 #ifndef READDY_MAIN_POTENTIALSORDER1_H
@@ -40,31 +41,21 @@
 namespace readdy {
 namespace model {
 
-class Kernel;
 namespace potentials {
 
 class CubePotential : public PotentialOrder1 {
-
+    using super = PotentialOrder1;
 public:
-    CubePotential(const Kernel *const kernel);
-
-    virtual void configureForType(const unsigned int type) override;
+    CubePotential(const std::string& particleType, double forceConstant, const Vec3& origin, const Vec3& extent,
+                  bool considerParticleRadius = true);
 
     const Vec3 &getOrigin() const;
 
-    void setOrigin(const Vec3 &origin);
-
     const Vec3 &getExtent() const;
-
-    void setExtent(const Vec3 &extent);
 
     double getForceConstant() const;
 
-    void setForceConstant(double forceConstant);
-
     bool isConsiderParticleRadius() const;
-
-    void setConsiderParticleRadius(bool considerParticleRadius);
 
     double getParticleRadius() const;
 
@@ -72,38 +63,57 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept override;
 
+    std::string describe() override;
+
+    friend std::ostream &operator<<(std::ostream &os, const CubePotential &potential);
+
+    double calculateEnergy(const Vec3 &position) const override;
+
+    void calculateForce(Vec3 &force, const Vec3 &position) const override;
+
+    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
 protected:
-    const Kernel *const kernel;
-    Vec3 origin;
-    Vec3 extent;
-    Vec3 min{0, 0, 0}, max{0, 0, 0};
-    double particleRadius = 0;
-    double forceConstant = 1;
-    bool considerParticleRadius = true;
+    friend class readdy::model::KernelContext;
+
+    void configureForType(const KernelContext *const ctx, const unsigned int type) override;
+
+    const Vec3 origin, extent, min, max;
+    const double forceConstant;
+    const bool considerParticleRadius;
+    double particleRadius;
 };
 
 class SpherePotential : public PotentialOrder1 {
+    using super = PotentialOrder1;
 public:
-    SpherePotential(const Kernel * kernel);
-
-    virtual void configureForType(const unsigned int type) override;
+    SpherePotential(const std::string& particleType, double forceConstant, const Vec3& origin, double radius);
 
     const Vec3 &getOrigin() const;
-    void setOrigin(const Vec3 &origin);
     double getRadius() const;
-    void setRadius(double radius);
     double getForceConstant() const;
-    void setForceConstant(double forceConstant);
 
     virtual double getRelevantLengthScale() const noexcept override;
 
     virtual double getMaximalForce(double kbt) const noexcept override;
 
+    std::string describe() override;
+
+    friend std::ostream &operator<<(std::ostream &os, const SpherePotential &potential);
+
+    double calculateEnergy(const Vec3 &position) const override;
+
+    void calculateForce(Vec3 &force, const Vec3 &position) const override;
+
+    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
 protected:
-    const Kernel * const kernel;
-    Vec3 origin;
-    double radius = 1;
-    double forceConstant = 1;
+    friend class readdy::model::KernelContext;
+
+    void configureForType(const KernelContext *const ctx, const unsigned int type) override;
+
+    const Vec3 origin;
+    const double radius, forceConstant;
 };
 
 template<typename T>

@@ -33,7 +33,7 @@
 #include <readdy/kernel/singlecpu/reactions/SCPUReactions.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/model/programs/Programs.h>
+#include <readdy/model/actions/Actions.h>
 
 TEST(SingleCPUTestReactions, CheckInOutTypesAndPositions) {
     using fusion_t = readdy::model::reactions::Fusion;
@@ -150,15 +150,16 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setDiffusionConstant("X", .25);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
 
-    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
-    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
+    double timeStep = 1.0;
+    auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
+    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    using update_nl = readdy::model::actions::UpdateNeighborList;
+    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(update_nl::Operation::create, -1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(timeStep);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_t &t) {
@@ -171,13 +172,13 @@ TEST(SingleCPUTestReactions, TestDecay) {
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
     kernel->getKernelContext().configure();
-    neighborList->execute();
+    neighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
-        forces->execute();
-        integrator->execute();
-        neighborList->execute();
-        reactionsProgram->execute();
+        forces->perform();
+        integrator->perform();
+        neighborList->perform();
+        reactions->perform();
 
         kernel->evaluateObservables(t);
 
@@ -223,7 +224,6 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().setTimeStep(1);
 
     kernel->getKernelContext().setDiffusionConstant("A", .25);
     kernel->getKernelContext().setDiffusionConstant("B", .25);
@@ -237,10 +237,10 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->registerReaction<conversion_t>("E->A", "E", "A", 1);
     kernel->registerReaction<conversion_t>("C->D", "C", "D", 1);
 
-    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
-    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::UncontrolledApproximation>();
+    auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
+    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
 
     const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
     const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
@@ -305,12 +305,12 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
         }
 
         // propagate
-        neighborList->execute();
-        forces->execute();
-        integrator->execute();
+        neighborList->perform();
+        forces->perform();
+        integrator->perform();
 
-        neighborList->execute();
-        reactionsProgram->execute();
+        neighborList->perform();
+        reactions->perform();
         kernel->evaluateObservables(t);
     }
 }

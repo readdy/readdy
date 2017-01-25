@@ -35,17 +35,17 @@
 #define READDY_MAIN_POTENTIALSORDER2_H
 
 #include <readdy/model/KernelContext.h>
+#include <ostream>
 #include "PotentialOrder2.h"
 
 namespace readdy {
 namespace model {
-class Kernel;
 namespace potentials {
 
 class HarmonicRepulsion : public PotentialOrder2 {
-
+    using super = PotentialOrder2;
 public:
-    HarmonicRepulsion(const Kernel *const kernel);
+    HarmonicRepulsion(const std::string &type1, const std::string &type2, double forceConstant);
 
     double getSumOfParticleRadii() const;
 
@@ -53,44 +53,75 @@ public:
 
     double getForceConstant() const;
 
-    void setForceConstant(double forceConstant);
-
-    virtual void configureForTypes(unsigned int type1, unsigned int type2) override;
-
     virtual double getMaximalForce(double kbt) const noexcept override;
 
+    friend std::ostream &operator<<(std::ostream &os, const HarmonicRepulsion &repulsion);
+
+    std::string describe() override;
+
+    double calculateEnergy(const Vec3 &x_ij) const override;
+
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+
+    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+
+    double getCutoffRadius() const override;
+
+    double getCutoffRadiusSquared() const override;
+
 protected:
-    const Kernel *const kernel;
+    friend class readdy::model::KernelContext;
+
+    void configureForTypes(const KernelContext *const ctx, unsigned int type1, unsigned int type2) override;
+
     double sumOfParticleRadii;
     double sumOfParticleRadiiSquared;
-    double forceConstant = 0;
-
+    const double forceConstant;
 };
 
 class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
-
+    using super = PotentialOrder2;
 public:
-    WeakInteractionPiecewiseHarmonic(const Kernel *const kernel);
 
-    virtual void configureForTypes(unsigned int type1, unsigned int type2) override;
+    class Configuration {
+    public:
+        Configuration(const double desiredParticleDistance, const double depthAtDesiredDistance,
+                      const double noInteractionDistance);
 
+        friend std::ostream &operator<<(std::ostream &os, const Configuration &configuration);
 
-    void setDesiredParticleDistance(double desiredParticleDistance);
+    private:
+        friend class WeakInteractionPiecewiseHarmonic;
 
-    void setForceConstant(double forceConstant);
+        const double desiredParticleDistance, depthAtDesiredDistance, noInteractionDistance, noInteractionDistanceSquared;
+    };
 
-    void setDepthAtDesiredDistance(double depthAtDesiredDistance);
-
-    void setNoInteractionDistance(double noInteractionDistance);
+    WeakInteractionPiecewiseHarmonic(const std::string &particleType1, const std::string &particleType2,
+                                     const double forceConstant, const Configuration &config);
 
     virtual double getMaximalForce(double kbt) const noexcept override;
 
+    friend std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmonic &harmonic);
+
+    std::string describe() override;
+
+    double calculateEnergy(const Vec3 &x_ij) const override;
+
+    void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+
+    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+
+    double getCutoffRadius() const override;
+
+    double getCutoffRadiusSquared() const override;
+
 protected:
-    const Kernel *const kernel;
-    double desiredParticleDistance;
-    double forceConstant;
-    double depthAtDesiredDistance;
-    double noInteractionDistance, noInteractionDistanceSquared;
+    friend class readdy::model::KernelContext;
+
+    void configureForTypes(const KernelContext *const ctx, unsigned int type1, unsigned int type2) override;
+
+    const Configuration conf;
+    const double forceConstant;
 };
 
 template<typename T>

@@ -209,8 +209,8 @@ public:
      *        when calculating force and energy or not
      * @return a uuid with which the potential can be removed
      */
-    const short registerBoxPotential(std::string particleType, double forceConstant,
-                                     readdy::model::Vec3 origin, readdy::model::Vec3 extent,
+    const short registerBoxPotential(const std::string &particleType, double forceConstant,
+                                     const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                                      bool considerParticleRadius);
 
     /**
@@ -225,7 +225,7 @@ public:
      * @todo add a considerParticleRadius parameter
      */
     const short
-    registerSpherePotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin, double radius);
+    registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
 
     /**
      * Register a potential of order 1, i.e., a potential that only depends on the position of one particle.
@@ -246,7 +246,7 @@ public:
      * @return a uuid with which the potential can be removed again
      * @todo document this more thoroughly
      */
-    const short registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB,
+    const short registerHarmonicRepulsionPotential(const std::string& particleTypeA, const std::string& particleTypeB,
                                                    double forceConstant);
 
     /**
@@ -262,8 +262,13 @@ public:
      * @todo document this more thoroughly, maybe make it available as a method of only two-three of the four: forceConstant, desiredDistance, depth, noInteractionDistance?
      */
     const short registerWeakInteractionPiecewiseHarmonicPotential(
-            std::string particleTypeA, std::string particleTypeB, double forceConstant,
+            const std::string& particleTypeA, const std::string& particleTypeB, double forceConstant,
             double desiredParticleDistance, double depth, double noInteractionDistance);
+
+    void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
+        ensureKernelSelected();
+        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+    }
 
     /**
      * Register a potential of order 2, i.e., a potential that depends on the positions of a particle pair.
@@ -272,11 +277,11 @@ public:
      * @param type2 one of the two types for which this potential should be registered
      * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
      */
-    void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr,
-                                 const std::string &type1, const std::string &type2) {
+    void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
         ensureKernelSelected();
-        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr, type1, type2);
+        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
     };
+
 
     //void registerReaction(const Reaction& reaction);
     //void registerReactionByDescriptor(const std::string descriptor);
@@ -389,8 +394,6 @@ public:
      */
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
                                       const double rate);
-
-    void setTimeStep(const double);
 
     virtual void run(const readdy::model::observables::time_step_type steps, const double timeStep);
 

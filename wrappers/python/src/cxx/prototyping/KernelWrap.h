@@ -39,9 +39,9 @@ namespace rpy {
 struct KernelWrap : public readdy::model::Kernel {
     KernelWrap(const std::string &name) : Kernel(name) {}
 
-    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override {
+    virtual readdy::model::actions::ActionFactory &getActionFactory() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(readdy::model::programs::ProgramFactory &, readdy::model::Kernel, getProgramFactory,);
+        PYBIND11_OVERLOAD_PURE(readdy::model::actions::ActionFactory &, readdy::model::Kernel, getActionFactory,);
     }
 
     virtual readdy::model::KernelStateModel &getKernelStateModel() const override {
@@ -82,10 +82,10 @@ struct SCPUKernelWrap : public readdy::kernel::scpu::SCPUKernel {
                                getKernelContext,);
     }
 
-    virtual model::programs::ProgramFactory &getProgramFactory() const override {
+    virtual model::actions::ActionFactory &getActionFactory() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(model::programs::ProgramFactory &, readdy::kernel::scpu::SCPUKernel,
-                               "get_program_factory", getProgramFactory,);
+        PYBIND11_OVERLOAD_NAME(model::actions::ActionFactory &, readdy::kernel::scpu::SCPUKernel,
+                               "get_program_factory", getActionFactory,);
     }
 
     virtual std::vector<std::string> getAvailablePotentials() const override {

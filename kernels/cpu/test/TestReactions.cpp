@@ -33,11 +33,11 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/programs/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu/programs/reactions/CPUGillespieParallel.h>
-#include <readdy/kernel/cpu/programs/reactions/NextSubvolumesReactionScheduler.h>
+#include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
+#include <readdy/kernel/cpu/actions/reactions/NextSubvolumesReactionScheduler.h>
 
-namespace reac = readdy::kernel::cpu::programs::reactions;
+namespace reac = readdy::kernel::cpu::actions::reactions;
 
 struct fix_n_threads {
     fix_n_threads(readdy::kernel::cpu::CPUKernel *const kernel, unsigned int n)
@@ -207,15 +207,14 @@ TEST(CPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setDiffusionConstant("X", .25);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
 
-    auto &&integrator = kernel->createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&forces = kernel->createProgram<readdy::model::programs::CalculateForces>();
-    auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&reactionsProgram = kernel->createProgram<readdy::model::programs::reactions::GillespieParallel>();
+    auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
+    auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_t &t) {
@@ -228,13 +227,13 @@ TEST(CPUTestReactions, TestDecay) {
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
     kernel->getKernelContext().configure();
-    neighborList->execute();
+    neighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
-        forces->execute();
-        integrator->execute();
-        neighborList->execute();
-        reactionsProgram->execute();
+        forces->perform();
+        integrator->perform();
+        neighborList->perform();
+        reactions->perform();
 
         kernel->evaluateObservables(t);
 
@@ -256,7 +255,6 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using particle_t = readdy::model::Particle;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->getKernelContext().setBoxSize(10, 10, 30);
-    kernel->getKernelContext().setTimeStep(1);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);
 
     kernel->getKernelContext().setDiffusionConstant("A", .25);
@@ -294,18 +292,20 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
-        auto &&neighborList = kernel->createProgram<readdy::model::programs::UpdateNeighborList>();
-        auto &&reactionsProgram = kernel->createProgram<readdy::kernel::cpu::programs::reactions::CPUGillespieParallel>();
-        neighborList->execute();
-        reactionsProgram->execute();
-        EXPECT_EQ(1.0, reactionsProgram->getMaxReactionRadius());
-        EXPECT_EQ(15.0, reactionsProgram->getBoxWidth());
-        EXPECT_EQ(2, reactionsProgram->getLongestAxis());
-        EXPECT_TRUE(reactionsProgram->getOtherAxis1() == 0 || reactionsProgram->getOtherAxis1() == 1);
-        if (reactionsProgram->getOtherAxis1() == 0) {
-            EXPECT_EQ(1, reactionsProgram->getOtherAxis2());
+        auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+        auto &&reactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
+                kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1)
+        );
+        neighborList->perform();
+        reactions->perform();
+        EXPECT_EQ(1.0, reactions->getMaxReactionRadius());
+        EXPECT_EQ(15.0, reactions->getBoxWidth());
+        EXPECT_EQ(2, reactions->getLongestAxis());
+        EXPECT_TRUE(reactions->getOtherAxis1() == 0 || reactions->getOtherAxis1() == 1);
+        if (reactions->getOtherAxis1() == 0) {
+            EXPECT_EQ(1, reactions->getOtherAxis2());
         } else {
-            EXPECT_EQ(0, reactionsProgram->getOtherAxis2());
+            EXPECT_EQ(0, reactions->getOtherAxis2());
         }
     }
     // we have two boxes, left and right, which can be projected into a line with (index, type):
@@ -351,7 +351,9 @@ TEST(TestNextSubvolumes, ReactionRadii) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->getKernelContext().setDiffusionConstant("A", 1.0);
 
-    auto nextSubvolumes = kernel->createProgram<readdy::kernel::cpu::programs::reactions::NextSubvolumes>();
+    auto nextSubvolumes = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUNextSubvolumes>(
+            kernel->createAction<readdy::model::actions::reactions::NextSubvolumes>(1)
+    );
     kernel->getKernelContext().configure();
     EXPECT_EQ(0, nextSubvolumes->getMaxReactionRadius()) << "no reactions present, expect max radius to be 0";
 

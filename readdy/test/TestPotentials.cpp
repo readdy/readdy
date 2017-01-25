@@ -56,37 +56,33 @@ void setupParticles(readdy::model::Kernel &kernel) {
     for (auto i = 0; i < nParticlesB; ++i) kernel.addParticle("B", readdy::model::rnd::normal3());
 }
 
-void run(readdy::model::Kernel &kernel) {
+void run(readdy::model::Kernel &kernel, double timeStep) {
     unsigned int nSteps = 2000;
-    auto &&integrator = kernel.createProgram<readdy::model::programs::EulerBDIntegrator>();
-    auto &&nl = kernel.createProgram<readdy::model::programs::UpdateNeighborList>();
-    auto &&forces = kernel.createProgram<readdy::model::programs::CalculateForces>();
-    nl->execute();
+    auto &&integrator = kernel.createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
+    auto &&nl = kernel.createAction<readdy::model::actions::UpdateNeighborList>();
+    auto &&forces = kernel.createAction<readdy::model::actions::CalculateForces>();
+    nl->perform();
     for (readdy::model::observables::time_step_type &&t = 0; t < nSteps; ++t) {
-        forces->execute();
-        integrator->execute();
-        nl->execute();
+        forces->perform();
+        integrator->perform();
+        nl->perform();
     }
 }
 
 TEST_P(TestPotentials, TestParticlesStayInBox) {
     kernel->getKernelContext().setBoxSize(5, 5, 5);
-    kernel->getKernelContext().setTimeStep(.005);
+    const double timeStep = .005;
 
     setupParticles(*kernel);
 
-    auto harmonicRepulsion = kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    harmonicRepulsion->setForceConstant(.01);
-    kernel->getKernelContext().registerPotential(std::move(harmonicRepulsion), "A", "B");
+    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("A", "B", .01);
+
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
-        auto cubePot = kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
-        cubePot->setOrigin({-1, -1, -1});
-        cubePot->setConsiderParticleRadius(true);
-        cubePot->setExtent({2, 2, 2});
-        cubePot->setForceConstant(10);
         // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
-        kernel->getKernelContext().registerPotential(std::move(cubePot), t);
+        readdy::model::Vec3 origin {-1, -1, -1};
+        readdy::model::Vec3 extent {2, 2, 2};
+        kernel->registerPotential<readdy::model::potentials::CubePotential>(t, 10, origin, extent, true);
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
@@ -103,22 +99,19 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
         ASSERT_TRUE(allWithinBounds);
     });
     auto connection = kernel->connectObservable(ppObs.get());
-    run(*kernel);
+    run(*kernel, timeStep);
 }
 
 TEST_P(TestPotentials, TestParticleStayInSphere) {
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().setTimeStep(.005);
+    const double timeStep = .005;
 
     setupParticles(*kernel);
 
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
-        auto spherePot = kernel->createPotentialAs<readdy::model::potentials::SpherePotential>();
-        spherePot->setOrigin(readdy::model::Vec3(0, 0, 0));
-        spherePot->setRadius(3);
-        spherePot->setForceConstant(20);
-        kernel->getKernelContext().registerPotential(std::move(spherePot), t);
+        readdy::model::Vec3 origin (0, 0, 0);
+        kernel->registerPotential<readdy::model::potentials::SpherePotential>(t, 20, origin, 3);
     }
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
     const double maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
@@ -136,7 +129,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
         ASSERT_TRUE(allWithinBounds);
     });
     auto connection = kernel->connectObservable(ppObs.get());
-    run(*kernel);
+    run(*kernel, timeStep);
 }
 
 INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,

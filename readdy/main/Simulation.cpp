@@ -30,7 +30,7 @@
 #include <readdy/io/File.h>
 
 namespace rmr = readdy::model::reactions;
-namespace rmp = readdy::model::programs;
+namespace rmp = readdy::model::actions;
 
 namespace readdy {
 double Simulation::getKBT() const {
@@ -71,13 +71,12 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
 void Simulation::run(const readdy::model::observables::time_step_type steps, const double timeStep) {
     ensureKernelSelected();
     {
-        log::console()->debug("available programs: ");
-        for (auto &&p : pimpl->kernel->getAvailablePrograms()) {
+        log::console()->debug("available actions: ");
+        for (auto &&p : pimpl->kernel->getAvailableActions()) {
             log::console()->debug("\t {}", p);
         }
     }
-    pimpl->kernel->getKernelContext().setTimeStep(timeStep);
-    runScheme().configure()->run(steps);
+    runScheme().configure(timeStep)->run(steps);
 }
 
 void Simulation::setKernel(const std::string &kernel) {
@@ -122,59 +121,45 @@ const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() con
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
 
-void Simulation::registerExternalPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr,
-                                                 const std::string &type) {
-    ensureKernelSelected();
-    pimpl->kernel->getKernelContext().registerExternalPotential(ptr, type);
-}
-
 void Simulation::deregisterPotential(const short uuid) {
     pimpl->kernel->getKernelContext().deregisterPotential(uuid);
 };
 
 const short
-Simulation::registerHarmonicRepulsionPotential(std::string particleTypeA, std::string particleTypeB,
+Simulation::registerHarmonicRepulsionPotential(const std::string& particleTypeA, const std::string& particleTypeB,
                                                double forceConstant) {
+    using potential_t = readdy::model::potentials::HarmonicRepulsion;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::HarmonicRepulsion>();
-    ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleTypeA, particleTypeB);
+    return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant);
 }
 
 const short
-Simulation::registerWeakInteractionPiecewiseHarmonicPotential(std::string particleTypeA, std::string particleTypeB,
-                                                              double forceConstant, double desiredParticleDistance,
-                                                              double depth, double noInteractionDistance) {
+Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string& particleTypeA,
+                                                              const std::string& particleTypeB, double forceConstant,
+                                                              double desiredParticleDistance, double depth,
+                                                              double noInteractionDistance) {
+    using potential_t = readdy::model::potentials::WeakInteractionPiecewiseHarmonic;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::WeakInteractionPiecewiseHarmonic>();
-    ptr->setForceConstant(forceConstant);
-    ptr->setDesiredParticleDistance(desiredParticleDistance);
-    ptr->setDepthAtDesiredDistance(depth);
-    ptr->setNoInteractionDistance(noInteractionDistance);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleTypeA, particleTypeB);
+    return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant,
+                                                         desiredParticleDistance, depth, noInteractionDistance);
 }
 
 const short
-Simulation::registerBoxPotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin,
-                                 readdy::model::Vec3 extent, bool considerParticleRadius) {
+Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
+                                 const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
+                                 bool considerParticleRadius) {
+    using potential_t = readdy::model::potentials::CubePotential;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::CubePotential>();
-    ptr->setOrigin(origin);
-    ptr->setExtent(extent);
-    ptr->setConsiderParticleRadius(considerParticleRadius);
-    ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
+    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, extent,
+                                                         considerParticleRadius);
 }
 
 const short
-Simulation::registerSpherePotential(std::string particleType, double forceConstant, readdy::model::Vec3 origin,
+Simulation::registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
                                     double radius) {
+    using potential_t = readdy::model::potentials::SpherePotential;
     ensureKernelSelected();
-    auto ptr = pimpl->kernel->createPotentialAs<readdy::model::potentials::SpherePotential>();
-    ptr->setOrigin(origin);
-    ptr->setRadius(radius);
-    ptr->setForceConstant(forceConstant);
-    return pimpl->kernel->getKernelContext().registerPotential(std::move(ptr), particleType);
+    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
 
 void Simulation::ensureKernelSelected() const {
@@ -283,11 +268,6 @@ std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string ty
 
 double Simulation::getRecommendedTimeStep(unsigned int N) const {
     return readdy::model::util::getRecommendedTimeStep(N, pimpl->kernel->getKernelContext());
-}
-
-void Simulation::setTimeStep(const double timeStep) {
-    ensureKernelSelected();
-    pimpl->kernel->getKernelContext().setTimeStep(timeStep);
 }
 
 readdy::model::Kernel *const Simulation::getSelectedKernel() const {

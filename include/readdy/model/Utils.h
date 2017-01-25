@@ -33,13 +33,14 @@
 #define READDY_MAIN_MODEL_UTILS_H
 
 #include <readdy/model/KernelContext.h>
+#include <readdy/model/observables/Observable.h>
 
 namespace readdy {
 namespace model {
 namespace util {
 
 double getRecommendedTimeStep(unsigned int N, KernelContext&);
-double getMaximumDisplacement(KernelContext&);
+double getMaximumDisplacement(KernelContext&, const double);
 
 }
 }

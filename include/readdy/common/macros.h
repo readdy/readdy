@@ -24,6 +24,8 @@
 // Created by mho on 10/10/2016.
 //
 
+
+
 #ifndef READDY_MAIN_MACROS_H
 #define READDY_MAIN_MACROS_H
 
@@ -54,6 +56,35 @@
 #  define READDY_API __declspec(dllexport)
 #else
 #  define READDY_API __attribute__ ((visibility("default")))
+#endif
+
+/**
+ * Utilities
+ */
+#define READDY_CREATE_FACTORY_DISPATCHER(FACTORY, TYPE) template<typename... Args> \
+struct FACTORY::get_dispatcher<TYPE, Args...> { \
+    static TYPE *impl(const FACTORY *self, Args &&... args) { \
+        return self->create##TYPE(std::forward<Args>(args)...); \
+    } \
+};
+#define READDY_CREATE_FACTORY_DISPATCHER2(FACTORY, NS, TYPE) template<typename... Args> \
+struct FACTORY::get_dispatcher<NS::TYPE, Args...> { \
+    static NS::TYPE *impl(const FACTORY *self, Args &&... args) { \
+        return self->create##TYPE(std::forward<Args>(args)...); \
+    } \
+};
+#define READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(TYPE) template<typename... Args> \
+struct ObservableFactory::get_dispatcher<TYPE, Args...> { \
+    static TYPE *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) { \
+        return self->create##TYPE(stride, std::forward<Args>(args)...); \
+    } \
+};
+
+#if !defined(NAMESPACE_BEGIN)
+#  define NAMESPACE_BEGIN(name) namespace name {
+#endif
+#if !defined(NAMESPACE_END)
+#  define NAMESPACE_END(name) }
 #endif
 
 #endif //READDY_MAIN_MACROS_H

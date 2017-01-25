@@ -39,11 +39,10 @@ namespace readdy {
 namespace model {
 namespace util {
 
-double getMaximumDisplacement(KernelContext& context) {
+double getMaximumDisplacement(KernelContext& context, const double timeStep) {
     context.configure();
 
     double kbt = context.getKBT();
-    double tau = context.getTimeStep();
 
     double maximum_displacement = 0;
     for (auto &&pI : context.getAllRegisteredParticleTypes()) {
@@ -59,7 +58,7 @@ double getMaximumDisplacement(KernelContext& context) {
             }
         }
         // todo magic number?
-        double local_maximum_displacement = std::sqrt(2 * D * tau) + D * kbt * fMax * tau;
+        double local_maximum_displacement = std::sqrt(2 * D * timeStep) + D * kbt * fMax * timeStep;
         maximum_displacement = std::max(local_maximum_displacement, maximum_displacement);
     }
 

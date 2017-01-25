@@ -39,13 +39,13 @@
 #include <iostream>
 #include <readdy/common/signals.h>
 #include <readdy/model/Plugin.h>
-#include <readdy/model/programs/Program.h>
+#include <readdy/model/actions/Action.h>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/potentials/PotentialFactory.h>
-#include <readdy/model/programs/ProgramFactory.h>
+#include <readdy/model/actions/ActionFactory.h>
 #include <readdy/model/reactions/ReactionFactory.h>
 
 namespace readdy {
@@ -90,22 +90,9 @@ public:
      */
     virtual const std::string &getName() const override;
 
-    /**
-     * Create a program that can be executed on this kernel.
-     * If the requested program is not available on the kernel, a nullptr is returned.
-     *
-     * @param name the name of the program
-     * @see getAvailablePrograms()
-     * @return The program if it was available, otherwise nullptr
-     */
-    virtual std::unique_ptr<programs::Program> createProgram(const std::string &name) const {
-        return getProgramFactory().createProgram(name);
-    };
-
-
-    template<typename ProgramType>
-    std::unique_ptr<ProgramType> createProgram() const {
-        return getProgramFactory().createProgramAs<ProgramType>(programs::getProgramName<ProgramType>());
+    template<typename ActionType, typename... Args>
+    std::unique_ptr<ActionType> createAction(Args &&... args) const {
+        return getActionFactory().createAction<ActionType>(std::forward<Args>(args)...);
     }
 
     template<typename T, typename... Args>
@@ -136,7 +123,7 @@ public:
     virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const observables::observable_type &observable, unsigned int stride);
 
-    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const = 0;
+    virtual readdy::model::actions::ActionFactory &getActionFactory() const = 0;
 
     /**
      * Returns a vector containing all available program names for this specific kernel instance.
@@ -144,8 +131,8 @@ public:
      * @see createProgram(name)
      * @return The program names.
      */
-    virtual std::vector<std::string> getAvailablePrograms() const {
-        return getProgramFactory().getAvailablePrograms();
+    virtual std::vector<std::string> getAvailableActions() const {
+        return getActionFactory().getAvailableActions();
     }
 
     /**
@@ -165,17 +152,11 @@ public:
 
     virtual std::vector<std::string> getAvailablePotentials() const;
 
-    virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const;
-
-    template<typename T>
-    std::unique_ptr<T> createPotentialAs() const {
-        return createPotentialAs<T>(readdy::model::potentials::getPotentialName<T>());
-    }
-
-    template<typename T>
-    std::unique_ptr<T> createPotentialAs(const std::string &name) const {
-        return getPotentialFactory().createPotentialAs<T>(name);
-    }
+    template<typename T, typename... Args>
+    potentials::Potential::id_t registerPotential(Args &&... args) {
+        auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
+        return getKernelContext().registerPotential(std::move(pot));
+    };
 
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {

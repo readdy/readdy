@@ -56,25 +56,21 @@ public:
 
     virtual const std::string &getName() const override;
 
-    virtual std::unique_ptr<readdy::model::potentials::Potential> createPotential(std::string &name) const override;
-
     virtual std::vector<std::string> getAvailablePotentials() const override;
 
-    virtual readdy::model::programs::ProgramFactory &getProgramFactory() const override;
+    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
     virtual readdy::signals::scoped_connection
     connectObservable(model::observables::ObservableBase *const observable) override;
 
-    virtual std::unique_ptr<model::programs::Program> createProgram(const std::string &name) const override;
-
     virtual void evaluateObservables(readdy::model::observables::time_step_type t) override;
 
     virtual std::tuple<std::unique_ptr<readdy::model::observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const model::observables::observable_type &observable, unsigned int stride) override;
 
-    virtual std::vector<std::string> getAvailablePrograms() const override;
+    virtual std::vector<std::string> getAvailableActions() const override;
 
     virtual void addParticle(const std::string &type, const model::Vec3 &pos) override;
 

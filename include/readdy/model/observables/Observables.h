@@ -198,8 +198,6 @@ public:
 
     virtual ~NParticles();
 
-    virtual void evaluate() = 0;
-
 protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
@@ -221,8 +219,6 @@ public:
     Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
 
     virtual ~Forces();
-
-    virtual void evaluate() = 0;
 
     void flush() override;
 

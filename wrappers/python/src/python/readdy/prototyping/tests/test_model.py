@@ -86,17 +86,13 @@ class TestModel(unittest.TestCase):
         self.ctx.set_particle_radius("A", 5.0)
         np.testing.assert_equal(self.ctx.get_particle_radius("A"), 5.0)
 
-    def test_kernel_context_time_step(self):
-        self.ctx.timestep = 111.0
-        np.testing.assert_equal(self.ctx.timestep, 111.0)
-
     def test_potential_order_1(self):
         self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
         self.model.get_particle_data().clear()
         class MyPot1(pr.PotentialOrder1):
-            def __init__(self):
-                super(MyPot1, self).__init__("yes")
+            def __init__(self, type):
+                super(MyPot1, self).__init__(type)
 
             def calculate_energy(self, pos_vec):
                 return 5.0
@@ -114,14 +110,14 @@ class TestModel(unittest.TestCase):
                 return kbt
 
         self.ctx.set_diffusion_constant("A", 1.0)
-        pot = MyPot1()
-        self.ctx.register_potential_order_1(pot, "A")
-        add_particles_program = self.progs.create_add_particles()
-        add_particles_program.add_particle(pr.Particle(0, 0, .5, self.ctx.get_particle_type_id("A"))) # x y z type_id
-        add_particles_program.execute()
+        pot = MyPot1("A")
+        self.ctx.register_potential_order_1(pot)
+        particles = [pr.Particle(0, 0, .5, self.ctx.get_particle_type_id("A"))]
+        add_particles_program = self.progs.create_add_particles(particles)
+        add_particles_program.perform()
         self.ctx.configure()
         updforces = self.progs.create_update_forces()
-        updforces.execute()
+        updforces.perform()
 
         np.testing.assert_equal(self.model.get_energy(), 5.0, err_msg="the user defined potential returns energy=5.0")
 
@@ -138,8 +134,8 @@ class TestModel(unittest.TestCase):
         self.model.get_particle_data().clear()
 
         class MyPot2(pr.PotentialOrder2):
-            def __init__(self):
-                super(MyPot2, self).__init__("yes2")
+            def __init__(self, typea, typeb):
+                super(MyPot2, self).__init__(typea, typeb)
             
             def calculate_energy(self, x_ij):
                 return np.sqrt(x_ij * x_ij)
@@ -158,15 +154,15 @@ class TestModel(unittest.TestCase):
 
         self.ctx.set_diffusion_constant("A", 1.0)
         self.ctx.set_diffusion_constant("B", 1.0)
-        pot = MyPot2()
-        self.ctx.register_potential_order_2(pot, "A", "B")
-        add_particles_program = self.progs.create_add_particles()
-        add_particles_program.add_particle(pr.Particle(0, 0, 0, self.ctx.get_particle_type_id("A")))
-        add_particles_program.add_particle(pr.Particle(1, 1, 1, self.ctx.get_particle_type_id("B")))
-        add_particles_program.execute()
+        pot = MyPot2("A", "B")
+        self.ctx.register_potential_order_2(pot)
+        particles = [pr.Particle(0, 0, 0, self.ctx.get_particle_type_id("A")),
+                     pr.Particle(1, 1, 1, self.ctx.get_particle_type_id("B"))]
+        add_particles_program = self.progs.create_add_particles(particles)
+        add_particles_program.perform()
         self.ctx.configure()
-        self.progs.create_update_neighbor_list().execute()
-        self.progs.create_update_forces().execute()
+        self.progs.create_update_neighbor_list().perform()
+        self.progs.create_update_forces().perform()
 
         np.testing.assert_almost_equal(self.model.get_energy(), np.sqrt(3))
 
@@ -184,13 +180,15 @@ class TestModel(unittest.TestCase):
             next(it_forces)
 
     def test_potential_factory(self):
-        cube_pot = self.pots.create_cube_potential()
+        self.ctx.set_diffusion_constant("A", 1.0)
+        self.ctx.set_diffusion_constant("B", 1.0)
+        cube_pot = self.pots.create_cube_potential("A", 1, cmn.Vec(0,0,0), cmn.Vec(1,1,1), True)
         np.testing.assert_equal(cube_pot.get_name(), "Cube")
 
-        repulsion_pot = self.pots.create_harmonic_repulsion()
+        repulsion_pot = self.pots.create_harmonic_repulsion("A", "B", 10)
         np.testing.assert_equal(repulsion_pot.get_name(), "HarmonicRepulsion")
 
-        weak_interaction_pot = self.pots.create_weak_interaction()
+        weak_interaction_pot = self.pots.create_weak_interaction("A", "B", 0,0,0,0)
         np.testing.assert_equal(weak_interaction_pot.get_name(), "WeakInteractionPiecewiseHarmonic")
 
 if __name__ == '__main__':

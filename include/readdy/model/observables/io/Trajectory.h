@@ -75,11 +75,11 @@ public:
 
     ~Trajectory();
 
-    virtual void evaluate();
+    virtual void evaluate() override;
 
     virtual void append(observable_entry_t &);
 
-    virtual void flush();
+    virtual void flush() override;
 
 protected:
     void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;

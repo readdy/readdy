@@ -115,55 +115,21 @@ protected:
         };
     };
 
-    template<typename... Args>
-    struct get_dispatcher<readdy::model::observables::HistogramAlongAxis, Args...> {
-        static HistogramAlongAxis *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
-            return self->createHistogramAlongAxis(stride, std::forward<Args>(args)...);
-        }
-    };
-
-    template<typename... Args>
-    struct get_dispatcher<readdy::model::observables::NParticles, Args...> {
-        static NParticles *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
-            return self->createNParticles(stride, std::forward<Args>(args)...);
-        }
-    };
-
-    template<typename... Args>
-    struct get_dispatcher<readdy::model::observables::Forces, Args...> {
-        static Forces *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
-            return self->createForces(stride, std::forward<Args>(args)...);
-        }
-    };
-
-    template<typename... Args>
-    struct get_dispatcher<readdy::model::observables::Positions, Args...> {
-        static Positions *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
-            return self->createPositions(stride, std::forward<Args>(args)...);
-        }
-    };
-
-    template<typename... Args>
-    struct get_dispatcher<readdy::model::observables::RadialDistribution, Args...> {
-        static RadialDistribution *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
-            return self->createRadialDistribution(stride, std::forward<Args>(args)...);
-        }
-    };
-
-    template<typename... Args>
-    struct get_dispatcher<readdy::model::observables::Particles, Args...> {
-        static Particles *impl(const ObservableFactory *self, unsigned int stride, Args &&... args) {
-            return self->createParticles(stride, std::forward<Args>(args)...);
-        }
-    };
-
-    template<typename... Args>
-    struct get_dispatcher<readdy::model::observables::MeanSquaredDisplacement, Args...> {
-        static MeanSquaredDisplacement *impl(const ObservableFactory *self, unsigned int stride, Args... args) {
-            return self->createMeanSquaredDisplacement(stride, std::forward<Args>(args)...);
-        }
-    };
 };
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(HistogramAlongAxis)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(NParticles)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Forces)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Positions)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(RadialDistribution)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Particles)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(MeanSquaredDisplacement)
 
 }
 }

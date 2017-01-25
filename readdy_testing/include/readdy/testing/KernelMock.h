@@ -37,12 +37,48 @@
 
 namespace readdy {
 namespace testing {
+
+class FakeActionFactory : public readdy::model::actions::ActionFactory {
+    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override {
+        return nullptr;
+    }
+
+    readdy::model::actions::CalculateForces *createCalculateForces() const override {
+        return nullptr;
+    }
+
+    readdy::model::actions::UpdateNeighborList *
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
+                             double skinSize) const override { return nullptr; }
+
+    readdy::model::actions::Compartments *createCompartments() const override {
+        return nullptr;
+    }
+
+    readdy::model::actions::reactions::UncontrolledApproximation *
+    createUncontrolledApproximation(double timeStep) const override {
+        return nullptr;
+    }
+
+    readdy::model::actions::reactions::Gillespie *createGillespie(double timeStep) const override {
+        return nullptr;
+    }
+
+    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(double timeStep) const override {
+        return nullptr;
+    }
+
+    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override {
+        return nullptr;
+    }
+};
+
 class KernelMock : public readdy::model::Kernel {
 
 public:
     KernelMock(const std::string &name) : Kernel(name) {}
 
-    MOCK_CONST_METHOD0(getProgramFactory, readdy::model::programs::ProgramFactory & (void));
+    MOCK_CONST_METHOD0(getActionFactory, readdy::model::actions::ActionFactory & (void));
 
     MOCK_CONST_METHOD0(getKernelStateModel, readdy::model::KernelStateModel & (void));
 

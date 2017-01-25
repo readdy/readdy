@@ -35,7 +35,7 @@ class TestSchemeApi(unittest.TestCase):
             .include_forces(False) \
             .with_reaction_scheduler("UncontrolledApproximation") \
             .evaluate_observables(False) \
-            .configure()
+            .configure(1)
         scheme.run(10)
 
     def test_sanity_oneliner(self):
@@ -47,14 +47,14 @@ class TestSchemeApi(unittest.TestCase):
             .include_forces(False) \
             .with_reaction_scheduler("UncontrolledApproximation") \
             .evaluate_observables(False) \
-            .configure_and_run(10)
+            .configure_and_run(1, 10)
 
         simulation.run_scheme_readdy(False) \
             .with_integrator("EulerBDIntegrator") \
             .include_forces(False) \
             .with_reaction_scheduler("UncontrolledApproximation") \
             .evaluate_observables(False) \
-            .configure().run(10)
+            .configure(1).run(10)
 
 
 if __name__ == '__main__':

@@ -39,11 +39,12 @@
 
 namespace readdy {
 namespace model {
+class KernelContext;
 namespace potentials {
 class PotentialOrder1 : public Potential {
 
 public:
-    PotentialOrder1(const std::string &name) : Potential(name, 1) {}
+    PotentialOrder1(const std::string& particleType) : Potential(1), particleType(particleType) {}
 
     virtual double calculateEnergy(const Vec3 &position) const = 0;
 
@@ -51,9 +52,13 @@ public:
 
     virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const = 0;
 
-    virtual void configureForType(const unsigned int type) {}
-
     virtual double getRelevantLengthScale() const noexcept = 0;
+
+protected:
+    friend class readdy::model::KernelContext;
+    virtual void configureForType(const KernelContext* const, const unsigned int type) = 0;
+
+    const std::string particleType;
 
 };
 }
