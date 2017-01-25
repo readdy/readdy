@@ -84,10 +84,10 @@ const std::string BOXLENGTHS_FACTOR = "boxlengths";
  */
 class PerformanceScenario {
 public:
-    PerformanceScenario(const std::string &kernelName, double timeStep, double skin = -1) :
+    PerformanceScenario(const std::string &kernelName, double timeStep, double skin) :
             kernel(readdy::plugin::KernelProvider::getInstance().create(kernelName)), timeStep(timeStep),
-            neighborList(kernel->createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skin)),
             clearNeighborList(kernel->createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear)) {
+        neighborList = kernel->createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skin);
     }
 
     template<typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
@@ -233,7 +233,8 @@ public:
     static const std::string name;
 
     ReactiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
-            : PerformanceScenario(kernelName, .1, skin * factors.at(SKIN_FACTOR)) {
+            : PerformanceScenario(kernelName, .1,
+                                  factors.find(SKIN_FACTOR) != factors.end() ? 4.5 * factors.at(SKIN_FACTOR) : -1) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
         numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
         boxLength *= factors.at(BOXLENGTHS_FACTOR);
@@ -284,7 +285,7 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, skin = 4.5;
+    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5;
     std::map<std::string, double> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
@@ -303,7 +304,8 @@ public:
     static const std::string name;
 
     ReactiveCollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
-            : PerformanceScenario(kernelName, .1, skin * factors.at(SKIN_FACTOR)) {
+            : PerformanceScenario(kernelName, .1,
+                                  factors.find(SKIN_FACTOR) != factors.end() ? 4.5 * factors.at(SKIN_FACTOR) : -1) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
         numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
         boxLength *= factors.at(BOXLENGTHS_FACTOR);
@@ -330,7 +332,9 @@ public:
                                                                   {"B", "C"},
                                                                   {"A", "C"}};
         for (const auto &typePair : pairs) {
-            kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>(std::get<0>(typePair), std::get<1>(typePair), forceConstant);
+            kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>(std::get<0>(typePair),
+                                                                                    std::get<1>(typePair),
+                                                                                    forceConstant);
         }
 
         /** Distribute particles uniformly in box */
@@ -360,7 +364,7 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, skin = 4.5, forceConstant = 10.;
+    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, forceConstant = 10.;
     std::map<std::string, double> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
@@ -376,7 +380,8 @@ public:
     static const std::string name;
 
     CollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
-            : PerformanceScenario(kernelName, .1, skin * factors.at(SKIN_FACTOR)) {
+            : PerformanceScenario(kernelName, .1,
+                                  factors.find(SKIN_FACTOR) != factors.end() ? 4.5 * factors.at(SKIN_FACTOR) : -1) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
         numberC = static_cast<unsigned long>(numberC * factors.at(NUMBERS_FACTOR));
         boxLength *= factors.at(BOXLENGTHS_FACTOR);
@@ -400,7 +405,9 @@ public:
                                                                   {"B", "C"},
                                                                   {"A", "C"}};
         for (const auto &typePair : pairs) {
-            kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>(std::get<0>(typePair), std::get<1>(typePair), forceConstant);
+            kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>(std::get<0>(typePair),
+                                                                                    std::get<1>(typePair),
+                                                                                    forceConstant);
         }
 
         /** Distribute particles uniformly in box */
@@ -430,7 +437,7 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., skin = 4.5, forceConstant = 10.;
+    double boxLength = 100., forceConstant = 10.;
     std::map<std::string, double> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
@@ -508,18 +515,18 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     readdy::log::console()->debug("using reduced numbers: {}", reducedNumbers);
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
     std::vector<double> numbers;
-    if(reducedNumbers) {
-      numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
-                 3., 4., 5., 6., 7., 8., 9.,
-                 10., 12., 15., 20., 40.};
+    if (reducedNumbers) {
+        numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
+                   3., 4., 5., 6., 7., 8., 9.,
+                   10., 12., 15., 20., 40.};
     } else {
-       numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
-                  3., 4., 5., 6., 7., 8., 9.,
-                  10., 12., 15., 20., 40., 60, 80, 100};
+        numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
+                   3., 4., 5., 6., 7., 8., 9.,
+                   10., 12., 15., 20., 40., 60, 80, 100};
     }
     std::vector<double> skinSizes;
-    if(readdy::plugin::KernelProvider::getInstance().create(
-            kernelName)->createAction<readdy::model::actions::UpdateNeighborList>()->supportsSkin()){
+    if (readdy::plugin::KernelProvider::getInstance().create(
+            kernelName)->createAction<readdy::model::actions::UpdateNeighborList>()->supportsSkin()) {
         skinSizes = {.0, .1, .2, .3, .4, .5, 1, 2, 3, 4, 5, 10};
     } else {
         skinSizes = {-1};
@@ -541,7 +548,8 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     readdy::log::console()->set_level(spdlog::level::warn);
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
-            readdy::log::console()->error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j, skinSizesSize, skinSizes[j]);
+            readdy::log::console()->error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j,
+                                          skinSizesSize, skinSizes[j]);
             std::map<std::string, double> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
@@ -645,7 +653,8 @@ void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) 
 TEST(TestPerformance, ReactiveCPU) {
     //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::Gillespie>("SingleCPU", true);
     //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>("CPU_Dense", false);
-    scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>("CPU", false);
+    scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>(
+            "CPU", false);
 }
 
 }
