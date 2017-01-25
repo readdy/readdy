@@ -180,7 +180,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
 
-    IF (EXISTS "${CMAKE_SOURCE_DIR}/libraries/googletest/CMakeLists.txt" AND READDY_CREATE_TEST_TARGET)
+    IF (READDY_CREATE_TEST_TARGET)
 
        if (CMAKE_VERSION VERSION_LESS 3.2)
            set(UPDATE_DISCONNECTED_IF_AVAILABLE "")
