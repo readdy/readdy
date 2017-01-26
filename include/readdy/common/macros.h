@@ -93,4 +93,12 @@ struct CompartmentFactory::get_dispatcher<TYPE, Args...> { \
 #  define NAMESPACE_END(name) }
 #endif
 
+#ifdef __GNUC__
+#define likely(x)       __builtin_expect(!!(x), 1)
+#define unlikely(x)     __builtin_expect(!!(x), 0)
+#else
+#define likely(x)       !!(x)
+#define unlikely(x)     !!(x)
+#endif
+
 #endif //READDY_MAIN_MACROS_H
