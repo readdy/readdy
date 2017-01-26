@@ -64,6 +64,8 @@ public:
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
+
     virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactory() const override;
 
     virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;

@@ -91,6 +91,7 @@ public:
     MOCK_CONST_METHOD0(getCompartmentFactory, readdy::model::compartments::CompartmentFactory & (void));
     MOCK_CONST_METHOD0(getTopologyActionFactory, readdy::model::top::TopologyActionFactory* (void));
 
+    MOCK_CONST_METHOD0(getCompartmentFactory, readdy::model::compartments::CompartmentFactory & (void));
 };
 }
 }
