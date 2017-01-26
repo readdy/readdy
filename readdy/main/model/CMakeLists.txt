@@ -20,7 +20,7 @@
 #####################################################################
 
 
-PROJECT(ReaDDy_model CXX)
+PROJECT(readdy_model CXX)
 
 INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_model.cmake")
 
@@ -31,10 +31,7 @@ TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${MODEL_INCLUDE_DIRS})
 # Required on Unix OS family to be able to be linked into shared libraries.
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
         LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-        COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-        CXX_STANDARD ${READDY_STANDARD}
-        CXX_STANDARD_REQUIRED ON
-)
+        COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 
 # link
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${READDY_MODEL_LIBRARIES})

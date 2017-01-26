@@ -21,9 +21,9 @@
 
 
 /**
- * This file contains the class definitions for Kernel and KernelProvider.
+ * This file contains the base class definitions for Kernel and KernelProvider.
  * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
- * The kernels can be built in or provided by shared libs in directories, which are loaded by the KernelProvider.
+ * The derived kernels can be built in or provided by shared libs in directories, which are loaded by the KernelProvider.
  * Each Kernel has a readdy::plugin::Kernel::name by which it can be accessed in the KernelProvider.
  *
  * @file Kernel.h
@@ -113,7 +113,7 @@ public:
     virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *const observable);
 
     /**
-     * Evaluates all unblocked observables.
+     * Evaluates all observables.
      */
     virtual void evaluateObservables(observables::time_step_type t);
 

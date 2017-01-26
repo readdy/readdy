@@ -20,7 +20,7 @@
 #####################################################################
 
 
-PROJECT(ReaDDy_plugin)
+PROJECT(readdy_plugin)
 
 # sources
 INCLUDE("${READDY_GLOBAL_DIR}/cmake/sources/sources_plugin.cmake")
@@ -34,13 +34,10 @@ TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${PLUGIN_INCLUDE_DIRS})
 # Required on Unix OS family to be able to be linked into shared libraries.
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
     LINK_FLAGS "${EXTRA_LINK_FLAGS}"
-    COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}"
-    CXX_STANDARD ${READDY_STANDARD}
-    CXX_STANDARD_REQUIRED ON
-)
+    COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 
 # link
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${READDY_PLUGIN_LIBRARIES} ReaDDy_kernel_singlecpu)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${READDY_PLUGIN_LIBRARIES} readdy_kernel_singlecpu)
 
 INSTALL(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION bin

@@ -21,11 +21,14 @@
 
 
 /**
- * << detailed description >>
+ * The observable Trajectory is a time series of all particles' positions. A single particle is represented by the
+ * TrajectoryEntry. Unlike other observables, Trajectory must be constructed with a File object, because a trajectory
+ * is not of much use except writing it to disk.
  *
  * @file Trajectory.h
- * @brief << brief description >>
+ * @brief A trajectory keeps track of all particles' positions and saves them to a file.
  * @author chrisfroe
+ * @author clonker
  * @date 12.12.16
  * @copyright GNU Lesser General Public License v3.0
  */
@@ -71,7 +74,7 @@ public:
     const static std::string TRAJECTORY_GROUP_PATH;
     const static std::string TRAJECTORY_DATA_SET_NAME;
 
-    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fs, readdy::io::File &file);
+    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fStride, readdy::io::File &file);
 
     ~Trajectory();
 

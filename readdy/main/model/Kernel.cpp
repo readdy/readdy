@@ -21,10 +21,8 @@
 
 
 /**
- * << detailed description >>
- *
- * @file Kernel.cpp.cpp
- * @brief << brief description >>
+ * @file Kernel.cpp
+ * @brief Core library Implementation of the kernel.
  * @author clonker
  * @date 02.05.16
  */
