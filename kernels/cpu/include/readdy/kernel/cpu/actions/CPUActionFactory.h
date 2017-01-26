@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file CPUProgramFactory.h.h
+ * @file CPUProgramFactory.h
  * @brief << brief description >>
  * @author clonker
  * @date 23.06.16

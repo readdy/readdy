@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file CPUProgramFactory.cpp
+ * @file CPUActionFactory.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 23.06.16

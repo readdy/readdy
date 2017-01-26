@@ -43,6 +43,7 @@ struct CPUKernel::Impl {
     std::unique_ptr<readdy::model::potentials::PotentialFactory> potentialFactory;
     std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory;
     std::unique_ptr<observables::CPUObservableFactory> observableFactory;
+    std::unique_ptr<readdy::model::compartments::CompartmentFactory> compartmentFactory;
     std::unique_ptr<CPUStateModel> stateModel;
     std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<readdy::util::thread::Config> config;
@@ -64,6 +65,7 @@ CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Imp
     pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get(), pimpl->config.get());
     pimpl->potentialFactory = std::make_unique<readdy::model::potentials::PotentialFactory>();
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
+    pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
 }
 
 CPUStateModel &CPUKernel::getKernelStateModel() const {
@@ -84,6 +86,10 @@ readdy::model::reactions::ReactionFactory &CPUKernel::getReactionFactory() const
 
 readdy::model::observables::ObservableFactory &CPUKernel::getObservableFactory() const {
     return *pimpl->observableFactory;
+}
+
+readdy::model::compartments::CompartmentFactory &CPUKernel::getCompartmentFactory() const {
+    return *pimpl->compartmentFactory;
 }
 
 unsigned long CPUKernel::getNThreads() const {

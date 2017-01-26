@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,65 +23,61 @@
 /**
  * << detailed description >>
  *
- * @file CPUKernel.h
+ * @file Compartment.h
  * @brief << brief description >>
- * @author clonker
- * @date 23.06.16
+ * @author chrisfroe
+ * @date 12.01.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
+#ifndef READDY_MAIN_COMPARTMENT_H
+#define READDY_MAIN_COMPARTMENT_H
 
-#ifndef READDY_CPUKERNEL_CPUKERNEL_H
-#define READDY_CPUKERNEL_CPUKERNEL_H
-
-#include <readdy/model/Kernel.h>
-#include <readdy/common/dll.h>
-#include "CPUStateModel.h"
+#include <readdy/model/Vec3.h>
+#include <readdy/model/Particle.h>
+#include <unordered_map>
 
 namespace readdy {
-namespace kernel {
-namespace cpu {
+namespace model {
+namespace compartments {
 
-
-class CPUKernel : public readdy::model::Kernel {
+class Compartment {
 public:
-    static const std::string name;
+    using id_t = short;
+    using particleType_t = readdy::model::Particle::type_type;
 
-    CPUKernel();
+    Compartment(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &typeName, const std::string &uniqueName)
+            : typeName(typeName), uniqueName(uniqueName), conversions(conversions), id(counter++) {}
 
-    ~CPUKernel();
+    virtual const bool isContained(const Vec3 &position) const = 0;
 
-    // factory method
-    static readdy::model::Kernel* create();
+    const std::unordered_map<particleType_t, particleType_t> &getConversions() const {
+        return conversions;
+    }
 
-    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
+    const std::string &getTypeName() const {
+        return typeName;
+    }
 
-    virtual CPUStateModel &getKernelStateModel() const override;
+    const std::string &getUniqueName() const {
+        return uniqueName;
+    }
 
-    virtual readdy::model::KernelContext &getKernelContext() const override;
-
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
-
-    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
-
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
-
-    unsigned long getNThreads() const;
-
-    void setNThreads(readdy::util::thread::Config::n_threads_t n);
+    const short getId() const {
+        return id;
+    }
 
 private:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
+    static id_t counter;
+
+    const std::string typeName;
+    const std::string uniqueName;
+    const id_t id;
+    const std::unordered_map<particleType_t, particleType_t> conversions;
 };
 
 }
 }
 }
 
-extern "C" const char* name();
-
-extern "C" readdy::model::Kernel* createKernel();
-
-#endif //READDY_CPUKERNEL_CPUKERNEL_H
+#endif //READDY_MAIN_COMPARTMENT_H

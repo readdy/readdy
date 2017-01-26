@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,51 +21,32 @@
 
 
 /**
- * Utility methods to deal with particle type ids: Transform a vector of types into a vector or set of type ids.
+ * << detailed description >>
  *
- * @file Util.h
- * @brief Some utility methods for the model module.
- * @author clonker
- * @date 09.08.16
+ * @file Compartments.cpp
+ * @brief << brief description >>
+ * @author chrisfroe
+ * @date 13.01.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_MODEL_UTIL_H
-#define READDY_MAIN_MODEL_UTIL_H
-
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/compartments/Compartments.h>
 
 namespace readdy {
 namespace model {
-namespace _internal {
-namespace util {
+namespace compartments {
 
-inline std::set<unsigned int> transformTypes(std::vector<std::string> types, const readdy::model::KernelContext &ctx) {
-    std::set<unsigned int> result;
-    for (auto &&t : types) {
-        result.insert(ctx.getParticleTypeID(t));
-    }
-    return result;
-}
+short Compartment::counter = 0;
 
-inline std::vector<unsigned int>
-transformTypes2(std::vector<std::string> types, const readdy::model::KernelContext &ctx) {
-    std::vector<unsigned int> result;
-    result.reserve(types.size());
-    for (auto &&t : types) {
-        result.push_back(ctx.getParticleTypeID(t));
-    }
-    return result;
-}
+Sphere::Sphere(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &origin,
+               const double radius, const bool largerOrLess)
+        : Compartment(conversions, getCompartmentTypeName<Sphere>(), uniqueName), radius(radius), largerOrLess(largerOrLess), origin(origin) {}
 
-inline std::unordered_map<Particle::type_type, Particle::type_type> transformTypesMap(std::unordered_map<std::string, std::string> stringMap) {
-    std::unordered_map<Particle::type_type, Particle::type_type> result;
-    // todo
-    return result;
-};
+Plane::Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &coefficients,
+             const double distance, const bool largerOrLess)
+        : Compartment(conversions, getCompartmentTypeName<Plane>(), uniqueName), coefficients(coefficients), distanceFromOrigin(distance),
+          largerOrLess(largerOrLess) {}
 
 }
 }
 }
-}
-
-#endif //READDY_MAIN_MODEL_UTIL_H

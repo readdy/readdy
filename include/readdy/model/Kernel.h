@@ -47,6 +47,8 @@
 #include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/actions/ActionFactory.h>
 #include <readdy/model/reactions/ReactionFactory.h>
+#include <readdy/model/compartments/CompartmentFactory.h>
+#include <readdy/model/_internal/Util.h>
 
 namespace readdy {
 namespace model {
@@ -158,6 +160,13 @@ public:
         return getKernelContext().registerPotential(std::move(pot));
     };
 
+    template<typename T, typename... Args>
+    compartments::Compartment::id_t registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
+        std::unordered_map<Particle::type_type, Particle::type_type> conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr);
+        auto comp = getCompartmentFactory().createCompartment<T>(conversionsMapInt, std::forward<Args>(args)...);
+        return getKernelContext().registerCompartment(std::move(comp));
+    };
+
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
         return getObservableFactory().create(obs1, obs2, stride);
@@ -198,6 +207,8 @@ public:
     virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const = 0;
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const = 0;
+
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const = 0;
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const;
 

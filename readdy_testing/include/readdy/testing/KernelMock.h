@@ -88,6 +88,7 @@ public:
 
     MOCK_CONST_METHOD0(getReactionFactory, readdy::model::reactions::ReactionFactory & (void));
 
+    MOCK_CONST_METHOD0(getCompartmentFactory, readdy::model::compartments::CompartmentFactory & (void));
 };
 }
 }

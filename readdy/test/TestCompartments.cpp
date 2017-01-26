@@ -31,6 +31,7 @@
 #include <gmock/gmock.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/KernelTest.h>
+#include <readdy/model/compartments/Compartments.h>
 
 namespace m = readdy::model;
 
@@ -44,13 +45,10 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     auto &ctx = kernel->getKernelContext();
     ctx.setDiffusionConstant("A", 1.);
     ctx.setDiffusionConstant("B", 1.);
-    auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
-    auto fun = [](m::Vec3 position) {
-        return true;
-    };
-    comp->registerCompartment(fun);
-    comp->registerConversion(0, "A", "B");
     kernel->addParticle("A", m::Vec3(1, 0, 2));
+
+    std::unordered_map<std::string, std::string> conversionsMap = {{"A", "B"}};
+    kernel->registerCompartment<m::compartments::Sphere>(conversionsMap, "kugelrund", m::Vec3(0,0,0), 10., false);
 
     std::vector<std::string> typesToCount = {"A", "B"};
     auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
@@ -58,7 +56,8 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     const auto &resultBefore = obs->getResult();
     EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
 
-    comp->perform();
+    auto &&evaluateCompartments = kernel->createAction<m::actions::EvaluateCompartments>();
+    evaluateCompartments->perform();
 
     obs->evaluate();
     const auto &resultAfter = obs->getResult();

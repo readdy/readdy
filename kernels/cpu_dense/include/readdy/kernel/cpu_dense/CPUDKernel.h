@@ -64,6 +64,8 @@ public:
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
+
     unsigned long getNThreads() const;
 
     void setNThreads(readdy::util::thread::Config::n_threads_t n);

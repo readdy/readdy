@@ -64,6 +64,8 @@ public:
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
+
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 
 private:

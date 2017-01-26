@@ -53,6 +53,7 @@
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/common/ParticleTypePair.h>
+#include <readdy/model/compartments/Compartment.h>
 
 namespace readdy {
 namespace model {
@@ -241,6 +242,15 @@ public:
     }
 
     void deregisterPotential(const short);
+
+    template<typename T>
+    const short registerCompartment(std::unique_ptr<T> compartment) {
+        // assert to prevent errors already at compile-time
+        static_assert(std::is_base_of<compartments::Compartment, T>::value, "argument must be a compartment");
+        const auto id = compartment->getId();
+        // todo put that stuff into some registry
+        return id;
+    }
 
     std::vector<rdy_pot_1 *> getOrder1Potentials(const std::string &type) const;
 
