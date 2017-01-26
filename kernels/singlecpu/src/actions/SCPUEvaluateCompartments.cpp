@@ -27,16 +27,16 @@
  * @date 13.10.16
  */
 
-#include <readdy/kernel/singlecpu/actions/SCPUCompartments.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
 namespace actions {
 
-SCPUCompartments::SCPUCompartments(SCPUKernel const *const kernel) : kernel(kernel) {}
+SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel const *const kernel) : kernel(kernel) {}
 
-void SCPUCompartments::perform() {
+void SCPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
     auto data = kernel->getKernelStateModel().getParticleData();
     auto posIt = data->begin_positions();
@@ -55,11 +55,11 @@ void SCPUCompartments::perform() {
     }
 }
 
-void SCPUCompartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
+void SCPUEvaluateCompartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
     compartments.push_back(std::move(fun));
 }
 
-void SCPUCompartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
+void SCPUEvaluateCompartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
     if (compartmentIdx >= compartments.size()) {
         throw std::runtime_error("Given compartment does not exist. Register it first.");
     }
@@ -69,7 +69,7 @@ void SCPUCompartments::registerConversion(compartmentIdx_t compartmentIdx, parti
     conversions[compartmentIdx].emplace(from, to);
 }
 
-void SCPUCompartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
+void SCPUEvaluateCompartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
     // Since this program is not part of the default readdy functionality it shall not be able to
     // create particleTypes, i.e. if 'from' or 'to' do not exist the conversion cannot be registered
     const auto typeMapping = kernel->getKernelContext().getTypeMapping();

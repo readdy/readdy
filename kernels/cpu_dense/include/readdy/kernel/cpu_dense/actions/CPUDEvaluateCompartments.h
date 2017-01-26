@@ -24,26 +24,26 @@
  * @file Compartments.h
  * @brief Header file of CPU program Compartments
  * @author chrisfroe
- * @date 18.10.16
+ * @date 22.11.16
  */
 
-#ifndef READDY_CPUKERNEL_COMPARTMENTS_H
-#define READDY_CPUKERNEL_COMPARTMENTS_H
+#ifndef READDY_DENSE_COMPARTMENTS_H
+#define READDY_DENSE_COMPARTMENTS_H
 
-#include <readdy/kernel/singlecpu/actions/SCPUCompartments.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
+#include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_dense {
 namespace actions {
 
-class CPUCompartments : public readdy::model::actions::Compartments {
+class CPUDEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
     using compartmentIdx_t = size_t;
     using particleType_t = unsigned int;
 
-    CPUCompartments(CPUKernel const *const kernel);
+    CPUDEvaluateCompartments(CPUDKernel const *const kernel);
 
     virtual void perform() override;
 
@@ -54,7 +54,7 @@ public:
     virtual void registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to);
 
 protected:
-    CPUKernel const *const kernel;
+    CPUDKernel const *const kernel;
     std::vector<std::function<bool(readdy::model::Vec3)>> compartments;
     std::unordered_map<compartmentIdx_t, std::unordered_map<particleType_t, particleType_t>> conversions;
 };
@@ -64,4 +64,4 @@ protected:
 }
 }
 
-#endif //READDY_CPUKERNEL_COMPARTMENTS_H
+#endif //READDY_DENSE_COMPARTMENTS_H

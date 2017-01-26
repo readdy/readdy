@@ -104,7 +104,7 @@ protected:
         return createUpdateNeighborList(UpdateNeighborList::Operation::create, -1);
     };
 
-    virtual Compartments *createCompartments() const = 0;
+    virtual EvaluateCompartments *createEvaluateCompartments() const = 0;
 
     virtual reactions::UncontrolledApproximation *createUncontrolledApproximation(double timeStep) const = 0;
 
@@ -134,7 +134,7 @@ READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, CalculateForces)
 
 READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, UpdateNeighborList)
 
-READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, Compartments)
+READDY_CREATE_FACTORY_DISPATCHER(ActionFactory, EvaluateCompartments)
 
 READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, UncontrolledApproximation)
 

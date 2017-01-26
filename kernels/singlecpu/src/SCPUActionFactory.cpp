@@ -30,7 +30,7 @@
 #include <readdy/kernel/singlecpu/actions/SCPUCalculateForces.h>
 #include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
 #include <readdy/kernel/singlecpu/actions/SCPUUpdateNeighborList.h>
-#include <readdy/kernel/singlecpu/actions/SCPUCompartments.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
 
 namespace core_actions = readdy::model::actions;
 
@@ -53,8 +53,8 @@ SCPUActionFactory::createUpdateNeighborList(core_actions::UpdateNeighborList::Op
     return new SCPUUpdateNeighborList(kernel, op, skinSize);
 }
 
-core_actions::Compartments *SCPUActionFactory::createCompartments() const {
-    return new SCPUCompartments(kernel);
+core_actions::EvaluateCompartments *SCPUActionFactory::createEvaluateCompartments() const {
+    return new SCPUEvaluateCompartments(kernel);
 }
 
 core_actions::reactions::UncontrolledApproximation *

@@ -36,7 +36,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEulerBDIntegrator.cpp"
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUUpdateNeighborList.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUCalculateForces.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUReactionImpls.cpp")
-LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUCompartments.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEvaluateCompartments.cpp")
 
 # --- reactions ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/reactions/SCPUReactionFactory.cpp")

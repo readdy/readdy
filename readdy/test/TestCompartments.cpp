@@ -44,7 +44,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     auto &ctx = kernel->getKernelContext();
     ctx.setDiffusionConstant("A", 1.);
     ctx.setDiffusionConstant("B", 1.);
-    auto &&comp = kernel->createAction<m::actions::Compartments>();
+    auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
     auto fun = [](m::Vec3 position) {
         return true;
     };
@@ -73,7 +73,7 @@ TEST_P(TestCompartments, TwoCompartments) {
     ctx.setDiffusionConstant("B", 1.);
     ctx.setDiffusionConstant("C", 1.);
     ctx.setDiffusionConstant("D", 1.);
-    auto &&comp = kernel->createAction<m::actions::Compartments>();
+    auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
     auto funXPos = [](m::Vec3 position) {
         return position[0] >= 0;
     };

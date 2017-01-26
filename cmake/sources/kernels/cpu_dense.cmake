@@ -38,6 +38,6 @@ LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/reactions/CPUDGillespiePar
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/reactions/ReactionUtils.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/reactions/CPUDUncontrolledApproximation.cpp")
 
-LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/CPUDCompartments.cpp")
+LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/CPUDEvaluateCompartments.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/CPUDEulerBDIntegrator.cpp")
 LIST(APPEND CPU_DENSE_SOURCES "${SOURCES_DIR}/actions/CPUDActionFactory.cpp")

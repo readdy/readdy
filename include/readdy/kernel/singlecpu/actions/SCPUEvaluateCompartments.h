@@ -42,12 +42,12 @@ namespace kernel {
 namespace scpu {
 namespace actions {
 
-class SCPUCompartments : public readdy::model::actions::Compartments {
+class SCPUEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
     using compartmentIdx_t = size_t;
     using particleType_t = unsigned int;
 
-    SCPUCompartments(SCPUKernel const *const kernel);
+    SCPUEvaluateCompartments(SCPUKernel const *const kernel);
 
     virtual void perform() override;
 

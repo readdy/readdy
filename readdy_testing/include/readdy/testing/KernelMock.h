@@ -51,7 +51,7 @@ class FakeActionFactory : public readdy::model::actions::ActionFactory {
     createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
                              double skinSize) const override { return nullptr; }
 
-    readdy::model::actions::Compartments *createCompartments() const override {
+    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override {
         return nullptr;
     }
 

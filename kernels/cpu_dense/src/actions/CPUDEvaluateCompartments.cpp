@@ -30,16 +30,16 @@
  */
 
 
-#include <readdy/kernel/cpu_dense/actions/CPUDCompartments.h>
+#include <readdy/kernel/cpu_dense/actions/CPUDEvaluateCompartments.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 namespace actions {
 
-CPUDCompartments::CPUDCompartments(const CPUDKernel *const kernel) : kernel(kernel) {}
+CPUDEvaluateCompartments::CPUDEvaluateCompartments(const CPUDKernel *const kernel) : kernel(kernel) {}
 
-void CPUDCompartments::perform() {
+void CPUDEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
     long long idx = 0;
     for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
@@ -54,11 +54,11 @@ void CPUDCompartments::perform() {
     }
 }
 
-void CPUDCompartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
+void CPUDEvaluateCompartments::registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) {
     compartments.push_back(std::move(fun));
 }
 
-void CPUDCompartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
+void CPUDEvaluateCompartments::registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to) {
     if (compartmentIdx >= compartments.size()) {
         throw std::runtime_error("Given compartment does not exist. Register it first.");
     }
@@ -68,7 +68,7 @@ void CPUDCompartments::registerConversion(compartmentIdx_t compartmentIdx, parti
     conversions[compartmentIdx].emplace(from, to);
 }
 
-void CPUDCompartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
+void CPUDEvaluateCompartments::registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) {
     // Since this program is not part of the default readdy functionality it shall not be able to
     // create particleTypes, i.e. if 'from' or 'to' do not exist the conversion cannot be registered
     const auto typeMapping = kernel->getKernelContext().getTypeMapping();
