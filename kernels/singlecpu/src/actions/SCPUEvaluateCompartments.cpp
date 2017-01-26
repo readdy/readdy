@@ -45,7 +45,7 @@ void SCPUEvaluateCompartments::perform() {
             for (auto i=0; i<compartments.size(); ++i) {
                 if (compartments[i]->isContained(entry.position())) {
                     const auto &conversions = compartments[i]->getConversions();
-                    const auto convIt = conversions.find(*typesIt);
+                    const auto convIt = conversions.find(entry.type);
                     if (convIt != conversions.end()) {
                         entry.type = convIt->second;
                     }
