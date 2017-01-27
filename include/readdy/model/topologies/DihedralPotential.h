@@ -33,4 +33,27 @@
 #ifndef READDY_MAIN_DIHEDRALPOTENTIAL_H
 #define READDY_MAIN_DIHEDRALPOTENTIAL_H
 
+#include <cstddef>
+#include <tuple>
+#include <vector>
+#include "TopologyPotential.h"
+
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
+
+class DihedralPotential : public TopologyPotential {
+public:
+    DihedralPotential(Topology *const topology);
+
+    using dihedrals_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>>;
+
+
+};
+
+
+NAMESPACE_END(top)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)
+
 #endif //READDY_MAIN_DIHEDRALPOTENTIAL_H

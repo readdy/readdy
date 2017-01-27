@@ -23,51 +23,35 @@
 /**
  * << detailed description >>
  *
- * @file Bond.h
+ * @file TopologyPotential.h
  * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 27.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_BOND_H
-#define READDY_MAIN_BOND_H
+#ifndef READDY_MAIN_TOPOLOGYPOTENTIAL_H
+#define READDY_MAIN_TOPOLOGYPOTENTIAL_H
 
-#include <cstddef>
-#include <tuple>
-#include <vector>
-#include "TopologyPotential.h"
+#include <readdy/common/macros.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-class BondPotential : public TopologyPotential {
-public:
-    BondPotential(Topology *const topology);
-};
+class Topology;
 
-class HarmonicBondPotential : public BondPotential {
+class TopologyPotential {
 public:
-    HarmonicBondPotential(Topology *const topology);
-
-    void addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant);
+    TopologyPotential(Topology *const topology) : topology(topology) {}
 
 protected:
-    struct Bond;
-    std::vector<Bond> bonds;
-};
-
-struct HarmonicBondPotential::Bond {
-    Bond(size_t idx1, size_t idx2, double length, double forceConstant)
-            : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
-
-    std::size_t idx1, idx2;
-    double length, forceConstant;
+    Topology *const topology;
 };
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
 
-#endif //READDY_MAIN_BOND_H
+
+#endif //READDY_MAIN_TOPOLOGYPOTENTIAL_H

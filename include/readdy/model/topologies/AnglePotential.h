@@ -33,11 +33,21 @@
 #ifndef READDY_MAIN_ANGLEPOTENTIAL_H
 #define READDY_MAIN_ANGLEPOTENTIAL_H
 
-#include <readdy/common/macros.h>
+#include <cstddef>
+#include <tuple>
+#include <vector>
+#include "TopologyPotential.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+
+class AnglePotential : public TopologyPotential{
+public:
+    using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
+    AnglePotential(Topology *const topology);
+};
+
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)

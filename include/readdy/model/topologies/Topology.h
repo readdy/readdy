@@ -34,7 +34,10 @@
 #define READDY_MAIN_TOPOLOGY_H
 
 #include <vector>
-#include <readdy/common/macros.h>
+#include <memory>
+#include "BondPotential.h"
+#include "AnglePotential.h"
+#include "DihedralPotential.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -46,14 +49,26 @@ NAMESPACE_BEGIN(top)
  * A topology consists of:
  *  - particle indices
  *  - potentials between particles (bonds, angles, dihedrals)
+ *
+ *  It is created by specifying a set of particles and creating corresponding potentials between these.
  */
 class Topology {
+public:
+    using particles_t = std::vector<std::size_t>;
+
+    Topology(particles_t);
+
+    Topology(const particles_t &);
+
     virtual ~Topology();
 
+    particles_t::size_type getNParticles() const;
 
 private:
-    // particle indices belonging to this topology
-    std::vector<std::size_t> particles;
+    particles_t particles;
+    std::vector<std::unique_ptr<BondPotential>> bonds;
+    std::vector<std::unique_ptr<AnglePotential>> angles;
+    std::vector<std::unique_ptr<DihedralPotential>> dihedrals;
 };
 
 NAMESPACE_END(top)
