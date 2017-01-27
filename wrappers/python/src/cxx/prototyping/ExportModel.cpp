@@ -77,7 +77,7 @@ void exportModelClasses(py::module &proto) {
                           [](rdy_ctx_t &self, std::array<bool, 3> periodic) {
                               self.setPeriodicBoundary(periodic[0], periodic[1], periodic[2]);
                           })
-            .def("set_diffusion_constant", &rdy_ctx_t::setDiffusionConstant)
+            .def("register_particle_type", &rdy_ctx_t::registerParticleType)
             .def("get_diffusion_constant",
                  (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getDiffusionConstant)
             .def("get_fix_position_fun", &rdy_ctx_t::getFixPositionFun)
@@ -85,7 +85,6 @@ void exportModelClasses(py::module &proto) {
             .def("get_dist_squared_fun", &rdy_ctx_t::getDistSquaredFun)
             .def("get_particle_radius",
                  (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)
-            .def("set_particle_radius", &rdy_ctx_t::setParticleRadius)
             .def("register_conversion_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Conversion* r) -> const short {
                      return self.registerExternalReaction(r);

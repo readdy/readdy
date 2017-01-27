@@ -184,48 +184,31 @@ const std::array<bool, 3> &KernelContext::getPeriodicBoundary() const {
     return pimpl->periodic_boundary;
 }
 
+void KernelContext::registerParticleType(const std::string &name, const double diffusionConst, const double radius) {
+    particle_t::type_type t_id = (pimpl->typeCounter)++;
+    pimpl->typeMapping.emplace(name, t_id);
+    pimpl->diffusionConstants.emplace(t_id, diffusionConst);
+    pimpl->particleRadii.emplace(t_id, radius);
+}
+
 double KernelContext::getDiffusionConstant(const std::string &particleType) const {
-    return pimpl->diffusionConstants[pimpl->typeMapping[particleType]];
-}
-
-void KernelContext::setDiffusionConstant(const std::string &particleType, double D) {
-    pimpl->diffusionConstants[getOrCreateTypeId(particleType)] = D;
-}
-
-// todo respect const correctness, dont create new entries, thx
-particle_t::type_type KernelContext::getParticleTypeID(const std::string &name) const {
-    return pimpl->typeMapping[name];
+    return getDiffusionConstant(getParticleTypeID(particleType));
 }
 
 double KernelContext::getDiffusionConstant(particle_t::type_type particleType) const {
-    return pimpl->diffusionConstants[particleType];
+    return pimpl->diffusionConstants.at(particleType);
 }
 
-double KernelContext::getParticleRadius(const std::string &type) const {
-    return getParticleRadius(pimpl->typeMapping[type]);
+particle_t::type_type KernelContext::getParticleTypeID(const std::string &name) const {
+    return pimpl->typeMapping.at(name);
+}
+
+double KernelContext::getParticleRadius(const std::string &particleType) const {
+    return getParticleRadius(getParticleTypeID(particleType));
 }
 
 double KernelContext::getParticleRadius(const particle_t::type_type type) const {
-    if (pimpl->particleRadii.find(type) == pimpl->particleRadii.end()) {
-        log::console()->warn("No particle radius was set for the particle type id {}, setting r=1", type);
-        pimpl->particleRadii[type] = 1;
-    }
-    return pimpl->particleRadii[type];
-}
-
-void KernelContext::setParticleRadius(const std::string &particleType, const double r) {
-    pimpl->particleRadii[getOrCreateTypeId(particleType)] = r;
-}
-
-particle_t::type_type KernelContext::getOrCreateTypeId(const std::string &particleType) {
-    particle_t::type_type t_id;
-    if (pimpl->typeMapping.find(particleType) != pimpl->typeMapping.end()) {
-        t_id = pimpl->typeMapping[particleType];
-    } else {
-        t_id = (pimpl->typeCounter)++;
-        pimpl->typeMapping.emplace(particleType, t_id);
-    }
-    return t_id;
+    return pimpl->particleRadii.at(type);
 }
 
 const std::vector<potentials::PotentialOrder2 *> &

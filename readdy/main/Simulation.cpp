@@ -111,8 +111,7 @@ Simulation::particle_t::type_type
 Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->getKernelContext();
-    context.setDiffusionConstant(name, diffusionCoefficient);
-    context.setParticleRadius(name, radius);
+    context.registerParticleType(name, diffusionCoefficient, radius);
     return context.getParticleTypeID(name);
 }
 

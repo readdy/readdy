@@ -43,8 +43,8 @@ class TestCompartments : public KernelTest {
 
 TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     auto &ctx = kernel->getKernelContext();
-    ctx.setDiffusionConstant("A", 1.);
-    ctx.setDiffusionConstant("B", 1.);
+    ctx.registerParticleType("A", 1., 1.);
+    ctx.registerParticleType("B", 1., 1.);
     kernel->addParticle("A", m::Vec3(1, 0, 2));
 
     std::unordered_map<std::string, std::string> conversionsMap = {{"A", "B"}};
@@ -68,10 +68,10 @@ TEST_P(TestCompartments, TwoCompartments) {
     // two compartments, four species A,B,C and D, in the end there should only be C and D particles
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(10, 10, 10);
-    ctx.setDiffusionConstant("A", 1.);
-    ctx.setDiffusionConstant("B", 1.);
-    ctx.setDiffusionConstant("C", 1.);
-    ctx.setDiffusionConstant("D", 1.);
+    ctx.registerParticleType("A", 1., 1.);
+    ctx.registerParticleType("B", 1., 1.);
+    ctx.registerParticleType("C", 1., 1.);
+    ctx.registerParticleType("D", 1., 1.);
     auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
     auto funXPos = [](m::Vec3 position) {
         return position[0] >= 0;

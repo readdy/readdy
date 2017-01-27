@@ -123,17 +123,15 @@ public:
 
     const shortest_dist_fun &getShortestDifferenceFun() const;
 
+    void registerParticleType(const std::string &name, const double diffusionConst, const double radius);
+
     double getDiffusionConstant(const std::string &particleType) const;
 
     double getDiffusionConstant(const particle_t::type_type particleType) const;
 
-    void setDiffusionConstant(const std::string &particleType, double D);
-
     double getParticleRadius(const std::string &type) const;
 
     double getParticleRadius(const particle_t::type_type type) const;
-
-    void setParticleRadius(const std::string &type, const double r);
 
     const std::vector<const reactions::Reaction<1> *> getAllOrder1Reactions() const;
 
@@ -195,7 +193,7 @@ public:
     }
 
     const short registerExternalPotential(potentials::PotentialOrder1 *potential) {
-        auto typeId = getOrCreateTypeId(potential->particleType);
+        auto typeId = getParticleTypeID(potential->particleType);
         if (potentialO1RegistryExternal->find(typeId) == potentialO1RegistryExternal->end()) {
             potentialO1RegistryExternal->emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
         }
@@ -205,8 +203,8 @@ public:
 
     const short registerExternalPotential(potentials::PotentialOrder2 *potential) {
         const auto id = potential->getId();
-        auto type1Id = getOrCreateTypeId(potential->particleType1);
-        auto type2Id = getOrCreateTypeId(potential->particleType2);
+        auto type1Id = getParticleTypeID(potential->particleType1);
+        auto type2Id = getParticleTypeID(potential->particleType2);
         readdy::util::ParticleTypePair pp{type1Id, type2Id};
         if (potentialO2RegistryExternal->find(pp) == potentialO2RegistryExternal->end()) {
             potentialO2RegistryExternal->emplace(pp, pot_ptr_vec2_external());
@@ -219,7 +217,7 @@ public:
     const short registerPotential(std::unique_ptr<R> potential,
                                   typename std::enable_if<std::is_base_of<potentials::PotentialOrder1, R>::value>::type * = 0) {
         const auto id = potential->getId();
-        auto typeId = getOrCreateTypeId(potential->particleType);
+        auto typeId = getParticleTypeID(potential->particleType);
         if (potentialO1RegistryInternal->find(typeId) == potentialO1RegistryInternal->end()) {
             potentialO1RegistryInternal->insert(std::make_pair(typeId, pot_ptr_vec1()));
         }
@@ -231,8 +229,8 @@ public:
     const short registerPotential(std::unique_ptr<R> potential,
                                   typename std::enable_if<std::is_base_of<potentials::PotentialOrder2, R>::value>::type * = 0) {
         const auto id = potential->getId();
-        auto type1Id = getOrCreateTypeId(potential->particleType1);
-        auto type2Id = getOrCreateTypeId(potential->particleType2);
+        auto type1Id = getParticleTypeID(potential->particleType1);
+        auto type2Id = getParticleTypeID(potential->particleType2);
         readdy::util::ParticleTypePair pp{type1Id, type2Id};
         if (potentialO2RegistryInternal->find(pp) == potentialO2RegistryInternal->end()) {
             potentialO2RegistryInternal->emplace(pp, pot_ptr_vec2());
@@ -311,8 +309,6 @@ public:
 private:
     struct Impl;
     std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
-
-    particle_t::type_type getOrCreateTypeId(const std::string &name);
 
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;

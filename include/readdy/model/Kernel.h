@@ -162,7 +162,7 @@ public:
 
     template<typename T, typename... Args>
     compartments::Compartment::id_t registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
-        std::unordered_map<Particle::type_type, Particle::type_type> conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr);
+        auto conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr, getKernelContext());
         auto comp = getCompartmentFactory().createCompartment<T>(conversionsMapInt, std::forward<Args>(args)...);
         return getKernelContext().registerCompartment(std::move(comp));
     };
@@ -183,6 +183,7 @@ public:
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
     };
 
+    // todo registerConversion -> creates and register with context
     std::unique_ptr<reactions::Reaction<1>>
     createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                              const double rate) const;

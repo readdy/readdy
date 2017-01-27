@@ -77,6 +77,8 @@ TEST_F(TestKernelContext, BoxSize) {
 
 TEST_F(TestKernelContext, PotentialOrder2Map) {
     m::KernelContext ctx;
+    ctx.registerParticleType("a", 1., 1.);
+    ctx.registerParticleType("b", 1., 1.);
     auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>("a", "b");
     readdy::log::console()->critical("noop: {}", noop->describe());
     ctx.registerPotential(std::move(noop));
@@ -94,15 +96,11 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
     auto &ctx = kernel->getKernelContext();
 
-    ctx.setDiffusionConstant("A", 1.0);
-    ctx.setDiffusionConstant("B", 3.0);
-    ctx.setDiffusionConstant("C", 4.0);
-    ctx.setDiffusionConstant("D", 2.0);
+    ctx.registerParticleType("A", 1.0, 1.0);
+    ctx.registerParticleType("B", 3.0, 2.0);
+    ctx.registerParticleType("C", 4.0, 3.0);
+    ctx.registerParticleType("D", 2.0, 4.0);
 
-    ctx.setParticleRadius("A", 1.0);
-    ctx.setParticleRadius("B", 2.0);
-    ctx.setParticleRadius("C", 3.0);
-    ctx.setParticleRadius("D", 4.0);
     std::vector<short> idsToRemove;
     short uuid2_1, uuid2_2;
     {

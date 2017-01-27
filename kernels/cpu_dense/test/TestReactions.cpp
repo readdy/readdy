@@ -64,9 +64,9 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(100, 100, 100);
     const auto diff = kernel->getKernelContext().getShortestDifferenceFun();
-    kernel->getKernelContext().setDiffusionConstant("A", .1); // type id 0
-    kernel->getKernelContext().setDiffusionConstant("B", .1); // type id 1
-    kernel->getKernelContext().setDiffusionConstant("C", .1); // type id 2
+    kernel->getKernelContext().registerParticleType("A", .1, 1.); // type id 0
+    kernel->getKernelContext().registerParticleType("B", .1, 1.); // type id 1
+    kernel->getKernelContext().registerParticleType("C", .1, 1.); // type id 2
 
     // test conversion
     {
@@ -199,7 +199,7 @@ TEST(CPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().setDiffusionConstant("X", .25);
+    kernel->getKernelContext().registerParticleType("X", .25, 1.);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
 
@@ -249,9 +249,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->getKernelContext().setBoxSize(10, 10, 30);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);
 
-    kernel->getKernelContext().setDiffusionConstant("A", .25);
-    kernel->getKernelContext().setDiffusionConstant("B", .25);
-    kernel->getKernelContext().setDiffusionConstant("C", .25);
+    kernel->getKernelContext().registerParticleType("A", .25, 1.);
+    kernel->getKernelContext().registerParticleType("B", .25, 1.);
+    kernel->getKernelContext().registerParticleType("C", .25, 1.);
     double reactionRadius = 1.0;
     kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, reactionRadius);
     kernel->registerReaction<fusion_t>("very unlikely", "A", "C", "A", std::numeric_limits<double>::min(),

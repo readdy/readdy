@@ -251,8 +251,7 @@ public:
         ctx.setBoxSize(boxLength, boxLength, boxLength);
         ctx.setPeriodicBoundary(true, true, true);
         for (const std::string &type : {"A", "B", "C"}) {
-            ctx.setParticleRadius(type, radii[type]);
-            ctx.setDiffusionConstant(type, diffusionConstants[type]);
+            ctx.registerParticleType(type, diffusionConstants[type], radii[type]);
         }
 
         kernel->registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", rateOn, 4.5);
@@ -322,8 +321,7 @@ public:
         ctx.setBoxSize(boxLength, boxLength, boxLength);
         ctx.setPeriodicBoundary(true, true, true);
         for (const std::string &type : {"A", "B", "C"}) {
-            ctx.setParticleRadius(type, radii[type]);
-            ctx.setDiffusionConstant(type, diffusionConstants[type]);
+            ctx.registerParticleType(type, diffusionConstants[type], radii[type]);
         }
         kernel->registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", rateOn, 4.5);
         kernel->registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", rateOff, 4.5);
@@ -398,8 +396,7 @@ public:
         ctx.setBoxSize(boxLength, boxLength, boxLength);
         ctx.setPeriodicBoundary(true, true, true);
         for (const std::string &type : {"A", "B", "C"}) {
-            ctx.setParticleRadius(type, radii[type]);
-            ctx.setDiffusionConstant(type, diffusionConstants[type]);
+            ctx.registerParticleType(type, diffusionConstants[type], radii[type]);
         }
         std::vector<std::pair<std::string, std::string>> pairs = {{"A", "B"},
                                                                   {"B", "C"},
