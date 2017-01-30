@@ -55,6 +55,7 @@ SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<S
     pimpl->observables = std::make_unique<observables::SCPUObservableFactory>(this);
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
     pimpl->topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>();
+    pimpl->topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>(this);
 }
 
 /**
@@ -100,10 +101,9 @@ readdy::model::observables::ObservableFactory &SCPUKernel::getObservableFactory(
 readdy::model::compartments::CompartmentFactory &SCPUKernel::getCompartmentFactory() const {
     return *pimpl->compartmentFactory;
 }
-readdy::model::top::TopologyActionFactory &SCPUKernel::getTopologyActionFactory() const {
-    return *pimpl->topologyActionFactory;
+readdy::model::top::TopologyActionFactory *SCPUKernel::getTopologyActionFactory() const {
+    return pimpl->topologyActionFactory.get();
 }
-
 
 SCPUKernel &SCPUKernel::operator=(SCPUKernel &&rhs) = default;
 

@@ -100,6 +100,10 @@ void CPUKernel::setNThreads(readdy::util::thread::Config::n_threads_t n) {
     pimpl->config->setNThreads(n);
 }
 
+readdy::model::top::TopologyActionFactory *CPUKernel::getTopologyActionFactory() const {
+    return nullptr;
+}
+
 CPUKernel::~CPUKernel() = default;
 
 }

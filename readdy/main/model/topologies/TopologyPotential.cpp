@@ -23,38 +23,24 @@
 /**
  * << detailed description >>
  *
- * @file SCPUTopologyActionFactory.h
+ * @file TopologyPotential.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_SCPUTOPOLOGYACTIONFACTORY_H
-#define READDY_MAIN_SCPUTOPOLOGYACTIONFACTORY_H
+#include <readdy/model/topologies/TopologyPotential.h>
+#include <readdy/model/topologies/Topology.h>
+namespace readdy {
+namespace model {
+namespace top {
+TopologyPotential::TopologyPotential(Topology *const topology) : topology(topology) {}
 
-#include <readdy/common/macros.h>
-#include <readdy/model/topologies/TopologyActionFactory.h>
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
+Topology *const TopologyPotential::getTopology() const {
+    return topology;
+}
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(kernel)
-NAMESPACE_BEGIN(scpu)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-
-class SCPUTopologyActionFactory : public readdy::model::top::TopologyActionFactory {
-    const SCPUKernel *const kernel;
-public:
-    SCPUTopologyActionFactory(const SCPUKernel *const kernel);
-
-    virtual std::unique_ptr<readdy::model::top::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const readdy::model::top::HarmonicBondPotential *const) override;
-};
-
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(scpu)
-NAMESPACE_END(kernel)
-NAMESPACE_END(readdy)
-#endif //READDY_MAIN_SCPUTOPOLOGYACTIONFACTORY_H
+}
+}
+}

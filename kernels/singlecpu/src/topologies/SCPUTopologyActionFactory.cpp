@@ -31,9 +31,11 @@
  */
 
 #include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActionFactory.h>
+#include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActions.h>
 
 namespace c_top = readdy::model::top;
 
+using harmonic_bond = c_top::HarmonicBondPotential;
 using calc_harmonic_bond = c_top::CalculateHarmonicBondPotential;
 
 namespace readdy {
@@ -42,9 +44,14 @@ namespace scpu {
 namespace model {
 namespace top {
 
-std::unique_ptr<calc_harmonic_bond> SCPUTopologyActionFactory::createCalculateHarmonicBondPotential() {
-    return std::unique_ptr<calc_harmonic_bond>();
+std::unique_ptr<calc_harmonic_bond>
+SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_bond *const potential) {
+    return std::make_unique<SCPUCalculateHarmonicBondPotential>(
+            &kernel->getKernelContext(), kernel->getKernelStateModel().getParticleData(), potential
+    );
 }
+
+SCPUTopologyActionFactory::SCPUTopologyActionFactory(const SCPUKernel *const kernel) : kernel(kernel) {}
 }
 }
 }

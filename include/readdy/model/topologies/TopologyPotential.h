@@ -43,7 +43,9 @@ class Topology;
 
 class TopologyPotential {
 public:
-    TopologyPotential(Topology *const topology) : topology(topology) {}
+    TopologyPotential(Topology *const topology);
+
+    Topology *const getTopology() const;
 
 protected:
     Topology *const topology;

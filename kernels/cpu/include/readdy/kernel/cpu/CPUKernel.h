@@ -67,6 +67,8 @@ public:
 
     virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
 
+    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactory() const override;
+
     unsigned long getNThreads() const;
 
     void setNThreads(readdy::util::thread::Config::n_threads_t n);

@@ -55,7 +55,7 @@ NAMESPACE_BEGIN(top)
  */
 class Topology {
 public:
-    using particles_t = std::unordered_set<std::size_t>;
+    using particles_t = std::vector<std::size_t>;
 
     Topology(particles_t);
 
@@ -64,6 +64,8 @@ public:
     virtual ~Topology();
 
     particles_t::size_type getNParticles() const;
+
+    const particles_t &getParticles() const;
 
 private:
     particles_t particles;

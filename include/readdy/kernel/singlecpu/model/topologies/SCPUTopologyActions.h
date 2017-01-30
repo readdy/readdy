@@ -36,6 +36,7 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/actions/TopologyActions.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
+#include <readdy/model/topologies/Topology.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
@@ -46,22 +47,23 @@ NAMESPACE_BEGIN(top)
 class SCPUCalculateHarmonicBondPotential : public readdy::model::top::CalculateHarmonicBondPotential {
 
     const readdy::model::top::HarmonicBondPotential *const potential;
-    const SCPUParticleData *const data;
+    SCPUParticleData *const data;
 
 public:
     SCPUCalculateHarmonicBondPotential(const readdy::model::KernelContext *const context,
-                                       const SCPUParticleData *const data,
+                                       SCPUParticleData *const data,
                                        const readdy::model::top::HarmonicBondPotential *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
     virtual double calculateForcesAndEnergy() override {
         readdy::model::Vec3::entry_t energy = 0;
+        const auto& mapping = potential->getTopology()->getParticles();
         const auto& d = context->getShortestDifferenceFun();
         auto itBeginPos = data->begin_positions();
-        std::vector<readdy::model::Vec3>::iterator itBeginForce = data->begin_forces();
+        auto itBeginForce = data->begin_forces();
         for(const auto& bond : potential->getBonds()) {
-            const auto x_ij = d(*(itBeginPos + bond.idx1), *(itBeginPos + bond.idx2));
-            potential->calculateForce(*(itBeginForce + bond.idx1), x_ij, bond);
+            const auto x_ij = d(*(itBeginPos + mapping.at(bond.idx1)), *(itBeginPos + mapping.at(bond.idx2)));
+            potential->calculateForce(*(itBeginForce + mapping[bond.idx1]), x_ij, bond);
             energy += potential->calculateEnergy(x_ij, bond);
         }
         return energy;

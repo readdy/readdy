@@ -43,6 +43,10 @@ Topology::Topology(const Topology::particles_t &p) : particles(p) { }
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
 }
+
+const Topology::particles_t &Topology::getParticles() const {
+    return particles;
+}
 }
 }
 }
