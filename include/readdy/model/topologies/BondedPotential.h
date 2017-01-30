@@ -36,6 +36,7 @@
 #include <cstddef>
 #include <tuple>
 #include <vector>
+#include <string>
 #include <readdy/model/Vec3.h>
 #include "TopologyPotential.h"
 
@@ -53,16 +54,18 @@ public:
     struct Bond;
 
     HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds);
+
     HarmonicBondPotential(Topology *const topology, std::vector<Bond> bonds);
 
     const std::vector<Bond> &getBonds() const;
 
-    double calculateEnergy(const Vec3& x_ij, const Bond &bond) const;
+    double calculateEnergy(const Vec3 &x_ij, const Bond &bond) const;
 
-    void calculateForce(Vec3 &force, const Vec3& x_ij, const Bond& bond) const;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij, const Bond &bond) const;
 
 protected:
     void addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant);
+
     std::vector<Bond> bonds;
 };
 

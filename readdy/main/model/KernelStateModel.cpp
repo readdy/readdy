@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,55 +21,19 @@
 
 
 /**
- * The KernelStateModel keeps information about the current state of the system, like particle positions and forces.
- * A listener can be attached, that fires when the time step changes.
+ * << detailed description >>
  *
- * @file KernelStateModel.h
- * @brief Defines the KernelStateModel, which gives information about the system's current state.
+ * @file KernelStateModel.cpp
+ * @brief << brief description >>
  * @author clonker
- * @date 18/04/16
+ * @date 30.01.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_KERNELSTATEMODEL_H
-#define READDY_MAIN_KERNELSTATEMODEL_H
-
-#include <vector>
-#include <readdy/model/topologies/Topology.h>
-#include "Particle.h"
-#include "Vec3.h"
+#include <readdy/model/KernelStateModel.h>
 
 namespace readdy {
 namespace model {
 
-class KernelStateModel {
-public:
-    virtual ~KernelStateModel() = default;
-
-    // const accessor methods
-    virtual const std::vector<Vec3> getParticlePositions() const = 0;
-
-    virtual const std::vector<Particle> getParticles() const = 0;
-
-    virtual void updateNeighborList() = 0;
-
-    virtual void clearNeighborList() = 0;
-
-    virtual void calculateForces() = 0;
-
-    virtual void addParticle(const Particle &p) = 0;
-
-    virtual void addParticles(const std::vector<Particle> &p) = 0;
-
-    virtual void removeParticle(const Particle &p) = 0;
-
-    virtual void removeAllParticles() = 0;
-
-    virtual double getEnergy() const = 0;
-
-protected:
-    std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies;
-};
-
 }
 }
-#endif //READDY_MAIN_KERNELSTATEMODEL_H
