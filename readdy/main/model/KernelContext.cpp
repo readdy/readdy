@@ -39,7 +39,7 @@ using particle_t = readdy::model::Particle;
 
 struct KernelContext::Impl {
 
-    particle_t::type_type typeCounter;
+    particle_t::type_type typeCounter = 0;
     std::unordered_map<std::string, particle_t::type_type> typeMapping;
     double kBT = 1;
     std::array<double, 3> box_size{{1, 1, 1}};
@@ -499,6 +499,10 @@ const KernelContext::rdy_reverse_type_mapping KernelContext::generateReverseType
         ++it;
     }
     return reverseTypeMapping;
+}
+
+const KernelContext::compartment_registry &KernelContext::getCompartments() const {
+    return *compartmentRegistry;
 }
 
 KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;

@@ -292,6 +292,19 @@ void Simulation::closeTrajectoryFile() {
     pimpl->trajectoryFile.reset();
 }
 
+const short Simulation::registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
+                                                  const model::Vec3 &origin, const double radius, const bool largerOrLess) {
+    ensureKernelSelected();
+    return getSelectedKernel()->registerCompartment<model::compartments::Sphere>(conversionsMap, name, origin, radius, largerOrLess);
+}
+
+const short Simulation::registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
+                                                 const model::Vec3 &normalCoefficients, const double distanceFromPlane, const bool largerOrLess) {
+    ensureKernelSelected();
+    return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name, normalCoefficients, distanceFromPlane,
+                                                                                largerOrLess);
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};
 
 }

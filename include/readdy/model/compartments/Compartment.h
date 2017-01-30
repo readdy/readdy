@@ -67,7 +67,7 @@ public:
         return id;
     }
 
-private:
+protected:
     static id_t counter;
 
     const std::string typeName;

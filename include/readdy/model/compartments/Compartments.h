@@ -42,33 +42,29 @@ namespace compartments {
 class Sphere : public Compartment {
 public:
     Sphere(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &origin,
-               const double radius, const bool largerOrLess);
+           const double radius, const bool largerOrLess);
 
-    virtual const bool isContained(const Vec3 &position) const override {
-        // todo
-        return true;
-    }
+    virtual const bool isContained(const Vec3 &position) const override;
 
 protected:
-    Vec3 origin;
-    double radius;
-    bool largerOrLess;
+    const Vec3 origin;
+    const double radius;
+    const double radiusSquared;
+    const bool largerOrLess;
 };
+
 
 class Plane : public Compartment {
 public:
-    Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &coefficients,
-              const double distance, const bool largerOrLess);
+    Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
+          const double distance, const bool largerOrLess);
 
-    virtual const bool isContained(const Vec3 &position) const override {
-        // todo
-        return true;
-    }
+    virtual const bool isContained(const Vec3 &position) const override;
 
 protected:
-    Vec3 coefficients;
-    double distanceFromOrigin;
-    bool largerOrLess;
+    const Vec3 normalCoefficients;
+    const double distanceFromOrigin;
+    const bool largerOrLess;
 };
 
 template<typename T>

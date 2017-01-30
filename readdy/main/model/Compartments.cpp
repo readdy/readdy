@@ -31,6 +31,7 @@
  */
 
 #include <readdy/model/compartments/Compartments.h>
+#include <readdy/common/logging.h>
 
 namespace readdy {
 namespace model {
@@ -40,12 +41,38 @@ short Compartment::counter = 0;
 
 Sphere::Sphere(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &origin,
                const double radius, const bool largerOrLess)
-        : Compartment(conversions, getCompartmentTypeName<Sphere>(), uniqueName), radius(radius), largerOrLess(largerOrLess), origin(origin) {}
+        : Compartment(conversions, getCompartmentTypeName<Sphere>(), uniqueName), radius(radius), radiusSquared(radius * radius),
+          largerOrLess(largerOrLess), origin(origin) {}
 
-Plane::Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &coefficients,
+const bool Sphere::isContained(const Vec3 &position) const {
+    const auto delta = position - origin;
+    const auto distanceSquared = delta * delta;
+    if (largerOrLess) {
+        return distanceSquared > radiusSquared;
+    } else {
+        return distanceSquared < radiusSquared;
+    }
+}
+
+Plane::Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
              const double distance, const bool largerOrLess)
-        : Compartment(conversions, getCompartmentTypeName<Plane>(), uniqueName), coefficients(coefficients), distanceFromOrigin(distance),
-          largerOrLess(largerOrLess) {}
+        : Compartment(conversions, getCompartmentTypeName<Plane>(), uniqueName), normalCoefficients(normalCoefficients), distanceFromOrigin(distance),
+          largerOrLess(largerOrLess) {
+    const auto normSquared = normalCoefficients * normalCoefficients;
+    if (std::abs(normSquared - 1) > 0.0001) {
+        log::console()->warn("Plane coefficients not sufficiently normalized. Unwanted behavior ahead! Make sure that coefficients and distance"
+                                     "accord to the Hesse normal form");
+    }
+}
+
+const bool Plane::isContained(const Vec3 &position) const {
+    const double distanceFromPlane = position * normalCoefficients - distanceFromOrigin;
+    if (largerOrLess) {
+        return distanceFromPlane > 0;
+    } else {
+        return distanceFromPlane < 0;
+    }
+}
 
 }
 }

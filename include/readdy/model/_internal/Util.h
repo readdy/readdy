@@ -21,11 +21,12 @@
 
 
 /**
- * Utility methods to deal with particle type ids: Transform a vector of types into a vector or set of type ids.
+ * Utility methods to deal with particle type ids: Transform a container of type strings to a container of type ids.
  *
  * @file Util.h
  * @brief Some utility methods for the model module.
  * @author clonker
+ * @author chrisfroe
  * @date 09.08.16
  */
 
@@ -57,9 +58,14 @@ transformTypes2(std::vector<std::string> types, const readdy::model::KernelConte
     return result;
 }
 
-inline std::unordered_map<Particle::type_type, Particle::type_type> transformTypesMap(std::unordered_map<std::string, std::string> stringMap) {
+inline std::unordered_map<Particle::type_type, Particle::type_type>
+transformTypesMap(std::unordered_map<std::string, std::string> stringMap, const readdy::model::KernelContext &ctx) {
     std::unordered_map<Particle::type_type, Particle::type_type> result;
-    // todo
+    for (const auto &pair : stringMap) {
+        const auto id1 = ctx.getParticleTypeID(pair.first);
+        const auto id2 = ctx.getParticleTypeID(pair.second);
+        result.emplace(id1, id2);
+    }
     return result;
 };
 

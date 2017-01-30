@@ -97,6 +97,8 @@ public:
     using reaction_o1_registry = std::unordered_map<particle_t::type_type, std::vector<reactions::Reaction<1> *>>;
     using reaction_o2_registry = std::unordered_map<rdy_ptp, std::vector<reactions::Reaction<2> *>, rdy_ptp_hasher>;
 
+    using compartment_registry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
+
     using fix_pos_fun = std::function<void(Vec3 &)>;
     using dist_squared_fun = std::function<double(const Vec3 &, const Vec3 &)>;
     using shortest_dist_fun = std::function<Vec3(const Vec3 &, const Vec3 &)>;
@@ -246,9 +248,11 @@ public:
         // assert to prevent errors already at compile-time
         static_assert(std::is_base_of<compartments::Compartment, T>::value, "argument must be a compartment");
         const auto id = compartment->getId();
-        // todo put that stuff into some registry
+        compartmentRegistry->push_back(std::move(compartment));
         return id;
-    }
+    };
+
+    const compartment_registry &getCompartments() const;
 
     std::vector<rdy_pot_1 *> getOrder1Potentials(const std::string &type) const;
 
@@ -327,6 +331,8 @@ private:
     std::unique_ptr<rdy_pot_1_registry> potentialO1RegistryExternal = std::make_unique<rdy_pot_1_registry>();
     std::unique_ptr<potential_o2_registry_internal> potentialO2RegistryInternal = std::make_unique<potential_o2_registry_internal>();
     std::unique_ptr<rdy_pot_2_registry> potentialO2RegistryExternal = std::make_unique<rdy_pot_2_registry>();
+
+    std::unique_ptr<compartment_registry> compartmentRegistry = std::make_unique<compartment_registry>();
 };
 
 }

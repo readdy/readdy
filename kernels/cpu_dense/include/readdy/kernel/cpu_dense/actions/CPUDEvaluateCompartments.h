@@ -40,23 +40,12 @@ namespace actions {
 
 class CPUDEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
-    using compartmentIdx_t = size_t;
-    using particleType_t = unsigned int;
-
     CPUDEvaluateCompartments(CPUDKernel const *const kernel);
 
     virtual void perform() override;
 
-    virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) override;
-
-    virtual void registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) override;
-
-    virtual void registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to);
-
 protected:
     CPUDKernel const *const kernel;
-    std::vector<std::function<bool(readdy::model::Vec3)>> compartments;
-    std::unordered_map<compartmentIdx_t, std::unordered_map<particleType_t, particleType_t>> conversions;
 };
 
 }
