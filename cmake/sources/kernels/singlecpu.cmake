@@ -49,6 +49,8 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SCPUNeighborList.cpp")
 # --- observables ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/observables/SCPUObservableFactory.cpp")
 
+# --- topology actions ---
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/topologies/SCPUTopologyActionFactory.cpp")
 
 # --- all sources ---
 LIST(APPEND READDY_ALL_SOURCES ${SINGLECPU_SOURCES})

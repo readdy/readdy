@@ -23,42 +23,33 @@
 /**
  * << detailed description >>
  *
- * @file BondPotential.cpp
+ * @file TopologyActions.h
  * @brief << brief description >>
  * @author clonker
- * @date 27.01.17
+ * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/BondPotential.h>
-#include <readdy/model/topologies/Topology.h>
+#ifndef READDY_MAIN_TOPOLOGYACTIONS_H
+#define READDY_MAIN_TOPOLOGYACTIONS_H
 
-namespace readdy {
-namespace model {
-namespace top {
+#include "TopologyAction.h"
+#include <readdy/model/topologies/BondedPotential.h>
+#include <readdy/model/topologies/AnglePotential.h>
+#include <readdy/model/topologies/DihedralPotential.h>
 
-/*
- * Super class
- */
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
 
-BondPotential::BondPotential(Topology *const topology) : TopologyPotential(topology) {}
+class CalculateHarmonicBondPotential : public TopologyAction {
+public:
+    CalculateHarmonicBondPotential(const KernelContext *const context) : TopologyAction(context) {}
 
-/*
- * Harmonic bond
- */
+    virtual double calculateForcesAndEnergy() = 0;
+};
 
-HarmonicBondPotential::HarmonicBondPotential(Topology *const topology) : BondPotential(topology) {}
-
-void HarmonicBondPotential::addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant) {
-    const auto n = topology->getNParticles();
-    if(idx1 >= n) {
-        throw std::invalid_argument("the first particle index (" + std::to_string(idx1) + ") was out of bounds!");
-    }
-    if(idx2 >= n) {
-        throw std::invalid_argument("the second particle index (" + std::to_string(idx2) + ") was out of bounds!");
-    }
-    bonds.emplace_back(idx1, idx2, length, forceConstant);
-}
-}
-}
-}
+NAMESPACE_END(top)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)
+#endif //READDY_MAIN_TOPOLOGYACTIONS_H

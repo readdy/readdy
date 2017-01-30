@@ -21,59 +21,49 @@
 
 
 /**
- * Topologies are superstructures grouping particles to e.g. molecules.
+ * << detailed description >>
  *
- * @file Topology.h
- * @brief Definitions for topologies
+ * @file BondPotential.cpp
+ * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 27.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TOPOLOGY_H
-#define READDY_MAIN_TOPOLOGY_H
+#include <readdy/model/topologies/BondedPotential.h>
+#include <readdy/model/topologies/Topology.h>
 
-#include <memory>
-#include <unordered_set>
-#include "BondedPotential.h"
-#include "AnglePotential.h"
-#include "DihedralPotential.h"
-#include "TopologyActionFactory.h"
+namespace readdy {
+namespace model {
+namespace top {
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-
-/**
- * Topologies are superstructures grouping particles to e.g. molecules.
- *
- * A topology consists of:
- *  - particle indices
- *  - potentials between particles (bonds, angles, dihedrals)
- *
- *  It is created by specifying a set of particles and creating corresponding potentials between these.
+/*
+ * Super class
  */
-class Topology {
-public:
-    using particles_t = std::unordered_set<std::size_t>;
 
-    Topology(particles_t);
+BondedPotential::BondedPotential(Topology *const topology) : TopologyPotential(topology) {}
 
-    Topology(const particles_t &);
+/*
+ * Harmonic bond
+ */
 
-    virtual ~Topology();
+HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds)
+        : BondedPotential(topology), bonds(bonds) {}
+HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, std::vector<Bond> bonds)
+        : BondedPotential(topology), bonds(std::move(bonds)) {}
 
-    particles_t::size_type getNParticles() const;
+void HarmonicBondPotential::addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant) {
+    const auto n = topology->getNParticles();
+    if(idx1 >= n) {
+        throw std::invalid_argument("the first particle index (" + std::to_string(idx1) + ") was out of bounds!");
+    }
+    if(idx2 >= n) {
+        throw std::invalid_argument("the second particle index (" + std::to_string(idx2) + ") was out of bounds!");
+    }
+    bonds.emplace_back(idx1, idx2, length, forceConstant);
+}
 
-private:
-    particles_t particles;
-    std::vector<std::unique_ptr<BondedPotential>> bonds;
-    std::vector<std::unique_ptr<AnglePotential>> angles;
-    std::vector<std::unique_ptr<DihedralPotential>> dihedrals;
-};
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
-
-#endif //READDY_MAIN_TOPOLOGY_H
+}
+}
+}

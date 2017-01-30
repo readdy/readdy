@@ -28,6 +28,7 @@
 #include <readdy/kernel/singlecpu/actions/SCPUActionFactory.h>
 #include <readdy/kernel/singlecpu/reactions/SCPUReactionFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
+#include <readdy/kernel/singlecpu/model/topologies/SCPUTopologyActionFactory.h>
 
 
 namespace readdy {
@@ -41,6 +42,7 @@ struct SCPUKernel::Impl {
     std::unique_ptr<actions::SCPUActionFactory> actionFactory;
     std::unique_ptr<reactions::SCPUReactionFactory> reactions;
     std::unique_ptr<observables::SCPUObservableFactory> observables;
+    std::unique_ptr<model::top::SCPUTopologyActionFactory> topologyActionFactory;
     std::unique_ptr<readdy::model::compartments::CompartmentFactory> compartmentFactory;
 };
 
@@ -52,6 +54,7 @@ SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<S
     pimpl->model = std::make_unique<SCPUStateModel>(pimpl->context.get());
     pimpl->observables = std::make_unique<observables::SCPUObservableFactory>(this);
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
+    pimpl->topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>();
 }
 
 /**
@@ -97,6 +100,10 @@ readdy::model::observables::ObservableFactory &SCPUKernel::getObservableFactory(
 readdy::model::compartments::CompartmentFactory &SCPUKernel::getCompartmentFactory() const {
     return *pimpl->compartmentFactory;
 }
+readdy::model::top::TopologyActionFactory &SCPUKernel::getTopologyActionFactory() const {
+    return *pimpl->topologyActionFactory;
+}
+
 
 SCPUKernel &SCPUKernel::operator=(SCPUKernel &&rhs) = default;
 

@@ -23,51 +23,55 @@
 /**
  * << detailed description >>
  *
- * @file Bond.h
+ * @file SCPUTopologyActions.h
  * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_BOND_H
-#define READDY_MAIN_BOND_H
+#ifndef READDY_MAIN_SCPUTOPOLOGYACTIONS_H
+#define READDY_MAIN_SCPUTOPOLOGYACTIONS_H
 
-#include <cstddef>
-#include <tuple>
-#include <vector>
-#include "TopologyPotential.h"
+#include <readdy/common/macros.h>
+#include <readdy/model/topologies/actions/TopologyActions.h>
+#include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
 NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(kernel)
+NAMESPACE_BEGIN(scpu)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-class BondPotential : public TopologyPotential {
+class SCPUCalculateHarmonicBondPotential : public readdy::model::top::CalculateHarmonicBondPotential {
+
+    const readdy::model::top::HarmonicBondPotential *const potential;
+    const SCPUParticleData *const data;
+
 public:
-    BondPotential(Topology *const topology);
-};
+    SCPUCalculateHarmonicBondPotential(const readdy::model::KernelContext *const context,
+                                       const SCPUParticleData *const data,
+                                       const readdy::model::top::HarmonicBondPotential *const potential)
+            : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-class HarmonicBondPotential : public BondPotential {
-public:
-    HarmonicBondPotential(Topology *const topology);
+    virtual double calculateForcesAndEnergy() override {
+        readdy::model::Vec3::entry_t energy = 0;
+        const auto& d = context->getShortestDifferenceFun();
+        auto itBeginPos = data->begin_positions();
+        std::vector<readdy::model::Vec3>::iterator itBeginForce = data->begin_forces();
+        for(const auto& bond : potential->getBonds()) {
+            const auto x_ij = d(*(itBeginPos + bond.idx1), *(itBeginPos + bond.idx2));
+            potential->calculateForce(*(itBeginForce + bond.idx1), x_ij, bond);
+            energy += potential->calculateEnergy(x_ij, bond);
+        }
+        return energy;
+    }
 
-    void addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant);
-
-protected:
-    struct Bond;
-    std::vector<Bond> bonds;
-};
-
-struct HarmonicBondPotential::Bond {
-    Bond(size_t idx1, size_t idx2, double length, double forceConstant)
-            : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
-
-    std::size_t idx1, idx2;
-    double length, forceConstant;
 };
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)
+NAMESPACE_END(scpu)
+NAMESPACE_END(kernel)
 NAMESPACE_END(readdy)
-
-#endif //READDY_MAIN_BOND_H
+#endif //READDY_MAIN_SCPUTOPOLOGYACTIONS_H

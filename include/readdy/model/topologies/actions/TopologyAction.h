@@ -21,59 +21,36 @@
 
 
 /**
- * Topologies are superstructures grouping particles to e.g. molecules.
+ * << detailed description >>
  *
- * @file Topology.h
- * @brief Definitions for topologies
+ * @file TopologyAction.h
+ * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TOPOLOGY_H
-#define READDY_MAIN_TOPOLOGY_H
+#ifndef READDY_MAIN_TOPOLOGYACTION_H
+#define READDY_MAIN_TOPOLOGYACTION_H
 
-#include <memory>
-#include <unordered_set>
-#include "BondedPotential.h"
-#include "AnglePotential.h"
-#include "DihedralPotential.h"
-#include "TopologyActionFactory.h"
+#include <readdy/common/macros.h>
+#include <readdy/model/KernelContext.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-/**
- * Topologies are superstructures grouping particles to e.g. molecules.
- *
- * A topology consists of:
- *  - particle indices
- *  - potentials between particles (bonds, angles, dihedrals)
- *
- *  It is created by specifying a set of particles and creating corresponding potentials between these.
- */
-class Topology {
+class TopologyAction {
 public:
-    using particles_t = std::unordered_set<std::size_t>;
+    TopologyAction(const KernelContext *const context) : context(context) {}
+    virtual ~TopologyAction() = default;
 
-    Topology(particles_t);
-
-    Topology(const particles_t &);
-
-    virtual ~Topology();
-
-    particles_t::size_type getNParticles() const;
-
-private:
-    particles_t particles;
-    std::vector<std::unique_ptr<BondedPotential>> bonds;
-    std::vector<std::unique_ptr<AnglePotential>> angles;
-    std::vector<std::unique_ptr<DihedralPotential>> dihedrals;
+protected:
+    const KernelContext* const context;
 };
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
 
-#endif //READDY_MAIN_TOPOLOGY_H
+#endif //READDY_MAIN_TOPOLOGYACTION_H

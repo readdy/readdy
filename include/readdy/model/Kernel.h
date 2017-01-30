@@ -47,6 +47,7 @@
 #include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/actions/ActionFactory.h>
 #include <readdy/model/reactions/ReactionFactory.h>
+#include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/model/compartments/CompartmentFactory.h>
 #include <readdy/model/_internal/Util.h>
 
@@ -212,6 +213,8 @@ public:
     virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const = 0;
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const;
+
+    virtual readdy::model::top::TopologyActionFactory &getTopologyActionFactory() const = 0;
 
     virtual unsigned int getTypeId(const std::string &) const;
 

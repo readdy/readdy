@@ -120,6 +120,12 @@ unsigned int readdy::plugin::_internal::KernelPluginDecorator::getTypeId(const s
     return reference->getTypeId(string);
 }
 
+readdy::model::top::TopologyActionFactory &
+readdy::plugin::_internal::KernelPluginDecorator::getTopologyActionFactory() const {
+    return reference->getTopologyActionFactory();
+}
+
+
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) {}
 
 const std::string readdy::plugin::_internal::loadKernelName(const std::string &sharedLib) {

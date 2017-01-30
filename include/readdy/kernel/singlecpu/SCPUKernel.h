@@ -68,6 +68,8 @@ public:
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 
+    virtual readdy::model::top::TopologyActionFactory &getTopologyActionFactory() const override;
+
 private:
     struct Impl;
     std::unique_ptr<readdy::kernel::scpu::SCPUKernel::Impl> pimpl;

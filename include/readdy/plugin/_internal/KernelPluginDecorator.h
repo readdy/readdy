@@ -46,6 +46,8 @@ protected:
     std::unique_ptr<readdy::util::dll::shared_library> lib;
 
 public:
+    virtual model::top::TopologyActionFactory &getTopologyActionFactory() const override;
+
     KernelPluginDecorator(const std::string& sharedLib);
 
     virtual ~KernelPluginDecorator();

@@ -31,7 +31,6 @@
  */
 
 #include <readdy/model/Particle.h>
-#include <vector>
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
