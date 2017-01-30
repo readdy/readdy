@@ -78,8 +78,6 @@ public:
 
     virtual readdy::kernel::scpu::model::SCPUParticleData *getParticleData() const;
 
-    virtual void setNeighborList(std::unique_ptr<model::SCPUNeighborList> ptr);
-
     virtual const model::SCPUNeighborList *getNeighborList() const;
 
     virtual const std::vector<readdy::model::Particle> getParticles() const override;

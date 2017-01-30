@@ -82,9 +82,9 @@ class TestPrograms(unittest.TestCase):
         np.testing.assert_equal(positions[0], cmn.Vec(0, 0, 0))
         np.testing.assert_equal(positions[1], cmn.Vec(1, 1, 1))
 
-        it = kernel.get_kernel_state_model().get_particle_data().positions
-        assert next(it) == cmn.Vec(0, 0, 0)
-        assert next(it) == cmn.Vec(1, 1, 1)
+        it = kernel.get_kernel_state_model().get_particle_data().entries
+        assert next(it).pos == cmn.Vec(0, 0, 0)
+        assert next(it).pos == cmn.Vec(1, 1, 1)
 
         with np.testing.assert_raises(StopIteration):
             next(it)

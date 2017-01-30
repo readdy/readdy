@@ -102,7 +102,6 @@ public:
                       [&fixPos](readdy::model::Particle &p) { fixPos(p.getPos()); });
 
         // update data structure
-        data->deactivateMarked();
         data->addParticles(newParticles);
     }
 

@@ -79,9 +79,6 @@ public:
 
     virtual void addParticle(const std::string &type, const model::Vec3 &pos) override;
 
-    virtual unsigned int getTypeId(const std::string &string) const override;
-
-
 protected:
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
 

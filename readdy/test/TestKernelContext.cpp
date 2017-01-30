@@ -80,7 +80,6 @@ TEST_F(TestKernelContext, PotentialOrder2Map) {
     ctx.registerParticleType("a", 1., 1.);
     ctx.registerParticleType("b", 1., 1.);
     auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>("a", "b");
-    readdy::log::console()->critical("noop: {}", noop->describe());
     ctx.registerPotential(std::move(noop));
     ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("b", "a"));
     ctx.configure();

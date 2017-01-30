@@ -118,11 +118,11 @@ class TestModel(unittest.TestCase):
         np.testing.assert_equal(self.model.get_energy(), 5.0, err_msg="the user defined potential returns energy=5.0")
 
         data = self.model.get_particle_data()
-        it_forces = data.forces
-        f_vec = next(it_forces)
+        it = data.entries
+        f_vec = next(it).force
         np.testing.assert_equal(f_vec, cmn.Vec(.1, .1, .1))
         with np.testing.assert_raises(StopIteration):
-            next(it_forces)
+            next(it)
 
     def test_potential_order_2(self):
         self.ctx.set_box_size(cmn.Vec(2, 2, 2))
@@ -162,18 +162,17 @@ class TestModel(unittest.TestCase):
 
         np.testing.assert_almost_equal(self.model.get_energy(), np.sqrt(3))
 
-        it_forces = self.model.get_particle_data().forces
-        it_types = self.model.get_particle_data().types
-        t = next(it_types)
-        if t == self.ctx.get_particle_type_id("A"):
-            np.testing.assert_equal(next(it_forces), cmn.Vec(.5, .5, .5))
-            np.testing.assert_equal(next(it_forces), cmn.Vec(-.5, -.5, -.5))
+        it = self.model.get_particle_data().entries
+        entry = next(it)
+        if entry.type == self.ctx.get_particle_type_id("A"):
+            np.testing.assert_equal(entry.force, cmn.Vec(.5, .5, .5))
+            np.testing.assert_equal(next(it).force, cmn.Vec(-.5, -.5, -.5))
         else:
-            np.testing.assert_equal(next(it_forces), cmn.Vec(-.5, -.5, -.5))
-            np.testing.assert_equal(next(it_forces), cmn.Vec(.5, .5, .5))
+            np.testing.assert_equal(entry.force, cmn.Vec(-.5, -.5, -.5))
+            np.testing.assert_equal(next(it).force, cmn.Vec(.5, .5, .5))
 
         with np.testing.assert_raises(StopIteration):
-            next(it_forces)
+            next(it)
 
     def test_potential_factory(self):
         self.ctx.register_particle_type("A", 1.0, 1.0)

@@ -228,21 +228,21 @@ public:
             }
             super::pairs->clear();
 
-            auto it_pos = data.cbegin_positions();
             unsigned long idx = 0;
             const auto shift = readdy::model::Vec3(.5 * simBoxSize[0], .5 * simBoxSize[1],
                                                    .5 * simBoxSize[2]);
-            while (it_pos != data.cend_positions()) {
-                const auto pos_shifted = *it_pos + shift;
-                const long i = (const long) floor(pos_shifted[0] / boxSize[0]);
-                const long j = (const long) floor(pos_shifted[1] / boxSize[1]);
-                const long k = (const long) floor(pos_shifted[2] / boxSize[2]);
-                auto box = getBox(i, j, k);
-                if (box) {
-                    box->particleIndices.push_back(idx);
+            for(const auto& entry : data) {
+                if(!entry.is_deactivated()) {
+                    const auto pos_shifted = entry.position() + shift;
+                    const long i = (const long) floor(pos_shifted[0] / boxSize[0]);
+                    const long j = (const long) floor(pos_shifted[1] / boxSize[1]);
+                    const long k = (const long) floor(pos_shifted[2] / boxSize[2]);
+                    auto box = getBox(i, j, k);
+                    if (box) {
+                        box->particleIndices.push_back(idx);
+                    }
                 }
                 ++idx;
-                ++it_pos;
             }
 
             for (auto &&box : boxes) {

@@ -53,19 +53,18 @@ void SCPUUncontrolledApproximation::perform() {
 
     // reactions with one educt
     {
-        auto it_type = data->begin_types();
-
-        while (it_type != data->end_types()) {
+        for (auto it = data->begin(); it != data->end(); ++it) {
+            if(it->is_deactivated()) continue;
             // gather reactions
-            const auto &reactions = ctx.getOrder1Reactions(*it_type);
+            const auto &reactions = ctx.getOrder1Reactions(it->type);
             for (const auto &reaction : reactions) {
                 auto r = reaction->getRate() * timeStep;
                 if (readdy::model::rnd::uniform_real() < r) {
-                    const size_t particleIdx = (const size_t) (it_type - data->begin_types());
+                    const size_t particleIdx = (const size_t) (it - data->begin());
                     events.push_back([particleIdx, &newParticles, &reaction, this] {
                         auto &&_data = kernel->getKernelStateModel().getParticleData();
-                        if (_data->isMarkedForDeactivation(particleIdx)) return;
-                        _data->markForDeactivation(particleIdx);
+                        if (_data->entry_at(particleIdx).is_deactivated()) return;
+                        _data->removeEntry(particleIdx);
 
                         switch (reaction->getNProducts()) {
                             case 0: {
@@ -76,10 +75,10 @@ void SCPUUncontrolledApproximation::perform() {
                             case 1: {
                                 if (mapping_11.find(reaction->getId()) != mapping_11.end()) {
                                     newParticles.push_back(
-                                            mapping_11[reaction->getId()]((*_data)[particleIdx])
+                                            mapping_11[reaction->getId()](_data->getParticle(particleIdx))
                                     );
                                 } else {
-                                    const auto particle = (*_data)[particleIdx];
+                                    const auto particle = _data->getParticle(particleIdx);
                                     rdy_particle_t outParticle1{};
                                     reaction->perform(particle, particle, outParticle1,
                                                       outParticle1);
@@ -88,7 +87,7 @@ void SCPUUncontrolledApproximation::perform() {
                                 break;
                             }
                             case 2: {
-                                const auto particle = (*_data)[particleIdx];
+                                const auto particle = _data->getParticle(particleIdx);
                                 rdy_particle_t outParticle1{}, outParticle2{};
                                 if (mapping_12.find(reaction->getId()) != mapping_12.end()) {
                                     mapping_12[reaction->getId()](particle, outParticle1,
@@ -108,7 +107,6 @@ void SCPUUncontrolledApproximation::perform() {
                     });
                 }
             }
-            ++it_type;
         }
     }
 
@@ -117,13 +115,11 @@ void SCPUUncontrolledApproximation::perform() {
         const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
         for (auto &&it = neighborList->begin(); it != neighborList->end(); ++it) {
             const auto idx1 = it->idx1, idx2 = it->idx2;
-            const auto &reactions = ctx.getOrder2Reactions(
-                    *(data->begin_types() + idx1), *(data->begin_types() + idx2)
-            );
+            auto& e1 = data->entry_at(idx1);
+            auto& e2 = data->entry_at(idx2);
+            const auto &reactions = ctx.getOrder2Reactions(e1.type, e2.type);
 
-            const auto distSquared = dist(
-                    *(data->begin_positions() + idx1), *(data->begin_positions() + idx2)
-            );
+            const auto distSquared = dist(e1.position(), e2.position());
 
             for (const auto &reaction : reactions) {
                 // if close enough and coin flip successful
@@ -131,12 +127,12 @@ void SCPUUncontrolledApproximation::perform() {
                     && readdy::model::rnd::uniform_real() < reaction->getRate() * timeStep) {
                     events.push_back([idx1, idx2, this, &newParticles, &reaction] {
                         auto &&_data = kernel->getKernelStateModel().getParticleData();
-                        if (_data->isMarkedForDeactivation(idx1)) return;
-                        if (_data->isMarkedForDeactivation(idx2)) return;
-                        _data->markForDeactivation(idx1);
-                        _data->markForDeactivation(idx2);
-                        const auto inParticle1 = (*_data)[idx1];
-                        const auto inParticle2 = (*_data)[idx2];
+                        if (_data->entry_at(idx1).is_deactivated()) return;
+                        if (_data->entry_at(idx2).is_deactivated()) return;
+                        _data->removeEntry(idx1);
+                        _data->removeEntry(idx2);
+                        const auto inParticle1 = _data->getParticle(idx1);
+                        const auto inParticle2 = _data->getParticle(idx2);
                         switch (reaction->getNProducts()) {
                             case 1: {
                                 if (mapping_21.find(reaction->getId()) != mapping_21.end()) {
@@ -184,7 +180,6 @@ void SCPUUncontrolledApproximation::perform() {
                   [&fixPos](rdy_particle_t &p) { fixPos(p.getPos()); });
 
     // update data structure
-    data->deactivateMarked();
     data->addParticles(newParticles);
 }
 
@@ -297,7 +292,7 @@ std::vector<readdy::model::Particle> SCPUGillespie::handleEvents(std::vector<Rea
                  * Perform reaction
                  */
                 {
-                    const auto p1 = data->operator[](event.idx1);
+                    const auto p1 = data->getParticle(event.idx1);
                     rdy_particle_t pOut1{}, pOut2{};
                     if (event.nEducts == 1) {
                         auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
@@ -305,14 +300,14 @@ std::vector<readdy::model::Particle> SCPUGillespie::handleEvents(std::vector<Rea
                             reaction->perform(p1, p1, pOut1, pOut2);
                             newParticles.push_back(pOut1);
                         } else if (reaction->getNProducts() == 2) {
-                            reaction->perform(p1, data->operator[](event.idx2), pOut1, pOut2);
+                            reaction->perform(p1, data->getParticle(event.idx2), pOut1, pOut2);
                             newParticles.push_back(pOut1);
                             newParticles.push_back(pOut2);
                         }
                     } else {
                         auto reaction = ctx.getOrder2Reactions(event.t1,
                                                                event.t2)[event.reactionIdx];
-                        const auto p2 = data->operator[](event.idx2);
+                        const auto p2 = data->getParticle(event.idx2);
                         if (reaction->getNProducts() == 1) {
                             reaction->perform(p1, p2, pOut1, pOut2);
                             newParticles.push_back(pOut1);
@@ -331,7 +326,7 @@ std::vector<readdy::model::Particle> SCPUGillespie::handleEvents(std::vector<Rea
                     double cumsum = 0.0;
                     const auto idx1 = event.idx1;
                     if (event.nEducts == 1) {
-                        data->markForDeactivation((size_t) idx1);
+                        data->removeEntry((size_t) idx1);
                         while (_it < events.end() - nDeactivated) {
                             if ((*_it).idx1 == idx1 ||
                                 ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
@@ -345,8 +340,8 @@ std::vector<readdy::model::Particle> SCPUGillespie::handleEvents(std::vector<Rea
                         }
                     } else {
                         const auto idx2 = event.idx2;
-                        data->markForDeactivation((size_t) event.idx1);
-                        data->markForDeactivation((size_t) event.idx2);
+                        data->removeEntry((size_t) event.idx1);
+                        data->removeEntry((size_t) event.idx2);
                         while (_it < events.end() - nDeactivated) {
                             if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2
                                 ||
@@ -390,21 +385,21 @@ std::vector<ReactionEvent> SCPUGillespie::gatherEvents(double &alpha) {
     * Reactions with one educt
     */
     {
-        auto it_type = data->begin_types();
-        const auto end = data->end_types();
-        while (it_type != end) {
-            const auto &reactions = ctx.getOrder1Reactions(*it_type);
-            for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                const auto rate = (*it)->getRate();
-                if (rate > 0) {
-                    alpha += rate;
-                    events.push_back(
-                            {1, (*it)->getNProducts(), (reaction_idx_t) (it_type - data->begin_types()), 0, rate,
-                             alpha,
-                             (reaction_idx_t) (it - reactions.begin()), *it_type, 0});
+        std::size_t idx = 0;
+        for(auto& entry : *data) {
+            if(!entry.is_deactivated()) {
+                const auto &reactions = ctx.getOrder1Reactions(entry.type);
+                std::size_t reactionIdx = 0;
+                for (auto it = reactions.begin(); it != reactions.end(); ++it, ++reactionIdx) {
+                    const auto rate = (*it)->getRate();
+                    if (rate > 0) {
+                        alpha += rate;
+                        events.push_back(
+                                {1, (*it)->getNProducts(), idx, 0, rate, alpha, reactionIdx, entry.type, 0});
+                    }
                 }
             }
-            ++it_type;
+            ++idx;
         }
     }
 
@@ -413,16 +408,13 @@ std::vector<ReactionEvent> SCPUGillespie::gatherEvents(double &alpha) {
      */
     {
         const auto *neighborList = kernel->getKernelStateModel().getNeighborList();
-        auto typesBegin = data->begin_types();
         for (auto &&nl_it = neighborList->begin(); nl_it != neighborList->end(); ++nl_it) {
             const reaction_idx_t idx1 = nl_it->idx1, idx2 = nl_it->idx2;
-            const auto &reactions = ctx.getOrder2Reactions(
-                    *(data->begin_types() + idx1), *(data->begin_types() + idx2)
-            );
+            const auto& e1 = data->entry_at(idx1);
+            const auto& e2 = data->entry_at(idx2);
+            const auto &reactions = ctx.getOrder2Reactions(e1.type, e2.type);
 
-            const auto distSquared = dist(
-                    *(data->begin_positions() + idx1), *(data->begin_positions() + idx2)
-            );
+            const auto distSquared = dist(e1.position(), e2.position());
 
             for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                 // if close enough
@@ -434,7 +426,7 @@ std::vector<ReactionEvent> SCPUGillespie::gatherEvents(double &alpha) {
                         events.push_back(
                                 {2, reaction->getNProducts(), idx1, idx2, rate, alpha,
                                  (reaction_idx_t) (it - reactions.begin()),
-                                 *(typesBegin + idx1), *(typesBegin + idx2)});
+                                 e1.type, e2.type});
                     }
                 }
             }

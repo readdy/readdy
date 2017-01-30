@@ -116,10 +116,6 @@ readdy::plugin::_internal::KernelPluginDecorator::addParticle(const std::string 
     reference->addParticle(type, pos);
 }
 
-unsigned int readdy::plugin::_internal::KernelPluginDecorator::getTypeId(const std::string &string) const {
-    return reference->getTypeId(string);
-}
-
 readdy::model::top::TopologyActionFactory *
 readdy::plugin::_internal::KernelPluginDecorator::getTopologyActionFactory() const {
     return nullptr;

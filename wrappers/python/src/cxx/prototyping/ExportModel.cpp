@@ -53,6 +53,7 @@ using rdy_scpu_model_wrap_t = readdy::rpy::Model;
 using rdy_scpu_nl_t = readdy::kernel::scpu::model::SCPUNeighborList;
 using rdy_scpu_nl_box_t = readdy::kernel::scpu::model::Box;
 using rdy_scpu_pd_t = readdy::kernel::scpu::model::SCPUParticleData;
+using rdy_pd_entry = readdy::kernel::scpu::model::Entry;
 
 using rdy_pot_1 = readdy::model::potentials::PotentialOrder1;
 using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
@@ -123,7 +124,9 @@ void exportModelClasses(py::module &proto) {
             .def("get_particle_positions", &rdy_scpu_model_t::getParticlePositions)
             .def("get_energy", &rdy_scpu_model_t::getEnergy)
             .def("increase_energy", &rdy_scpu_model_t::increaseEnergy)
-            .def("get_particle_data", &rdy_scpu_model_t::getParticleData, rvp::reference_internal)
+            .def("get_particle_data", [](rdy_scpu_model_t& self) -> const rdy_scpu_pd_t& {
+                return *self.getParticleData();
+            }, rvp::reference_internal)
             .def("get_neighbor_list", &rdy_scpu_model_t::getNeighborList, rvp::reference_internal)
             .def("get_particles", &rdy_scpu_model_t::getParticles);
 
@@ -143,32 +146,23 @@ void exportModelClasses(py::module &proto) {
             .def_readwrite("particle_indices", &rdy_scpu_nl_box_t::particleIndices)
             .def_readwrite("neighboring_boxes", &rdy_scpu_nl_box_t::neighbors);
 
+    py::class_<rdy_pd_entry>(proto, "ParticleDataEntry")
+            .def("is_deactivated", &rdy_pd_entry::is_deactivated)
+            .def("position", &rdy_pd_entry::position)
+            .def_readwrite("force", &rdy_pd_entry::force)
+            .def_readwrite("pos", &rdy_pd_entry::pos)
+            .def_readwrite("id", &rdy_pd_entry::id)
+            .def_readwrite("type", &rdy_pd_entry::type);
+
     py::class_<rdy_scpu_pd_t>(proto, "ParticleData")
-            .def("swap", &rdy_scpu_pd_t::swap)
             .def("size", &rdy_scpu_pd_t::size)
-            .def("max_size", &rdy_scpu_pd_t::max_size)
-            .def("empty", &rdy_scpu_pd_t::empty)
             .def("clear", &rdy_scpu_pd_t::clear)
             .def("add_particle", &rdy_scpu_pd_t::addParticle)
             .def("add_particles", &rdy_scpu_pd_t::addParticles)
             .def("remove_particle", (void (rdy_scpu_pd_t::*)(const rdy_particle_t &)) &rdy_scpu_pd_t::removeParticle)
             .def("remove_particle", (void (rdy_scpu_pd_t::*)(const std::size_t)) &rdy_scpu_pd_t::removeParticle)
-            .def("is_marked_for_deactivation", &rdy_scpu_pd_t::isMarkedForDeactivation)
-            .def("get_deactivated_index", &rdy_scpu_pd_t::getDeactivatedIndex)
-            .def("get_n_deactivated", &rdy_scpu_pd_t::getNDeactivated)
-            .def("mark_for_deactivation", &rdy_scpu_pd_t::markForDeactivation)
-            .def("deactivate_marked", &rdy_scpu_pd_t::deactivateMarked)
-            .def_property_readonly("ids", [](rdy_scpu_pd_t &self) {
-                return py::make_iterator(self.begin_ids(), self.end_ids());
+            .def_property_readonly("entries", [](rdy_scpu_pd_t &self) {
+                return py::make_iterator(self.begin(), self.end());
             })
-            .def_property_readonly("positions", [](rdy_scpu_pd_t &self) {
-                return py::make_iterator(self.begin_positions(), self.end_positions());
-            })
-            .def_property_readonly("forces", [](rdy_scpu_pd_t &self) {
-                return py::make_iterator(self.begin_forces(), self.end_forces());
-            })
-            .def_property_readonly("types", [](rdy_scpu_pd_t &self) {
-                return py::make_iterator(self.begin_types(), self.end_types());
-            })
-            .def("__getitem__", [](rdy_scpu_pd_t &self, const unsigned int i) { return self[i]; });
+            .def("__getitem__", [](rdy_scpu_pd_t &self, const unsigned int i) { return self.getParticle(i); });
 }

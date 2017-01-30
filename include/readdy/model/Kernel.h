@@ -216,7 +216,7 @@ public:
 
     virtual readdy::model::top::TopologyActionFactory* getTopologyActionFactory() const = 0;
 
-    virtual unsigned int getTypeId(const std::string &) const;
+    unsigned int getTypeId(const std::string &) const;
 
 protected:
     struct Impl;

@@ -93,13 +93,21 @@ void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
 }
 
 unsigned int Kernel::getTypeId(const std::string &name) const {
-    return getKernelContext().getTypeMapping().find(name)->second;
+    auto findIt = getKernelContext().getTypeMapping().find(name);
+    if(findIt != getKernelContext().getTypeMapping().end()) {
+        return findIt->second;
+    } else {
+        log::console()->critical("did not find type id for {}", name);
+        return -1;
+    }
 }
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                  const double rate) const {
-    return getReactionFactory().createReaction<reactions::Conversion>(name, getTypeId(from), getTypeId(to), rate);
+    const auto typeFrom = getTypeId(from);
+    const auto typeTo = getTypeId(to);
+    return getReactionFactory().createReaction<reactions::Conversion>(name, typeFrom, typeTo, rate);
 }
 
 std::unique_ptr<reactions::Reaction<2>>
