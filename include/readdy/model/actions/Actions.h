@@ -136,7 +136,6 @@ struct NextSubvolumes : public TimeStepDependentAction {
 class EvaluateCompartments : public Action {
 public:
     EvaluateCompartments() : Action() {}
-    EvaluateCompartments() : Action() {}
 
     virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> characteristicFun) = 0;
 
