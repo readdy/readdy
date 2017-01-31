@@ -76,10 +76,6 @@ Kernel::registerObservable(const observables::observable_type &observable, unsig
     return std::make_tuple(std::move(wrap), std::move(connection));
 }
 
-readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() const {
-    return *pimpl->observableFactory;
-}
-
 void Kernel::evaluateObservables(observables::time_step_type t) {
     (*pimpl->signal)(t);
 }
@@ -98,7 +94,7 @@ unsigned int Kernel::getTypeId(const std::string &name) const {
         return findIt->second;
     } else {
         log::console()->critical("did not find type id for {}", name);
-        return -1;
+        throw std::invalid_argument("did not find type id for " + name);
     }
 }
 
@@ -139,12 +135,12 @@ Kernel::createDecayReaction(const std::string &name, const std::string &type, co
     return getReactionFactory().createReaction<reactions::Decay>(name, getTypeId(type), rate);
 }
 
+observables::ObservableFactory &Kernel::getObservableFactory() const {
+    return *pimpl->observableFactory;
+}
 
 Kernel &Kernel::operator=(Kernel &&rhs) = default;
 
 Kernel::Kernel(Kernel &&rhs) = default;
 }
 }
-
-
-

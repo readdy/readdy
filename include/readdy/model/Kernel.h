@@ -214,7 +214,7 @@ public:
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactory() const;
 
-    virtual readdy::model::top::TopologyActionFactory* getTopologyActionFactory() const = 0;
+    virtual readdy::model::top::TopologyActionFactory * getTopologyActionFactory() const = 0;
 
     unsigned int getTypeId(const std::string &) const;
 

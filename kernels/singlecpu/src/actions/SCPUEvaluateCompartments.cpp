@@ -38,6 +38,7 @@ SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : k
 
 void SCPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
+    const auto & compartments = ctx.getCompartments();
     auto data = kernel->getKernelStateModel().getParticleData();
     const auto &compartments = ctx.getCompartments();
     for(auto& entry : *data) {
