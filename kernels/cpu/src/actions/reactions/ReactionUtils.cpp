@@ -38,7 +38,7 @@ namespace actions {
 namespace reactions {
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel const *const kernel, double timeStep, bool filterEventsInAdvance, bool approximateRate,
+        CPUKernel *const kernel, double timeStep, bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events) {
     using rdy_particle_t = readdy::model::Particle;
 
@@ -47,7 +47,7 @@ data_t::update_t handleEventsGillespie(
 
     if(!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
-        const auto data = kernel->getKernelStateModel().getParticleData();
+        auto data = kernel->getCPUKernelStateModel().getParticleData();
         /**
          * Handle gathered reaction events
          */

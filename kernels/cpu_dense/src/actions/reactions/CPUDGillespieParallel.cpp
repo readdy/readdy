@@ -90,7 +90,7 @@ void CPUDGillespieParallel::perform() {
     }
 }
 
-CPUDGillespieParallel::CPUDGillespieParallel(const kernel_t *const kernel, double timeStep)
+CPUDGillespieParallel::CPUDGillespieParallel(kernel_t *const kernel, double timeStep)
         : super(timeStep), kernel(kernel), boxes({}) {}
 
 void CPUDGillespieParallel::setupBoxes() {
@@ -154,7 +154,7 @@ void CPUDGillespieParallel::setupBoxes() {
 
 void CPUDGillespieParallel::fillBoxes() {
     std::for_each(boxes.begin(), boxes.end(), [](SlicedBox &box) { box.particleIndices.clear(); });
-    const auto particleData = kernel->getKernelStateModel().getParticleData();
+    const auto particleData = kernel->getCPUDKernelStateModel().getParticleData();
     const auto simBoxSize = kernel->getKernelContext().getBoxSize();
     const auto nBoxes = boxes.size();
     std::size_t idx = 0;
@@ -227,8 +227,8 @@ void CPUDGillespieParallel::handleBoxReactions() {
                     thd::scoped_thread(std::thread(
                             worker, std::ref(boxes[i]),
                             std::ref(kernel->getKernelContext()),
-                            kernel->getKernelStateModel().getParticleData(),
-                            kernel->getKernelStateModel().getNeighborList(),
+                            kernel->getCPUDKernelStateModel().getParticleData(),
+                            kernel->getCPUDKernelStateModel().getNeighborList(),
                             std::move(promise),
                             std::move(promiseParticles)
                     ))
@@ -237,9 +237,9 @@ void CPUDGillespieParallel::handleBoxReactions() {
     }
     {
         //readdy::util::Timer t ("\t fix marked");
-        auto &data = *kernel->getKernelStateModel().getParticleData();
+        auto &data = *kernel->getCPUDKernelStateModel().getParticleData();
         const auto& d2 = kernel->getKernelContext().getDistSquaredFun();
-        auto &neighbor_list = *kernel->getKernelStateModel().getNeighborList();
+        auto &neighbor_list = *kernel->getCPUDKernelStateModel().getNeighborList();
         std::vector<event_t> evilEvents{};
         double alpha = 0;
         long n_local_problematic = 0;

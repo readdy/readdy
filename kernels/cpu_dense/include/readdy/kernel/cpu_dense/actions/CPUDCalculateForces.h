@@ -47,11 +47,11 @@ public:
     CPUDCalculateForces(CPUDKernel *const kernel) : kernel(kernel) {}
 
     virtual void perform() override {
-        kernel->getKernelStateModel().calculateForces();
+        kernel->getCPUDKernelStateModel().calculateForces();
     }
 
 protected:
-    const CPUDKernel *const kernel;
+    CPUDKernel *const kernel;
 };
 }
 }

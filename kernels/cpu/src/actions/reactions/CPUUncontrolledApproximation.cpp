@@ -55,7 +55,7 @@ using entry_type = data_t::Entry;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-CPUUncontrolledApproximation::CPUUncontrolledApproximation(const CPUKernel *const kernel, double timeStep)
+CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kernel, double timeStep)
         : super(timeStep), kernel(kernel) {
 
 }
@@ -63,7 +63,7 @@ CPUUncontrolledApproximation::CPUUncontrolledApproximation(const CPUKernel *cons
 void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const CPUKernel *const kernel,
                 double dt, bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
     std::vector<event_t> eventsUpdate;
-    const auto &data = *kernel->getKernelStateModel().getParticleData();
+    const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
     auto it = begin;
     auto it_nl = nl_begin;
@@ -115,8 +115,8 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
 void CPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
-    auto &data = *kernel->getKernelStateModel().getParticleData();
-    auto &nl = *kernel->getKernelStateModel().getNeighborList();
+    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
 
     // gather events
     std::vector<std::future<std::size_t>> n_eventsFutures;

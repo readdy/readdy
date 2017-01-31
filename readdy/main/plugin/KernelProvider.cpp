@@ -30,20 +30,24 @@
 #include <readdy/common/filesystem.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/plugin/_internal/KernelPluginDecorator.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/common/dll.h>
 
 namespace utl = readdy::util;
 namespace fs = utl::fs;
 namespace readdy {
 namespace plugin {
 
+struct KernelProvider::Impl {
+    std::unordered_map<std::string, std::shared_ptr<readdy::util::dll::shared_library>> libs {};
+};
+
 KernelProvider &KernelProvider::getInstance() {
     static KernelProvider instance;
     return instance;
 }
 
-KernelProvider::KernelProvider() {
+KernelProvider::KernelProvider() : pimpl(std::make_unique<Impl>()){
     const auto path = fs::current_path();
     if(!log::console()) {
         spdlog::set_sync_mode();
@@ -114,16 +118,46 @@ bool KernelProvider::isSharedLibrary(const std::string &path) const {
            && path.find(".a") == std::string::npos;
 }
 
-void KernelProvider::add(const std::string &sharedLib) {
-    using namespace _internal;
-    const auto name = loadKernelName(sharedLib);
-    log::console()->debug("Trying to load kernel with name {}", name);
-    factory.emplace(std::make_pair(name, [sharedLib] { return new KernelPluginDecorator(sharedLib); }));
+const std::string readdy::plugin::KernelProvider::loadKernelName(const std::string &sharedLib) {
+    auto it = pimpl->libs.find(sharedLib);
+    if(it != pimpl->libs.end()) {
+        return it->second->load<const char *()>("name")();
+    } else {
+        auto lib = std::make_shared<readdy::util::dll::shared_library>(sharedLib, RTLD_LAZY | RTLD_GLOBAL);
+        if (!lib->has_symbol("name")) {
+            throw std::invalid_argument("library " + sharedLib + " had no name() symbol");
+        } else {
+            auto fun = lib->load<const char *()>("name");
+            const auto name = fun();
+            pimpl->libs.emplace(sharedLib, std::move(lib));
+            return name;
+        }
+    }
 }
 
-void KernelProvider::add(const std::string name, const std::function<readdy::model::Kernel *()> creator) {
+void KernelProvider::add(const std::string &sharedLib) {
+    const auto name = loadKernelName(sharedLib);
+    log::console()->debug("Trying to load kernel with name {}", name);
+    factory.emplace(std::make_pair(name, [this, sharedLib, name] { // load the library
+        auto& lib = pimpl->libs.at(sharedLib);
+        // check if library has required symbol
+        if (!lib->has_symbol("createKernel")) {
+            log::console()->error("skipping, since the shared library {} had no createKernel symbol", name);
+            throw std::invalid_argument("library " + sharedLib + " had no createKernel symbol.");
+        }
+        // load the kernel
+
+        readdy::model::Kernel* kernel = lib->load<readdy::model::Kernel*()>("createKernel")();
+        log::console()->debug("loaded kernel with name {}", kernel->getName());
+        return kernel;
+    }));
+}
+
+void KernelProvider::add(const std::string name, const std::function<readdy::model::Kernel *()> &creator) {
     PluginProvider::add(name, creator);
 }
+
+KernelProvider::~KernelProvider() = default;
 }
 }
 

@@ -39,14 +39,13 @@ CPUEvaluateCompartments::CPUEvaluateCompartments(CPUKernel *const kernel) : kern
 void CPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &compartments = ctx.getCompartments();
-    for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
+    for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {
         if(!e.is_deactivated()) {
             for (auto i = 0; i < compartments.size(); ++i) {
                 if (compartments[i]->isContained(e.position())) {
                     const auto &conversions = compartments[i]->getConversions();
                     const auto convIt = conversions.find(e.type);
                     if (convIt != conversions.end()) {
-                        // todo IDE complains about const correctness of particleData entry "e"
                         e.type = (*convIt).second;
                     }
                 }

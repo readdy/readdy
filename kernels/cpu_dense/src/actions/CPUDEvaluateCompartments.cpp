@@ -42,7 +42,7 @@ CPUDEvaluateCompartments::CPUDEvaluateCompartments(CPUDKernel *const kernel) : k
 void CPUDEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &compartments = ctx.getCompartments();
-    for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
+    for(auto& e : *kernel->getCPUDKernelStateModel().getParticleData()) {
         for (auto i = 0; i < compartments.size(); ++i) {
             if (compartments[i]->isContained(e.position())) {
                 const auto &conversions = compartments[i]->getConversions();

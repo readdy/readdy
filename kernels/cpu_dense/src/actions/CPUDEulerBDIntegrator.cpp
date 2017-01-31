@@ -42,7 +42,7 @@ namespace rnd = readdy::model::rnd;
 namespace thd = readdy::util::thread;
 
 void CPUDEulerBDIntegrator::perform() {
-    auto& pd = *kernel->getKernelStateModel().getParticleData();
+    auto& pd = *kernel->getCPUDKernelStateModel().getParticleData();
     const auto size = pd.size();
     std::vector<thd::scoped_thread> threads;
     threads.reserve(kernel->getNThreads());

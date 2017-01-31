@@ -135,8 +135,72 @@ Kernel::createDecayReaction(const std::string &name, const std::string &type, co
     return getReactionFactory().createReaction<reactions::Decay>(name, getTypeId(type), rate);
 }
 
-observables::ObservableFactory &Kernel::getObservableFactory() const {
+observables::ObservableFactory &Kernel::getObservableFactoryInternal() const {
     return *pimpl->observableFactory;
+}
+
+const readdy::model::KernelContext &Kernel::getKernelContext() const {
+    return getKernelContextInternal();
+}
+
+readdy::model::KernelContext &Kernel::getKernelContext() {
+    return getKernelContextInternal();
+}
+
+const readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
+    return getKernelStateModelInternal();
+}
+
+readdy::model::KernelStateModel &Kernel::getKernelStateModel() {
+    return getKernelStateModelInternal();
+}
+
+const readdy::model::actions::ActionFactory &Kernel::getActionFactory() const {
+    return getActionFactoryInternal();
+}
+
+readdy::model::actions::ActionFactory &Kernel::getActionFactory() {
+    return getActionFactoryInternal();
+}
+
+const readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() const {
+    return getPotentialFactoryInternal();
+}
+
+readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() {
+    return getPotentialFactoryInternal();
+}
+
+const readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
+    return getReactionFactoryInternal();
+}
+
+readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() {
+    return getReactionFactoryInternal();
+}
+
+const readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() const {
+    return getCompartmentFactoryInternal();
+}
+
+readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() {
+    return getCompartmentFactoryInternal();
+}
+
+const readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() const {
+    return getObservableFactoryInternal();
+}
+
+readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() {
+    return getObservableFactoryInternal();
+}
+
+const readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactory() const {
+    return getTopologyActionFactoryInternal();
+}
+
+readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactory() {
+    return getTopologyActionFactoryInternal();
 }
 
 Kernel &Kernel::operator=(Kernel &&rhs) = default;

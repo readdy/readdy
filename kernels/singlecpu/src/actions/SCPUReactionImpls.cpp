@@ -60,7 +60,7 @@ std::ostream &operator<<(std::ostream &os, const Event &evt) {
 
 using event_t = Event;
 
-SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel const *const kernel, double timeStep)
+SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel *const kernel, double timeStep)
         : readdy::model::actions::reactions::UncontrolledApproximation(timeStep), kernel(kernel) {
 }
 
@@ -80,11 +80,12 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
 
 std::vector<event_t> findEvents(const SCPUKernel *const kernel, double dt, bool approximateRate = true) {
     std::vector<event_t> eventsUpdate;
-    auto& data = *kernel->getKernelStateModel().getParticleData();
+    auto& stateModel = kernel->getSCPUKernelStateModel();
+    auto& data = *stateModel.getParticleData();
     const auto& d2 = kernel->getKernelContext().getDistSquaredFun();
-    auto it = kernel->getKernelStateModel().getParticleData()->begin();
-    auto it_nl = kernel->getKernelStateModel().getNeighborList()->begin();
-    for(; it_nl != kernel->getKernelStateModel().getNeighborList()->end(); ++it_nl) {
+    auto it = stateModel.getParticleData()->begin();
+    auto it_nl = stateModel.getNeighborList()->begin();
+    for(; it_nl != stateModel.getNeighborList()->end(); ++it_nl) {
         const auto& entry = data.entry_at(it_nl->idx1);
         if (!entry.is_deactivated()) {
             // order 1
@@ -127,8 +128,9 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, double dt, bool 
 void SCPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
-    auto &data = *kernel->getKernelStateModel().getParticleData();
-    auto &nl = *kernel->getKernelStateModel().getNeighborList();
+    SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
+    auto &data = *stateModel.getParticleData();
+    auto &nl = *stateModel.getNeighborList();
     auto events = findEvents(kernel, timeStep, true);
 
 
@@ -230,7 +232,7 @@ void gatherEvents(SCPUKernel const *const kernel,
 }
 
 data_t::update_t handleEventsGillespie(
-        SCPUKernel const *const kernel, double timeStep,
+        SCPUKernel *const kernel, double timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events) {
     data_t::entries_update_t newParticles{};
@@ -239,7 +241,7 @@ data_t::update_t handleEventsGillespie(
     if(!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
         const auto& fixPos = ctx.getFixPositionFun();
-        const auto data = kernel->getKernelStateModel().getParticleData();
+        const auto data = kernel->getSCPUKernelStateModel().getParticleData();
         /**
          * Handle gathered reaction events
          */
@@ -331,10 +333,11 @@ data_t::update_t handleEventsGillespie(
 
 void SCPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
-    auto data = kernel->getKernelStateModel().getParticleData();
+    auto &stateModel = kernel->getSCPUKernelStateModel();
+    auto data = stateModel.getParticleData();
     const auto &dist = ctx.getDistSquaredFun();
     const auto &fixPos = ctx.getFixPositionFun();
-    const auto nl = kernel->getKernelStateModel().getNeighborList();
+    const auto nl = stateModel.getNeighborList();
 
     double alpha = 0.0;
     std::vector<event_t> events;

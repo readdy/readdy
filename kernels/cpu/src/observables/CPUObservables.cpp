@@ -49,11 +49,12 @@ CPUPositions::CPUPositions(CPUKernel *const kernel, unsigned int stride,
 
 void CPUPositions::evaluate() {
     result.clear();
-    const auto &pd = kernel->getKernelStateModel().getParticleData();
+    auto &stateModel = kernel->getCPUKernelStateModel();
+    const auto &pd = stateModel.getParticleData();
     if (typesToCount.empty()) {
-        result = kernel->getKernelStateModel().getParticlePositions();
+        result = stateModel.getParticlePositions();
     } else {
-        for (const auto &e : *kernel->getKernelStateModel().getParticleData()) {
+        for (const auto &e : *stateModel.getParticleData()) {
             if (!e.is_deactivated() &&
                 std::find(typesToCount.begin(), typesToCount.end(), e.type) != typesToCount.end()) {
                 result.push_back(e.position());
@@ -79,7 +80,7 @@ void CPUHistogramAlongAxis::evaluate() {
     const auto typesToCount = this->typesToCount;
     const auto resultSize = result.size();
     const auto axis = this->axis;
-    const auto data = kernel->getKernelStateModel().getParticleData();
+    const auto data = kernel->getCPUKernelStateModel().getParticleData();
 
     std::vector<std::future<result_t>> updates;
     updates.reserve(kernel->getNThreads());
@@ -136,10 +137,10 @@ CPUNParticles::CPUNParticles(CPUKernel *const kernel, unsigned int stride, std::
 void CPUNParticles::evaluate() {
     std::vector<unsigned long> resultVec = {};
     if (typesToCount.empty()) {
-        resultVec.push_back(kernel->getKernelStateModel().getParticleData()->size());
+        resultVec.push_back(kernel->getCPUKernelStateModel().getParticleData()->size());
     } else {
         resultVec.resize(typesToCount.size());
-        const auto &pd = kernel->getKernelStateModel().getParticleData();
+        const auto &pd = kernel->getCPUKernelStateModel().getParticleData();
         for (const auto &e : *pd) {
             if (!e.is_deactivated()) {
                 auto typeIt = std::find(typesToCount.begin(), typesToCount.end(), e.type);
@@ -158,7 +159,7 @@ CPUForces::CPUForces(CPUKernel *const kernel, unsigned int stride, std::vector<s
 
 void CPUForces::evaluate() {
     result.clear();
-    const auto &pd = kernel->getKernelStateModel().getParticleData();
+    const auto &pd = kernel->getCPUKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
         result.reserve(pd->size());
     }
@@ -189,7 +190,7 @@ void CPUParticles::evaluate() {
     resultTypes.clear();
     resultIds.clear();
     resultPositions.clear();
-    const auto &particleData = kernel->getKernelStateModel().getParticleData();
+    const auto &particleData = kernel->getCPUKernelStateModel().getParticleData();
     resultTypes.reserve(particleData->size());
     resultIds.reserve(particleData->size());
     resultPositions.reserve(particleData->size());

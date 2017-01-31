@@ -50,11 +50,11 @@ public:
         switch (operation) {
             case create:
                 kernel->getKernelStateModel().updateNeighborList();
-                if(skinSize >= 0) kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
+                if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->setSkinSize(skinSize);
                 break;
             case clear:
                 kernel->getKernelStateModel().clearNeighborList();
-                if(skinSize >= 0) kernel->getKernelStateModel().getNeighborList()->setSkinSize(skinSize);
+                if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->setSkinSize(skinSize);
                 break;
         }
 

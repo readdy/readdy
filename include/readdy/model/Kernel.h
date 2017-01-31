@@ -53,7 +53,6 @@
 
 namespace readdy {
 namespace model {
-
 namespace detail {
 template<typename T, typename... Args>
 struct get_reaction_dispatcher;
@@ -126,8 +125,7 @@ public:
     virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const observables::observable_type &observable, unsigned int stride);
 
-    virtual readdy::model::actions::ActionFactory &getActionFactory() const = 0;
-
+    
     /**
      * Returns a vector containing all available program names for this specific kernel instance.
      *
@@ -143,15 +141,6 @@ public:
      */
     virtual void addParticle(const std::string &type, const Vec3 &pos);
 
-    /**
-     * @todo implement this properly
-     */
-    virtual readdy::model::KernelStateModel &getKernelStateModel() const = 0;
-
-    /**
-     * @todo implement & document this properly
-     */
-    virtual readdy::model::KernelContext &getKernelContext() const = 0;
 
     virtual std::vector<std::string> getAvailablePotentials() const;
 
@@ -206,19 +195,57 @@ public:
     std::unique_ptr<reactions::Reaction<1>>
     createDecayReaction(const std::string &name, const std::string &type, const double rate) const;
 
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const = 0;
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const = 0;
-
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const = 0;
-
-    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const;
-
-    virtual readdy::model::top::TopologyActionFactory * getTopologyActionFactory() const = 0;
-
     unsigned int getTypeId(const std::string &) const;
 
+    /*
+     * 
+     * Accessors
+     * 
+     */
+
+    const readdy::model::KernelStateModel &getKernelStateModel() const;
+    readdy::model::KernelStateModel &getKernelStateModel();
+    
+    const readdy::model::KernelContext &getKernelContext() const;
+    readdy::model::KernelContext &getKernelContext();
+
+    const readdy::model::actions::ActionFactory &getActionFactory() const;
+    readdy::model::actions::ActionFactory &getActionFactory();
+
+    const readdy::model::potentials::PotentialFactory &getPotentialFactory() const;
+    readdy::model::potentials::PotentialFactory &getPotentialFactory();
+
+    const readdy::model::reactions::ReactionFactory &getReactionFactory() const;
+    readdy::model::reactions::ReactionFactory &getReactionFactory();
+
+    const readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const;
+    readdy::model::compartments::CompartmentFactory &getCompartmentFactory();
+
+    const readdy::model::observables::ObservableFactory &getObservableFactory() const;
+    readdy::model::observables::ObservableFactory &getObservableFactory();
+
+    const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const;
+    readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
+
 protected:
+
+    virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const = 0;
+
+    virtual readdy::model::KernelContext &getKernelContextInternal() const = 0;
+
+    virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
+    
+    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const = 0;
+
+    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const = 0;
+
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const = 0;
+
+    virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const;
+
+    virtual readdy::model::top::TopologyActionFactory * getTopologyActionFactoryInternal() const = 0;
+
+
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 };

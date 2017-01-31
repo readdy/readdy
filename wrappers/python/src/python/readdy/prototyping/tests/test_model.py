@@ -34,7 +34,7 @@ class TestModel(unittest.TestCase):
         self.kernel = pr.SingleCPUKernel()
         self.ctx = self.kernel.get_kernel_context()
         self.model = self.kernel.get_kernel_state_model()
-        self.progs = self.kernel.get_program_factory()
+        self.progs = self.kernel.get_action_factory()
         self.pots = self.kernel.get_potential_factory()
 
     def test_kernel_context_kbt(self):

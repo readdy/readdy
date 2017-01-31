@@ -71,9 +71,11 @@ public:
 
     virtual double getEnergy() const override;
 
-    data_t *const getParticleData() const;
+    data_t const*const getParticleData() const;
+    data_t *const getParticleData();
 
-    model::CPUNeighborList *const getNeighborList() const;
+    model::CPUNeighborList const*const getNeighborList() const;
+    model::CPUNeighborList *const getNeighborList();
 
     virtual void clearNeighborList() override;
 

@@ -56,8 +56,7 @@ protected:
     /**
      * The destructor of KernelProvider.
      */
-    virtual ~KernelProvider() {
-    }
+    virtual ~KernelProvider();
 
     /**
      * A protected method that determines if a path points to a shared library.
@@ -88,7 +87,7 @@ public:
      * @param kernel the kernel that should be moved
      * @todo update docs
      */
-    void add(const std::string name, const std::function<readdy::model::Kernel *()> creator);
+    void add(const std::string name, const std::function<readdy::model::Kernel *()> &creator);
 
     /**
      * Method that allows to add a kernel to the KernelProvider by providing a path to a shared lib (containing an implementation of a kernel).
@@ -115,11 +114,17 @@ public:
     static const std::string getDefaultKernelDirectory();
 
 private:
+    const std::string loadKernelName(const std::string &sharedLib);
+
+
     // prevent that copies can be created
     KernelProvider(KernelProvider const &) = delete;
 
     // prevent that copies can be created
     void operator=(KernelProvider const &) = delete;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 
 };
 }

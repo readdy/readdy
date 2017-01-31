@@ -49,10 +49,11 @@ public:
 
     virtual void evaluate() override {
         result.clear();
-        const auto &pd = kernel->getKernelStateModel().getParticleData();
+        auto& stateModel = kernel->getSCPUKernelStateModel();
+        const auto &pd = stateModel.getParticleData();
         auto it = pd->cbegin();
         if (typesToCount.empty()) {
-            result = kernel->getKernelStateModel().getParticlePositions();
+            result = stateModel.getParticlePositions();
         } else {
             // only get positions of typesToCount
             while (it != pd->cend()) {
@@ -82,7 +83,7 @@ public:
         resultTypes.clear();
         resultIds.clear();
         resultPositions.clear();
-        const auto &particleData = kernel->getKernelStateModel().getParticleData();
+        const auto &particleData = kernel->getSCPUKernelStateModel().getParticleData();
         auto it = particleData->cbegin();
         while(it != particleData->cend()) {
             if(!it->is_deactivated()) {
@@ -113,7 +114,7 @@ public:
     virtual void evaluate() override {
         std::fill(result.begin(), result.end(), 0);
 
-        const auto &model = kernel->getKernelStateModel();
+        const auto &model = kernel->getSCPUKernelStateModel();
         const auto data = model.getParticleData();
 
         auto it = data->cbegin();
@@ -146,7 +147,7 @@ public:
 
     virtual void evaluate() override {
         std::vector<unsigned long> resultVec = {};
-        const auto &pd = singleCPUKernel->getKernelStateModel().getParticleData();
+        const auto &pd = singleCPUKernel->getSCPUKernelStateModel().getParticleData();
 
         if (typesToCount.empty()) {
             resultVec.push_back(pd->size() - pd->n_deactivated());
@@ -184,7 +185,7 @@ public:
 
     virtual void evaluate() override {
         result.clear();
-        const auto &pd = kernel->getKernelStateModel().getParticleData();
+        const auto &pd = kernel->getSCPUKernelStateModel().getParticleData();
 
         auto it = pd->cbegin();
         if (typesToCount.empty()) {

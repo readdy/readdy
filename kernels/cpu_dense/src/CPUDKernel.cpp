@@ -54,9 +54,6 @@ readdy::model::Kernel* CPUDKernel::create() {
     return new CPUDKernel();
 }
 
-readdy::model::actions::ActionFactory &CPUDKernel::getActionFactory() const {
-    return *pimpl->actionFactory;
-}
 
 CPUDKernel::CPUDKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()) {
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
@@ -69,27 +66,32 @@ CPUDKernel::CPUDKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<I
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
 }
 
-CPUDStateModel &CPUDKernel::getKernelStateModel() const {
+readdy::model::actions::ActionFactory &CPUDKernel::getActionFactoryInternal() const {
+    return *pimpl->actionFactory;
+}
+
+
+CPUDStateModel &CPUDKernel::getKernelStateModelInternal() const {
     return *pimpl->stateModel;
 }
 
-readdy::model::KernelContext &CPUDKernel::getKernelContext() const {
+readdy::model::KernelContext &CPUDKernel::getKernelContextInternal() const {
     return *pimpl->context;
 }
 
-readdy::model::potentials::PotentialFactory &CPUDKernel::getPotentialFactory() const {
+readdy::model::potentials::PotentialFactory &CPUDKernel::getPotentialFactoryInternal() const {
     return *pimpl->potentialFactory;
 }
 
-readdy::model::reactions::ReactionFactory &CPUDKernel::getReactionFactory() const {
+readdy::model::reactions::ReactionFactory &CPUDKernel::getReactionFactoryInternal() const {
     return *pimpl->reactionFactory;
 }
 
-readdy::model::observables::ObservableFactory &CPUDKernel::getObservableFactory() const {
+readdy::model::observables::ObservableFactory &CPUDKernel::getObservableFactoryInternal() const {
     return *pimpl->observableFactory;
 }
 
-readdy::model::compartments::CompartmentFactory &CPUDKernel::getCompartmentFactory() const {
+readdy::model::compartments::CompartmentFactory &CPUDKernel::getCompartmentFactoryInternal() const {
     return *pimpl->compartmentFactory;
 }
 
@@ -101,8 +103,16 @@ void CPUDKernel::setNThreads(readdy::util::thread::Config::n_threads_t n) {
     pimpl->config->setNThreads(n);
 }
 
-readdy::model::top::TopologyActionFactory *CPUDKernel::getTopologyActionFactory() const {
+readdy::model::top::TopologyActionFactory *CPUDKernel::getTopologyActionFactoryInternal() const {
     return nullptr;
+}
+
+const CPUDStateModel &CPUDKernel::getCPUDKernelStateModel() const {
+    return getKernelStateModelInternal();
+}
+
+CPUDStateModel &CPUDKernel::getCPUDKernelStateModel() {
+    return getKernelStateModelInternal();
 }
 
 CPUDKernel::~CPUDKernel() = default;

@@ -47,7 +47,7 @@ namespace reactions {
 class CPUGillespieParallel : public readdy::model::actions::reactions::GillespieParallel {
     using super = readdy::model::actions::reactions::GillespieParallel;
 public:
-    CPUGillespieParallel(kernel_t const *const kernel, double timeStep);
+    CPUGillespieParallel(kernel_t *const kernel, double timeStep);
 
     ~CPUGillespieParallel();
 
@@ -68,7 +68,7 @@ public:
     void setApproximateRate(bool approximateRate);
 
 protected:
-    kernel_t const *const kernel;
+    kernel_t *const kernel;
     double maxReactionRadius = 0.0;
     double boxWidth = 0.0;
     unsigned int longestAxis;
@@ -122,7 +122,7 @@ protected:
     virtual void handleBoxReactions();
 
     void findProblematicParticles(data_t::index_t entry, const SlicedBox &box, ctx_t ctx,
-                                  const data_t& data, nl_t nl, std::set<data_t::index_t> &problematic,
+                                  const data_t& data, nl_t* nl, std::set<data_t::index_t> &problematic,
                                   const readdy::model::KernelContext::dist_squared_fun&) const;
 
 };

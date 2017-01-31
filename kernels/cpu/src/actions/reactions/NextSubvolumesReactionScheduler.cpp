@@ -117,7 +117,7 @@ void CPUNextSubvolumes::setUpGrid() {
 
 void CPUNextSubvolumes::assignParticles() {
     // todo this can be easily parallelized
-    const auto data = kernel->getKernelStateModel().getParticleData();
+    const auto data = kernel->getCPUKernelStateModel().getParticleData();
     std::for_each(cells.begin(), cells.end(), [](GridCell &cell) {
         cell.particles.clear();
         cell.typeCounts.clear();
@@ -141,8 +141,8 @@ void CPUNextSubvolumes::assignParticles() {
 void CPUNextSubvolumes::evaluateReactions() {
     std::vector<GridCell *>::size_type n_cells_done = 0;
     const auto& ctx = kernel->getKernelContext();
-    auto data = kernel->getKernelStateModel().getParticleData();
-    auto neighbor_list = kernel->getKernelStateModel().getNeighborList();
+    auto data = kernel->getCPUKernelStateModel().getParticleData();
+    auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
 
     const auto comparator = [](const GridCell *c1, const GridCell *c2) {
         return c1->cellRate < c2->cellRate;

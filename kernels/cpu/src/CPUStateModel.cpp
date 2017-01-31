@@ -213,11 +213,15 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context, readdy
     pimpl->neighborList = std::make_unique<model::CPUNeighborList>(context, *getParticleData(), config);
 }
 
-CPUStateModel::data_t *const CPUStateModel::getParticleData() const {
+CPUStateModel::data_t const*const CPUStateModel::getParticleData() const {
     return &pimpl->data<false>();
 }
 
-model::CPUNeighborList *const CPUStateModel::getNeighborList() const {
+CPUStateModel::data_t *const CPUStateModel::getParticleData() {
+    return &pimpl->data<false>();
+}
+
+model::CPUNeighborList const*const CPUStateModel::getNeighborList() const {
     return pimpl->neighborList.get();
 }
 
@@ -227,6 +231,10 @@ void CPUStateModel::clearNeighborList() {
 
 void CPUStateModel::removeAllParticles() {
     pimpl->data<false>().clear();
+}
+
+model::CPUNeighborList *const CPUStateModel::getNeighborList() {
+    return pimpl->neighborList.get();
 }
 
 CPUStateModel::~CPUStateModel() = default;

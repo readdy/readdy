@@ -89,7 +89,7 @@ void CPUGillespieParallel::perform() {
     }
 }
 
-CPUGillespieParallel::CPUGillespieParallel(const kernel_t *const kernel, double timeStep)
+CPUGillespieParallel::CPUGillespieParallel(kernel_t *const kernel, double timeStep)
         : super(timeStep), kernel(kernel), boxes({}) {}
 
 void CPUGillespieParallel::setupBoxes() {
@@ -153,7 +153,7 @@ void CPUGillespieParallel::setupBoxes() {
 
 void CPUGillespieParallel::fillBoxes() {
     std::for_each(boxes.begin(), boxes.end(), [](SlicedBox &box) { box.particleIndices.clear(); });
-    const auto particleData = kernel->getKernelStateModel().getParticleData();
+    const auto particleData = kernel->getCPUKernelStateModel().getParticleData();
     const auto simBoxSize = kernel->getKernelContext().getBoxSize();
     const auto nBoxes = boxes.size();
     std::size_t idx = 0;
@@ -180,7 +180,7 @@ void CPUGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<data_t::index_t>>;
     using promise_new_particles_t = std::promise<data_t::update_t>;
 
-    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t *data, nl_t nl, promise_t update,
+    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t *data, nl_t * nl, promise_t update,
                          promise_new_particles_t newParticles) {
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
@@ -215,6 +215,7 @@ void CPUGillespieParallel::handleBoxReactions() {
 
     std::vector<std::future<std::set<data_t::index_t>>> updates;
     std::vector<std::future<data_t::update_t>> newParticles;
+    auto &stateModel = kernel->getCPUKernelStateModel();
     {
         //readdy::util::Timer t ("\t run threads");
         std::vector<thd::scoped_thread> threads;
@@ -228,8 +229,8 @@ void CPUGillespieParallel::handleBoxReactions() {
                     thd::scoped_thread(std::thread(
                             worker, std::ref(boxes[i]),
                             std::ref(kernel->getKernelContext()),
-                            kernel->getKernelStateModel().getParticleData(),
-                            kernel->getKernelStateModel().getNeighborList(),
+                            stateModel.getParticleData(),
+                            stateModel.getNeighborList(),
                             std::move(promise),
                             std::move(promiseParticles)
                     ))
@@ -238,16 +239,16 @@ void CPUGillespieParallel::handleBoxReactions() {
     }
     {
         //readdy::util::Timer t ("\t fix marked");
-        auto &data = *kernel->getKernelStateModel().getParticleData();
+        auto &data = *stateModel.getParticleData();
         const auto& d2 = kernel->getKernelContext().getDistSquaredFun();
-        auto &neighbor_list = *kernel->getKernelStateModel().getNeighborList();
+        auto neighbor_list = stateModel.getNeighborList();
         std::vector<event_t> evilEvents{};
         double alpha = 0;
         long n_local_problematic = 0;
         for (auto&& update : updates) {
             auto local_problematic = std::move(update.get());
             n_local_problematic += local_problematic.size();
-            gatherEvents(kernel, std::move(local_problematic), &neighbor_list, data, alpha, evilEvents, d2);
+            gatherEvents(kernel, std::move(local_problematic), neighbor_list, data, alpha, evilEvents, d2);
         }
         //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
         auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(evilEvents));
@@ -255,16 +256,16 @@ void CPUGillespieParallel::handleBoxReactions() {
 
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         for (auto &&future : newParticles) {
-            neighbor_list.updateData(std::move(future.get()));
+            neighbor_list->updateData(std::move(future.get()));
         }
-        neighbor_list.updateData(std::move(newProblemParticles));
+        neighbor_list->updateData(std::move(newProblemParticles));
     }
 
 }
 
 void CPUGillespieParallel::findProblematicParticles(
         data_t::index_t index, const SlicedBox &box, ctx_t ctx,
-        const data_t &data, nl_t nl, std::set<data_t::index_t> &problematic,
+        const data_t &data, nl_t* nl, std::set<data_t::index_t> &problematic,
         const readdy::model::KernelContext::dist_squared_fun& d2
 ) const {
     if (problematic.find(index) != problematic.end()) {

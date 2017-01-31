@@ -67,7 +67,7 @@ class TestPrograms(unittest.TestCase):
     def test_factory_programs(self):
         kernel = pr.SingleCPUKernel()
         kernel.get_kernel_context().register_particle_type("A", 1.0, 1.0)
-        factory = kernel.get_program_factory()
+        factory = kernel.get_action_factory()
 
         add_particles = factory.create_add_particles([pr.Particle(0, 0, 0, 0), pr.Particle(1, 1, 1, 0)])
         integrator = factory.create_euler_integrator(1)

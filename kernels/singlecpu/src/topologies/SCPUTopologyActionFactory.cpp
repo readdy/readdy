@@ -47,7 +47,7 @@ namespace top {
 std::unique_ptr<calc_harmonic_bond>
 SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_bond *const potential) {
     return std::make_unique<SCPUCalculateHarmonicBondPotential>(
-            &kernel->getKernelContext(), kernel->getKernelStateModel().getParticleData(), potential
+            &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
     );
 }
 

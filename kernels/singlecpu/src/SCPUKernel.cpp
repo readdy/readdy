@@ -70,11 +70,11 @@ std::unique_ptr<SCPUKernel> SCPUKernel::create() {
  */
 SCPUKernel::~SCPUKernel() = default;
 
-SCPUStateModel &SCPUKernel::getKernelStateModel() const {
+SCPUStateModel &SCPUKernel::getKernelStateModelInternal() const {
     return *pimpl->model;
 }
 
-readdy::model::KernelContext &SCPUKernel::getKernelContext() const {
+readdy::model::KernelContext &SCPUKernel::getKernelContextInternal() const {
     return *pimpl->context;
 }
 
@@ -82,30 +82,38 @@ std::vector<std::string> SCPUKernel::getAvailablePotentials() const {
     return pimpl->potentials->getAvailablePotentials();
 }
 
-readdy::model::potentials::PotentialFactory &SCPUKernel::getPotentialFactory() const {
+readdy::model::potentials::PotentialFactory &SCPUKernel::getPotentialFactoryInternal() const {
     return *pimpl->potentials;
 }
 
-readdy::model::actions::ActionFactory &SCPUKernel::getActionFactory() const {
+readdy::model::actions::ActionFactory &SCPUKernel::getActionFactoryInternal() const {
     return *pimpl->actionFactory;
 }
 
-readdy::model::reactions::ReactionFactory &SCPUKernel::getReactionFactory() const {
+readdy::model::reactions::ReactionFactory &SCPUKernel::getReactionFactoryInternal() const {
     return *pimpl->reactions;
 }
 
-readdy::model::observables::ObservableFactory &SCPUKernel::getObservableFactory() const {
+readdy::model::observables::ObservableFactory &SCPUKernel::getObservableFactoryInternal() const {
     return *pimpl->observables;
 }
 
 readdy::model::compartments::CompartmentFactory &SCPUKernel::getCompartmentFactory() const {
     return *pimpl->compartmentFactory;
 }
-readdy::model::top::TopologyActionFactory *SCPUKernel::getTopologyActionFactory() const {
+readdy::model::top::TopologyActionFactory *SCPUKernel::getTopologyActionFactoryInternal() const {
     return pimpl->topologyActionFactory.get();
 }
-readdy::model::compartments::CompartmentFactory &SCPUKernel::getCompartmentFactory() const {
+readdy::model::compartments::CompartmentFactory &SCPUKernel::getCompartmentFactoryInternal() const {
     return *pimpl->compartmentFactory;
+}
+
+const SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() const {
+    return getKernelStateModelInternal();
+}
+
+SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() {
+    getKernelStateModelInternal();
 }
 
 SCPUKernel &SCPUKernel::operator=(SCPUKernel &&rhs) = default;
