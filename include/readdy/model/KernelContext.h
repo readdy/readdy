@@ -63,6 +63,17 @@ public:
     UnknownParticleType(const std::string &__arg) : runtime_error(__arg) {}
 };
 
+struct ParticleTypeInfo {
+    std::string name;
+    double diffusionConstant;
+    double radius;
+    readdy::model::Particle::flavor_t flavor;
+    readdy::model::Particle::type_type typeId;
+
+    ParticleTypeInfo(const std::string &name, const double diffusionConstant, const double radius,
+                     const Particle::flavor_t flavor, const Particle::type_type typeId);
+};
+
 class KernelContext {
     using particle_t = readdy::model::Particle;
 
@@ -125,7 +136,11 @@ public:
 
     const shortest_dist_fun &getShortestDifferenceFun() const;
 
-    void registerParticleType(const std::string &name, const double diffusionConst, const double radius);
+    void registerParticleType(const std::string &name, const double diffusionConst, const double radius,
+                              const readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
+
+    const ParticleTypeInfo& getParticleTypeInfo(const std::string& name) const;
+    const ParticleTypeInfo& getParticleTypeInfo(const particle_t::type_type type) const;
 
     double getDiffusionConstant(const std::string &particleType) const;
 

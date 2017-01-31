@@ -42,11 +42,9 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-class CalculateHarmonicBondPotential : public TopologyAction {
+class CalculateHarmonicBondPotential : public EvaluatePotentialAction {
 public:
-    CalculateHarmonicBondPotential(const KernelContext *const context) : TopologyAction(context) {}
-
-    virtual double calculateForcesAndEnergy() = 0;
+    CalculateHarmonicBondPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
 };
 
 NAMESPACE_END(top)

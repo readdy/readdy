@@ -65,8 +65,6 @@ public:
     virtual void removeAllParticles() = 0;
 
     virtual double getEnergy() const = 0;
-
-protected:
 };
 
 }

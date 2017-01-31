@@ -34,6 +34,7 @@
 #define READDY_MAIN_TOPOLOGYPOTENTIAL_H
 
 #include <readdy/common/macros.h>
+#include <readdy/model/topologies/actions/TopologyAction.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -46,6 +47,8 @@ public:
     TopologyPotential(Topology *const topology);
 
     Topology *const getTopology() const;
+
+    virtual std::unique_ptr<TopologyAction> createForceAndEnergyAction() = 0;
 
 protected:
     Topology *const topology;

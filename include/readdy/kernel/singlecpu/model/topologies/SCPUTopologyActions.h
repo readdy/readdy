@@ -55,14 +55,14 @@ public:
                                        const readdy::model::top::HarmonicBondPotential *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-    virtual double calculateForcesAndEnergy() override {
+    virtual double perform() override {
         readdy::model::Vec3::entry_t energy = 0;
-        const auto& mapping = potential->getTopology()->getParticles();
+        const auto& particleIndices = potential->getTopology()->getParticles();
         const auto& d = context->getShortestDifferenceFun();
         for(const auto& bond : potential->getBonds()) {
             readdy::model::Vec3 forceUpdate{0, 0, 0};
-            auto& e1 = data->entry_at(mapping.at(bond.idx1));
-            auto& e2 = data->entry_at(mapping.at(bond.idx2));
+            auto& e1 = data->entry_at(particleIndices.at(bond.idx1));
+            auto& e2 = data->entry_at(particleIndices.at(bond.idx2));
             const auto x_ij = d(e1.position(), e2.position());
             potential->calculateForce(forceUpdate, x_ij, bond);
             e1.force += forceUpdate;

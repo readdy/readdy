@@ -47,6 +47,19 @@ Topology::particles_t::size_type Topology::getNParticles() const {
 const Topology::particles_t &Topology::getParticles() const {
     return particles;
 }
+
+const std::vector<std::unique_ptr<BondedPotential>> &Topology::getBondedPotentials() const {
+    return bondedPotentials;
+}
+
+const std::vector<std::unique_ptr<AnglePotential>> &Topology::getAnglePotentials() const {
+    return anglePotentials;
+}
+
+const std::vector<std::unique_ptr<DihedralPotential>> &Topology::getDihedralPotentials() const {
+    return dihedralPotentials;
+}
+
 }
 }
 }

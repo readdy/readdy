@@ -67,11 +67,17 @@ public:
 
     const particles_t &getParticles() const;
 
+    const std::vector<std::unique_ptr<BondedPotential>> &getBondedPotentials() const;
+
+    const std::vector<std::unique_ptr<AnglePotential>> &getAnglePotentials() const;
+
+    const std::vector<std::unique_ptr<DihedralPotential>> &getDihedralPotentials() const;
+
 private:
     particles_t particles;
-    std::vector<std::unique_ptr<BondedPotential>> bonds;
-    std::vector<std::unique_ptr<AnglePotential>> angles;
-    std::vector<std::unique_ptr<DihedralPotential>> dihedrals;
+    std::vector<std::unique_ptr<BondedPotential>> bondedPotentials;
+    std::vector<std::unique_ptr<AnglePotential>> anglePotentials;
+    std::vector<std::unique_ptr<DihedralPotential>> dihedralPotentials;
 };
 
 NAMESPACE_END(top)

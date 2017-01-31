@@ -41,11 +41,11 @@ struct KernelContext::Impl {
 
     particle_t::type_type typeCounter = 0;
     std::unordered_map<std::string, particle_t::type_type> typeMapping;
+    std::unordered_map<particle_t::type_type, ParticleTypeInfo> particleInfo;
+
     double kBT = 1;
     std::array<double, 3> box_size{{1, 1, 1}};
     std::array<bool, 3> periodic_boundary{{true, true, true}};
-    std::unordered_map<particle_t::type_type, double> diffusionConstants{};
-    std::unordered_map<particle_t::type_type, double> particleRadii{};
 
     std::function<void(Vec3 &)> fixPositionFun = [](
             Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, 1., 1., 1.); };
@@ -184,11 +184,11 @@ const std::array<bool, 3> &KernelContext::getPeriodicBoundary() const {
     return pimpl->periodic_boundary;
 }
 
-void KernelContext::registerParticleType(const std::string &name, const double diffusionConst, const double radius) {
+void KernelContext::registerParticleType(const std::string &name, const double diffusionConst, const double radius,
+                                         const readdy::model::Particle::flavor_t flavor) {
     particle_t::type_type t_id = (pimpl->typeCounter)++;
     pimpl->typeMapping.emplace(name, t_id);
-    pimpl->diffusionConstants.emplace(t_id, diffusionConst);
-    pimpl->particleRadii.emplace(t_id, radius);
+    pimpl->particleInfo.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, radius, flavor, t_id}));
 }
 
 double KernelContext::getDiffusionConstant(const std::string &particleType) const {
@@ -196,7 +196,7 @@ double KernelContext::getDiffusionConstant(const std::string &particleType) cons
 }
 
 double KernelContext::getDiffusionConstant(particle_t::type_type particleType) const {
-    return pimpl->diffusionConstants.at(particleType);
+    return pimpl->particleInfo.at(particleType).diffusionConstant;
 }
 
 particle_t::type_type KernelContext::getParticleTypeID(const std::string &name) const {
@@ -208,7 +208,7 @@ double KernelContext::getParticleRadius(const std::string &particleType) const {
 }
 
 double KernelContext::getParticleRadius(const particle_t::type_type type) const {
-    return pimpl->particleRadii.at(type);
+    return pimpl->particleInfo.at(type).radius;
 }
 
 const std::vector<potentials::PotentialOrder2 *> &
@@ -505,11 +505,23 @@ const KernelContext::compartment_registry &KernelContext::getCompartments() cons
     return *compartmentRegistry;
 }
 
+const ParticleTypeInfo &KernelContext::getParticleTypeInfo(const std::string &name) const {
+    return getParticleTypeInfo(pimpl->typeMapping.at(name));
+}
+
+const ParticleTypeInfo &KernelContext::getParticleTypeInfo(const particle_t::type_type type) const {
+    return pimpl->particleInfo.at(type);
+}
+
 KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 
 KernelContext::KernelContext(KernelContext &&rhs) = default;
 
 KernelContext::~KernelContext() = default;
+
+ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const double diffusionConstant, const double radius,
+                                   const Particle::flavor_t flavor, const Particle::type_type typeId)
+        : name(name), diffusionConstant(diffusionConstant), radius(radius), flavor(flavor), typeId(typeId) {}
 }
 }
 

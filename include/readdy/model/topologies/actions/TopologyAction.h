@@ -49,6 +49,13 @@ protected:
     const KernelContext* const context;
 };
 
+class EvaluatePotentialAction : public TopologyAction {
+public:
+    EvaluatePotentialAction(const KernelContext *const context) : TopologyAction(context) {}
+
+    virtual double perform() = 0;
+};
+
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
