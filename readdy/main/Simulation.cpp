@@ -111,8 +111,7 @@ Simulation::particle_t::type_type
 Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->getKernelContext();
-    context.setDiffusionConstant(name, diffusionCoefficient);
-    context.setParticleRadius(name, radius);
+    context.registerParticleType(name, diffusionCoefficient, radius);
     return context.getParticleTypeID(name);
 }
 
@@ -291,6 +290,19 @@ Simulation::recordTrajectory(const std::string &fileName, const unsigned int str
 void Simulation::closeTrajectoryFile() {
     deregisterObservable(pimpl->trajectoryFileId);
     pimpl->trajectoryFile.reset();
+}
+
+const short Simulation::registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
+                                                  const model::Vec3 &origin, const double radius, const bool largerOrLess) {
+    ensureKernelSelected();
+    return getSelectedKernel()->registerCompartment<model::compartments::Sphere>(conversionsMap, name, origin, radius, largerOrLess);
+}
+
+const short Simulation::registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
+                                                 const model::Vec3 &normalCoefficients, const double distanceFromPlane, const bool largerOrLess) {
+    ensureKernelSelected();
+    return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name, normalCoefficients, distanceFromPlane,
+                                                                                largerOrLess);
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};

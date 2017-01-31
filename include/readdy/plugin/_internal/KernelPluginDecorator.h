@@ -62,6 +62,8 @@ public:
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
 
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
+
     virtual readdy::signals::scoped_connection
     connectObservable(model::observables::ObservableBase *const observable) override;
 

@@ -20,61 +20,37 @@
  ********************************************************************/
 
 
-//
-// Created by clonker on 07.03.16.
-//
+/**
+ * @file Compartments.h
+ * @brief Header file of CPU program Compartments
+ * @author chrisfroe
+ * @date 18.10.16
+ */
 
-#ifndef READDY_MAIN_SINGLECPUKERNEL_H
-#define READDY_MAIN_SINGLECPUKERNEL_H
+#ifndef READDY_CPUKERNEL_COMPARTMENTS_H
+#define READDY_CPUKERNEL_COMPARTMENTS_H
 
-#include <readdy/model/RandomProvider.h>
-#include <readdy/model/Kernel.h>
-#include <readdy/kernel/singlecpu/SCPUStateModel.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
+#include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
 namespace kernel {
-namespace scpu {
+namespace cpu {
+namespace actions {
 
-class SCPUKernel : public readdy::model::Kernel {
+class CPUEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
+    CPUEvaluateCompartments(CPUKernel *const kernel);
 
-    static const std::string name;
+    virtual void perform() override;
 
-    SCPUKernel();
-
-    ~SCPUKernel();
-
-    // move
-    SCPUKernel(SCPUKernel &&rhs);
-
-    SCPUKernel &operator=(SCPUKernel &&rhs);
-
-    // factory method
-    static std::unique_ptr<SCPUKernel> create();
-
-    virtual SCPUStateModel &getKernelStateModel() const override;
-
-    virtual readdy::model::KernelContext &getKernelContext() const override;
-
-    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
-
-    virtual std::vector<std::string> getAvailablePotentials() const override;
-
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
-
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
-
-    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
-
-private:
-    struct Impl;
-    std::unique_ptr<readdy::kernel::scpu::SCPUKernel::Impl> pimpl;
+protected:
+    CPUKernel *const kernel;
 };
 
 }
 }
 }
+}
 
-#endif //READDY_MAIN_SINGLECPUKERNEL_H
+#endif //READDY_CPUKERNEL_COMPARTMENTS_H

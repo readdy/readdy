@@ -246,7 +246,7 @@ public:
      * @return a uuid with which the potential can be removed again
      * @todo document this more thoroughly
      */
-    const short registerHarmonicRepulsionPotential(const std::string& particleTypeA, const std::string& particleTypeB,
+    const short registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
                                                    double forceConstant);
 
     /**
@@ -262,7 +262,7 @@ public:
      * @todo document this more thoroughly, maybe make it available as a method of only two-three of the four: forceConstant, desiredDistance, depth, noInteractionDistance?
      */
     const short registerWeakInteractionPiecewiseHarmonicPotential(
-            const std::string& particleTypeA, const std::string& particleTypeB, double forceConstant,
+            const std::string &particleTypeA, const std::string &particleTypeB, double forceConstant,
             double desiredParticleDistance, double depth, double noInteractionDistance);
 
     void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
@@ -394,6 +394,13 @@ public:
      */
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
                                       const double rate);
+
+    const short
+    registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name, const model::Vec3 &origin,
+                              const double radius, const bool largerOrLess);
+
+    const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
+                                         const model::Vec3 &normalCoefficients, const double distanceFromPlane, const bool largerOrLess);
 
     virtual void run(const readdy::model::observables::time_step_type steps, const double timeStep);
 

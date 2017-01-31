@@ -43,10 +43,8 @@ class TestPotentials : public KernelTest {
 };
 
 void setupParticles(readdy::model::Kernel &kernel) {
-    kernel.getKernelContext().setDiffusionConstant("A", 1);
-    kernel.getKernelContext().setDiffusionConstant("B", .1);
-    kernel.getKernelContext().setParticleRadius("A", .1);
-    kernel.getKernelContext().setParticleRadius("B", .01);
+    kernel.getKernelContext().registerParticleType("A", 1., 0.1);
+    kernel.getKernelContext().registerParticleType("B", 0.1, 0.01);
     kernel.getKernelContext().setPeriodicBoundary(false, false, false);
     const unsigned int nParticlesA = 10;
     const unsigned int nParticlesB = 10;

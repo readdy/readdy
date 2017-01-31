@@ -119,12 +119,12 @@ Another nice feature is, that the computational complexity of applying the conve
 total number of particles. So it should not take longer than the evaluation of first order potentials.
 
 What types of compartments are easily implemented?:
-- Radial, $|r-r_0| >\text{or}< R$, with three parameters
+- Radial, $ | r-r_0 | > \text{or} < R $, with three parameters
     - Vec3 origin $r_0$
     - double radius $R$
     - bool largerOrLess
-- Hyperplane, $a_0 x_0 + a_1 x_1 + a_2 x_2 >\text{or}< d$, with three parameters
-    - Vec3 coefficients $a$
+- Plane, $ a_0 x_0 + a_1 x_1 + a_2 x_2 > \text{or} < d $, in Hesse normal form with three parameters
+    - Vec3 normalCoefficients $a$
     - double distanceFromOrigin $d$
     - bool largerOrLess
 

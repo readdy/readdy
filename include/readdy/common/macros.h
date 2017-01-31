@@ -79,6 +79,12 @@ struct ObservableFactory::get_dispatcher<TYPE, Args...> { \
         return self->create##TYPE(stride, std::forward<Args>(args)...); \
     } \
 };
+#define READDY_CREATE_COMPARTMENT_FACTORY_DISPATCHER(TYPE) template<typename... Args> \
+struct CompartmentFactory::get_dispatcher<TYPE, Args...> { \
+    static TYPE *impl(const CompartmentFactory *self, const std::unordered_map<particleType_t, particleType_t> &convMap, Args &&... args) { \
+        return self->create##TYPE(convMap, std::forward<Args>(args)...); \
+    } \
+};
 
 #if !defined(NAMESPACE_BEGIN)
 #  define NAMESPACE_BEGIN(name) namespace name {

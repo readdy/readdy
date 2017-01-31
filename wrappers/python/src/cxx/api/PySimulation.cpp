@@ -205,6 +205,8 @@ PYBIND11_PLUGIN (api) {
             .def("register_reaction_fission", &sim::registerFissionReaction, rvp::reference_internal)
             .def("register_reaction_fusion", &sim::registerFusionReaction, rvp::reference_internal)
             .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal)
+            .def("register_compartment_sphere", &sim::registerCompartmentSphere)
+            .def("register_compartment_plane", &sim::registerCompartmentPlane)
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("set_kernel", &sim::setKernel)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {

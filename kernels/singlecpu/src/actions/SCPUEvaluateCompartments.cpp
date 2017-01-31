@@ -21,50 +21,44 @@
 
 
 /**
- * The SingleCPUCompartments program defines compartments via characteristic functions that map from Vec3 to bool. For every compartment
- * one can then define conversions that should take place as soon as a particle enters the compartment. Note that the user is responsible for
- * keeping the compartments disjoint.
- *
- * @file SingleCPUCompartments.cpp
- * @brief SingleCPUCompartments defines compartments via characteristic functions and performs conversions of particle species on these compartments.
+ * @file Compartments.cpp
+ * @brief Implementation of SingleCPU program Compartments
  * @author chrisfroe
  * @date 13.10.16
  */
 
-#ifndef READDY_MAIN_SINGLECPUCOMPARTMENTS_H
-#define READDY_MAIN_SINGLECPUCOMPARTMENTS_H
-
-#include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
 namespace actions {
 
-class SCPUCompartments : public readdy::model::actions::Compartments {
-public:
-    using compartmentIdx_t = size_t;
-    using particleType_t = unsigned int;
+SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : kernel(kernel) {}
 
-    SCPUCompartments(SCPUKernel const *const kernel);
-
-    virtual void perform() override;
-
-    virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) override;
-
-    virtual void registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) override;
-
-    virtual void registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to);
-
-protected:
-    SCPUKernel const *const kernel;
-    std::vector<std::function<bool(readdy::model::Vec3)>> compartments;
-    std::unordered_map<compartmentIdx_t, std::unordered_map<particleType_t, particleType_t>> conversions;
-};
+void SCPUEvaluateCompartments::perform() {
+    const auto &ctx = kernel->getKernelContext();
+    auto data = kernel->getKernelStateModel().getParticleData();
+    auto posIt = data->begin_positions();
+    auto typesIt = data->begin_types();
+    const auto &compartments = ctx.getCompartments();
+    while (posIt != data->end_positions()) {
+        for (auto i=0; i<compartments.size(); ++i) {
+            if (compartments[i]->isContained(*posIt)) {
+                const auto &conversions = compartments[i]->getConversions();
+                const auto convIt = conversions.find(*typesIt);
+                if (convIt != conversions.end()) {
+                    *typesIt = (*convIt).second;
+                }
+            }
+        }
+        ++posIt;
+        ++typesIt;
+    }
+}
 
 }
 }
 }
 }
-#endif //READDY_MAIN_SINGLECPUCOMPARTMENTS_H
+

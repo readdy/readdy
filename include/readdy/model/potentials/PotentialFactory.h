@@ -21,8 +21,9 @@
 
 
 /**
- * This header file contains the definition of the PotentialFactory. It contains a map of available potentials to
- * a std function object that will create a new instance upon invocation.
+ * The PotentialFactory contains create-methods, that can be overridden by other kernels, in case
+ * another kernel-specific implementation of the potential is needed. The dispatcher is responsible
+ * for calling the correct create-method.
  *
  * @file PotentialFactory.h
  * @brief Header file containing the definition of the PotentialFactory.
@@ -41,9 +42,8 @@
 
 namespace readdy {
 namespace model {
-
-class Kernel;
 namespace potentials {
+
 class PotentialFactory {
 public:
 

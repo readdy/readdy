@@ -31,6 +31,7 @@
 #include <gmock/gmock.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/KernelTest.h>
+#include <readdy/model/compartments/Compartments.h>
 
 namespace m = readdy::model;
 
@@ -42,15 +43,12 @@ class TestCompartments : public KernelTest {
 
 TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     auto &ctx = kernel->getKernelContext();
-    ctx.setDiffusionConstant("A", 1.);
-    ctx.setDiffusionConstant("B", 1.);
-    auto &&comp = kernel->createAction<m::actions::Compartments>();
-    auto fun = [](m::Vec3 position) {
-        return true;
-    };
-    comp->registerCompartment(fun);
-    comp->registerConversion(0, "A", "B");
+    ctx.registerParticleType("A", 1., 1.);
+    ctx.registerParticleType("B", 1., 1.);
     kernel->addParticle("A", m::Vec3(1, 0, 2));
+
+    std::unordered_map<std::string, std::string> conversionsMap = {{"A", "B"}};
+    kernel->registerCompartment<m::compartments::Sphere>(conversionsMap, "kugelrund", m::Vec3(0,0,0), 10., false);
 
     std::vector<std::string> typesToCount = {"A", "B"};
     auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
@@ -58,7 +56,8 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     const auto &resultBefore = obs->getResult();
     EXPECT_THAT(resultBefore, ::testing::ElementsAre(1, 0)) << "Expect one A particle before program execution";
 
-    comp->perform();
+    auto &&evaluateCompartments = kernel->createAction<m::actions::EvaluateCompartments>();
+    evaluateCompartments->perform();
 
     obs->evaluate();
     const auto &resultAfter = obs->getResult();
@@ -69,24 +68,17 @@ TEST_P(TestCompartments, TwoCompartments) {
     // two compartments, four species A,B,C and D, in the end there should only be C and D particles
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(10, 10, 10);
-    ctx.setDiffusionConstant("A", 1.);
-    ctx.setDiffusionConstant("B", 1.);
-    ctx.setDiffusionConstant("C", 1.);
-    ctx.setDiffusionConstant("D", 1.);
-    auto &&comp = kernel->createAction<m::actions::Compartments>();
-    auto funXPos = [](m::Vec3 position) {
-        return position[0] >= 0;
-    };
-    auto funXNeg = [](m::Vec3 position) {
-        return position[0] < 0;
-    };
-    comp->registerCompartment(funXPos);
-    comp->registerCompartment(funXNeg);
-    comp->registerConversion(0, "A", "C");
-    comp->registerConversion(0, "B", "C");
-    comp->registerConversion(1, "A", "D");
-    comp->registerConversion(1, "B", "D");
-
+    ctx.registerParticleType("A", 1., 1.);
+    ctx.registerParticleType("B", 1., 1.);
+    ctx.registerParticleType("C", 1., 1.);
+    ctx.registerParticleType("D", 1., 1.);
+    auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
+    
+    std::unordered_map<std::string, std::string> conversionsXPos = {{"A", "C"}, {"B", "C"}};
+    std::unordered_map<std::string, std::string> conversionsXNeg = {{"A", "D"}, {"B", "D"}};
+    kernel->registerCompartment<m::compartments::Plane>(conversionsXPos, "XPos", m::Vec3(1,0,0), 0, true);
+    kernel->registerCompartment<m::compartments::Plane>(conversionsXNeg, "XNeg", m::Vec3(-1,0,0), 0, true);
+    
     for (auto i = 0; i < 100; ++i) {
         kernel->addParticle("A", readdy::model::rnd::normal3());
         kernel->addParticle("B", readdy::model::rnd::normal3());

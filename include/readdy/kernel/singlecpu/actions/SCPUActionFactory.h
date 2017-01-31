@@ -49,7 +49,7 @@ protected:
     readdy::model::actions::UpdateNeighborList *
     createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation, double) const override;
 
-    readdy::model::actions::Compartments *createCompartments() const override;
+    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
 
     readdy::model::actions::reactions::UncontrolledApproximation *
     createUncontrolledApproximation(double timeStep) const override;

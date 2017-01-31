@@ -36,7 +36,7 @@ class TestAggregators : public KernelTest {
 };
 
 TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
-    kernel->getKernelContext().setDiffusionConstant("A", 1);
+    kernel->getKernelContext().registerParticleType("A", 1., 1.);
     for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::model::Vec3(0, 0, 0));
     auto obs = kernel->createObservable<readdy::model::observables::Particles>(1);
     auto msd = kernel->createObservable<readdy::model::observables::MeanSquaredDisplacement>(1, std::vector<std::string>(), obs.get());
@@ -64,7 +64,7 @@ TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
 }
 
 TEST_P(TestAggregators, TestTrivial) {
-    kernel->getKernelContext().setDiffusionConstant("A", 1);
+    kernel->getKernelContext().registerParticleType("A", 1., 1.);
     for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::model::Vec3(4, 2, 0));
     auto obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     auto traj = kernel->createObservable<readdy::model::observables::Trivial<readdy::model::observables::Positions>>(1, obs.get());

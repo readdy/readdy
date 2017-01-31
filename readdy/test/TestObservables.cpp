@@ -43,8 +43,7 @@ class TestObservables : public KernelTest {
 
 TEST_P(TestObservables, TestParticlePositions) {
     const unsigned int n_particles = 100;
-    const double diffusionConstant = 1;
-    kernel->getKernelContext().setDiffusionConstant("type", diffusionConstant);
+    kernel->getKernelContext().registerParticleType("type", 1., 1.);
     const double timeStep = 1.0;
     const auto particleTypeId = kernel->getKernelContext().getParticleTypeID("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
@@ -76,8 +75,8 @@ TEST_P(TestObservables, TestParticlePositions) {
 
 TEST_P(TestObservables, TestForcesObservable) {
     // Setup particles
-    kernel->getKernelContext().setDiffusionConstant("A", 42.);
-    kernel->getKernelContext().setDiffusionConstant("B", 1337.);
+    kernel->getKernelContext().registerParticleType("A", 42., 1.);
+    kernel->getKernelContext().registerParticleType("B", 1337., 1.);
     const auto typeIdA = kernel->getKernelContext().getParticleTypeID("A");
     const auto typeIdB = kernel->getKernelContext().getParticleTypeID("B");
     const unsigned int n_particles = 50; // There will be 55 Bs
@@ -111,8 +110,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     // Two particles C and C with radius 1 and harmonic repulsion at distance 1.5 -> force = kappa * (radiiSum - 1.5)
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(5, 5, 5);
-    kernel->getKernelContext().setDiffusionConstant("C", 1.);
-    kernel->getKernelContext().setParticleRadius("C", 1.);
+    kernel->getKernelContext().registerParticleType("C", 1., 1.);
     const auto typeIdC = kernel->getKernelContext().getParticleTypeID("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
     kernel->getKernelStateModel().addParticles(particlesC);

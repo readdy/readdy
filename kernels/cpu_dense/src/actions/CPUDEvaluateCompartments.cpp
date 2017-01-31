@@ -21,47 +21,41 @@
 
 
 /**
- * @file Compartments.h
- * @brief Header file of CPU program Compartments
- * @author chrisfroe
- * @date 18.10.16
+ * << detailed description >>
+ *
+ * @file Compartments.cpp
+ * @brief << brief description >>
+ * @author clonker
+ * @date 23.11.16
  */
 
-#ifndef READDY_CPUKERNEL_COMPARTMENTS_H
-#define READDY_CPUKERNEL_COMPARTMENTS_H
 
-#include <readdy/kernel/singlecpu/actions/SCPUCompartments.h>
-#include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu_dense/actions/CPUDEvaluateCompartments.h>
 
 namespace readdy {
 namespace kernel {
-namespace cpu {
+namespace cpu_dense {
 namespace actions {
 
-class CPUCompartments : public readdy::model::actions::Compartments {
-public:
-    using compartmentIdx_t = size_t;
-    using particleType_t = unsigned int;
+CPUDEvaluateCompartments::CPUDEvaluateCompartments(CPUDKernel *const kernel) : kernel(kernel) {}
 
-    CPUCompartments(CPUKernel const *const kernel);
-
-    virtual void perform() override;
-
-    virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> fun) override;
-
-    virtual void registerConversion(compartmentIdx_t compartmentIdx, std::string from, std::string to) override;
-
-    virtual void registerConversion(compartmentIdx_t compartmentIdx, particleType_t from, particleType_t to);
-
-protected:
-    CPUKernel const *const kernel;
-    std::vector<std::function<bool(readdy::model::Vec3)>> compartments;
-    std::unordered_map<compartmentIdx_t, std::unordered_map<particleType_t, particleType_t>> conversions;
-};
+void CPUDEvaluateCompartments::perform() {
+    const auto &ctx = kernel->getKernelContext();
+    const auto &compartments = ctx.getCompartments();
+    for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
+        for (auto i = 0; i < compartments.size(); ++i) {
+            if (compartments[i]->isContained(e.position())) {
+                const auto &conversions = compartments[i]->getConversions();
+                const auto convIt = conversions.find(e.type);
+                if (convIt != conversions.end()) {
+                    e.type = (*convIt).second;
+                }
+            }
+        }
+    }
+}
 
 }
 }
 }
 }
-
-#endif //READDY_CPUKERNEL_COMPARTMENTS_H

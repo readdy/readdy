@@ -87,6 +87,10 @@ readdy::plugin::_internal::KernelPluginDecorator::getObservableFactory() const {
     return reference->getObservableFactory();
 }
 
+readdy::model::compartments::CompartmentFactory &readdy::plugin::_internal::KernelPluginDecorator::getCompartmentFactory() const {
+    return reference->getCompartmentFactory();
+}
+
 readdy::signals::scoped_connection
 readdy::plugin::_internal::KernelPluginDecorator::connectObservable(readdy::model::observables::ObservableBase *const observable) {
     return reference->connectObservable(observable);
@@ -115,7 +119,6 @@ readdy::plugin::_internal::KernelPluginDecorator::addParticle(const std::string 
 unsigned int readdy::plugin::_internal::KernelPluginDecorator::getTypeId(const std::string &string) const {
     return reference->getTypeId(string);
 }
-
 
 plug::InvalidPluginException::InvalidPluginException(const std::string &__arg) : runtime_error(__arg) {}
 

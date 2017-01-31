@@ -34,7 +34,7 @@
 #include <readdy/kernel/cpu_dense/actions/CPUDEulerBDIntegrator.h>
 #include <readdy/kernel/cpu_dense/actions/CPUDUpdateNeighborList.h>
 #include <readdy/kernel/cpu_dense/actions/CPUDCalculateForces.h>
-#include <readdy/kernel/cpu_dense/actions/CPUDCompartments.h>
+#include <readdy/kernel/cpu_dense/actions/CPUDEvaluateCompartments.h>
 #include <readdy/kernel/cpu_dense/actions/reactions/CPUDGillespie.h>
 #include <readdy/kernel/cpu_dense/actions/reactions/CPUDUncontrolledApproximation.h>
 #include <readdy/kernel/cpu_dense/actions/reactions/CPUDGillespieParallel.h>
@@ -61,8 +61,8 @@ CPUDActionFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operatio
     return new CPUDUpdateNeighborList(kernel, operation, skinSize);
 }
 
-core_p::Compartments *CPUDActionFactory::createCompartments() const {
-    return new CPUDCompartments(kernel);
+core_p::EvaluateCompartments *CPUDActionFactory::createEvaluateCompartments() const {
+    return new CPUDEvaluateCompartments(kernel);
 }
 
 core_p::reactions::UncontrolledApproximation *

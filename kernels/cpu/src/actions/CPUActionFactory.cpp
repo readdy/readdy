@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file CPUProgramFactory.cpp
+ * @file CPUActionFactory.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 23.06.16
@@ -33,7 +33,7 @@
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
 #include <readdy/kernel/cpu/actions/CPUUpdateNeighborList.h>
 #include <readdy/kernel/cpu/actions/CPUCalculateForces.h>
-#include <readdy/kernel/cpu/actions/CPUCompartments.h>
+#include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
@@ -61,8 +61,8 @@ CPUActionFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation
     return new CPUUpdateNeighborList(kernel, operation, skinSize);
 }
 
-core_p::Compartments *CPUActionFactory::createCompartments() const {
-    return new CPUCompartments(kernel);
+core_p::EvaluateCompartments *CPUActionFactory::createEvaluateCompartments() const {
+    return new CPUEvaluateCompartments(kernel);
 }
 
 core_p::reactions::UncontrolledApproximation *

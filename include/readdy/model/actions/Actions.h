@@ -133,13 +133,9 @@ struct NextSubvolumes : public TimeStepDependentAction {
 };
 }
 
-class Compartments : public Action {
+class EvaluateCompartments : public Action {
 public:
-    Compartments() : Action() {}
-
-    virtual void registerCompartment(const std::function<bool(const readdy::model::Vec3)> characteristicFun) = 0;
-
-    virtual void registerConversion(size_t compartmentIdx, std::string from, std::string to) = 0;
+    EvaluateCompartments() : Action() {}
 };
 
 template<typename T>
@@ -187,8 +183,8 @@ getActionName(typename std::enable_if<std::is_base_of<reactions::NextSubvolumes,
 
 
 template<typename T>
-const std::string getActionName(typename std::enable_if<std::is_base_of<Compartments, T>::value>::type * = 0) {
-    return "Compartments";
+const std::string getActionName(typename std::enable_if<std::is_base_of<EvaluateCompartments, T>::value>::type * = 0) {
+    return "EvaluateCompartments";
 };
 
 }
