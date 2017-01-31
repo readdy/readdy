@@ -37,8 +37,7 @@ namespace model {
 namespace top {
 readdy::model::top::Topology::~Topology() = default;
 
-Topology::Topology(Topology::particles_t p) : particles(std::move(p)) {}
-Topology::Topology(const Topology::particles_t &p) : particles(p) { }
+Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) {}
 
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
@@ -58,6 +57,10 @@ const std::vector<std::unique_ptr<AnglePotential>> &Topology::getAnglePotentials
 
 const std::vector<std::unique_ptr<DihedralPotential>> &Topology::getDihedralPotentials() const {
     return dihedralPotentials;
+}
+
+void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
+    bondedPotentials.push_back(std::move(pot));
 }
 
 }

@@ -49,7 +49,7 @@ public:
     SCPUTopologyActionFactory(const SCPUKernel *const kernel);
 
     virtual std::unique_ptr<readdy::model::top::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const readdy::model::top::HarmonicBondPotential *const) override;
+    createCalculateHarmonicBondPotential(const readdy::model::top::HarmonicBondPotential *const) const override;
 };
 
 NAMESPACE_END(top)

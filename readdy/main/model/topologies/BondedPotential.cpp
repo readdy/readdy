@@ -30,6 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <readdy/model/Kernel.h>
 #include <readdy/model/topologies/BondedPotential.h>
 #include <readdy/model/topologies/Topology.h>
 
@@ -48,9 +49,29 @@ BondedPotential::BondedPotential(Topology *const topology) : TopologyPotential(t
  */
 
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds)
-        : BondedPotential(topology), bonds(bonds) {}
+        : BondedPotential(topology), bonds(bonds) {
+}
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, std::vector<Bond> bonds)
         : BondedPotential(topology), bonds(std::move(bonds)) {}
+
+const std::vector<HarmonicBondPotential::Bond> &HarmonicBondPotential::getBonds() const {
+    return bonds;
+}
+
+double HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const HarmonicBondPotential::Bond &bond) const {
+    const auto norm = std::sqrt(x_ij * x_ij);
+    return bond.forceConstant * (norm - bond.length) * (norm - bond.length);
+}
+
+void
+HarmonicBondPotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const HarmonicBondPotential::Bond &bond) const {
+    const auto norm = std::sqrt(x_ij * x_ij);
+    force += (-2 * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
+}
+
+std::unique_ptr<EvaluatePotentialAction> HarmonicBondPotential::createForceAndEnergyAction(const Kernel*const kernel) {
+    return kernel->getTopologyActionFactory()->createCalculateHarmonicBondPotential(this);
+}
 
 void HarmonicBondPotential::addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant) {
     const auto n = topology->getNParticles();

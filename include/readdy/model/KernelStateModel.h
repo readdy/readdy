@@ -60,6 +60,8 @@ public:
 
     virtual void addParticles(const std::vector<Particle> &p) = 0;
 
+    virtual readdy::model::top::Topology *const addTopology(std::vector<Particle> &particles) = 0;
+
     virtual void removeParticle(const Particle &p) = 0;
 
     virtual void removeAllParticles() = 0;

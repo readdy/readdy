@@ -224,6 +224,10 @@ void CPUDStateModel::removeAllParticles() {
     pimpl->data().clear();
 }
 
+readdy::model::top::Topology *const CPUDStateModel::addTopology(std::vector<readdy::model::Particle> &particles) {
+    return nullptr;
+}
+
 CPUDStateModel::~CPUDStateModel() = default;
 
 

@@ -105,6 +105,8 @@ public:
 
     void addParticles(const std::vector<particle_type> &particles);
 
+    std::vector<entries_t::size_type> addParticlesGetIds(const std::vector<particle_type> &particles);
+
     void removeParticle(const particle_type &particle);
 
     void removeParticle(const size_t index);

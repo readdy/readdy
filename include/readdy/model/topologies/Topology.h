@@ -57,9 +57,7 @@ class Topology {
 public:
     using particles_t = std::vector<std::size_t>;
 
-    Topology(particles_t);
-
-    Topology(const particles_t &);
+    Topology(particles_t&&);
 
     virtual ~Topology();
 
@@ -72,6 +70,8 @@ public:
     const std::vector<std::unique_ptr<AnglePotential>> &getAnglePotentials() const;
 
     const std::vector<std::unique_ptr<DihedralPotential>> &getDihedralPotentials() const;
+
+    void addBondedPotential(std::unique_ptr<BondedPotential>&&);
 
 private:
     particles_t particles;

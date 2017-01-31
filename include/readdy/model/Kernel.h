@@ -195,8 +195,6 @@ public:
     std::unique_ptr<reactions::Reaction<1>>
     createDecayReaction(const std::string &name, const std::string &type, const double rate) const;
 
-    unsigned int getTypeId(const std::string &) const;
-
     /*
      * 
      * Accessors
@@ -228,6 +226,8 @@ public:
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
 
 protected:
+
+    unsigned int getTypeIdRequireNormalFlavor(const std::string &) const;
 
     virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const = 0;
 

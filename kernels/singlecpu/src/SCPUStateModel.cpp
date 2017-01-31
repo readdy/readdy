@@ -41,6 +41,7 @@ struct SCPUStateModel::Impl {
     double currentEnergy = 0;
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
+    std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies;
     readdy::model::KernelContext const *context;
 };
 
@@ -136,6 +137,16 @@ void SCPUStateModel::calculateForces() {
             }
         }
     }
+    // update forces and energy for topologies
+    {
+        for(const auto& topology : pimpl->topologies) {
+            // calculate bonded potentials
+            for(const auto& bondedPot : topology->getBondedPotentials()) {
+                auto energy = bondedPot->createForceAndEnergyAction(pimpl->kernel)->perform();
+                pimpl->currentEnergy += energy;
+            }
+        }
+    }
 }
 
 void SCPUStateModel::clearNeighborList() {
@@ -144,6 +155,17 @@ void SCPUStateModel::clearNeighborList() {
 
 void SCPUStateModel::removeAllParticles() {
     pimpl->particleData->clear();
+}
+
+readdy::model::top::Topology *const SCPUStateModel::addTopology(std::vector<readdy::model::Particle> &particles) {
+    for(const auto& p : particles) {
+        if(pimpl->context->getParticleTypeInfo(p.getType()).flavor != readdy::model::Particle::FLAVOR_TOPOLOGY) {
+            throw std::invalid_argument("at least one of the particles did not have the topology flavor!");
+        }
+    }
+    std::vector<std::size_t> ids = pimpl->particleData->addParticlesGetIds(particles);
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids)));
+    return pimpl->topologies.back().get();
 }
 
 

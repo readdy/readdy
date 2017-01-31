@@ -88,10 +88,16 @@ void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
     getKernelStateModel().addParticle({pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)});
 }
 
-unsigned int Kernel::getTypeId(const std::string &name) const {
+unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
     auto findIt = getKernelContext().getTypeMapping().find(name);
-    if(findIt != getKernelContext().getTypeMapping().end()) {
-        return findIt->second;
+    if (findIt != getKernelContext().getTypeMapping().end()) {
+        const auto &info = getKernelContext().getParticleTypeInfo(findIt->second);
+        if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
+            return findIt->second;
+        } else {
+            log::console()->critical("particle type {} had no \"normal\" flavor", name);
+            throw std::invalid_argument("particle type " + name + " had no \"normal\" flavor");
+        }
     } else {
         log::console()->critical("did not find type id for {}", name);
         throw std::invalid_argument("did not find type id for " + name);
@@ -101,8 +107,8 @@ unsigned int Kernel::getTypeId(const std::string &name) const {
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                  const double rate) const {
-    const auto typeFrom = getTypeId(from);
-    const auto typeTo = getTypeId(to);
+    const auto typeFrom = getTypeIdRequireNormalFlavor(from);
+    const auto typeTo = getTypeIdRequireNormalFlavor(to);
     return getReactionFactory().createReaction<reactions::Conversion>(name, typeFrom, typeTo, rate);
 }
 
@@ -110,29 +116,35 @@ std::unique_ptr<reactions::Reaction<2>>
 Kernel::createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
                              const std::string &to, const double rate, const double eductDistance,
                              const double weight1, const double weight2) const {
-    return getReactionFactory().createReaction<reactions::Fusion>(name, getTypeId(from1), getTypeId(from2),
-                                                                  getTypeId(to), rate, eductDistance, weight1, weight2);
+    return getReactionFactory().createReaction<reactions::Fusion>(name, getTypeIdRequireNormalFlavor(from1),
+                                                                  getTypeIdRequireNormalFlavor(from2),
+                                                                  getTypeIdRequireNormalFlavor(to), rate, eductDistance,
+                                                                  weight1, weight2);
 }
 
 std::unique_ptr<reactions::Reaction<2>>
 Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                                 const std::string &to, const double rate, const double eductDistance) const {
-    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeId(catalyst), getTypeId(from),
-                                                                     getTypeId(to), rate, eductDistance);
+    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeIdRequireNormalFlavor(catalyst),
+                                                                     getTypeIdRequireNormalFlavor(from),
+                                                                     getTypeIdRequireNormalFlavor(to), rate,
+                                                                     eductDistance);
 }
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                               const std::string &to2, const double rate, const double productDistance,
                               const double weight1, const double weight2) const {
-    return getReactionFactory().createReaction<reactions::Fission>(name, getTypeId(from), getTypeId(to1),
-                                                                   getTypeId(to2), rate, productDistance, weight1,
+    return getReactionFactory().createReaction<reactions::Fission>(name, getTypeIdRequireNormalFlavor(from),
+                                                                   getTypeIdRequireNormalFlavor(to1),
+                                                                   getTypeIdRequireNormalFlavor(to2), rate,
+                                                                   productDistance, weight1,
                                                                    weight2);
 }
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createDecayReaction(const std::string &name, const std::string &type, const double rate) const {
-    return getReactionFactory().createReaction<reactions::Decay>(name, getTypeId(type), rate);
+    return getReactionFactory().createReaction<reactions::Decay>(name, getTypeIdRequireNormalFlavor(type), rate);
 }
 
 observables::ObservableFactory &Kernel::getObservableFactoryInternal() const {

@@ -61,6 +61,8 @@ public:
 
     virtual void removeAllParticles() override;
 
+    virtual readdy::model::top::Topology *const addTopology(std::vector<readdy::model::Particle> &particles) override;
+
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
     virtual double getEnergy() const override;

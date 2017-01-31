@@ -48,21 +48,6 @@ struct HarmonicBondPotential::Bond {
     double length, forceConstant;
 };
 
-inline const std::vector<HarmonicBondPotential::Bond> &HarmonicBondPotential::getBonds() const {
-    return bonds;
-}
-
-inline double HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const HarmonicBondPotential::Bond &bond) const {
-    const auto norm = std::sqrt(x_ij * x_ij);
-    return bond.forceConstant * (norm - bond.length) * (norm - bond.length);
-}
-
-inline void
-HarmonicBondPotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const HarmonicBondPotential::Bond &bond) const {
-    const auto norm = std::sqrt(x_ij * x_ij);
-    force += (-2 * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
-}
-
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
