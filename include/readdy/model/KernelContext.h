@@ -159,10 +159,10 @@ public:
         log::console()->trace("registering reaction {}", *r);
         const auto id = r->getId();
         const auto type = r->getEducts()[0];
-        if (reactionOneEductRegistryInternal->find(type) == reactionOneEductRegistryInternal->end()) {
-            reactionOneEductRegistryInternal->emplace(type, rea_ptr_vec1());
+        if (reactionOneEductRegistryInternal.find(type) == reactionOneEductRegistryInternal.end()) {
+            reactionOneEductRegistryInternal.emplace(type, rea_ptr_vec1());
         }
-        (*reactionOneEductRegistryInternal)[type].push_back(std::move(r));
+        reactionOneEductRegistryInternal[type].push_back(std::move(r));
         return id;
     }
 
@@ -175,20 +175,20 @@ public:
         const auto t2 = r->getEducts()[1];
 
         const readdy::util::ParticleTypePair pp{t1, t2};
-        if (reactionTwoEductsRegistryInternal->find(pp) == reactionTwoEductsRegistryInternal->end()) {
-            reactionTwoEductsRegistryInternal->emplace(pp, rea_ptr_vec2());
+        if (reactionTwoEductsRegistryInternal.find(pp) == reactionTwoEductsRegistryInternal.end()) {
+            reactionTwoEductsRegistryInternal.emplace(pp, rea_ptr_vec2());
         }
-        (*reactionTwoEductsRegistryInternal)[pp].push_back(std::move(r));
+        reactionTwoEductsRegistryInternal[pp].push_back(std::move(r));
         return id;
     }
 
     const short registerExternalReaction(reactions::Reaction<1> *r) {
-        (*reactionOneEductRegistryExternal)[r->getEducts()[0]].push_back(r);
+        reactionOneEductRegistryExternal[r->getEducts()[0]].push_back(r);
         return r->getId();
     }
 
     const short registerExternalReaction(reactions::Reaction<2> *r) {
-        (*reactionTwoEductsRegistryExternal)[
+        reactionTwoEductsRegistryExternal[
                 readdy::util::ParticleTypePair(r->getEducts()[0], r->getEducts()[1])
         ].push_back(r);
         return r->getId();
@@ -196,10 +196,10 @@ public:
 
     const short registerExternalPotential(potentials::PotentialOrder1 *potential) {
         auto typeId = getParticleTypeID(potential->particleType);
-        if (potentialO1RegistryExternal->find(typeId) == potentialO1RegistryExternal->end()) {
-            potentialO1RegistryExternal->emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
+        if (potentialO1RegistryExternal.find(typeId) == potentialO1RegistryExternal.end()) {
+            potentialO1RegistryExternal.emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
         }
-        (*potentialO1RegistryExternal)[typeId].push_back(potential);
+        potentialO1RegistryExternal[typeId].push_back(potential);
         return potential->getId();
     }
 
@@ -208,10 +208,10 @@ public:
         auto type1Id = getParticleTypeID(potential->particleType1);
         auto type2Id = getParticleTypeID(potential->particleType2);
         readdy::util::ParticleTypePair pp{type1Id, type2Id};
-        if (potentialO2RegistryExternal->find(pp) == potentialO2RegistryExternal->end()) {
-            potentialO2RegistryExternal->emplace(pp, pot_ptr_vec2_external());
+        if (potentialO2RegistryExternal.find(pp) == potentialO2RegistryExternal.end()) {
+            potentialO2RegistryExternal.emplace(pp, pot_ptr_vec2_external());
         }
-        (*potentialO2RegistryExternal)[pp].push_back(potential);
+        potentialO2RegistryExternal[pp].push_back(potential);
         return id;
     }
 
@@ -220,10 +220,10 @@ public:
                                   typename std::enable_if<std::is_base_of<potentials::PotentialOrder1, R>::value>::type * = 0) {
         const auto id = potential->getId();
         auto typeId = getParticleTypeID(potential->particleType);
-        if (potentialO1RegistryInternal->find(typeId) == potentialO1RegistryInternal->end()) {
-            potentialO1RegistryInternal->insert(std::make_pair(typeId, pot_ptr_vec1()));
+        if (potentialO1RegistryInternal.find(typeId) == potentialO1RegistryInternal.end()) {
+            potentialO1RegistryInternal.insert(std::make_pair(typeId, pot_ptr_vec1()));
         }
-        (*potentialO1RegistryInternal)[typeId].push_back(std::move(potential));
+        potentialO1RegistryInternal[typeId].push_back(std::move(potential));
         return id;
     }
 
@@ -234,10 +234,10 @@ public:
         auto type1Id = getParticleTypeID(potential->particleType1);
         auto type2Id = getParticleTypeID(potential->particleType2);
         readdy::util::ParticleTypePair pp{type1Id, type2Id};
-        if (potentialO2RegistryInternal->find(pp) == potentialO2RegistryInternal->end()) {
-            potentialO2RegistryInternal->emplace(pp, pot_ptr_vec2());
+        if (potentialO2RegistryInternal.find(pp) == potentialO2RegistryInternal.end()) {
+            potentialO2RegistryInternal.emplace(pp, pot_ptr_vec2());
         }
-        (*potentialO2RegistryInternal)[pp].push_back(std::move(potential));
+        potentialO2RegistryInternal[pp].push_back(std::move(potential));
         return id;
     }
 
@@ -317,20 +317,20 @@ private:
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
 
-    std::unique_ptr<reaction_o1_registry> reactionOneEductRegistry = std::make_unique<reaction_o1_registry>();
-    std::unique_ptr<reaction_o1_registry_internal> reactionOneEductRegistryInternal = std::make_unique<reaction_o1_registry_internal>();
-    std::unique_ptr<reaction_o1_registry_external> reactionOneEductRegistryExternal = std::make_unique<reaction_o1_registry_external>();
-    std::unique_ptr<reaction_o2_registry> reactionTwoEductsRegistry = std::make_unique<reaction_o2_registry>();
-    std::unique_ptr<reaction_o2_registry_internal> reactionTwoEductsRegistryInternal = std::make_unique<reaction_o2_registry_internal>();
-    std::unique_ptr<reaction_o2_registry_external> reactionTwoEductsRegistryExternal = std::make_unique<reaction_o2_registry_external>();
+    reaction_o1_registry reactionOneEductRegistry {};
+    reaction_o1_registry_internal reactionOneEductRegistryInternal {};
+    reaction_o1_registry_external reactionOneEductRegistryExternal {};
+    reaction_o2_registry reactionTwoEductsRegistry {};
+    reaction_o2_registry_internal reactionTwoEductsRegistryInternal {};
+    reaction_o2_registry_external reactionTwoEductsRegistryExternal {};
 
-    std::unique_ptr<rdy_pot_1_registry> potentialO1Registry = std::make_unique<rdy_pot_1_registry>();
-    std::unique_ptr<rdy_pot_2_registry> potentialO2Registry = std::make_unique<rdy_pot_2_registry>();
+    rdy_pot_1_registry potentialO1Registry {};
+    rdy_pot_2_registry potentialO2Registry {};
 
-    std::unique_ptr<potential_o1_registry_internal> potentialO1RegistryInternal = std::make_unique<potential_o1_registry_internal>();
-    std::unique_ptr<rdy_pot_1_registry> potentialO1RegistryExternal = std::make_unique<rdy_pot_1_registry>();
-    std::unique_ptr<potential_o2_registry_internal> potentialO2RegistryInternal = std::make_unique<potential_o2_registry_internal>();
-    std::unique_ptr<rdy_pot_2_registry> potentialO2RegistryExternal = std::make_unique<rdy_pot_2_registry>();
+    potential_o1_registry_internal potentialO1RegistryInternal {};
+    rdy_pot_1_registry potentialO1RegistryExternal {};
+    potential_o2_registry_internal potentialO2RegistryInternal {};
+    rdy_pot_2_registry potentialO2RegistryExternal {};
 
     std::unique_ptr<compartment_registry> compartmentRegistry = std::make_unique<compartment_registry>();
 };

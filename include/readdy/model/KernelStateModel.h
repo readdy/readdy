@@ -67,7 +67,6 @@ public:
     virtual double getEnergy() const = 0;
 
 protected:
-    std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies;
 };
 
 }

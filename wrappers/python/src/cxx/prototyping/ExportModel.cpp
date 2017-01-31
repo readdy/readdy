@@ -64,8 +64,8 @@ void exportModelClasses(py::module &proto) {
 
     py::class_<rdy_particle_t>(proto, "Particle")
             .def(py::init<double, double, double, rdy_uint>())
-            .def_property("pos", [](rdy_particle_t &self) { return self.getPos(); }, &rdy_particle_t::setPos)
-            .def_property("type", &rdy_particle_t::getType, &rdy_particle_t::setType)
+            .def_property_readonly("pos", [](rdy_particle_t &self) { return self.getPos(); })
+            .def_property_readonly("type", &rdy_particle_t::getType)
             .def_property_readonly("id", &rdy_particle_t::getId, rvp::reference_internal)
             .def(py::self == py::self)
             .def(py::self != py::self);

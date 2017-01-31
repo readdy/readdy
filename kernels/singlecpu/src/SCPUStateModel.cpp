@@ -30,8 +30,8 @@
  * @todo
  */
 
-#include <readdy/model/Particle.h>
 #include <algorithm>
+#include <readdy/model/Particle.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
 namespace readdy {

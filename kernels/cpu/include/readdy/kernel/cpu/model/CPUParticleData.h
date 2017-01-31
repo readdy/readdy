@@ -71,7 +71,8 @@ public:
      */
     struct Entry {
         Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
-                                               deactivated(false), displacement(0), id(particle.getId()) { }
+                                               deactivated(false), displacement(0), id(particle.getId()) {
+        }
 
         Entry(const Entry&) = delete;
         Entry& operator=(const Entry&) = delete;

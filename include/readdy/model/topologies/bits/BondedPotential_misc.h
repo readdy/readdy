@@ -34,6 +34,7 @@
 #define READDY_MAIN_BONDEDPOTENTIAL_MISC_H
 
 #include "../BondedPotential.h"
+#include <cmath>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

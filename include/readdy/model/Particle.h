@@ -37,40 +37,40 @@
 #include <string>
 #include <atomic>
 #include <spdlog/fmt/ostr.h>
+#include <ostream>
 #include "Vec3.h"
 
 namespace readdy {
 namespace model {
 
+
 class Particle {
 public:
-    
+
     using id_type = unsigned long;
     using pos_type = Vec3;
-    using type_type = unsigned int;
-    
+    using type_type = unsigned short;
+    using flavor_t = std::uint8_t;
+
+    static constexpr flavor_t FLAVOR_NORMAL = 0;
+    static constexpr flavor_t FLAVOR_TOPOLOGY = 1;
+    static constexpr flavor_t FLAVOR_MEMBRANE = 2;
+
+    Particle(double x, double y, double z, type_type type, flavor_t flavor = FLAVOR_NORMAL);
+
+    Particle(Vec3 pos, type_type type, flavor_t flavor = FLAVOR_NORMAL);
+
+    Particle(Vec3 pos, type_type type, id_type id, flavor_t flavor = FLAVOR_NORMAL);
+
+    virtual ~Particle();
+
     const Vec3 &getPos() const;
 
     Vec3 &getPos();
 
-    void setPos(const Vec3 &pos);
-
-    unsigned int getType() const;
-
-    void setType(const unsigned int type);
+    const type_type &getType() const;
 
     const id_type getId() const;
-
-    void setId(const id_type id);
-
-    Particle();
-
-    Particle(double x, double y, double z, unsigned int type);
-
-    Particle(Vec3 pos, unsigned int type);
-    Particle(Vec3 pos, unsigned int type, id_type id);
-
-    virtual ~Particle();
 
     bool operator==(const Particle &rhs) const;
 
@@ -78,11 +78,11 @@ public:
 
     friend std::ostream &operator<<(std::ostream &, const Particle &);
 
-
 private:
     Vec3 pos;
-    unsigned int type;
+    type_type type;
     id_type id;
+    flavor_t flavor;
 
     static std::atomic<id_type> id_counter;
 };

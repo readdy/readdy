@@ -50,10 +50,6 @@ public:
         return educts[0];
     }
 
-    virtual void perform(const Particle &p1_in, const Particle &p2_in, Particle &p1_out, Particle &p2_out,
-                         rnd_normal rnd) const override {
-    }
-
     virtual const ReactionType getType() override {
         return ReactionType::Decay;
     }

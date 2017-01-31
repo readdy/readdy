@@ -30,7 +30,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/kernel/singlecpu/reactions/SCPUReactions.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/actions/Actions.h>
@@ -168,7 +167,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const unsigned int typeId = kernel->getKernelContext().getParticleTypeID("X");
+    const auto typeId = kernel->getKernelContext().getParticleTypeID("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
     kernel->getKernelContext().configure();
