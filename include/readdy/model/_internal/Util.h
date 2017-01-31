@@ -40,26 +40,26 @@ namespace model {
 namespace _internal {
 namespace util {
 
-inline std::set<unsigned int> transformTypes(std::vector<std::string> types, const readdy::model::KernelContext &ctx) {
+inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const readdy::model::KernelContext &ctx) {
     std::set<unsigned int> result;
-    for (auto &&t : types) {
+    for (const auto &t : types) {
         result.insert(ctx.getParticleTypeID(t));
     }
     return result;
 }
 
 inline std::vector<unsigned int>
-transformTypes2(std::vector<std::string> types, const readdy::model::KernelContext &ctx) {
+transformTypes2(const std::vector<std::string> &types, const readdy::model::KernelContext &ctx) {
     std::vector<unsigned int> result;
     result.reserve(types.size());
-    for (auto &&t : types) {
+    for (auto &t : types) {
         result.push_back(ctx.getParticleTypeID(t));
     }
     return result;
 }
 
 inline std::unordered_map<Particle::type_type, Particle::type_type>
-transformTypesMap(std::unordered_map<std::string, std::string> stringMap, const readdy::model::KernelContext &ctx) {
+transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap, const readdy::model::KernelContext &ctx) {
     std::unordered_map<Particle::type_type, Particle::type_type> result;
     for (const auto &pair : stringMap) {
         const auto id1 = ctx.getParticleTypeID(pair.first);

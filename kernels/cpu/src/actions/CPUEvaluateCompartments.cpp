@@ -34,7 +34,7 @@ namespace kernel {
 namespace cpu {
 namespace actions {
 
-CPUEvaluateCompartments::CPUEvaluateCompartments(const CPUKernel *const kernel) : kernel(kernel) {}
+CPUEvaluateCompartments::CPUEvaluateCompartments(CPUKernel *const kernel) : kernel(kernel) {}
 
 void CPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
@@ -43,9 +43,11 @@ void CPUEvaluateCompartments::perform() {
         if(!e.is_deactivated()) {
             for (auto i = 0; i < compartments.size(); ++i) {
                 if (compartments[i]->isContained(e.position())) {
-                    const auto conversions = compartments[i]->getConversions();
-                    if (conversions.find(e.type) != conversions.end()) {
-                        e.type = conversions.at(e.type);
+                    const auto &conversions = compartments[i]->getConversions();
+                    const auto convIt = conversions.find(e.type);
+                    if (convIt != conversions.end()) {
+                        // todo IDE complains about const correctness of particleData entry "e"
+                        e.type = (*convIt).second;
                     }
                 }
             }

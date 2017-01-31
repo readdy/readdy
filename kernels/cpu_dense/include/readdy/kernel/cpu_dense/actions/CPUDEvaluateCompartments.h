@@ -40,12 +40,12 @@ namespace actions {
 
 class CPUDEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
-    CPUDEvaluateCompartments(CPUDKernel const *const kernel);
+    CPUDEvaluateCompartments(CPUDKernel *const kernel);
 
     virtual void perform() override;
 
 protected:
-    CPUDKernel const *const kernel;
+    CPUDKernel *const kernel;
 };
 
 }

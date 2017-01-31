@@ -37,7 +37,7 @@ namespace kernel {
 namespace cpu_dense {
 namespace actions {
 
-CPUDEvaluateCompartments::CPUDEvaluateCompartments(const CPUDKernel *const kernel) : kernel(kernel) {}
+CPUDEvaluateCompartments::CPUDEvaluateCompartments(CPUDKernel *const kernel) : kernel(kernel) {}
 
 void CPUDEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
@@ -45,9 +45,10 @@ void CPUDEvaluateCompartments::perform() {
     for(auto& e : *kernel->getKernelStateModel().getParticleData()) {
         for (auto i = 0; i < compartments.size(); ++i) {
             if (compartments[i]->isContained(e.position())) {
-                const auto conversions = compartments[i]->getConversions();
-                if (conversions.find(e.type) != conversions.end()) {
-                    e.type = conversions.at(e.type);
+                const auto &conversions = compartments[i]->getConversions();
+                const auto convIt = conversions.find(e.type);
+                if (convIt != conversions.end()) {
+                    e.type = (*convIt).second;
                 }
             }
         }

@@ -34,7 +34,7 @@ namespace kernel {
 namespace scpu {
 namespace actions {
 
-SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel const *const kernel) : kernel(kernel) {}
+SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : kernel(kernel) {}
 
 void SCPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
@@ -45,10 +45,10 @@ void SCPUEvaluateCompartments::perform() {
     while (posIt != data->end_positions()) {
         for (auto i=0; i<compartments.size(); ++i) {
             if (compartments[i]->isContained(*posIt)) {
-                const auto conversions = compartments[i]->getConversions();
-                if (conversions.find(*typesIt) != conversions.end()) {
-                    const auto targetType = conversions.at(*typesIt);
-                    *typesIt = targetType;
+                const auto &conversions = compartments[i]->getConversions();
+                const auto convIt = conversions.find(*typesIt);
+                if (convIt != conversions.end()) {
+                    *typesIt = (*convIt).second;
                 }
             }
         }
