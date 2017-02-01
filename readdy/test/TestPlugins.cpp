@@ -38,8 +38,8 @@ TEST(Kernel, LoadingNonexistingPlugin) {
     try {
         plug::KernelProvider::getInstance().create("foo2");
         FAIL() << "Expected NoSuchPluginException!";
-    } catch (plug::NoSuchPluginException const &ex) {
-        SUCCEED() << "NoSuchPluginException caught.";
+    } catch (std::invalid_argument const &ex) {
+        SUCCEED() << "invalid argument caught.";
     } catch (...) {
         FAIL() << "Expected NoSuchPluginException!";
     }

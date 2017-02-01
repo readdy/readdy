@@ -44,13 +44,12 @@ struct shared_library {
 
     void* handle = nullptr;
 
-    shared_library() {
-        // no op
-    }
-
     shared_library(const std::string& path, int mode) {
         handle = dlopen(path.c_str(), mode);
     }
+
+    shared_library(const shared_library&) = delete;
+    shared_library& operator=(const shared_library&) = delete;
 
     bool has_symbol(const std::string& symbol) {
         if(handle) {

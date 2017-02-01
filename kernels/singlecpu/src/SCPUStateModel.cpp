@@ -142,8 +142,8 @@ void SCPUStateModel::calculateForces() {
         for(const auto& topology : pimpl->topologies) {
             // calculate bonded potentials
             for(const auto& bondedPot : topology->getBondedPotentials()) {
-                auto energy = bondedPot->createForceAndEnergyAction(pimpl->kernel)->perform();
-                pimpl->currentEnergy += energy;
+                // auto energy = bondedPot->createForceAndEnergyAction(pimpl->kernel)->perform();
+                // pimpl->currentEnergy += energy;
             }
         }
     }
