@@ -80,45 +80,52 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
 
 std::vector<event_t> findEvents(const SCPUKernel *const kernel, double dt, bool approximateRate = true) {
     std::vector<event_t> eventsUpdate;
-    auto& stateModel = kernel->getSCPUKernelStateModel();
-    auto& data = *stateModel.getParticleData();
-    const auto& d2 = kernel->getKernelContext().getDistSquaredFun();
-    auto it = stateModel.getParticleData()->begin();
-    auto it_nl = stateModel.getNeighborList()->begin();
-    for(; it_nl != stateModel.getNeighborList()->end(); ++it_nl) {
-        const auto& entry = data.entry_at(it_nl->idx1);
-        if (!entry.is_deactivated()) {
-            // order 1
-            {
-                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(entry.type);
+    auto &stateModel = kernel->getSCPUKernelStateModel();
+    auto &data = *stateModel.getParticleData();
+    const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
+    {
+        std::size_t idx = 0;
+        for (const auto &e : data) {
+            if (!e.is_deactivated()) {
+                // order 1
+                const auto &reactions = kernel->getKernelContext().getOrder1Reactions(e.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
                         //unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
                         //double cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2
-                        Event evt {1, (*it_reactions)->getNProducts(), it_nl->idx1, it_nl->idx1, rate, 0,
-                                   static_cast<std::size_t>(it_reactions - reactions.begin()),
-                                   entry.type, 0};
+                        Event evt{1, (*it_reactions)->getNProducts(), idx, idx, rate, 0,
+                                  static_cast<std::size_t>(it_reactions - reactions.begin()),
+                                  e.type, 0};
                         eventsUpdate.push_back(evt);
                     }
                 }
             }
+            ++idx;
+        }
+    }
+    auto it_nl = stateModel.getNeighborList()->cbegin();
+    for (; it_nl != stateModel.getNeighborList()->cend(); ++it_nl) {
+        const auto &entry = data.entry_at(it_nl->idx1);
+        if (!entry.is_deactivated()) {
+
             // order 2
-                const auto &neighbor = data.entry_at(it_nl->idx2);
-                const auto &reactions = kernel->getKernelContext().getOrder2Reactions(entry.type, neighbor.type);
-                if (!reactions.empty()) {
-                    const auto distSquared = d2(neighbor.position(), entry.position());
-                    for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
-                        const auto &react = *it_reactions;
-                        const auto rate = react->getRate();
-                        if (rate > 0 && distSquared < react->getEductDistanceSquared()
-                            && shouldPerformEvent(rate, dt, approximateRate)) {
-                            const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
-                                                                                                  reactions.begin());
-                            eventsUpdate.push_back({2, react->getNProducts(), it_nl->idx1, it_nl->idx2, rate, 0, reaction_index,
-                                                    entry.type, neighbor.type});
-                        }
+            const auto &neighbor = data.entry_at(it_nl->idx2);
+            const auto &reactions = kernel->getKernelContext().getOrder2Reactions(entry.type, neighbor.type);
+            if (!reactions.empty()) {
+                const auto distSquared = d2(neighbor.position(), entry.position());
+                for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
+                    const auto &react = *it_reactions;
+                    const auto rate = react->getRate();
+                    if (rate > 0 && distSquared < react->getEductDistanceSquared()
+                        && shouldPerformEvent(rate, dt, approximateRate)) {
+                        const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                              reactions.begin());
+                        eventsUpdate.push_back(
+                                {2, react->getNProducts(), it_nl->idx1, it_nl->idx2, rate, 0, reaction_index,
+                                 entry.type, neighbor.type});
                     }
+                }
             }
         }
     }
@@ -140,26 +147,26 @@ void SCPUUncontrolledApproximation::perform() {
     // execute reactions
     {
         data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries {};
+        std::vector<data_t::index_t> decayedEntries{};
 
-        for(auto it = events.begin(); it != events.end(); ++it) {
-            auto& event = *it;
-            if(event.cumulativeRate == 0) {
+        for (auto it = events.begin(); it != events.end(); ++it) {
+            auto &event = *it;
+            if (event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
                     auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
                     performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
-                    for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
-                        if(_it2->idx1 == entry1 || _it2->idx2 == entry1) {
+                    for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
+                        if (_it2->idx1 == entry1 || _it2->idx2 == entry1) {
                             _it2->cumulativeRate = 1;
                         }
                     }
                 } else {
                     auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
                     performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
-                    for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
-                        if(_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
-                           _it2 ->idx1 == event.idx2 || _it2->idx2 == event.idx2) {
+                    for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
+                        if (_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
+                            _it2->idx1 == event.idx2 || _it2->idx2 == event.idx2) {
                             _it2->cumulativeRate = 1;
                         }
                     }
@@ -192,26 +199,31 @@ void SCPUUncontrolledApproximation::registerReactionScheme_22(const std::string 
 
 void gatherEvents(SCPUKernel const *const kernel,
                   const readdy::kernel::scpu::model::SCPUNeighborList &nl, const data_t &data, double &alpha,
-                  std::vector<event_t> &events, const readdy::model::KernelContext::dist_squared_fun& d2) {
-    for(auto it_nl = nl.begin(); it_nl != nl.end(); ++it_nl) {
-        auto& entry = data.entry_at(it_nl->idx1);
-        if(!entry.is_deactivated()) {
-            // order 1
-            {
+                  std::vector<event_t> &events, const readdy::model::KernelContext::dist_squared_fun &d2) {
+    {
+        std::size_t index = 0;
+        for (const auto &entry : data) {
+            if(!entry.is_deactivated()) {
                 const auto &reactions = kernel->getKernelContext().getOrder1Reactions(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
                     if (rate > 0) {
                         alpha += rate;
                         events.push_back(
-                                {1, (*it)->getNProducts(), it_nl->idx1, 0, rate, alpha,
+                                {1, (*it)->getNProducts(), index, 0, rate, alpha,
                                  static_cast<event_t::reaction_index_type>(it - reactions.begin()),
                                  entry.type, 0});
                     }
                 }
             }
+            ++index;
+        }
+    }
+    for (auto it_nl = nl.begin(); it_nl != nl.end(); ++it_nl) {
+        auto &entry = data.entry_at(it_nl->idx1);
+        if (!entry.is_deactivated()) {
             // order 2
-            const auto& neighbor = data.entry_at(it_nl->idx2);
+            const auto &neighbor = data.entry_at(it_nl->idx2);
             const auto &reactions = kernel->getKernelContext().getOrder2Reactions(entry.type, neighbor.type);
             if (!reactions.empty()) {
                 const auto distSquared = d2(neighbor.position(), entry.position());
@@ -236,11 +248,11 @@ data_t::update_t handleEventsGillespie(
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events) {
     data_t::entries_update_t newParticles{};
-    std::vector<data_t::index_t> decayedEntries {};
+    std::vector<data_t::index_t> decayedEntries{};
 
-    if(!events.empty()) {
+    if (!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
-        const auto& fixPos = ctx.getFixPositionFun();
+        const auto &fixPos = ctx.getFixPositionFun();
         const auto data = kernel->getSCPUKernelStateModel().getParticleData();
         /**
          * Handle gathered reaction events

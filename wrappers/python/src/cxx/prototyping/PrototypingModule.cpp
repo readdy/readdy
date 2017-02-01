@@ -75,6 +75,7 @@ PYBIND11_PLUGIN (prototyping) {
             .def("get_potential_factory", [](const scpu_kernel_t &self) -> const readdy::model::potentials::PotentialFactory& {return self.getPotentialFactory(); }, rvp::reference_internal)
             .def("get_reaction_factory", [](const scpu_kernel_t &self) -> const readdy::model::reactions::ReactionFactory& {return self.getReactionFactory();}, rvp::reference_internal)
             .def("get_observable_factory", [](const scpu_kernel_t &self) -> const readdy::model::observables::ObservableFactory& {return self.getObservableFactory();}, rvp::reference_internal)
+            .def("get_topology_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::top::TopologyActionFactory*  {return self.getTopologyActionFactory();}, rvp::reference_internal)
             .def("get_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::actions::ActionFactory& {return self.getActionFactory();}, rvp::reference_internal);
 
     return proto.ptr();

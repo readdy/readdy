@@ -212,7 +212,7 @@ protected:
 
 protected:
     // the (N,L,S,R) observables defined above
-    std::unique_ptr<readdy::model::Kernel> kernel;
+    readdy::plugin::KernelProvider::kernel_ptr kernel;
     std::unique_ptr<readdy::model::actions::UpdateNeighborList> neighborList;
     std::unique_ptr<readdy::model::actions::UpdateNeighborList> clearNeighborList;
     bool hasPerformed = false;

@@ -45,6 +45,7 @@ namespace kernel {
 namespace scpu {
 
 class SCPUStateModel : public readdy::model::KernelStateModel {
+    using topology_action_factory = readdy::model::top::TopologyActionFactory;
 public:
 
     virtual void updateNeighborList() override;
@@ -69,7 +70,7 @@ public:
 
     virtual void increaseEnergy(double increase);
 
-    SCPUStateModel(readdy::model::KernelContext const *context);
+    SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *);
 
     ~SCPUStateModel();
 

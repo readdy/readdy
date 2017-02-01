@@ -63,7 +63,7 @@ public:
 
     void calculateForce(Vec3 &force, const Vec3 &x_ij, const Bond &bond) const;
 
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const Kernel*const) override;
+    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) override;
 
 protected:
     void addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant);

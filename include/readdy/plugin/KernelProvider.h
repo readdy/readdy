@@ -38,13 +38,15 @@
 namespace readdy {
 namespace util  { namespace dll { class shared_library; }}
 namespace plugin {
-class KernelDeleter : public std::default_delete<readdy::model::Kernel> {
+class KernelDeleter {
     std::shared_ptr<readdy::util::dll::shared_library> ptr;
 public:
     // internal kernel
     KernelDeleter();
     // external kernel
     KernelDeleter(const std::shared_ptr<readdy::util::dll::shared_library>& libPtr);
+
+    void operator()(readdy::model::Kernel*);
 };
 
 /**

@@ -43,7 +43,8 @@ void SCPUEulerBDIntegrator::perform() {
     const auto &context = kernel->getKernelContext();
     const auto &kbt = context.getKBT();
     const auto &fixPos = context.getFixPositionFun();
-    const auto pd = kernel->getSCPUKernelStateModel().getParticleData();
+    auto& stateModel = kernel->getSCPUKernelStateModel();
+    const auto pd = stateModel.getParticleData();
     for(auto& entry : *pd) {
         if(!entry.is_deactivated()) {
             const double D = context.getDiffusionConstant(entry.type);

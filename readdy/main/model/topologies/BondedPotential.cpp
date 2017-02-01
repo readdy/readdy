@@ -30,7 +30,6 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/Kernel.h>
 #include <readdy/model/topologies/BondedPotential.h>
 #include <readdy/model/topologies/Topology.h>
 
@@ -51,6 +50,7 @@ BondedPotential::BondedPotential(Topology *const topology) : TopologyPotential(t
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds)
         : BondedPotential(topology), bonds(bonds) {
 }
+
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, std::vector<Bond> bonds)
         : BondedPotential(topology), bonds(std::move(bonds)) {}
 
@@ -69,16 +69,17 @@ HarmonicBondPotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const Harmo
     force += (-2 * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
 }
 
-std::unique_ptr<EvaluatePotentialAction> HarmonicBondPotential::createForceAndEnergyAction(const Kernel*const kernel) {
-    return kernel->getTopologyActionFactory()->createCalculateHarmonicBondPotential(this);
+std::unique_ptr<EvaluatePotentialAction>
+HarmonicBondPotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
+    return factory->createCalculateHarmonicBondPotential(this);
 }
 
 void HarmonicBondPotential::addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant) {
     const auto n = topology->getNParticles();
-    if(idx1 >= n) {
+    if (idx1 >= n) {
         throw std::invalid_argument("the first particle index (" + std::to_string(idx1) + ") was out of bounds!");
     }
-    if(idx2 >= n) {
+    if (idx2 >= n) {
         throw std::invalid_argument("the second particle index (" + std::to_string(idx2) + ") was out of bounds!");
     }
     bonds.emplace_back(idx1, idx2, length, forceConstant);

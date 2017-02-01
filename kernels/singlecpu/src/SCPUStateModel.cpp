@@ -42,14 +42,16 @@ struct SCPUStateModel::Impl {
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
     std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies;
+    SCPUStateModel::topology_action_factory const* topologyActionFactory;
     readdy::model::KernelContext const *context;
 };
 
-SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context) : pimpl(
-        std::make_unique<SCPUStateModel::Impl>()) {
+SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const*const taf)
+        : pimpl(std::make_unique<SCPUStateModel::Impl>()) {
     pimpl->particleData = std::make_unique<model::SCPUParticleData>();
     pimpl->neighborList = std::make_unique<model::SCPUNeighborList>(context);
     pimpl->context = context;
+    pimpl->topologyActionFactory = taf;
 }
 
 void readdy::kernel::scpu::SCPUStateModel::addParticle(const readdy::model::Particle &p) {
@@ -124,7 +126,7 @@ void SCPUStateModel::calculateForces() {
     {
         const auto &difference = pimpl->context->getShortestDifferenceFun();
         readdy::model::Vec3 forceVec{0, 0, 0};
-        for (auto &&it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
+        for (auto it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
             auto i = it->idx1;
             auto j = it->idx2;
             auto& entry_i = pimpl->particleData->entry_at(i);
@@ -142,8 +144,8 @@ void SCPUStateModel::calculateForces() {
         for(const auto& topology : pimpl->topologies) {
             // calculate bonded potentials
             for(const auto& bondedPot : topology->getBondedPotentials()) {
-                // auto energy = bondedPot->createForceAndEnergyAction(pimpl->kernel)->perform();
-                // pimpl->currentEnergy += energy;
+                auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                pimpl->currentEnergy += energy;
             }
         }
     }

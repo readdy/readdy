@@ -38,10 +38,10 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
-class Kernel;
 NAMESPACE_BEGIN(top)
 
 class Topology;
+class TopologyActionFactory;
 
 class TopologyPotential {
 public:
@@ -49,7 +49,7 @@ public:
 
     Topology *const getTopology() const;
 
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const Kernel*const) = 0;
+    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) = 0;
 
 protected:
     Topology *const topology;

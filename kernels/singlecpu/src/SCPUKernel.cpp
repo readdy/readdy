@@ -47,13 +47,13 @@ struct SCPUKernel::Impl {
 
 SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<SCPUKernel::Impl>()) {
     pimpl->actionFactory = std::make_unique<actions::SCPUActionFactory>(this);
+    pimpl->topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>(this);
     pimpl->potentials = std::make_unique<readdy::model::potentials::PotentialFactory>();
     pimpl->reactions = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
-    pimpl->model = std::make_unique<SCPUStateModel>(pimpl->context.get());
+    pimpl->model = std::make_unique<SCPUStateModel>(pimpl->context.get(), pimpl->topologyActionFactory.get());
     pimpl->observables = std::make_unique<observables::SCPUObservableFactory>(this);
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
-    pimpl->topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>();
     pimpl->topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>(this);
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
 }
@@ -113,7 +113,7 @@ const SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() const {
 }
 
 SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() {
-    getKernelStateModelInternal();
+    return getKernelStateModelInternal();
 }
 
 SCPUKernel &SCPUKernel::operator=(SCPUKernel &&rhs) = default;

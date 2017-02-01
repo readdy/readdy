@@ -119,7 +119,7 @@ void exportModelClasses(py::module &proto) {
 
     py::class_ <rdy_scpu_model_t, rdy_scpu_model_wrap_t> model(proto, "Model");
     model
-            .def(py::init<rdy_ctx_t *>())
+            .def(py::init<rdy_ctx_t *, readdy::model::top::TopologyActionFactory *>())
             .def("remove_particle", &rdy_scpu_model_t::removeParticle)
             .def("get_particle_positions", &rdy_scpu_model_t::getParticlePositions)
             .def("get_energy", &rdy_scpu_model_t::getEnergy)

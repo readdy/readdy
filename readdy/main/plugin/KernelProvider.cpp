@@ -153,7 +153,7 @@ void KernelProvider::add(const std::string &sharedLib) {
 }
 
 void KernelProvider::add(const std::string &name, const std::function<readdy::model::Kernel *()> &creator) {
-    pimpl->factory.emplace(std::make_pair(name,  [=]() {
+    pimpl->factory.emplace(std::make_pair(name, [creator]() {
         return kernel_ptr(creator(), {});
     }));
 }
@@ -171,6 +171,11 @@ KernelProvider::~KernelProvider() = default;
 KernelDeleter::KernelDeleter()  : ptr(nullptr) {}
 
 KernelDeleter::KernelDeleter(const std::shared_ptr<readdy::util::dll::shared_library> &libPtr) : ptr(libPtr) {}
+
+void KernelDeleter::operator()(readdy::model::Kernel *k) {
+    delete k;
+    ptr.reset();
+}
 
 }
 }

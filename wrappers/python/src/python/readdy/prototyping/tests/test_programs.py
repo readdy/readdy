@@ -37,7 +37,7 @@ class TestPrograms(unittest.TestCase):
         class CustomKernel(pr.SingleCPUKernel):
             def __init__(self):
                 super(CustomKernel, self).__init__()
-                self._model = CustomStateModel(self.get_kernel_context())
+                self._model = CustomStateModel(self.get_kernel_context(), self.get_topology_action_factory())
 
             def get_kernel_state_model(self):
                 return self._model
