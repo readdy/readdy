@@ -157,13 +157,8 @@ void SCPUStateModel::removeAllParticles() {
     pimpl->particleData->clear();
 }
 
-readdy::model::top::Topology *const SCPUStateModel::addTopology(std::vector<readdy::model::Particle> &particles) {
-    for(const auto& p : particles) {
-        if(pimpl->context->getParticleTypeInfo(p.getType()).flavor != readdy::model::Particle::FLAVOR_TOPOLOGY) {
-            throw std::invalid_argument("at least one of the particles did not have the topology flavor!");
-        }
-    }
-    std::vector<std::size_t> ids = pimpl->particleData->addParticlesGetIds(particles);
+readdy::model::top::Topology *const SCPUStateModel::addTopology(std::vector<readdy::model::TopologyParticle> &particles) {
+    std::vector<std::size_t> ids = pimpl->particleData->addTopologyParticles(particles);
     pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids)));
     return pimpl->topologies.back().get();
 }

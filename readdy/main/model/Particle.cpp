@@ -35,18 +35,18 @@
 namespace readdy {
 namespace model {
 
-std::atomic<Particle::id_type> Particle::id_counter {0};
+std::atomic<Particle::id_type> Particle::id_counter{0};
 
-bool Particle::operator==(const Particle &rhs) const{
+bool Particle::operator==(const Particle &rhs) const {
     return rhs.id == id;
 }
 
-bool Particle::operator!=(const Particle &rhs) const{
+bool Particle::operator!=(const Particle &rhs) const {
     return !(*this == rhs);
 }
 
-Particle::Particle(double x, double y, double z, type_type type, flavor_t flavor)
-        : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type), flavor(flavor){}
+Particle::Particle(double x, double y, double z, type_type type)
+        : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type), flavor(FLAVOR_NORMAL) {}
 
 const Vec3 &Particle::getPos() const {
     return pos;
@@ -56,15 +56,15 @@ const Particle::id_type Particle::getId() const {
     return id;
 }
 
-Particle::Particle(Vec3 pos, type_type type, id_type id, flavor_t flavor)
-        : pos(pos), type(std::move(type)), id(id), flavor(flavor) {}
+Particle::Particle(Vec3 pos, type_type type, id_type id)
+        : pos(pos), type(std::move(type)), id(id), flavor(FLAVOR_NORMAL) {}
 
 Vec3 &Particle::getPos() {
     return pos;
 }
 
-Particle::Particle(Vec3 pos, type_type type, flavor_t flavor)
-        : pos(pos), type(std::move(type)), id(std::atomic_fetch_add<id_type>(&id_counter, 1)), flavor(flavor) {}
+Particle::Particle(Vec3 pos, type_type type)
+        : pos(pos), type(std::move(type)), id(std::atomic_fetch_add<id_type>(&id_counter, 1)), flavor(FLAVOR_NORMAL) {}
 
 
 Particle::~Particle() = default;
@@ -74,10 +74,21 @@ std::ostream &operator<<(std::ostream &os, const Particle &p) {
     return os;
 }
 
-const Particle::type_type& Particle::getType() const {
+const Particle::type_type &Particle::getType() const {
     return type;
 }
 
 
+TopologyParticle::TopologyParticle(double x, double y, double z, Particle::type_type type) : Particle(x, y, z, type) {
+    flavor = FLAVOR_TOPOLOGY;
+}
+
+TopologyParticle::TopologyParticle(Vec3 pos, Particle::type_type type) : Particle(pos, type) {
+    flavor = FLAVOR_TOPOLOGY;
+}
+
+TopologyParticle::TopologyParticle(Vec3 pos, Particle::type_type type, Particle::id_type id) : Particle(pos, type, id) {
+    flavor = FLAVOR_TOPOLOGY;
+}
 }
 }

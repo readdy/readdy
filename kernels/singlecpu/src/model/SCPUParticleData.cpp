@@ -91,7 +91,7 @@ void SCPUParticleData::addParticles(const std::vector<SCPUParticleData::particle
 }
 
 std::vector<SCPUParticleData::entries_t::size_type>
-SCPUParticleData::addParticlesGetIds(const std::vector<SCPUParticleData::particle_type> &particles) {
+SCPUParticleData::addTopologyParticles(const std::vector<SCPUParticleData::top_particle_type> &particles) {
     std::vector<entries_t::size_type> indices;
     indices.reserve(particles.size());
     for(const auto& p : particles) {

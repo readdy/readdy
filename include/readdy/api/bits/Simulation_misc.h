@@ -33,6 +33,7 @@
 #ifndef READDY_MAIN_SIMULATION_MISC_H
 #define READDY_MAIN_SIMULATION_MISC_H
 
+#include <readdy/plugin/KernelProvider.h>
 #include "../Simulation.h"
 
 namespace readdy {
@@ -40,7 +41,7 @@ namespace readdy {
 struct Simulation::Impl {
     std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
     std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables{};
-    std::unique_ptr<readdy::model::Kernel> kernel;
+    plugin::KernelProvider::kernel_ptr kernel;
     std::unique_ptr<io::File> trajectoryFile;
     unsigned long trajectoryFileId;
     unsigned long counter = 0;

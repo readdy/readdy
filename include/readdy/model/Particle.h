@@ -56,11 +56,11 @@ public:
     static constexpr flavor_t FLAVOR_TOPOLOGY = 1;
     static constexpr flavor_t FLAVOR_MEMBRANE = 2;
 
-    Particle(double x, double y, double z, type_type type, flavor_t flavor = FLAVOR_NORMAL);
+    Particle(double x, double y, double z, type_type type);
 
-    Particle(Vec3 pos, type_type type, flavor_t flavor = FLAVOR_NORMAL);
+    Particle(Vec3 pos, type_type type);
 
-    Particle(Vec3 pos, type_type type, id_type id, flavor_t flavor = FLAVOR_NORMAL);
+    Particle(Vec3 pos, type_type type, id_type id);
 
     virtual ~Particle();
 
@@ -78,13 +78,24 @@ public:
 
     friend std::ostream &operator<<(std::ostream &, const Particle &);
 
-private:
+protected:
     Vec3 pos;
     type_type type;
     id_type id;
     flavor_t flavor;
 
     static std::atomic<id_type> id_counter;
+};
+
+class TopologyParticle : public Particle {
+    using super = Particle;
+public:
+    TopologyParticle(double x, double y, double z, type_type type);
+
+    TopologyParticle(Vec3 pos, type_type type);
+
+    TopologyParticle(Vec3 pos, type_type type, id_type id);
+
 };
 
 }

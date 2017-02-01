@@ -50,7 +50,7 @@ class TestModel(unittest.TestCase):
         np.testing.assert_equal(self.ctx.periodic_boundary, [True, False, True])
 
     def test_kernel_context_register_particle_type(self):
-        self.ctx.register_particle_type("A", 13.0, 17.0)
+        self.ctx.register_particle_type("A", 13.0, 17.0, 0)
         np.testing.assert_equal(self.ctx.get_diffusion_constant("A"), 13.0)
         np.testing.assert_equal(self.ctx.get_particle_radius("A"), 17.0)
 
@@ -70,10 +70,10 @@ class TestModel(unittest.TestCase):
         self.ctx.periodic_boundary = [True, True, True]
         diff = self.ctx.get_shortest_difference_fun()
         np.testing.assert_equal(diff(cmn.Vec(0, 0, 0), cmn.Vec(1, 0, 0)), cmn.Vec(1, 0, 0),
-                          err_msg="both vectors were already inside the domain")
+                                err_msg="both vectors were already inside the domain")
         np.testing.assert_equal(diff(cmn.Vec(0, 0, 0), cmn.Vec(-1.5, 0, 0)), cmn.Vec(.5, 0, 0),
-                          err_msg="The latter vector was outside the domain, thus had to get a "
-                                  "position update to (.5, 0, 0)")
+                                err_msg="The latter vector was outside the domain, thus had to get a "
+                                        "position update to (.5, 0, 0)")
 
     def test_kernel_context_dist_squared_fun(self):
         self.ctx.set_box_size(cmn.Vec(2, 2, 2))
@@ -86,6 +86,7 @@ class TestModel(unittest.TestCase):
         self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
         self.model.get_particle_data().clear()
+
         class MyPot1(pr.PotentialOrder1):
             def __init__(self, type):
                 super(MyPot1, self).__init__(type)
@@ -105,7 +106,7 @@ class TestModel(unittest.TestCase):
             def get_maximal_force(self, kbt):
                 return kbt
 
-        self.ctx.register_particle_type("A", 1.0, 1.0)
+        self.ctx.register_particle_type("A", 1.0, 1.0, 0)
         pot = MyPot1("A")
         self.ctx.register_potential_order_1(pot)
         particles = [pr.Particle(0, 0, .5, self.ctx.get_particle_type_id("A"))]
@@ -132,7 +133,7 @@ class TestModel(unittest.TestCase):
         class MyPot2(pr.PotentialOrder2):
             def __init__(self, typea, typeb):
                 super(MyPot2, self).__init__(typea, typeb)
-            
+
             def calculate_energy(self, x_ij):
                 return np.sqrt(x_ij * x_ij)
 
@@ -148,8 +149,8 @@ class TestModel(unittest.TestCase):
             def get_maximal_force(self, kbt):
                 return kbt
 
-        self.ctx.register_particle_type("A", 1.0, 1.0)
-        self.ctx.register_particle_type("B", 1.0, 1.0)
+        self.ctx.register_particle_type("A", 1.0, 1.0, 0)
+        self.ctx.register_particle_type("B", 1.0, 1.0, 0)
         pot = MyPot2("A", "B")
         self.ctx.register_potential_order_2(pot)
         particles = [pr.Particle(0, 0, 0, self.ctx.get_particle_type_id("A")),
@@ -175,16 +176,17 @@ class TestModel(unittest.TestCase):
             next(it)
 
     def test_potential_factory(self):
-        self.ctx.register_particle_type("A", 1.0, 1.0)
-        self.ctx.register_particle_type("B", 1.0, 1.0)
-        cube_pot = self.pots.create_cube_potential("A", 1, cmn.Vec(0,0,0), cmn.Vec(1,1,1), True)
+        self.ctx.register_particle_type("A", 1.0, 1.0, 0)
+        self.ctx.register_particle_type("B", 1.0, 1.0, 0)
+        cube_pot = self.pots.create_cube_potential("A", 1, cmn.Vec(0, 0, 0), cmn.Vec(1, 1, 1), True)
         np.testing.assert_equal(cube_pot.get_name(), "Cube")
 
         repulsion_pot = self.pots.create_harmonic_repulsion("A", "B", 10)
         np.testing.assert_equal(repulsion_pot.get_name(), "HarmonicRepulsion")
 
-        weak_interaction_pot = self.pots.create_weak_interaction("A", "B", 0,0,0,0)
+        weak_interaction_pot = self.pots.create_weak_interaction("A", "B", 0, 0, 0, 0)
         np.testing.assert_equal(weak_interaction_pot.get_name(), "WeakInteractionPiecewiseHarmonic")
+
 
 if __name__ == '__main__':
     unittest.main()

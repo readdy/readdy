@@ -85,6 +85,7 @@ public:
     using index_t = entries_t::size_type;
     using entries_update_t = std::vector<Entry>;
     using particle_type = readdy::model::Particle;
+    using top_particle_type = readdy::model::TopologyParticle;
     using force_t = particle_type::pos_type;
     using displacement_t = force_t::entry_t;
     using iterator = entries_t::iterator;
@@ -105,7 +106,7 @@ public:
 
     void addParticles(const std::vector<particle_type> &particles);
 
-    std::vector<entries_t::size_type> addParticlesGetIds(const std::vector<particle_type> &particles);
+    std::vector<entries_t::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
 
     void removeParticle(const particle_type &particle);
 
