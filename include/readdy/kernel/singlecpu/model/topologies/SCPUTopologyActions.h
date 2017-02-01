@@ -74,6 +74,32 @@ public:
 
 };
 
+class SCPUCalculateHarmonicAnglePotential : public readdy::model::top::CalculateHarmonicAnglePotential {
+    const readdy::model::top::HarmonicAnglePotential *const potential;
+    SCPUParticleData *const data;
+public:
+    SCPUCalculateHarmonicAnglePotential(const readdy::model::KernelContext *const context, SCPUParticleData *const data,
+                                        const readdy::model::top::HarmonicAnglePotential*const potential)
+            : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
+
+    virtual double perform() override {
+        readdy::model::Vec3::entry_t energy = 0;
+        const auto& particleIndices = potential->getTopology()->getParticles();
+        const auto& d = context->getShortestDifferenceFun();
+
+
+        for(const auto& angle : potential->getAngles()) {
+            readdy::model::Vec3 forceUpdate{0,0,0};
+            auto& e1 = data->entry_at(particleIndices.at(angle.idx1));
+            auto& e2 = data->entry_at(particleIndices.at(angle.idx2));
+            auto& e3 = data->entry_at(particleIndices.at(angle.idx3));
+
+        }
+        return energy;
+    }
+
+};
+
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(scpu)

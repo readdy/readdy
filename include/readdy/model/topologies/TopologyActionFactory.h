@@ -45,6 +45,9 @@ class TopologyActionFactory {
 public:
     virtual std::unique_ptr<CalculateHarmonicBondPotential>
     createCalculateHarmonicBondPotential(const HarmonicBondPotential *const) const = 0;
+
+    virtual std::unique_ptr<CalculateHarmonicAnglePotential>
+    createCalculateHarmonicAnglePotential(const HarmonicAnglePotential *const) const = 0;
 };
 
 NAMESPACE_END(top)

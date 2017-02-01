@@ -46,13 +46,35 @@ class AnglePotential : public TopologyPotential{
 public:
     using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
     AnglePotential(Topology *const topology);
-
-protected:
-    struct Angle {
-
-    };
 };
 
+class HarmonicAnglePotential : public AnglePotential{
+public:
+    struct Angle;
+    using angles_t = std::vector<Angle>;
+    HarmonicAnglePotential(Topology *const topology, const angles_t& angles);
+    HarmonicAnglePotential(Topology *const topology, angles_t angles);
+
+    virtual std::unique_ptr<EvaluatePotentialAction>
+    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
+
+    const angles_t &getAngles() const;
+
+    double calculateEnergy(const Vec3& x_ij, const Vec3& x_kj, const Angle& angle) const;
+
+    double calculateForce(Vec3 &force, const Vec3 &x_ij, const Vec3 &x_kj, const Angle &angle) const;
+
+protected:
+    angles_t angles;
+};
+
+struct HarmonicAnglePotential::Angle {
+
+    Angle(size_t idx1, size_t idx2, size_t idx3, double equilibriumAngle, double forceConstant);
+
+    const std::size_t idx1, idx2, idx3;
+    const double equilibriumAngle, forceConstant;
+};
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)

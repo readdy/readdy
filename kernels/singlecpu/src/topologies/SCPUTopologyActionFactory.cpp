@@ -44,6 +44,8 @@ namespace scpu {
 namespace model {
 namespace top {
 
+SCPUTopologyActionFactory::SCPUTopologyActionFactory(const SCPUKernel *const kernel) : kernel(kernel) {}
+
 std::unique_ptr<calc_harmonic_bond>
 SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_bond *const potential) const {
     return std::make_unique<SCPUCalculateHarmonicBondPotential>(
@@ -51,7 +53,14 @@ SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_b
     );
 }
 
-SCPUTopologyActionFactory::SCPUTopologyActionFactory(const SCPUKernel *const kernel) : kernel(kernel) {}
+std::unique_ptr<readdy::model::top::CalculateHarmonicAnglePotential>
+SCPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
+        const readdy::model::top::HarmonicAnglePotential *const potential) const {
+    return std::make_unique<SCPUCalculateHarmonicAnglePotential>(
+            &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+    );
+}
+
 }
 }
 }

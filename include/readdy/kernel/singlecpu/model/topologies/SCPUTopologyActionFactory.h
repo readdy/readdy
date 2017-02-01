@@ -43,13 +43,18 @@ NAMESPACE_BEGIN(scpu)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
+namespace top = readdy::model::top;
+
 class SCPUTopologyActionFactory : public readdy::model::top::TopologyActionFactory {
     const SCPUKernel *const kernel;
 public:
     SCPUTopologyActionFactory(const SCPUKernel *const kernel);
 
-    virtual std::unique_ptr<readdy::model::top::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const readdy::model::top::HarmonicBondPotential *const) const override;
+    virtual std::unique_ptr<top::CalculateHarmonicBondPotential>
+    createCalculateHarmonicBondPotential(const top::HarmonicBondPotential *const) const override;
+
+    virtual std::unique_ptr<top::CalculateHarmonicAnglePotential>
+    createCalculateHarmonicAnglePotential(const top::HarmonicAnglePotential *const potential) const override;
 };
 
 NAMESPACE_END(top)

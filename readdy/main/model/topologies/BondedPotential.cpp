@@ -48,11 +48,32 @@ BondedPotential::BondedPotential(Topology *const topology) : TopologyPotential(t
  */
 
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds)
-        : BondedPotential(topology), bonds(bonds) {
+        : BondedPotential(topology) {
+    const auto n = topology->getNParticles();
+    for(const auto& bond : bonds) {
+        if (bond.idx1 >= n) {
+            throw std::invalid_argument("the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
+        }
+        if (bond.idx2 >= n) {
+            throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
+        }
+    }
+    this->bonds = bonds;
 }
 
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, std::vector<Bond> bonds)
-        : BondedPotential(topology), bonds(std::move(bonds)) {}
+        : BondedPotential(topology) {
+    const auto n = topology->getNParticles();
+    for(const auto& bond : bonds) {
+        if (bond.idx1 >= n) {
+            throw std::invalid_argument("the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
+        }
+        if (bond.idx2 >= n) {
+            throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
+        }
+    }
+    this->bonds = std::move(bonds);
+}
 
 const std::vector<HarmonicBondPotential::Bond> &HarmonicBondPotential::getBonds() const {
     return bonds;
@@ -73,18 +94,6 @@ std::unique_ptr<EvaluatePotentialAction>
 HarmonicBondPotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
     return factory->createCalculateHarmonicBondPotential(this);
 }
-
-void HarmonicBondPotential::addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant) {
-    const auto n = topology->getNParticles();
-    if (idx1 >= n) {
-        throw std::invalid_argument("the first particle index (" + std::to_string(idx1) + ") was out of bounds!");
-    }
-    if (idx2 >= n) {
-        throw std::invalid_argument("the second particle index (" + std::to_string(idx2) + ") was out of bounds!");
-    }
-    bonds.emplace_back(idx1, idx2, length, forceConstant);
-}
-
 
 }
 }

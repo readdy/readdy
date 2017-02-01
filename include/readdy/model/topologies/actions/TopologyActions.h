@@ -47,6 +47,11 @@ public:
     CalculateHarmonicBondPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
 };
 
+class CalculateHarmonicAnglePotential : public EvaluatePotentialAction {
+public:
+    CalculateHarmonicAnglePotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+};
+
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

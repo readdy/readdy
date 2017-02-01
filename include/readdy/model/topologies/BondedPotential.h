@@ -63,18 +63,23 @@ public:
 
     void calculateForce(Vec3 &force, const Vec3 &x_ij, const Bond &bond) const;
 
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) override;
+    virtual std::unique_ptr<EvaluatePotentialAction>
+    createForceAndEnergyAction(const TopologyActionFactory *const) override;
 
 protected:
-    void addBond(std::size_t idx1, std::size_t idx2, double length, double forceConstant);
-
     std::vector<Bond> bonds;
+};
+
+struct HarmonicBondPotential::Bond {
+    Bond(std::size_t idx1, std::size_t idx2, double length, double forceConstant)
+            : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
+
+    std::size_t idx1, idx2;
+    double length, forceConstant;
 };
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-
-#include "bits/BondedPotential_misc.h"
 
 #endif //READDY_MAIN_BOND_H

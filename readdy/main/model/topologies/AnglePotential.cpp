@@ -31,12 +31,50 @@
  */
 
 #include <readdy/model/topologies/AnglePotential.h>
+#include <readdy/model/topologies/TopologyActionFactory.h>
 
 namespace readdy {
 namespace model {
 namespace top {
 
 AnglePotential::AnglePotential(Topology *const topology) : TopologyPotential(topology) {}
+
+HarmonicAnglePotential::HarmonicAnglePotential(Topology *const topology, const angles_t &angles)
+        : AnglePotential(topology), angles(angles) {}
+
+HarmonicAnglePotential::HarmonicAnglePotential(Topology *const topology, HarmonicAnglePotential::angles_t angles)
+        : AnglePotential(topology), angles(std::move(angles)) {}
+
+std::unique_ptr<EvaluatePotentialAction>
+HarmonicAnglePotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
+    return factory->createCalculateHarmonicAnglePotential(this);
+}
+
+const HarmonicAnglePotential::angles_t &HarmonicAnglePotential::getAngles() const {
+    return angles;
+}
+
+double HarmonicAnglePotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const Vec3 &x_kj,
+                                              const HarmonicAnglePotential::Angle &angle) const {
+    const double scalarProduct = x_ij * x_kj;
+    const double norm_ij = std::sqrt(x_ij * x_ij);
+    const double norm_kj = std::sqrt(x_kj * x_kj);
+    const double theta_ijk = std::acos(scalarProduct / (norm_ij * norm_kj));
+    force += (-2 * angle.forceConstant * (theta_ijk - angle.equilibriumAngle) / theta_ijk) * x_ij;
+    return angle.forceConstant * (theta_ijk - angle.equilibriumAngle) * (theta_ijk - angle.equilibriumAngle);
+}
+
+double HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
+                                               const HarmonicAnglePotential::Angle &angle) const {
+    const double scalarProduct = x_ij * x_kj;
+    const double norm_ij = std::sqrt(x_ij * x_ij);
+    const double norm_kj = std::sqrt(x_kj * x_kj);
+    const double theta_ijk = std::acos(scalarProduct / (norm_ij * norm_kj));
+    return angle.forceConstant * (theta_ijk - angle.equilibriumAngle) * (theta_ijk - angle.equilibriumAngle);
+}
+
+HarmonicAnglePotential::Angle::Angle(size_t idx1, size_t idx2, size_t idx3, double theta_0, double forceConstant)
+        : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
 }
 }
 }
