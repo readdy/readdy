@@ -147,6 +147,10 @@ void SCPUStateModel::calculateForces() {
                 auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
                 pimpl->currentEnergy += energy;
             }
+            for(const auto& anglePot : topology->getAnglePotentials()) {
+                auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                pimpl->currentEnergy += energy;
+            }
         }
     }
 }

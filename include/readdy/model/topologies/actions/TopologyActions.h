@@ -36,7 +36,7 @@
 #include "TopologyAction.h"
 #include <readdy/model/topologies/BondedPotential.h>
 #include <readdy/model/topologies/AnglePotential.h>
-#include <readdy/model/topologies/DihedralPotential.h>
+#include <readdy/model/topologies/TorsionPotential.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

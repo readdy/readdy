@@ -129,6 +129,22 @@ std::ostream &operator<<(std::ostream &os, const Vec3 &vec) {
     return os;
 }
 
+Vec3 Vec3::cross(const Vec3 &other) const {
+    return {
+            data[1] * other.data[2] - data[2] * other.data[1],
+            data[2] * other.data[0] - data[0] * other.data[2],
+            data[0] * other.data[1] - data[1] * other.data[0]
+    };
+}
+
+double Vec3::norm() const {
+    return std::sqrt(normSquared());
+}
+
+double Vec3::normSquared() const {
+    return data[0]*data[0] + data[1]*data[1] + data[2]*data[2];
+}
+
 }
 }
 

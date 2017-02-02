@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file DihedralPotential.h
+ * @file TorsionPotential.h
  * @brief << brief description >>
  * @author clonker
  * @date 26.01.17
@@ -42,13 +42,30 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-class DihedralPotential : public TopologyPotential {
+class TorsionPotential : public TopologyPotential {
 public:
-    DihedralPotential(Topology *const topology);
+    TorsionPotential(Topology *const topology);
+};
 
-    using dihedrals_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>>;
+class CosineDihedralPotential : public TorsionPotential {
+public:
+    struct Dihedral {
+        Dihedral(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant, double multiplicity,
+                 double equilibriumAngle);
 
+        std::size_t idx1, idx2, idx3, idx4;
+        double forceConstant, equilibriumAngle, multiplicity;
+    };
+    using dihedrals_t = std::vector<Dihedral>;
+    CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
+    CosineDihedralPotential(Topology *const topology, dihedrals_t dihedrals);
 
+    const dihedrals_t &getDihedrals() const;
+
+    double calculateEnergy(const Vec3& x_i, const Vec3& x_j, const Vec3& x_k, const Vec3& x_l, const Dihedral&) const;
+
+protected:
+    dihedrals_t dihedrals;
 };
 
 

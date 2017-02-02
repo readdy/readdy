@@ -55,8 +55,8 @@ const std::vector<std::unique_ptr<AnglePotential>> &Topology::getAnglePotentials
     return anglePotentials;
 }
 
-const std::vector<std::unique_ptr<DihedralPotential>> &Topology::getDihedralPotentials() const {
-    return dihedralPotentials;
+const std::vector<std::unique_ptr<TorsionPotential>> &Topology::getTorsionPotentials() const {
+    return torsionPotentials;
 }
 
 void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {

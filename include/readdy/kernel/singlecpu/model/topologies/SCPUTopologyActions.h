@@ -89,11 +89,13 @@ public:
 
 
         for(const auto& angle : potential->getAngles()) {
-            readdy::model::Vec3 forceUpdate{0,0,0};
             auto& e1 = data->entry_at(particleIndices.at(angle.idx1));
             auto& e2 = data->entry_at(particleIndices.at(angle.idx2));
             auto& e3 = data->entry_at(particleIndices.at(angle.idx3));
-
+            const auto x_ij = e1.pos - e2.pos;
+            const auto x_kj = e3.pos - e2.pos;
+            energy += potential->calculateEnergy(x_ij, x_kj, angle);
+            potential->calculateForce(e1.force, e2.force, e3.force, x_ij, x_kj, angle);
         }
         return energy;
     }

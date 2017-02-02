@@ -37,7 +37,7 @@
 #include <unordered_set>
 #include "BondedPotential.h"
 #include "AnglePotential.h"
-#include "DihedralPotential.h"
+#include "TorsionPotential.h"
 #include "TopologyActionFactory.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -49,7 +49,7 @@ NAMESPACE_BEGIN(top)
  *
  * A topology consists of:
  *  - particle indices
- *  - potentials between particles (bonds, angles, dihedrals)
+ *  - potentials between particles (bonds, angles, torsions)
  *
  *  It is created by specifying a set of particles and creating corresponding potentials between these.
  */
@@ -69,15 +69,19 @@ public:
 
     const std::vector<std::unique_ptr<AnglePotential>> &getAnglePotentials() const;
 
-    const std::vector<std::unique_ptr<DihedralPotential>> &getDihedralPotentials() const;
+    const std::vector<std::unique_ptr<TorsionPotential>> &getTorsionPotentials() const;
 
     void addBondedPotential(std::unique_ptr<BondedPotential>&&);
+    template<typename T, typename... Args>
+    void addBondedPotential(Args &&...args) {
+        addBondedPotential(std::make_unique<T>(std::forward<Args>(args)...));
+    };
 
 private:
     particles_t particles;
     std::vector<std::unique_ptr<BondedPotential>> bondedPotentials;
     std::vector<std::unique_ptr<AnglePotential>> anglePotentials;
-    std::vector<std::unique_ptr<DihedralPotential>> dihedralPotentials;
+    std::vector<std::unique_ptr<TorsionPotential>> torsionPotentials;
 };
 
 NAMESPACE_END(top)
