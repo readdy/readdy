@@ -77,5 +77,11 @@ inline readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool us
     return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
 }
 
+template<typename SchemeType>
+inline readdy::api::AdvancedSchemeConfigurator<SchemeType> Simulation::runAdvancedScheme(bool useDefaults) {
+    ensureKernelSelected();
+    return readdy::api::AdvancedSchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
+}
+
 }
 #endif //READDY_MAIN_SIMULATION_MISC_H

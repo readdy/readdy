@@ -39,7 +39,7 @@ namespace {
 
 TEST(TestSchemes, Sanity) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    api::SchemeConfigurator <api::ReaDDyScheme> c(kernel.get());
+    api::SchemeConfigurator<api::ReaDDyScheme> c(kernel.get());
     c.evaluateObservables(false)
             .includeForces(false)
             .withIntegrator(kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1))
@@ -68,6 +68,15 @@ TEST(TestSchemes, SimulationObject) {
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
             .configureAndRun(.5, 100);
+
+    /**
+     * use AdvancedScheme
+     */
+    sim.runAdvancedScheme<readdy::api::AdvancedScheme>(false)
+         .includeForces(true)
+         .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
+         .includeCompartments(true)
+         .configureAndRun(.5, 100);
 }
 
 }

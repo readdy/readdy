@@ -38,6 +38,20 @@ class TestSchemeApi(unittest.TestCase):
             .configure(1)
         scheme.run(10)
 
+    def test_sanity_advanced(self):
+        # todo @chrisfroe test interrupt api
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+        configurator = simulation.run_scheme_advanced(False)
+        scheme = configurator \
+            .with_integrator("EulerBDIntegrator") \
+            .include_forces(False) \
+            .include_compartments(False) \
+            .with_reaction_scheduler("UncontrolledApproximation") \
+            .evaluate_observables(False) \
+            .configure(1)
+        scheme.run(10)
+
     def test_sanity_oneliner(self):
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
