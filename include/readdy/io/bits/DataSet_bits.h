@@ -114,8 +114,16 @@ inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, co
             H5Eprint (H5Eget_current_stack(), stderr);
         }
         memorySpace = -1;
-        H5Pclose(plist);
-        H5Pclose(fileSpace);
+        if(plist >= 0 && H5Pclose(plist) < 0) {
+            log::console()->error("Error on closing plist {}", plist);
+            H5Eprint (H5Eget_current_stack(), stderr);
+            throw std::runtime_error("Error on closing plist " + std::to_string(plist));
+        }
+        if(fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
+            log::console()->error("Error on closing file space {}", fileSpace);
+            H5Eprint (H5Eget_current_stack(), stderr);
+            throw std::runtime_error("(constructor) Error on closing file space " + std::to_string(fileSpace));
+        }
     }
 }
 
@@ -154,7 +162,11 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, std::v
         currentExtent.resize(dims.size());
         auto fileSpace = H5Dget_space(dataSetHandle);
         H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
-        H5Dclose(fileSpace);
+        if(fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
+            log::console()->error("error on closing file space! {}", fileSpace);
+            H5Eprint (H5Eget_current_stack(), stderr);
+            throw std::runtime_error("error on closing file space!");
+        }
     }
     std::vector<h5::dims_t> offset;
     {
@@ -230,7 +242,11 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const 
         {
             auto fileSpace = H5Dget_space(dataSetHandle);
             H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
-            H5Dclose(fileSpace);
+            if(fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
+                log::console()->error("error on closing file space! {}", fileSpace);
+                H5Eprint (H5Eget_current_stack(), stderr);
+                throw std::runtime_error("error on closing file space!");
+            }
         }
     }
     offset[extensionDim] = currentExtent[extensionDim];
