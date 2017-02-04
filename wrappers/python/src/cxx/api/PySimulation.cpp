@@ -44,6 +44,8 @@ using model = readdy::model::KernelStateModel;
 using ctx = readdy::model::KernelContext;
 using kern = readdy::model::Kernel;
 
+void exportTopologies(py::module&);
+
 // thin wrappers
 void setBoxSize(sim &self, const vec &size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
 
@@ -161,6 +163,7 @@ PYBIND11_PLUGIN (api) {
     py::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
+    exportTopologies(api);
 
     py::class_<obs_handle_t>(api, "ObservableHandle")
             .def(py::init<>())
