@@ -47,9 +47,14 @@ inline typename std::make_unsigned<T>::type positive_modulo(T i, D n) {
 }
 
 template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-T clamp(T d, T min, T max) {
+constexpr T clamp(T d, T min, T max) {
     const T t = d < min ? min : d;
     return t > max ? max : t;
+}
+
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
+constexpr T clamp_min(T d, T min) {
+    return d < min ? min : d;
 }
 
 }

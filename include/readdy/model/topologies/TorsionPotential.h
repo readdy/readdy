@@ -54,15 +54,21 @@ public:
                  double equilibriumAngle);
 
         std::size_t idx1, idx2, idx3, idx4;
-        double forceConstant, equilibriumAngle, multiplicity;
+        double forceConstant, phi_0, multiplicity;
     };
+
     using dihedrals_t = std::vector<Dihedral>;
+
     CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
+
     CosineDihedralPotential(Topology *const topology, dihedrals_t dihedrals);
 
     const dihedrals_t &getDihedrals() const;
 
-    double calculateEnergy(const Vec3& x_i, const Vec3& x_j, const Vec3& x_k, const Vec3& x_l, const Dihedral&) const;
+    double calculateEnergy(const Vec3 &x_i, const Vec3 &x_j, const Vec3 &x_k, const Vec3 &x_l, const Dihedral &) const;
+
+    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_i, const Vec3 &x_j, const Vec3 &x_k,
+                        const Vec3 &x_l, const Dihedral &) const;
 
 protected:
     dihedrals_t dihedrals;

@@ -145,6 +145,13 @@ double Vec3::normSquared() const {
     return data[0]*data[0] + data[1]*data[1] + data[2]*data[2];
 }
 
+Vec3 &Vec3::invertElementWise() {
+    data[0] = 1./data[0];
+    data[1] = 1./data[1];
+    data[2] = 1./data[2];
+    return *this;
+}
+
 }
 }
 

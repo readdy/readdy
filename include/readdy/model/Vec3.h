@@ -66,6 +66,8 @@ public:
 
     entry_t &operator[](const unsigned int i);
 
+    Vec3& invertElementWise();
+
     bool operator==(const Vec3 &rhs) const;
 
     bool operator!=(const Vec3 &rhs) const;
