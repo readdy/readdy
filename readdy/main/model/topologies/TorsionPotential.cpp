@@ -103,7 +103,7 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     const auto dn_norm_squared_dxk = -1 * (dn_norm_squared_dxl + dn_norm_squared_dxj);
     const auto dn_norm_dxk = dn_norm_squared_dxk / (2 * n_norm);
 
-    const Vec3Tensor<3> dm_dxi{{{{0, -x_kj[2], x_kj[2]}, {x_kj[2], 0, -x_kj[0]}, {-x_kj[1], x_kj[0], 0}}}};
+    const Vec3Tensor<3> dm_dxi{{{{0, -x_kj[2], x_kj[1]}, {x_kj[2], 0, -x_kj[0]}, {-x_kj[1], x_kj[0], 0}}}};
     const Vec3Tensor<3> dm_dxk{{{{0, -x_ji[2], x_ji[1]}, {x_ji[2], 0, -x_ji[0]}, {-x_ji[1], x_ji[0], 0}}}};
     const auto dm_dxj = (dm_dxk + dm_dxi) * -1.;
 
@@ -112,17 +112,12 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     const auto dn_dxk = (dn_dxj + dn_dxl) * -1;
 
     const auto dcos_phi_prefactor = 1. / n_m_norm;
-    auto dcos_phi_dxi_inv = dcos_phi_prefactor * (dm_dxi * n - (cos_phi * n_norm) * dm_norm_dxi);
-    dcos_phi_dxi_inv.invertElementWise();
-    auto dcos_phi_dxj_inv = dcos_phi_prefactor * (dm_dxj * n + m * dn_dxj - (cos_phi * n_norm) * dm_norm_dxj -
+    const auto dcos_phi_dxi = dcos_phi_prefactor * (n * dm_dxi - (cos_phi * n_norm) * dm_norm_dxi);
+    const auto dcos_phi_dxj = dcos_phi_prefactor * (n * dm_dxj + m * dn_dxj - (cos_phi * n_norm) * dm_norm_dxj -
                                                   (cos_phi * m_norm) * dn_norm_dxj);
-    dcos_phi_dxj_inv.invertElementWise();
-    auto dcos_phi_dxk_inv = dcos_phi_prefactor * (dm_dxk * n + m * dn_dxk - (cos_phi * n_norm) * dm_norm_dxk -
+    const auto dcos_phi_dxk = dcos_phi_prefactor * (n * dm_dxk + m * dn_dxk - (cos_phi * n_norm) * dm_norm_dxk -
                                                   (cos_phi * m_norm) * dn_norm_dxk);
-    dcos_phi_dxk_inv.invertElementWise();
-    auto dcos_phi_dxl_inv = dcos_phi_prefactor * (m * dn_dxl - (cos_phi * m_norm) * dn_norm_dxl);
-    dcos_phi_dxl_inv.invertElementWise();
-
+    const auto dcos_phi_dxl = dcos_phi_prefactor * (m * dn_dxl - (cos_phi * m_norm) * dn_norm_dxl);
 
     const Vec3Tensor<3> dmxn_dxi{{{dm_dxi.at(0).cross(n), dm_dxi.at(1).cross(n), dm_dxi.at(2).cross(n)}}};
     const Vec3Tensor<3> dmxn_dxj{{{dm_dxj.at(0).cross(n) + m.cross(dn_dxj.at(0)),
@@ -134,21 +129,21 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     const Vec3Tensor<3> dmxn_dxl{{{m.cross(dn_dxl.at(0)), m.cross(dn_dxl.at(1)), m.cross(dn_dxl.at(2))}}};
 
     const auto dsin_phi_prefactor = (1. / (n_m_norm * x_jk_norm));
-    const auto dsin_phi_dxi = dsin_phi_prefactor * (dmxn_dxi * x_jk - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxi);
-    const auto dsin_phi_dxj = dsin_phi_prefactor * (dmxn_dxi * x_jk - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxj -
+    const auto dsin_phi_dxi = dsin_phi_prefactor * (x_jk * dmxn_dxi - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxi);
+    const auto dsin_phi_dxj = dsin_phi_prefactor * (x_jk * dmxn_dxj - 1 * m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxj -
                                                     (sin_phi * m_norm * x_jk_norm) * dn_norm_dxj +
                                                     (sin_phi * n_m_norm / x_jk_norm) * x_jk);
     const auto dsin_phi_dxk = dsin_phi_prefactor *
-                              (dmxn_dxk * x_jk + m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxk -
+                              (x_jk * dmxn_dxk + m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxk -
                                (sin_phi * m_norm * x_jk_norm) * dn_norm_dxk - (sin_phi * n_m_norm / x_jk_norm) * x_jk);
-    const auto dsin_phi_dxl = dsin_phi_prefactor * (dmxn_dxl * x_jk - (sin_phi * n_norm * x_jk_norm) * dn_norm_dxl);
+    const auto dsin_phi_dxl = dsin_phi_prefactor * (x_jk * dmxn_dxl - (sin_phi * m_norm * x_jk_norm) * dn_norm_dxl);
 
     const auto sinphi_by_cosphi = sin_phi / cos_phi;
-    const auto dphi_prefactor = -1 / (cos_phi * (1 + sinphi_by_cosphi * sinphi_by_cosphi));
-    const auto dphi_dxi = dphi_prefactor * (dsin_phi_dxi - sinphi_by_cosphi * dcos_phi_dxi_inv);
-    const auto dphi_dxj = dphi_prefactor * (dsin_phi_dxj - sinphi_by_cosphi * dcos_phi_dxj_inv);
-    const auto dphi_dxk = dphi_prefactor * (dsin_phi_dxk - sinphi_by_cosphi * dcos_phi_dxk_inv);
-    const auto dphi_dxl = dphi_prefactor * (dsin_phi_dxl - sinphi_by_cosphi * dcos_phi_dxl_inv);
+    const auto dphi_prefactor = -1. / (cos_phi * (1. + sinphi_by_cosphi * sinphi_by_cosphi));
+    const auto dphi_dxi = dphi_prefactor * (dsin_phi_dxi - sinphi_by_cosphi * dcos_phi_dxi);
+    const auto dphi_dxj = dphi_prefactor * (dsin_phi_dxj - sinphi_by_cosphi * dcos_phi_dxj);
+    const auto dphi_dxk = dphi_prefactor * (dsin_phi_dxk - sinphi_by_cosphi * dcos_phi_dxk);
+    const auto dphi_dxl = dphi_prefactor * (dsin_phi_dxl - sinphi_by_cosphi * dcos_phi_dxl);
 
     f_i += -d_V_d_phi * dphi_dxi;
     f_j += -d_V_d_phi * dphi_dxj;

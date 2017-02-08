@@ -107,9 +107,9 @@ TEST(TestTopologies, AnglePotential) {
 
     EXPECT_EQ(collectedForces.size(), 3);
     EXPECT_DOUBLE_EQ(scpu->getKernelStateModel().getEnergy(), 2.4674011002723395);
-    readdy::model::Vec3 force_x_i{0, 3.14159265, 0};
-    readdy::model::Vec3 force_x_j{3.14159265, -3.14159265, 0};
-    readdy::model::Vec3 force_x_k{-3.14159265, 0., 0.};
+    readdy::model::Vec3 force_x_i{0, -3.14159265, 0};
+    readdy::model::Vec3 force_x_j{-3.14159265, 3.14159265, 0};
+    readdy::model::Vec3 force_x_k{3.14159265, 0., 0.};
 
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
@@ -146,9 +146,54 @@ TEST(TestTopologies, DihedralPotential) {
 
     EXPECT_EQ(collectedForces.size(), 4);
     EXPECT_DOUBLE_EQ(scpu->getKernelStateModel().getEnergy(), 0.044370223263673791);
-    for(const auto& f : collectedForces) {
-        readdy::log::console()->debug("got force: {}", f);
+    readdy::model::Vec3 force_x_i{0., -0.88371125, 0.};
+    readdy::model::Vec3 force_x_j{0., 0.88371125, 0.};
+    readdy::model::Vec3 force_x_k{-0.08749616, 0.87496163, 0.};
+    readdy::model::Vec3 force_x_l{0.08749616, -0.87496163, 0.};
+    EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
+}
+
+TEST(TestTopologies, DihedralPotentialSteeperAngle) {
+    auto scpu = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
+    auto &ctx = scpu->getKernelContext();
+    ctx.registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.setBoxSize(10, 10, 10);
+    topology_particle_t x_i{-1, 0, 0, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_l{1, 3, 1, ctx.getParticleTypeID("Topology A")};
+    auto top = scpu->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
+    {
+        std::vector<dihedral_bond::Dihedral> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
+        top->addTorsionPotential(std::make_unique<dihedral_bond>(top, dihedral));
     }
+    auto fObs = scpu->createObservable<readdy::model::observables::Forces>(1);
+    std::vector<readdy::model::Vec3> collectedForces;
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+        for (const auto &force : result) {
+            collectedForces.push_back(force);
+        }
+    });
+
+    auto conn = scpu->connectObservable(fObs.get());
+
+    ctx.configure();
+    scpu->getKernelStateModel().calculateForces();
+    scpu->evaluateObservables(1);
+
+    EXPECT_EQ(collectedForces.size(), 4);
+    EXPECT_DOUBLE_EQ(scpu->getKernelStateModel().getEnergy(), 1.8221921916437787);
+    readdy::model::Vec3 force_x_i{0., 1.70762994, 0.};
+    readdy::model::Vec3 force_x_j{0., -1.70762994, 0.};
+    readdy::model::Vec3 force_x_k{0.51228898, -0.17076299, 0.};
+    readdy::model::Vec3 force_x_l{-0.51228898, 0.17076299, 0.};
+    EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
 }
 
 }
