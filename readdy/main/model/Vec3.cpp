@@ -32,6 +32,7 @@
 #include <readdy/model/Vec3.h>
 #include <assert.h>
 #include <ostream>
+#include <cmath>
 
 namespace readdy {
 namespace model {
