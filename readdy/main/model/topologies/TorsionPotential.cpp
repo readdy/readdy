@@ -53,12 +53,17 @@ const CosineDihedralPotential::dihedrals_t &CosineDihedralPotential::getDihedral
 
 double CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                                                 const CosineDihedralPotential::Dihedral &dihedral) const {
+    const auto x_jk = -1 * x_kj;
+    auto x_jk_norm = x_jk.norm();
+    x_jk_norm = x_jk_norm < SMALL ? SMALL : x_jk_norm;
     const auto m = x_ji.cross(x_kj);
     const auto m_norm = m.norm();
-    const auto n = x_kl.cross(-1 * x_kj);
+    const auto n = x_kl.cross(x_jk);
     const auto n_norm = n.norm();
-    const double sin_theta = -1 * (m.cross(n) * x_kj) * x_kj.norm() / (m_norm * n_norm * x_kj.norm());
-    const double cos_theta = m * n / (m_norm * n_norm);
+    auto m_n_norm = m_norm * n_norm;
+    m_n_norm = m_n_norm < SMALL ? SMALL : m_n_norm;
+    const double sin_theta = (m.cross(n) * x_jk) / (m_n_norm * x_jk_norm);
+    const double cos_theta = m * n / m_n_norm;
     const double dih = -std::atan2(sin_theta, cos_theta);
     return dihedral.forceConstant * (1 + std::cos(dihedral.multiplicity * dih - dihedral.phi_0));
 }

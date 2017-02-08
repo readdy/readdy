@@ -81,8 +81,8 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
 
     const double c = 2. * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
 
-    const Vec3 force_i = c * cos_theta * (1/norm_ij_2) * x_ij - c * inv_norm_product * x_kj;
-    const Vec3 force_k = -c * inv_norm_product * x_ij + c * cos_theta  * (1/norm_kj_2) * x_kj;
+    const Vec3 force_i = c * cos_theta * (1/norm_ij_2) * x_ij + c * inv_norm_product * x_kj;
+    const Vec3 force_k = -c * inv_norm_product * x_ij - c * cos_theta  * (1/norm_kj_2) * x_kj;
 
     f_i += force_i;
     f_j -= force_i + force_k;

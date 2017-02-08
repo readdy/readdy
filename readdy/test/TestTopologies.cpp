@@ -122,7 +122,7 @@ TEST(TestTopologies, DihedralPotential) {
     ctx.registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
     ctx.setBoxSize(10, 10, 10);
     topology_particle_t x_i{-1, 0, 0, ctx.getParticleTypeID("Topology A")};
-    topology_particle_t x_j{1, 0, 0, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.getParticleTypeID("Topology A")};
     topology_particle_t x_k{0, 0, 1, ctx.getParticleTypeID("Topology A")};
     topology_particle_t x_l{1, .1, 1, ctx.getParticleTypeID("Topology A")};
     auto top = scpu->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
@@ -146,6 +146,9 @@ TEST(TestTopologies, DihedralPotential) {
 
     EXPECT_EQ(collectedForces.size(), 4);
     EXPECT_DOUBLE_EQ(scpu->getKernelStateModel().getEnergy(), 0.044370223263673791);
+    for(const auto& f : collectedForces) {
+        readdy::log::console()->debug("got force: {}", f);
+    }
 }
 
 }
