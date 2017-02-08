@@ -63,6 +63,14 @@ void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
     bondedPotentials.push_back(std::move(pot));
 }
 
+void Topology::addAnglePotential(std::unique_ptr<AnglePotential> &&pot) {
+    anglePotentials.push_back(std::move(pot));
+}
+
+void Topology::addTorsionPotential(std::unique_ptr<TorsionPotential> &&pot) {
+    torsionPotentials.push_back(std::move(pot));
+}
+
 }
 }
 }

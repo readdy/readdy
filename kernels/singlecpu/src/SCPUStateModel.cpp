@@ -151,6 +151,10 @@ void SCPUStateModel::calculateForces() {
                 auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
                 pimpl->currentEnergy += energy;
             }
+            for(const auto& torsionPot : topology->getTorsionPotentials()) {
+                auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                pimpl->currentEnergy += energy;
+            }
         }
     }
 }
@@ -163,7 +167,7 @@ void SCPUStateModel::removeAllParticles() {
     pimpl->particleData->clear();
 }
 
-readdy::model::top::Topology *const SCPUStateModel::addTopology(std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::Topology *const SCPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = pimpl->particleData->addTopologyParticles(particles);
     pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids)));
     return pimpl->topologies.back().get();

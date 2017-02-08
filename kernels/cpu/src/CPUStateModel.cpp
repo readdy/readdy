@@ -237,7 +237,7 @@ model::CPUNeighborList *const CPUStateModel::getNeighborList() {
     return pimpl->neighborList.get();
 }
 
-readdy::model::top::Topology *const CPUStateModel::addTopology(std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::Topology *const CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     return nullptr;
 }
 

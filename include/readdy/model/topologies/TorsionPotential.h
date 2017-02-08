@@ -61,14 +61,15 @@ public:
 
     CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
 
-    CosineDihedralPotential(Topology *const topology, dihedrals_t dihedrals);
-
     const dihedrals_t &getDihedrals() const;
 
-    double calculateEnergy(const Vec3 &x_i, const Vec3 &x_j, const Vec3 &x_k, const Vec3 &x_l, const Dihedral &) const;
+    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const Dihedral &) const;
 
-    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_i, const Vec3 &x_j, const Vec3 &x_k,
-                        const Vec3 &x_l, const Dihedral &) const;
+    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
+                        const Dihedral &) const;
+
+    virtual std::unique_ptr<EvaluatePotentialAction>
+    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
 
 protected:
     dihedrals_t dihedrals;

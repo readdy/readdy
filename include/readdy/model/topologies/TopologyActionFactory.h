@@ -48,6 +48,9 @@ public:
 
     virtual std::unique_ptr<CalculateHarmonicAnglePotential>
     createCalculateHarmonicAnglePotential(const HarmonicAnglePotential *const) const = 0;
+
+    virtual std::unique_ptr<CalculateCosineDihedralPotential>
+    createCalculateCosineDihedralPotential(const CosineDihedralPotential *const) const = 0;
 };
 
 NAMESPACE_END(top)

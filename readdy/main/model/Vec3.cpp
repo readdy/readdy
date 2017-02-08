@@ -152,6 +152,13 @@ Vec3 &Vec3::invertElementWise() {
     return *this;
 }
 
+Vec3 &Vec3::operator-=(const Vec3 &rhs) {
+    data[0] -= rhs.data[0];
+    data[1] -= rhs.data[1];
+    data[2] -= rhs.data[2];
+    return *this;
+}
+
 }
 }
 

@@ -76,6 +76,8 @@ public:
     void addBondedPotential(Args &&...args) {
         addBondedPotential(std::make_unique<T>(std::forward<Args>(args)...));
     };
+    void addAnglePotential(std::unique_ptr<AnglePotential>&&);
+    void addTorsionPotential(std::unique_ptr<TorsionPotential>&&);
 
 private:
     particles_t particles;

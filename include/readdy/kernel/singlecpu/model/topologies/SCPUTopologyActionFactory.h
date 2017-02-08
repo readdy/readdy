@@ -55,6 +55,9 @@ public:
 
     virtual std::unique_ptr<top::CalculateHarmonicAnglePotential>
     createCalculateHarmonicAnglePotential(const top::HarmonicAnglePotential *const potential) const override;
+
+    virtual std::unique_ptr<top::CalculateCosineDihedralPotential>
+    createCalculateCosineDihedralPotential(const top::CosineDihedralPotential *const potential) const override;
 };
 
 NAMESPACE_END(top)

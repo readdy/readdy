@@ -79,7 +79,7 @@ public:
 
     virtual void clearNeighborList() override;
 
-    virtual readdy::model::top::Topology *const addTopology(std::vector<readdy::model::TopologyParticle> &particles) override;
+    virtual readdy::model::top::Topology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
 
 private:
     struct Impl;

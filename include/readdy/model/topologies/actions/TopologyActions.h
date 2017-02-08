@@ -52,6 +52,11 @@ public:
     CalculateHarmonicAnglePotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
 };
 
+class CalculateCosineDihedralPotential : public EvaluatePotentialAction {
+public:
+    CalculateCosineDihedralPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+};
+
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

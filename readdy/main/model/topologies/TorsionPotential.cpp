@@ -31,6 +31,7 @@
  */
 
 #include <readdy/model/topologies/TorsionPotential.h>
+#include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/common/numeric.h>
 #include <readdy/model/Vec3Tensor.h>
 
@@ -42,11 +43,6 @@ namespace top {
 
 TorsionPotential::TorsionPotential(Topology *const topology) : TopologyPotential(topology) {}
 
-CosineDihedralPotential::CosineDihedralPotential(Topology *const t, dihedrals_t d)
-        : TorsionPotential(t), dihedrals(std::move(d)) {
-
-}
-
 CosineDihedralPotential::CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals)
         : TorsionPotential(topology), dihedrals(dihedrals) {
 }
@@ -55,32 +51,25 @@ const CosineDihedralPotential::dihedrals_t &CosineDihedralPotential::getDihedral
     return dihedrals;
 }
 
-double CosineDihedralPotential::calculateEnergy(const Vec3 &x_i, const Vec3 &x_j, const Vec3 &x_k, const Vec3 &x_l,
+double CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                                                 const CosineDihedralPotential::Dihedral &dihedral) const {
-    const auto x_ij = x_i - x_j;
-    const auto x_jk = x_j - x_k;
-    const auto x_lk = x_l - x_k;
-    const auto m = x_ij.cross(x_jk);
+    const auto m = x_ji.cross(x_kj);
     const auto m_norm = m.norm();
-    const auto n = x_lk.cross(x_jk);
+    const auto n = x_kl.cross(-1 * x_kj);
     const auto n_norm = n.norm();
-    const double sin_theta = (n * x_ij) * x_jk.norm() / (m_norm * n_norm);
+    const double sin_theta = -1 * (m.cross(n) * x_kj) * x_kj.norm() / (m_norm * n_norm * x_kj.norm());
     const double cos_theta = m * n / (m_norm * n_norm);
     const double dih = -std::atan2(sin_theta, cos_theta);
     return dihedral.forceConstant * (1 + std::cos(dihedral.multiplicity * dih - dihedral.phi_0));
 }
 
 void
-CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_i, const Vec3 &x_j,
-                                        const Vec3 &x_k, const Vec3 &x_l,
+CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                                         const CosineDihedralPotential::Dihedral &dih) const {
-    const auto x_ji = x_i - x_j;
-    const auto x_kj = x_j - x_k;
-    const auto x_jk = x_k - x_j;
+    const auto x_jk = -1 * x_kj;
     auto x_jk_norm_squared = x_jk.normSquared();
     x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared;
     const auto x_jk_norm = std::sqrt(x_jk_norm_squared);
-    const auto x_kl = x_l - x_k;
     const auto m = x_ji.cross(x_kj);
     auto m_norm_squared = m.normSquared();
     m_norm_squared = m_norm_squared < SMALL ? SMALL : m_norm_squared;
@@ -161,6 +150,11 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     f_k += -d_V_d_phi * dphi_dxk;
     f_l += -d_V_d_phi * dphi_dxl;
 
+}
+
+std::unique_ptr<EvaluatePotentialAction>
+CosineDihedralPotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {
+    return factory->createCalculateCosineDihedralPotential(this);
 }
 
 CosineDihedralPotential::Dihedral::Dihedral(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant,

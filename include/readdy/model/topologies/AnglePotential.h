@@ -53,7 +53,6 @@ public:
     struct Angle;
     using angles_t = std::vector<Angle>;
     HarmonicAnglePotential(Topology *const topology, const angles_t& angles);
-    HarmonicAnglePotential(Topology *const topology, angles_t angles);
 
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const factory) override;

@@ -92,14 +92,43 @@ public:
             auto& e1 = data->entry_at(particleIndices.at(angle.idx1));
             auto& e2 = data->entry_at(particleIndices.at(angle.idx2));
             auto& e3 = data->entry_at(particleIndices.at(angle.idx3));
-            const auto x_ij = e1.pos - e2.pos;
-            const auto x_kj = e3.pos - e2.pos;
-            energy += potential->calculateEnergy(x_ij, x_kj, angle);
-            potential->calculateForce(e1.force, e2.force, e3.force, x_ij, x_kj, angle);
+            const auto x_ji = d(e2.pos, e1.pos);
+            const auto x_kj = d(e2.pos, e3.pos);
+            energy += potential->calculateEnergy(x_ji, x_kj, angle);
+            potential->calculateForce(e1.force, e2.force, e3.force, x_ji, x_kj, angle);
         }
         return energy;
     }
 
+};
+
+class SCPUCalculateCosineDihedralPotential : public readdy::model::top::CalculateCosineDihedralPotential {
+    const readdy::model::top::CosineDihedralPotential *const potential;
+    SCPUParticleData *const data;
+public:
+    SCPUCalculateCosineDihedralPotential(const readdy::model::KernelContext *const context,
+                                         SCPUParticleData *const data,
+                                         const readdy::model::top::CosineDihedralPotential* const pot)
+            : CalculateCosineDihedralPotential(context), potential(pot), data(data){
+    }
+
+    virtual double perform() override {
+        readdy::model::Vec3::entry_t energy = 0;
+        const auto& particleIndices = potential->getTopology()->getParticles();
+        const auto& d = context->getShortestDifferenceFun();
+
+        for(const auto& dih : potential->getDihedrals()) {
+            auto& e_i = data->entry_at(particleIndices.at(dih.idx1));
+            auto& e_j = data->entry_at(particleIndices.at(dih.idx2));
+            auto& e_k = data->entry_at(particleIndices.at(dih.idx3));
+            auto& e_l = data->entry_at(particleIndices.at(dih.idx4));
+            const auto x_ji = d(e_j.pos, e_i.pos);
+            const auto x_kj = d(e_k.pos, e_j.pos);
+            const auto x_kl = d(e_k.pos, e_l.pos);
+            energy += potential->calculateEnergy(x_ji, x_kj, x_kl, dih);
+        }
+        return energy;
+    }
 };
 
 NAMESPACE_END(top)

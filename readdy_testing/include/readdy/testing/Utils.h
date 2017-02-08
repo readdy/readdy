@@ -39,6 +39,7 @@
 
 // use this to check floating point equality of readdy's Vec3 object
 #define EXPECT_VEC3_EQ(u, v) EXPECT_DOUBLE_EQ((u)[0], (v)[0]); EXPECT_DOUBLE_EQ((u)[1], (v)[1]); EXPECT_DOUBLE_EQ((u)[2], (v)[2])
+#define EXPECT_VEC3_NEAR(u, v, abs_error) EXPECT_NEAR((u)[0], (v)[0], abs_error); EXPECT_NEAR((u)[1], (v)[1], abs_error); EXPECT_NEAR((u)[2], (v)[2], abs_error)
 
 namespace readdy {
 namespace testing {

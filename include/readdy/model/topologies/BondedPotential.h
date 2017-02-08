@@ -55,8 +55,6 @@ public:
 
     HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds);
 
-    HarmonicBondPotential(Topology *const topology, std::vector<Bond> bonds);
-
     const std::vector<Bond> &getBonds() const;
 
     double calculateEnergy(const Vec3 &x_ij, const Bond &bond) const;

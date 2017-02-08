@@ -61,6 +61,14 @@ SCPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
     );
 }
 
+std::unique_ptr<top::CalculateCosineDihedralPotential>
+SCPUTopologyActionFactory::createCalculateCosineDihedralPotential(
+        const readdy::model::top::CosineDihedralPotential *const potential) const {
+    return std::make_unique<SCPUCalculateCosineDihedralPotential>(
+            &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+    );
+}
+
 }
 }
 }

@@ -61,20 +61,6 @@ HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std
     this->bonds = bonds;
 }
 
-HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, std::vector<Bond> bonds)
-        : BondedPotential(topology) {
-    const auto n = topology->getNParticles();
-    for(const auto& bond : bonds) {
-        if (bond.idx1 >= n) {
-            throw std::invalid_argument("the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
-        }
-        if (bond.idx2 >= n) {
-            throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
-        }
-    }
-    this->bonds = std::move(bonds);
-}
-
 const std::vector<HarmonicBondPotential::Bond> &HarmonicBondPotential::getBonds() const {
     return bonds;
 }
@@ -87,7 +73,7 @@ double HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const HarmonicBo
 void
 HarmonicBondPotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const HarmonicBondPotential::Bond &bond) const {
     const auto norm = std::sqrt(x_ij * x_ij);
-    force += (-2 * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
+    force += (2. * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
 }
 
 std::unique_ptr<EvaluatePotentialAction>

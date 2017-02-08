@@ -52,6 +52,8 @@ public:
 
     Vec3 &operator+=(const Vec3 &rhs);
 
+    Vec3 &operator-=(const Vec3 &rhs);
+
     Vec3 &operator*=(const entry_t a);
 
     Vec3 &operator/=(const entry_t a);
