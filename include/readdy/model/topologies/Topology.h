@@ -71,12 +71,20 @@ public:
 
     const std::vector<std::unique_ptr<TorsionPotential>> &getTorsionPotentials() const;
 
+    template<typename T, typename... Args>
+    typename std::enable_if<std::is_base_of<BondedPotential, T>::value>::type addBondedPotential(Args &&...args) {
+        bondedPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
+    };
     void addBondedPotential(std::unique_ptr<BondedPotential>&&);
     template<typename T, typename... Args>
-    void addBondedPotential(Args &&...args) {
-        addBondedPotential(std::make_unique<T>(std::forward<Args>(args)...));
+    typename std::enable_if<std::is_base_of<AnglePotential, T>::value>::type addAnglePotential(Args &&...args) {
+        anglePotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
     };
     void addAnglePotential(std::unique_ptr<AnglePotential>&&);
+    template<typename T, typename... Args>
+    typename std::enable_if<std::is_base_of<TorsionPotential, T>::value>::type addTorsionPotential(Args &&...args) {
+        torsionPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
+    };
     void addTorsionPotential(std::unique_ptr<TorsionPotential>&&);
 
 private:

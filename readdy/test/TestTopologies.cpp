@@ -54,7 +54,7 @@ TEST(TestTopologies, BondedPotential) {
     auto top = scpu->getKernelStateModel().addTopology({x_i, x_j});
     {
         std::vector<harmonic_bond::Bond> bonds{{0, 1, 5.0, 10.0}};
-        top->addBondedPotential(std::make_unique<harmonic_bond>(top, bonds));
+        top->addBondedPotential<harmonic_bond>(bonds);
     }
     auto fObs = scpu->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
@@ -89,7 +89,7 @@ TEST(TestTopologies, AnglePotential) {
     auto top = scpu->getKernelStateModel().addTopology({x_i, x_j, x_k});
     {
         std::vector<angle_bond::Angle> angles{{0, 1, 2, readdy::util::numeric::pi(), 1.0}};
-        top->addAnglePotential(std::make_unique<angle_bond>(top, angles));
+        top->addAnglePotential<angle_bond>(angles);
     }
     auto fObs = scpu->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
@@ -127,8 +127,8 @@ TEST(TestTopologies, DihedralPotential) {
     topology_particle_t x_l{1, .1, 1, ctx.getParticleTypeID("Topology A")};
     auto top = scpu->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
     {
-        std::vector<dihedral_bond::Dihedral> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
-        top->addTorsionPotential(std::make_unique<dihedral_bond>(top, dihedral));
+        std::vector<dihedral_bond::Dihedral> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
+        top->addTorsionPotential<dihedral_bond>(dihedrals);
     }
     auto fObs = scpu->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;

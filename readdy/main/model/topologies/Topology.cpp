@@ -59,16 +59,25 @@ const std::vector<std::unique_ptr<TorsionPotential>> &Topology::getTorsionPotent
     return torsionPotentials;
 }
 
-void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
-    bondedPotentials.push_back(std::move(pot));
-}
-
 void Topology::addAnglePotential(std::unique_ptr<AnglePotential> &&pot) {
+    if(pot->getTopology() != this) {
+        throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
+    }
     anglePotentials.push_back(std::move(pot));
 }
 
 void Topology::addTorsionPotential(std::unique_ptr<TorsionPotential> &&pot) {
+    if(pot->getTopology() != this) {
+        throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
+    }
     torsionPotentials.push_back(std::move(pot));
+}
+
+void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
+    if(pot->getTopology() != this) {
+        throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
+    }
+    bondedPotentials.push_back(std::move(pot));
 }
 
 }
