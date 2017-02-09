@@ -32,6 +32,7 @@
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/actions/CPUActionFactory.h>
 #include <readdy/kernel/cpu/observables/CPUObservableFactory.h>
+#include <readdy/kernel/cpu/model/topologies/CPUTopologyActionFactory.h>
 
 namespace readdy {
 namespace kernel {
@@ -47,6 +48,7 @@ struct CPUKernel::Impl {
     std::unique_ptr<CPUStateModel> stateModel;
     std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<readdy::util::thread::Config> config;
+    std::unique_ptr<readdy::model::top::TopologyActionFactory> topologyActionFactory;
 };
 
 readdy::model::Kernel* CPUKernel::create() {
@@ -62,6 +64,7 @@ CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Imp
     pimpl->potentialFactory = std::make_unique<readdy::model::potentials::PotentialFactory>();
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
+    pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::model::top::CPUTopologyActionFactory>(this);
 }
 
 CPUStateModel &CPUKernel::getKernelStateModelInternal() const {
@@ -101,7 +104,7 @@ readdy::model::actions::ActionFactory &CPUKernel::getActionFactoryInternal() con
 }
 
 readdy::model::top::TopologyActionFactory *CPUKernel::getTopologyActionFactoryInternal() const {
-    return nullptr;
+    return pimpl->topologyActionFactory.get();
 }
 
 const CPUStateModel &CPUKernel::getCPUKernelStateModel() const {
