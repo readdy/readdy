@@ -47,6 +47,7 @@ NAMESPACE_BEGIN(top)
 class BondedPotential : public TopologyPotential {
 public:
     BondedPotential(Topology *const topology);
+    virtual ~BondedPotential() = default;
 };
 
 class HarmonicBondPotential : public BondedPotential {
@@ -55,6 +56,7 @@ public:
     using bonds_t = std::vector<Bond>;
 
     HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds);
+    virtual ~HarmonicBondPotential() = default;
 
     const bonds_t &getBonds() const;
 

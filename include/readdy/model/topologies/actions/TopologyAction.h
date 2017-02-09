@@ -52,6 +52,7 @@ protected:
 class EvaluatePotentialAction : public TopologyAction {
 public:
     EvaluatePotentialAction(const KernelContext *const context) : TopologyAction(context) {}
+    virtual ~EvaluatePotentialAction() = default;
 
     virtual double perform() = 0;
 };

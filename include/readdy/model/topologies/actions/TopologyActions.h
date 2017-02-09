@@ -45,16 +45,19 @@ NAMESPACE_BEGIN(top)
 class CalculateHarmonicBondPotential : public EvaluatePotentialAction {
 public:
     CalculateHarmonicBondPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    virtual ~CalculateHarmonicBondPotential() = default;
 };
 
 class CalculateHarmonicAnglePotential : public EvaluatePotentialAction {
 public:
     CalculateHarmonicAnglePotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    virtual ~CalculateHarmonicAnglePotential() = default;
 };
 
 class CalculateCosineDihedralPotential : public EvaluatePotentialAction {
 public:
     CalculateCosineDihedralPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    virtual ~CalculateCosineDihedralPotential() = default;
 };
 
 NAMESPACE_END(top)

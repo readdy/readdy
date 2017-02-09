@@ -45,6 +45,7 @@ NAMESPACE_BEGIN(top)
 class TorsionPotential : public TopologyPotential {
 public:
     TorsionPotential(Topology *const topology);
+    virtual ~TorsionPotential() = default;
 };
 
 class CosineDihedralPotential : public TorsionPotential {
@@ -60,6 +61,7 @@ public:
     using dihedrals_t = std::vector<Dihedral>;
 
     CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
+    virtual ~CosineDihedralPotential() = default;
 
     const dihedrals_t &getDihedrals() const;
 

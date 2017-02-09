@@ -76,8 +76,7 @@ public:
 
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<BondedPotential, T>::value>::type addBondedPotential(Args &&...args) {
-        auto ptr = std::make_unique<T>(this, std::forward<Args>(args)...);
-        bondedPotentials.push_back(std::move(ptr));
+        bondedPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
     };
     void addBondedPotential(std::unique_ptr<BondedPotential>&&);
     template<typename T, typename... Args>

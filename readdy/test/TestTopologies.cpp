@@ -60,8 +60,7 @@ TEST_P(TestTopologies, BondedPotential) {
     {
         std::vector<harmonic_bond::Bond> bonds;
         bonds.emplace_back(0, 1, 10.0, 5.0);
-        std::unique_ptr<readdy::model::top::BondedPotential> hb = std::make_unique<harmonic_bond>(top, std::move(bonds));
-        top->addBondedPotential(std::move(hb));
+        top->addBondedPotential<harmonic_bond>(bonds);
     }
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;

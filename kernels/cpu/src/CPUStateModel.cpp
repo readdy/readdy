@@ -199,7 +199,8 @@ void CPUStateModel::calculateForces() {
     for (auto t_it = pimpl->topologies.cbegin(); t_it != pimpl->topologies.cend(); ++t_it) {
         const auto &top = *t_it;
         for (const auto &bondedPot : top->getBondedPotentials()) {
-            auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+            auto action = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory);
+            auto energy = action->perform();
             pimpl->currentEnergy += energy;
         }
         for (const auto &anglePot : top->getAnglePotentials()) {

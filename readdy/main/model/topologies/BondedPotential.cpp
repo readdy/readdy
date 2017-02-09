@@ -48,7 +48,7 @@ BondedPotential::BondedPotential(Topology *const topology) : TopologyPotential(t
  */
 
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds)
-        : BondedPotential(topology) {
+        : BondedPotential(topology), bonds(bonds) {
     const auto n = topology->getNParticles();
     for(const auto& bond : bonds) {
         if (bond.idx1 >= n) {
@@ -58,7 +58,6 @@ HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std
             throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
         }
     }
-    this->bonds = bonds;
 }
 
 const std::vector<HarmonicBondPotential::Bond> &HarmonicBondPotential::getBonds() const {

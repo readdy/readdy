@@ -47,6 +47,8 @@ class TopologyPotential {
 public:
     TopologyPotential(Topology *const topology);
 
+    virtual ~TopologyPotential() = default;
+
     Topology *const getTopology() const;
 
     virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) = 0;

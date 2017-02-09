@@ -46,6 +46,7 @@ class AnglePotential : public TopologyPotential{
 public:
     using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
     AnglePotential(Topology *const topology);
+    virtual ~AnglePotential() = default;
 };
 
 class HarmonicAnglePotential : public AnglePotential{
@@ -53,6 +54,7 @@ public:
     struct Angle;
     using angles_t = std::vector<Angle>;
     HarmonicAnglePotential(Topology *const topology, const angles_t& angles);
+    virtual ~HarmonicAnglePotential() = default;
 
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
