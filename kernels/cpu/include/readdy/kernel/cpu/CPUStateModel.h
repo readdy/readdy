@@ -49,7 +49,7 @@ public:
 
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
 
-    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
+    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config, readdy::model::top::TopologyActionFactory const *const  taf);
 
     ~CPUStateModel();
 

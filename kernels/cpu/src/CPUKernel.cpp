@@ -60,11 +60,11 @@ CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Imp
     pimpl->reactionFactory = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
-    pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get(), pimpl->config.get());
+    pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::model::top::CPUTopologyActionFactory>(this);
+    pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get(), pimpl->config.get(), pimpl->topologyActionFactory.get());
     pimpl->potentialFactory = std::make_unique<readdy::model::potentials::PotentialFactory>();
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
-    pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::model::top::CPUTopologyActionFactory>(this);
 }
 
 CPUStateModel &CPUKernel::getKernelStateModelInternal() const {

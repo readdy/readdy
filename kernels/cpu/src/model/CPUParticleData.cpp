@@ -276,6 +276,25 @@ CPUParticleData::index_t CPUParticleData::getIndexForId(const particle_type::id_
     throw std::out_of_range("requested id was not to be found in particle data");
 }
 
+std::vector<std::size_t>
+CPUParticleData::addTopologyParticles(const std::vector<CPUParticleData::top_particle_type> &particles) {
+    std::vector<entries_t::size_type> indices;
+    indices.reserve(particles.size());
+    for(const auto& p : particles) {
+        if(!blanks.empty()) {
+            const auto idx = blanks.back();
+            blanks.pop_back();
+            entries.at(idx) = {p};
+            indices.push_back(idx);
+        } else {
+            entries.push_back({p});
+            neighbors.push_back({});
+            indices.push_back(entries.size()-1);
+        }
+    }
+    return indices;
+}
+
 }
 }
 }
