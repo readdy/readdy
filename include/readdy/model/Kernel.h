@@ -139,8 +139,9 @@ public:
     /**
      * Adds a particle of the type "type" at position "pos".
      */
-    virtual void addParticle(const std::string &type, const Vec3 &pos);
+    void addParticle(const std::string &type, const Vec3 &pos);
 
+    TopologyParticle createTopologyParticle(const std::string& type, const Vec3& pos) const;
 
     virtual std::vector<std::string> getAvailablePotentials() const;
 
@@ -172,6 +173,8 @@ public:
         return getKernelContext().registerReaction(
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
     };
+
+    bool supportsTopologies() const;
 
     // todo registerConversion -> creates and register with context
     std::unique_ptr<reactions::Reaction<1>>

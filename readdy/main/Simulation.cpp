@@ -108,10 +108,11 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
 }
 
 Simulation::particle_t::type_type
-Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius) {
+Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius,
+                                 readdy::model::Particle::flavor_t flavor) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->getKernelContext();
-    context.registerParticleType(name, diffusionCoefficient, radius);
+    context.registerParticleType(name, diffusionCoefficient, radius, flavor);
     return context.getParticleTypeID(name);
 }
 
@@ -303,6 +304,26 @@ const short Simulation::registerCompartmentPlane(const std::unordered_map<std::s
     ensureKernelSelected();
     return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name, normalCoefficients, distanceFromPlane,
                                                                                 largerOrLess);
+}
+
+readdy::model::TopologyParticle
+Simulation::createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const {
+    ensureKernelSelected();
+    return getSelectedKernel()->createTopologyParticle(type, pos);
+}
+
+bool Simulation::kernelSupportsTopologies() const {
+    ensureKernelSelected();
+    return getSelectedKernel()->supportsTopologies();
+}
+
+readdy::model::top::Topology *Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+    ensureKernelSelected();
+    if(getSelectedKernel()->supportsTopologies()) {
+        return getSelectedKernel()->getKernelStateModel().addTopology(particles);
+    } else {
+        throw std::logic_error("the selected kernel does not support topologies!");
+    }
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};

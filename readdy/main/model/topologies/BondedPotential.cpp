@@ -81,6 +81,8 @@ HarmonicBondPotential::createForceAndEnergyAction(const TopologyActionFactory *c
     return factory->createCalculateHarmonicBondPotential(this);
 }
 
+HarmonicBondPotential::Bond::Bond(std::size_t idx1, std::size_t idx2, double forceConstant, double length)
+        : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
 }
 }
 }

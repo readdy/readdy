@@ -215,6 +215,14 @@ readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactor
     return getTopologyActionFactoryInternal();
 }
 
+TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
+    return TopologyParticle(pos, getKernelContext().getParticleTypeID(type));
+}
+
+bool Kernel::supportsTopologies() const {
+    return getTopologyActionFactory() ? true : false;
+}
+
 Kernel &Kernel::operator=(Kernel &&rhs) = default;
 
 Kernel::Kernel(Kernel &&rhs) = default;

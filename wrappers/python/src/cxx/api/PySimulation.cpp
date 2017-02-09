@@ -157,13 +157,19 @@ obs_handle_t registerObservable_ForcesObservable(sim &self, unsigned int stride,
     }
 }
 
+enum class ParticleTypeFlavor {
+    NORMAL = 0, TOPOLOGY, MEMBRANE
+};
+
 // module
 PYBIND11_PLUGIN (api) {
 
     py::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
-    exportTopologies(api);
+
+    auto topologyModule = api.def_submodule("top");
+    exportTopologies(topologyModule);
 
     py::class_<obs_handle_t>(api, "ObservableHandle")
             .def(py::init<>())
@@ -173,12 +179,26 @@ PYBIND11_PLUGIN (api) {
                 return "ObservableHandle(id=" + std::to_string(self.getId()) + ")";
             });
 
+    py::enum_<ParticleTypeFlavor>(api, "ParticleTypeFlavor")
+            .value("NORMAL", ParticleTypeFlavor::NORMAL)
+            .value("TOPOLOGY", ParticleTypeFlavor::TOPOLOGY)
+            .value("MEMBRANE", ParticleTypeFlavor::MEMBRANE);
+
     py::class_<sim>(api, "Simulation")
             .def(py::init<>())
             .def_property("kbt", &sim::getKBT, &sim::setKBT)
             .def_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)
-            .def("register_particle_type", &sim::registerParticleType)
+            .def("register_particle_type", [](sim& self, const std::string &name, double diffusionCoefficient, double radius, ParticleTypeFlavor flavor) {
+                readdy::model::Particle::flavor_t f = [=] {
+                    switch(flavor) {
+                        case ParticleTypeFlavor::NORMAL: return readdy::model::Particle::FLAVOR_NORMAL;
+                        case ParticleTypeFlavor::MEMBRANE: return readdy::model::Particle::FLAVOR_MEMBRANE;
+                        case ParticleTypeFlavor::TOPOLOGY: return readdy::model::Particle::FLAVOR_TOPOLOGY;
+                    }
+                }();
+                return self.registerParticleType(name, diffusionCoefficient, radius);
+            }, py::arg("name"), py::arg("diffusion_coefficient"), py::arg("radius"), py::arg("flavor") = ParticleTypeFlavor::NORMAL)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(pos[0], pos[1], pos[2], type);
             })
@@ -211,6 +231,10 @@ PYBIND11_PLUGIN (api) {
             .def("register_compartment_sphere", &sim::registerCompartmentSphere)
             .def("register_compartment_plane", &sim::registerCompartmentPlane)
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
+            .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
+            .def("create_topology_particle", &sim::createTopologyParticle)
+            .def("add_topology", &sim::addTopology, rvp::reference)
+            //.def("add_topology", &sim::addTopology, rvp::reference)
             .def("set_kernel", &sim::setKernel)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(

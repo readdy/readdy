@@ -53,7 +53,7 @@ TEST(TestTopologies, BondedPotential) {
     topology_particle_t x_j{1, 0, 0, ctx.getParticleTypeID("Topology A")};
     auto top = scpu->getKernelStateModel().addTopology({x_i, x_j});
     {
-        std::vector<harmonic_bond::Bond> bonds{{0, 1, 5.0, 10.0}};
+        std::vector<harmonic_bond::Bond> bonds{{0, 1, 10.0, 5.0}};
         top->addBondedPotential<harmonic_bond>(bonds);
     }
     auto fObs = scpu->createObservable<readdy::model::observables::Forces>(1);
@@ -88,7 +88,7 @@ TEST(TestTopologies, AnglePotential) {
     topology_particle_t x_k{1, 1, 0, ctx.getParticleTypeID("Topology A")};
     auto top = scpu->getKernelStateModel().addTopology({x_i, x_j, x_k});
     {
-        std::vector<angle_bond::Angle> angles{{0, 1, 2, readdy::util::numeric::pi(), 1.0}};
+        std::vector<angle_bond::Angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
         top->addAnglePotential<angle_bond>(angles);
     }
     auto fObs = scpu->createObservable<readdy::model::observables::Forces>(1);

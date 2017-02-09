@@ -100,6 +100,12 @@ public:
 
     void closeTrajectoryFile();
 
+    readdy::model::TopologyParticle createTopologyParticle(const std::string& type, const readdy::model::Vec3& pos) const;
+
+    bool kernelSupportsTopologies() const;
+
+    readdy::model::top::Topology* addTopology(const std::vector<readdy::model::TopologyParticle> &particles);
+
     /**
      * Method to set the box size.
      * @param dx length of the x-axis
@@ -184,7 +190,8 @@ public:
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      */
     particle_t::type_type
-    registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius);
+    registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius,
+                         readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
     /**
      * A method that allows to remove a certain potential type.

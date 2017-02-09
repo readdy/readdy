@@ -89,7 +89,7 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
     f_k += force_k;
 }
 
-HarmonicAnglePotential::Angle::Angle(size_t idx1, size_t idx2, size_t idx3, double theta_0, double forceConstant)
+HarmonicAnglePotential::Angle::Angle(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double theta_0)
         : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
 }
 }

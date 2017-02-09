@@ -58,7 +58,10 @@ public:
     using particles_t = std::vector<std::size_t>;
 
     Topology(particles_t&&);
-
+    Topology(const Topology&) = delete;
+    Topology& operator=(const Topology&) = delete;
+    Topology(Topology&&);
+    Topology& operator=(Topology&&);
     virtual ~Topology();
 
     particles_t::size_type getNParticles() const;

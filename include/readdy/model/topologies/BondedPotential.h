@@ -52,10 +52,11 @@ public:
 class HarmonicBondPotential : public BondedPotential {
 public:
     struct Bond;
+    using bonds_t = std::vector<Bond>;
 
     HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds);
 
-    const std::vector<Bond> &getBonds() const;
+    const bonds_t &getBonds() const;
 
     double calculateEnergy(const Vec3 &x_ij, const Bond &bond) const;
 
@@ -65,12 +66,11 @@ public:
     createForceAndEnergyAction(const TopologyActionFactory *const) override;
 
 protected:
-    std::vector<Bond> bonds;
+    bonds_t bonds;
 };
 
 struct HarmonicBondPotential::Bond {
-    Bond(std::size_t idx1, std::size_t idx2, double length, double forceConstant)
-            : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
+    Bond(std::size_t idx1, std::size_t idx2, double forceConstant, double length);
 
     std::size_t idx1, idx2;
     double length, forceConstant;

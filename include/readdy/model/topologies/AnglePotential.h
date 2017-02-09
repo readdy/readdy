@@ -69,7 +69,7 @@ protected:
 
 struct HarmonicAnglePotential::Angle {
 
-    Angle(size_t idx1, size_t idx2, size_t idx3, double equilibriumAngle, double forceConstant);
+    Angle(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double equilibriumAngle);
 
     const std::size_t idx1, idx2, idx3;
     const double equilibriumAngle, forceConstant;

@@ -44,7 +44,7 @@ namespace readdy {
 namespace model {
 
 
-class Particle {
+class READDY_API Particle {
 public:
 
     using id_type = unsigned long;

@@ -80,6 +80,10 @@ void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
     bondedPotentials.push_back(std::move(pot));
 }
 
+Topology &Topology::operator=(Topology &&) = default;
+
+Topology::Topology(Topology &&) = default;
+
 }
 }
 }
