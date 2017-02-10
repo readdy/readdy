@@ -49,7 +49,7 @@ public:
 
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
 
-    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
+    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config, readdy::model::top::TopologyActionFactory const *const  taf);
 
     ~CPUStateModel();
 
@@ -71,11 +71,15 @@ public:
 
     virtual double getEnergy() const override;
 
-    data_t *const getParticleData() const;
+    data_t const*const getParticleData() const;
+    data_t *const getParticleData();
 
-    model::CPUNeighborList *const getNeighborList() const;
+    model::CPUNeighborList const*const getNeighborList() const;
+    model::CPUNeighborList *const getNeighborList();
 
     virtual void clearNeighborList() override;
+
+    virtual readdy::model::top::Topology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
 
 private:
     struct Impl;

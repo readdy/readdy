@@ -32,6 +32,7 @@
 #include <readdy/model/Vec3.h>
 #include <assert.h>
 #include <ostream>
+#include <cmath>
 
 namespace readdy {
 namespace model {
@@ -127,6 +128,36 @@ Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs) {
 std::ostream &operator<<(std::ostream &os, const Vec3 &vec) {
     os << "Vec3(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
     return os;
+}
+
+Vec3 Vec3::cross(const Vec3 &other) const {
+    return {
+            data[1] * other.data[2] - data[2] * other.data[1],
+            data[2] * other.data[0] - data[0] * other.data[2],
+            data[0] * other.data[1] - data[1] * other.data[0]
+    };
+}
+
+double Vec3::norm() const {
+    return std::sqrt(normSquared());
+}
+
+double Vec3::normSquared() const {
+    return data[0]*data[0] + data[1]*data[1] + data[2]*data[2];
+}
+
+Vec3 &Vec3::invertElementWise() {
+    data[0] = 1./data[0];
+    data[1] = 1./data[1];
+    data[2] = 1./data[2];
+    return *this;
+}
+
+Vec3 &Vec3::operator-=(const Vec3 &rhs) {
+    data[0] -= rhs.data[0];
+    data[1] -= rhs.data[1];
+    data[2] -= rhs.data[2];
+    return *this;
 }
 
 }

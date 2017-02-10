@@ -41,6 +41,14 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/Actions.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/Reactions.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/Utils.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/Compartments.cpp")
+
+# topologies
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/Topology.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/TopologyPotential.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/BondedPotential.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/AnglePotential.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/TorsionPotential.cpp")
+
 # internal sources
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/_internal/ObservableWrapper.cpp")
 

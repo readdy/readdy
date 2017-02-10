@@ -50,11 +50,11 @@ CPUDPositions::CPUDPositions(CPUDKernel *const kernel, unsigned int stride,
 
 void CPUDPositions::evaluate() {
     result.clear();
-    const auto &pd = kernel->getKernelStateModel().getParticleData();
+    const auto &pd = kernel->getCPUDKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
         result = kernel->getKernelStateModel().getParticlePositions();
     } else {
-        for (const auto &e : *kernel->getKernelStateModel().getParticleData()) {
+        for (const auto &e : *kernel->getCPUDKernelStateModel().getParticleData()) {
             if (std::find(typesToCount.begin(), typesToCount.end(), e.type) != typesToCount.end()) {
                 result.push_back(e.pos);
             }
@@ -79,7 +79,7 @@ void CPUDHistogramAlongAxis::evaluate() {
     const auto typesToCount = this->typesToCount;
     const auto resultSize = result.size();
     const auto axis = this->axis;
-    const auto data = kernel->getKernelStateModel().getParticleData();
+    const auto data = kernel->getCPUDKernelStateModel().getParticleData();
 
     std::vector<std::future<result_t>> updates;
     updates.reserve(kernel->getNThreads());
@@ -138,10 +138,10 @@ CPUDNParticles::CPUDNParticles(CPUDKernel *const kernel, unsigned int stride, st
 void CPUDNParticles::evaluate() {
     std::vector<unsigned long> resultVec = {};
     if (typesToCount.empty()) {
-        resultVec.push_back(kernel->getKernelStateModel().getParticleData()->size());
+        resultVec.push_back(kernel->getCPUDKernelStateModel().getParticleData()->size());
     } else {
         resultVec.resize(typesToCount.size());
-        const auto &pd = kernel->getKernelStateModel().getParticleData();
+        const auto &pd = kernel->getCPUDKernelStateModel().getParticleData();
         for (const auto &e : *pd) {
             auto typeIt = std::find(typesToCount.begin(), typesToCount.end(), e.type);
             if (typeIt != typesToCount.end()) {
@@ -158,7 +158,7 @@ CPUDForces::CPUDForces(CPUDKernel *const kernel, unsigned int stride, std::vecto
 
 void CPUDForces::evaluate() {
     result.clear();
-    const auto &pd = kernel->getKernelStateModel().getParticleData();
+    const auto &pd = kernel->getCPUDKernelStateModel().getParticleData();
     if (typesToCount.empty()) {
         result.reserve(pd->size());
     }
@@ -187,7 +187,7 @@ void CPUDParticles::evaluate() {
     resultTypes.clear();
     resultIds.clear();
     resultPositions.clear();
-    const auto &particleData = kernel->getKernelStateModel().getParticleData();
+    const auto &particleData = kernel->getCPUDKernelStateModel().getParticleData();
     resultTypes.reserve(particleData->size());
     resultIds.reserve(particleData->size());
     resultPositions.reserve(particleData->size());

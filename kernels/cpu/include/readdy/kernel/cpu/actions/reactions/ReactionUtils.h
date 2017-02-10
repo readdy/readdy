@@ -48,7 +48,7 @@ using kernel_t = readdy::kernel::cpu::CPUKernel;
 using vec_t = readdy::model::Vec3;
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
 using reaction_type = readdy::model::reactions::Reaction<1>::ReactionType;
-using nl_t = const decltype(std::declval<kernel_t>().getKernelStateModel().getNeighborList());
+using nl_t = readdy::kernel::cpu::model::CPUNeighborList;
 using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
 using event_t = Event;
 using particle_t = readdy::model::Particle;
@@ -68,12 +68,12 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
 }
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel const *const kernel, double timeStep,
+        CPUKernel *const kernel, double timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events);
 
 template<typename ParticleIndexCollection>
-void gatherEvents(CPUKernel const *const kernel, const ParticleIndexCollection &particles, const nl_t &nl,
+void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const nl_t* nl,
                   const data_t &data, double &alpha, std::vector<event_t> &events,
                   const readdy::model::KernelContext::dist_squared_fun& d2) {
     for (const auto index : particles) {

@@ -35,170 +35,120 @@
 #include <memory>
 #include <vector>
 #include <readdy/model/Particle.h>
-#include <set>
-#include <mutex>
-#include <atomic>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
 namespace model {
 
+class SCPUParticleData;
+
+struct Entry {
+    using entries_t = std::vector<Entry>;
+    using particle_type = readdy::model::Particle;
+    using force_t = particle_type::pos_type;
+    using displacement_t = force_t::entry_t;
+
+    Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
+                                           deactivated(false), displacement(0), id(particle.getId()) {}
+
+    Entry(const Entry &) = delete;
+
+    Entry &operator=(const Entry &) = delete;
+
+    Entry(Entry &&) = default;
+
+    Entry &operator=(Entry &&) = default;
+
+    bool is_deactivated() const;
+
+    const particle_type::pos_type &position() const;
+
+    force_t force;
+    displacement_t displacement;
+    particle_type::pos_type pos;
+
+private:
+    friend class readdy::kernel::scpu::model::SCPUParticleData;
+
+public:
+    particle_type::id_type id;
+    particle_type::type_type type;
+private:
+    bool deactivated;
+};
+
 class SCPUParticleData {
 public:
-    using marked_count_t = std::atomic<std::size_t>;
+
+    using entries_t = std::vector<Entry>;
+    using index_t = entries_t::size_type;
+    using entries_update_t = std::vector<Entry>;
     using particle_type = readdy::model::Particle;
+    using top_particle_type = readdy::model::TopologyParticle;
+    using force_t = particle_type::pos_type;
+    using displacement_t = force_t::entry_t;
+    using iterator = entries_t::iterator;
+    using const_iterator = entries_t::const_iterator;
+    using update_t = std::pair<entries_update_t, std::vector<index_t>>;
 
-    // ctor / dtor
-    SCPUParticleData();
+    SCPUParticleData() = default;
+    SCPUParticleData(const SCPUParticleData&) = delete;
+    SCPUParticleData& operator=(const SCPUParticleData&) = delete;
+    SCPUParticleData(SCPUParticleData&&) = default;
+    SCPUParticleData& operator=(SCPUParticleData&&) = default;
 
-    SCPUParticleData(bool useMarkedSet);
+    readdy::model::Particle getParticle(const index_t index) const;
 
-    SCPUParticleData(unsigned int capacity);
-
-    SCPUParticleData(unsigned int capacity, bool useMarkedSet);
-
-    ~SCPUParticleData();
-
-    // move
-    SCPUParticleData(SCPUParticleData &&rhs);
-
-    SCPUParticleData &operator=(SCPUParticleData &&rhs);
-
-    // copy
-    SCPUParticleData(const SCPUParticleData &rhs) = delete;
-
-    SCPUParticleData &operator=(const SCPUParticleData &rhs) = delete;
-
-    std::vector<particle_type::id_type>::iterator begin_ids();
-
-    std::vector<particle_type::id_type>::const_iterator begin_ids() const;
-
-    std::vector<particle_type::id_type>::const_iterator cbegin_ids() const;
-
-    std::vector<particle_type::id_type>::iterator end_ids();
-
-    std::vector<particle_type::id_type>::const_iterator end_ids() const;
-
-    std::vector<particle_type::id_type>::const_iterator cend_ids() const;
-
-    std::vector<particle_type::pos_type>::iterator begin_positions();
-
-    std::vector<particle_type::pos_type>::const_iterator begin_positions() const;
-
-    std::vector<particle_type::pos_type>::const_iterator cbegin_positions() const;
-
-    std::vector<particle_type::pos_type>::iterator end_positions();
-
-    std::vector<particle_type::pos_type>::const_iterator end_positions() const;
-
-    std::vector<particle_type::pos_type>::const_iterator cend_positions() const;
-
-    std::vector<readdy::model::Vec3>::iterator begin_forces();
-
-    std::vector<readdy::model::Vec3>::const_iterator begin_forces() const;
-
-    std::vector<readdy::model::Vec3>::const_iterator cbegin_forces() const;
-
-    std::vector<readdy::model::Vec3>::iterator end_forces();
-
-    std::vector<readdy::model::Vec3>::const_iterator end_forces() const;
-
-    std::vector<readdy::model::Vec3>::const_iterator cend_forces() const;
-
-    std::vector<particle_type::type_type>::iterator begin_types();
-
-    std::vector<particle_type::type_type>::const_iterator begin_types() const;
-
-    std::vector<particle_type::type_type>::const_iterator cbegin_types() const;
-
-    std::vector<particle_type::type_type>::iterator end_types();
-
-    std::vector<particle_type::type_type>::const_iterator end_types() const;
-
-    std::vector<particle_type::type_type>::const_iterator cend_types() const;
-
-    std::vector<char>::iterator begin_deactivated();
-
-    std::vector<char>::const_iterator begin_deactivated() const;
-
-    std::vector<char>::const_iterator cbegin_deactivated() const;
-
-    std::vector<char>::iterator end_deactivated();
-
-    std::vector<char>::const_iterator end_deactivated() const;
-
-    std::vector<char>::const_iterator cend_deactivated() const;
-
-    void swap(SCPUParticleData &rhs);
-
-    size_t size() const;
-
-    size_t max_size() const;
-
-    bool empty() const;
-
-    void clear();
+    readdy::model::Particle toParticle(const Entry &e) const;
 
     void addParticle(const particle_type &particle);
 
     void addParticles(const std::vector<particle_type> &particles);
 
-    /**
-     * Remove a particle via its unique id.
-     * @param particle the particle to be removed
-     */
+    std::vector<entries_t::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
+
     void removeParticle(const particle_type &particle);
 
     void removeParticle(const size_t index);
 
-    void setParticleData(const particle_type &particle, const size_t &index);
+    iterator begin();
 
-    particle_type operator[](const size_t index) const;
+    iterator end();
 
-    bool isMarkedForDeactivation(const size_t index);
+    const_iterator cbegin() const;
 
-    size_t getDeactivatedIndex() const;
+    const_iterator cend() const;
 
-    size_t getNDeactivated() const;
+    const_iterator begin() const;
 
-    void markForDeactivation(size_t index);
+    const_iterator end() const;
 
-    template<typename T>
-    void updateDeactivated(const T &update) const {
-        std::lock_guard<std::mutex> lock(markedForDeactivationMutex);
-        markedForDeactivation->insert(std::begin(update), std::end(update));
-    }
+    Entry &entry_at(index_t);
 
-    /**
-     * This method is the counterpart to markForDeactivation.
-     * The particles that were marked are now deactivated, i.e.,
-     * for each marked particle:
-     *   - If it is at the very end of the particle list, the
-     *     counters are updated.
-     *   - If not, the particle is swapped with the last active particle,
-     *     so that again, all deactivated particles reside at the end
-     *     of the internal data structure.
-     */
-    void deactivateMarked();
+    index_t size() const;
+
+    index_t n_deactivated() const;
+
+    void clear();
+
+    const Entry &entry_at(index_t) const;
+
+    const Entry &centry_at(index_t) const;
+
+    index_t addEntry(Entry &&entry);
+
+    void removeEntry(index_t entry);
+
+    std::vector<index_t> update(update_t&&);
 
 protected:
-    std::unique_ptr<std::vector<particle_type::id_type>> ids;
-    std::unique_ptr<std::vector<particle_type::pos_type>> positions;
-    std::unique_ptr<std::vector<readdy::model::Vec3>> forces;
-    std::unique_ptr<std::vector<particle_type::type_type>> type;
-    std::unique_ptr<std::vector<char>> deactivated;
-    size_t deactivated_index;
-    size_t n_deactivated;
-    mutable marked_count_t n_marked;
-    mutable std::unique_ptr<std::set<size_t>> markedForDeactivation;
-    mutable std::mutex markedForDeactivationMutex;
-    bool useMarkedSet = true;
 
-    void deactivateMarkedSet();
+    entries_t entries;
+    std::vector<index_t> blanks;
 
-    void deactivateMarkedNoSet();
 };
+
 
 }
 }

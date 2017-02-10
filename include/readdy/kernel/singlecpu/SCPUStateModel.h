@@ -45,6 +45,7 @@ namespace kernel {
 namespace scpu {
 
 class SCPUStateModel : public readdy::model::KernelStateModel {
+    using topology_action_factory = readdy::model::top::TopologyActionFactory;
 public:
 
     virtual void updateNeighborList() override;
@@ -61,13 +62,15 @@ public:
 
     virtual void removeAllParticles() override;
 
+    virtual readdy::model::top::Topology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
+
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
     virtual double getEnergy() const override;
 
     virtual void increaseEnergy(double increase);
 
-    SCPUStateModel(readdy::model::KernelContext const *context);
+    SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *const );
 
     ~SCPUStateModel();
 
@@ -77,8 +80,6 @@ public:
     SCPUStateModel &operator=(SCPUStateModel &&rhs);
 
     virtual readdy::kernel::scpu::model::SCPUParticleData *getParticleData() const;
-
-    virtual void setNeighborList(std::unique_ptr<model::SCPUNeighborList> ptr);
 
     virtual const model::SCPUNeighborList *getNeighborList() const;
 

@@ -52,13 +52,23 @@ public:
 
     Vec3 &operator+=(const Vec3 &rhs);
 
+    Vec3 &operator-=(const Vec3 &rhs);
+
     Vec3 &operator*=(const entry_t a);
 
     Vec3 &operator/=(const entry_t a);
 
+    Vec3 cross(const Vec3&) const;
+
+    double norm() const;
+
+    double normSquared() const;
+
     entry_t operator[](const unsigned int i) const;
 
     entry_t &operator[](const unsigned int i);
+
+    Vec3& invertElementWise();
 
     bool operator==(const Vec3 &rhs) const;
 

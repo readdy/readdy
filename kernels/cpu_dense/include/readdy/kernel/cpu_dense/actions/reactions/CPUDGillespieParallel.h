@@ -47,7 +47,7 @@ namespace reactions {
 class CPUDGillespieParallel : public readdy::model::actions::reactions::GillespieParallel {
     using super = readdy::model::actions::reactions::GillespieParallel;
 public:
-    CPUDGillespieParallel(kernel_t const *const kernel, double timeStep);
+    CPUDGillespieParallel(kernel_t *const kernel, double timeStep);
 
     virtual ~CPUDGillespieParallel();
 
@@ -68,7 +68,7 @@ public:
     void setApproximateRate(bool approximateRate);
 
 protected:
-    kernel_t const *const kernel;
+    kernel_t *const kernel;
     double maxReactionRadius = 0.0;
     double boxWidth = 0.0;
     unsigned int longestAxis;

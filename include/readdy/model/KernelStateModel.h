@@ -34,6 +34,7 @@
 #define READDY_MAIN_KERNELSTATEMODEL_H
 
 #include <vector>
+#include <readdy/model/topologies/Topology.h>
 #include "Particle.h"
 #include "Vec3.h"
 
@@ -59,13 +60,15 @@ public:
 
     virtual void addParticles(const std::vector<Particle> &p) = 0;
 
+    virtual readdy::model::top::Topology *const addTopology(const std::vector<TopologyParticle> &particles) = 0;
+
     virtual void removeParticle(const Particle &p) = 0;
 
     virtual void removeAllParticles() = 0;
 
     virtual double getEnergy() const = 0;
-
 };
+
 }
 }
 #endif //READDY_MAIN_KERNELSTATEMODEL_H

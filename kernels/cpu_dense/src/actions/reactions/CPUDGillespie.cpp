@@ -42,10 +42,10 @@ CPUDGillespie::CPUDGillespie(const CPUDKernel *const kernel, double timeStep) : 
 
 void CPUDGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
-    auto data = kernel->getKernelStateModel().getParticleData();
+    auto data = kernel->getCPUDKernelStateModel().getParticleData();
     const auto &dist = ctx.getDistSquaredFun();
     const auto &fixPos = ctx.getFixPositionFun();
-    const auto nl = kernel->getKernelStateModel().getNeighborList();
+    const auto nl = kernel->getCPUDKernelStateModel().getNeighborList();
 
     double alpha = 0.0;
     std::vector<event_t> events;

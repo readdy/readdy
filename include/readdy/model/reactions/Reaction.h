@@ -103,15 +103,6 @@ public:
         return productDistance;
     }
 
-    virtual void perform(const Particle &p1_in, const Particle &p2_in,
-                         Particle &p1_out, Particle &p2_out, rnd_normal rnd) const {
-    }
-
-    virtual void perform(const Particle &p1_in, const Particle &p2_in,
-                         Particle &p1_out, Particle &p2_out) const {
-        perform(p1_in, p2_in, p1_out, p2_out, &readdy::model::rnd::normal3<>);
-    }
-
     friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
         os << "Reaction(\"" << reaction.name << "\", N_Educts=" << reaction._n_educts << ", N_Products="
            << reaction._n_products << ", (";

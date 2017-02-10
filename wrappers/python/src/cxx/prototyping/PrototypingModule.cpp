@@ -52,8 +52,6 @@ namespace scpu = readdy::kernel::scpu;
 using rdy_scpu_model_t = scpu::SCPUStateModel;
 using scpu_kernel_t = scpu::SCPUKernel;
 
-using scpu_kernel_wrap_t = scpu_kernel_t; // todo: do i need readdy::py::SingleCPUKernelWrap here?
-
 using core_kernel_t = readdy::model::Kernel;
 using core_kernel_wrap_t = readdy::rpy::KernelWrap;
 using core_program_factory = readdy::model::actions::ActionFactory;
@@ -69,15 +67,16 @@ PYBIND11_PLUGIN (prototyping) {
     exportModelClasses(proto);
     exportPotentials(proto);
 
-    py::class_<scpu_kernel_wrap_t>(proto, "SingleCPUKernel")
+    py::class_<scpu_kernel_t>(proto, "SingleCPUKernel")
             .def(py::init<>())
-            .def("get_kernel_state_model", &scpu_kernel_wrap_t::getKernelStateModel, rvp::reference_internal)
-            .def("get_kernel_context", &scpu_kernel_wrap_t::getKernelContext, rvp::reference_internal)
-            .def("get_available_potentials", &scpu_kernel_wrap_t::getAvailablePotentials)
-            .def("get_potential_factory", &scpu_kernel_wrap_t::getPotentialFactory, rvp::reference_internal)
-            .def("get_reaction_factory", &scpu_kernel_wrap_t::getReactionFactory, rvp::reference_internal)
-            .def("get_observable_factory", &scpu_kernel_wrap_t::getObservableFactory, rvp::reference_internal)
-            .def("get_program_factory", &scpu_kernel_wrap_t::getActionFactory, rvp::reference_internal);
+            .def("get_kernel_state_model", [](const scpu_kernel_t &self) -> const scpu::SCPUStateModel& {return self.getSCPUKernelStateModel(); }, rvp::reference_internal)
+            .def("get_kernel_context", [](const scpu_kernel_t &self) -> const readdy::model::KernelContext& { return self.getKernelContext(); }, rvp::reference_internal)
+            .def("get_available_potentials", &scpu_kernel_t::getAvailablePotentials)
+            .def("get_potential_factory", [](const scpu_kernel_t &self) -> const readdy::model::potentials::PotentialFactory& {return self.getPotentialFactory(); }, rvp::reference_internal)
+            .def("get_reaction_factory", [](const scpu_kernel_t &self) -> const readdy::model::reactions::ReactionFactory& {return self.getReactionFactory();}, rvp::reference_internal)
+            .def("get_observable_factory", [](const scpu_kernel_t &self) -> const readdy::model::observables::ObservableFactory& {return self.getObservableFactory();}, rvp::reference_internal)
+            .def("get_topology_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::top::TopologyActionFactory*  {return self.getTopologyActionFactory();}, rvp::reference_internal)
+            .def("get_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::actions::ActionFactory& {return self.getActionFactory();}, rvp::reference_internal);
 
     return proto.ptr();
 }

@@ -37,19 +37,19 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-CPUGillespie::CPUGillespie(const CPUKernel *const kernel, double timeStep) : super(timeStep), kernel(kernel) {}
+CPUGillespie::CPUGillespie(CPUKernel *const kernel, double timeStep) : super(timeStep), kernel(kernel) {}
 
 void CPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
-    auto data = kernel->getKernelStateModel().getParticleData();
+    auto &stateModel = kernel->getCPUKernelStateModel();
+    auto data = stateModel.getParticleData();
     const auto &dist = ctx.getDistSquaredFun();
     const auto &fixPos = ctx.getFixPositionFun();
-    const auto nl = kernel->getKernelStateModel().getNeighborList();
+    const auto nl = stateModel.getNeighborList();
 
     double alpha = 0.0;
     std::vector<event_t> events;
-    gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()),
-                 nl, *data, alpha, events, dist);
+    gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, *data, alpha, events, dist);
     auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events));
 
     // update data structure

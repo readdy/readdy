@@ -73,12 +73,12 @@ TEST_P(TestCompartments, TwoCompartments) {
     ctx.registerParticleType("C", 1., 1.);
     ctx.registerParticleType("D", 1., 1.);
     auto &&comp = kernel->createAction<m::actions::EvaluateCompartments>();
-    
+
     std::unordered_map<std::string, std::string> conversionsXPos = {{"A", "C"}, {"B", "C"}};
     std::unordered_map<std::string, std::string> conversionsXNeg = {{"A", "D"}, {"B", "D"}};
     kernel->registerCompartment<m::compartments::Plane>(conversionsXPos, "XPos", m::Vec3(1,0,0), 0, true);
     kernel->registerCompartment<m::compartments::Plane>(conversionsXNeg, "XNeg", m::Vec3(-1,0,0), 0, true);
-    
+
     for (auto i = 0; i < 100; ++i) {
         kernel->addParticle("A", readdy::model::rnd::normal3());
         kernel->addParticle("B", readdy::model::rnd::normal3());

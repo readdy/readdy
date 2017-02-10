@@ -82,6 +82,8 @@ void exportPrograms(py::module &proto) {
                 return action.release();
             }, rvp::take_ownership);
 
+    py::class_<readdy::model::top::TopologyActionFactory> (proto, "TopologyActionFactory");
+
     py::class_ <action_t, program_wrap_t> program(proto, "Action");
     program
             .def(py::init<>())

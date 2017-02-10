@@ -30,28 +30,27 @@
 #include <readdy/common/filesystem.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/plugin/KernelProvider.h>
-#include <readdy/plugin/_internal/KernelPluginDecorator.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/common/dll.h>
 
 namespace utl = readdy::util;
 namespace fs = utl::fs;
+namespace dll = utl::dll;
 namespace readdy {
 namespace plugin {
+
+struct KernelProvider::Impl {
+    std::unordered_map<std::string, std::weak_ptr<readdy::util::dll::shared_library>> libs {};
+    std::unordered_map<std::string, std::function<KernelProvider::kernel_ptr()>> factory {};
+};
 
 KernelProvider &KernelProvider::getInstance() {
     static KernelProvider instance;
     return instance;
 }
 
-KernelProvider::KernelProvider() {
+KernelProvider::KernelProvider() : pimpl(std::make_unique<Impl>()){
     const auto path = fs::current_path();
-    if(!log::console()) {
-        spdlog::set_sync_mode();
-        auto console = spdlog::stdout_color_mt("console");
-        console->set_level(spdlog::level::debug);
-        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-        log::console()->warn("initialized default console logger because there was none");
-    }
     log::console()->debug("current path is {}", path);
     add(readdy::kernel::scpu::SCPUKernel::name, [] {
         return new readdy::kernel::scpu::SCPUKernel();
@@ -114,16 +113,70 @@ bool KernelProvider::isSharedLibrary(const std::string &path) const {
            && path.find(".a") == std::string::npos;
 }
 
-void KernelProvider::add(const std::string &sharedLib) {
-    using namespace _internal;
-    const auto name = loadKernelName(sharedLib);
-    log::console()->debug("Trying to load kernel with name {}", name);
-    factory.emplace(std::make_pair(name, [sharedLib] { return new KernelPluginDecorator(sharedLib); }));
+const std::string readdy::plugin::KernelProvider::loadKernelName(const std::string &sharedLib) {
+    auto it = pimpl->libs.find(sharedLib);
+    if(it != pimpl->libs.end() && !it->second.expired()) {
+        return it->second.lock()->load<const char *()>("name")();
+    } else {
+        dll::shared_library lib {sharedLib, RTLD_LAZY | RTLD_GLOBAL};
+        if(!lib.has_symbol("name")) {
+            throw std::invalid_argument("library " + sharedLib + " had no \"name\" symbol");
+        } else {
+            if(!lib.has_symbol("createKernel")) {
+                throw std::invalid_argument("library " + sharedLib + " had no \"createKernel\" symbol");
+            }
+            return lib.load<const char*()>("name")();
+        }
+    }
 }
 
-void KernelProvider::add(const std::string name, const std::function<readdy::model::Kernel *()> creator) {
-    PluginProvider::add(name, creator);
+void KernelProvider::add(const std::string &sharedLib) {
+    const auto name = loadKernelName(sharedLib);
+    pimpl->factory.emplace(std::make_pair(name, [this, sharedLib, name] { // load the library
+        log::console()->debug("Trying to load kernel with name {}", name);
+        auto it = pimpl->libs.find(sharedLib);
+        if(it != pimpl->libs.end() && !it->second.expired()) {
+            auto libPtr = it->second.lock();
+            // load the kernel
+            readdy::model::Kernel* kernel = libPtr->load<readdy::model::Kernel*()>("createKernel")();
+            log::console()->debug("loaded kernel with name {}", kernel->getName());
+            return kernel_ptr(kernel, {libPtr});
+        } else {
+            auto lib = std::make_shared<readdy::util::dll::shared_library>(sharedLib, RTLD_LAZY | RTLD_GLOBAL);
+            pimpl->libs[sharedLib] = lib;
+            // load the kernel
+            readdy::model::Kernel* kernel = lib->load<readdy::model::Kernel*()>("createKernel")();
+            log::console()->debug("loaded kernel with name {}", kernel->getName());
+            return kernel_ptr(kernel, {lib});
+        }
+    }));
 }
+
+void KernelProvider::add(const std::string &name, const std::function<readdy::model::Kernel *()> &creator) {
+    pimpl->factory.emplace(std::make_pair(name, [creator]() {
+        return kernel_ptr(creator(), {});
+    }));
+}
+
+KernelProvider::kernel_ptr KernelProvider::create(const std::string &name) const {
+    auto it = pimpl->factory.find(name);
+    if (it != pimpl->factory.end()) {
+        return it->second();
+    }
+    throw std::invalid_argument("Could not load plugin with name \"" + name + "\"");
+}
+
+KernelProvider::~KernelProvider() = default;
+
+KernelDeleter::KernelDeleter()  : ptr(nullptr) {}
+
+KernelDeleter::KernelDeleter(const std::shared_ptr<readdy::util::dll::shared_library> &libPtr) : ptr(libPtr) {}
+
+void KernelDeleter::operator()(readdy::model::Kernel *k) {
+    delete k;
+    ptr.reset();
+}
+
 }
 }
 

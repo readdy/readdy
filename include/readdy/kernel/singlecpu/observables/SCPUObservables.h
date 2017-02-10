@@ -49,21 +49,20 @@ public:
 
     virtual void evaluate() override {
         result.clear();
-        const auto &pd = kernel->getKernelStateModel().getParticleData();
-        auto positionsIt = pd->cbegin_positions();
+        auto& stateModel = kernel->getSCPUKernelStateModel();
+        const auto &pd = stateModel.getParticleData();
+        auto it = pd->cbegin();
         if (typesToCount.empty()) {
-            // get all particles' positions
-            result.reserve(pd->size());
-            std::copy(positionsIt, pd->cend_positions(), std::back_inserter(result));
+            result = stateModel.getParticlePositions();
         } else {
             // only get positions of typesToCount
-            auto typesIt = pd->cbegin_types();
-            while (positionsIt != pd->cend_positions()) {
-                if (std::find(typesToCount.begin(), typesToCount.end(), *typesIt) != typesToCount.end()) {
-                    result.push_back(*positionsIt);
+            while (it != pd->cend()) {
+                if(!it->is_deactivated()) {
+                    if (std::find(typesToCount.begin(), typesToCount.end(), it->type) != typesToCount.end()) {
+                        result.push_back(it->position());
+                    }
                 }
-                ++positionsIt;
-                ++typesIt;
+                ++it;
             }
         }
     }
@@ -84,16 +83,16 @@ public:
         resultTypes.clear();
         resultIds.clear();
         resultPositions.clear();
-        const auto &particleData = kernel->getKernelStateModel().getParticleData();
-        auto typesIt = particleData->cbegin_types();
-        auto idsIt = particleData->cbegin_ids();
-        auto positionsIt = particleData->cbegin_positions();
-        resultTypes.reserve(particleData->size());
-        resultIds.reserve(particleData->size());
-        resultPositions.reserve(particleData->size());
-        std::copy(typesIt, particleData->cend_types(), std::back_inserter(resultTypes));
-        std::copy(idsIt, particleData->cend_ids(), std::back_inserter(resultIds));
-        std::copy(positionsIt, particleData->cend_positions(), std::back_inserter(resultPositions));
+        const auto &particleData = kernel->getSCPUKernelStateModel().getParticleData();
+        auto it = particleData->cbegin();
+        while(it != particleData->cend()) {
+            if(!it->is_deactivated()) {
+                resultTypes.push_back(it->type);
+                resultIds.push_back(it->id);
+                resultPositions.push_back(it->position());
+            }
+            ++it;
+        }
     };
 
 protected:
@@ -115,15 +114,14 @@ public:
     virtual void evaluate() override {
         std::fill(result.begin(), result.end(), 0);
 
-        const auto &model = kernel->getKernelStateModel();
+        const auto &model = kernel->getSCPUKernelStateModel();
         const auto data = model.getParticleData();
 
-        auto it_pos = data->begin_positions();
-        auto it_types = data->begin_types();
+        auto it = data->cbegin();
 
-        while (it_pos != data->end_positions()) {
-            if (typesToCount.find(*it_types) != typesToCount.end()) {
-                const auto &vec = *it_pos;
+        while (it != data->cend()) {
+            if (!it->is_deactivated() and typesToCount.find(it->type) != typesToCount.end()) {
+                const auto &vec = it->position();
                 auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), vec[axis]);
                 if (upperBound != binBorders.end()) {
                     unsigned long binBordersIdx = static_cast<unsigned long>(upperBound - binBorders.begin());
@@ -132,8 +130,7 @@ public:
                     }
                 }
             }
-            ++it_pos;
-            ++it_types;
+            ++it;
         }
     }
 
@@ -144,28 +141,31 @@ protected:
 
 class SCPUNParticles : public readdy::model::observables::NParticles {
 public:
-    SCPUNParticles(SCPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+    SCPUNParticles(SCPUKernel *const kernel, unsigned int stride, const std::vector<std::string>& typesToCount = {}) :
             readdy::model::observables::NParticles(kernel, stride, typesToCount),
             singleCPUKernel(kernel) {}
 
     virtual void evaluate() override {
         std::vector<unsigned long> resultVec = {};
+        const auto &pd = singleCPUKernel->getSCPUKernelStateModel().getParticleData();
+
         if (typesToCount.empty()) {
-            resultVec.push_back(singleCPUKernel->getKernelStateModel().getParticleData()->size());
+            resultVec.push_back(pd->size() - pd->n_deactivated());
         } else {
             resultVec.resize(typesToCount.size());
-            const auto &pd = singleCPUKernel->getKernelStateModel().getParticleData();
-            auto typesIt = pd->cbegin_types();
-            while (typesIt != pd->cend_types()) {
-                unsigned int idx = 0;
-                for (const auto t : typesToCount) {
-                    if (*typesIt == t) {
-                        resultVec[idx]++;
-                        break;
+            auto it = pd->cbegin();
+            while(it != pd->cend()) {
+                if(!it->is_deactivated()) {
+                    unsigned int idx = 0;
+                    for (const auto t : typesToCount) {
+                        if (it->type == t) {
+                            resultVec[idx]++;
+                            break;
+                        }
+                        ++idx;
                     }
-                    ++idx;
                 }
-                ++typesIt;
+                ++it;
             }
         }
         result = resultVec;
@@ -177,7 +177,7 @@ protected:
 
 class SCPUForces : public readdy::model::observables::Forces {
 public:
-    SCPUForces(SCPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {}) :
+    SCPUForces(SCPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
             readdy::model::observables::Forces(kernel, stride, typesToCount),
             kernel(kernel) {}
 
@@ -185,25 +185,28 @@ public:
 
     virtual void evaluate() override {
         result.clear();
-        const auto &pd = kernel->getKernelStateModel().getParticleData();
-        auto forcesIt = pd->cbegin_forces();
+        const auto &pd = kernel->getSCPUKernelStateModel().getParticleData();
 
+        auto it = pd->cbegin();
         if (typesToCount.empty()) {
             // get all particles' forces
-            result.reserve(pd->size());
-            std::copy(forcesIt, pd->cend_forces(), std::back_inserter(result));
+            for(; it != pd->cend(); ++it) {
+                if(!it->is_deactivated()) {
+                    result.push_back(it->force);
+                }
+            }
         } else {
             // only get forces of typesToCount
-            auto typesIt = pd->cbegin_types();
-            while (forcesIt != pd->cend_forces()) {
-                for (auto countedParticleType : typesToCount) {
-                    if (*typesIt == countedParticleType) {
-                        result.push_back(*forcesIt);
-                        break;
+            while (it != pd->cend()) {
+                if(!it->is_deactivated()) {
+                    for (auto countedParticleType : typesToCount) {
+                        if (it->type == countedParticleType) {
+                            result.push_back(it->force);
+                            break;
+                        }
                     }
                 }
-                ++forcesIt;
-                ++typesIt;
+                ++it;
             }
         }
     }

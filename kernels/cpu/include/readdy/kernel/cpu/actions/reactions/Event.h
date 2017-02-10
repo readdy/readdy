@@ -47,7 +47,7 @@ struct Event {
     unsigned int nProducts;
     index_type idx1, idx2;
     reaction_index_type reactionIdx;
-    unsigned int t1, t2;
+    readdy::model::Particle::type_type t1, t2;
     double reactionRate;
     double cumulativeRate;
 

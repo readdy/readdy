@@ -34,10 +34,20 @@
 #define READDY_MAIN_KERNELPROVIDER_H
 
 #include <readdy/model/Kernel.h>
-#include "PluginProvider.h"
 
 namespace readdy {
+namespace util  { namespace dll { class shared_library; }}
 namespace plugin {
+class KernelDeleter {
+    std::shared_ptr<readdy::util::dll::shared_library> ptr;
+public:
+    // internal kernel
+    KernelDeleter();
+    // external kernel
+    KernelDeleter(const std::shared_ptr<readdy::util::dll::shared_library>& libPtr);
+
+    void operator()(readdy::model::Kernel*);
+};
 
 /**
  * The KernelProvider is a singleton which can be accessed by getInstance()
@@ -46,7 +56,7 @@ namespace plugin {
  * specified directory will be scanned for shared libraries with the required
  * symbols, i.e., with an implementation of the Kernel class.
  */
-class KernelProvider : public PluginProvider<readdy::model::Kernel> {
+class KernelProvider {
 protected:
     /**
      * The constructor of KernelProvider. As it is a singleton, it is protected.
@@ -56,8 +66,7 @@ protected:
     /**
      * The destructor of KernelProvider.
      */
-    virtual ~KernelProvider() {
-    }
+    virtual ~KernelProvider();
 
     /**
      * A protected method that determines if a path points to a shared library.
@@ -68,6 +77,9 @@ protected:
     bool isSharedLibrary(const std::string &path) const;
 
 public:
+
+    using kernel_ptr = std::unique_ptr<readdy::model::Kernel, KernelDeleter>;
+
     /**
      * Method that returns the singleton KernelProvider.
      *
@@ -88,7 +100,7 @@ public:
      * @param kernel the kernel that should be moved
      * @todo update docs
      */
-    void add(const std::string name, const std::function<readdy::model::Kernel *()> creator);
+    void add(const std::string &name, const std::function<readdy::model::Kernel *()> &creator);
 
     /**
      * Method that allows to add a kernel to the KernelProvider by providing a path to a shared lib (containing an implementation of a kernel).
@@ -114,12 +126,20 @@ public:
      */
     static const std::string getDefaultKernelDirectory();
 
+    kernel_ptr create(const std::string &name) const;
+
 private:
+    const std::string loadKernelName(const std::string &sharedLib);
+
+
     // prevent that copies can be created
     KernelProvider(KernelProvider const &) = delete;
 
     // prevent that copies can be created
     void operator=(KernelProvider const &) = delete;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
 
 };
 }

@@ -49,12 +49,12 @@ class CPUGillespie : public readdy::model::actions::reactions::Gillespie {
 
 public:
 
-    CPUGillespie(CPUKernel const *const kernel, double timeStep);
+    CPUGillespie(CPUKernel *const kernel, double timeStep);
 
     virtual void perform() override;
 
 protected:
-    CPUKernel const *const kernel;
+    CPUKernel *const kernel;
 };
 }
 }

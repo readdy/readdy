@@ -76,10 +76,6 @@ Kernel::registerObservable(const observables::observable_type &observable, unsig
     return std::make_tuple(std::move(wrap), std::move(connection));
 }
 
-readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() const {
-    return *pimpl->observableFactory;
-}
-
 void Kernel::evaluateObservables(observables::time_step_type t) {
     (*pimpl->signal)(t);
 }
@@ -92,51 +88,143 @@ void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
     getKernelStateModel().addParticle({pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)});
 }
 
-unsigned int Kernel::getTypeId(const std::string &name) const {
-    return getKernelContext().getTypeMapping().find(name)->second;
+unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
+    auto findIt = getKernelContext().getTypeMapping().find(name);
+    if (findIt != getKernelContext().getTypeMapping().end()) {
+        const auto &info = getKernelContext().getParticleTypeInfo(findIt->second);
+        if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
+            return findIt->second;
+        } else {
+            log::console()->critical("particle type {} had no \"normal\" flavor", name);
+            throw std::invalid_argument("particle type " + name + " had no \"normal\" flavor");
+        }
+    } else {
+        log::console()->critical("did not find type id for {}", name);
+        throw std::invalid_argument("did not find type id for " + name);
+    }
 }
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                  const double rate) const {
-    return getReactionFactory().createReaction<reactions::Conversion>(name, getTypeId(from), getTypeId(to), rate);
+    const auto typeFrom = getTypeIdRequireNormalFlavor(from);
+    const auto typeTo = getTypeIdRequireNormalFlavor(to);
+    return getReactionFactory().createReaction<reactions::Conversion>(name, typeFrom, typeTo, rate);
 }
 
 std::unique_ptr<reactions::Reaction<2>>
 Kernel::createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
                              const std::string &to, const double rate, const double eductDistance,
                              const double weight1, const double weight2) const {
-    return getReactionFactory().createReaction<reactions::Fusion>(name, getTypeId(from1), getTypeId(from2),
-                                                                  getTypeId(to), rate, eductDistance, weight1, weight2);
+    return getReactionFactory().createReaction<reactions::Fusion>(name, getTypeIdRequireNormalFlavor(from1),
+                                                                  getTypeIdRequireNormalFlavor(from2),
+                                                                  getTypeIdRequireNormalFlavor(to), rate, eductDistance,
+                                                                  weight1, weight2);
 }
 
 std::unique_ptr<reactions::Reaction<2>>
 Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                                 const std::string &to, const double rate, const double eductDistance) const {
-    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeId(catalyst), getTypeId(from),
-                                                                     getTypeId(to), rate, eductDistance);
+    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeIdRequireNormalFlavor(catalyst),
+                                                                     getTypeIdRequireNormalFlavor(from),
+                                                                     getTypeIdRequireNormalFlavor(to), rate,
+                                                                     eductDistance);
 }
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                               const std::string &to2, const double rate, const double productDistance,
                               const double weight1, const double weight2) const {
-    return getReactionFactory().createReaction<reactions::Fission>(name, getTypeId(from), getTypeId(to1),
-                                                                   getTypeId(to2), rate, productDistance, weight1,
+    return getReactionFactory().createReaction<reactions::Fission>(name, getTypeIdRequireNormalFlavor(from),
+                                                                   getTypeIdRequireNormalFlavor(to1),
+                                                                   getTypeIdRequireNormalFlavor(to2), rate,
+                                                                   productDistance, weight1,
                                                                    weight2);
 }
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createDecayReaction(const std::string &name, const std::string &type, const double rate) const {
-    return getReactionFactory().createReaction<reactions::Decay>(name, getTypeId(type), rate);
+    return getReactionFactory().createReaction<reactions::Decay>(name, getTypeIdRequireNormalFlavor(type), rate);
 }
 
+observables::ObservableFactory &Kernel::getObservableFactoryInternal() const {
+    return *pimpl->observableFactory;
+}
+
+const readdy::model::KernelContext &Kernel::getKernelContext() const {
+    return getKernelContextInternal();
+}
+
+readdy::model::KernelContext &Kernel::getKernelContext() {
+    return getKernelContextInternal();
+}
+
+const readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
+    return getKernelStateModelInternal();
+}
+
+readdy::model::KernelStateModel &Kernel::getKernelStateModel() {
+    return getKernelStateModelInternal();
+}
+
+const readdy::model::actions::ActionFactory &Kernel::getActionFactory() const {
+    return getActionFactoryInternal();
+}
+
+readdy::model::actions::ActionFactory &Kernel::getActionFactory() {
+    return getActionFactoryInternal();
+}
+
+const readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() const {
+    return getPotentialFactoryInternal();
+}
+
+readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() {
+    return getPotentialFactoryInternal();
+}
+
+const readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
+    return getReactionFactoryInternal();
+}
+
+readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() {
+    return getReactionFactoryInternal();
+}
+
+const readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() const {
+    return getCompartmentFactoryInternal();
+}
+
+readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() {
+    return getCompartmentFactoryInternal();
+}
+
+const readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() const {
+    return getObservableFactoryInternal();
+}
+
+readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() {
+    return getObservableFactoryInternal();
+}
+
+const readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactory() const {
+    return getTopologyActionFactoryInternal();
+}
+
+readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactory() {
+    return getTopologyActionFactoryInternal();
+}
+
+TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
+    return TopologyParticle(pos, getKernelContext().getParticleTypeID(type));
+}
+
+bool Kernel::supportsTopologies() const {
+    return getTopologyActionFactory() ? true : false;
+}
 
 Kernel &Kernel::operator=(Kernel &&rhs) = default;
 
 Kernel::Kernel(Kernel &&rhs) = default;
 }
 }
-
-
-

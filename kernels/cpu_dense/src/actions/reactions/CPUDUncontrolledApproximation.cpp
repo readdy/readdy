@@ -63,7 +63,7 @@ CPUDUncontrolledApproximation::CPUDUncontrolledApproximation(const CPUDKernel *c
 void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const CPUDKernel *const kernel,
                 double timeStep, bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
     std::vector<event_t> eventsUpdate;
-    const auto &data = *kernel->getKernelStateModel().getParticleData();
+    const auto &data = *kernel->getCPUDKernelStateModel().getParticleData();
     auto it = begin;
     auto it_nl = nl_begin;
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
@@ -116,8 +116,8 @@ void CPUDUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     const auto &dt = timeStep;
-    auto &data = *kernel->getKernelStateModel().getParticleData();
-    auto &nl = *kernel->getKernelStateModel().getNeighborList();
+    auto &data = *kernel->getCPUDKernelStateModel().getParticleData();
+    auto &nl = *kernel->getCPUDKernelStateModel().getNeighborList();
 
     // gather events
     std::vector<std::future<std::size_t>> n_eventsFutures;

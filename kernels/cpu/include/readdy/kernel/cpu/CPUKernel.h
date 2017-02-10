@@ -53,25 +53,31 @@ public:
     // factory method
     static readdy::model::Kernel* create();
 
-    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
-
-    virtual CPUStateModel &getKernelStateModel() const override;
-
-    virtual readdy::model::KernelContext &getKernelContext() const override;
-
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
-
-    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
-
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
-
     unsigned long getNThreads() const;
 
     void setNThreads(readdy::util::thread::Config::n_threads_t n);
 
-private:
+    const CPUStateModel &getCPUKernelStateModel() const;
+    CPUStateModel &getCPUKernelStateModel();
+
+protected:
+
+    virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
+
+    virtual CPUStateModel &getKernelStateModelInternal() const override;
+
+    virtual readdy::model::KernelContext &getKernelContextInternal() const override;
+
+    virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
+
+    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
+
+    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
+
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
+
+    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
+
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 };

@@ -37,7 +37,7 @@ class TestPrograms(unittest.TestCase):
         class CustomKernel(pr.SingleCPUKernel):
             def __init__(self):
                 super(CustomKernel, self).__init__()
-                self._model = CustomStateModel(self.get_kernel_context())
+                self._model = CustomStateModel(self.get_kernel_context(), self.get_topology_action_factory())
 
             def get_kernel_state_model(self):
                 return self._model
@@ -66,8 +66,8 @@ class TestPrograms(unittest.TestCase):
 
     def test_factory_programs(self):
         kernel = pr.SingleCPUKernel()
-        kernel.get_kernel_context().register_particle_type("A", 1.0, 1.0)
-        factory = kernel.get_program_factory()
+        kernel.get_kernel_context().register_particle_type("A", 1.0, 1.0, 0)
+        factory = kernel.get_action_factory()
 
         add_particles = factory.create_add_particles([pr.Particle(0, 0, 0, 0), pr.Particle(1, 1, 1, 0)])
         integrator = factory.create_euler_integrator(1)
@@ -82,9 +82,9 @@ class TestPrograms(unittest.TestCase):
         np.testing.assert_equal(positions[0], cmn.Vec(0, 0, 0))
         np.testing.assert_equal(positions[1], cmn.Vec(1, 1, 1))
 
-        it = kernel.get_kernel_state_model().get_particle_data().positions
-        assert next(it) == cmn.Vec(0, 0, 0)
-        assert next(it) == cmn.Vec(1, 1, 1)
+        it = kernel.get_kernel_state_model().get_particle_data().entries
+        assert next(it).pos == cmn.Vec(0, 0, 0)
+        assert next(it).pos == cmn.Vec(1, 1, 1)
 
         with np.testing.assert_raises(StopIteration):
             next(it)

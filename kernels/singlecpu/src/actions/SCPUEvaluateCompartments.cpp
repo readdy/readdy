@@ -38,22 +38,20 @@ SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : k
 
 void SCPUEvaluateCompartments::perform() {
     const auto &ctx = kernel->getKernelContext();
-    auto data = kernel->getKernelStateModel().getParticleData();
-    auto posIt = data->begin_positions();
-    auto typesIt = data->begin_types();
-    const auto &compartments = ctx.getCompartments();
-    while (posIt != data->end_positions()) {
-        for (auto i=0; i<compartments.size(); ++i) {
-            if (compartments[i]->isContained(*posIt)) {
-                const auto &conversions = compartments[i]->getConversions();
-                const auto convIt = conversions.find(*typesIt);
-                if (convIt != conversions.end()) {
-                    *typesIt = (*convIt).second;
+    const auto & compartments = ctx.getCompartments();
+    auto data = kernel->getSCPUKernelStateModel().getParticleData();
+    for(auto& entry : *data) {
+        if(!entry.is_deactivated()) {
+            for (auto i=0; i<compartments.size(); ++i) {
+                if (compartments[i]->isContained(entry.position())) {
+                    const auto& conversions = compartments[i]->getConversions();
+                    auto it = conversions.find(entry.type);
+                    if (it != conversions.end()) {
+                        entry.type = it->second;
+                    }
                 }
             }
         }
-        ++posIt;
-        ++typesIt;
     }
 }
 

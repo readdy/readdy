@@ -52,23 +52,30 @@ public:
     // factory method
     static std::unique_ptr<SCPUKernel> create();
 
-    virtual SCPUStateModel &getKernelStateModel() const override;
-
-    virtual readdy::model::KernelContext &getKernelContext() const override;
-
-    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
-
     virtual std::vector<std::string> getAvailablePotentials() const override;
 
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
+    const SCPUStateModel &getSCPUKernelStateModel() const;
+    SCPUStateModel &getSCPUKernelStateModel();
 
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
+protected:
+    virtual SCPUStateModel &getKernelStateModelInternal() const override;
 
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
+    virtual readdy::model::KernelContext &getKernelContextInternal() const override;
 
-    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
+    virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
+
+    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
+
+    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
+
+    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
+
+    virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
+
+    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
 
 private:
+
     struct Impl;
     std::unique_ptr<readdy::kernel::scpu::SCPUKernel::Impl> pimpl;
 };

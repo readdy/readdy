@@ -56,6 +56,7 @@ public:
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
     using entries_update_t = std::vector<Entry>;
+    using top_particle_type = readdy::model::TopologyParticle;
     using neighbors_t = std::vector<Neighbor>;
     using neighbor_list_t = std::vector<neighbors_t>;
     using index_t = entries_t::size_type;
@@ -71,7 +72,8 @@ public:
      */
     struct Entry {
         Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
-                                               deactivated(false), displacement(0), id(particle.getId()) { }
+                                               deactivated(false), displacement(0), id(particle.getId()) {
+        }
 
         Entry(const Entry&) = delete;
         Entry& operator=(const Entry&) = delete;
@@ -121,6 +123,8 @@ public:
     index_t addEntry(Entry &&entry);
 
     void addParticles(const std::vector<particle_type> &particles);
+
+    std::vector<entries_t::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
 
     readdy::model::Particle getParticle(const index_t index) const;
 

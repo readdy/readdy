@@ -35,7 +35,7 @@
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
 
 readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::FilteredGillespieParallel(
-        const readdy::kernel::cpu::CPUKernel *const kernel, double timeStep) : CPUGillespieParallel(kernel, timeStep) {}
+        readdy::kernel::cpu::CPUKernel *const kernel, double timeStep) : CPUGillespieParallel(kernel, timeStep) {}
 
 void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<event_t>>;

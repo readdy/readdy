@@ -40,6 +40,9 @@ namespace actions {
 
 class CPUDEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
+    using compartmentIdx_t = size_t;
+    using particleType_t = unsigned int;
+
     CPUDEvaluateCompartments(CPUDKernel *const kernel);
 
     virtual void perform() override;

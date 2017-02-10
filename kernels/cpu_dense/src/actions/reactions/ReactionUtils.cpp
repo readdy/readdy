@@ -48,7 +48,7 @@ data_t::update_t handleEventsGillespie(
 
     if(!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
-        const auto data = kernel->getKernelStateModel().getParticleData();
+        const auto data = kernel->getCPUDKernelStateModel().getParticleData();
         /**
          * Handle gathered reaction events
          */
