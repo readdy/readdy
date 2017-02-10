@@ -73,7 +73,7 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
                                         const CosineDihedralPotential::Dihedral &dih) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm_squared = x_jk.normSquared();
-    x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared;
+    x_jk_norm_squared = x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared;
     const auto x_jk_norm = std::sqrt(x_jk_norm_squared);
     const auto m = x_ji.cross(x_kj);
     auto m_norm_squared = m.normSquared();
@@ -81,7 +81,7 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     const auto m_norm = std::sqrt(m_norm_squared);
     const auto n = x_kl.cross(x_jk);
     auto n_norm_squared = n.normSquared();
-    n_norm_squared < SMALL ? SMALL : n_norm_squared;
+    n_norm_squared = n_norm_squared < SMALL ? SMALL : n_norm_squared;
     const auto n_norm = std::sqrt(n_norm_squared);
     const auto n_m_norm = m_norm * n_norm;
     const auto m_x_n = m.cross(n);
