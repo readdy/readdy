@@ -45,10 +45,10 @@ void SCPUEvaluateCompartments::perform() {
         if(!entry.is_deactivated()) {
             for (auto i=0; i<compartments.size(); ++i) {
                 if (compartments[i]->isContained(entry.position())) {
-                    const auto &conversions = compartments[i]->getConversions();
-                    const auto convIt = conversions.find(entry.type);
-                    if (convIt != conversions.end()) {
-                        entry.type = convIt->second;
+                    const auto& conversions = compartments[i]->getConversions();
+                    auto it = conversions.find(entry.type);
+                    if (it != conversions.end()) {
+                        entry.type = it->second;
                     }
                 }
             }
