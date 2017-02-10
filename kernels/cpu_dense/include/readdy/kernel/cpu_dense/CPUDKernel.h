@@ -52,22 +52,6 @@ public:
     // factory method
     static readdy::model::Kernel* create();
 
-    virtual readdy::model::actions::ActionFactory &getActionFactory() const override;
-
-    virtual CPUDStateModel &getKernelStateModel() const override;
-
-    virtual readdy::model::KernelContext &getKernelContext() const override;
-
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactory() const override;
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactory() const override;
-
-    virtual readdy::model::observables::ObservableFactory &getObservableFactory() const override;
-
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const override;
-
-    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactory() const override;
-
     unsigned long getNThreads() const;
 
     void setNThreads(readdy::util::thread::Config::n_threads_t n);

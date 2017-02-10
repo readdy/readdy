@@ -70,7 +70,7 @@ public:
 
     virtual void increaseEnergy(double increase);
 
-    SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *);
+    SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *const );
 
     ~SCPUStateModel();
 
