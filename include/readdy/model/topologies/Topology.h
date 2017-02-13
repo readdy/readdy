@@ -67,6 +67,7 @@ public:
     particles_t::size_type getNParticles() const;
 
     const particles_t &getParticles() const;
+    particles_t &getParticles();
 
     const std::vector<std::unique_ptr<BondedPotential>> &getBondedPotentials() const;
 

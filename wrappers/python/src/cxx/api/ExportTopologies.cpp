@@ -54,7 +54,7 @@ void exportTopologies(py::module &m) {
             .def("get_id", [](topology_particle& self) {return self.getId();});
     py::class_<topology>(m, "Topology")
             .def("get_n_particles", &topology::getNParticles)
-            .def("get_particles", &topology::getParticles)
+            .def("get_particles", [](const topology& slfe) {return slfe.getParticles();})
             .def("add_harmonic_angle_potential", [](topology &self, const harmonic_angle::angles_t &angles) {
                 self.addAnglePotential<harmonic_angle>(angles);
             })
