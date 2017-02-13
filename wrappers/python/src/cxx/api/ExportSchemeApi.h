@@ -45,6 +45,11 @@ void exportReaDDySchemeApi(pybind11::module &module, std::string schemeName) {
             .def("run", [](SchemeType& self, const readdy::model::observables::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
+            })
+            .def("run_with_criterion", [](SchemeType& self, pybind11::object continuingCriterion) {
+                py::gil_scoped_release release;
+                auto pyFun = readdy::rpy::PyFunction<bool(const readdy::model::observables::time_step_type current)>(continuingCriterion);
+                self.run(std::move(pyFun));
             });
     std::string configuratorName =  schemeName + "Configurator";
     py::class_<conf>(module, configuratorName.c_str())
@@ -73,6 +78,11 @@ void exportAdvancedSchemeApi(pybind11::module &module, std::string schemeName) {
             .def("run", [](SchemeType& self, const readdy::model::observables::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
+            })
+            .def("run_with_criterion", [](SchemeType& self, pybind11::object continuingCriterion) {
+                py::gil_scoped_release release;
+                auto pyFun = readdy::rpy::PyFunction<bool(const readdy::model::observables::time_step_type current)>(continuingCriterion);
+                self.run(std::move(pyFun));
             });
     std::string configuratorName =  schemeName + "Configurator";
     py::class_<conf>(module, configuratorName.c_str())

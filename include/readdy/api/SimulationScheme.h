@@ -63,8 +63,7 @@ struct SimulationScheme {
     using continue_fun_t = std::function<bool(readdy::model::observables::time_step_type)>;
 
     SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
-
-    // todo test this
+    
     virtual void run(const continue_fun_t &fun) = 0;
 
     void run(const model::observables::time_step_type steps) {
