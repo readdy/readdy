@@ -166,8 +166,8 @@ PYBIND11_PLUGIN (api) {
 
     py::module api("api", "ReaDDy c++-api python module");
 
-    exportReaDDySchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
-    exportAdvancedSchemeApi<readdy::api::AdvancedScheme>(api, "AdvancedScheme");
+    exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
+    exportSchemeApi<readdy::api::AdvancedScheme>(api, "AdvancedScheme");
 
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
@@ -243,8 +243,8 @@ PYBIND11_PLUGIN (api) {
                  }, py::arg("defaults")
             )
             .def("run_scheme_advanced", [](sim &self, bool defaults) {
-                    return std::make_unique<readdy::api::AdvancedSchemeConfigurator<readdy::api::AdvancedScheme>>(
-                            self.runAdvancedScheme<readdy::api::AdvancedScheme>(defaults)
+                    return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::AdvancedScheme>>(
+                            self.runScheme<readdy::api::AdvancedScheme>(defaults)
                     );
                 }, py::arg("defaults")
             )

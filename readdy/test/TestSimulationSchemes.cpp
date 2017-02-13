@@ -72,7 +72,7 @@ TEST(TestSchemes, SimulationObject) {
     /**
      * use AdvancedScheme
      */
-    sim.runAdvancedScheme<readdy::api::AdvancedScheme>(false)
+    sim.runScheme<readdy::api::AdvancedScheme>(false)
             .includeForces(true)
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .includeCompartments(true)

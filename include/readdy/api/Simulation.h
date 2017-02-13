@@ -416,9 +416,6 @@ public:
     template<typename SchemeType=readdy::api::ReaDDyScheme>
     readdy::api::SchemeConfigurator<SchemeType> runScheme(bool useDefaults = true);
 
-    template<typename SchemeType=readdy::api::AdvancedScheme>
-    readdy::api::AdvancedSchemeConfigurator<SchemeType> runAdvancedScheme(bool useDefaults = true);
-
 private:
     struct Impl;
     std::unique_ptr<readdy::Simulation::Impl> pimpl;

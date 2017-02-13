@@ -77,6 +77,7 @@ class TestSchemeApi(unittest.TestCase):
         sim.register_particle_type("A", 0.1, 0.)
         # Define counter as list. This is a workaround because nosetest will complain otherwise.
         counter = [0]
+
         def increment(result):
             counter[0] += 1
 
@@ -90,13 +91,14 @@ class TestSchemeApi(unittest.TestCase):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
         sim.register_particle_type("A", 0.1, 0.)
-        sim.add_particle("A", Vec(0,0,0))
+        sim.add_particle("A", Vec(0, 0, 0))
         sim.register_reaction_fission("bla", "A", "A", "A", 1000., 0., 0.5, 0.5)
         counter = [0]
         shall_stop = [False]
+
         def increment(result):
             counter[0] += 1
-            if (result[0] >= 8):
+            if result[0] >= 8:
                 shall_stop[0] = True
 
         sim.register_observable_n_particles(1, increment, ["A"])
@@ -104,6 +106,7 @@ class TestSchemeApi(unittest.TestCase):
         do_continue = lambda t: not shall_stop[0]
         scheme.run_with_criterion(do_continue)
         np.testing.assert_equal(counter[0], 4)
+
 
 if __name__ == '__main__':
     unittest.main()

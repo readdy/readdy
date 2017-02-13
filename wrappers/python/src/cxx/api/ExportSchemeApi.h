@@ -38,7 +38,7 @@
 
 
 template<typename SchemeType>
-void exportReaDDySchemeApi(pybind11::module &module, std::string schemeName) {
+void exportSchemeApi(pybind11::module &module, std::string schemeName) {
     namespace py = pybind11;
     using conf = readdy::api::SchemeConfigurator<SchemeType>;
     py::class_<SchemeType>(module, schemeName.c_str())
@@ -70,16 +70,17 @@ void exportReaDDySchemeApi(pybind11::module &module, std::string schemeName) {
             });
 }
 
-template<typename SchemeType>
-void exportAdvancedSchemeApi(pybind11::module &module, std::string schemeName) {
+template<>
+void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, std::string schemeName) {
     namespace py = pybind11;
-    using conf = readdy::api::AdvancedSchemeConfigurator<SchemeType>;
-    py::class_<SchemeType>(module, schemeName.c_str())
-            .def("run", [](SchemeType& self, const readdy::model::observables::time_step_type steps) {
+    using scheme_t = readdy::api::AdvancedScheme;
+    using conf = readdy::api::SchemeConfigurator<scheme_t>;
+    py::class_<scheme_t>(module, schemeName.c_str())
+            .def("run", [](scheme_t& self, const readdy::model::observables::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
             })
-            .def("run_with_criterion", [](SchemeType& self, pybind11::object continuingCriterion) {
+            .def("run_with_criterion", [](scheme_t& self, pybind11::object continuingCriterion) {
                 py::gil_scoped_release release;
                 auto pyFun = readdy::rpy::PyFunction<bool(const readdy::model::observables::time_step_type current)>(continuingCriterion);
                 self.run(std::move(pyFun));
@@ -102,7 +103,6 @@ void exportAdvancedSchemeApi(pybind11::module &module, std::string schemeName) {
                 py::gil_scoped_release release;
                 self.configureAndRun(dt, steps);
             });
-}
-
+};
 
 #endif //READDY_MAIN_EXPORTSCHEMEAPI_H

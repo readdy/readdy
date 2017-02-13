@@ -63,7 +63,7 @@ struct SimulationScheme {
     using continue_fun_t = std::function<bool(readdy::model::observables::time_step_type)>;
 
     SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
-    
+
     virtual void run(const continue_fun_t &fun) = 0;
 
     void run(const model::observables::time_step_type steps) {
@@ -257,19 +257,18 @@ public:
 protected:
     template<typename SchemeType>
     friend
-    class AdvancedSchemeConfigurator;
+    class SchemeConfigurator;
 
     std::unique_ptr<model::actions::EvaluateCompartments> compartments = nullptr;
 };
 
-template<typename SchemeType>
-class AdvancedSchemeConfigurator {
-    static_assert(std::is_base_of<AdvancedScheme, SchemeType>::value, "SchemeType must inherit from readdy::api::AdvancedScheme");
+template<>
+class SchemeConfigurator<AdvancedScheme> {
 public:
-    AdvancedSchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<SchemeType>(kernel)),
-                                                                                       useDefaults(useDefaults) {}
+    SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<AdvancedScheme>(kernel)),
+                                                                               useDefaults(useDefaults) {}
 
-    AdvancedSchemeConfigurator &includeCompartments(bool include = false) {
+    SchemeConfigurator &includeCompartments(bool include = false) {
         if (include) {
             scheme->compartments = scheme->kernel->template createAction<readdy::model::actions::EvaluateCompartments>();
         } else {
@@ -279,45 +278,45 @@ public:
         return *this;
     }
 
-    AdvancedSchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
+    SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
         scheme->integrator = std::move(integrator);
         return *this;
     }
 
     template<typename IntegratorType>
-    AdvancedSchemeConfigurator &withIntegrator() {
+    SchemeConfigurator &withIntegrator() {
         scheme->integrator = scheme->kernel->template createAction<IntegratorType>(0.);
         return *this;
     }
 
-    AdvancedSchemeConfigurator &withIntegrator(const std::string &integratorName) {
+    SchemeConfigurator &withIntegrator(const std::string &integratorName) {
         scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
         return *this;;
     }
 
     template<typename ReactionSchedulerType>
-    AdvancedSchemeConfigurator &withReactionScheduler() {
+    SchemeConfigurator &withReactionScheduler() {
         scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
         return *this;
     }
 
-    AdvancedSchemeConfigurator &withReactionScheduler(std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
+    SchemeConfigurator &withReactionScheduler(std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
         scheme->reactionScheduler = std::move(reactionScheduler);
         return *this;
     }
 
-    AdvancedSchemeConfigurator &withReactionScheduler(const std::string &name) {
+    SchemeConfigurator &withReactionScheduler(const std::string &name) {
         scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
         return *this;
     }
 
-    AdvancedSchemeConfigurator &evaluateObservables(bool evaluate = true) {
+    SchemeConfigurator &evaluateObservables(bool evaluate = true) {
         scheme->evaluateObservables = evaluate;
         evaluateObservablesSet = true;
         return *this;
     }
 
-    AdvancedSchemeConfigurator &includeForces(bool include = true) {
+    SchemeConfigurator &includeForces(bool include = true) {
         if (include) {
             scheme->forces = scheme->kernel->template createAction<readdy::model::actions::CalculateForces>();
         } else {
@@ -327,7 +326,7 @@ public:
         return *this;
     }
 
-    std::unique_ptr<SchemeType> configure(double timeStep) {
+    std::unique_ptr<AdvancedScheme> configure(double timeStep) {
         using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
         using default_reactions_t = readdy::model::actions::reactions::Gillespie;
         using calculate_forces_t = readdy::model::actions::CalculateForces;
@@ -357,7 +356,7 @@ public:
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
-        std::unique_ptr<SchemeType> ptr = std::move(scheme);
+        std::unique_ptr<AdvancedScheme> ptr = std::move(scheme);
         scheme = nullptr;
         return ptr;
     }
@@ -367,12 +366,14 @@ public:
     }
 
 protected:
-    std::unique_ptr<SchemeType> scheme = nullptr;
+    std::unique_ptr<AdvancedScheme> scheme = nullptr;
     bool useDefaults;
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     bool includeCompartmentsSet = false;
+
 };
+
 }
 }
 #endif //READDY_MAIN_SIMULATIONSCHEME_H
