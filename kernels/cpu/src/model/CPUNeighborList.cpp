@@ -109,7 +109,7 @@ const static std::vector<CPUNeighborList::neighbor_t> no_neighbors{};
 
 CPUNeighborList::CPUNeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config,
                            skin_size_t skin)
-        : ctx(context), config(config), cells(std::vector<Cell>()),
+        : ctx(context), config(config), cells(std::vector<Cell>()), reorderSignal(std::make_unique<reorder_signal_t>()),
           simBoxSize(ctx->getBoxSize()), skin_size(skin), data(data), groupParticlesOnCreation(true) {}
 
 void CPUNeighborList::setupCells() {
@@ -341,6 +341,7 @@ void CPUNeighborList::fillCells() {
                     for(std::size_t i = 0; i < indices.size(); ++i) {
                         inverseIndices[indices[i]] = i;
                     }
+                    reorderSignal->fire_signal(inverseIndices);
                     readdy::util::collections::reorder_destructive(inverseIndices.begin(), inverseIndices.end(), data.begin());
                 }
                 /*{
@@ -845,6 +846,11 @@ std::tuple<CPUNeighborList::cell_index, CPUNeighborList::cell_index, CPUNeighbor
     const cell_index k = static_cast<const cell_index>(floor((pos[2] + .5 * simBoxSize[2]) / cellSize[2]));
     return std::make_tuple(i, j, k);
 }
+
+readdy::signals::scoped_connection CPUNeighborList::registerReorderEventListener(const reorder_signal_t::slot_type &slot) {
+    return reorderSignal->connect_scoped(slot);
+}
+
 
 }
 }

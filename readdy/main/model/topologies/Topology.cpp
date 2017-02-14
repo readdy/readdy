@@ -47,6 +47,10 @@ const Topology::particles_t &Topology::getParticles() const {
     return particles;
 }
 
+Topology::particles_t &Topology::getParticles() {
+    return particles;
+}
+
 const std::vector<std::unique_ptr<BondedPotential>> &Topology::getBondedPotentials() const {
     return bondedPotentials;
 }

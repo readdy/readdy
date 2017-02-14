@@ -21,8 +21,10 @@
 
 
 import unittest
+import numpy as np
 
 from readdy._internal.api import Simulation
+from readdy._internal.common import Vec
 
 
 class TestSchemeApi(unittest.TestCase):
@@ -33,6 +35,19 @@ class TestSchemeApi(unittest.TestCase):
         scheme = configurator \
             .with_integrator("EulerBDIntegrator") \
             .include_forces(False) \
+            .with_reaction_scheduler("UncontrolledApproximation") \
+            .evaluate_observables(False) \
+            .configure(1)
+        scheme.run(10)
+
+    def test_sanity_advanced(self):
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+        configurator = simulation.run_scheme_advanced(False)
+        scheme = configurator \
+            .with_integrator("EulerBDIntegrator") \
+            .include_forces(False) \
+            .include_compartments(False) \
             .with_reaction_scheduler("UncontrolledApproximation") \
             .evaluate_observables(False) \
             .configure(1)
@@ -55,6 +70,42 @@ class TestSchemeApi(unittest.TestCase):
             .with_reaction_scheduler("UncontrolledApproximation") \
             .evaluate_observables(False) \
             .configure(1).run(10)
+
+    def test_interrupt_simple(self):
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+        sim.register_particle_type("A", 0.1, 0.)
+        # Define counter as list. This is a workaround because nosetest will complain otherwise.
+        counter = [0]
+
+        def increment(result):
+            counter[0] += 1
+
+        sim.register_observable_n_particles(1, increment, ["A"])
+        scheme = sim.run_scheme_readdy(True).configure(0.1)
+        do_continue = lambda t: t < 5
+        scheme.run_with_criterion(do_continue)
+        np.testing.assert_equal(counter[0], 6)
+
+    def test_interrupt_maxparticles(self):
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+        sim.register_particle_type("A", 0.1, 0.)
+        sim.add_particle("A", Vec(0, 0, 0))
+        sim.register_reaction_fission("bla", "A", "A", "A", 1000., 0., 0.5, 0.5)
+        counter = [0]
+        shall_stop = [False]
+
+        def increment(result):
+            counter[0] += 1
+            if result[0] >= 8:
+                shall_stop[0] = True
+
+        sim.register_observable_n_particles(1, increment, ["A"])
+        scheme = sim.run_scheme_readdy(True).configure(1.)
+        do_continue = lambda t: not shall_stop[0]
+        scheme.run_with_criterion(do_continue)
+        np.testing.assert_equal(counter[0], 4)
 
 
 if __name__ == '__main__':

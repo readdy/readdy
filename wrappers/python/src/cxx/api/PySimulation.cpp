@@ -167,6 +167,7 @@ PYBIND11_PLUGIN (api) {
     py::module api("api", "ReaDDy c++-api python module");
 
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
+    exportSchemeApi<readdy::api::AdvancedScheme>(api, "AdvancedScheme");
 
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
@@ -234,13 +235,18 @@ PYBIND11_PLUGIN (api) {
             .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
             .def("create_topology_particle", &sim::createTopologyParticle)
             .def("add_topology", &sim::addTopology, rvp::reference)
-            //.def("add_topology", &sim::addTopology, rvp::reference)
             .def("set_kernel", &sim::setKernel)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)
                      );
-                 }
+                 }, py::arg("defaults")
+            )
+            .def("run_scheme_advanced", [](sim &self, bool defaults) {
+                    return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::AdvancedScheme>>(
+                            self.runScheme<readdy::api::AdvancedScheme>(defaults)
+                    );
+                }, py::arg("defaults")
             )
             .def("run", [](sim &self, const readdy::model::observables::time_step_type steps, const double timeStep) {
                 py::gil_scoped_release release;

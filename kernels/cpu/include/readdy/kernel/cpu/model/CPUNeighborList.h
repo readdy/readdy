@@ -39,6 +39,7 @@
 
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/common/thread/Config.h>
+#include <readdy/common/signals.h>
 
 #include "CPUParticleData.h"
 
@@ -48,7 +49,10 @@ namespace cpu {
 namespace model {
 
 class CPUNeighborList {
-public: 
+public:
+
+    using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
+
     struct Cell;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
@@ -94,6 +98,8 @@ public:
     void displace(data_t::Entry&, const data_t::particle_type::pos_type& delta);
     void displace(data_t::index_t entry, const data_t::particle_type::pos_type& delta);
     void setPosition(data_t::index_t entry, data_t::particle_type::pos_type&& newPosition);
+
+    readdy::signals::scoped_connection registerReorderEventListener(const reorder_signal_t::slot_type& slot);
 
     void remove(const particle_index);
 
@@ -155,6 +161,8 @@ protected:
     void setUpCell(CPUNeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
 
     data_t& data;
+
+    std::unique_ptr<reorder_signal_t> reorderSignal;
 
     bool groupParticlesOnCreation;
 };

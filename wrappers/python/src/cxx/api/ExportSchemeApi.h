@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file ExportSchemeApi.h.h
+ * @file ExportSchemeApi.h
  * @brief << brief description >>
  * @author clonker
  * @date 26.08.16
@@ -34,6 +34,7 @@
 
 #include <pybind11/pybind11.h>
 #include <readdy/api/SimulationScheme.h>
+#include "PyFunction.h"
 
 
 template<typename SchemeType>
@@ -44,8 +45,13 @@ void exportSchemeApi(pybind11::module &module, std::string schemeName) {
             .def("run", [](SchemeType& self, const readdy::model::observables::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
+            })
+            .def("run_with_criterion", [](SchemeType& self, pybind11::object continuingCriterion) {
+                py::gil_scoped_release release;
+                auto pyFun = readdy::rpy::PyFunction<bool(const readdy::model::observables::time_step_type current)>(continuingCriterion);
+                self.run(std::move(pyFun));
             });
-    std::string configuratorName = "SchemeConfigurator" + schemeName;
+    std::string configuratorName =  schemeName + "Configurator";
     py::class_<conf>(module, configuratorName.c_str())
             .def("with_integrator",
                  [](conf &self, std::string name) -> conf & { return self.withIntegrator(name); },
@@ -63,5 +69,40 @@ void exportSchemeApi(pybind11::module &module, std::string schemeName) {
                 self.configureAndRun(dt, steps);
             });
 }
+
+template<>
+void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, std::string schemeName) {
+    namespace py = pybind11;
+    using scheme_t = readdy::api::AdvancedScheme;
+    using conf = readdy::api::SchemeConfigurator<scheme_t>;
+    py::class_<scheme_t>(module, schemeName.c_str())
+            .def("run", [](scheme_t& self, const readdy::model::observables::time_step_type steps) {
+                py::gil_scoped_release release;
+                self.run(steps);
+            })
+            .def("run_with_criterion", [](scheme_t& self, pybind11::object continuingCriterion) {
+                py::gil_scoped_release release;
+                auto pyFun = readdy::rpy::PyFunction<bool(const readdy::model::observables::time_step_type current)>(continuingCriterion);
+                self.run(std::move(pyFun));
+            });
+    std::string configuratorName =  schemeName + "Configurator";
+    py::class_<conf>(module, configuratorName.c_str())
+            .def("with_integrator",
+                 [](conf &self, std::string name) -> conf & { return self.withIntegrator(name); },
+                 py::return_value_policy::reference_internal)
+            .def("include_forces", &conf::includeForces, py::return_value_policy::reference_internal)
+            .def("include_compartments", &conf::includeCompartments, py::return_value_policy::reference_internal)
+            .def("with_reaction_scheduler",
+                 [](conf &self, std::string name) -> conf & {
+                     return (self.withReactionScheduler(name));
+                 },
+                 py::return_value_policy::reference_internal)
+            .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal)
+            .def("configure", &conf::configure)
+            .def("configure_and_run", [](conf& self, double dt, const readdy::model::observables::time_step_type steps) {
+                py::gil_scoped_release release;
+                self.configureAndRun(dt, steps);
+            });
+};
 
 #endif //READDY_MAIN_EXPORTSCHEMEAPI_H

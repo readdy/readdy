@@ -55,159 +55,325 @@
 #include <readdy/model/Kernel.h>
 
 namespace readdy {
-    namespace api {
-        template<typename SchemeType>
-        class SchemeConfigurator;
+namespace api {
+template<typename SchemeType>
+class SchemeConfigurator;
 
-        struct SimulationScheme {
-            SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
+struct SimulationScheme {
+    using continue_fun_t = std::function<bool(readdy::model::observables::time_step_type)>;
 
-            virtual void run(const model::observables::time_step_type steps) = 0;
+    SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
 
-        protected:
-            template<typename SchemeType>
-            friend class SchemeConfigurator;
+    virtual void run(const continue_fun_t &fun) = 0;
 
-            model::Kernel *const kernel;
-            std::unique_ptr<model::actions::TimeStepDependentAction> integrator = nullptr;
-            std::unique_ptr<model::actions::Action> forces = nullptr;
-            std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler = nullptr;
-            std::unique_ptr<model::actions::UpdateNeighborList> neighborList = nullptr;
-            std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList = nullptr;
-            bool evaluateObservables = true;
-            model::observables::time_step_type start = 0;
+    void run(const model::observables::time_step_type steps) {
+        // show every 1% of the simulation
+        const std::size_t progressOutputStride = static_cast<std::size_t>(steps / 100);
+        auto defaultContinueCriterion = [this, steps, progressOutputStride](const model::observables::time_step_type current) {
+            if (progressOutputStride > 0 && (current - start) % progressOutputStride == 0) {
+                log::console()->debug("Simulation progress: {} / {} steps", (current - start), steps);
+            }
+            return current < start + steps;
         };
+        run(defaultContinueCriterion);
+    };
 
-        class ReaDDyScheme : public SimulationScheme {
-        public:
-            ReaDDyScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
+protected:
+    template<typename SchemeType>
+    friend
+    class SchemeConfigurator;
 
-            virtual void run(const model::observables::time_step_type steps) override {
-                kernel->getKernelContext().configure(true);
+    model::Kernel *const kernel;
+    std::unique_ptr<model::actions::TimeStepDependentAction> integrator = nullptr;
+    std::unique_ptr<model::actions::Action> forces = nullptr;
+    std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler = nullptr;
+    std::unique_ptr<model::actions::UpdateNeighborList> neighborList = nullptr;
+    std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList = nullptr;
+    bool evaluateObservables = true;
+    model::observables::time_step_type start = 0;
+};
 
-                if (neighborList) neighborList->perform();
-                if (forces) forces->perform();
-                if (evaluateObservables) kernel->evaluateObservables(start);
-                // show every 1% of the simulation
-                const std::size_t progressOutputStride = static_cast<std::size_t>(steps / 100);
-                for (model::observables::time_step_type t = start; t < start+steps; ++t) {
-                    if (integrator) integrator->perform();
-                    if (neighborList) neighborList->perform();
-                    // if (forces) forces->perform();
+class ReaDDyScheme : public SimulationScheme {
+public:
+    ReaDDyScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
 
-                    if (reactionScheduler) reactionScheduler->perform();
-                    if (neighborList) neighborList->perform();
-                    if (forces) forces->perform();
-                    if (evaluateObservables) kernel->evaluateObservables(t + 1);
-                    if(progressOutputStride > 0 && (t - start) % progressOutputStride == 0) {
-                        log::console()->debug("Simulation progress: {} / {} steps", (t - start), steps);
-                    }
-                }
+    using SimulationScheme::run;
 
-                if (clearNeighborList) clearNeighborList->perform();
-                start += steps;
-                log::console()->debug("Simulation completed");
-            }
-        };
+    virtual void run(const continue_fun_t &continueFun) override {
+        kernel->getKernelContext().configure(true);
 
-        template<typename SchemeType>
-        class SchemeConfigurator {
-            static_assert(std::is_base_of<SimulationScheme, SchemeType>::value,
-                          "SchemeType must inherit from readdy::api::SimulationScheme");
-        public:
+        if (neighborList) neighborList->perform();
+        if (forces) forces->perform();
+        if (evaluateObservables) kernel->evaluateObservables(start);
+        model::observables::time_step_type t = start;
+        while (continueFun(t)) {
+            if (integrator) integrator->perform();
+            if (neighborList) neighborList->perform();
+            // if (forces) forces->perform();
 
-            SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<SchemeType>(kernel)),
-                                                                                       useDefaults(useDefaults) {}
-            SchemeConfigurator& withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
-                scheme->integrator = std::move(integrator);
-                return *this;
-            }
-
-            template<typename IntegratorType>
-            SchemeConfigurator& withIntegrator() {
-                scheme->integrator = scheme->kernel->template createAction<IntegratorType>(0.);
-                return *this;
-            }
-
-            SchemeConfigurator& withIntegrator(const std::string &integratorName) {
-                scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
-                return *this;
-            }
-
-            template<typename ReactionSchedulerType>
-            SchemeConfigurator& withReactionScheduler() {
-                scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
-                return *this;
-            }
-
-            SchemeConfigurator& withReactionScheduler(std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
-                scheme->reactionScheduler = std::move(reactionScheduler);
-                return *this;
-            }
-
-            SchemeConfigurator& withReactionScheduler(const std::string &name) {
-                scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
-                return *this;
-            }
-
-            SchemeConfigurator& evaluateObservables(bool evaluate = true) {
-                scheme->evaluateObservables = evaluate;
-                evaluateObservablesSet = true;
-                return *this;
-            }
-
-            SchemeConfigurator& includeForces(bool include = true) {
-                if (include) {
-                    scheme->forces = scheme->kernel->template createAction<readdy::model::actions::CalculateForces>();
-                } else {
-                    scheme->forces = nullptr;
-                }
-                includeForcesSet = true;
-                return *this;
-            }
-
-            std::unique_ptr<SchemeType> configure(double timeStep) {
-                using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
-                using default_reactions_t = readdy::model::actions::reactions::Gillespie;
-                using calculate_forces_t = readdy::model::actions::CalculateForces;
-                using update_neighbor_list_t = readdy::model::actions::UpdateNeighborList;
-                if (useDefaults) {
-                    if (!scheme->integrator) {
-                        scheme->integrator = scheme->kernel->template createAction<default_integrator_t>(timeStep);
-                    }
-                    if (!scheme->reactionScheduler) {
-                        scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions_t>(timeStep);
-                    }
-                    if (!evaluateObservablesSet) {
-                        scheme->evaluateObservables = true;
-                    }
-                    if (!scheme->forces && !includeForcesSet) {
-                        scheme->forces = scheme->kernel->template createAction<calculate_forces_t>();
-                    }
-                }
-                if (scheme->forces || scheme->reactionScheduler) {
-                    scheme->neighborList = scheme->kernel
-                            ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, -1);
-                    scheme->clearNeighborList = scheme->kernel
-                            ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
-                }
-                if(scheme->integrator) scheme->integrator->setTimeStep(timeStep);
-                if(scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
-                std::unique_ptr<SchemeType> ptr = std::move(scheme);
-                scheme = nullptr;
-                return ptr;
-            }
-
-            void configureAndRun(double timeStep, const model::observables::time_step_type steps) {
-                configure(timeStep)->run(steps);
-            }
-
-        private:
-            bool useDefaults;
-            bool evaluateObservablesSet = false;
-            bool includeForcesSet = false;
-            std::unique_ptr<SchemeType> scheme = nullptr;
-        };
+            if (reactionScheduler) reactionScheduler->perform();
+            if (neighborList) neighborList->perform();
+            if (forces) forces->perform();
+            if (evaluateObservables) kernel->evaluateObservables(t + 1);
+            ++t;
+        }
+        if (clearNeighborList) clearNeighborList->perform();
+        start = t;
+        log::console()->debug("Simulation completed");
     }
+};
+
+template<typename SchemeType>
+class SchemeConfigurator {
+    static_assert(std::is_base_of<SimulationScheme, SchemeType>::value, "SchemeType must inherit from readdy::api::SimulationScheme");
+public:
+
+    SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<SchemeType>(kernel)),
+                                                                               useDefaults(useDefaults) {}
+
+    SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
+        scheme->integrator = std::move(integrator);
+        return *this;
+    }
+
+    template<typename IntegratorType>
+    SchemeConfigurator &withIntegrator() {
+        scheme->integrator = scheme->kernel->template createAction<IntegratorType>(0.);
+        return *this;
+    }
+
+    SchemeConfigurator &withIntegrator(const std::string &integratorName) {
+        scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
+        return *this;;
+    }
+
+    template<typename ReactionSchedulerType>
+    SchemeConfigurator &withReactionScheduler() {
+        scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
+        return *this;
+    }
+
+    SchemeConfigurator &withReactionScheduler(std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
+        scheme->reactionScheduler = std::move(reactionScheduler);
+        return *this;
+    }
+
+    SchemeConfigurator &withReactionScheduler(const std::string &name) {
+        scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
+        return *this;
+    }
+
+    SchemeConfigurator &evaluateObservables(bool evaluate = true) {
+        scheme->evaluateObservables = evaluate;
+        evaluateObservablesSet = true;
+        return *this;
+    }
+
+    SchemeConfigurator &includeForces(bool include = true) {
+        if (include) {
+            scheme->forces = scheme->kernel->template createAction<readdy::model::actions::CalculateForces>();
+        } else {
+            scheme->forces = nullptr;
+        }
+        includeForcesSet = true;
+        return *this;
+    }
+
+    virtual std::unique_ptr<SchemeType> configure(double timeStep) {
+        using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
+        using default_reactions_t = readdy::model::actions::reactions::Gillespie;
+        using calculate_forces_t = readdy::model::actions::CalculateForces;
+        using update_neighbor_list_t = readdy::model::actions::UpdateNeighborList;
+        if (useDefaults) {
+            if (!scheme->integrator) {
+                scheme->integrator = scheme->kernel->template createAction<default_integrator_t>(timeStep);
+            }
+            if (!scheme->reactionScheduler) {
+                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions_t>(timeStep);
+            }
+            if (!evaluateObservablesSet) {
+                scheme->evaluateObservables = true;
+            }
+            if (!scheme->forces && !includeForcesSet) {
+                scheme->forces = scheme->kernel->template createAction<calculate_forces_t>();
+            }
+        }
+        if (scheme->forces || scheme->reactionScheduler) {
+            scheme->neighborList = scheme->kernel
+                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, -1);
+            scheme->clearNeighborList = scheme->kernel
+                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
+        }
+        if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
+        if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
+        std::unique_ptr<SchemeType> ptr = std::move(scheme);
+        scheme = nullptr;
+        return ptr;
+    }
+
+    void configureAndRun(double timeStep, const model::observables::time_step_type steps) {
+        configure(timeStep)->run(steps);
+    }
+
+protected:
+    bool useDefaults;
+    bool evaluateObservablesSet = false;
+    bool includeForcesSet = false;
+    std::unique_ptr<SchemeType> scheme = nullptr;
+};
+
+class AdvancedScheme : public SimulationScheme {
+public:
+    AdvancedScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
+
+    using SimulationScheme::run;
+
+    virtual void run(const continue_fun_t &fun) override {
+        kernel->getKernelContext().configure(true);
+
+        if (neighborList) neighborList->perform();
+        if (forces) forces->perform();
+        if (evaluateObservables) kernel->evaluateObservables(start);
+        model::observables::time_step_type t = start;
+        while (fun(t)) {
+            if (integrator) integrator->perform();
+            if (compartments) compartments->perform();
+            if (neighborList) neighborList->perform();
+            // if (forces) forces->perform();
+
+            if (reactionScheduler) reactionScheduler->perform();
+            if (compartments) compartments->perform();
+            if (neighborList) neighborList->perform();
+            if (forces) forces->perform();
+            if (evaluateObservables) kernel->evaluateObservables(t + 1);
+            ++t;
+        }
+
+        if (clearNeighborList) clearNeighborList->perform();
+        start = t;
+        log::console()->debug("Simulation completed");
+    }
+
+protected:
+    template<typename SchemeType>
+    friend
+    class SchemeConfigurator;
+
+    std::unique_ptr<model::actions::EvaluateCompartments> compartments = nullptr;
+};
+
+template<>
+class SchemeConfigurator<AdvancedScheme> {
+public:
+    SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<AdvancedScheme>(kernel)),
+                                                                               useDefaults(useDefaults) {}
+
+    SchemeConfigurator &includeCompartments(bool include = false) {
+        if (include) {
+            scheme->compartments = scheme->kernel->template createAction<readdy::model::actions::EvaluateCompartments>();
+        } else {
+            scheme->compartments = nullptr;
+        }
+        includeCompartmentsSet = true;
+        return *this;
+    }
+
+    SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
+        scheme->integrator = std::move(integrator);
+        return *this;
+    }
+
+    template<typename IntegratorType>
+    SchemeConfigurator &withIntegrator() {
+        scheme->integrator = scheme->kernel->template createAction<IntegratorType>(0.);
+        return *this;
+    }
+
+    SchemeConfigurator &withIntegrator(const std::string &integratorName) {
+        scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
+        return *this;;
+    }
+
+    template<typename ReactionSchedulerType>
+    SchemeConfigurator &withReactionScheduler() {
+        scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
+        return *this;
+    }
+
+    SchemeConfigurator &withReactionScheduler(std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler) {
+        scheme->reactionScheduler = std::move(reactionScheduler);
+        return *this;
+    }
+
+    SchemeConfigurator &withReactionScheduler(const std::string &name) {
+        scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
+        return *this;
+    }
+
+    SchemeConfigurator &evaluateObservables(bool evaluate = true) {
+        scheme->evaluateObservables = evaluate;
+        evaluateObservablesSet = true;
+        return *this;
+    }
+
+    SchemeConfigurator &includeForces(bool include = true) {
+        if (include) {
+            scheme->forces = scheme->kernel->template createAction<readdy::model::actions::CalculateForces>();
+        } else {
+            scheme->forces = nullptr;
+        }
+        includeForcesSet = true;
+        return *this;
+    }
+
+    std::unique_ptr<AdvancedScheme> configure(double timeStep) {
+        using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
+        using default_reactions_t = readdy::model::actions::reactions::Gillespie;
+        using calculate_forces_t = readdy::model::actions::CalculateForces;
+        using update_neighbor_list_t = readdy::model::actions::UpdateNeighborList;
+        if (useDefaults) {
+            if (!scheme->integrator) {
+                scheme->integrator = scheme->kernel->template createAction<default_integrator_t>(timeStep);
+            }
+            if (!scheme->reactionScheduler) {
+                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions_t>(timeStep);
+            }
+            if (!evaluateObservablesSet) {
+                scheme->evaluateObservables = true;
+            }
+            if (!scheme->forces && !includeForcesSet) {
+                scheme->forces = scheme->kernel->template createAction<calculate_forces_t>();
+            }
+            if (!scheme->compartments && !includeCompartmentsSet) {
+                scheme->compartments = nullptr;
+            }
+        }
+        if (scheme->forces || scheme->reactionScheduler) {
+            scheme->neighborList = scheme->kernel
+                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, -1);
+            scheme->clearNeighborList = scheme->kernel
+                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
+        }
+        if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
+        if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
+        std::unique_ptr<AdvancedScheme> ptr = std::move(scheme);
+        scheme = nullptr;
+        return ptr;
+    }
+
+    void configureAndRun(double timeStep, const model::observables::time_step_type steps) {
+        configure(timeStep)->run(steps);
+    }
+
+protected:
+    std::unique_ptr<AdvancedScheme> scheme = nullptr;
+    bool useDefaults;
+    bool evaluateObservablesSet = false;
+    bool includeForcesSet = false;
+    bool includeCompartmentsSet = false;
+
+};
+
+}
 }
 #endif //READDY_MAIN_SIMULATIONSCHEME_H

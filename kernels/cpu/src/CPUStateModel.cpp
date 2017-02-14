@@ -51,7 +51,7 @@ using top_action_factory = readdy::model::top::TopologyActionFactory;
 void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighbors_it,
                            std::promise<double> energyPromise, const CPUStateModel::data_t &data,
                            pot1Map pot1, pot2Map pot2, dist_fun d,
-                           topologies_it tbegin, topologies_it tend, top_action_factory const*const taf,
+                           topologies_it tbegin, topologies_it tend, top_action_factory const *const taf,
                            const thd::barrier &barrier) {
     double energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it) {
@@ -121,6 +121,7 @@ struct CPUStateModel::Impl {
     readdy::model::KernelContext *context;
     std::unique_ptr<readdy::kernel::cpu::model::CPUNeighborList> neighborList;
     double currentEnergy = 0;
+    std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
     std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies{};
     top_action_factory const *const topologyActionFactory;
 
@@ -136,9 +137,9 @@ struct CPUStateModel::Impl {
         return *particleData;
     }
 
-    Impl(readdy::model::KernelContext *context, top_action_factory const *const taf)
+    Impl(readdy::model::KernelContext *context, top_action_factory const *const taf, readdy::util::thread::Config const *const config)
             : particleData(std::make_unique<CPUStateModel::data_t>(context)), topologyActionFactory(taf) {
-        this->context = context;
+        Impl::context = context;
     }
 
 private:
@@ -259,8 +260,18 @@ double CPUStateModel::getEnergy() const {
 CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
-        : pimpl(std::make_unique<Impl>(context, taf)), config(config) {
+        : pimpl(std::make_unique<Impl>(context, taf, config)), config(config) {
     pimpl->neighborList = std::make_unique<model::CPUNeighborList>(context, *getParticleData(), config);
+    pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
+            pimpl->neighborList->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
+                for (auto &top : pimpl->topologies) {
+                    auto &particles = top->getParticles();
+                    std::transform(particles.begin(), particles.end(), particles.begin(), [&indices](std::size_t index) {
+                        return indices[index];
+                    });
+                }
+            }));
+
 }
 
 CPUStateModel::data_t const *const CPUStateModel::getParticleData() const {
