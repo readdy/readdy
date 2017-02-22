@@ -19,12 +19,30 @@
  * <http://www.gnu.org/licenses/>.                                  *
  ********************************************************************/
 
-
 /**
- * << detailed description >>
+ * Tested against a numerical derivative:
+ *
+ *   import numpy as np
+ *   import numdifftools as nd
+ *   import matplotlib.pyplot as plt
+ *           from scipy.misc import derivative
+ *
+ *           def partial_derivative(func, var=0, point=[]):
+ *   args = point[:]
+ *   def wraps(x):
+ *   args[var] = x
+ *   return func(*args)
+ *   return derivative(wraps, point[var], dx=1e-6)
+ *   def partial_derivative_nd(func, var, *args):
+ *   args2 = list(args)
+ *   def wraps(z):
+ *   args2[var] = z
+ *   return func(*args2).ravel()
+ *   J = nd.Jacobian(wraps, order=8)
+ *   return J(args[var].ravel())
  *
  * @file TestTopologies.cpp
- * @brief << brief description >>
+ * @brief Tests for topology potentials
  * @author clonker
  * @date 08.02.17
  * @copyright GNU Lesser General Public License v3.0
@@ -50,6 +68,17 @@ struct TestTopologies : KernelTest {
 
 };
 
+/**
+ * k_bonded = 10
+ * d_0 = 5
+ * def bonded_energy(x_i, x_j):
+ *      result = k_bonded * ((np.linalg.norm(x_j - x_i) - d_0) ** 2)
+ *      return result
+ * x_i = np.array([4.0, 0., 0.])
+ * x_j = np.array([1.0, 0., 0.])
+ * print bonded_energy(x_i, x_j)
+ * partial_derivative_nd(bonded_energy, 0||1, x_i, x_j)
+ */
 TEST_P(TestTopologies, BondedPotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
@@ -84,6 +113,16 @@ TEST_P(TestTopologies, BondedPotential) {
     EXPECT_EQ(kernel->getKernelStateModel().getEnergy(), 40);
 }
 
+/**
+ * theta_0 = np.pi
+ * k_angle = 1.0
+ * def angle_potential(x_i, x_j, x_k):
+ *     x_ji = x_i - x_j
+ *     x_jk = x_k - x_j
+ *     cos_theta = np.dot(x_ji, x_jk) / (np.linalg.norm(x_ji) * np.linalg.norm(x_jk))
+ *     return k_angle * ((np.arccos(cos_theta) - theta_0) ** 2)
+ * partial_derivative_nd(angle_potential, 0||1||2, x_i, x_j, x_k)
+ */
 TEST_P(TestTopologies, AnglePotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
@@ -112,15 +151,69 @@ TEST_P(TestTopologies, AnglePotential) {
 
     EXPECT_EQ(collectedForces.size(), 3);
     EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 2.4674011002723395);
-    readdy::model::Vec3 force_x_i{0, -3.14159265, 0};
-    readdy::model::Vec3 force_x_j{-3.14159265, 3.14159265, 0};
-    readdy::model::Vec3 force_x_k{3.14159265, 0., 0.};
+    readdy::model::Vec3 force_x_i{0, 3.14159265, 0};
+    readdy::model::Vec3 force_x_j{3.14159265, -3.14159265, 0};
+    readdy::model::Vec3 force_x_k{-3.14159265, 0., 0.};
 
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
 }
 
+TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
+    auto &ctx = kernel->getKernelContext();
+    ctx.registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.setBoxSize(10, 10, 10);
+    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_k{1.0, 0.5, -.3, ctx.getParticleTypeID("Topology A")};
+    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k});
+    {
+        std::vector<angle_bond::Angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
+        top->addAnglePotential<angle_bond>(std::move(angles));
+    }
+    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    std::vector<readdy::model::Vec3> collectedForces;
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+        for (const auto &force : result) {
+            collectedForces.push_back(force);
+        }
+    });
+
+    auto conn = kernel->connectObservable(fObs.get());
+
+    ctx.configure();
+    kernel->getKernelStateModel().calculateForces();
+    kernel->evaluateObservables(1);
+
+    EXPECT_EQ(collectedForces.size(), 3);
+    EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 2.5871244540347655);
+    readdy::model::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
+    readdy::model::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
+    readdy::model::Vec3 force_x_k{-5.45394396, 0.42776031, 0.71293385};
+
+    EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
+}
+
+/**
+ * phi_0 = np.pi
+ * multiplicity = 3
+ * k_dihedral = 1.0
+ * def dihedral_potential(x_i, x_j, x_k, x_l):
+ *     x_ji = x_i - x_j
+ *     x_kj = x_j - x_k
+ *     x_kl = x_l - x_k
+ *     x_jk = x_k - x_j
+ *     m = np.cross(x_ji, x_kj)
+ *     n = np.cross(x_kl, x_jk)
+ *     cos_phi = np.dot(m, n) / (np.linalg.norm(m) * np.linalg.norm(n))
+ *     sin_phi = np.dot(np.cross(m, n), x_jk) / (np.linalg.norm(m) * np.linalg.norm(n) * np.linalg.norm(x_jk))
+ *     phi = -np.arctan2(sin_phi, cos_phi)
+ *     return k_dihedral * (1 + np.cos(multiplicity * phi - phi_0))
+ * partial_derivative_nd(dihedral_potential, 0||1||2||3, x_i, x_j, x_k, x_l) * -1.
+ */
 TEST_P(TestTopologies, DihedralPotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
