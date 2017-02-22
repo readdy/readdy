@@ -42,7 +42,8 @@ namespace model {
 class KernelContext;
 namespace potentials {
 class PotentialOrder1 : public Potential {
-
+protected:
+    using particle_type_type = readdy::model::Particle::type_type;
 public:
     PotentialOrder1(const std::string& particleType) : Potential(1), particleType(particleType) {}
 
@@ -56,7 +57,7 @@ public:
 
 protected:
     friend class readdy::model::KernelContext;
-    virtual void configureForType(const KernelContext* const, const unsigned int type) = 0;
+    virtual void configureForType(const KernelContext* const, const particle_type_type type) = 0;
 
     const std::string particleType;
 

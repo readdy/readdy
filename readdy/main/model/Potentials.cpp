@@ -86,7 +86,7 @@ bool CubePotential::isConsiderParticleRadius() const { return considerParticleRa
 
 double CubePotential::getParticleRadius() const { return particleRadius; }
 
-double CubePotential::getMaximalForce(double kbt) const noexcept {
+double CubePotential::getMaximalForce(double) const noexcept {
     return 0;
 }
 
@@ -94,7 +94,7 @@ double CubePotential::getRelevantLengthScale() const noexcept {
     return std::min(extent[0], std::min(extent[1], extent[2]));
 }
 
-void CubePotential::configureForType(const KernelContext *const ctx, const unsigned int type) {
+void CubePotential::configureForType(const KernelContext *const ctx, const particle_type_type type) {
     particleRadius = ctx->getParticleRadius(type);
 }
 
@@ -105,7 +105,8 @@ std::string CubePotential::describe() {
 }
 
 std::ostream &operator<<(std::ostream &os, const CubePotential &potential) {
-    os << getPotentialName<CubePotential>() << "[type: " << potential.particleType <<", origin: " << potential.origin << ", extent: "
+    os << getPotentialName<CubePotential>() << "[type: " << potential.particleType << ", origin: " << potential.origin
+       << ", extent: "
        << potential.extent << ", min: " << potential.min << ", max: " << potential.max << ", forceConstant: "
        << potential.forceConstant << ", considerParticleRadius: " << potential.considerParticleRadius << "]";
     return os;
@@ -163,17 +164,18 @@ double SpherePotential::getRelevantLengthScale() const noexcept {
     return radius;
 }
 
-double SpherePotential::getMaximalForce(double kbt) const noexcept {
+double SpherePotential::getMaximalForce(double) const noexcept {
     return 0;
 }
 
 SpherePotential::SpherePotential(const std::string &particleType, double f, const Vec3 &origin, double radius)
         : super(particleType), origin(origin), radius(radius), forceConstant(f) {}
 
-void SpherePotential::configureForType(const KernelContext *const ctx, const unsigned int type) {}
+void SpherePotential::configureForType(const KernelContext *const, const particle_type_type) {}
 
 std::ostream &operator<<(std::ostream &os, const SpherePotential &potential) {
-    os << getPotentialName<SpherePotential>() << "[type: " << potential.particleType << ", origin: " << potential.origin << ", radius: "
+    os << getPotentialName<SpherePotential>() << "[type: " << potential.particleType << ", origin: " << potential.origin
+       << ", radius: "
        << potential.radius << ", forceConstant: " << potential.forceConstant << "]";
     return os;
 }
@@ -239,11 +241,12 @@ double HarmonicRepulsion::getForceConstant() const {
     return forceConstant;
 }
 
-double HarmonicRepulsion::getMaximalForce(double kbt) const noexcept {
+double HarmonicRepulsion::getMaximalForce(double) const noexcept {
     return forceConstant * getCutoffRadius();
 }
 
-void HarmonicRepulsion::configureForTypes(const KernelContext *const ctx, unsigned int type1, unsigned int type2) {
+void HarmonicRepulsion::configureForTypes(const KernelContext *const ctx, particle_type_type type1,
+                                          particle_type_type type2) {
     auto r1 = ctx->getParticleRadius(type1);
     auto r2 = ctx->getParticleRadius(type2);
     sumOfParticleRadii = r1 + r2;
@@ -251,7 +254,8 @@ void HarmonicRepulsion::configureForTypes(const KernelContext *const ctx, unsign
 }
 
 std::ostream &operator<<(std::ostream &os, const HarmonicRepulsion &repulsion) {
-    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << repulsion.particleType1 <<", type2: " << repulsion.particleType2 << ", forceConstant: " << repulsion.forceConstant << "]";
+    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << repulsion.particleType1 << ", type2: "
+       << repulsion.particleType2 << ", forceConstant: " << repulsion.forceConstant << "]";
     return os;
 }
 
@@ -307,7 +311,7 @@ double HarmonicRepulsion::getCutoffRadiusSquared() const {
  * Weak interaction piecewise harmonic
  */
 
-double WeakInteractionPiecewiseHarmonic::getMaximalForce(double kbt) const noexcept {
+double WeakInteractionPiecewiseHarmonic::getMaximalForce(double) const noexcept {
     double fMax1 = forceConstant * conf.desiredParticleDistance;
     double fMax2 = 2 * conf.depthAtDesiredDistance *
                    (conf.noInteractionDistance - conf.desiredParticleDistance);
@@ -315,7 +319,8 @@ double WeakInteractionPiecewiseHarmonic::getMaximalForce(double kbt) const noexc
 }
 
 
-void WeakInteractionPiecewiseHarmonic::configureForTypes(const KernelContext *const, unsigned int, unsigned int) {}
+void WeakInteractionPiecewiseHarmonic::configureForTypes(const KernelContext *const, particle_type_type,
+                                                         particle_type_type) {}
 
 WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const std::string &particleType1,
                                                                    const std::string &particleType2,
@@ -324,8 +329,9 @@ WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const std::st
         : super(particleType1, particleType2), forceConstant(forceConstant), conf(config) {}
 
 std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmonic &harmonic) {
-    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << harmonic.particleType1 <<", type2: " << harmonic.particleType2 << ", configuration[" << harmonic.conf
-       << "], forceConstant: " << harmonic.forceConstant<< "]";
+    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << harmonic.particleType1 << ", type2: "
+       << harmonic.particleType2 << ", configuration[" << harmonic.conf
+       << "], forceConstant: " << harmonic.forceConstant << "]";
     return os;
 }
 
@@ -347,13 +353,13 @@ double WeakInteractionPiecewiseHarmonic::calculateEnergy(const Vec3 &x_ij) const
     if (dist < conf.desiredParticleDistance) {
         // repulsive as we are closer than the desired distance
         return .5 * forceConstant * (dist - conf.desiredParticleDistance) * (dist - conf.desiredParticleDistance) -
-                conf.depthAtDesiredDistance;
+               conf.depthAtDesiredDistance;
     } else {
         // attractive as we are further (but not too far) apart than the desired distance
         if (dist < conf.desiredParticleDistance + .5 * len_part2) {
             return .5 * conf.depthAtDesiredDistance * (1 / (.5 * len_part2)) * (1 / (.5 * len_part2)) *
                    (dist - conf.desiredParticleDistance) * (dist - conf.desiredParticleDistance) -
-                    conf.depthAtDesiredDistance;
+                   conf.depthAtDesiredDistance;
         } else {
             // if we are not too far apart but still further than in the previous case, attractive
             if (dist < conf.noInteractionDistance) {
@@ -412,7 +418,55 @@ WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const double desi
         : desiredParticleDistance(desiredParticleDistance), depthAtDesiredDistance(depthAtDesiredDistance),
           noInteractionDistance(noInteractionDistance),
           noInteractionDistanceSquared(noInteractionDistance * noInteractionDistance) {}
-}
-}
+
+LennardJones::LennardJones(const std::string &particleType1, const std::string &particleType2,
+                                             unsigned int exponent1, unsigned int exponent2, double cutoffDistance,
+                                             bool shift, double epsilon, double sigma)
+        : super(particleType1, particleType2), exponent1(exponent1), exponent2(exponent2),
+          cutoffDistance(cutoffDistance), shift(shift), epsilon(epsilon), sigma(sigma),
+          cutoffDistanceSquared(cutoffDistance*cutoffDistance) { }
+
+void
+LennardJones::configureForTypes(const KernelContext *const context, particle_type_type type1,
+                                         particle_type_type type2) {
+
 }
 
+std::string LennardJones::describe() {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
+}
+
+std::ostream &operator<<(std::ostream &os, const LennardJones &potential) {
+    os << getPotentialName<LennardJones>() << "[exponent1: " << potential.exponent1 << " exponent2: "
+       << potential.exponent2 << " cutoffDistance: " << potential.cutoffDistance << " shift: " << potential.shift
+       << " epsilon: " << potential.epsilon << " k: " << potential.k << "]";
+    return os;
+}
+
+double LennardJones::calculateEnergy(const Vec3 &x_ij) const {
+    return 0;
+}
+
+void LennardJones::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
+
+}
+
+void LennardJones::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
+    energy = calculateEnergy(x_ij);
+    calculateForce(force, x_ij);
+}
+
+double LennardJones::getCutoffRadius() const {
+    return cutoffDistance;
+}
+
+double LennardJones::getCutoffRadiusSquared() const {
+    return cutoffDistanceSquared;
+}
+
+
+}
+}
+}

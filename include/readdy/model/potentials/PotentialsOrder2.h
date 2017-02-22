@@ -72,7 +72,7 @@ public:
 protected:
     friend class readdy::model::KernelContext;
 
-    void configureForTypes(const KernelContext *const ctx, unsigned int type1, unsigned int type2) override;
+    void configureForTypes(const KernelContext *const ctx, particle_type_type type1, particle_type_type type2) override;
 
     double sumOfParticleRadii;
     double sumOfParticleRadiiSquared;
@@ -118,10 +118,68 @@ public:
 protected:
     friend class readdy::model::KernelContext;
 
-    void configureForTypes(const KernelContext *const ctx, unsigned int type1, unsigned int type2) override;
+    void configureForTypes(const KernelContext *const ctx, particle_type_type type1, particle_type_type type2) override;
 
     const Configuration conf;
     const double forceConstant;
+};
+
+/**
+ * Lennard-Jones potential class
+ */
+class LennardJones : public PotentialOrder2 {
+    using super = PotentialOrder2;
+public:
+    /**
+     * Constructs a Lennard-Jones-type potential between two particle types A and B (where possibly A = B) of the
+     * form
+     *
+     * V_LJ(r) = k(epsilon, n, m) [ (sigma/r)^m - (sigma/r)^n ],
+     *
+     * where n,m are exponent 1 and 2, respectively, with n > m.
+     * If shift == true, it will be defined as
+     *
+     * V_LJ_shifted(r) = V_LJ(r) - V_LJ(cutoffDistance)
+     *
+     * for r <= cutoffDistance.
+     *
+     * @param particleType1 particle type A
+     * @param particleType2 particle type B
+     * @param exponent1 first exponent
+     * @param exponent2 second exponent
+     * @param cutoffDistance the cutoff distance
+     * @param shift if it should be shifted or not
+     * @param epsilon the well depth
+     * @param sigma the distance at which the inter-particle potential is zero
+     */
+    LennardJones(const std::string &particleType1, const std::string &particleType2,
+                          unsigned int exponent1, unsigned int exponent2, double cutoffDistance,
+                          bool shift, double epsilon, double sigma);
+
+    virtual std::string describe() override;
+
+    friend std::ostream &operator<<(std::ostream &os, const LennardJones &potential);
+
+    virtual double calculateEnergy(const Vec3 &x_ij) const override;
+
+    virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+
+    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+
+    virtual double getCutoffRadius() const override;
+
+    virtual double getCutoffRadiusSquared() const override;
+
+protected:
+    friend class readdy::model::KernelContext;
+
+    virtual void configureForTypes(const KernelContext *const context, particle_type_type type1, particle_type_type type2) override;
+    unsigned int exponent1, exponent2;
+    double cutoffDistance, cutoffDistanceSquared;
+    bool shift; // V_LJ_trunc = V_LJ(r) - V_LJ(r_cutoff)
+    double epsilon; // depth
+    double sigma;
+    double k;
 };
 
 template<typename T>
@@ -133,6 +191,12 @@ template<typename T>
 const std::string
 getPotentialName(typename std::enable_if<std::is_base_of<WeakInteractionPiecewiseHarmonic, T>::value>::type * = 0) {
     return "WeakInteractionPiecewiseHarmonic";
+}
+
+template<typename T>
+const std::string
+getPotentialName(typename std::enable_if<std::is_base_of<LennardJones, T>::value>::type * = 0) {
+    return "LennardJones";
 }
 }
 }
