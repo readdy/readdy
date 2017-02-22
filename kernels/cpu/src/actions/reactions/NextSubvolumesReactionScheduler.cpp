@@ -223,16 +223,16 @@ void CPUNextSubvolumes::evaluateReactions() {
                                 break;
                             }
                             default: {
-                                log::console()->error("encountered event with order > 2! (order was {})",
+                                log::error("encountered event with order > 2! (order was {})",
                                                       event.order);
                             }
                         }
                     }
                 } else {
-                    log::console()->debug("did not find any particle of type {} in current box", event.type1);
+                    log::debug("did not find any particle of type {} in current box", event.type1);
                 }
             } else {
-                log::console()->error("The event was not set previously, should not happen! (?)");
+                log::error("The event was not set previously, should not happen! (?)");
             }
 
             if(performedSomething) {
@@ -361,7 +361,7 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
         if (eventIt != events.end()) {
             cell.nextEvent = std::move(events[eventIt - events.begin()]);
         } else {
-            log::console()->error("next subvolumes: the next event was events.end()!");
+            log::error("next subvolumes: the next event was events.end()!");
         }
     }
 }

@@ -106,14 +106,14 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     {
         const auto foo = stateModel.getParticles();
         for(const auto& bar : foo) {
-            readdy::log::console()->debug("got particle: {}", bar);
+            readdy::log::debug("got particle: {}", bar);
         }
     }
     stateModel.updateNeighborList();
     {
         const auto foo = stateModel.getParticles();
         for(const auto& bar : foo) {
-            readdy::log::console()->debug("-> got particle: {}", bar);
+            readdy::log::debug("-> got particle: {}", bar);
         }
     }
     stateModel.calculateForces();
@@ -121,7 +121,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
         {
             const auto foo = stateModel.getParticles();
             for(const auto& bar : foo) {
-                readdy::log::console()->debug("--> got particle: {}", bar);
+                readdy::log::debug("--> got particle: {}", bar);
             }
         }
     }
@@ -145,7 +145,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
         {
             const auto foo = stateModel.getParticles();
             for(const auto& bar : foo) {
-                readdy::log::console()->debug("---> got particle: {}", bar);
+                readdy::log::debug("---> got particle: {}", bar);
             }
         }
     }
@@ -167,7 +167,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
             EXPECT_VEC3_EQ(forces.at(idx), (-1. * force05) - force15 - force25)
                                 << "force on particle 5 = - force05 - force15 - force25";
         } else {
-            readdy::log::console()->error("Got an unexpected particle id: {}", particle.getId());
+            readdy::log::error("Got an unexpected particle id: {}", particle.getId());
             FAIL() << "Got an unexpected particle id: " << particle.getId();
         }
         ++idx;

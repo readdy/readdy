@@ -118,7 +118,7 @@ void CPUDParticleData::removeParticle(const CPUDParticleData::particle_type &par
     if (find_it != entries.end()) {
         removeParticle(static_cast<std::size_t>(std::distance(entries.begin(), find_it)));
     } else {
-        log::console()->warn("Could not find and thus remove particle with id {}", particle.getId());
+        log::warn("Could not find and thus remove particle with id {}", particle.getId());
     }
 }
 

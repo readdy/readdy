@@ -60,7 +60,7 @@ Plane::Plane(const std::unordered_map<particleType_t, particleType_t> &conversio
           largerOrLess(largerOrLess) {
     const auto normSquared = normalCoefficients * normalCoefficients;
     if (std::abs(normSquared - 1) > 0.0001) {
-        log::console()->warn("Plane coefficients not sufficiently normalized. Unwanted behavior ahead! Make sure that coefficients and distance"
+        log::warn("Plane coefficients not sufficiently normalized. Unwanted behavior ahead! Make sure that coefficients and distance"
                                      "accord to the Hesse normal form");
     }
 }

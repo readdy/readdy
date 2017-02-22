@@ -65,7 +65,7 @@ SCPUParticleData::const_iterator SCPUParticleData::end() const {
 readdy::model::Particle SCPUParticleData::getParticle(const index_t index) const {
     const auto& entry = *(entries.begin() + index);
     if(entry.deactivated) {
-        log::console()->error("Requested deactivated particle at index {}!", index);
+        log::error("Requested deactivated particle at index {}!", index);
     }
     return toParticle(entry);
 }
@@ -118,7 +118,7 @@ void SCPUParticleData::removeParticle(const SCPUParticleData::particle_type &par
             return;
         }
     }
-    log::console()->error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
+    log::error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
 }
 
 void SCPUParticleData::removeParticle(const size_t index) {
@@ -128,7 +128,7 @@ void SCPUParticleData::removeParticle(const size_t index) {
         p.deactivated = true;
         // neighbors.at(index).clear();
     } else {
-        log::console()->error("Tried to remove particle (index={}), that was already removed!", index);
+        log::error("Tried to remove particle (index={}), that was already removed!", index);
     }
 }
 

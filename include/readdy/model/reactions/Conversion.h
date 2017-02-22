@@ -42,7 +42,7 @@ namespace reactions {
 class Conversion : public Reaction<1> {
 
 public:
-    Conversion(const std::string &name, unsigned int typeFrom, unsigned int typeTo, const double rate) :
+    Conversion(const std::string &name, particle_type_type typeFrom, particle_type_type typeTo, const double rate) :
             Reaction(name, rate, 0, 0, 1) {
         educts = {typeFrom};
         products = {typeTo};

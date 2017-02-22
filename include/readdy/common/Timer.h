@@ -41,11 +41,11 @@ namespace readdy {
 namespace util {
 struct Timer {
 
-    Timer(std::string label, bool print = true) : label(label), print(print) {}
+    Timer(const std::string &label, bool print = true) : label(label), print(print) {}
 
     ~Timer() {
         if (print) {
-            log::console()->debug("Elapsed ({}): {} seconds", label, getSeconds());
+            log::debug("Elapsed ({}): {} seconds", label, getSeconds());
         }
     }
 

@@ -309,7 +309,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
 //   9 and 10, resulting in a particle A at {0,0,5.25}
     {
         const auto particles = kernel->getKernelStateModel().getParticles();
-        for (auto p : particles) readdy::log::console()->debug("particle {}", p);
+        for (const auto &p : particles) readdy::log::debug("particle {}", p);
         EXPECT_EQ(7, particles.size());
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
             return p.getType() == typeB && p.getPos() == vec_t(0, 0, -1.7);

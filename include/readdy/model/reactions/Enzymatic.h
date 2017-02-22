@@ -41,8 +41,8 @@ namespace reactions {
 class Enzymatic : public Reaction<2> {
 
 public:
-    Enzymatic(const std::string &name, unsigned int catalyst, unsigned int from, unsigned int to, const double rate,
-              const double eductDistance) :
+    Enzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from, particle_type_type to,
+              const double rate, const double eductDistance) :
             Reaction(name, rate, eductDistance, 0, 2) {
         educts = {from, catalyst};
         products = {to, catalyst};

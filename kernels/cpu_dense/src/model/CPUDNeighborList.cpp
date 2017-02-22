@@ -76,7 +76,7 @@ void CPUDNeighborList::setupCells() {
                 if (nCells[i] == 0) nCells[i] = 1;
                 cellSize[i] = simBoxSize[i] / static_cast<double>(nCells[i]);
             }
-            log::console()->debug("resulting cell size = {}", cellSize);
+            log::debug("resulting cell size = {}", cellSize);
 
             for (cell_index i = 0; i < nCells[0]; ++i) {
                 for (cell_index j = 0; j < nCells[1]; ++j) {
@@ -184,7 +184,7 @@ CPUDNeighborList::Cell *CPUDNeighborList::getCell(signed_cell_index i, signed_ce
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("CPUDNeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
+        log::critical("CPUDNeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::runtime_error("tried to get cell index that was too large");
     }
@@ -226,7 +226,7 @@ const CPUDNeighborList::Cell *const CPUDNeighborList::getCell(CPUDNeighborList::
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("CPUDNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
+        log::critical("CPUDNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::out_of_range("tried to access an invalid cell");
     }

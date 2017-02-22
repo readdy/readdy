@@ -98,8 +98,8 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
         msd += position * position;
     }
     msd /= positions.size();
-    readdy::log::console()->debug("mean squared displacement: {}", msd);
-    readdy::log::console()->debug("mean squared displacement2: {}", *aggregator.result);
+    readdy::log::debug("mean squared displacement: {}", msd);
+    readdy::log::debug("mean squared displacement2: {}", *aggregator.result);
 }
 
 TEST_F(TestSimulation, TestObservables) {

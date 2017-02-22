@@ -95,11 +95,11 @@ unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const
         if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
             return findIt->second;
         } else {
-            log::console()->critical("particle type {} had no \"normal\" flavor", name);
+            log::critical("particle type {} had no \"normal\" flavor", name);
             throw std::invalid_argument("particle type " + name + " had no \"normal\" flavor");
         }
     } else {
-        log::console()->critical("did not find type id for {}", name);
+        log::critical("did not find type id for {}", name);
         throw std::invalid_argument("did not find type id for " + name);
     }
 }

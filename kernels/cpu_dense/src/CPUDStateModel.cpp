@@ -130,7 +130,7 @@ void CPUDStateModel::calculateForces() {
             const auto nl_size = std::distance(pimpl->neighborList->begin(), pimpl->neighborList->end());
             const auto needSecondOrderPotentials = pimpl->neighborList->getMaxCutoff() > 0;
             if(needSecondOrderPotentials && data_size != nl_size) {
-                log::console()->critical("size data = {}, size nl = {}", data_size, nl_size);
+                log::critical("size data = {}, size nl = {}", data_size, nl_size);
             }
             for (auto i = 0; i < config->nThreads() - 1; ++i) {
                 std::promise<double> energyPromise;

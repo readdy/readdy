@@ -71,9 +71,9 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
 void Simulation::run(const readdy::model::observables::time_step_type steps, const double timeStep) {
     ensureKernelSelected();
     {
-        log::console()->debug("available actions: ");
+        log::debug("available actions: ");
         for (auto &&p : pimpl->kernel->getAvailableActions()) {
-            log::console()->debug("\t {}", p);
+            log::debug("\t {}", p);
         }
     }
     runScheme().configure(timeStep)->run(steps);
@@ -81,7 +81,7 @@ void Simulation::run(const readdy::model::observables::time_step_type steps, con
 
 void Simulation::setKernel(const std::string &kernel) {
     if (isKernelSelected()) {
-        log::console()->debug("replacing kernel \"{}\" with \"{}\"", pimpl->kernel->getName(), kernel);
+        log::debug("replacing kernel \"{}\" with \"{}\"", pimpl->kernel->getName(), kernel);
     }
     pimpl->kernel = readdy::plugin::KernelProvider::getInstance().create(kernel);
 }
@@ -102,7 +102,7 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
         readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
         pimpl->kernel->getKernelStateModel().addParticle(p);
     } else {
-        log::console()->error("particle position was not in bounds of the simulation box!");
+        log::error("particle position was not in bounds of the simulation box!");
     }
 
 }

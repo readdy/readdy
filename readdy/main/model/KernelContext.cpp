@@ -400,42 +400,42 @@ void KernelContext::configure(bool debugOutput) {
             }
             return "";
         };
-        log::console()->debug("Configured kernel context with: ");
-        log::console()->debug("--------------------------------");
-        log::console()->debug(" - kBT = {}", getKBT());
-        log::console()->debug(" - periodic b.c. = ({}, {}, {})", getPeriodicBoundary()[0], getPeriodicBoundary()[1],
+        log::debug("Configured kernel context with: ");
+        log::debug("--------------------------------");
+        log::debug(" - kBT = {}", getKBT());
+        log::debug(" - periodic b.c. = ({}, {}, {})", getPeriodicBoundary()[0], getPeriodicBoundary()[1],
                               getPeriodicBoundary()[2]);
-        log::console()->debug(" - box size = ({}, {}, {})", getBoxSize()[0], getBoxSize()[1], getBoxSize()[2]);
+        log::debug(" - box size = ({}, {}, {})", getBoxSize()[0], getBoxSize()[1], getBoxSize()[2]);
 
         if (!getAllOrder1Potentials().empty()) {
-            log::console()->debug(" - potentials of order 1:");
+            log::debug(" - potentials of order 1:");
             for (const auto& types : getAllOrder1Potentials()) {
-                log::console()->debug("     * for type {}", find_pot_name(types.first));
+                log::debug("     * for type {}", find_pot_name(types.first));
                 for (auto pot : types.second) {
-                    log::console()->debug("         * {}", pot->describe());
+                    log::debug("         * {}", pot->describe());
                 }
             }
         }
         if (!getAllOrder2Potentials().empty()) {
-            log::console()->debug(" - potentials of order 2:");
+            log::debug(" - potentials of order 2:");
             for (const auto& types : getAllOrder2Potentials()) {
-                log::console()->debug("     * for types {} and {}", find_pot_name(types.first.t1),
+                log::debug("     * for types {} and {}", find_pot_name(types.first.t1),
                                       find_pot_name(types.first.t2));
                 for (auto pot : types.second) {
-                    log::console()->debug("         * {}", pot->describe());
+                    log::debug("         * {}", pot->describe());
                 }
             }
         }
         if (!getAllOrder1Reactions().empty()) {
-            log::console()->debug(" - reactions of order 1:");
+            log::debug(" - reactions of order 1:");
             for (const auto& reaction : getAllOrder1Reactions()) {
-                log::console()->debug("     * reaction {}", *reaction);
+                log::debug("     * reaction {}", *reaction);
             }
         }
         if (!getAllOrder2Reactions().empty()) {
-            log::console()->debug(" - reactions of order 2:");
+            log::debug(" - reactions of order 2:");
             for (const auto& reaction : getAllOrder2Reactions()) {
-                log::console()->debug("     * reaction {}", *reaction);
+                log::debug("     * reaction {}", *reaction);
             }
         }
     }

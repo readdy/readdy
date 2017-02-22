@@ -93,7 +93,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
             avg += v;
         }
         avg /= currentResult.size();
-        if (!allWithinBounds) readdy::log::console()->debug("Average position: {}", avg);
+        if (!allWithinBounds) readdy::log::debug("Average position: {}", avg);
         ASSERT_TRUE(allWithinBounds);
     });
     auto connection = kernel->connectObservable(ppObs.get());
@@ -123,7 +123,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
             avg += v;
         }
         avg /= currentResult.size();
-        if (!allWithinBounds) readdy::log::console()->debug("Average position: {}", avg);
+        if (!allWithinBounds) readdy::log::debug("Average position: {}", avg);
         ASSERT_TRUE(allWithinBounds);
     });
     auto connection = kernel->connectObservable(ppObs.get());

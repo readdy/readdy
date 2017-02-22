@@ -67,7 +67,7 @@ public:
             H5Tinsert(entryTypeMemory, "pz", HOFFSET(entry_t, pz), posType.tid);
             return entryTypeMemory;
         }();
-        log::console()->debug("created trajectory entry memory type {}", tid);
+        log::debug("created trajectory entry memory type {}", tid);
     }
 };
 
@@ -98,7 +98,7 @@ public:
             H5Tinsert(entryTypeFile, "pz", cumsize, posType.tid);
             return entryTypeFile;
         }();
-        log::console()->debug("created trajectory entry file type {}", tid);
+        log::debug("created trajectory entry file type {}", tid);
     }
 };
 
