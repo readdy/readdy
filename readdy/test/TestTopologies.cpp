@@ -25,21 +25,21 @@
  *   import numpy as np
  *   import numdifftools as nd
  *   import matplotlib.pyplot as plt
- *           from scipy.misc import derivative
+ *   from scipy.misc import derivative
  *
- *           def partial_derivative(func, var=0, point=[]):
- *   args = point[:]
- *   def wraps(x):
- *   args[var] = x
- *   return func(*args)
- *   return derivative(wraps, point[var], dx=1e-6)
+ *   def partial_derivative(func, var=0, point=[]):
+ *      args = point[:]
+ *      def wraps(x):
+ *          args[var] = x
+ *          return func(*args)
+ *      return derivative(wraps, point[var], dx=1e-6)
  *   def partial_derivative_nd(func, var, *args):
- *   args2 = list(args)
- *   def wraps(z):
- *   args2[var] = z
- *   return func(*args2).ravel()
- *   J = nd.Jacobian(wraps, order=8)
- *   return J(args[var].ravel())
+ *      args2 = list(args)
+ *      def wraps(z):
+ *          args2[var] = z
+ *          return func(*args2).ravel()
+ *      J = nd.Jacobian(wraps, order=8)
+ *      return J(args[var].ravel())
  *
  * @file TestTopologies.cpp
  * @brief Tests for topology potentials
