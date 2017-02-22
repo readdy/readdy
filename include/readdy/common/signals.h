@@ -100,7 +100,7 @@ public:
         disconnect();
     }
 
-    scoped_connection(connection connection) : conn(std::move(connection)) {}
+    explicit scoped_connection(connection&& connection) : conn(std::move(connection)) {}
 
     void disconnect() {
         conn.disconnect();
@@ -127,7 +127,7 @@ class slots_container {
     std::shared_ptr<std::list<T>> container;
 
     struct eraser {
-        eraser(typename std::list<T>::iterator it) : it(it) {}
+        explicit eraser(typename std::list<T>::iterator it) : it(it) {}
 
         void operator()(std::shared_ptr<void> ptr) {
             auto slots = std::static_pointer_cast<std::list<T>>(ptr);
