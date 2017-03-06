@@ -139,7 +139,7 @@ public:
     /**
      * Adds a particle of the type "type" at position "pos".
      */
-    void addParticle(const std::string &type, const Vec3 &pos);
+    readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos);
 
     TopologyParticle createTopologyParticle(const std::string& type, const Vec3& pos) const;
 

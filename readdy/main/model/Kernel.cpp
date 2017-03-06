@@ -84,8 +84,10 @@ std::vector<std::string> Kernel::getAvailablePotentials() const {
     return std::vector<std::string>();
 }
 
-void Kernel::addParticle(const std::string &type, const Vec3 &pos) {
-    getKernelStateModel().addParticle({pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)});
+readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, const Vec3 &pos) {
+    readdy::model::Particle particle {pos[0], pos[1], pos[2], getKernelContext().getParticleTypeID(type)};
+    getKernelStateModel().addParticle(particle);
+    return particle.getId();
 }
 
 unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
@@ -95,11 +97,11 @@ unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const
         if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
             return findIt->second;
         } else {
-            log::console()->critical("particle type {} had no \"normal\" flavor", name);
+            log::critical("particle type {} had no \"normal\" flavor", name);
             throw std::invalid_argument("particle type " + name + " had no \"normal\" flavor");
         }
     } else {
-        log::console()->critical("did not find type id for {}", name);
+        log::critical("did not find type id for {}", name);
         throw std::invalid_argument("did not find type id for " + name);
     }
 }

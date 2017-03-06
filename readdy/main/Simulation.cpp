@@ -71,9 +71,9 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
 void Simulation::run(const readdy::model::observables::time_step_type steps, const double timeStep) {
     ensureKernelSelected();
     {
-        log::console()->debug("available actions: ");
+        log::debug("available actions: ");
         for (auto &&p : pimpl->kernel->getAvailableActions()) {
-            log::console()->debug("\t {}", p);
+            log::debug("\t {}", p);
         }
     }
     runScheme().configure(timeStep)->run(steps);
@@ -81,7 +81,7 @@ void Simulation::run(const readdy::model::observables::time_step_type steps, con
 
 void Simulation::setKernel(const std::string &kernel) {
     if (isKernelSelected()) {
-        log::console()->debug("replacing kernel \"{}\" with \"{}\"", pimpl->kernel->getName(), kernel);
+        log::debug("replacing kernel \"{}\" with \"{}\"", pimpl->kernel->getName(), kernel);
     }
     pimpl->kernel = readdy::plugin::KernelProvider::getInstance().create(kernel);
 }
@@ -102,7 +102,7 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
         readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
         pimpl->kernel->getKernelStateModel().addParticle(p);
     } else {
-        log::console()->error("particle position was not in bounds of the simulation box!");
+        log::error("particle position was not in bounds of the simulation box!");
     }
 
 }
@@ -143,6 +143,15 @@ Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string&
     return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant,
                                                          desiredParticleDistance, depth, noInteractionDistance);
 }
+
+const short
+Simulation::registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m,
+                                          unsigned int n, double cutoff, bool shift, double epsilon, double sigma) {
+    using potential_t = readdy::model::potentials::LennardJones;
+    ensureKernelSelected();
+    return pimpl->kernel->registerPotential<potential_t>(type1, type2, m, n, cutoff, shift, epsilon, sigma);
+}
+
 
 const short
 Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
@@ -324,6 +333,16 @@ readdy::model::top::Topology *Simulation::addTopology(const std::vector<readdy::
     } else {
         throw std::logic_error("the selected kernel does not support topologies!");
     }
+}
+
+void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+}
+
+void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};

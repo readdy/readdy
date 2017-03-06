@@ -156,8 +156,8 @@ protected:
         }
         for (readdy::model::observables::time_step_type t = 0; t < steps; ++t) {
             if (verbose) {
-                readdy::log::console()->debug("----------");
-                readdy::log::console()->debug("t = {}", t);
+                readdy::log::debug("----------");
+                readdy::log::debug("t = {}", t);
             }
             {
                 timer c("integrator", verbose);
@@ -186,7 +186,7 @@ protected:
             }
         }
         clearNeighborList->perform();
-        readdy::log::console()->critical("DONE!");
+        readdy::log::critical("DONE!");
         timeForces /= steps + 1;
         timeIntegrator /= steps;
         timeNeighborList /= steps;
@@ -509,7 +509,7 @@ void scaleNumbersAndBoxsize(const std::string &kernelName) {
 
 template<typename Scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
 void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
-    readdy::log::console()->debug("using reduced numbers: {}", reducedNumbers);
+    readdy::log::debug("using reduced numbers: {}", reducedNumbers);
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
     std::vector<double> numbers;
     if (reducedNumbers) {
@@ -545,14 +545,14 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     readdy::log::console()->set_level(spdlog::level::warn);
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
-            readdy::log::console()->error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j,
+            readdy::log::error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j,
                                           skinSizesSize, skinSizes[j]);
             std::map<std::string, double> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
             factors.emplace(std::make_pair(SKIN_FACTOR, skinSizes[j]));
             Scenario_t scenario(kernelName, factors);
-            readdy::log::console()->warn("this places us at {} particles", scenario.getParticleNumber());
+            readdy::log::warn("this places us at {} particles", scenario.getParticleNumber());
             scenario.template perform<ReactionScheduler>(10, true);
             timeForces[i][j] = scenario.getTimeForces();
             timeIntegrator[i][j] = scenario.getTimeIntegrator();
@@ -589,7 +589,7 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
 
 /*template<typename Scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
 void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) {
-    readdy::log::console()->debug("using reduced numbers: {}", reducedNumbers);
+    readdy::log::debug("using reduced numbers: {}", reducedNumbers);
     std::vector<double> numbers = {80};
     std::vector<double> skinSizes = {1.0};
 
@@ -608,13 +608,13 @@ void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) 
 
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
-            readdy::log::console()->error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j, skinSizesSize, skinSizes[j]);
+            readdy::log::error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j, skinSizesSize, skinSizes[j]);
             std::map<std::string, double> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
             factors.emplace(std::make_pair(SKIN_FACTOR, skinSizes[j]));
             Scenario_t scenario(kernelName, factors);
-            readdy::log::console()->warn("this places us at {} particles", scenario.getParticleNumber());
+            readdy::log::warn("this places us at {} particles", scenario.getParticleNumber());
             scenario.template perform<ReactionScheduler>(20, true);
             timeForces[i][j] = scenario.getTimeForces();
             timeIntegrator[i][j] = scenario.getTimeIntegrator();

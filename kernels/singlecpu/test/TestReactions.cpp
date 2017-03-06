@@ -56,7 +56,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_t &t) {
-        readdy::log::console()->trace("got n particles={}", t.size());
+        readdy::log::trace("got n particles={}", t.size());
     });
     auto connection = kernel->connectObservable(pp_obs.get());
 
@@ -174,11 +174,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
             case 1: {
                 EXPECT_TRUE(particles.size() == 2 || particles.size() == 1);
                 if (particles.size() == 2) {
-                    readdy::log::console()->debug("------> conversion happened");
+                    readdy::log::debug("------> conversion happened");
                     EXPECT_TRUE(containsB);
                     EXPECT_TRUE(containsD);
                 } else {
-                    readdy::log::console()->debug("------> fusion happened");
+                    readdy::log::debug("------> fusion happened");
                     EXPECT_TRUE(containsE);
                 }
                 break;

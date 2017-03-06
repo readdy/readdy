@@ -126,7 +126,7 @@ void CPUNeighborList::setupCells() {
         CPUNeighborList::maxCutoff = maxCutoff;
         CPUNeighborList::maxCutoffPlusSkin = maxCutoff + skin_size;
 
-        log::console()->debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size,
+        log::debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size,
                               maxCutoff + skin_size);
 
         if (maxCutoff > 0) {
@@ -137,7 +137,7 @@ void CPUNeighborList::setupCells() {
                 if (nCells[i] == 0) nCells[i] = 1;
                 cellSize[i] = simBoxSize[i] / static_cast<double>(nCells[i]);
             }
-            log::console()->debug("resulting cell size = {}", cellSize);
+            log::debug("resulting cell size = {}", cellSize);
 
             for (cell_index i = 0; i < nCells[0]; ++i) {
                 for (cell_index j = 0; j < nCells[1]; ++j) {
@@ -284,7 +284,7 @@ void CPUNeighborList::fillCells() {
                                     auto merge_begin = indices_begin;
                                     auto merge_mid = std::min(indices_begin + (k/2) * grainSize, indices.end());
                                     auto merge_end = std::min(indices_begin + k * grainSize, indices.end());
-                                    readdy::log::console()->debug("k={}, thread {} merging range {} - {} - {}",k, thread_id, std::distance(indices.begin(), merge_begin), std::distance(indices.begin(), merge_mid), std::distance(indices.begin(), merge_end));
+                                    readdy::log::debug("k={}, thread {} merging range {} - {} - {}",k, thread_id, std::distance(indices.begin(), merge_begin), std::distance(indices.begin(), merge_mid), std::distance(indices.begin(), merge_end));
                                     if(merge_mid != merge_end) {
                                         std::inplace_merge(merge_begin, merge_mid, merge_end,
                                                            [&hilbert_indices](std::size_t i, std::size_t j) {
@@ -329,7 +329,7 @@ void CPUNeighborList::fillCells() {
                                 bitmask_t coords[3]{std::get<0>(ijk), std::get<1>(ijk), std::get<2>(ijk)};
                                 auto newHilbert = static_cast<unsigned int>(hilbert_c2i(3, CHAR_BIT, coords));
                                 if(newHilbert < lastHilbert) {
-                                    log::console()->critical("mist1: {} < {}", newHilbert, lastHilbert);
+                                    log::critical("mist1: {} < {}", newHilbert, lastHilbert);
                                 }
                                 lastHilbert = newHilbert;
                             }
@@ -355,7 +355,7 @@ void CPUNeighborList::fillCells() {
                         if(newHilbert >= lastHilbert) {
                             // ok!
                         } else {
-                            log::console()->critical("mist2: {} < {}", newHilbert, lastHilbert);
+                            log::critical("mist2: {} < {}", newHilbert, lastHilbert);
                         }
                         lastHilbert = newHilbert;
                     }
@@ -409,7 +409,7 @@ void CPUNeighborList::fillCells() {
             const double fraction = 8.;
             if (dirtyCells.size() > cells.size() * fraction) {
                 initialSetup = true;
-                log::console()->debug("had more than {}% dirty cells, recreate neighbor list", fraction * 100);
+                log::debug("had more than {}% dirty cells, recreate neighbor list", fraction * 100);
                 setupCells();
                 fillCells();
                 initialSetup = false;
@@ -479,7 +479,7 @@ void CPUNeighborList::fillCells() {
                 std::vector<thd::scoped_thread> threads;
                 threads.reserve(config->nThreads());
 
-                // log::console()->warn("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
+                // log::warn("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
 
                 {
                     auto it_cells = dirtyCells.begin();
@@ -494,7 +494,7 @@ void CPUNeighborList::fillCells() {
             }
             {
                 // auto dirtyCells2 = findDirtyCells();
-                // log::console()->warn("dirty cells after: {}", dirtyCells2.size());
+                // log::warn("dirty cells after: {}", dirtyCells2.size());
             }
         }
     }
@@ -512,7 +512,7 @@ void CPUNeighborList::create() {
     } catch (const ParticleTravelledTooFarException &) {
         initialSetup = true;
         redoFillCells = true;
-        log::console()->warn("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
+        log::warn("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
                                      "it might have left its cell linked-list cell. This should, if at all, only happen "
                                      "very rarely and triggers a complete rebuild of the neighbor list.",
                              maxCutoff, skin_size, maxCutoffPlusSkin);
@@ -533,7 +533,7 @@ CPUNeighborList::Cell *CPUNeighborList::getCell(signed_cell_index i, signed_cell
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("CPUNeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
+        log::critical("CPUNeighborList::getCell(nonconst): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::runtime_error("tried to get cell index that was too large");
     }
@@ -559,7 +559,7 @@ void CPUNeighborList::remove(const particle_index idx) {
                 particles.erase(find_it);
             }
         } catch (const std::out_of_range &) {
-            log::console()->error("tried to remove particle with id {} but it was not in the neighbor list", idx);
+            log::error("tried to remove particle with id {} but it was not in the neighbor list", idx);
         }
     }
 }
@@ -591,7 +591,7 @@ void CPUNeighborList::insert(const particle_index idx) {
             }
         }
     } else {
-        //log::console()->error("could not assign particle (index={}) to any cell!", data.getEntryIndex(idx));
+        //log::error("could not assign particle (index={}) to any cell!", data.getEntryIndex(idx));
     }
 }
 
@@ -645,7 +645,7 @@ const CPUNeighborList::Cell *const CPUNeighborList::getCell(CPUNeighborList::sig
     if (cix < cells.size()) {
         return &cells.at(static_cast<cell_index>(cix));
     } else {
-        log::console()->critical("CPUNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
+        log::critical("CPUNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
                                          "only {} cells.", i, j, k, cix, cells.size());
         throw std::out_of_range("tried to access an invalid cell");
     }

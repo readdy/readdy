@@ -33,7 +33,7 @@ namespace {
 
 struct TestSlot {
 
-    TestSlot(const std::function<void()> &callback) : callback(callback) {}
+    explicit TestSlot(const std::function<void()> &callback) : callback(callback) {}
 
     void operator()() {
         callback();

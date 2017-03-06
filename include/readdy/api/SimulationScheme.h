@@ -71,7 +71,7 @@ struct SimulationScheme {
         const std::size_t progressOutputStride = static_cast<std::size_t>(steps / 100);
         auto defaultContinueCriterion = [this, steps, progressOutputStride](const model::observables::time_step_type current) {
             if (progressOutputStride > 0 && (current - start) % progressOutputStride == 0) {
-                log::console()->debug("Simulation progress: {} / {} steps", (current - start), steps);
+                log::debug("Simulation progress: {} / {} steps", (current - start), steps);
             }
             return current < start + steps;
         };
@@ -119,7 +119,7 @@ public:
         }
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
-        log::console()->debug("Simulation completed");
+        log::debug("Simulation completed");
     }
 };
 
@@ -251,7 +251,7 @@ public:
 
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
-        log::console()->debug("Simulation completed");
+        log::debug("Simulation completed");
     }
 
 protected:

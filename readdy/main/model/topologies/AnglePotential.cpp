@@ -34,6 +34,8 @@
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/common/numeric.h>
 
+#define SMALL .0001
+
 namespace readdy {
 namespace model {
 namespace top {
@@ -61,14 +63,15 @@ double HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_k
     return angle.forceConstant * (theta_ijk - angle.equilibriumAngle) * (theta_ijk - angle.equilibriumAngle);
 }
 
-void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ij, const Vec3 &x_kj,
+void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk,
                                             const HarmonicAnglePotential::Angle &angle) const {
-    const double scalarProduct = x_ij * x_kj;
-    const double norm_ij_2 = x_ij * x_ij;
-    const double norm_ij = std::sqrt(norm_ij_2);
-    const double norm_kj_2 = x_kj * x_kj;
-    const double norm_kj = std::sqrt(norm_kj_2);
-    const double norm_product = norm_ij * norm_kj;
+    const double scalarProduct = x_ji * x_jk;
+    const double norm_ji_2 = x_ji * x_ji;
+    const double norm_ji = std::sqrt(norm_ji_2);
+    const double norm_jk_2 = x_jk * x_jk;
+    const double norm_jk = std::sqrt(norm_jk_2);
+    double norm_product = norm_ji * norm_jk;
+    if(norm_product < SMALL) norm_product = SMALL;
     const double inv_norm_product = 1/norm_product;
 
     double cos_theta = inv_norm_product * scalarProduct;
@@ -81,8 +84,8 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
 
     const double c = 2. * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
 
-    const Vec3 force_i = -c * cos_theta * (1/norm_ij_2) * x_ij - c * inv_norm_product * x_kj;
-    const Vec3 force_k = c * inv_norm_product * x_ij + c * cos_theta  * (1/norm_kj_2) * x_kj;
+    const Vec3 force_i = c * cos_theta * (1/norm_ji_2) * x_ji - c * inv_norm_product * x_jk;
+    const Vec3 force_k = -c * inv_norm_product * x_ji + c * cos_theta  * (1/norm_jk_2) * x_jk;
 
     f_i += force_i;
     f_j -= force_i + force_k;

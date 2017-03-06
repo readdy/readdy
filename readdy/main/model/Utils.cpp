@@ -118,7 +118,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
                     rMin = std::min(rMin, pot->getCutoffRadius());
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
                 } else {
-                    log::console()->warn("Discovered potential with cutoff radius 0.");
+                    log::warn("Discovered potential with cutoff radius 0.");
                 }
             }
         }
@@ -130,7 +130,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
             tD = .5 * rho * rho / D;
         }
         fMaxes.emplace(pI, fMax);
-        log::console()->trace(" tau for {}: {} ( xi = {}, rho = {})", context.getParticleName(pI), tD, xi, rho);
+        log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.getParticleName(pI), tD, xi, rho);
         if (tDMin == 0) {
             tDMin = tD;
         } else {
@@ -138,11 +138,11 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
         }
     }
 
-    log::console()->debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
+    log::debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
     for (auto &&pI : context.getAllRegisteredParticleTypes()) {
         double D = context.getDiffusionConstant(pI);
         double xmax = std::sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
-        log::console()->debug("\t - {}: {} + {} = {}" , context.getParticleName(pI), std::sqrt(2 * D * tDMin),
+        log::debug("\t - {}: {} + {} = {}" , context.getParticleName(pI), std::sqrt(2 * D * tDMin),
                               D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 
@@ -152,7 +152,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     if (tau_R > 0) tau = std::min(tau_R, tau);
     if (tDMin > 0) tau = std::min(tDMin, tau);
     tau /= (double) N;
-    log::console()->debug("Estimated time step: {}", tau);
+    log::debug("Estimated time step: {}", tau);
     return tau;
 }
 

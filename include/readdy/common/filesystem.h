@@ -49,7 +49,7 @@ constexpr char separator =
 
 struct dir_iterator {
 
-    dir_iterator(const std::string& path);
+    explicit dir_iterator(const std::string& path);
     bool has_next() const;
     std::string base_name() const;
     std::string next();

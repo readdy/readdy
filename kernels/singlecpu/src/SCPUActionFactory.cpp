@@ -67,13 +67,13 @@ core_actions::reactions::Gillespie *SCPUActionFactory::createGillespie(double ti
 }
 
 core_actions::reactions::GillespieParallel *SCPUActionFactory::createGillespieParallel(double) const {
-    log::console()->critical("SingleCPU kernel does not support the \"{}\" action",
+    log::critical("SingleCPU kernel does not support the \"{}\" action",
                              core_actions::getActionName<core_actions::reactions::GillespieParallel>());
     return nullptr;
 }
 
 core_actions::reactions::NextSubvolumes *SCPUActionFactory::createNextSubvolumes(double) const {
-    log::console()->critical("SingleCPU kernel does not support the \"{}\" action",
+    log::critical("SingleCPU kernel does not support the \"{}\" action",
                              core_actions::getActionName<core_actions::reactions::NextSubvolumes>());
     return nullptr;
 }

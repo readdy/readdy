@@ -63,7 +63,7 @@ PYBIND11_PLUGIN (common) {
             } else if (level == "off") {
                 return spdlog::level::off;
             }
-            readdy::log::console()->warn("Did not select a valid logging level, setting to debug!");
+            readdy::log::warn("Did not select a valid logging level, setting to debug!");
             return spdlog::level::debug;
         }());
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "

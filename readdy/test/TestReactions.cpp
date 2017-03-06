@@ -48,7 +48,7 @@ TEST_P(TestReactions, TestReactionFactory) {
     {
         // sanity check of operator<< for reactions
         const auto r = kernel->getReactionFactory().createReaction<readdy::model::reactions::Decay>("decay", 0, .1);
-        readdy::log::console()->debug("decay reaction: {}", *r);
+        readdy::log::debug("decay reaction: {}", *r);
     }
 }
 

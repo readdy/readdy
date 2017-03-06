@@ -93,9 +93,9 @@ public:
             auto& e2 = data->entry_at(particleIndices.at(angle.idx2));
             auto& e3 = data->entry_at(particleIndices.at(angle.idx3));
             const auto x_ji = d(e2.pos, e1.pos);
-            const auto x_kj = d(e3.pos, e2.pos);
-            energy += potential->calculateEnergy(x_ji, x_kj, angle);
-            potential->calculateForce(e1.force, e2.force, e3.force, x_ji, x_kj, angle);
+            const auto x_jk = d(e2.pos, e3.pos);
+            energy += potential->calculateEnergy(x_ji, x_jk, angle);
+            potential->calculateForce(e1.force, e2.force, e3.force, x_ji, x_jk, angle);
         }
         return energy;
     }

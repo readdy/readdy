@@ -23,8 +23,7 @@ requirements:
     - curl
     - python
     - h5py
-    - hdf5 ==1.8.15.1 # [osx]
-    - hdf5 >=1.8.15.1 # [not osx]
+    - hdf5
     - bzip2
     - numpy
     - vs2015_runtime  # [win]
@@ -33,8 +32,7 @@ requirements:
     - python
     - numpy
     - h5py
-    - hdf5 ==1.8.15.1 # [osx]
-    - hdf5 >=1.8.15.1 # [not osx]
+    - hdf5
     - vs2015_runtime  # [win]
 
 test:
@@ -43,5 +41,4 @@ test:
     - numpy
     - nose
     - h5py
-    - hdf5 ==1.8.15.1 # [osx]
-    - hdf5 >=1.8.15.1 # [not osx]
+    - hdf5

@@ -61,9 +61,9 @@ public:
 
     const angles_t &getAngles() const;
 
-    double calculateEnergy(const Vec3& x_ij, const Vec3& x_kj, const Angle& angle) const;
+    double calculateEnergy(const Vec3& x_ji, const Vec3& x_jk, const Angle& angle) const;
 
-    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ij, const Vec3 &x_kj, const Angle &angle) const;
+    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk, const Angle &angle) const;
 
 protected:
     angles_t angles;

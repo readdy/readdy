@@ -44,7 +44,7 @@ bool UpdateNeighborList::supportsSkin() const {
 UpdateNeighborList::UpdateNeighborList(UpdateNeighborList::Operation operation, double skinSize)
         : operation(operation), skinSize(skinSize) {
     if(skinSize >= 0 && !supportsSkin()) {
-        log::console()->warn("The selected kernel has no Verlet list implemented, thus ignoring the skin size");
+        log::warn("The selected kernel has no Verlet list implemented, thus ignoring the skin size");
     }
 }
 
@@ -68,7 +68,7 @@ void AddParticles::perform() {
     if(kernel) {
         kernel->getKernelStateModel().addParticles(particles);
     } else {
-        log::console()->critical("Tried to perform {} without providing a valid kernel!", getActionName<AddParticles>());
+        log::critical("Tried to perform {} without providing a valid kernel!", getActionName<AddParticles>());
     }
 }
 

@@ -51,7 +51,7 @@ KernelProvider &KernelProvider::getInstance() {
 
 KernelProvider::KernelProvider() : pimpl(std::make_unique<Impl>()){
     const auto path = fs::current_path();
-    log::console()->debug("current path is {}", path);
+    log::debug("current path is {}", path);
     add(readdy::kernel::scpu::SCPUKernel::name, [] {
         return new readdy::kernel::scpu::SCPUKernel();
     });
@@ -78,7 +78,7 @@ const std::string KernelProvider::getDefaultKernelDirectory() {
 }
 
 void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
-    log::console()->debug("loading kernels from directory: {}", directory);
+    log::debug("loading kernels from directory: {}", directory);
     if (fs::exists(directory) && fs::is_directory(directory)) {
         fs::dir_iterator dir(directory);
         while(dir.has_next()) {
@@ -89,10 +89,10 @@ void KernelProvider::loadKernelsFromDirectory(const std::string &directory) {
                         add(file);
                     }
                 } catch (const std::exception &e) {
-                    log::console()->warn("could not load {} due to {}", file, std::string(e.what()));
+                    log::warn("could not load {} due to {}", file, std::string(e.what()));
                 }
             } else {
-                log::console()->debug("omitted {} because it was no file.", file);
+                log::debug("omitted {} because it was no file.", file);
             }
         }
     } else {
@@ -133,20 +133,20 @@ const std::string readdy::plugin::KernelProvider::loadKernelName(const std::stri
 void KernelProvider::add(const std::string &sharedLib) {
     const auto name = loadKernelName(sharedLib);
     pimpl->factory.emplace(std::make_pair(name, [this, sharedLib, name] { // load the library
-        log::console()->debug("Trying to load kernel with name {}", name);
+        log::debug("Trying to load kernel with name {}", name);
         auto it = pimpl->libs.find(sharedLib);
         if(it != pimpl->libs.end() && !it->second.expired()) {
             auto libPtr = it->second.lock();
             // load the kernel
             readdy::model::Kernel* kernel = libPtr->load<readdy::model::Kernel*()>("createKernel")();
-            log::console()->debug("loaded kernel with name {}", kernel->getName());
+            log::debug("loaded kernel with name {}", kernel->getName());
             return kernel_ptr(kernel, {libPtr});
         } else {
             auto lib = std::make_shared<readdy::util::dll::shared_library>(sharedLib, RTLD_LAZY | RTLD_GLOBAL);
             pimpl->libs[sharedLib] = lib;
             // load the kernel
             readdy::model::Kernel* kernel = lib->load<readdy::model::Kernel*()>("createKernel")();
-            log::console()->debug("loaded kernel with name {}", kernel->getName());
+            log::debug("loaded kernel with name {}", kernel->getName());
             return kernel_ptr(kernel, {lib});
         }
     }));

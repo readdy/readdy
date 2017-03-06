@@ -76,7 +76,7 @@ public:
 protected:
     friend class readdy::model::KernelContext;
 
-    void configureForType(const KernelContext *const ctx, const unsigned int type) override;
+    void configureForType(const KernelContext *const ctx, const particle_type_type type) override;
 
     const Vec3 origin, extent, min, max;
     const double forceConstant;
@@ -110,7 +110,7 @@ public:
 protected:
     friend class readdy::model::KernelContext;
 
-    void configureForType(const KernelContext *const ctx, const unsigned int type) override;
+    void configureForType(const KernelContext *const ctx, const particle_type_type type) override;
 
     const Vec3 origin;
     const double radius, forceConstant;

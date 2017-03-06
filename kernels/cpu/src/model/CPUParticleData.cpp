@@ -111,7 +111,7 @@ void CPUParticleData::removeParticle(const CPUParticleData::particle_type &parti
             return;
         }
     }
-    log::console()->error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
+    log::error("Tried to remove particle ({}) which did not exist or was already deactivated!", particle);
 }
 
 void CPUParticleData::removeParticle(const CPUParticleData::index_t index) {
@@ -121,7 +121,7 @@ void CPUParticleData::removeParticle(const CPUParticleData::index_t index) {
         p.deactivated = true;
         // neighbors.at(index).clear();
     } else {
-        log::console()->error("Tried to remove particle (index={}), that was already removed!", index);
+        log::error("Tried to remove particle (index={}), that was already removed!", index);
     }
 }
 
@@ -132,7 +132,7 @@ CPUParticleData::index_t CPUParticleData::getNDeactivated() const {
 readdy::model::Particle CPUParticleData::getParticle(const index_t index) const {
     const auto& entry = *(entries.begin() + index);
     if(entry.deactivated) {
-        log::console()->error("Requested deactivated particle at index {}!", index);
+        log::error("Requested deactivated particle at index {}!", index);
     }
     return toParticle(entry);
 }

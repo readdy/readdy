@@ -72,13 +72,13 @@ TEST(KernelProvider, TestLoadPluginsFromDirectory) {
         pluginDir = _env.append(pluginDir);
     }
     plug::KernelProvider::getInstance().loadKernelsFromDirectory(pluginDir);
-    readdy::log::console()->debug("current path: {}", readdy::util::fs::current_path());
+    readdy::log::debug("current path: {}", readdy::util::fs::current_path());
 }
 
 TEST(KernelProvider, TestFoo) {
     auto k = plug::KernelProvider::getInstance().create("SingleCPU");
     auto name = k.get()->getName();
-    readdy::log::console()->debug("foo name: {}", name);
+    readdy::log::debug("foo name: {}", name);
 }
 
 }

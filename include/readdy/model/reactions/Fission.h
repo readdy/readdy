@@ -43,7 +43,7 @@ namespace reactions {
 class Fission : public Reaction<1> {
     using super = Reaction<1>;
 public:
-    Fission(const std::string &name, unsigned int from, unsigned int to1, unsigned int to2,
+    Fission(const std::string &name, particle_type_type from, particle_type_type to1, particle_type_type to2,
             const double rate, const double productDistance, const double weight1 = 0.5,
             const double weight2 = 0.5) :
             Reaction(name, rate, 0, productDistance, 2) {
@@ -55,7 +55,7 @@ public:
         if (sum != 1) {
             this->weight1 /= sum;
             this->weight2 /= sum;
-            log::console()->warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
+            log::warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
                                          this->weight1, this->weight2);
         }
     }

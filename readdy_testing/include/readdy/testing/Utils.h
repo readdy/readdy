@@ -60,7 +60,7 @@ inline std::string getPluginsDirectory() {
     for (auto &&key : envs) {
         env = std::getenv(key.c_str());
         if (env) {
-            log::console()->trace("Using env-variable for plugin dir prefix {}={}", key, env);
+            log::trace("Using env-variable for plugin dir prefix {}={}", key, env);
             break;
         }
     }
@@ -72,7 +72,7 @@ inline std::string getPluginsDirectory() {
         }
         pluginDir = _env.append(pluginDir);
     } else {
-        log::console()->trace("no environment variables found that indicate plugins dir.");
+        log::trace("no environment variables found that indicate plugins dir.");
     }
     return pluginDir;
 }

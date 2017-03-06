@@ -44,8 +44,8 @@ inline ObservableHandle::enableWriteToFile(readdy::io::File &file, const std::st
     if (observable) {
         observable->enableWriteToFile(file, dataSetName, flushStride);
     } else {
-        readdy::log::console()->warn("You just tried to enable write to file on a user-provided observable instance, "
-                                             "this is not supported!");
+        log::warn("You just tried to enable write to file on a user-provided observable instance, "
+                          "this is not supported!");
     }
 }
 

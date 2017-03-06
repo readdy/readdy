@@ -67,7 +67,7 @@ public:
         if(name == getActionName<EulerBDIntegrator>()) {
             return std::unique_ptr<TimeStepDependentAction>(createEulerBDIntegrator(timeStep));
         }
-        log::console()->critical("Requested integrator \"{}\" is not available, returning nullptr", name);
+        log::critical("Requested integrator \"{}\" is not available, returning nullptr", name);
         return nullptr;
     }
 
@@ -81,7 +81,7 @@ public:
         } else if(name == getActionName<reactions::UncontrolledApproximation>()) {
             return std::unique_ptr<TimeStepDependentAction>(createUncontrolledApproximation(timeStep));
         }
-        log::console()->critical("Requested reaction scheduler \"{}\" is not available, returning nullptr", name);
+        log::critical("Requested reaction scheduler \"{}\" is not available, returning nullptr", name);
         return nullptr;
     }
 

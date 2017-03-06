@@ -42,7 +42,7 @@ namespace reactions {
 class Fusion : public Reaction<2> {
     using super = Reaction<2>;
 public:
-    Fusion(const std::string &name, unsigned int from1, unsigned int from2, unsigned int to,
+    Fusion(const std::string &name, particle_type_type from1, particle_type_type from2, particle_type_type to,
            const double rate, const double eductDistance, const double weight1 = 0.5,
            const double weight2 = 0.5) :
             Reaction(name, rate, eductDistance, 0, 1){
@@ -55,7 +55,7 @@ public:
         if (sum != 1) {
             this->weight1 /= sum;
             this->weight2 /= sum;
-            log::console()->warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
+            log::warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
                                  this->weight1, this->weight2);
         }
     }

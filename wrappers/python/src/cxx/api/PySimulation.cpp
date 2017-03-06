@@ -213,6 +213,7 @@ PYBIND11_PLUGIN (api) {
                  &sim::registerWeakInteractionPiecewiseHarmonicPotential)
             .def("register_potential_box", &sim::registerBoxPotential)
             .def("register_potential_sphere", &sim::registerSpherePotential)
+            .def("register_potential_lennard_jones", &sim::registerLennardJonesPotential)
             .def("get_particle_positions", &sim::getParticlePositions)
             .def("register_observable_particle_positions", &registerObservable_Positions)
             .def("register_observable_particles", &registerObservable_Particles)

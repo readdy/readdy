@@ -79,7 +79,7 @@ core_p::reactions::GillespieParallel *CPUDActionFactory::createGillespieParallel
 }
 
 core_p::reactions::NextSubvolumes *CPUDActionFactory::createNextSubvolumes(double) const {
-    log::console()->critical("CPU_Dense kernel does not support the \"{}\" action",
+    log::critical("CPU_Dense kernel does not support the \"{}\" action",
                              core_p::getActionName<core_p::reactions::NextSubvolumes>());
     return nullptr;
 }

@@ -51,6 +51,7 @@ template<unsigned int N_EDUCTS>
 class Reaction {
 protected:
     static short counter;
+    using particle_type_type = readdy::model::Particle::type_type;
 public:
     enum ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
 
@@ -120,11 +121,11 @@ public:
         return os;
     }
 
-    const std::array<unsigned int, N_EDUCTS> &getEducts() const {
+    const std::array<particle_type_type, N_EDUCTS> &getEducts() const {
         return educts;
     }
 
-    const std::array<unsigned int, 2> &getProducts() const {
+    const std::array<particle_type_type, 2> &getProducts() const {
         return products;
     }
 
@@ -147,8 +148,8 @@ public:
 protected:
     const unsigned int _n_educts = N_EDUCTS;
     const unsigned int _n_products;
-    std::array<unsigned int, N_EDUCTS> educts;
-    std::array<unsigned int, 2> products;
+    std::array<particle_type_type, N_EDUCTS> educts;
+    std::array<particle_type_type, 2> products;
     const std::string name;
     const short id;
     const double rate;

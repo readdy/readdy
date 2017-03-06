@@ -216,7 +216,7 @@ void RadialDistribution::setBinBorders(const std::vector<double> &binBorders) {
             ++it_begin_next;
         }
     } else {
-        log::console()->warn("Argument bin borders' size should be at least two to make sense.");
+        log::warn("Argument bin borders' size should be at least two to make sense.");
     }
 
 }
@@ -238,7 +238,7 @@ void RadialDistribution::initializeDataSet(io::File &file, const std::string &da
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, centers.size()};
         const auto path = OBSERVABLES_GROUP_PATH + "/" + dataSetName;
         auto group = file.createGroup(path);
-        log::console()->debug("created group with path {}", path);
+        log::debug("created group with path {}", path);
         group.write("bin_centers", centers);
         auto dataSet = std::make_unique<Impl::writer_t>(
                 "distribution", group, fs, dims
@@ -307,7 +307,7 @@ void CenterOfMass::initializeDataSet(io::File &file, const std::string &dataSetN
         auto dataSet = std::make_unique<Impl::writer_t>(
                 dataSetName, group, fs, dims, Vec3MemoryType(), Vec3FileType()
         );
-        log::console()->debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
+        log::debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
         pimpl->ds = std::move(dataSet);
     }
 }
@@ -354,7 +354,7 @@ void NParticles::initializeDataSet(io::File &file, const std::string &dataSetNam
         auto dataSet = std::make_unique<Impl::data_set_t>(
                 dataSetName, group, fs, dims
         );
-        log::console()->debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
+        log::debug("created data set with path {}", OBSERVABLES_GROUP_PATH + "/" + dataSetName);
         pimpl->ds = std::move(dataSet);
     }
 }
@@ -437,7 +437,7 @@ void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &da
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         const auto path = OBSERVABLES_GROUP_PATH + "/" + dataSetName;
         auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
-        log::console()->debug("created data set with path {}", path);
+        log::debug("created data set with path {}", path);
         auto dataSet = std::make_unique<Impl::data_set_t>(dataSetName, group, fs, dims);
         pimpl->dataSet = std::move(dataSet);
     }
