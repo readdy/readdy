@@ -463,7 +463,7 @@ double LennardJones::calculateEnergy(const Vec3 &x_ij) const {
 void LennardJones::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
     const auto norm = x_ij.norm();
     if(norm <= cutoffDistance) {
-        force -= k * ((m - n) / (sigma * sigma)) * (std::pow(sigma / norm, m + 2) - std::pow(sigma / norm, n + 2)) *
+        force -= k * ( 1 / (sigma * sigma)) * (m * std::pow(sigma / norm, m + 2) - n * std::pow(sigma / norm, n + 2)) *
                  x_ij;
     }
 }

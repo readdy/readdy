@@ -131,31 +131,54 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
 }
 
 TEST_P(TestPotentials, TestLennardJonesRepellent) {
+    // test system where the particles are closer together than they should be, i.e., the force should be repellent
     auto& ctx = kernel->getKernelContext();
+    // one particle type A
     ctx.registerParticleType("A", 1.0, 1.0);
+    // large enough box
     ctx.setBoxSize(10, 10, 10);
-    kernel->addParticle("A", {0, 0, 0});
-    kernel->addParticle("A", {0, 0, .09});
+    // particles are aligned in the x-y plane and have a distance of .09
+    auto id0 = kernel->addParticle("A", {0, 0, 0});
+    auto id1 = kernel->addParticle("A", {0, 0, .09});
 
+    // the potential has exponents 3 and 2, a cutoff distance of 1.0, does not shift the energy, a well depth
+    // of 1.0 and a zero-interaction distance of 0.1 (particle distance < sigma ==> repellent)
     kernel->registerPotential<readdy::model::potentials::LennardJones>("A", "A", 3, 2, 1.0, false, 1.0, .1);
 
+    // record ids
+    auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
+    std::vector<readdy::model::Particle::id_type> ids;
+    pObs->setCallback([&ids](const readdy::model::observables::Particles::result_t& result) {
+        const auto& recordedIds = std::get<1>(result);
+        ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
+    });
+    auto connParticles = kernel->connectObservable(pObs.get());
+    // also record forces
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t& result) {
         collectedForces.insert(collectedForces.end(), result.begin(), result.end());
     });
     auto conn = kernel->connectObservable(fObs.get());
+    // configure the context
     ctx.configure();
 
+    // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     neighborList->perform();
+    // calc forces
     kernel->getKernelStateModel().calculateForces();
+    // give me results
     kernel->evaluateObservables(1);
 
+    // the reference values were calculated numerically
     ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 0.925925925926);
-    for(const auto& f : collectedForces) {
-        readdy::log::debug("collected force: {}", f);
-    }
+    ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
+    ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
+    readdy::model::Vec3 forceOnParticle0 {0, 0, -123.45679012};
+    readdy::model::Vec3 forceOnParticle1 {0, 0, 123.45679012};
+    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
 }
 
 INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,
