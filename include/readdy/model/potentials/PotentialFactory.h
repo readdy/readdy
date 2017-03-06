@@ -57,17 +57,6 @@ public:
                 getPotentialName<HarmonicRepulsion>(), getPotentialName<WeakInteractionPiecewiseHarmonic>()};
     }
 
-protected:
-    template<typename T, typename... Args>
-    struct get_dispatcher;
-
-    template<typename T, typename... Args>
-    struct get_dispatcher {
-        static T *impl(const PotentialFactory *self, Args &&... args) {
-            return new T(std::forward<Args>(args)...);
-        };
-    };
-
     virtual CubePotential *createCubePotential(const std::string &particleType, double forceConstant,
                                                const Vec3 &origin, const Vec3 &extent,
                                                bool considerParticleRadius) const {
@@ -105,7 +94,20 @@ protected:
         return createWeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, config{desiredDist, depth, cutoff});
     };
 
+    LennardJones* createLennardJones(const std::string& type1, const std::string& type2, unsigned int m, unsigned int n, double cutoff, bool shift, double epsilon, double sigma) const {
+        return new LennardJones(type1, type2, m, n, cutoff, shift, epsilon, sigma);
+    }
 
+protected:
+    template<typename T, typename... Args>
+    struct get_dispatcher;
+
+    template<typename T, typename... Args>
+    struct get_dispatcher {
+        static T *impl(const PotentialFactory *self, Args &&... args) {
+            return new T(std::forward<Args>(args)...);
+        };
+    };
 };
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, CubePotential)
@@ -115,6 +117,8 @@ READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SpherePotential)
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, HarmonicRepulsion)
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, WeakInteractionPiecewiseHarmonic)
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, LennardJones)
 
 }
 }

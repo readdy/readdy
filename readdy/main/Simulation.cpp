@@ -145,6 +145,15 @@ Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string&
 }
 
 const short
+Simulation::registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m,
+                                          unsigned int n, double cutoff, bool shift, double epsilon, double sigma) {
+    using potential_t = readdy::model::potentials::LennardJones;
+    ensureKernelSelected();
+    return pimpl->kernel->registerPotential<potential_t>(type1, type2, m, n, cutoff, shift, epsilon, sigma);
+}
+
+
+const short
 Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
                                  const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                                  bool considerParticleRadius) {
@@ -324,6 +333,16 @@ readdy::model::top::Topology *Simulation::addTopology(const std::vector<readdy::
     } else {
         throw std::logic_error("the selected kernel does not support topologies!");
     }
+}
+
+void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+}
+
+void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};

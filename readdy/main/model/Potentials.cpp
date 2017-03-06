@@ -420,15 +420,24 @@ WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const double desi
           noInteractionDistanceSquared(noInteractionDistance * noInteractionDistance) {}
 
 LennardJones::LennardJones(const std::string &particleType1, const std::string &particleType2,
-                                             unsigned int exponent1, unsigned int exponent2, double cutoffDistance,
-                                             bool shift, double epsilon, double sigma)
-        : super(particleType1, particleType2), exponent1(exponent1), exponent2(exponent2),
+                           unsigned int m, unsigned int n, double cutoffDistance,
+                           bool shift, double epsilon, double sigma)
+        : super(particleType1, particleType2), m(m), n(n),
           cutoffDistance(cutoffDistance), shift(shift), epsilon(epsilon), sigma(sigma),
-          cutoffDistanceSquared(cutoffDistance*cutoffDistance) { }
+          cutoffDistanceSquared(cutoffDistance * cutoffDistance) {
+    if (m <= n) {
+        throw std::invalid_argument("When constructing the LJ potential, the first exponent m=" + std::to_string(m) +
+                                    " was not greater than the second exponent n=" + std::to_string(n) + "!");
+    }
+    double dm = static_cast<double>(m);
+    double dn = static_cast<double>(n);
+    double r_min = sigma * std::pow(dn / dm, 1. / (dn - dm));
+    k = -epsilon / (std::pow(sigma / r_min, dm) - std::pow(sigma / r_min, dn));
+}
 
 void
 LennardJones::configureForTypes(const KernelContext *const context, particle_type_type type1,
-                                         particle_type_type type2) {
+                                particle_type_type type2) {
 
 }
 
@@ -439,22 +448,28 @@ std::string LennardJones::describe() {
 }
 
 std::ostream &operator<<(std::ostream &os, const LennardJones &potential) {
-    os << getPotentialName<LennardJones>() << "[exponent1: " << potential.exponent1 << " exponent2: "
-       << potential.exponent2 << " cutoffDistance: " << potential.cutoffDistance << " shift: " << potential.shift
+    os << getPotentialName<LennardJones>() << "[m: " << potential.m << " n: "
+       << potential.n << " cutoffDistance: " << potential.cutoffDistance << " shift: " << potential.shift
        << " epsilon: " << potential.epsilon << " k: " << potential.k << "]";
     return os;
 }
 
 double LennardJones::calculateEnergy(const Vec3 &x_ij) const {
-    return 0;
+    const auto r = x_ij.norm();
+    if (r > cutoffDistance) return 0;
+    else return shift ? energy(r) - energy(cutoffDistance) : energy(r);
 }
 
 void LennardJones::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
-
+    const auto norm = x_ij.norm();
+    if(norm <= cutoffDistance) {
+        force -= k * ((m - n) / (sigma * sigma)) * (std::pow(sigma / norm, m + 2) - std::pow(sigma / norm, n + 2)) *
+                 x_ij;
+    }
 }
 
 void LennardJones::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
-    energy = calculateEnergy(x_ij);
+    energy += calculateEnergy(x_ij);
     calculateForce(force, x_ij);
 }
 
@@ -465,6 +480,16 @@ double LennardJones::getCutoffRadius() const {
 double LennardJones::getCutoffRadiusSquared() const {
     return cutoffDistanceSquared;
 }
+
+double LennardJones::energy(double r) const {
+    return k * (std::pow(sigma / r, m) - std::pow(sigma / r, n));
+}
+
+double LennardJones::getMaximalForce(double kbt) const noexcept {
+    return 0;
+}
+
+LennardJones::~LennardJones() = default;
 
 
 }

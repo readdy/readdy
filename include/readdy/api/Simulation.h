@@ -234,14 +234,6 @@ public:
     const short
     registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
 
-    /**
-     * Register a potential of order 1, i.e., a potential that only depends on the position of one particle.
-     * @param ptr a const pointer to a PotentialOrder1 instance that is to be evaluated
-     * @param type the type for which the potential should be registered
-     * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
-     */
-    void registerExternalPotentialOrder1(readdy::model::potentials::PotentialOrder1 *, const std::string &);
-
     //----------------------
     // Order 2 potentials
     //----------------------
@@ -272,10 +264,36 @@ public:
             const std::string &particleTypeA, const std::string &particleTypeB, double forceConstant,
             double desiredParticleDistance, double depth, double noInteractionDistance);
 
-    void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
-        ensureKernelSelected();
-        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
-    }
+    /**
+    * Constructs a Lennard-Jones-type potential between two particle types A and B (where possibly A = B) of the form
+    *
+    * \f[
+    *      V_\text{LJ}(r) = k(\epsilon, n, m) [ (\sigma/r)^m - (\sigma/r)^n ],
+    * \f]
+    *
+    * where n,m are exponent 1 and 2, respectively, with m > n.
+    * If shift == true, it will be defined as
+    *
+    * \f[
+    *      V_{\text{LJ, shifted}}(r) = V_\text{LJ}(r) - V_\text{LJ}(r_\text{cutoff})
+    * \f]
+    *
+    * for r <= cutoffDistance, which makes a difference in energy, but not in force.
+    *
+    * @param particleType1 particle type A
+    * @param particleType2 particle type B
+    * @param m first exponent
+    * @param n second exponent
+    * @param cutoffDistance the cutoff distance
+    * @param shift if it should be shifted or not
+    * @param epsilon the well depth
+    * @param sigma the distance at which the inter-particle potential is zero
+    */
+    const short
+    registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
+                                  double cutoff, bool shift, double epsilon, double sigma);
+
+    void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr);
 
     /**
      * Register a potential of order 2, i.e., a potential that depends on the positions of a particle pair.
@@ -284,10 +302,7 @@ public:
      * @param type2 one of the two types for which this potential should be registered
      * @todo return uuid (?), this does only work for the single cpu kernel (-> descriptor language?)
      */
-    void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
-        ensureKernelSelected();
-        getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
-    };
+    void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr);
 
 
     //void registerReaction(const Reaction& reaction);

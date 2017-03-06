@@ -130,6 +130,34 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     run(*kernel, timeStep);
 }
 
+TEST_P(TestPotentials, TestLennardJonesRepellent) {
+    auto& ctx = kernel->getKernelContext();
+    ctx.registerParticleType("A", 1.0, 1.0);
+    ctx.setBoxSize(10, 10, 10);
+    kernel->addParticle("A", {0, 0, 0});
+    kernel->addParticle("A", {0, 0, .09});
+
+    kernel->registerPotential<readdy::model::potentials::LennardJones>("A", "A", 3, 2, 1.0, false, 1.0, .1);
+
+    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    std::vector<readdy::model::Vec3> collectedForces;
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t& result) {
+        collectedForces.insert(collectedForces.end(), result.begin(), result.end());
+    });
+    auto conn = kernel->connectObservable(fObs.get());
+    ctx.configure();
+
+    auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    neighborList->perform();
+    kernel->getKernelStateModel().calculateForces();
+    kernel->evaluateObservables(1);
+
+    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 0.925925925926);
+    for(const auto& f : collectedForces) {
+        readdy::log::debug("collected force: {}", f);
+    }
+}
+
 INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 }

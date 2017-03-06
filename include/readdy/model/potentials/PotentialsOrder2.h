@@ -136,25 +136,27 @@ public:
      *
      * V_LJ(r) = k(epsilon, n, m) [ (sigma/r)^m - (sigma/r)^n ],
      *
-     * where n,m are exponent 1 and 2, respectively, with n > m.
+     * where n,m are exponent 1 and 2, respectively, with m > n.
      * If shift == true, it will be defined as
      *
      * V_LJ_shifted(r) = V_LJ(r) - V_LJ(cutoffDistance)
      *
-     * for r <= cutoffDistance.
+     * for r <= cutoffDistance, which makes a difference in energy, but not in force.
      *
      * @param particleType1 particle type A
      * @param particleType2 particle type B
-     * @param exponent1 first exponent
-     * @param exponent2 second exponent
+     * @param m first exponent
+     * @param n second exponent
      * @param cutoffDistance the cutoff distance
      * @param shift if it should be shifted or not
      * @param epsilon the well depth
      * @param sigma the distance at which the inter-particle potential is zero
      */
     LennardJones(const std::string &particleType1, const std::string &particleType2,
-                          unsigned int exponent1, unsigned int exponent2, double cutoffDistance,
+                          unsigned int m, unsigned int n, double cutoffDistance,
                           bool shift, double epsilon, double sigma);
+
+    virtual ~LennardJones();
 
     virtual std::string describe() override;
 
@@ -170,11 +172,15 @@ public:
 
     virtual double getCutoffRadiusSquared() const override;
 
+    double getMaximalForce(double kbt) const noexcept override;
+
 protected:
     friend class readdy::model::KernelContext;
 
+    double energy(double r) const;
+
     virtual void configureForTypes(const KernelContext *const context, particle_type_type type1, particle_type_type type2) override;
-    unsigned int exponent1, exponent2;
+    double m, n;
     double cutoffDistance, cutoffDistanceSquared;
     bool shift; // V_LJ_trunc = V_LJ(r) - V_LJ(r_cutoff)
     double epsilon; // depth
