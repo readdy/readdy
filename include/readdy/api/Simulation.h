@@ -267,16 +267,12 @@ public:
     /**
     * Constructs a Lennard-Jones-type potential between two particle types A and B (where possibly A = B) of the form
     *
-    * \f[
-    *      V_\text{LJ}(r) = k(\epsilon, n, m) [ (\sigma/r)^m - (\sigma/r)^n ],
-    * \f]
+    * \f[ V_{\mbox{LJ}}(r) = k(\epsilon , n, m) \left[ \left(\frac{\sigma}{r}\right)^m - \left(\frac{\sigma}{r}\right)^n \right], \f]
     *
     * where n,m are exponent 1 and 2, respectively, with m > n.
     * If shift == true, it will be defined as
     *
-    * \f[
-    *      V_{\text{LJ, shifted}}(r) = V_\text{LJ}(r) - V_\text{LJ}(r_\text{cutoff})
-    * \f]
+    * \f[ V_{\mbox{LJ, shifted}}(r) = V_{\mbox{LJ}}(r) - V_{\mbox{LJ}}(r_{\mbox{cutoff}}) \f]
     *
     * for r <= cutoffDistance, which makes a difference in energy, but not in force.
     *
