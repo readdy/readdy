@@ -54,7 +54,7 @@ public:
             hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
             // data types
             io::NativeDataSetType<particle_t::type_type> particleTypeType{};
-            io::NativeDataSetType<readdy::model::observables::time_step_type> timeStepType{};
+            io::NativeDataSetType<time_step_type> timeStepType{};
             io::NativeDataSetType<particle_t::id_type> particleIdType{};
             io::NativeDataSetType<entry_t::pos_t> posType{};
             // init vec pod
@@ -76,19 +76,19 @@ public:
     TrajectoryEntryFileType() {
         using entry_t = readdy::model::observables::TrajectoryEntry;
         tid = []() -> hid_t {
-            std::size_t size = sizeof(particle_t::type_type) + sizeof(readdy::model::observables::time_step_type) +
+            std::size_t size = sizeof(particle_t::type_type) + sizeof(time_step_type) +
                                sizeof(particle_t::id_type) + 3 * sizeof(entry_t::pos_t);
             hid_t entryTypeFile = H5Tcreate(H5T_COMPOUND, size);
             // data types
             io::STDDataSetType<particle_t::type_type> particleTypeType{};
-            io::STDDataSetType<readdy::model::observables::time_step_type> timeStepType{};
+            io::STDDataSetType<time_step_type> timeStepType{};
             io::STDDataSetType<particle_t::id_type> particleIdType{};
             io::STDDataSetType<entry_t::pos_t> posType{};
             // init trajectory pod
             H5Tinsert(entryTypeFile, "typeId", 0, particleTypeType.tid);
             auto cumsize = sizeof(particle_t::type_type);
             H5Tinsert(entryTypeFile, "t", cumsize, timeStepType.tid);
-            cumsize += sizeof(readdy::model::observables::time_step_type);
+            cumsize += sizeof(time_step_type);
             H5Tinsert(entryTypeFile, "id", cumsize, particleIdType.tid);
             cumsize += sizeof(particle_t::id_type);
             H5Tinsert(entryTypeFile, "px", cumsize, posType.tid);

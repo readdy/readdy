@@ -420,7 +420,7 @@ public:
     const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
                                          const model::Vec3 &normalCoefficients, const double distanceFromPlane, const bool largerOrLess);
 
-    virtual void run(const readdy::model::observables::time_step_type steps, const double timeStep);
+    virtual void run(const time_step_type steps, const double timeStep);
 
     double getRecommendedTimeStep(unsigned int N) const;
 

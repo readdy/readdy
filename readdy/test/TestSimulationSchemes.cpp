@@ -99,7 +99,7 @@ TEST(TestSchemes, StoppingCriterionSimple) {
         counter++;
     };
     auto obsHandle = sim.registerObservable<readdy::model::observables::NParticles>(increment, 1);
-    auto shallContinue = [](readdy::model::observables::time_step_type currentStep) {
+    auto shallContinue = [](readdy::time_step_type currentStep) {
         return currentStep < 5;
     };
     auto scheme = sim.runScheme(true).configure(0.1);
@@ -123,7 +123,7 @@ TEST(TestSchemes, ComplexStoppingCriterion) {
         }
     };
     auto obsHandle = sim.registerObservable<readdy::model::observables::NParticles>(increment, 1);
-    auto shallContinue = [&doStop](readdy::model::observables::time_step_type currentStep) {
+    auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
         return !doStop;
     };
     auto scheme = sim.runScheme(true).configure(1.);

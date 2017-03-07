@@ -49,15 +49,15 @@ namespace observables {
 struct TrajectoryEntry {
     using pos_t = readdy::model::Vec3::entry_t;
 
-    TrajectoryEntry(const readdy::model::Particle &p, readdy::model::observables::time_step_type t) : typeId(
+    TrajectoryEntry(const readdy::model::Particle &p, time_step_type t) : typeId(
             p.getType()), id(p.getId()), px(p.getPos()[0]), py(p.getPos()[1]), pz(p.getPos()[2]), t(t) {}
 
     TrajectoryEntry(const model::Particle::type_type typeId, const model::Particle::id_type id,
-                    const model::Vec3 &position, readdy::model::observables::time_step_type t)
+                    const model::Vec3 &position, time_step_type t)
             : typeId(typeId), id(id), px(position[0]), py(position[1]), pz(position[2]), t(t) {}
 
     readdy::model::Particle::type_type typeId;
-    readdy::model::observables::time_step_type t;
+    time_step_type t;
     readdy::model::Particle::id_type id;
     pos_t px, py, pz;
 

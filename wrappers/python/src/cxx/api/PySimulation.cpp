@@ -249,7 +249,7 @@ PYBIND11_PLUGIN (api) {
                     );
                 }, py::arg("defaults")
             )
-            .def("run", [](sim &self, const readdy::model::observables::time_step_type steps, const double timeStep) {
+            .def("run", [](sim &self, const readdy::time_step_type steps, const double timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);
             });

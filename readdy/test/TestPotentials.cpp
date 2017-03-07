@@ -60,7 +60,7 @@ void run(readdy::model::Kernel &kernel, double timeStep) {
     auto &&nl = kernel.createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&forces = kernel.createAction<readdy::model::actions::CalculateForces>();
     nl->perform();
-    for (readdy::model::observables::time_step_type &&t = 0; t < nSteps; ++t) {
+    for (readdy::time_step_type &&t = 0; t < nSteps; ++t) {
         forces->perform();
         integrator->perform();
         nl->perform();

@@ -68,7 +68,7 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
     return pimpl->kernel->getKernelContext().getPeriodicBoundary();
 }
 
-void Simulation::run(const readdy::model::observables::time_step_type steps, const double timeStep) {
+void Simulation::run(const time_step_type steps, const double timeStep) {
     ensureKernelSelected();
     {
         log::debug("available actions: ");

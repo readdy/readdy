@@ -44,6 +44,7 @@
 #ifndef READDY_MAIN_OBSERVABLE_H
 #define READDY_MAIN_OBSERVABLE_H
 
+#include <readdy/common/common.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/common/signals.h>
 #include <readdy/common/logging.h>
@@ -57,7 +58,6 @@ namespace model {
 class Kernel;
 
 namespace observables {
-using time_step_type = unsigned long;
 using signal_type = readdy::signals::signal<void(time_step_type)>;
 using observable_type = signal_type::slot_type;
 
@@ -80,13 +80,13 @@ public:
         return stride;
     }
 
-    const observables::time_step_type &getCurrentTimeStep() const {
+    const time_step_type &getCurrentTimeStep() const {
         return t_current;
     }
 
     virtual ~ObservableBase() = default;
 
-    virtual void callback(observables::time_step_type t) {
+    virtual void callback(time_step_type t) {
         if (shouldExecuteCallback(t)) {
             firstCall = false;
             t_current = t;
@@ -94,7 +94,7 @@ public:
         }
     };
 
-    virtual bool shouldExecuteCallback(observables::time_step_type t) const {
+    virtual bool shouldExecuteCallback(time_step_type t) const {
         return (t_current != t || firstCall) && (stride == 0 || t % stride == 0);
     }
 
@@ -117,7 +117,7 @@ protected:
     unsigned int stride;
     unsigned int flushStride = 1;
     readdy::model::Kernel *const kernel;
-    observables::time_step_type t_current = 0;
+    time_step_type t_current = 0;
     bool writeToFile = false;
     bool firstCall = true;
 };
@@ -140,7 +140,7 @@ public:
         Observable::externalCallback = std::move(callbackFun);
     }
 
-    virtual void callback(observables::time_step_type t) override {
+    virtual void callback(time_step_type t) override {
         if (shouldExecuteCallback(t)) {
             ObservableBase::callback(t);
             if (writeToFile) append();
@@ -159,7 +159,7 @@ public:
     Combiner(Kernel *const kernel, unsigned int stride, ParentObs_t *... parents)
             : Observable<Res_t>(kernel, stride), parentObservables(std::forward<ParentObs_t *>(parents)...) {}
 
-    virtual void callback(observables::time_step_type t) override {
+    virtual void callback(time_step_type t) override {
         if (ObservableBase::shouldExecuteCallback(t)) {
             readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::callback(t);
@@ -183,9 +183,9 @@ protected:
     std::tuple<ParentObs_t *...> parentObservables;
 private:
     struct CallbackFunctor {
-        observables::time_step_type currentTimeStep;
+        time_step_type currentTimeStep;
 
-        CallbackFunctor(observables::time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
+        CallbackFunctor(time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
 
         template<typename T>
         void operator()(T *const obs) {

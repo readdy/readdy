@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -20,52 +20,22 @@
  ********************************************************************/
 
 
-#include <readdy/model/_internal/ObservableWrapper.h>
-#include <readdy/model/Kernel.h>
-
 /**
  * << detailed description >>
  *
- * @file ObservableWrapper.cpp
+ * @file common.h
  * @brief << brief description >>
  * @author clonker
- * @date 10.05.16
+ * @date 07.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
+#ifndef READDY_MAIN_COMMON_H
+#define READDY_MAIN_COMMON_H
 
-void readdy::model::observables::ObservableWrapper::operator()(time_step_type t) {
-    callback(t);
-}
+#include "macros.h"
 
-readdy::model::observables::ObservableWrapper::ObservableWrapper(readdy::model::Kernel *const kernel,
-                                                                 const observables::observable_type &observable,
-                                                                 unsigned int stride)
-        : ObservableBase(kernel, stride), observable(observable) {
-}
-
-void readdy::model::observables::ObservableWrapper::evaluate() {
-    observable(t_current);
-}
-
-void readdy::model::observables::ObservableWrapper::flush() {
-    throw std::runtime_error("not supported");
-}
-
-void
-readdy::model::observables::ObservableWrapper::initializeDataSet(readdy::io::File &file, const std::string &dataSetName,
-                                                                 unsigned int flushStride) {
-    throw std::runtime_error("not supported");
-}
-
-void readdy::model::observables::ObservableWrapper::append() {
-    throw std::runtime_error("not supported");
-}
-
-
-
-
-
-
-
-
-
+NAMESPACE_BEGIN(readdy)
+using time_step_type = unsigned long;
+NAMESPACE_END(readdy)
+#endif //READDY_MAIN_COMMON_H
