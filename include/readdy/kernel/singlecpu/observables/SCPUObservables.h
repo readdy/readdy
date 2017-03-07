@@ -216,6 +216,37 @@ protected:
     SCPUKernel *const kernel;
 };
 
+class SCPUReactions : public readdy::model::observables::Reactions {
+public:
+    SCPUReactions(SCPUKernel *const kernel, unsigned int stride, bool withPositions)
+            : Reactions(kernel, stride, withPositions), kernel(kernel) {}
+
+    virtual ~SCPUReactions() = default;
+
+    virtual void evaluate() override {
+        readdy::model::reactions::ReactionRecord rr1 {
+                readdy::model::reactions::ReactionType::CONVERSION, t_current
+        };
+        rr1.educts[0] = 0;
+        rr1.products[0] = 1;
+        rr1.where = std::make_tuple(true, readdy::model::Vec3(5, 5, 5));
+        readdy::model::reactions::ReactionRecord rr2 {
+                readdy::model::reactions::ReactionType::CONVERSION, t_current
+        };
+        rr2.educts[0] = 0;
+        rr2.products[0] = 1;
+        rr2.where = std::make_tuple(false, readdy::model::Vec3(1, 1, 1));
+        if(t_current % 2 == 0) {
+            result = {rr1};
+        } else {
+            result = {rr1, rr2};
+        }
+    }
+
+private:
+    SCPUKernel* const kernel;
+};
+
 template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
 class SCPURadialDistribution : public readdy::model::observables::RadialDistribution {
 public:
