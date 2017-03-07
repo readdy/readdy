@@ -33,10 +33,8 @@
 #ifndef READDY_MAIN_REACTIONRECORD_H
 #define READDY_MAIN_REACTIONRECORD_H
 
-#include <readdy/common/macros.h>
+#include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
-#include <readdy/common/optional.h>
-#include <readdy/model/observables/Observable.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -48,10 +46,11 @@ enum class ReactionType {
 
 struct ReactionRecord {
     ReactionType type;
-    observables::time_step_type when;
+    time_step_type when;
     Particle::id_type educts[2];
     Particle::id_type products[2];
-    std::experimental::optional<Vec3> where;
+    // 1st element tells if 2nd argument is initialized
+    std::tuple<bool, Vec3> where;
 };
 
 NAMESPACE_END(reactions)

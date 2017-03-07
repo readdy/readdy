@@ -107,6 +107,49 @@ inline NativeDataSetType<bool>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_H
 template<>
 inline NativeDataSetType<std::string>::NativeDataSetType() { tid = H5Tcopy(H5T_C_S1); }
 
+template<typename T, unsigned int len>
+inline NativeArrayDataSetType<T, len>::NativeArrayDataSetType() {
+    auto basic_type = NativeDataSetType<T>{};
+    hsize_t dim[1] = {len};
+    tid = H5Tarray_create(basic_type.tid, 1, dim);
+}
+
+template<typename T, unsigned int len>
+inline STDArrayDataSetType<T, len>::STDArrayDataSetType() {
+    auto basic_type = STDDataSetType<T>{};
+    hsize_t dim[1] = {len};
+    tid = H5Tarray_create(basic_type.tid, 1, dim);
+}
+
+inline NativeCompoundType::NativeCompoundType(h5::data_set_type_t tid) {
+    DataSetType::tid = tid;
+}
+
+inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size) {
+    tid = H5Tcreate(H5T_COMPOUND, size);
+}
+
+inline NativeCompoundType NativeCompoundTypeBuilder::build() {
+    return NativeCompoundType(tid);
+}
+
+inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::string &name, std::size_t offset,
+                                                 h5::data_set_type_t type) {
+    if (H5Tinsert(tid, name.c_str(), offset, type) < 0) {
+        H5Eprint(H5Eget_current_stack(), stderr);
+        throw std::runtime_error(
+                "error on inserting field " + name + " at offset " + std::to_string(offset) + " into compound type " +
+                std::to_string(tid) + "!");
+    }
+    return *this;
+}
+
+inline STDCompoundType::STDCompoundType(const NativeCompoundType &nativeType) {
+    auto copy = H5Tcopy(nativeType.tid);
+    H5Tpack(copy);
+    tid = copy;
+}
+
 }
 }
 #endif //READDY_MAIN_DATASETTYPE_BITS_H

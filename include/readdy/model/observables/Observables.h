@@ -47,6 +47,7 @@
 #include <iostream>
 #include <set>
 #include <readdy/model/Particle.h>
+#include <readdy/model/reactions/ReactionRecord.h>
 
 namespace readdy {
 namespace model {
@@ -231,6 +232,28 @@ protected:
     std::unique_ptr<Impl> pimpl;
 
     std::vector<unsigned int> typesToCount;
+};
+
+class Reactions : public Observable<std::vector<reactions::ReactionRecord>> {
+    using super = Observable<std::vector<reactions::ReactionRecord>>;
+
+public:
+    Reactions(Kernel *const kernel, unsigned int stride, bool withPositions);
+    virtual ~Reactions();
+
+    const bool& withPositions() const;
+
+    virtual void flush() override;
+
+protected:
+    virtual void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    virtual void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    bool withPositions_;
 };
 
 }

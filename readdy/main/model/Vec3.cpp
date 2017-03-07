@@ -37,44 +37,44 @@
 namespace readdy {
 namespace model {
 Vec3 &Vec3::operator+=(const Vec3 &rhs) {
-    data[0] += rhs.data[0];
-    data[1] += rhs.data[1];
-    data[2] += rhs.data[2];
+    data_[0] += rhs.data_[0];
+    data_[1] += rhs.data_[1];
+    data_[2] += rhs.data_[2];
     return *this;
 }
 
 Vec3 &Vec3::operator*=(const entry_t a) {
-    data[0] *= a;
-    data[1] *= a;
-    data[2] *= a;
+    data_[0] *= a;
+    data_[1] *= a;
+    data_[2] *= a;
     return *this;
 }
 
 Vec3 &Vec3::operator/=(const entry_t a) {
-    data[0] /= a;
-    data[1] /= a;
-    data[2] /= a;
+    data_[0] /= a;
+    data_[1] /= a;
+    data_[2] /= a;
     return *this;
 }
 
 Vec3::Vec3(const std::array<entry_t, 3> &xyz) {
-    data = std::array<entry_t, 3>(xyz);
+    data_ = std::array<entry_t, 3>(xyz);
 }
 
 Vec3::Vec3(entry_t x, entry_t y, entry_t z) {
-    data[0] = x;
-    data[1] = y;
-    data[2] = z;
+    data_[0] = x;
+    data_[1] = y;
+    data_[2] = z;
 }
 
 Vec3::entry_t Vec3::operator[](const unsigned int i) const {
     assert(0 <= i && i < 3);
-    return data[i];
+    return data_[i];
 }
 
 Vec3::entry_t &Vec3::operator[](const unsigned int i) {
     assert(0 <= i && i < 3);
-    return data[i];
+    return data_[i];
 }
 
 Vec3::Vec3() : Vec3(0, 0, 0) {
@@ -82,7 +82,7 @@ Vec3::Vec3() : Vec3(0, 0, 0) {
 }
 
 bool Vec3::operator==(const Vec3 &rhs) const {
-    return data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2];
+    return data_[0] == rhs[0] && data_[1] == rhs[1] && data_[2] == rhs[2];
 }
 
 bool operator<=(const Vec3 &lhs, const Vec3 &rhs) {
@@ -94,7 +94,7 @@ bool operator>(const Vec3 &lhs, const Vec3 &rhs) {
 }
 
 bool operator>=(const Vec3 &lhs, const Vec3 &rhs) {
-    return lhs.data[0] >= rhs.data[0] && lhs.data[1] >= rhs.data[1] && lhs.data[2] >= rhs.data[2];
+    return lhs.data_[0] >= rhs.data_[0] && lhs.data_[1] >= rhs.data_[1] && lhs.data_[2] >= rhs.data_[2];
 }
 
 bool operator<(const Vec3 &lhs, const Vec3 &rhs) {
@@ -102,7 +102,7 @@ bool operator<(const Vec3 &lhs, const Vec3 &rhs) {
 }
 
 bool Vec3::operator!=(const Vec3 &rhs) const {
-    return !(data[0] == rhs[0] && data[1] == rhs[1] && data[2] == rhs[2]);
+    return !(data_[0] == rhs[0] && data_[1] == rhs[1] && data_[2] == rhs[2]);
 }
 
 Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs) {
@@ -132,9 +132,9 @@ std::ostream &operator<<(std::ostream &os, const Vec3 &vec) {
 
 Vec3 Vec3::cross(const Vec3 &other) const {
     return {
-            data[1] * other.data[2] - data[2] * other.data[1],
-            data[2] * other.data[0] - data[0] * other.data[2],
-            data[0] * other.data[1] - data[1] * other.data[0]
+            data_[1] * other.data_[2] - data_[2] * other.data_[1],
+            data_[2] * other.data_[0] - data_[0] * other.data_[2],
+            data_[0] * other.data_[1] - data_[1] * other.data_[0]
     };
 }
 
@@ -143,22 +143,30 @@ double Vec3::norm() const {
 }
 
 double Vec3::normSquared() const {
-    return data[0]*data[0] + data[1]*data[1] + data[2]*data[2];
+    return data_[0]*data_[0] + data_[1]*data_[1] + data_[2]*data_[2];
 }
 
 Vec3 &Vec3::invertElementWise() {
-    data[0] = 1./data[0];
-    data[1] = 1./data[1];
-    data[2] = 1./data[2];
+    data_[0] = 1./data_[0];
+    data_[1] = 1./data_[1];
+    data_[2] = 1./data_[2];
     return *this;
 }
 
 Vec3 &Vec3::operator-=(const Vec3 &rhs) {
-    data[0] -= rhs.data[0];
-    data[1] -= rhs.data[1];
-    data[2] -= rhs.data[2];
+    data_[0] -= rhs.data_[0];
+    data_[1] -= rhs.data_[1];
+    data_[2] -= rhs.data_[2];
     return *this;
 }
+
+const std::array<Vec3::entry_t, 3>& Vec3::data() const {
+    return data_;
+};
+
+std::array<Vec3::entry_t, 3>& Vec3::data() {
+    return data_;
+};
 
 }
 }

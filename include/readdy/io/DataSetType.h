@@ -49,11 +49,48 @@ public:
     using type = T;
 };
 
+template<typename T, unsigned int len>
+class READDY_API NativeArrayDataSetType : public DataSetType {
+public:
+    NativeArrayDataSetType();
+    using type = T;
+    constexpr static unsigned int size = len;
+};
+
 template<typename T>
 class READDY_API STDDataSetType : public DataSetType {
 public:
     STDDataSetType();
     using type = T;
+};
+
+template<typename T, unsigned int len>
+class READDY_API STDArrayDataSetType : public DataSetType {
+public:
+    STDArrayDataSetType();
+    using type = T;
+    constexpr static unsigned int size = len;
+};
+
+class NativeCompoundTypeBuilder;
+class READDY_API NativeCompoundType : public DataSetType {
+    friend class readdy::io::NativeCompoundTypeBuilder;
+    NativeCompoundType(h5::data_set_type_t tid);
+};
+
+class NativeCompoundTypeBuilder {
+public:
+    NativeCompoundTypeBuilder(std::size_t size);
+    NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset, h5::data_set_type_t type);
+    NativeCompoundType build();
+
+private:
+    h5::data_set_type_t tid;
+};
+
+class READDY_API STDCompoundType : public DataSetType {
+public:
+    STDCompoundType(const NativeCompoundType& nativeType);
 };
 
 

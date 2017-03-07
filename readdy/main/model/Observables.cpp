@@ -505,12 +505,108 @@ void Particles::append() {
 }
 
 void Particles::flush() {
-    pimpl->dataSetTypes->flush();
-    pimpl->dataSetIds->flush();
-    pimpl->dataSetPositions->flush();
+    if(pimpl->dataSetTypes) pimpl->dataSetTypes->flush();
+    if(pimpl->dataSetIds) pimpl->dataSetIds->flush();
+    if(pimpl->dataSetPositions) pimpl->dataSetPositions->flush();
 }
 
 Particles::~Particles() = default;
+
+struct ReactionRecordPOD {
+    int reactionType;
+    time_step_type when;
+    Particle::id_type educts[2];
+    Particle::id_type products[2];
+    int contains_position;
+    Vec3::entry_t position[3];
+
+    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord& record) {
+        reactionType = static_cast<int>(record.type);
+        when = record.when;
+        std::copy(std::begin(record.educts), std::end(record.educts), std::begin(educts));
+        std::copy(std::begin(record.products), std::end(record.products), std::begin(products));
+        contains_position = std::get<0>(record.where);
+        if(contains_position) {
+            const auto& vec = std::get<1>(record.where).data();
+            std::copy(vec.begin(), vec.end(), std::begin(position));
+        }
+    }
+};
+
+class ReactionRecordPODMemoryType : public readdy::io::DataSetType {
+public:
+    ReactionRecordPODMemoryType() {
+        using entry_t = ReactionRecordPOD;
+        tid = []() -> hid_t {
+            io::NativeDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().reactionType)>::type> reactionType {};
+            io::NativeDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().when)>::type> whenType {};
+            io::NativeDataSetType<int> containsPositionType {};
+            io::NativeArrayDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().educts[0])>::type, 2> eductsType {};
+            io::NativeArrayDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().position[0])>::type, 3> positionsType{};
+            auto nativeType = io::NativeCompoundTypeBuilder(sizeof(entry_t))
+                    .insert("reaction_type", offsetof(entry_t, reactionType), reactionType.tid)
+                    .insert("when", offsetof(entry_t, when), whenType.tid)
+                    .insert("educts", offsetof(entry_t, educts), eductsType.tid)
+                    .insert("products", offsetof(entry_t, products), eductsType.tid)
+                    .insert("containsPosition", offsetof(entry_t, contains_position), containsPositionType.tid)
+                    .insert("position", offsetof(entry_t, position), positionsType.tid)
+                    .build();
+            return nativeType.tid;
+        }();
+    }
+};
+
+class ReactionRecordPODFileType : public readdy::io::DataSetType {
+public:
+    ReactionRecordPODFileType() {
+        using entry_t = ReactionRecordPOD;
+        tid = []() -> hid_t {
+            ReactionRecordPODMemoryType memType {};
+            auto file_type = H5Tcopy(memType.tid);
+            H5Tpack(file_type);
+            return file_type;
+        }();
+    }
+};
+
+
+struct Reactions::Impl {
+    using reactions_record_t = ReactionRecordPOD;
+    using reactions_writer_t = io::DataSet<reactions_record_t, true>;
+    std::unique_ptr<reactions_writer_t> writer;
+};
+
+Reactions::Reactions(Kernel *const kernel, unsigned int stride, bool withPositions) : super(kernel, stride),
+                                                                                      withPositions_(withPositions){
+
+}
+
+const bool &Reactions::withPositions() const {
+    return withPositions_;
+}
+
+void Reactions::flush() {
+    if(pimpl->writer) pimpl->writer->flush();
+}
+
+void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->writer) {
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        auto group = file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName);
+        {
+            auto dataSet = std::make_unique<Impl::reactions_writer_t>("reactions", group, fs, dims, ReactionRecordPODMemoryType(), ReactionRecordPODFileType());
+            pimpl->writer = std::move(dataSet);
+        }
+    }
+}
+
+void Reactions::append() {
+    std::vector<ReactionRecordPOD> pods (result.begin(), result.end());
+    pimpl->writer->append({1}, &pods);
+}
+
+Reactions::~Reactions() = default;
 
 
 }

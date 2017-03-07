@@ -94,8 +94,12 @@ public:
 
     friend bool operator<(const Vec3 &lhs, const Vec3 &rhs);
 
+    const std::array<entry_t, 3>& data() const;
+
+    std::array<entry_t, 3>& data();
+
 private:
-    std::array<entry_t, 3> data;
+    std::array<entry_t, 3> data_;
 };
 
 inline Vec3::entry_t operator*(const Vec3 &lhs, const Vec3 &rhs) {
