@@ -82,6 +82,10 @@ class NativeCompoundTypeBuilder {
 public:
     NativeCompoundTypeBuilder(std::size_t size);
     NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset, h5::data_set_type_t type);
+    template<typename T>
+    NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset);
+    template<typename T, unsigned int size>
+    NativeCompoundTypeBuilder& insertArray(const std::string&name, std::size_t offset);
     NativeCompoundType build();
 
 private:

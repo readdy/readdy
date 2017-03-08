@@ -144,6 +144,18 @@ inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::s
     return *this;
 }
 
+template<typename T>
+inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::string& name, std::size_t offset) {
+    NativeDataSetType<typename std::decay<T>::type> type;
+    return insert(name, offset, type.tid);
+}
+
+template<typename T, unsigned int size>
+inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insertArray(const std::string &name, std::size_t offset) {
+    io::NativeArrayDataSetType<typename std::decay<T>::type, size> type;
+    return insert(name, offset, type.tid);
+}
+
 inline STDCompoundType::STDCompoundType(const NativeCompoundType &nativeType) {
     auto copy = H5Tcopy(nativeType.tid);
     H5Tpack(copy);

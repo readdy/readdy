@@ -505,9 +505,9 @@ void Particles::append() {
 }
 
 void Particles::flush() {
-    if(pimpl->dataSetTypes) pimpl->dataSetTypes->flush();
-    if(pimpl->dataSetIds) pimpl->dataSetIds->flush();
-    if(pimpl->dataSetPositions) pimpl->dataSetPositions->flush();
+    if (pimpl->dataSetTypes) pimpl->dataSetTypes->flush();
+    if (pimpl->dataSetIds) pimpl->dataSetIds->flush();
+    if (pimpl->dataSetPositions) pimpl->dataSetPositions->flush();
 }
 
 Particles::~Particles() = default;
@@ -522,8 +522,8 @@ struct ReactionRecordPOD {
 
     ReactionRecordPOD() = default;
 
-    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord& record)
-            : reactionType(0), when(0), educts{0, 0}, products{0,0}, contains_position{0}, position{0,0,0} {
+    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord &record)
+            : reactionType(0), when(0), educts{0, 0}, products{0, 0}, contains_position{0}, position{0, 0, 0} {
         reactionType = static_cast<int>(record.type);
         when = record.when;
         educts[0] = record.educts[0];
@@ -531,8 +531,8 @@ struct ReactionRecordPOD {
         products[0] = record.products[0];
         products[1] = record.products[1];
         contains_position = std::get<0>(record.where);
-        if(contains_position) {
-            const auto& data = std::get<1>(record.where).data();
+        if (contains_position) {
+            const auto &data = std::get<1>(record.where).data();
             position[0] = data[0];
             position[1] = data[1];
             position[2] = data[2];
@@ -546,22 +546,17 @@ public:
         using entry_t = ReactionRecordPOD;
         log::debug("attempting to build memory type");
         tid = []() -> hid_t {
-            io::NativeDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().reactionType)>::type> reactionType {};
-            io::NativeDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().when)>::type> whenType {};
-            io::NativeDataSetType<int> containsPositionType {};
-            io::NativeArrayDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().educts[0])>::type, 2> eductsType {};
-            io::NativeArrayDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().position[0])>::type, 3> positionsType{};
+            auto podDummy = std::declval<ReactionRecordPOD>();
             auto nativeType = io::NativeCompoundTypeBuilder(sizeof(entry_t))
-                    .insert("reaction_type", offsetof(entry_t, reactionType), reactionType.tid)
-                    .insert("when", offsetof(entry_t, when), whenType.tid)
-                    .insert("educts", offsetof(entry_t, educts), eductsType.tid)
-                    .insert("products", offsetof(entry_t, products), eductsType.tid)
-                    .insert("containsPosition", offsetof(entry_t, contains_position), containsPositionType.tid)
-                    .insert("position", offsetof(entry_t, position), positionsType.tid)
+                    .insert<decltype(podDummy.reactionType)>("reaction_type", offsetof(entry_t, reactionType))
+                    .insert<decltype(podDummy.when)>("when", offsetof(entry_t, when))
+                    .insertArray<decltype(podDummy.educts), 2>("educts", offsetof(entry_t, educts))
+                    .insertArray<decltype(podDummy.products), 2>("products", offsetof(entry_t, products))
+                    .insert<int>("containsPosition", offsetof(entry_t, contains_position))
+                    .insertArray<decltype(podDummy.reactionType), 3>("position", offsetof(entry_t, position))
                     .build();
             return nativeType.tid;
         }();
-        log::debug("got memory type {}", tid);
     }
 };
 
@@ -570,12 +565,11 @@ public:
     ReactionRecordPODFileType() {
         using entry_t = ReactionRecordPOD;
         tid = []() -> hid_t {
-            ReactionRecordPODMemoryType memType {};
+            ReactionRecordPODMemoryType memType{};
             auto file_type = H5Tcopy(memType.tid);
             H5Tpack(file_type);
             return file_type;
         }();
-        log::debug("got file type {}", tid);
     }
 };
 
@@ -587,8 +581,7 @@ struct Reactions::Impl {
 };
 
 Reactions::Reactions(Kernel *const kernel, unsigned int stride, bool withPositions)
-        : super(kernel, stride), pimpl(std::make_unique<Impl>()), withPositions_(withPositions){
-
+        : super(kernel, stride), pimpl(std::make_unique<Impl>()), withPositions_(withPositions) {
 }
 
 const bool &Reactions::withPositions() const {
@@ -596,33 +589,37 @@ const bool &Reactions::withPositions() const {
 }
 
 void Reactions::flush() {
-    if(pimpl->writer) pimpl->writer->flush();
+    if (pimpl->writer) pimpl->writer->flush();
 }
 
 void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->writer) {
+    if (!pimpl->writer) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto group = file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName);
+        auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
         {
-            auto dataSet = std::make_unique<Impl::reactions_writer_t>("reactions", group, fs, dims, ReactionRecordPODMemoryType(), ReactionRecordPODFileType());
+            auto dataSet = std::make_unique<Impl::reactions_writer_t>(
+                    dataSetName, group, fs, dims, ReactionRecordPODMemoryType(), ReactionRecordPODFileType()
+            );
             pimpl->writer = std::move(dataSet);
         }
     }
 }
 
 void Reactions::append() {
-    std::vector<ReactionRecordPOD> pods {};
+    std::vector<ReactionRecordPOD> pods{};
     pods.reserve(result.size());
-    for(const auto& rr : result) {
+    for (const auto &rr : result) {
         auto pod = ReactionRecordPOD(rr);
         pods.push_back(std::move(pod));
     }
     log::debug("got {} pods with", pods.size());
-    for(const auto& pod : pods) {
-        log::debug(" -> position={},{},{}, contains_position={}, educts={},{}, products={},{}, reactionType={}, time={}",
-                   pod.position[0], pod.position[1], pod.position[2], pod.contains_position, pod.educts[0], pod.educts[1], pod.products[0], pod.products[1],
-                   pod.reactionType, pod.when);
+    for (const auto &pod : pods) {
+        log::debug(
+                " -> position={},{},{}, contains_position={}, educts={},{}, products={},{}, reactionType={}, time={}",
+                pod.position[0], pod.position[1], pod.position[2], pod.contains_position, pod.educts[0], pod.educts[1],
+                pod.products[0], pod.products[1],
+                pod.reactionType, pod.when);
     }
     pimpl->writer->append({1}, &pods);
 }

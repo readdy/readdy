@@ -270,7 +270,7 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(n_particles[t][0], callback_n_particles_all[t][0])
 
     def test_reactions_observable(self):
-        common.set_logging_level("trace")
+        common.set_logging_level("error")
         fname = os.path.join(self.dir, "test_observables_particle_reactions.h5")
         sim = Simulation()
         sim.set_kernel("SingleCPU")
@@ -281,7 +281,7 @@ class TestObservablesIO(unittest.TestCase):
             sim.run(1, 5)
 
         with h5py.File(fname, "r") as f2:
-            data = f2["readdy/observables/reactions/reactions"][:]
+            data = f2["readdy/observables/reactions"][:]
         common.set_logging_level("error")
 
     def test_forces_observable(self):
