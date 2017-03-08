@@ -546,14 +546,13 @@ public:
         using entry_t = ReactionRecordPOD;
         log::debug("attempting to build memory type");
         tid = []() -> hid_t {
-            auto podDummy = std::declval<ReactionRecordPOD>();
             auto nativeType = io::NativeCompoundTypeBuilder(sizeof(entry_t))
-                    .insert<decltype(podDummy.reactionType)>("reaction_type", offsetof(entry_t, reactionType))
-                    .insert<decltype(podDummy.when)>("when", offsetof(entry_t, when))
-                    .insertArray<decltype(podDummy.educts), 2>("educts", offsetof(entry_t, educts))
-                    .insertArray<decltype(podDummy.products), 2>("products", offsetof(entry_t, products))
+                    .insert<decltype(std::declval<ReactionRecordPOD>().reactionType)>("reaction_type", offsetof(entry_t, reactionType))
+                    .insert<decltype(std::declval<ReactionRecordPOD>().when)>("when", offsetof(entry_t, when))
+                    .insertArray<decltype(std::declval<ReactionRecordPOD>().educts), 2>("educts", offsetof(entry_t, educts))
+                    .insertArray<decltype(std::declval<ReactionRecordPOD>().products), 2>("products", offsetof(entry_t, products))
                     .insert<int>("containsPosition", offsetof(entry_t, contains_position))
-                    .insertArray<decltype(podDummy.reactionType), 3>("position", offsetof(entry_t, position))
+                    .insertArray<decltype(std::declval<ReactionRecordPOD>().reactionType), 3>("position", offsetof(entry_t, position))
                     .build();
             return nativeType.tid;
         }();

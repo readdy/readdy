@@ -152,7 +152,7 @@ inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::s
 
 template<typename T, unsigned int size>
 inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insertArray(const std::string &name, std::size_t offset) {
-    io::NativeArrayDataSetType<typename std::decay<T>::type, size> type;
+    io::NativeArrayDataSetType<typename std::remove_pointer<typename std::decay<T>::type>::type, size> type;
     return insert(name, offset, type.tid);
 }
 

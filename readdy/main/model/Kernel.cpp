@@ -64,6 +64,7 @@ Kernel::~Kernel() {
 }
 
 readdy::signals::scoped_connection Kernel::connectObservable(observables::ObservableBase *const observable) {
+    observable->initialize(this);
     return pimpl->signal->connect_scoped([observable](const time_step_type t) {
         observable->callback(t);
     });
