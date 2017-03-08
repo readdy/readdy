@@ -136,6 +136,7 @@ void SCPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
+    stateModel.reactionRecords().clear();
     auto &data = *stateModel.getParticleData();
     auto &nl = *stateModel.getNeighborList();
     auto events = findEvents(kernel, timeStep, true);
@@ -155,7 +156,11 @@ void SCPUUncontrolledApproximation::perform() {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
                     auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                    performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                    if(ctx.recordReactionsWithPositions()) {
+                        performReaction<true>(stateModel, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                    } else {
+                        performReaction<false>(stateModel, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                    }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1) {
                             _it2->cumulativeRate = 1;
@@ -163,7 +168,11 @@ void SCPUUncontrolledApproximation::perform() {
                     }
                 } else {
                     auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                    performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                    if(ctx.recordReactionsWithPositions()) {
+                        performReaction<true>(stateModel, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                    } else {
+                        performReaction<false>(stateModel, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                    }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
                             _it2->idx1 == event.idx2 || _it2->idx2 == event.idx2) {
@@ -253,6 +262,7 @@ data_t::update_t handleEventsGillespie(
     if (!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
         const auto &fixPos = ctx.getFixPositionFun();
+        auto &model = kernel->getSCPUKernelStateModel();
         const auto data = kernel->getSCPUKernelStateModel().getParticleData();
         /**
          * Handle gathered reaction events
@@ -282,10 +292,18 @@ data_t::update_t handleEventsGillespie(
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
                             auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                            performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                            if(ctx.recordReactionsWithPositions()) {
+                                performReaction<true>(model, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                            } else {
+                                performReaction<false>(model, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                            }
                         } else {
                             auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                            performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                            if(ctx.recordReactionsWithPositions()) {
+                                performReaction<true>(model, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                            } else {
+                                performReaction<false>(model, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                            }
                         }
                     }
                     /**
@@ -346,6 +364,7 @@ data_t::update_t handleEventsGillespie(
 void SCPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
     auto &stateModel = kernel->getSCPUKernelStateModel();
+    stateModel.reactionRecords().clear();
     auto data = stateModel.getParticleData();
     const auto &dist = ctx.getDistSquaredFun();
     const auto &fixPos = ctx.getFixPositionFun();

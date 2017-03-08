@@ -137,25 +137,6 @@ TEST_P(TestObservables, TestForcesObservable) {
     }
 }
 
-TEST(TestObservablesTmp, ReactionsSCPU) {
-    using namespace readdy;
-    io::File f {"./hierstehtwas", io::File::Action::CREATE, io::File::Flag::OVERWRITE};
-    auto scpu = plugin::KernelProvider::getInstance().create("SingleCPU");
-    auto obs = scpu->createObservable<model::observables::Reactions>(1, true);
-    obs->setCallback([](const model::observables::Reactions::result_t& result) {
-        for(const auto& rr : result) {
-            log::debug("got reaction record {}", rr);
-        }
-    });
-    obs->enableWriteToFile(f, "reactions", 3);
-    auto connection = scpu->connectObservable(obs.get());
-    log::console()->debug("1");
-    scpu->evaluateObservables(1);
-    log::console()->debug("2");
-    scpu->evaluateObservables(2);
-    f.close();
-}
-
 INSTANTIATE_TEST_CASE_P(TestObservables, TestObservables,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 }

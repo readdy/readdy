@@ -517,26 +517,22 @@ struct ReactionRecordPOD {
     time_step_type when;
     Particle::id_type educts[2];
     Particle::id_type products[2];
-    int contains_position;
     Vec3::entry_t position[3];
 
     ReactionRecordPOD() = default;
 
-    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord &record)
-            : reactionType(0), when(0), educts{0, 0}, products{0, 0}, contains_position{0}, position{0, 0, 0} {
+    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord &record, readdy::time_step_type t)
+            : reactionType(0), when(0), educts{0, 0}, products{0, 0}, position{0, 0, 0} {
         reactionType = static_cast<int>(record.type);
-        when = record.when;
+        when = t;
         educts[0] = record.educts[0];
         educts[1] = record.educts[1];
         products[0] = record.products[0];
         products[1] = record.products[1];
-        contains_position = std::get<0>(record.where);
-        if (contains_position) {
-            const auto &data = std::get<1>(record.where).data();
-            position[0] = data[0];
-            position[1] = data[1];
-            position[2] = data[2];
-        }
+        const auto &data = record.where.data();
+        position[0] = data[0];
+        position[1] = data[1];
+        position[2] = data[2];
     }
 };
 
@@ -551,7 +547,6 @@ public:
                     .insert<decltype(std::declval<ReactionRecordPOD>().when)>("when", offsetof(entry_t, when))
                     .insertArray<decltype(std::declval<ReactionRecordPOD>().educts), 2>("educts", offsetof(entry_t, educts))
                     .insertArray<decltype(std::declval<ReactionRecordPOD>().products), 2>("products", offsetof(entry_t, products))
-                    .insert<int>("containsPosition", offsetof(entry_t, contains_position))
                     .insertArray<decltype(std::declval<ReactionRecordPOD>().reactionType), 3>("position", offsetof(entry_t, position))
                     .build();
             return nativeType.tid;
@@ -609,18 +604,14 @@ void Reactions::append() {
     std::vector<ReactionRecordPOD> pods{};
     pods.reserve(result.size());
     for (const auto &rr : result) {
-        auto pod = ReactionRecordPOD(rr);
+        auto pod = ReactionRecordPOD(rr, t_current);
         pods.push_back(std::move(pod));
     }
-    log::debug("got {} pods with", pods.size());
-    for (const auto &pod : pods) {
-        log::debug(
-                " -> position={},{},{}, contains_position={}, educts={},{}, products={},{}, reactionType={}, time={}",
-                pod.position[0], pod.position[1], pod.position[2], pod.contains_position, pod.educts[0], pod.educts[1],
-                pod.products[0], pod.products[1],
-                pod.reactionType, pod.when);
-    }
     pimpl->writer->append({1}, &pods);
+}
+
+void Reactions::initialize(Kernel *const kernel) {
+    kernel->getKernelContext().recordReactionsWithPositions() = true;
 }
 
 Reactions::~Reactions() = default;

@@ -310,6 +310,20 @@ public:
      */
     const rdy_reverse_type_mapping generateReverseTypeMapping() const;
 
+    /**
+     * Returns whether reactions with positions shall be recorded in the state model, then obtainable by
+     * the readdy::model::observables::Reactions observable.
+     * @return whether reactions shall be recorded in the state model, by default false
+     */
+    const bool& recordReactionsWithPositions() const;
+
+    /**
+     * Returns whether reactions with positions shall be recorded in the state model, then obtainable by
+     * the readdy::model::observables::Reactions observable.
+     * @return whether reactions shall be recorded in the state model, by default false
+     */
+    bool& recordReactionsWithPositions();
+
     // ctor and dtor
     KernelContext();
 
@@ -348,6 +362,9 @@ private:
     rdy_pot_2_registry potentialO2RegistryExternal {};
 
     std::unique_ptr<compartment_registry> compartmentRegistry = std::make_unique<compartment_registry>();
+
+    // here come horrible flags
+    bool recordReactionsWithPositions_ = false;
 };
 
 }

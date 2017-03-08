@@ -246,6 +246,8 @@ public:
     virtual void flush() override;
 
 protected:
+    virtual void initialize(Kernel *const kernel) override;
+
     virtual void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     virtual void append() override;

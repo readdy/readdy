@@ -49,11 +49,9 @@ inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionTy
 
 struct ReactionRecord {
     ReactionType type = ReactionType::DECAY;
-    time_step_type when = 0;
     Particle::id_type educts[2] = {0, 0};
     Particle::id_type products[2] = {0, 0};
-    // 1st element tells if 2nd argument is initialized
-    std::tuple<bool, Vec3> where = std::make_tuple(false, Vec3(0,0,0));
+    Vec3 where {0, 0, 0};
 
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
 };

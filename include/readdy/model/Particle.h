@@ -78,6 +78,8 @@ public:
 
     friend std::ostream &operator<<(std::ostream &, const Particle &);
 
+    static id_type nextId();
+
 protected:
     Vec3 pos;
     type_type type;

@@ -513,6 +513,14 @@ const ParticleTypeInfo &KernelContext::getParticleTypeInfo(const particle_t::typ
     return pimpl->particleInfo.at(type);
 }
 
+const bool &KernelContext::recordReactionsWithPositions() const {
+    return recordReactionsWithPositions_;
+}
+
+bool &KernelContext::recordReactionsWithPositions() {
+    return recordReactionsWithPositions_;
+}
+
 KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 
 KernelContext::KernelContext(KernelContext &&rhs) = default;

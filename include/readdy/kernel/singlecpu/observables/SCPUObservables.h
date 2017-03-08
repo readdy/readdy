@@ -229,13 +229,11 @@ public:
         };
         rr1.educts[0] = 0;
         rr1.products[0] = 1;
-        rr1.where = std::make_tuple(true, readdy::model::Vec3(5, 5, 5));
         readdy::model::reactions::ReactionRecord rr2 {
                 readdy::model::reactions::ReactionType::CONVERSION, t_current
         };
         rr2.educts[0] = 0;
         rr2.products[0] = 1;
-        rr2.where = std::make_tuple(false, readdy::model::Vec3(1, 1, 1));
         result.clear();
         result.push_back(rr1);
         if(t_current % 2 != 0) {

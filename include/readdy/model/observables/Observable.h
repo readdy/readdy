@@ -29,7 +29,7 @@
  *
  * Observable derives from ObservableBase and is templateized to a certain result type.
  *
- * Combiner takes two Observables and combines their results into a third result to avoid duplication of
+ * Combiner takes two or more Observables and combines their results into a third result to avoid duplication of
  * work.
  *
  * The callback methods are responsible for triggering the evaluation and forwarding the results to the external callback

@@ -51,7 +51,7 @@ std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
 }
 
 std::ostream& operator<<(std::ostream& os, const ReactionRecord& record) {
-    os << "ReactionRecord[type: " << record.type << " when: " << record.when;
+    os << "ReactionRecord[type: " << record.type;
     switch (record.type) {
         case ReactionType::DECAY:{
             os << " educt: " << record.educts[0];
@@ -75,11 +75,7 @@ std::ostream& operator<<(std::ostream& os, const ReactionRecord& record) {
             break;
         }
     }
-    if(std::get<0>(record.where)) {
-        os << " location: did not contain that information";
-    } else {
-        os << " location: " << std::get<1>(record.where);
-    }
+    os << " location: " << record.where;
     return os;
 }
 

@@ -38,31 +38,59 @@ namespace scpu {
 namespace actions {
 namespace reactions {
 
+using model_t = readdy::kernel::scpu::SCPUStateModel;
 using data_t = readdy::kernel::scpu::model::SCPUParticleData;
 using reaction_type = readdy::model::reactions::Reaction<1>::ReactionType;
 using ctx_t = readdy::model::KernelContext;
 using fix_pos = ctx_t::fix_pos_fun;
 
-template<typename Reaction>
-void performReaction(data_t &data, data_t::index_t idx1, data_t::index_t idx2, data_t::entries_update_t &newEntries,
-                     std::vector<data_t::index_t> &decayedEntries, Reaction *reaction, const fix_pos &fixPos) {
+template<bool recordPositions, typename Reaction>
+void performReaction(model_t &model, data_t::index_t idx1, data_t::index_t idx2,
+                     data_t::entries_update_t &newEntries, std::vector<data_t::index_t> &decayedEntries,
+                     Reaction *reaction, const fix_pos &fixPos) {
+    auto& data = *model.getParticleData();
     switch (reaction->getType()) {
         case reaction_type::Decay: {
             decayedEntries.push_back(idx1);
+            if(recordPositions) {
+                const auto& entry = data.entry_at(idx1);
+                readdy::model::reactions::ReactionRecord rr {
+                        readdy::model::reactions::ReactionType::DECAY, {entry.id, 0}, {0, 0}, entry.pos};
+                model.reactionRecords().push_back(std::move(rr));
+            }
             break;
         }
         case reaction_type::Conversion: {
-            data.entry_at(idx1).type = reaction->getProducts()[0];
+            auto& entry = data.entry_at(idx1);
+            entry.type = reaction->getProducts()[0];
+            const auto newId = readdy::model::Particle::nextId();
+            if(recordPositions) {
+                readdy::model::reactions::ReactionRecord rr {
+                        readdy::model::reactions::ReactionType::CONVERSION, {entry.id, 0}, {newId, 0}, entry.pos
+                };
+                model.reactionRecords().push_back(std::move(rr));
+            }
+            entry.id = newId;
             break;
         }
         case reaction_type::Enzymatic: {
             auto &entry1 = data.entry_at(idx1);
             if (entry1.type == reaction->getEducts()[1]) {
                 // p1 is the catalyst
-                data.entry_at(idx2).type = reaction->getProducts()[0];
+                auto &entry2 = data.entry_at(idx2);
+                entry2.type = reaction->getProducts()[0];
+                const auto newId = readdy::model::Particle::nextId();
+                if(recordPositions) {
+                    readdy::model::reactions::ReactionRecord rr {
+                            readdy::model::reactions::ReactionType::ENZYMATIC, {entry1.id, entry2.id}, {entry1.id, newId}, (entry1.pos + entry2.pos)/2.
+                    };
+                    model.reactionRecords().push_back(std::move(rr));
+                }
             } else {
                 // p2 is the catalyst
+                auto& entry2 = data.entry_at(idx2);
                 entry1.type = reaction->getProducts()[0];
+                // todo: record also _which_ reaction it was (as in.. the id in the context or its name)
             }
             break;
         }
