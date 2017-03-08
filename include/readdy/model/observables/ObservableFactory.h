@@ -101,6 +101,10 @@ public:
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
+    virtual Reactions * createReactions(unsigned int stride, bool recordPosition) const {
+        throw std::runtime_error("should be overridden");
+    }
+
 protected:
     Kernel *const kernel;
 
@@ -130,6 +134,8 @@ READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(RadialDistribution)
 READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Particles)
 
 READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(MeanSquaredDisplacement)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Reactions)
 
 }
 }

@@ -57,6 +57,15 @@ void registerPotentialOrder2(sim &self, pot2 *potential) {
     self.registerPotentialOrder2(potential);
 }
 
+obs_handle_t registerObservable_Reactions(sim& self, unsigned int stride, py::object callback, bool recordPositions) {
+    if(callback.is_none()) {
+        return self.registerObservable<readdy::model::observables::Reactions>(stride, recordPositions);
+    } else {
+        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Reactions::result_t)>(callback);
+        return self.registerObservable<readdy::model::observables::Reactions>(std::move(pyFun), stride, recordPositions);
+    }
+}
+
 obs_handle_t
 registerObservable_Positions(sim &self, unsigned int stride, pybind11::object callbackFun,
                              std::vector<std::string> types) {
@@ -222,6 +231,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_observable_center_of_mass", &registerObservable_CenterOfMass)
             .def("register_observable_n_particles", &registerObservable_NParticles)
             .def("register_observable_forces", &registerObservable_ForcesObservable)
+            .def("register_observable_reactions", &registerObservable_Reactions)
             .def("deregister_observable", [](sim& self, const obs_handle_t& handle) {
                 self.deregisterObservable(handle.getId());
             })

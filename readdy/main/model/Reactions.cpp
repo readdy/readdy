@@ -30,6 +30,7 @@
  */
 
 #include "readdy/model/reactions/Reaction.h"
+#include "readdy/model/reactions/ReactionRecord.h"
 
 namespace readdy {
 namespace model {
@@ -37,6 +38,50 @@ namespace reactions {
 
 template<> short Reaction<1>::counter = 0;
 template<> short Reaction<2>::counter = 0;
+
+std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
+    switch (reactionType) {
+        case ReactionType::DECAY: os << "Decay"; break;
+        case ReactionType::CONVERSION: os << "Conversion"; break;
+        case ReactionType::FUSION: os << "Fusion"; break;
+        case ReactionType::FISSION: os << "Fission"; break;
+        case ReactionType::ENZYMATIC: os << "Enzymatic"; break;
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const ReactionRecord& record) {
+    os << "ReactionRecord[type: " << record.type << " when: " << record.when;
+    switch (record.type) {
+        case ReactionType::DECAY:{
+            os << " educt: " << record.educts[0];
+            break;
+        }
+        case ReactionType::CONVERSION: {
+            os << " educt: " << record.educts[0] << " product: " << record.products[0];
+            break;
+        }
+        case ReactionType::FUSION: {
+            os << " educts: " << record.educts[0] << "," << record.educts[1] << " product: " << record.products[0];
+            break;
+        }
+        case ReactionType::FISSION: {
+            os << " educt: " << record.educts[0] << " products: " << record.products[0] << "," << record.products[1];
+            break;
+        }
+        case ReactionType::ENZYMATIC: {
+            os << " educts: " << record.educts[0] << "," << record.educts[1];
+            os << " products: " << record.products[0] << "," << record.products[1];
+            break;
+        }
+    }
+    if(std::get<0>(record.where)) {
+        os << " location: did not contain that information";
+    } else {
+        os << " location: " << std::get<1>(record.where);
+    }
+    return os;
+}
 
 }
 }

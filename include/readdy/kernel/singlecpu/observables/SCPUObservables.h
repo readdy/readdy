@@ -236,10 +236,10 @@ public:
         rr2.educts[0] = 0;
         rr2.products[0] = 1;
         rr2.where = std::make_tuple(false, readdy::model::Vec3(1, 1, 1));
-        if(t_current % 2 == 0) {
-            result = {rr1};
-        } else {
-            result = {rr1, rr2};
+        result.clear();
+        result.push_back(rr1);
+        if(t_current % 2 != 0) {
+            result.push_back(rr2);
         }
     }
 

@@ -35,6 +35,7 @@
 
 #include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
+#include <spdlog/fmt/ostr.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -44,13 +45,17 @@ enum class ReactionType {
     DECAY = 0, CONVERSION, FUSION, FISSION, ENZYMATIC
 };
 
+inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType);
+
 struct ReactionRecord {
-    ReactionType type;
-    time_step_type when;
-    Particle::id_type educts[2];
-    Particle::id_type products[2];
+    ReactionType type = ReactionType::DECAY;
+    time_step_type when = 0;
+    Particle::id_type educts[2] = {0, 0};
+    Particle::id_type products[2] = {0, 0};
     // 1st element tells if 2nd argument is initialized
-    std::tuple<bool, Vec3> where;
+    std::tuple<bool, Vec3> where = std::make_tuple(false, Vec3(0,0,0));
+
+    friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
 };
 
 NAMESPACE_END(reactions)

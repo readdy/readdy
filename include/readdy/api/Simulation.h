@@ -165,6 +165,7 @@ public:
      * Gives all available predefined observable names.
      * @return a vector containing all predefined observable names
      * @todo implement this (changed the factory type to constructor+dispatcher)
+     * @fixme
      */
     std::vector<std::string> getAvailableObservables();
 

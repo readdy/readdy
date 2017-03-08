@@ -33,6 +33,7 @@
 #include <readdy/api/Simulation.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
+#include <readdy/io/File.h>
 
 namespace m = readdy::model;
 
@@ -134,6 +135,25 @@ TEST_P(TestObservables, TestForcesObservable) {
         EXPECT_TRUE(resC[0] == force0 || resC[1] == force0);
         EXPECT_TRUE(resC[1] == force1 || resC[0] == force1);
     }
+}
+
+TEST(TestObservablesTmp, ReactionsSCPU) {
+    using namespace readdy;
+    io::File f {"./hierstehtwas", io::File::Action::CREATE, io::File::Flag::OVERWRITE};
+    auto scpu = plugin::KernelProvider::getInstance().create("SingleCPU");
+    auto obs = scpu->createObservable<model::observables::Reactions>(1, true);
+    obs->setCallback([](const model::observables::Reactions::result_t& result) {
+        for(const auto& rr : result) {
+            log::debug("got reaction record {}", rr);
+        }
+    });
+    obs->enableWriteToFile(f, "reactions", 3);
+    auto connection = scpu->connectObservable(obs.get());
+    log::console()->debug("1");
+    scpu->evaluateObservables(1);
+    log::console()->debug("2");
+    scpu->evaluateObservables(2);
+    f.close();
 }
 
 INSTANTIATE_TEST_CASE_P(TestObservables, TestObservables,

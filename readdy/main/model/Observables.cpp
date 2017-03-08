@@ -520,15 +520,22 @@ struct ReactionRecordPOD {
     int contains_position;
     Vec3::entry_t position[3];
 
-    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord& record) {
+    ReactionRecordPOD() = default;
+
+    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord& record)
+            : reactionType(0), when(0), educts{0, 0}, products{0,0}, contains_position{0}, position{0,0,0} {
         reactionType = static_cast<int>(record.type);
         when = record.when;
-        std::copy(std::begin(record.educts), std::end(record.educts), std::begin(educts));
-        std::copy(std::begin(record.products), std::end(record.products), std::begin(products));
+        educts[0] = record.educts[0];
+        educts[1] = record.educts[1];
+        products[0] = record.products[0];
+        products[1] = record.products[1];
         contains_position = std::get<0>(record.where);
         if(contains_position) {
-            const auto& vec = std::get<1>(record.where).data();
-            std::copy(vec.begin(), vec.end(), std::begin(position));
+            const auto& data = std::get<1>(record.where).data();
+            position[0] = data[0];
+            position[1] = data[1];
+            position[2] = data[2];
         }
     }
 };
@@ -537,6 +544,7 @@ class ReactionRecordPODMemoryType : public readdy::io::DataSetType {
 public:
     ReactionRecordPODMemoryType() {
         using entry_t = ReactionRecordPOD;
+        log::debug("attempting to build memory type");
         tid = []() -> hid_t {
             io::NativeDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().reactionType)>::type> reactionType {};
             io::NativeDataSetType<std::remove_reference<decltype(std::declval<ReactionRecordPOD>().when)>::type> whenType {};
@@ -553,6 +561,7 @@ public:
                     .build();
             return nativeType.tid;
         }();
+        log::debug("got memory type {}", tid);
     }
 };
 
@@ -566,6 +575,7 @@ public:
             H5Tpack(file_type);
             return file_type;
         }();
+        log::debug("got file type {}", tid);
     }
 };
 
@@ -576,8 +586,8 @@ struct Reactions::Impl {
     std::unique_ptr<reactions_writer_t> writer;
 };
 
-Reactions::Reactions(Kernel *const kernel, unsigned int stride, bool withPositions) : super(kernel, stride),
-                                                                                      withPositions_(withPositions){
+Reactions::Reactions(Kernel *const kernel, unsigned int stride, bool withPositions)
+        : super(kernel, stride), pimpl(std::make_unique<Impl>()), withPositions_(withPositions){
 
 }
 
@@ -602,7 +612,18 @@ void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName
 }
 
 void Reactions::append() {
-    std::vector<ReactionRecordPOD> pods (result.begin(), result.end());
+    std::vector<ReactionRecordPOD> pods {};
+    pods.reserve(result.size());
+    for(const auto& rr : result) {
+        auto pod = ReactionRecordPOD(rr);
+        pods.push_back(std::move(pod));
+    }
+    log::debug("got {} pods with", pods.size());
+    for(const auto& pod : pods) {
+        log::debug(" -> position={},{},{}, contains_position={}, educts={},{}, products={},{}, reactionType={}, time={}",
+                   pod.position[0], pod.position[1], pod.position[2], pod.contains_position, pod.educts[0], pod.educts[1], pod.products[0], pod.products[1],
+                   pod.reactionType, pod.when);
+    }
     pimpl->writer->append({1}, &pods);
 }
 

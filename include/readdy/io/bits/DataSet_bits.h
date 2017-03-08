@@ -112,6 +112,7 @@ inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, co
         if(dataSetHandle < 0) {
             log::error("Error on creating data set {}", dataSetHandle);
             H5Eprint (H5Eget_current_stack(), stderr);
+            throw std::runtime_error("Error on creating data set " + std::to_string(dataSetHandle));
         }
         memorySpace = -1;
         if(plist >= 0 && H5Pclose(plist) < 0) {

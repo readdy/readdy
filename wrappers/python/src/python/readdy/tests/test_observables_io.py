@@ -19,6 +19,8 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 """
 @author: clonker
 """
@@ -266,6 +268,21 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(n_a_b_particles[t][0], callback_n_particles_a_b[t][0])
                 np.testing.assert_equal(n_a_b_particles[t][1], callback_n_particles_a_b[t][1])
                 np.testing.assert_equal(n_particles[t][0], callback_n_particles_all[t][0])
+
+    def test_reactions_observable(self):
+        common.set_logging_level("trace")
+        fname = os.path.join(self.dir, "test_observables_particle_reactions.h5")
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+
+        handle = sim.register_observable_reactions(1, None, True)
+        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            handle.enable_write_to_file(f, u"reactions", int(3))
+            sim.run(1, 5)
+
+        with h5py.File(fname, "r") as f2:
+            data = f2["readdy/observables/reactions/reactions"][:]
+        common.set_logging_level("error")
 
     def test_forces_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_forces.h5")
