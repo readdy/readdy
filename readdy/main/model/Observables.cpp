@@ -522,6 +522,8 @@ struct Reactions::Impl {
     using reactions_record_t = readdy::model::reactions::ReactionRecord;
     using reactions_writer_t = io::DataSet<reactions_record_t, true>;
     std::unique_ptr<reactions_writer_t> writer;
+    std::unique_ptr<readdy::io::Group> group;
+    bool firstWrite = true;
 };
 
 Reactions::Reactions(Kernel *const kernel, unsigned int stride, bool withPositions)
@@ -540,10 +542,10 @@ void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName
     if (!pimpl->writer) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto group = file.createGroup(OBSERVABLES_GROUP_PATH);
+        pimpl->group = std::make_unique<io::Group>(file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName));
         {
             auto dataSet = std::make_unique<Impl::reactions_writer_t>(
-                    dataSetName, group, fs, dims, ReactionRecordPODMemoryType(), ReactionRecordPODFileType()
+                    "records", *pimpl->group, fs, dims, ReactionRecordPODMemoryType(), ReactionRecordPODFileType()
             );
             pimpl->writer = std::move(dataSet);
         }
@@ -552,6 +554,27 @@ void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName
 
 void Reactions::append() {
     pimpl->writer->append({1}, &result);
+    if(pimpl->firstWrite) {
+        const auto& ctx = kernel->getKernelContext();
+        pimpl->firstWrite = false;
+        auto group = pimpl->group->createGroup("./registered_reactions");
+        auto groupO1 = group.createGroup("./order1");
+        auto groupO2 = group.createGroup("./order2");
+        for(const auto& t1 : ctx.getAllRegisteredParticleTypes()) {
+            const auto& rO1 = ctx.getOrder1Reactions(t1);
+            std::vector<std::string> lO1;
+            lO1.reserve(rO1.size());
+            std::for_each(rO1.begin(), rO1.end(), [&lO1](reactions::Reaction<1>* r) { lO1.push_back(r->getName()); });
+            groupO1.write(ctx.getParticleName(t1) + "[id="+ std::to_string(t1)+"]", lO1);
+            for(const auto& t2 : ctx.getAllRegisteredParticleTypes()) {
+                const auto& rO2 = ctx.getOrder2Reactions(t1, t2);
+                std::vector<std::string> lO2;
+                lO2.reserve(rO2.size());
+                std::for_each(rO2.begin(), rO2.end(), [&lO2](reactions::Reaction<2>* r) { lO2.push_back(r->getName()); });
+                groupO2.write(ctx.getParticleName(t1) + "[id="+ std::to_string(t1)+"] + " + ctx.getParticleName(t2) + "[id="+ std::to_string(t2)+"]", lO2);
+            }
+        }
+    }
 }
 
 void Reactions::initialize(Kernel *const kernel) {

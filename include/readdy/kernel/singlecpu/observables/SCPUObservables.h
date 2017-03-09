@@ -224,21 +224,11 @@ public:
     virtual ~SCPUReactions() = default;
 
     virtual void evaluate() override {
-        readdy::model::reactions::ReactionRecord rr1 {
-                0, t_current
-        };
-        rr1.educts[0] = 0;
-        rr1.products[0] = 1;
-        readdy::model::reactions::ReactionRecord rr2 {
-                1, t_current
-        };
-        rr2.educts[0] = 0;
-        rr2.products[0] = 1;
+        const auto& model = kernel->getSCPUKernelStateModel();
+        const auto& records = model.reactionRecords();
         result.clear();
-        result.push_back(rr1);
-        if(t_current % 2 != 0) {
-            result.push_back(rr2);
-        }
+        result.reserve(records.size());
+        result.insert(result.end(), records.begin(), records.end());
     }
 
 private:

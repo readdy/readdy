@@ -33,10 +33,19 @@
 #define READDY_MAIN_DATASETTYPE_BITS_H
 
 #include <H5Tpublic.h>
+#include <readdy/common/logging.h>
 #include "../DataSetType.h"
 
 namespace readdy {
 namespace io {
+
+inline DataSetType::~DataSetType() {
+    if(tid >= 0) {
+        if(H5Tclose(tid) < 0) {
+            log::error("error on closing data set type with tid = {}", tid);
+        }
+    }
+}
 
 template<>
 inline STDDataSetType<short>::STDDataSetType() { tid = H5Tcopy(H5T_STD_I16LE); }

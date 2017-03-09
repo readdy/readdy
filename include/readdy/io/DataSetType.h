@@ -40,6 +40,7 @@ namespace io {
 class READDY_API DataSetType {
 public:
     h5::data_set_type_t tid = -1;
+    virtual ~DataSetType();
 };
 
 template<typename T>
