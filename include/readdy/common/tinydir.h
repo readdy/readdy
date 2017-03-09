@@ -101,7 +101,7 @@ extern "C" {
 # define _TINYDIR_PATH_EXTRA 0
 #endif
 
-#define _TINYDIR_FILENAME_MAX 256
+#define _TINYDIR_FILENAME_MAX 512
 
 #if (defined _MSC_VER || defined __MINGW32__)
 #define _TINYDIR_DRIVE_MAX 3
