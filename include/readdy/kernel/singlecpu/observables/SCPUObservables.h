@@ -225,12 +225,12 @@ public:
 
     virtual void evaluate() override {
         readdy::model::reactions::ReactionRecord rr1 {
-                readdy::model::reactions::ReactionType::CONVERSION, t_current
+                0, t_current
         };
         rr1.educts[0] = 0;
         rr1.products[0] = 1;
         readdy::model::reactions::ReactionRecord rr2 {
-                readdy::model::reactions::ReactionType::CONVERSION, t_current
+                1, t_current
         };
         rr2.educts[0] = 0;
         rr2.products[0] = 1;

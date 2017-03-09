@@ -52,8 +52,8 @@ public:
 template<typename T, unsigned int len>
 class READDY_API NativeArrayDataSetType : public DataSetType {
 public:
+    using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
     NativeArrayDataSetType();
-    using type = T;
     constexpr static unsigned int size = len;
 };
 
@@ -67,8 +67,8 @@ public:
 template<typename T, unsigned int len>
 class READDY_API STDArrayDataSetType : public DataSetType {
 public:
+    using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
     STDArrayDataSetType();
-    using type = T;
     constexpr static unsigned int size = len;
 };
 

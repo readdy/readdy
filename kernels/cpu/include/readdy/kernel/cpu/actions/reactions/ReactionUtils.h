@@ -47,7 +47,7 @@ namespace reactions {
 using kernel_t = readdy::kernel::cpu::CPUKernel;
 using vec_t = readdy::model::Vec3;
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
-using reaction_type = readdy::model::reactions::Reaction<1>::ReactionType;
+using reaction_type = readdy::model::reactions::ReactionType;
 using nl_t = readdy::kernel::cpu::model::CPUNeighborList;
 using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
 using event_t = Event;

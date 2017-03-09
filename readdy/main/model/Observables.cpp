@@ -42,29 +42,14 @@ namespace readdy {
 namespace model {
 namespace observables {
 
-struct Vec3POD {
-    using entry_t = readdy::model::Vec3::entry_t;
-
-    Vec3POD(Vec3::entry_t x, Vec3::entry_t y, Vec3::entry_t z) : x(x), y(y), z(z) {}
-
-    Vec3POD(const Vec3 &v) : x(v[0]), y(v[1]), z(v[2]) {}
-
-    entry_t x, y, z;
-
-    friend std::ostream &operator<<(std::ostream &os, const Vec3POD &v) {
-        os << "Vec3POD(" << v.x << ", " << v.y << ", " << v.z << ")";
-        return os;
-    }
-};
-
 class Vec3MemoryType : public readdy::io::DataSetType {
 public:
     Vec3MemoryType() {
-        using entry_t = Vec3POD;
+        using entry_t = Vec3;
         tid = []() -> hid_t {
             hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
             // init vec pod
-            io::NativeDataSetType<entry_t::entry_t> posType{};
+            io::NativeDataSetType<entry_t::value_t> posType{};
             H5Tinsert(entryTypeMemory, "x", HOFFSET(entry_t, x), posType.tid);
             H5Tinsert(entryTypeMemory, "y", HOFFSET(entry_t, y), posType.tid);
             H5Tinsert(entryTypeMemory, "z", HOFFSET(entry_t, z), posType.tid);
@@ -76,27 +61,19 @@ public:
 class Vec3FileType : public readdy::io::DataSetType {
 public:
     Vec3FileType() {
-        using entry_t = Vec3POD;
+        using entry_t = Vec3;
         tid = []() -> hid_t {
-            std::size_t size = 3 * sizeof(entry_t::entry_t);
-            hid_t entryTypeFile = H5Tcreate(H5T_COMPOUND, size);
-            // data types
-            io::STDDataSetType<entry_t::entry_t> posType{};
-            // init trajectory pod
-            std::size_t cumsize = 0;
-            H5Tinsert(entryTypeFile, "x", cumsize, posType.tid);
-            cumsize += sizeof(entry_t::entry_t);
-            H5Tinsert(entryTypeFile, "y", cumsize, posType.tid);
-            cumsize += sizeof(entry_t::entry_t);
-            H5Tinsert(entryTypeFile, "z", cumsize, posType.tid);
-            return entryTypeFile;
+            Vec3MemoryType memType{};
+            auto file_type = H5Tcopy(memType.tid);
+            H5Tpack(file_type);
+            return file_type;
         }();
     }
 };
 
 
 struct Positions::Impl {
-    using writer_t = io::DataSet<Vec3POD, true>;
+    using writer_t = io::DataSet<Vec3, true>;
     std::unique_ptr<writer_t> writer;
 };
 
@@ -110,7 +87,7 @@ Positions::Positions(Kernel *const kernel, unsigned int stride,
         Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
 
 void Positions::append() {
-    std::vector<Vec3POD> podVec(result.begin(), result.end());
+    std::vector<Vec3> podVec(result.begin(), result.end());
     pimpl->writer->append({1}, &podVec);
 }
 
@@ -120,7 +97,7 @@ void Positions::initializeDataSet(io::File &file, const std::string &dataSetName
     if (!pimpl->writer) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto dataSet = std::make_unique<io::DataSet<Vec3POD, true>>(
+        auto dataSet = std::make_unique<io::DataSet<Vec3, true>>(
                 dataSetName, file.createGroup(OBSERVABLES_GROUP_PATH), fs, dims,
                 Vec3MemoryType(), Vec3FileType()
         );
@@ -259,7 +236,7 @@ void RadialDistribution::flush() {
 RadialDistribution::~RadialDistribution() = default;
 
 struct CenterOfMass::Impl {
-    using writer_t = io::DataSet<Vec3POD, false>;
+    using writer_t = io::DataSet<Vec3, false>;
     std::unique_ptr<writer_t> ds;
 };
 
@@ -313,8 +290,7 @@ void CenterOfMass::initializeDataSet(io::File &file, const std::string &dataSetN
 }
 
 void CenterOfMass::append() {
-    auto pod = Vec3POD(result);
-    pimpl->ds->append({1}, &pod);
+    pimpl->ds->append({1}, &result);
 }
 
 void CenterOfMass::flush() {
@@ -368,7 +344,7 @@ void NParticles::flush() {
 }
 
 struct Forces::Impl {
-    using data_set_t = io::DataSet<Vec3POD, true>;
+    using data_set_t = io::DataSet<Vec3, true>;
     std::unique_ptr<data_set_t> dataSet;
 };
 
@@ -390,7 +366,7 @@ void Forces::initializeDataSet(io::File &file, const std::string &dataSetName, u
     if (!pimpl->dataSet) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto dataSet = std::make_unique<io::DataSet<Vec3POD, true>>(
+        auto dataSet = std::make_unique<io::DataSet<Vec3, true>>(
                 dataSetName, file.createGroup(OBSERVABLES_GROUP_PATH), fs, dims,
                 Vec3MemoryType(), Vec3FileType()
         );
@@ -399,8 +375,7 @@ void Forces::initializeDataSet(io::File &file, const std::string &dataSetName, u
 }
 
 void Forces::append() {
-    std::vector<Vec3POD> podVec(result.begin(), result.end());
-    pimpl->dataSet->append({1}, &podVec);
+    pimpl->dataSet->append({1}, &result);
 }
 
 Forces::~Forces() = default;
@@ -457,7 +432,7 @@ struct Particles::Impl {
     using particle_t = readdy::model::Particle;
     using types_writer_t = io::DataSet<particle_t::type_type, true>;
     using ids_writer_t = io::DataSet<particle_t::id_type, true>;
-    using pos_writer_t = io::DataSet<Vec3POD, true>;
+    using pos_writer_t = io::DataSet<Vec3, true>;
     std::unique_ptr<types_writer_t> dataSetTypes;
     std::unique_ptr<ids_writer_t> dataSetIds;
     std::unique_ptr<pos_writer_t> dataSetPositions;
@@ -498,9 +473,7 @@ void Particles::append() {
         pimpl->dataSetIds->append({1}, &ids);
     }
     {
-        const auto &positions = std::get<2>(result);
-        std::vector<Vec3POD> podVec(positions.begin(), positions.end());
-        pimpl->dataSetPositions->append({1}, &podVec);
+        pimpl->dataSetPositions->append({1}, &std::get<2>(result));
     }
 }
 
@@ -512,42 +485,19 @@ void Particles::flush() {
 
 Particles::~Particles() = default;
 
-struct ReactionRecordPOD {
-    int reactionType;
-    time_step_type when;
-    Particle::id_type educts[2];
-    Particle::id_type products[2];
-    Vec3::entry_t position[3];
-
-    ReactionRecordPOD() = default;
-
-    ReactionRecordPOD(const readdy::model::reactions::ReactionRecord &record, readdy::time_step_type t)
-            : reactionType(0), when(0), educts{0, 0}, products{0, 0}, position{0, 0, 0} {
-        reactionType = static_cast<int>(record.type);
-        when = t;
-        educts[0] = record.educts[0];
-        educts[1] = record.educts[1];
-        products[0] = record.products[0];
-        products[1] = record.products[1];
-        const auto &data = record.where.data();
-        position[0] = data[0];
-        position[1] = data[1];
-        position[2] = data[2];
-    }
-};
-
 class ReactionRecordPODMemoryType : public readdy::io::DataSetType {
 public:
     ReactionRecordPODMemoryType() {
-        using entry_t = ReactionRecordPOD;
+        using entry_t = readdy::model::reactions::ReactionRecord;
         log::debug("attempting to build memory type");
         tid = []() -> hid_t {
             auto nativeType = io::NativeCompoundTypeBuilder(sizeof(entry_t))
-                    .insert<decltype(std::declval<ReactionRecordPOD>().reactionType)>("reaction_type", offsetof(entry_t, reactionType))
-                    .insert<decltype(std::declval<ReactionRecordPOD>().when)>("when", offsetof(entry_t, when))
-                    .insertArray<decltype(std::declval<ReactionRecordPOD>().educts), 2>("educts", offsetof(entry_t, educts))
-                    .insertArray<decltype(std::declval<ReactionRecordPOD>().products), 2>("products", offsetof(entry_t, products))
-                    .insertArray<decltype(std::declval<ReactionRecordPOD>().reactionType), 3>("position", offsetof(entry_t, position))
+                    .insert<decltype(std::declval<entry_t>().type)>("reaction_type", offsetof(entry_t, type))
+                    .insertArray<decltype(std::declval<entry_t>().educts), 2>("educts", offsetof(entry_t, educts))
+                    .insertArray<decltype(std::declval<entry_t>().products), 2>("products", offsetof(entry_t, products))
+                    .insertArray<Vec3::value_t, 3>("position", offsetof(entry_t, where))
+                    .insertArray<decltype(std::declval<entry_t>().types_from), 2>("types_from", offsetof(entry_t, types_from))
+                    .insert<decltype(std::declval<entry_t>().reactionIndex)>("reaction_index", offsetof(entry_t, reactionIndex))
                     .build();
             return nativeType.tid;
         }();
@@ -557,7 +507,7 @@ public:
 class ReactionRecordPODFileType : public readdy::io::DataSetType {
 public:
     ReactionRecordPODFileType() {
-        using entry_t = ReactionRecordPOD;
+        using entry_t = readdy::model::reactions::ReactionRecord;
         tid = []() -> hid_t {
             ReactionRecordPODMemoryType memType{};
             auto file_type = H5Tcopy(memType.tid);
@@ -569,7 +519,7 @@ public:
 
 
 struct Reactions::Impl {
-    using reactions_record_t = ReactionRecordPOD;
+    using reactions_record_t = readdy::model::reactions::ReactionRecord;
     using reactions_writer_t = io::DataSet<reactions_record_t, true>;
     std::unique_ptr<reactions_writer_t> writer;
 };
@@ -601,13 +551,7 @@ void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName
 }
 
 void Reactions::append() {
-    std::vector<ReactionRecordPOD> pods{};
-    pods.reserve(result.size());
-    for (const auto &rr : result) {
-        auto pod = ReactionRecordPOD(rr, t_current);
-        pods.push_back(std::move(pod));
-    }
-    pimpl->writer->append({1}, &pods);
+    pimpl->writer->append({1}, &result);
 }
 
 void Reactions::initialize(Kernel *const kernel) {

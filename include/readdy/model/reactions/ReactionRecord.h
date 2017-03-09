@@ -33,25 +33,21 @@
 #ifndef READDY_MAIN_REACTIONRECORD_H
 #define READDY_MAIN_REACTIONRECORD_H
 
+#include <spdlog/fmt/ostr.h>
 #include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
-#include <spdlog/fmt/ostr.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
-enum class ReactionType {
-    DECAY = 0, CONVERSION, FUSION, FISSION, ENZYMATIC
-};
-
-inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType);
-
 struct ReactionRecord {
-    ReactionType type = ReactionType::DECAY;
-    Particle::id_type educts[2] = {0, 0};
-    Particle::id_type products[2] = {0, 0};
+    int type; // int corresponding to the enum readdy::model::reactions::ReactionType
+    Particle::id_type educts[2] {0, 0};
+    Particle::id_type products[2] {0, 0};
+    Particle::type_type types_from[2] {0, 0};
     Vec3 where {0, 0, 0};
+    std::size_t reactionIndex {0};
 
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
 };

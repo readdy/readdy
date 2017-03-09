@@ -47,7 +47,7 @@ namespace model {
 namespace observables {
 
 struct TrajectoryEntry {
-    using pos_t = readdy::model::Vec3::entry_t;
+    using pos_t = readdy::model::Vec3::value_t;
 
     TrajectoryEntry(const readdy::model::Particle &p, time_step_type t) : typeId(
             p.getType()), id(p.getId()), px(p.getPos()[0]), py(p.getPos()[1]), pz(p.getPos()[2]), t(t) {}

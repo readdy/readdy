@@ -157,9 +157,12 @@ void SCPUUncontrolledApproximation::perform() {
                 if (event.nEducts == 1) {
                     auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
-                        performReaction<true>(stateModel, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                        record_t record;
+                        record.reactionIndex = event.reactionIdx;
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos, &record);
+                        stateModel.reactionRecords().push_back(record);
                     } else {
-                        performReaction<false>(stateModel, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos, nullptr);
                     }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1) {
@@ -169,9 +172,13 @@ void SCPUUncontrolledApproximation::perform() {
                 } else {
                     auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
-                        performReaction<true>(stateModel, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                        record_t record;
+                        record.reactionIndex = event.reactionIdx;
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
+                        stateModel.reactionRecords().push_back(record);
                     } else {
-                        performReaction<false>(stateModel, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos,
+                                        nullptr);
                     }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
@@ -288,21 +295,28 @@ data_t::update_t handleEventsGillespie(
                      * Perform reaction
                      */
                     {
-
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
                             auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
                             if(ctx.recordReactionsWithPositions()) {
-                                performReaction<true>(model, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                                record_t record;
+                                record.reactionIndex = event.reactionIdx;
+                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
+                                                &record);
+                                model.reactionRecords().push_back(record);
                             } else {
-                                performReaction<false>(model, entry1, entry1, newParticles, decayedEntries, reaction, fixPos);
+                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
+                                                nullptr);
                             }
                         } else {
                             auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
                             if(ctx.recordReactionsWithPositions()) {
-                                performReaction<true>(model, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                                record_t record;
+                                record.reactionIndex = event.reactionIdx;
+                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
+                                model.reactionRecords().push_back(record);
                             } else {
-                                performReaction<false>(model, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos);
+                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, nullptr);
                             }
                         }
                     }

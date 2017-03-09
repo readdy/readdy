@@ -47,13 +47,16 @@ namespace readdy {
 namespace model {
 namespace reactions {
 
+enum class ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
+
+inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType);
+
 template<unsigned int N_EDUCTS>
 class Reaction {
 protected:
     static short counter;
     using particle_type_type = readdy::model::Particle::type_type;
 public:
-    enum ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
 
     using rnd_normal = std::function<Vec3(const double, const double)>;
     // static constexpr unsigned int n_educts = N_EDUCTS;

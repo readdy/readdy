@@ -47,7 +47,7 @@ namespace reactions {
 using kernel_t = readdy::kernel::cpu_dense::CPUDKernel;
 using vec_t = readdy::model::Vec3;
 using data_t = readdy::kernel::cpu_dense::model::CPUDParticleData;
-using reaction_type = readdy::model::reactions::Reaction<1>::ReactionType;
+using reaction_type = readdy::model::reactions::ReactionType;
 using nl_t = const decltype(std::declval<kernel_t>().getCPUDKernelStateModel().getNeighborList());
 using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
 using event_t = Event;

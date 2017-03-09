@@ -39,24 +39,30 @@
 namespace readdy {
 namespace model {
 
-class READDY_API Vec3 {
+struct READDY_API Vec3 {
 public:
 
-    using entry_t = double;
+    using value_t = double;
+    using data_t = std::array<value_t, 3>;
+
+    union {
+        struct { value_t x, y, z; };
+        data_t data;
+    };
 
     Vec3();
 
-    Vec3(entry_t x, entry_t y, entry_t z);
+    Vec3(value_t x, value_t y, value_t z);
 
-    Vec3(const std::array<entry_t, 3> &xyz);
+    Vec3(const data_t &xyz);
 
     Vec3 &operator+=(const Vec3 &rhs);
 
     Vec3 &operator-=(const Vec3 &rhs);
 
-    Vec3 &operator*=(const entry_t a);
+    Vec3 &operator*=(const value_t a);
 
-    Vec3 &operator/=(const entry_t a);
+    Vec3 &operator/=(const value_t a);
 
     Vec3 cross(const Vec3&) const;
 
@@ -64,9 +70,9 @@ public:
 
     double normSquared() const;
 
-    entry_t operator[](const unsigned int i) const;
+    value_t operator[](const unsigned int i) const;
 
-    entry_t &operator[](const unsigned int i);
+    value_t &operator[](const unsigned int i);
 
     Vec3& invertElementWise();
 
@@ -78,13 +84,13 @@ public:
 
     friend Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs);
 
-    friend Vec3 operator+(const Vec3 &lhs, const entry_t rhs);
+    friend Vec3 operator+(const Vec3 &lhs, const value_t rhs);
 
     friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
 
-    friend Vec3 operator-(const Vec3 &lhs, const entry_t rhs);
+    friend Vec3 operator-(const Vec3 &lhs, const value_t rhs);
 
-    friend Vec3 operator/(const Vec3 &lhs, const entry_t rhs);
+    friend Vec3 operator/(const Vec3 &lhs, const value_t rhs);
 
     friend bool operator>=(const Vec3 &lhs, const Vec3 &rhs);
 
@@ -94,28 +100,22 @@ public:
 
     friend bool operator<(const Vec3 &lhs, const Vec3 &rhs);
 
-    const std::array<entry_t, 3>& data() const;
-
-    std::array<entry_t, 3>& data();
-
-private:
-    std::array<entry_t, 3> data_;
 };
 
-inline Vec3::entry_t operator*(const Vec3 &lhs, const Vec3 &rhs) {
+inline Vec3::value_t operator*(const Vec3 &lhs, const Vec3 &rhs) {
     return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
 }
 
-inline Vec3 operator*(const Vec3 &lhs, const Vec3::entry_t rhs) {
+inline Vec3 operator*(const Vec3 &lhs, const Vec3::value_t rhs) {
     return Vec3(rhs * lhs[0], rhs * lhs[1], rhs * lhs[2]);
 }
 
-inline Vec3 operator*(const Vec3::entry_t rhs, const Vec3 &lhs) {
+inline Vec3 operator*(const Vec3::value_t rhs, const Vec3 &lhs) {
     return lhs * rhs;
 }
 
 template<bool PX, bool PY, bool PZ>
-inline void fixPosition(Vec3 &vec, const Vec3::entry_t dx, const Vec3::entry_t dy, const Vec3::entry_t dz) {
+inline void fixPosition(Vec3 &vec, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
     if (PX) {
         vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
     }
@@ -128,8 +128,8 @@ inline void fixPosition(Vec3 &vec, const Vec3::entry_t dx, const Vec3::entry_t d
 };
 
 template<bool PX, bool PY, bool PZ>
-inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Vec3::entry_t dx, const Vec3::entry_t dy,
-                               const Vec3::entry_t dz) {
+inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Vec3::value_t dx, const Vec3::value_t dy,
+                               const Vec3::value_t dz) {
     auto dv = rhs - lhs;
     if (PX) {
         if (dv[0] > dx * .5) dv[0] -= dx;
@@ -147,8 +147,8 @@ inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Vec3::ent
 };
 
 template<bool PX, bool PY, bool PZ>
-inline Vec3::entry_t
-distSquared(const Vec3 &lhs, const Vec3 &rhs, const Vec3::entry_t dx, const Vec3::entry_t dy, const Vec3::entry_t dz) {
+inline Vec3::value_t
+distSquared(const Vec3 &lhs, const Vec3 &rhs, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
     auto dv = shortestDifference<PX, PY, PZ>(lhs, rhs, dx, dy, dz);
     return dv * dv;
 };

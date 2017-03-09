@@ -109,14 +109,14 @@ inline NativeDataSetType<std::string>::NativeDataSetType() { tid = H5Tcopy(H5T_C
 
 template<typename T, unsigned int len>
 inline NativeArrayDataSetType<T, len>::NativeArrayDataSetType() {
-    auto basic_type = NativeDataSetType<T>{};
+    auto basic_type = NativeDataSetType<type>{};
     hsize_t dim[1] = {len};
     tid = H5Tarray_create(basic_type.tid, 1, dim);
 }
 
 template<typename T, unsigned int len>
 inline STDArrayDataSetType<T, len>::STDArrayDataSetType() {
-    auto basic_type = STDDataSetType<T>{};
+    auto basic_type = STDDataSetType<type>{};
     hsize_t dim[1] = {len};
     tid = H5Tarray_create(basic_type.tid, 1, dim);
 }
@@ -152,7 +152,7 @@ inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::s
 
 template<typename T, unsigned int size>
 inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insertArray(const std::string &name, std::size_t offset) {
-    io::NativeArrayDataSetType<typename std::remove_pointer<typename std::decay<T>::type>::type, size> type;
+    io::NativeArrayDataSetType<T, size> type;
     return insert(name, offset, type.tid);
 }
 

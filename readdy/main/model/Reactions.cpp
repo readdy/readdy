@@ -41,35 +41,36 @@ template<> short Reaction<2>::counter = 0;
 
 std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
     switch (reactionType) {
-        case ReactionType::DECAY: os << "Decay"; break;
-        case ReactionType::CONVERSION: os << "Conversion"; break;
-        case ReactionType::FUSION: os << "Fusion"; break;
-        case ReactionType::FISSION: os << "Fission"; break;
-        case ReactionType::ENZYMATIC: os << "Enzymatic"; break;
+        case ReactionType::Decay: os << "Decay"; break;
+        case ReactionType::Conversion: os << "Conversion"; break;
+        case ReactionType::Fusion: os << "Fusion"; break;
+        case ReactionType::Fission: os << "Fission"; break;
+        case ReactionType::Enzymatic: os << "Enzymatic"; break;
     }
     return os;
 }
 
 std::ostream& operator<<(std::ostream& os, const ReactionRecord& record) {
-    os << "ReactionRecord[type: " << record.type;
-    switch (record.type) {
-        case ReactionType::DECAY:{
+    ReactionType type = ReactionType(record.type);
+    os << "ReactionRecord[type: " << type;
+    switch (type) {
+        case ReactionType::Decay:{
             os << " educt: " << record.educts[0];
             break;
         }
-        case ReactionType::CONVERSION: {
+        case ReactionType::Conversion: {
             os << " educt: " << record.educts[0] << " product: " << record.products[0];
             break;
         }
-        case ReactionType::FUSION: {
+        case ReactionType::Fusion: {
             os << " educts: " << record.educts[0] << "," << record.educts[1] << " product: " << record.products[0];
             break;
         }
-        case ReactionType::FISSION: {
+        case ReactionType::Fission: {
             os << " educt: " << record.educts[0] << " products: " << record.products[0] << "," << record.products[1];
             break;
         }
-        case ReactionType::ENZYMATIC: {
+        case ReactionType::Enzymatic: {
             os << " educts: " << record.educts[0] << "," << record.educts[1];
             os << " products: " << record.products[0] << "," << record.products[1];
             break;
