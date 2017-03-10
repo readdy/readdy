@@ -321,7 +321,7 @@ class TestObservablesIO(unittest.TestCase):
         common.set_logging_level("error")
         fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
         sim = Simulation()
-        sim.set_kernel("SingleCPU")
+        sim.set_kernel("CPU")
         sim.box_size = common.Vec(10, 10, 10)
         sim.register_particle_type("A", .0, 5.0)
         sim.register_particle_type("B", .0, 6.0)

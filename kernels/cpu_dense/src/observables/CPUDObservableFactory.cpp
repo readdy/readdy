@@ -87,6 +87,10 @@ readdy::model::observables::Reactions *CPUDObservableFactory::createReactions(un
     throw std::runtime_error("Reactions observable is not supported on the CPU_Dense kernel.");
 }
 
+readdy::model::observables::ReactionCounts *CPUDObservableFactory::createReactionCounts(unsigned int) const {
+    throw std::runtime_error("ReactionCounts observable is not supported on the CPU_Dense kernel.");
+}
+
 }
 }
 }
