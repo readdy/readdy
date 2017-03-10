@@ -19,11 +19,11 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
-
 """
 @author: clonker
 """
+
+from __future__ import print_function
 
 import os
 import unittest
@@ -33,6 +33,9 @@ import h5py
 import readdy._internal.common as common
 import readdy._internal.common.io as io
 from readdy._internal.api import Simulation
+from readdy._internal.api import KernelProvider
+from readdy.util import platform_utils
+
 from contextlib import closing
 import numpy as np
 
@@ -40,6 +43,8 @@ import numpy as np
 class TestObservablesIO(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.kernel_provider = KernelProvider.get()
+        cls.kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
         cls.dir = tempfile.mkdtemp("test-observables-io")
 
     @classmethod
@@ -273,7 +278,7 @@ class TestObservablesIO(unittest.TestCase):
         common.set_logging_level("error")
         fname = os.path.join(self.dir, "test_observables_particle_reactions.h5")
         sim = Simulation()
-        sim.set_kernel("SingleCPU")
+        sim.set_kernel("CPU")
         sim.box_size = common.Vec(10, 10, 10)
         sim.register_particle_type("A", .0, 5.0)
         sim.register_particle_type("B", .0, 6.0)
@@ -294,9 +299,9 @@ class TestObservablesIO(unittest.TestCase):
             data = f2["readdy/observables/reactions"]
             order_1_reactions_with_A = data["registered_reactions/order1/A[id=0]"][:]
             order_2_reactions_with_B_and_C = data["registered_reactions/order2/B[id=1] + C[id=2]"][:]
-            np.testing.assert_equal(order_1_reactions_with_A[0], "mylabel")
-            np.testing.assert_equal(order_1_reactions_with_A[1], "A->B")
-            np.testing.assert_equal(order_2_reactions_with_B_and_C[0], "B+C->A")
+            np.testing.assert_equal(order_1_reactions_with_A[0], b"mylabel")
+            np.testing.assert_equal(order_1_reactions_with_A[1], b"A->B")
+            np.testing.assert_equal(order_2_reactions_with_B_and_C[0], b"B+C->A")
             records = data["records"][:]
             np.testing.assert_equal(len(records), 2)
             # records of 1st time step

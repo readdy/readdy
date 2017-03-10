@@ -101,6 +101,17 @@ protected:
     CPUKernel *const kernel;
 };
 
+class CPUReactions : public readdy::model::observables::Reactions {
+public:
+    CPUReactions(CPUKernel *const kernel, unsigned int stride, bool withPositions);
+
+    virtual void evaluate() override;
+
+protected:
+    CPUKernel *const kernel;
+
+};
+
 
 }
 }

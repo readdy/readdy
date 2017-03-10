@@ -202,6 +202,18 @@ void CPUParticles::evaluate() {
         }
     }
 }
+
+CPUReactions::CPUReactions(CPUKernel *const kernel, unsigned int stride, bool withPositions)
+        : Reactions(kernel, stride, withPositions), kernel(kernel) {}
+
+void CPUReactions::evaluate() {
+    const auto& model = kernel->getCPUKernelStateModel();
+    const auto& records = model.reactionRecords();
+    result.clear();
+    result.reserve(records.size());
+    result.insert(result.end(), records.begin(), records.end());
+}
+
 }
 }
 }

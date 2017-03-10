@@ -39,6 +39,7 @@
 #include <readdy/kernel/cpu/model/CPUNeighborList.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
+#include <readdy/model/reactions/ReactionRecord.h>
 
 namespace readdy {
 namespace kernel {
@@ -80,6 +81,10 @@ public:
     virtual void clearNeighborList() override;
 
     virtual readdy::model::top::Topology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
+
+    std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords();
+
+    const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const;
 
 private:
     struct Impl;

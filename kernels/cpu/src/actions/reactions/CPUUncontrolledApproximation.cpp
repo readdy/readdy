@@ -185,7 +185,15 @@ void CPUUncontrolledApproximation::perform() {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
                     auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                    performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction);
+                    if(ctx.recordReactionsWithPositions()) {
+                        record_t record;
+                        record.reactionIndex = event.reactionIdx;
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, &record);
+                        fixPos(record.where);
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                    } else {
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
+                    }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1) {
                             _it2->cumulativeRate = 1;
@@ -193,7 +201,15 @@ void CPUUncontrolledApproximation::perform() {
                     }
                 } else {
                     auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                    performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction);
+                    if(ctx.recordReactionsWithPositions()) {
+                        record_t record;
+                        record.reactionIndex = event.reactionIdx;
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
+                        fixPos(record.where);
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                    } else {
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
+                    }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
                                 _it2 ->idx1 == event.idx2 || _it2->idx2 == event.idx2) {

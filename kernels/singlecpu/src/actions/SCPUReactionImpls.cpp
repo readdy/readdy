@@ -303,7 +303,7 @@ data_t::update_t handleEventsGillespie(
                                 record.reactionIndex = event.reactionIdx;
                                 performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
                                                 &record);
-                                model.reactionRecords().push_back(record);
+                                model.reactionRecords().push_back(std::move(record));
                             } else {
                                 performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
                                                 nullptr);
@@ -314,7 +314,7 @@ data_t::update_t handleEventsGillespie(
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
                                 performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
-                                model.reactionRecords().push_back(record);
+                                model.reactionRecords().push_back(std::move(record));
                             } else {
                                 performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, nullptr);
                             }

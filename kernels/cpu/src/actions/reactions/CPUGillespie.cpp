@@ -50,10 +50,19 @@ void CPUGillespie::perform() {
     double alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, *data, alpha, events, dist);
-    auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events));
+    if(ctx.recordReactionsWithPositions()) {
+        stateModel.reactionRecords().clear();
+        auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events), &stateModel.reactionRecords());
 
-    // update data structure
-    nl->updateData(std::move(particlesUpdate));
+        // update data structure
+        nl->updateData(std::move(particlesUpdate));
+    } else {
+        auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events), nullptr);
+
+        // update data structure
+        nl->updateData(std::move(particlesUpdate));
+    }
+
 }
 
 }

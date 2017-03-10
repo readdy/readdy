@@ -179,9 +179,10 @@ void CPUGillespieParallel::clear() {
 void CPUGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<data_t::index_t>>;
     using promise_new_particles_t = std::promise<data_t::update_t>;
+    using promise_records = std::promise<std::vector<record_t>>;
 
     auto worker = [this](SlicedBox &box, ctx_t ctx, data_t *data, nl_t * nl, promise_t update,
-                         promise_new_particles_t newParticles) {
+                         promise_new_particles_t newParticles, promise_records promiseRecords) {
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
         std::set<data_t::index_t> problematic{};
@@ -205,8 +206,20 @@ void CPUGillespieParallel::handleBoxReactions() {
             gatherEvents(kernel, box.particleIndices, nl, *data, localAlpha, localEvents, d2);
             // handle events
             {
-                auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(localEvents));
-                newParticles.set_value(std::move(result));
+                if(ctx.recordReactionsWithPositions()) {
+                    std::vector<record_t> records;
+                    auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(localEvents),
+                                                        &records);
+                    newParticles.set_value(std::move(result));
+                    promiseRecords.set_value(std::move(records));
+                } else {
+                    auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(localEvents),
+                                                        nullptr);
+                    newParticles.set_value(std::move(result));
+                    std::vector<record_t> no_records;
+                    promiseRecords.set_value(std::move(no_records));
+                }
+
             }
 
         }
@@ -215,6 +228,7 @@ void CPUGillespieParallel::handleBoxReactions() {
 
     std::vector<std::future<std::set<data_t::index_t>>> updates;
     std::vector<std::future<data_t::update_t>> newParticles;
+    std::vector<std::future<std::vector<record_t>>> records;
     auto &stateModel = kernel->getCPUKernelStateModel();
     {
         //readdy::util::Timer t ("\t run threads");
@@ -225,6 +239,8 @@ void CPUGillespieParallel::handleBoxReactions() {
             updates.push_back(promise.get_future());
             promise_new_particles_t promiseParticles;
             newParticles.push_back(promiseParticles.get_future());
+            promise_records promiseRecords;
+            records.push_back(promiseRecords.get_future());
             threads.push_back(
                     thd::scoped_thread(std::thread(
                             worker, std::ref(boxes[i]),
@@ -232,11 +248,14 @@ void CPUGillespieParallel::handleBoxReactions() {
                             stateModel.getParticleData(),
                             stateModel.getNeighborList(),
                             std::move(promise),
-                            std::move(promiseParticles)
+                            std::move(promiseParticles),
+                            std::move(promiseRecords)
                     ))
             );
         }
     }
+    std::vector<std::vector<record_t>> attainedRecords;
+    attainedRecords.reserve(records.size()+1);
     {
         //readdy::util::Timer t ("\t fix marked");
         auto &data = *stateModel.getParticleData();
@@ -250,15 +269,35 @@ void CPUGillespieParallel::handleBoxReactions() {
             n_local_problematic += local_problematic.size();
             gatherEvents(kernel, std::move(local_problematic), neighbor_list, data, alpha, evilEvents, d2);
         }
-        //BOOST_LOG_TRIVIAL(debug) << "got n_local_problematic="<<n_local_problematic<<", handling events on these!";
-        auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(evilEvents));
-        // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
-
-        const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
-        for (auto &&future : newParticles) {
-            neighbor_list->updateData(std::move(future.get()));
+        if(kernel->getKernelContext().recordReactionsWithPositions()) {
+            std::vector<record_t> newRecords;
+            auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(evilEvents), &newRecords);
+            const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
+            for (auto &&future : newParticles) {
+                neighbor_list->updateData(std::move(future.get()));
+            }
+            neighbor_list->updateData(std::move(newProblemParticles));
+            std::size_t totalRecordSize = newRecords.size();
+            attainedRecords.push_back(std::move(newRecords));
+            for(auto &&future : records) {
+                attainedRecords.push_back(std::move(future.get()));
+                totalRecordSize += attainedRecords.back().size();
+            }
+            auto& modelRecords = kernel->getCPUKernelStateModel().reactionRecords();
+            modelRecords.clear();
+            modelRecords.reserve(totalRecordSize);
+            for(const auto& r : attainedRecords) {
+                modelRecords.insert(modelRecords.end(), r.begin(), r.end());
+            }
+        } else {
+            auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(evilEvents), nullptr);
+            const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
+            for (auto &&future : newParticles) {
+                neighbor_list->updateData(std::move(future.get()));
+            }
+            neighbor_list->updateData(std::move(newProblemParticles));
         }
-        neighbor_list->updateData(std::move(newProblemParticles));
+
     }
 
 }
