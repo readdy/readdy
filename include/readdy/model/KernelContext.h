@@ -139,8 +139,9 @@ public:
     void registerParticleType(const std::string &name, const double diffusionConst, const double radius,
                               const readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
-    const ParticleTypeInfo& getParticleTypeInfo(const std::string& name) const;
-    const ParticleTypeInfo& getParticleTypeInfo(const particle_t::type_type type) const;
+    const ParticleTypeInfo &getParticleTypeInfo(const std::string &name) const;
+
+    const ParticleTypeInfo &getParticleTypeInfo(const particle_t::type_type type) const;
 
     double getDiffusionConstant(const std::string &particleType) const;
 
@@ -315,14 +316,28 @@ public:
      * the readdy::model::observables::Reactions observable.
      * @return whether reactions shall be recorded in the state model, by default false
      */
-    const bool& recordReactionsWithPositions() const;
+    const bool &recordReactionsWithPositions() const;
 
     /**
      * Returns whether reactions with positions shall be recorded in the state model, then obtainable by
      * the readdy::model::observables::Reactions observable.
      * @return whether reactions shall be recorded in the state model, by default false
      */
-    bool& recordReactionsWithPositions();
+    bool &recordReactionsWithPositions();
+
+    /**
+     * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
+     * by the readdy::model::observables::ReactionCounts observable.
+     * @return wheter reaction counts shall be recorded
+     */
+    const bool &recordReactionCounts() const;
+
+    /**
+     * Returns whether reaction counts shall be recorded in the state model (if it is supported). It is then obtainable
+     * by the readdy::model::observables::ReactionCounts observable.
+     * @return wheter reaction counts shall be recorded
+     */
+    bool &recordReactionCounts();
 
     // ctor and dtor
     KernelContext();
@@ -346,25 +361,26 @@ private:
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
 
-    reaction_o1_registry reactionOneEductRegistry {};
-    reaction_o1_registry_internal reactionOneEductRegistryInternal {};
-    reaction_o1_registry_external reactionOneEductRegistryExternal {};
-    reaction_o2_registry reactionTwoEductsRegistry {};
-    reaction_o2_registry_internal reactionTwoEductsRegistryInternal {};
-    reaction_o2_registry_external reactionTwoEductsRegistryExternal {};
+    reaction_o1_registry reactionOneEductRegistry{};
+    reaction_o1_registry_internal reactionOneEductRegistryInternal{};
+    reaction_o1_registry_external reactionOneEductRegistryExternal{};
+    reaction_o2_registry reactionTwoEductsRegistry{};
+    reaction_o2_registry_internal reactionTwoEductsRegistryInternal{};
+    reaction_o2_registry_external reactionTwoEductsRegistryExternal{};
 
-    rdy_pot_1_registry potentialO1Registry {};
-    rdy_pot_2_registry potentialO2Registry {};
+    rdy_pot_1_registry potentialO1Registry{};
+    rdy_pot_2_registry potentialO2Registry{};
 
-    potential_o1_registry_internal potentialO1RegistryInternal {};
-    rdy_pot_1_registry potentialO1RegistryExternal {};
-    potential_o2_registry_internal potentialO2RegistryInternal {};
-    rdy_pot_2_registry potentialO2RegistryExternal {};
+    potential_o1_registry_internal potentialO1RegistryInternal{};
+    rdy_pot_1_registry potentialO1RegistryExternal{};
+    potential_o2_registry_internal potentialO2RegistryInternal{};
+    rdy_pot_2_registry potentialO2RegistryExternal{};
 
     std::unique_ptr<compartment_registry> compartmentRegistry = std::make_unique<compartment_registry>();
 
     // here come horrible flags
     bool recordReactionsWithPositions_ = false;
+    bool recordReactionCounts_ = false;
 };
 
 }

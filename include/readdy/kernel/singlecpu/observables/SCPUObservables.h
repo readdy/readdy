@@ -235,6 +235,26 @@ private:
     SCPUKernel* const kernel;
 };
 
+class SCPUReactionCounts : public readdy::model::observables::ReactionCounts {
+public:
+    SCPUReactionCounts(SCPUKernel *const kernel, unsigned int stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
+
+    virtual ~SCPUReactionCounts() = default;
+
+    virtual void evaluate() override {
+        auto &order1 = std::get<0>(result);
+        auto &order2 = std::get<1>(result);
+        const auto& counts = kernel->getSCPUKernelStateModel().reactionCounts();
+        const auto& counts_order1 = std::get<0>(counts);
+        const auto& counts_order2 = std::get<1>(counts);
+        order1.assign(counts_order1.begin(), counts_order1.end());
+        order2.assign(counts_order2.begin(), counts_order2.end());
+    }
+
+private:
+    SCPUKernel* const kernel;
+};
+
 template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
 class SCPURadialDistribution : public readdy::model::observables::RadialDistribution {
 public:

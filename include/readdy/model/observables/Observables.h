@@ -254,6 +254,25 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
+class ReactionCounts : public Observable<std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>> {
+public:
+    ReactionCounts(Kernel *const kernel, unsigned int stride);
+
+    virtual ~ReactionCounts();
+
+    virtual void flush() override;
+
+protected:
+    virtual void initialize(Kernel *const kernel) override;
+
+    virtual void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    virtual void append() override;
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+};
+
 }
 }
 }

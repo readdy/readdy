@@ -35,6 +35,7 @@
 #include <readdy/model/_internal/Util.h>
 #include <readdy/common/numeric.h>
 #include <readdy/io/DataSet.h>
+#include <readdy/model/IOUtils.h>
 
 const std::string OBSERVABLES_GROUP_PATH = "/readdy/observables";
 
@@ -547,42 +548,92 @@ void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName
 void Reactions::append() {
     pimpl->writer->append({1}, &result);
     if(pimpl->firstWrite) {
-        const auto& ctx = kernel->getKernelContext();
         pimpl->firstWrite = false;
-        auto group = pimpl->group->createGroup("./registered_reactions");
-        auto groupO1 = group.createGroup("./order1");
-        auto groupO2 = group.createGroup("./order2");
-        for(const auto& t1 : ctx.getAllRegisteredParticleTypes()) {
-            const auto& rO1 = ctx.getOrder1Reactions(t1);
-            std::vector<std::string> lO1;
-            lO1.reserve(rO1.size());
-            std::for_each(rO1.begin(), rO1.end(), [&lO1](reactions::Reaction<1>* r) { lO1.push_back(r->getName()); });
-            if(!lO1.empty()) {
-                groupO1.write(ctx.getParticleName(t1) + "[id=" + std::to_string(t1) + "]", lO1);
-            }
-            for(const auto& t2 : ctx.getAllRegisteredParticleTypes()) {
-                if(t2 < t1) continue;
-                const auto& rO2 = ctx.getOrder2Reactions(t1, t2);
-                std::vector<std::string> lO2;
-                lO2.reserve(rO2.size());
-                std::for_each(rO2.begin(), rO2.end(), [&lO2](reactions::Reaction<2>* r) { lO2.push_back(r->getName()); });
-                if(!lO2.empty()) {
-                    groupO2.write(
-                            ctx.getParticleName(t1) + "[id=" + std::to_string(t1) + "] + " + ctx.getParticleName(t2) +
-                            "[id=" + std::to_string(t2) + "]", lO2);
-                }
-            }
-        }
+        writeReactionInformation(*pimpl->group, kernel->getKernelContext());
     }
 }
 
 void Reactions::initialize(Kernel *const kernel) {
-    kernel->getKernelContext().recordReactionsWithPositions() = true;
+    if(!kernel->getKernelContext().recordReactionsWithPositions()) {
+        log::warn("The \"Reactions\"-observable set context.recordReactionsWithPositions() to true. "
+                          "If this is undesired, the observable should not be registered.");
+        kernel->getKernelContext().recordReactionsWithPositions() = true;
+    }
 }
 
 Reactions::~Reactions() = default;
 
+struct ReactionCounts::Impl {
+    using data_set_t = io::DataSet<std::size_t, false>;
+    std::unique_ptr<io::Group> group;
+    std::unique_ptr<data_set_t> ds_order1;
+    std::unique_ptr<data_set_t> ds_order2;
+    bool shouldWrite = false;
+    unsigned int flushStride = 0;
+    bool firstWrite = true;
+};
 
+ReactionCounts::ReactionCounts(Kernel *const kernel, unsigned int stride)
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {
+    result = std::make_tuple(std::vector<std::size_t>(), std::vector<std::size_t>());
+}
+
+void ReactionCounts::flush() {
+    if(pimpl->ds_order1) pimpl->ds_order1->flush();
+    if(pimpl->ds_order2) pimpl->ds_order2->flush();
+}
+
+void ReactionCounts::initialize(Kernel *const kernel) {
+    if(!kernel->getKernelContext().recordReactionCounts()) {
+        log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
+                          "If this is undesired, the observable should not be registered.");
+        kernel->getKernelContext().recordReactionCounts() = true;
+    }
+}
+
+void ReactionCounts::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->group) {
+        pimpl->group = std::make_unique<io::Group>(file.createGroup(OBSERVABLES_GROUP_PATH + "/" + dataSetName));
+        pimpl->shouldWrite = true;
+        pimpl->flushStride = flushStride;
+    }
+}
+
+void ReactionCounts::append() {
+    if(pimpl->firstWrite) {
+        const auto n_reactions_order1 = kernel->getKernelContext().getAllOrder1Reactions().size();
+        const auto n_reactions_order2 = kernel->getKernelContext().getAllOrder2Reactions().size();
+        std::get<0>(result).resize(n_reactions_order1);
+        std::get<1>(result).resize(n_reactions_order2);
+        if(pimpl->shouldWrite) {
+            auto subgroup = pimpl->group->createGroup("counts");
+            {
+                std::vector<readdy::io::h5::dims_t> fs = {pimpl->flushStride, n_reactions_order1};
+                std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, n_reactions_order1};
+                auto dataSetTypes = std::make_unique<Impl::data_set_t>("order1", subgroup, fs, dims);
+                pimpl->ds_order1 = std::move(dataSetTypes);
+            }
+            {
+                std::vector<readdy::io::h5::dims_t> fs = {pimpl->flushStride, n_reactions_order2};
+                std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, n_reactions_order2};
+                auto dataSetTypes = std::make_unique<Impl::data_set_t>("order2", subgroup, fs, dims);
+                pimpl->ds_order2 = std::move(dataSetTypes);
+            }
+            writeReactionInformation(*pimpl->group, kernel->getKernelContext());
+        }
+        pimpl->firstWrite = false;
+    }
+    {
+        auto& order1Reactions = std::get<0>(result);
+        pimpl->ds_order1->append({1, order1Reactions.size()}, order1Reactions.data());
+    }
+    {
+        auto& order2Reactions = std::get<1>(result);
+        pimpl->ds_order2->append({1, order2Reactions.size()}, order2Reactions.data());
+    }
+}
+
+ReactionCounts::~ReactionCounts() = default;
 }
 }
 }

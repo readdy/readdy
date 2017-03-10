@@ -71,6 +71,8 @@ public:
 
     virtual readdy::model::observables::Reactions *createReactions(unsigned int stride) const override;
 
+    virtual readdy::model::observables::ReactionCounts *createReactionCounts(unsigned int stride) const override;
+
 private:
     readdy::kernel::scpu::SCPUKernel *const kernel;
 };

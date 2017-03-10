@@ -46,6 +46,7 @@ struct SCPUStateModel::Impl {
     readdy::model::KernelContext const *context;
     // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords {};
+    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts {};
 };
 
 SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const*const taf)
@@ -181,6 +182,14 @@ std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionR
 
 const std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionRecords() const {
     return pimpl->reactionRecords;
+}
+
+std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() {
+    return pimpl->reactionCounts;
+}
+
+const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() const {
+    return pimpl->reactionCounts;
 }
 
 

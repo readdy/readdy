@@ -66,6 +66,15 @@ obs_handle_t registerObservable_Reactions(sim& self, unsigned int stride, py::ob
     }
 }
 
+obs_handle_t registerObservable_ReactionCounts(sim& self, unsigned int stride, py::object callback) {
+    if(callback.is_none()) {
+        return self.registerObservable<readdy::model::observables::ReactionCounts>(stride);
+    } else {
+        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::ReactionCounts::result_t)>(callback);
+        return self.registerObservable<readdy::model::observables::ReactionCounts>(std::move(pyFun), stride);
+    }
+}
+
 obs_handle_t
 registerObservable_Positions(sim &self, unsigned int stride, pybind11::object callbackFun,
                              std::vector<std::string> types) {
@@ -232,6 +241,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_observable_n_particles", &registerObservable_NParticles)
             .def("register_observable_forces", &registerObservable_ForcesObservable)
             .def("register_observable_reactions", &registerObservable_Reactions)
+            .def("register_observable_reaction_counts", &registerObservable_ReactionCounts)
             .def("deregister_observable", [](sim& self, const obs_handle_t& handle) {
                 self.deregisterObservable(handle.getId());
             })

@@ -521,6 +521,14 @@ bool &KernelContext::recordReactionsWithPositions() {
     return recordReactionsWithPositions_;
 }
 
+const bool &KernelContext::recordReactionCounts() const {
+    return recordReactionCounts_;
+}
+
+bool &KernelContext::recordReactionCounts() {
+    return recordReactionCounts_;
+}
+
 KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
 
 KernelContext::KernelContext(KernelContext &&rhs) = default;

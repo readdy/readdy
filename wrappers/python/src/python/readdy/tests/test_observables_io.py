@@ -290,7 +290,7 @@ class TestObservablesIO(unittest.TestCase):
         sim.add_particle("B", common.Vec(1.0, 1.0, 1.0))
         sim.add_particle("C", common.Vec(1.1, 1.0, 1.0))
 
-        handle = sim.register_observable_reactions(1, None, True)
+        handle = sim.register_observable_reactions(1, None)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
             sim.run(1, 1)
@@ -310,14 +310,51 @@ class TestObservablesIO(unittest.TestCase):
                 if record["reaction_type"] == 0:
                     np.testing.assert_equal(record["position"], np.array([.0, .0, .0]))
                     np.testing.assert_equal(record["reaction_index"], 1)
-                    pass
                 elif record["reaction_type"] == 1:
                     # fusion
                     np.testing.assert_equal(record["position"], np.array([1.05, 1.0, 1.0]))
                     np.testing.assert_equal(record["reaction_index"], 0)
-                    pass
 
         common.set_logging_level("error")
+
+    def test_reaction_counts_observable(self):
+        common.set_logging_level("error")
+        fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+        sim.box_size = common.Vec(10, 10, 10)
+        sim.register_particle_type("A", .0, 5.0)
+        sim.register_particle_type("B", .0, 6.0)
+        sim.register_particle_type("C", .0, 6.0)
+        sim.register_reaction_conversion("mylabel", "A", "B", .00001)
+        sim.register_reaction_conversion("A->B", "A", "B", 1.)
+        sim.register_reaction_fusion("B+C->A", "B", "C", "A", 1.0, 1.0, .5, .5)
+        sim.add_particle("A", common.Vec(0, 0, 0))
+        sim.add_particle("B", common.Vec(1.0, 1.0, 1.0))
+        sim.add_particle("C", common.Vec(1.1, 1.0, 1.0))
+
+        handle = sim.register_observable_reaction_counts(1, None)
+        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            handle.enable_write_to_file(f, u"reactions", int(3))
+            sim.run(1, 1)
+
+        with h5py.File(fname, "r") as f2:
+            data = f2["readdy/observables/reactions"]
+            order_1_reactions_with_A = data["registered_reactions/order1/A[id=0]"][:]
+            order_2_reactions_with_B_and_C = data["registered_reactions/order2/B[id=1] + C[id=2]"][:]
+            np.testing.assert_equal(order_1_reactions_with_A[0], b"mylabel")
+            np.testing.assert_equal(order_1_reactions_with_A[1], b"A->B")
+            np.testing.assert_equal(order_2_reactions_with_B_and_C[0], b"B+C->A")
+            # counts of first time step
+            np.testing.assert_equal(data["counts/order1"][0], np.array([0, 0]))
+            np.testing.assert_equal(data["counts/order2"][0], np.array([0]))
+            # counts of second time step
+            np.testing.assert_equal(data["counts/order1"][1], np.array([0, 1]))
+            np.testing.assert_equal(data["counts/order2"][1], np.array([1]))
+
+
+        common.set_logging_level("error")
+        # register_observable_reaction_counts
 
     def test_forces_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_forces.h5")
