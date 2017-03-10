@@ -83,7 +83,7 @@ CPUDObservableFactory::createMeanSquaredDisplacement(unsigned int stride, std::v
     return new readdy::kernel::scpu::observables::SCPUMeanSquaredDisplacement<CPUDKernel>(kernel, stride, typesToCount, particlesObservable);
 }
 
-readdy::model::observables::Reactions *CPUDObservableFactory::createReactions(unsigned int stride, bool recordPosition) const {
+readdy::model::observables::Reactions *CPUDObservableFactory::createReactions(unsigned int) const {
     throw std::runtime_error("Reactions observable is not supported on the CPU_Dense kernel.");
 }
 

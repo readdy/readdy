@@ -203,8 +203,8 @@ void CPUParticles::evaluate() {
     }
 }
 
-CPUReactions::CPUReactions(CPUKernel *const kernel, unsigned int stride, bool withPositions)
-        : Reactions(kernel, stride, withPositions), kernel(kernel) {}
+CPUReactions::CPUReactions(CPUKernel *const kernel, unsigned int stride)
+        : Reactions(kernel, stride), kernel(kernel) {}
 
 void CPUReactions::evaluate() {
     const auto& model = kernel->getCPUKernelStateModel();

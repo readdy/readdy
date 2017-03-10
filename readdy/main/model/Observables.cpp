@@ -522,12 +522,8 @@ struct Reactions::Impl {
     bool firstWrite = true;
 };
 
-Reactions::Reactions(Kernel *const kernel, unsigned int stride, bool withPositions)
-        : super(kernel, stride), pimpl(std::make_unique<Impl>()), withPositions_(withPositions) {
-}
-
-const bool &Reactions::withPositions() const {
-    return withPositions_;
+Reactions::Reactions(Kernel *const kernel, unsigned int stride)
+        : super(kernel, stride), pimpl(std::make_unique<Impl>()) {
 }
 
 void Reactions::flush() {

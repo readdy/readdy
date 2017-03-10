@@ -101,7 +101,7 @@ public:
         throw std::runtime_error("should be overridden (or todo: provide default impl)");
     }
 
-    virtual Reactions * createReactions(unsigned int stride, bool recordPosition) const {
+    virtual Reactions * createReactions(unsigned int stride) const {
         throw std::runtime_error("should be overridden");
     }
 

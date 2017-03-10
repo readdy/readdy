@@ -103,7 +103,7 @@ protected:
 
 class CPUReactions : public readdy::model::observables::Reactions {
 public:
-    CPUReactions(CPUKernel *const kernel, unsigned int stride, bool withPositions);
+    CPUReactions(CPUKernel *const kernel, unsigned int stride);
 
     virtual void evaluate() override;
 

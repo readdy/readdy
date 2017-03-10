@@ -69,7 +69,7 @@ public:
     createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount,
                                   readdy::model::observables::Particles *particlesObservable) const override;
 
-    virtual readdy::model::observables::Reactions *createReactions(unsigned int stride, bool recordPosition) const override;
+    virtual readdy::model::observables::Reactions *createReactions(unsigned int stride) const override;
 
 private:
     readdy::kernel::scpu::SCPUKernel *const kernel;

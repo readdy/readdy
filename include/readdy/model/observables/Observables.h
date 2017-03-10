@@ -238,10 +238,8 @@ class Reactions : public Observable<std::vector<reactions::ReactionRecord>> {
     using super = Observable<std::vector<reactions::ReactionRecord>>;
 
 public:
-    Reactions(Kernel *const kernel, unsigned int stride, bool withPositions);
+    Reactions(Kernel *const kernel, unsigned int stride);
     virtual ~Reactions();
-
-    const bool& withPositions() const;
 
     virtual void flush() override;
 
@@ -254,8 +252,6 @@ protected:
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;
-
-    bool withPositions_;
 };
 
 }

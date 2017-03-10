@@ -57,12 +57,12 @@ void registerPotentialOrder2(sim &self, pot2 *potential) {
     self.registerPotentialOrder2(potential);
 }
 
-obs_handle_t registerObservable_Reactions(sim& self, unsigned int stride, py::object callback, bool recordPositions) {
+obs_handle_t registerObservable_Reactions(sim& self, unsigned int stride, py::object callback) {
     if(callback.is_none()) {
-        return self.registerObservable<readdy::model::observables::Reactions>(stride, recordPositions);
+        return self.registerObservable<readdy::model::observables::Reactions>(stride);
     } else {
         auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Reactions::result_t)>(callback);
-        return self.registerObservable<readdy::model::observables::Reactions>(std::move(pyFun), stride, recordPositions);
+        return self.registerObservable<readdy::model::observables::Reactions>(std::move(pyFun), stride);
     }
 }
 

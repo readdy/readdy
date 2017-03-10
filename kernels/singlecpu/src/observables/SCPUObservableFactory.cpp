@@ -81,8 +81,8 @@ SCPUObservableFactory::createMeanSquaredDisplacement(unsigned int stride, std::v
     return new SCPUMeanSquaredDisplacement<>(kernel, stride, typesToCount, particlesObservable);
 }
 
-readdy::model::observables::Reactions *SCPUObservableFactory::createReactions(unsigned int stride, bool recordPosition) const {
-    return new SCPUReactions(kernel, stride, recordPosition);
+readdy::model::observables::Reactions *SCPUObservableFactory::createReactions(unsigned int stride) const {
+    return new SCPUReactions(kernel, stride);
 }
 
 }

@@ -218,8 +218,8 @@ protected:
 
 class SCPUReactions : public readdy::model::observables::Reactions {
 public:
-    SCPUReactions(SCPUKernel *const kernel, unsigned int stride, bool withPositions)
-            : Reactions(kernel, stride, withPositions), kernel(kernel) {}
+    SCPUReactions(SCPUKernel *const kernel, unsigned int stride)
+            : Reactions(kernel, stride), kernel(kernel) {}
 
     virtual ~SCPUReactions() = default;
 

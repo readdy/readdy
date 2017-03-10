@@ -82,8 +82,8 @@ CPUObservableFactory::createMeanSquaredDisplacement(unsigned int stride, std::ve
     return new readdy::kernel::scpu::observables::SCPUMeanSquaredDisplacement<CPUKernel>(kernel, stride, typesToCount, particlesObservable);
 }
 
-readdy::model::observables::Reactions *CPUObservableFactory::createReactions(unsigned int stride, bool recordPosition) const {
-    return new CPUReactions(kernel, stride, recordPosition);
+readdy::model::observables::Reactions *CPUObservableFactory::createReactions(unsigned int stride) const {
+    return new CPUReactions(kernel, stride);
 }
 
 }
