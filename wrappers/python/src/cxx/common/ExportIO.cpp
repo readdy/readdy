@@ -29,11 +29,11 @@
  */
 
 
+#include <spdlog/fmt/ostr.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <readdy/io/File.h>
 #include <pybind11/numpy.h>
-#include <readdy/common/logging.h>
 #include <readdy/io/DataSet.h>
 
 namespace py = pybind11;

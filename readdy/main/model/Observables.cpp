@@ -46,15 +46,15 @@ class Vec3MemoryType : public readdy::io::DataSetType {
 public:
     Vec3MemoryType() {
         using entry_t = Vec3;
-        tid = []() -> hid_t {
+        tid = std::make_shared<io::DataTypeHandle>([]() -> hid_t {
             hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
             // init vec pod
             io::NativeDataSetType<entry_t::value_t> posType{};
-            H5Tinsert(entryTypeMemory, "x", HOFFSET(entry_t, x), posType.tid);
-            H5Tinsert(entryTypeMemory, "y", HOFFSET(entry_t, y), posType.tid);
-            H5Tinsert(entryTypeMemory, "z", HOFFSET(entry_t, z), posType.tid);
+            H5Tinsert(entryTypeMemory, "x", HOFFSET(entry_t, x), posType.tid->tid);
+            H5Tinsert(entryTypeMemory, "y", HOFFSET(entry_t, y), posType.tid->tid);
+            H5Tinsert(entryTypeMemory, "z", HOFFSET(entry_t, z), posType.tid->tid);
             return entryTypeMemory;
-        }();
+        }());
     }
 };
 
@@ -62,12 +62,12 @@ class Vec3FileType : public readdy::io::DataSetType {
 public:
     Vec3FileType() {
         using entry_t = Vec3;
-        tid = []() -> hid_t {
+        tid = std::make_shared<io::DataTypeHandle>([]() -> hid_t {
             Vec3MemoryType memType{};
-            auto file_type = H5Tcopy(memType.tid);
+            auto file_type = H5Tcopy(memType.tid->tid);
             H5Tpack(file_type);
             return file_type;
-        }();
+        }());
     }
 };
 
@@ -489,18 +489,14 @@ class ReactionRecordPODMemoryType : public readdy::io::DataSetType {
 public:
     ReactionRecordPODMemoryType() {
         using entry_t = readdy::model::reactions::ReactionRecord;
-        log::debug("attempting to build memory type");
-        tid = []() -> hid_t {
-            auto nativeType = io::NativeCompoundTypeBuilder(sizeof(entry_t))
-                    .insert<decltype(std::declval<entry_t>().type)>("reaction_type", offsetof(entry_t, type))
-                    .insertArray<decltype(std::declval<entry_t>().educts), 2>("educts", offsetof(entry_t, educts))
-                    .insertArray<decltype(std::declval<entry_t>().products), 2>("products", offsetof(entry_t, products))
-                    .insertArray<Vec3::value_t, 3>("position", offsetof(entry_t, where))
-                    .insertArray<decltype(std::declval<entry_t>().types_from), 2>("types_from", offsetof(entry_t, types_from))
-                    .insert<decltype(std::declval<entry_t>().reactionIndex)>("reaction_index", offsetof(entry_t, reactionIndex))
-                    .build();
-            return nativeType.tid;
-        }();
+        tid = io::NativeCompoundTypeBuilder(sizeof(entry_t))
+                .insert<decltype(std::declval<entry_t>().type)>("reaction_type", offsetof(entry_t, type))
+                .insertArray<decltype(std::declval<entry_t>().educts), 2>("educts", offsetof(entry_t, educts))
+                .insertArray<decltype(std::declval<entry_t>().products), 2>("products", offsetof(entry_t, products))
+                .insertArray<Vec3::value_t, 3>("position", offsetof(entry_t, where))
+                .insertArray<decltype(std::declval<entry_t>().types_from), 2>("types_from", offsetof(entry_t, types_from))
+                .insert<decltype(std::declval<entry_t>().reactionIndex)>("reaction_index", offsetof(entry_t, reactionIndex))
+                .build().tid;
     }
 };
 
@@ -508,12 +504,12 @@ class ReactionRecordPODFileType : public readdy::io::DataSetType {
 public:
     ReactionRecordPODFileType() {
         using entry_t = readdy::model::reactions::ReactionRecord;
-        tid = []() -> hid_t {
+        tid = std::make_shared<io::DataTypeHandle>([]() -> hid_t {
             ReactionRecordPODMemoryType memType{};
-            auto file_type = H5Tcopy(memType.tid);
+            auto file_type = H5Tcopy(memType.tid->tid);
             H5Tpack(file_type);
             return file_type;
-        }();
+        }());
     }
 };
 
@@ -565,13 +561,20 @@ void Reactions::append() {
             std::vector<std::string> lO1;
             lO1.reserve(rO1.size());
             std::for_each(rO1.begin(), rO1.end(), [&lO1](reactions::Reaction<1>* r) { lO1.push_back(r->getName()); });
-            groupO1.write(ctx.getParticleName(t1) + "[id="+ std::to_string(t1)+"]", lO1);
+            if(!lO1.empty()) {
+                groupO1.write(ctx.getParticleName(t1) + "[id=" + std::to_string(t1) + "]", lO1);
+            }
             for(const auto& t2 : ctx.getAllRegisteredParticleTypes()) {
+                if(t2 < t1) continue;
                 const auto& rO2 = ctx.getOrder2Reactions(t1, t2);
                 std::vector<std::string> lO2;
                 lO2.reserve(rO2.size());
                 std::for_each(rO2.begin(), rO2.end(), [&lO2](reactions::Reaction<2>* r) { lO2.push_back(r->getName()); });
-                groupO2.write(ctx.getParticleName(t1) + "[id="+ std::to_string(t1)+"] + " + ctx.getParticleName(t2) + "[id="+ std::to_string(t2)+"]", lO2);
+                if(!lO2.empty()) {
+                    groupO2.write(
+                            ctx.getParticleName(t1) + "[id=" + std::to_string(t1) + "] + " + ctx.getParticleName(t2) +
+                            "[id=" + std::to_string(t2) + "]", lO2);
+                }
             }
         }
     }

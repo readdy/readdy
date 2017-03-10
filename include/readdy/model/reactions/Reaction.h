@@ -49,7 +49,7 @@ namespace reactions {
 
 enum class ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
 
-inline std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType);
+std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType);
 
 template<unsigned int N_EDUCTS>
 class Reaction {

@@ -34,6 +34,7 @@
 
 #include "../Group.h"
 #include "Util_bits.h"
+#include "String_utils.h"
 #include <hdf5_hl.h>
 #include <readdy/io/DataSetType.h>
 #include <readdy/io/File.h>
@@ -47,8 +48,10 @@ inline Group::Group(h5::handle_t handle, const std::string &path)
 inline Group::Group() : Group(-1, "/") {}
 
 inline void Group::write(const std::string &dataSetName, const std::string &string) {
-    H5Tset_cset(STDDataSetType<std::string>().tid, H5T_CSET_UTF8);
-    H5Tset_cset(NativeDataSetType<std::string>().tid, H5T_CSET_UTF8);
+    auto stdstr = STDDataSetType<std::string>();
+    auto nativestr = NativeDataSetType<std::string>();
+    H5Tset_cset(stdstr.tid->tid, H5T_CSET_UTF8);
+    H5Tset_cset(nativestr.tid->tid, H5T_CSET_UTF8);
     H5LTmake_dataset_string(handle, dataSetName.c_str(), string.c_str());
 }
 
@@ -65,6 +68,11 @@ inline Group Group::createGroup(const std::string &path) {
 
 inline h5::handle_t Group::getHandle() const {
     return handle;
+}
+
+template<>
+inline void Group::write<std::string>(const std::string &dataSetName, const std::vector<std::string> &data) {
+    writeVector(handle, dataSetName, data);
 }
 
 template<>

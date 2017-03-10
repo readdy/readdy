@@ -39,99 +39,91 @@
 namespace readdy {
 namespace io {
 
-inline DataSetType::~DataSetType() {
-    if(tid >= 0) {
-        if(H5Tclose(tid) < 0) {
-            log::error("error on closing data set type with tid = {}", tid);
-        }
-    }
-}
+template<>
+inline STDDataSetType<short>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_I16LE)); }
 
 template<>
-inline STDDataSetType<short>::STDDataSetType() { tid = H5Tcopy(H5T_STD_I16LE); }
+inline STDDataSetType<unsigned short>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_U16LE)); }
 
 template<>
-inline STDDataSetType<unsigned short>::STDDataSetType() { tid = H5Tcopy(H5T_STD_U16LE); }
+inline STDDataSetType<int>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_I32LE)); }
 
 template<>
-inline STDDataSetType<int>::STDDataSetType() { tid = H5Tcopy(H5T_STD_I32LE); }
+inline STDDataSetType<unsigned int>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_U32LE)); }
 
 template<>
-inline STDDataSetType<unsigned int>::STDDataSetType() { tid = H5Tcopy(H5T_STD_U32LE); }
+inline STDDataSetType<long>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_I64LE)); }
 
 template<>
-inline STDDataSetType<long>::STDDataSetType() { tid = H5Tcopy(H5T_STD_I64LE); }
+inline STDDataSetType<unsigned long>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_U64LE)); }
 
 template<>
-inline STDDataSetType<unsigned long>::STDDataSetType() { tid = H5Tcopy(H5T_STD_U64LE); }
+inline STDDataSetType<long long>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_I64LE)); }
 
 template<>
-inline STDDataSetType<long long>::STDDataSetType() { tid = H5Tcopy(H5T_STD_I64LE); }
+inline STDDataSetType<unsigned long long>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_U64LE)); }
 
 template<>
-inline STDDataSetType<unsigned long long>::STDDataSetType() { tid = H5Tcopy(H5T_STD_U64LE); }
+inline STDDataSetType<float>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_IEEE_F32LE)); }
 
 template<>
-inline STDDataSetType<float>::STDDataSetType() { tid = H5Tcopy(H5T_IEEE_F32LE); }
+inline STDDataSetType<double>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_IEEE_F64LE)); }
 
 template<>
-inline STDDataSetType<double>::STDDataSetType() { tid = H5Tcopy(H5T_IEEE_F64LE); }
+inline STDDataSetType<std::string>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_C_S1)); }
 
 template<>
-inline STDDataSetType<std::string>::STDDataSetType() { tid = H5Tcopy(H5T_C_S1); }
+inline NativeDataSetType<short>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_SHORT)); }
 
 template<>
-inline NativeDataSetType<short>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_SHORT); }
+inline NativeDataSetType<unsigned short>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_USHORT)); }
 
 template<>
-inline NativeDataSetType<unsigned short>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_USHORT); }
+inline NativeDataSetType<int>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_INT)); }
 
 template<>
-inline NativeDataSetType<int>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_INT); }
+inline NativeDataSetType<unsigned int>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_UINT)); }
 
 template<>
-inline NativeDataSetType<unsigned int>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_UINT); }
+inline NativeDataSetType<long>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_LONG)); }
 
 template<>
-inline NativeDataSetType<long>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_LONG); }
+inline NativeDataSetType<unsigned long>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_ULONG)); }
 
 template<>
-inline NativeDataSetType<unsigned long>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_ULONG); }
+inline NativeDataSetType<long long>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_LLONG)); }
 
 template<>
-inline NativeDataSetType<long long>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_LLONG); }
+inline NativeDataSetType<unsigned long long>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_ULLONG)); }
 
 template<>
-inline NativeDataSetType<unsigned long long>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_ULLONG); }
+inline NativeDataSetType<float>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_FLOAT)); }
 
 template<>
-inline NativeDataSetType<float>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_FLOAT); }
+inline NativeDataSetType<double>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_DOUBLE)); }
 
 template<>
-inline NativeDataSetType<double>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_DOUBLE); }
+inline NativeDataSetType<bool>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_HBOOL)); }
 
 template<>
-inline NativeDataSetType<bool>::NativeDataSetType() { tid = H5Tcopy(H5T_NATIVE_HBOOL); }
-
-template<>
-inline NativeDataSetType<std::string>::NativeDataSetType() { tid = H5Tcopy(H5T_C_S1); }
+inline NativeDataSetType<std::string>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_C_S1)); }
 
 template<typename T, unsigned int len>
 inline NativeArrayDataSetType<T, len>::NativeArrayDataSetType() {
-    auto basic_type = NativeDataSetType<type>{};
+    nativeType = NativeDataSetType<type>{};
     hsize_t dim[1] = {len};
-    tid = H5Tarray_create(basic_type.tid, 1, dim);
+    tid = std::make_shared<DataTypeHandle>(H5Tarray_create(nativeType.tid->tid, 1, dim));
 }
 
 template<typename T, unsigned int len>
 inline STDArrayDataSetType<T, len>::STDArrayDataSetType() {
-    auto basic_type = STDDataSetType<type>{};
+    stdType = STDDataSetType<type>{};
     hsize_t dim[1] = {len};
-    tid = H5Tarray_create(basic_type.tid, 1, dim);
+    tid = std::make_shared<DataTypeHandle>(H5Tarray_create(stdType.tid->tid, 1, dim));
 }
 
 inline NativeCompoundType::NativeCompoundType(h5::data_set_type_t tid) {
-    DataSetType::tid = tid;
+    DataSetType::tid = std::make_shared<DataTypeHandle>(tid);
 }
 
 inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size) {
@@ -156,19 +148,19 @@ inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::s
 template<typename T>
 inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::string& name, std::size_t offset) {
     NativeDataSetType<typename std::decay<T>::type> type;
-    return insert(name, offset, type.tid);
+    return insert(name, offset, type.tid->tid);
 }
 
 template<typename T, unsigned int size>
 inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insertArray(const std::string &name, std::size_t offset) {
     io::NativeArrayDataSetType<T, size> type;
-    return insert(name, offset, type.tid);
+    return insert(name, offset, type.tid->tid);
 }
 
 inline STDCompoundType::STDCompoundType(const NativeCompoundType &nativeType) {
-    auto copy = H5Tcopy(nativeType.tid);
+    auto copy = H5Tcopy(nativeType.tid->tid);
     H5Tpack(copy);
-    tid = copy;
+    tid = std::make_shared<DataTypeHandle>(copy);
 }
 
 }

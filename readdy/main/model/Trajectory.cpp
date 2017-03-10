@@ -50,7 +50,7 @@ class TrajectoryEntryMemoryType : public readdy::io::DataSetType {
 public:
     TrajectoryEntryMemoryType() {
         using entry_t = readdy::model::observables::TrajectoryEntry;
-        tid = []() -> hid_t {
+        tid = std::make_shared<io::DataTypeHandle>([]() -> hid_t {
             hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
             // data types
             io::NativeDataSetType<particle_t::type_type> particleTypeType{};
@@ -59,14 +59,14 @@ public:
             io::NativeDataSetType<entry_t::pos_t> posType{};
             // init vec pod
             // init trajectory entry pod
-            H5Tinsert(entryTypeMemory, "typeId", HOFFSET(entry_t, typeId), particleTypeType.tid);
-            H5Tinsert(entryTypeMemory, "t", HOFFSET(entry_t, t), timeStepType.tid);
-            H5Tinsert(entryTypeMemory, "id", HOFFSET(entry_t, id), particleIdType.tid);
-            H5Tinsert(entryTypeMemory, "px", HOFFSET(entry_t, px), posType.tid);
-            H5Tinsert(entryTypeMemory, "py", HOFFSET(entry_t, py), posType.tid);
-            H5Tinsert(entryTypeMemory, "pz", HOFFSET(entry_t, pz), posType.tid);
+            H5Tinsert(entryTypeMemory, "typeId", HOFFSET(entry_t, typeId), particleTypeType.tid->tid);
+            H5Tinsert(entryTypeMemory, "t", HOFFSET(entry_t, t), timeStepType.tid->tid);
+            H5Tinsert(entryTypeMemory, "id", HOFFSET(entry_t, id), particleIdType.tid->tid);
+            H5Tinsert(entryTypeMemory, "px", HOFFSET(entry_t, px), posType.tid->tid);
+            H5Tinsert(entryTypeMemory, "py", HOFFSET(entry_t, py), posType.tid->tid);
+            H5Tinsert(entryTypeMemory, "pz", HOFFSET(entry_t, pz), posType.tid->tid);
             return entryTypeMemory;
-        }();
+        }());
         log::debug("created trajectory entry memory type {}", tid);
     }
 };
@@ -75,7 +75,7 @@ class TrajectoryEntryFileType : public readdy::io::DataSetType {
 public:
     TrajectoryEntryFileType() {
         using entry_t = readdy::model::observables::TrajectoryEntry;
-        tid = []() -> hid_t {
+        tid = std::make_shared<io::DataTypeHandle>([]() -> hid_t {
             std::size_t size = sizeof(particle_t::type_type) + sizeof(time_step_type) +
                                sizeof(particle_t::id_type) + 3 * sizeof(entry_t::pos_t);
             hid_t entryTypeFile = H5Tcreate(H5T_COMPOUND, size);
@@ -85,19 +85,19 @@ public:
             io::STDDataSetType<particle_t::id_type> particleIdType{};
             io::STDDataSetType<entry_t::pos_t> posType{};
             // init trajectory pod
-            H5Tinsert(entryTypeFile, "typeId", 0, particleTypeType.tid);
+            H5Tinsert(entryTypeFile, "typeId", 0, particleTypeType.tid->tid);
             auto cumsize = sizeof(particle_t::type_type);
-            H5Tinsert(entryTypeFile, "t", cumsize, timeStepType.tid);
+            H5Tinsert(entryTypeFile, "t", cumsize, timeStepType.tid->tid);
             cumsize += sizeof(time_step_type);
-            H5Tinsert(entryTypeFile, "id", cumsize, particleIdType.tid);
+            H5Tinsert(entryTypeFile, "id", cumsize, particleIdType.tid->tid);
             cumsize += sizeof(particle_t::id_type);
-            H5Tinsert(entryTypeFile, "px", cumsize, posType.tid);
+            H5Tinsert(entryTypeFile, "px", cumsize, posType.tid->tid);
             cumsize += sizeof(entry_t::pos_t);
-            H5Tinsert(entryTypeFile, "py", cumsize, posType.tid);
+            H5Tinsert(entryTypeFile, "py", cumsize, posType.tid->tid);
             cumsize += sizeof(entry_t::pos_t);
-            H5Tinsert(entryTypeFile, "pz", cumsize, posType.tid);
+            H5Tinsert(entryTypeFile, "pz", cumsize, posType.tid->tid);
             return entryTypeFile;
-        }();
+        }());
         log::debug("created trajectory entry file type {}", tid);
     }
 };

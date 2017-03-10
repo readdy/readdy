@@ -329,27 +329,27 @@ data_t::update_t handleEventsGillespie(
                         const auto idx1 = event.idx1;
                         if (event.nEducts == 1) {
                             while (_it < events.end() - nDeactivated) {
-                                if ((*_it).idx1 == idx1 ||
-                                    ((*_it).nEducts == 2 && (*_it).idx2 == idx1)) {
+                                if (_it->idx1 == idx1 ||
+                                    (_it->nEducts == 2 && _it->idx2 == idx1)) {
                                     ++nDeactivated;
                                     std::iter_swap(_it, events.end() - nDeactivated);
                                 } else {
-                                    cumsum += (*_it).reactionRate;
-                                    (*_it).cumulativeRate = cumsum;
+                                    cumsum += _it->reactionRate;
+                                    _it->cumulativeRate = cumsum;
                                     ++_it;
                                 }
                             }
                         } else {
                             const auto idx2 = event.idx2;
                             while (_it < events.end() - nDeactivated) {
-                                if ((*_it).idx1 == idx1 || (*_it).idx1 == idx2 ||
-                                    ((*_it).nEducts == 2 &&
-                                     ((*_it).idx2 == idx1 || (*_it).idx2 == idx2))) {
+                                if (_it->idx1 == idx1 || _it->idx1 == idx2 ||
+                                    (_it->nEducts == 2 &&
+                                     (_it->idx2 == idx1 || _it->idx2 == idx2))) {
                                     ++nDeactivated;
                                     std::iter_swap(_it, events.end() - nDeactivated);
                                 } else {
-                                    (*_it).cumulativeRate = cumsum;
-                                    cumsum += (*_it).reactionRate;
+                                    _it->cumulativeRate = cumsum;
+                                    cumsum += _it->reactionRate;
                                     ++_it;
                                 }
                             }

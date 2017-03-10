@@ -33,14 +33,29 @@
 #define READDY_MAIN_DATASETTYPE_H
 
 #include <vector>
+#include <readdy/common/logging.h>
 
 namespace readdy {
 namespace io {
 
+class DataTypeHandle {
+public:
+    h5::data_set_type_t tid;
+    DataTypeHandle(h5::data_set_type_t tid) : tid(tid) {}
+
+    virtual ~DataTypeHandle() {
+        if(tid >= 0) {
+            if(H5Tclose(tid) < 0) {
+                log::error("error on closing data set type");
+                H5Eprint (H5Eget_current_stack(), stderr);
+            }
+        }
+    }
+};
+
 class READDY_API DataSetType {
 public:
-    h5::data_set_type_t tid = -1;
-    virtual ~DataSetType();
+    std::shared_ptr<DataTypeHandle> tid;
 };
 
 template<typename T>
@@ -56,6 +71,8 @@ public:
     using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
     NativeArrayDataSetType();
     constexpr static unsigned int size = len;
+private:
+    NativeDataSetType<type> nativeType;
 };
 
 template<typename T>
@@ -71,6 +88,8 @@ public:
     using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
     STDArrayDataSetType();
     constexpr static unsigned int size = len;
+private:
+    STDDataSetType<type> stdType;
 };
 
 class NativeCompoundTypeBuilder;

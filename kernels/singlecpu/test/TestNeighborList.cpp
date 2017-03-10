@@ -81,7 +81,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(3.6, 2, 2);
     ctx.setPeriodicBoundary(true, false, false);
-    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 3);
@@ -114,7 +114,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
-    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 27);
@@ -142,7 +142,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(4.8, 5, 5.1);
     ctx.setPeriodicBoundary(true, true, true);
-    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 64);
@@ -169,7 +169,7 @@ TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     auto &ctx = kernel->getKernelContext();
     ctx.setBoxSize(1.5, 4, 1.5);
     ctx.setPeriodicBoundary(false, false, false);
-    scpum::SCPUNotThatNaiveNeighborList<> list(&ctx);
+    scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes();
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 3);
