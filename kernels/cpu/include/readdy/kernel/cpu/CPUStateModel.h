@@ -86,6 +86,10 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const;
 
+    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts();
+
+    const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts() const;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;

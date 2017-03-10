@@ -53,6 +53,7 @@ using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelConte
 using event_t = Event;
 using particle_t = readdy::model::Particle;
 using record_t = readdy::model::reactions::ReactionRecord;
+using reaction_counts_t = std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>;
 
 template<bool approximated>
 bool performReactionEvent(const double rate, const double timeStep) {
@@ -71,7 +72,7 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
 data_t::update_t handleEventsGillespie(
         CPUKernel *const kernel, double timeStep,
         bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events, std::vector<record_t>* maybeRecords);
+        std::vector<event_t> &&events, std::vector<record_t>* maybeRecords, reaction_counts_t* maybeCounts);
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const nl_t* nl,

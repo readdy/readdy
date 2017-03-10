@@ -359,7 +359,7 @@ class TestObservablesIO(unittest.TestCase):
     def test_forces_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_forces.h5")
         sim = Simulation()
-        sim.set_kernel("SingleCPU")
+        sim.set_kernel("CPU")
         sim.box_size = common.Vec(13, 13, 13)
         sim.register_particle_type("A", .1, .1)
         sim.add_particle("A", common.Vec(0, 0, 0))

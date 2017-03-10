@@ -125,6 +125,7 @@ struct CPUStateModel::Impl {
     std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords {};
+    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts {};
 
     template<bool fixpos = true>
     const model::CPUParticleData &cdata() const {
@@ -312,6 +313,14 @@ std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRe
 
 const std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() const {
     return pimpl->reactionRecords;
+}
+
+std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() {
+    return pimpl->reactionCounts;
+}
+
+const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() const {
+    return pimpl->reactionCounts;
 }
 
 CPUStateModel::~CPUStateModel() = default;

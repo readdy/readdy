@@ -112,6 +112,15 @@ protected:
 
 };
 
+class CPUReactionCounts : public readdy::model::observables::ReactionCounts {
+public:
+    CPUReactionCounts(CPUKernel *const kernel, unsigned int stride);
+
+    virtual void evaluate() override;
+
+protected:
+    CPUKernel *const kernel;
+};
 
 }
 }

@@ -86,6 +86,10 @@ readdy::model::observables::Reactions *CPUObservableFactory::createReactions(uns
     return new CPUReactions(kernel, stride);
 }
 
+readdy::model::observables::ReactionCounts *CPUObservableFactory::createReactionCounts(unsigned int stride) const {
+    return new CPUReactionCounts(kernel, stride);
+}
+
 }
 }
 }

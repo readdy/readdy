@@ -136,7 +136,20 @@ void SCPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
-    stateModel.reactionRecords().clear();
+    if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
+    if(ctx.recordReactionCounts()) {
+        auto& order1 = std::get<0>(stateModel.reactionCounts());
+        auto& order2 = std::get<1>(stateModel.reactionCounts());
+        if(order1.empty() && order2.empty()) {
+            const auto n_reactions_order1 = kernel->getKernelContext().getAllOrder1Reactions().size();
+            const auto n_reactions_order2 = kernel->getKernelContext().getAllOrder2Reactions().size();
+            order1.resize(n_reactions_order1);
+            order2.resize(n_reactions_order2);
+        } else {
+            std::fill(order1.begin(), order1.end(), 0);
+            std::fill(order2.begin(), order2.end(), 0);
+        }
+    }
     auto &data = *stateModel.getParticleData();
     auto &nl = *stateModel.getNeighborList();
     auto events = findEvents(kernel, timeStep, true);
