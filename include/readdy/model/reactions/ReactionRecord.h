@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,49 +21,38 @@
 
 
 /**
- * @file Config.h
- * @brief Config class header
+ * << detailed description >>
+ *
+ * @file ReactionRecord.h
+ * @brief << brief description >>
  * @author clonker
- * @date 05.09.16
+ * @date 07.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_CONFIG_H
-#define READDY_MAIN_CONFIG_H
+#ifndef READDY_MAIN_REACTIONRECORD_H
+#define READDY_MAIN_REACTIONRECORD_H
 
-namespace readdy {
-namespace util {
-namespace thread {
+#include <spdlog/fmt/ostr.h>
+#include <readdy/common/common.h>
+#include <readdy/model/Particle.h>
 
-/**
- * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
- * CPU or CPU_Dense kernel.
- */
-struct Config {
-    /**
-     * return type of std::thread::hardware_concurrency()
-     */
-    using n_threads_t = decltype(std::thread::hardware_concurrency());
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
 
-    /**
-     * constructs a new config (should only be performed by the kernels)
-     */
-    Config();
-    /**
-     * Returns the number of threads. Defaults to:
-     *  - hardware_concurrency() if in DEBUG mode
-     *  - 4 * hardware_concurrency() otherwise
-     * @return the number of threads
-     */
-    n_threads_t nThreads() const;
-    /**
-     * Set the number of threads to be used
-     */
-    void setNThreads(const n_threads_t);
-private:
-    n_threads_t m_nThreads;
+struct ReactionRecord {
+    int type; // int corresponding to the enum readdy::model::reactions::ReactionType
+    std::array<Particle::id_type, 2> educts {{0, 0}};
+    std::array<Particle::id_type, 2> products {{0, 0}};
+    std::array<Particle::type_type, 2> types_from {{0, 0}};
+    Vec3 where {0, 0, 0};
+    std::size_t reactionIndex {0};
+
+    friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
 };
 
-}
-}
-}
-#endif //READDY_MAIN_CONFIG_H
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)
+#endif //READDY_MAIN_REACTIONRECORD_H

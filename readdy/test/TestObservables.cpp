@@ -33,6 +33,7 @@
 #include <readdy/api/Simulation.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
+#include <readdy/io/File.h>
 
 namespace m = readdy::model;
 
@@ -54,7 +55,7 @@ TEST_P(TestObservables, TestParticlePositions) {
     auto &&integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", timeStep);
     using update_nl = readdy::model::actions::UpdateNeighborList;
     auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::create, -1);
-    for (readdy::model::observables::time_step_type t = 0; t < 100; t++) {
+    for (readdy::time_step_type t = 0; t < 100; t++) {
         integrator->perform();
         neighborList->perform();
         kernel->evaluateObservables(t);

@@ -30,6 +30,7 @@
  */
 
 #include "readdy/model/reactions/Reaction.h"
+#include "readdy/model/reactions/ReactionRecord.h"
 
 namespace readdy {
 namespace model {
@@ -37,6 +38,47 @@ namespace reactions {
 
 template<> short Reaction<1>::counter = 0;
 template<> short Reaction<2>::counter = 0;
+
+std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
+    switch (reactionType) {
+        case ReactionType::Decay: os << "Decay"; break;
+        case ReactionType::Conversion: os << "Conversion"; break;
+        case ReactionType::Fusion: os << "Fusion"; break;
+        case ReactionType::Fission: os << "Fission"; break;
+        case ReactionType::Enzymatic: os << "Enzymatic"; break;
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const ReactionRecord& record) {
+    ReactionType type = ReactionType(record.type);
+    os << "ReactionRecord[type: " << type;
+    switch (type) {
+        case ReactionType::Decay:{
+            os << ", educt: " << record.educts[0];
+            break;
+        }
+        case ReactionType::Conversion: {
+            os << ", educt: " << record.educts[0] << ", product: " << record.products[0];
+            break;
+        }
+        case ReactionType::Fusion: {
+            os << ", educts: [" << record.educts[0] << "," << record.educts[1] << "], product: " << record.products[0];
+            break;
+        }
+        case ReactionType::Fission: {
+            os << ", educt: " << record.educts[0] << ", products: [" << record.products[0] << "," << record.products[1] << "]";
+            break;
+        }
+        case ReactionType::Enzymatic: {
+            os << ", educts: [" << record.educts[0] << "," << record.educts[1] << "]";
+            os << ", products: [" << record.products[0] << "," << record.products[1] << "]";
+            break;
+        }
+    }
+    os << ", location: " << record.where << "]";
+    return os;
+}
 
 }
 }

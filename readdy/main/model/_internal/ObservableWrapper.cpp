@@ -33,7 +33,7 @@
  */
 
 
-void readdy::model::observables::ObservableWrapper::operator()(observables::time_step_type t) {
+void readdy::model::observables::ObservableWrapper::operator()(time_step_type t) {
     callback(t);
 }
 

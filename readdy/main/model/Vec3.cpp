@@ -37,42 +37,36 @@
 namespace readdy {
 namespace model {
 Vec3 &Vec3::operator+=(const Vec3 &rhs) {
-    data[0] += rhs.data[0];
-    data[1] += rhs.data[1];
-    data[2] += rhs.data[2];
+    x += rhs.x;
+    y += rhs.y;
+    z += rhs.z;
     return *this;
 }
 
-Vec3 &Vec3::operator*=(const entry_t a) {
-    data[0] *= a;
-    data[1] *= a;
-    data[2] *= a;
+Vec3 &Vec3::operator*=(const value_t a) {
+    x *= a;
+    y *= a;
+    z *= a;
     return *this;
 }
 
-Vec3 &Vec3::operator/=(const entry_t a) {
-    data[0] /= a;
-    data[1] /= a;
-    data[2] /= a;
+Vec3 &Vec3::operator/=(const value_t a) {
+    x /= a;
+    y /= a;
+    z /= a;
     return *this;
 }
 
-Vec3::Vec3(const std::array<entry_t, 3> &xyz) {
-    data = std::array<entry_t, 3>(xyz);
-}
+Vec3::Vec3(const std::array<value_t, 3> &xyz) : data(xyz) {}
 
-Vec3::Vec3(entry_t x, entry_t y, entry_t z) {
-    data[0] = x;
-    data[1] = y;
-    data[2] = z;
-}
+Vec3::Vec3(value_t x, value_t y, value_t z) : x(x), y(y), z(z) {}
 
-Vec3::entry_t Vec3::operator[](const unsigned int i) const {
+Vec3::value_t Vec3::operator[](const unsigned int i) const {
     assert(0 <= i && i < 3);
     return data[i];
 }
 
-Vec3::entry_t &Vec3::operator[](const unsigned int i) {
+Vec3::value_t &Vec3::operator[](const unsigned int i) {
     assert(0 <= i && i < 3);
     return data[i];
 }
@@ -109,15 +103,15 @@ Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs) {
     return {lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2]};
 }
 
-Vec3 operator+(const Vec3 &lhs, const Vec3::entry_t rhs) {
+Vec3 operator+(const Vec3 &lhs, const Vec3::value_t rhs) {
     return {lhs[0] + rhs, lhs[1] + rhs, lhs[2] + rhs};
 }
 
-Vec3 operator-(const Vec3 &lhs, const Vec3::entry_t rhs) {
+Vec3 operator-(const Vec3 &lhs, const Vec3::value_t rhs) {
     return lhs + (-1 * rhs);
 }
 
-Vec3 operator/(const Vec3 &lhs, const Vec3::entry_t rhs) {
+Vec3 operator/(const Vec3 &lhs, const Vec3::value_t rhs) {
     return {lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs};
 }
 

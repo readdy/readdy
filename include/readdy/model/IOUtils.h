@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,49 +21,28 @@
 
 
 /**
- * @file Config.h
- * @brief Config class header
+ * << detailed description >>
+ *
+ * @file IOUtils.h
+ * @brief << brief description >>
  * @author clonker
- * @date 05.09.16
+ * @date 10.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_CONFIG_H
-#define READDY_MAIN_CONFIG_H
+#ifndef READDY_MAIN_IOUTILS_H
+#define READDY_MAIN_IOUTILS_H
 
-namespace readdy {
-namespace util {
-namespace thread {
+#include <readdy/common/macros.h>
+#include <readdy/io/Group.h>
+#include "KernelContext.h"
 
-/**
- * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
- * CPU or CPU_Dense kernel.
- */
-struct Config {
-    /**
-     * return type of std::thread::hardware_concurrency()
-     */
-    using n_threads_t = decltype(std::thread::hardware_concurrency());
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 
-    /**
-     * constructs a new config (should only be performed by the kernels)
-     */
-    Config();
-    /**
-     * Returns the number of threads. Defaults to:
-     *  - hardware_concurrency() if in DEBUG mode
-     *  - 4 * hardware_concurrency() otherwise
-     * @return the number of threads
-     */
-    n_threads_t nThreads() const;
-    /**
-     * Set the number of threads to be used
-     */
-    void setNThreads(const n_threads_t);
-private:
-    n_threads_t m_nThreads;
-};
+void writeReactionInformation(io::Group& group, const KernelContext &context);
 
-}
-}
-}
-#endif //READDY_MAIN_CONFIG_H
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)
+
+#endif //READDY_MAIN_IOUTILS_H

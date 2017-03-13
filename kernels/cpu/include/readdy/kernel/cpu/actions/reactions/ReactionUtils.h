@@ -47,11 +47,13 @@ namespace reactions {
 using kernel_t = readdy::kernel::cpu::CPUKernel;
 using vec_t = readdy::model::Vec3;
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
-using reaction_type = readdy::model::reactions::Reaction<1>::ReactionType;
+using reaction_type = readdy::model::reactions::ReactionType;
 using nl_t = readdy::kernel::cpu::model::CPUNeighborList;
 using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
 using event_t = Event;
 using particle_t = readdy::model::Particle;
+using record_t = readdy::model::reactions::ReactionRecord;
+using reaction_counts_t = std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>;
 
 template<bool approximated>
 bool performReactionEvent(const double rate, const double timeStep) {
@@ -70,7 +72,7 @@ inline bool shouldPerformEvent(const double rate, const double timestep, bool ap
 data_t::update_t handleEventsGillespie(
         CPUKernel *const kernel, double timeStep,
         bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events);
+        std::vector<event_t> &&events, std::vector<record_t>* maybeRecords, reaction_counts_t* maybeCounts);
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const nl_t* nl,
@@ -121,29 +123,45 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
 
 template<typename Reaction>
 void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, data_t::entries_update_t& newEntries,
-                     std::vector<data_t::index_t>& decayedEntries, Reaction* reaction) {
+                     std::vector<data_t::index_t>& decayedEntries, Reaction* reaction, record_t* record) {
+    auto& entry1 = data.entry_at(idx1);
+    auto& entry2 = data.entry_at(idx2);
+    if(record) {
+        record->type = static_cast<int>(reaction->getType());
+        record->where = (entry1.position() + entry2.position()) / 2.;
+        record->educts[0] = entry1.id;
+        record->educts[1] = entry2.id;
+        record->types_from[0] = entry1.type;
+        record->types_from[1] = entry2.type;
+    }
     switch(reaction->getType()) {
         case reaction_type::Decay: {
             decayedEntries.push_back(idx1);
             break;
         }
         case reaction_type::Conversion: {
-            data.entry_at(idx1).type = reaction->getProducts()[0];
+            entry1.type = reaction->getProducts()[0];
+            entry1.id = readdy::model::Particle::nextId();
+            if(record) record->products[0] = entry1.id;
             break;
         }
         case reaction_type::Enzymatic: {
-            auto& entry1 = data.entry_at(idx1);
             if (entry1.type == reaction->getEducts()[1]) {
                 // p1 is the catalyst
-                data.entry_at(idx2).type = reaction->getProducts()[0];
+                entry2.type = reaction->getProducts()[0];
+                entry2.id = readdy::model::Particle::nextId();
             } else {
                 // p2 is the catalyst
                 entry1.type = reaction->getProducts()[0];
+                entry1.id = readdy::model::Particle::nextId();
+            }
+            if(record) {
+                record->products[0] = entry1.id;
+                record->products[1] = entry2.id;
             }
             break;
         }
         case reaction_type::Fission: {
-            auto& entry1 = data.entry_at(idx1);
             auto n3 = readdy::model::rnd::normal3(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
@@ -151,20 +169,26 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
             newEntries.push_back({p});
 
             entry1.type = reaction->getProducts()[0];
+            entry1.id = readdy::model::Particle::nextId();
             data.displace(entry1, reaction->getWeight1() * reaction->getProductDistance() * n3);
+            if(record) {
+                record->products[0] = entry1.id;
+                record->products[1] = p.getId();
+            }
             break;
         }
         case reaction_type::Fusion: {
-            auto& entry1 = data.entry_at(idx1);
-            const auto e1Pos = data.pos(idx1);
-            const auto e2Pos = data.pos(idx2);
+            const auto& e1Pos = entry1.position();
+            const auto& e2Pos = entry2.position();
             if (reaction->getEducts()[0] == entry1.type) {
                 data.displace(entry1, reaction->getWeight1() * (e2Pos - e1Pos));
             } else {
                 data.displace(entry1, reaction->getWeight1() * (e1Pos - e2Pos));
             }
             entry1.type = reaction->getProducts()[0];
+            entry1.id = readdy::model::Particle::nextId();
             decayedEntries.push_back(idx2);
+            if(record) record->products[0] = entry1.id;
             break;
         }
     }

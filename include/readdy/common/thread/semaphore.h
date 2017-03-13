@@ -21,10 +21,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file semaphore.h
- * @brief << brief description >>
+ * @brief header containing the semaphore class
  * @author clonker
  * @date 16.11.16
  */
@@ -45,6 +43,10 @@ namespace thread {
  */
 class semaphore {
 public:
+    /**
+     * creates a new semaphore
+     * @param count the count, defaults to 0
+     */
     explicit semaphore(int count = 0) : count(count) {}
 
     /**

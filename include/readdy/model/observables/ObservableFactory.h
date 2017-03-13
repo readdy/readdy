@@ -65,40 +65,47 @@ public:
     virtual HistogramAlongAxis *
     createHistogramAlongAxis(unsigned int stride, std::vector<double> binBorders,
                              std::vector<std::string> typesToCount, unsigned int axis) const {
-        // todo: provide default impl
-        throw std::runtime_error("Should be overridden (or todo: provide default impl)");
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
     virtual NParticles *
     createNParticles(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
-        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
     virtual Forces *
     createForces(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
-        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
     virtual Positions *
     createPositions(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
-        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
     virtual RadialDistribution *
     createRadialDistribution(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
                              std::vector<std::string> typeCountTo,
                              double particleDensity) const {
-        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
     virtual Particles *
     createParticles(unsigned int stride) const {
-        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
     virtual MeanSquaredDisplacement *
     createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount, Particles *particlesObservable) const {
-        throw std::runtime_error("should be overridden (or todo: provide default impl)");
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
+    }
+
+    virtual Reactions * createReactions(unsigned int stride) const {
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
+    }
+
+    virtual ReactionCounts* createReactionCounts(unsigned int stride) const {
+        throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
 protected:
@@ -130,6 +137,10 @@ READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(RadialDistribution)
 READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Particles)
 
 READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(MeanSquaredDisplacement)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Reactions)
+
+READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(ReactionCounts)
 
 }
 }

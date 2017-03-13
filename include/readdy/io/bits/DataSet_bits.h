@@ -53,12 +53,6 @@ inline void DataSet<T, VLEN>::close() {
     } else {
         dataSetHandle = -1;
     }
-    if (memoryType.tid >= 0 && H5Tclose(memoryType.tid) < 0) {
-        log::error("error on closing entries type memory");
-    }
-    if (fileType.tid >= 0 && H5Tclose(fileType.tid) < 0) {
-        log::error("error on closing entries type file");
-    }
 }
 
 template<typename T, bool VLEN>
@@ -83,10 +77,10 @@ inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, co
     if (VLEN) {
         log::trace("making the types {} and {} vlen", memoryType.tid, fileType.tid);
         DataSetType vlenMemoryType;
-        vlenMemoryType.tid = H5Tvlen_create(memoryType.tid);
+        vlenMemoryType.tid = std::make_shared<DataTypeHandle>(H5Tvlen_create(memoryType.tid->tid));
         this->memoryType = vlenMemoryType;
         DataSetType vlenFileType;
-        vlenFileType.tid = H5Tvlen_create(fileType.tid);
+        vlenFileType.tid = std::make_shared<DataTypeHandle>(H5Tvlen_create(fileType.tid->tid));
         this->fileType = vlenFileType;
     }
     // validate and find extension dim
@@ -107,11 +101,12 @@ inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group, co
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
         H5Pset_layout(plist, H5D_CHUNKED);
         H5Pset_chunk(plist, static_cast<int>(chunkSize.size()), chunkSize.data());
-        dataSetHandle = H5Dcreate(group.handle, name.c_str(), this->fileType.tid, fileSpace, H5P_DEFAULT, plist,
+        dataSetHandle = H5Dcreate(group.handle, name.c_str(), this->fileType.tid->tid, fileSpace, H5P_DEFAULT, plist,
                                   H5P_DEFAULT);
         if(dataSetHandle < 0) {
             log::error("Error on creating data set {}", dataSetHandle);
             H5Eprint (H5Eget_current_stack(), stderr);
+            throw std::runtime_error("Error on creating data set " + std::to_string(dataSetHandle));
         }
         memorySpace = -1;
         if(plist >= 0 && H5Pclose(plist) < 0) {
@@ -211,7 +206,7 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, std::v
     {
         auto fileSpace = H5Dget_space(dataSetHandle);
         H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-        H5Dwrite(dataSetHandle, memoryType.tid, memorySpace, fileSpace, H5P_DEFAULT, traj.data());
+        H5Dwrite(dataSetHandle, memoryType.tid->tid, memorySpace, fileSpace, H5P_DEFAULT, traj.data());
         H5Sclose(fileSpace);
     }
 };
@@ -268,7 +263,7 @@ inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const 
     }
     auto fileSpace = H5Dget_space(dataSetHandle);
     H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    if(H5Dwrite(dataSetHandle, memoryType.tid, memorySpace, fileSpace, H5P_DEFAULT, data) < 0) {
+    if(H5Dwrite(dataSetHandle, memoryType.tid->tid, memorySpace, fileSpace, H5P_DEFAULT, data) < 0) {
         log::error("Error with data set {}", dataSetHandle);
         H5Eprint (H5Eget_current_stack(), stderr);
     }

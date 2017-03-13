@@ -165,6 +165,7 @@ public:
      * Gives all available predefined observable names.
      * @return a vector containing all predefined observable names
      * @todo implement this (changed the factory type to constructor+dispatcher)
+     * @fixme
      */
     std::vector<std::string> getAvailableObservables();
 
@@ -267,16 +268,12 @@ public:
     /**
     * Constructs a Lennard-Jones-type potential between two particle types A and B (where possibly A = B) of the form
     *
-    * \f[
-    *      V_\text{LJ}(r) = k(\epsilon, n, m) [ (\sigma/r)^m - (\sigma/r)^n ],
-    * \f]
+    * \f[ V_{\mbox{LJ}}(r) = k(\epsilon , n, m) \left[ \left(\frac{\sigma}{r}\right)^m - \left(\frac{\sigma}{r}\right)^n \right], \f]
     *
     * where n,m are exponent 1 and 2, respectively, with m > n.
     * If shift == true, it will be defined as
     *
-    * \f[
-    *      V_{\text{LJ, shifted}}(r) = V_\text{LJ}(r) - V_\text{LJ}(r_\text{cutoff})
-    * \f]
+    * \f[ V_{\mbox{LJ, shifted}}(r) = V_{\mbox{LJ}}(r) - V_{\mbox{LJ}}(r_{\mbox{cutoff}}) \f]
     *
     * for r <= cutoffDistance, which makes a difference in energy, but not in force.
     *
@@ -424,7 +421,7 @@ public:
     const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
                                          const model::Vec3 &normalCoefficients, const double distanceFromPlane, const bool largerOrLess);
 
-    virtual void run(const readdy::model::observables::time_step_type steps, const double timeStep);
+    virtual void run(const time_step_type steps, const double timeStep);
 
     double getRecommendedTimeStep(unsigned int N) const;
 

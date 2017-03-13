@@ -45,7 +45,7 @@ public:
     ObservableWrapper(Kernel *const kernel,
                       const observables::observable_type &observable, unsigned int stride = 1);
 
-    void operator()(observables::time_step_type t);
+    void operator()(time_step_type t);
 
     virtual void evaluate() override;
 

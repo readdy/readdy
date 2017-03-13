@@ -202,6 +202,30 @@ void CPUParticles::evaluate() {
         }
     }
 }
+
+CPUReactions::CPUReactions(CPUKernel *const kernel, unsigned int stride)
+        : Reactions(kernel, stride), kernel(kernel) {}
+
+void CPUReactions::evaluate() {
+    const auto& model = kernel->getCPUKernelStateModel();
+    const auto& records = model.reactionRecords();
+    result.clear();
+    result.reserve(records.size());
+    result.insert(result.end(), records.begin(), records.end());
+}
+
+CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int stride)
+        : ReactionCounts(kernel, stride), kernel(kernel) {}
+
+void CPUReactionCounts::evaluate() {
+    auto &order1 = std::get<0>(result);
+    auto &order2 = std::get<1>(result);
+    const auto& counts = kernel->getCPUKernelStateModel().reactionCounts();
+    const auto& counts_order1 = std::get<0>(counts);
+    const auto& counts_order2 = std::get<1>(counts);
+    order1.assign(counts_order1.begin(), counts_order1.end());
+    order2.assign(counts_order2.begin(), counts_order2.end());
+}
 }
 }
 }

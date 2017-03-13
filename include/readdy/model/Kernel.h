@@ -117,7 +117,7 @@ public:
     /**
      * Evaluates all observables.
      */
-    virtual void evaluateObservables(observables::time_step_type t);
+    virtual void evaluateObservables(time_step_type t);
 
     /**
      * Registers an observable to the kernel signal.

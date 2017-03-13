@@ -39,8 +39,9 @@ namespace reactions {
 
 data_t::update_t handleEventsGillespie(
         CPUKernel *const kernel, double timeStep, bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events) {
+        std::vector<event_t> &&events, std::vector<record_t>* maybeRecords, reaction_counts_t* maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
+    const auto& fixPos = kernel->getKernelContext().getFixPositionFun();
 
     data_t::entries_update_t newParticles{};
     std::vector<data_t::index_t> decayedEntries {};
@@ -76,10 +77,34 @@ data_t::update_t handleEventsGillespie(
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
                             auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                            performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction);
+                            if(maybeRecords) {
+                                record_t record;
+                                record.reactionIndex = event.reactionIdx;
+                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, &record);
+                                fixPos(record.where);
+                                maybeRecords->push_back(std::move(record));
+                            } else {
+                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
+                            }
+                            if(maybeCounts) {
+                                std::get<0>(*maybeCounts).at(event.reactionIdx)++;
+                            }
                         } else {
                             auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                            performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction);
+                            if(maybeRecords) {
+                                record_t record;
+                                record.reactionIndex = event.reactionIdx;
+                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction,
+                                                &record);
+                                fixPos(record.where);
+                                maybeRecords->push_back(std::move(record));
+                            } else {
+                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction,
+                                                nullptr);
+                            }
+                            if(maybeCounts) {
+                                std::get<1>(*maybeCounts).at(event.reactionIdx)++;
+                            }
                         }
                     }
                     /**

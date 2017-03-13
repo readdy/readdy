@@ -91,7 +91,7 @@ public:
     }
 
     template<typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
-    void perform(const readdy::model::observables::time_step_type steps = 5, bool verbose = false) {
+    void perform(const readdy::time_step_type steps = 5, bool verbose = false) {
         this->configure();
         const auto result = runPerformanceTest<ReactionScheduler>(steps, verbose);
         timeForces = std::get<0>(result);
@@ -140,7 +140,7 @@ protected:
      */
     template<typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
     std::array<double, 4>
-    runPerformanceTest(readdy::model::observables::time_step_type steps, const bool verbose = false) {
+    runPerformanceTest(readdy::time_step_type steps, const bool verbose = false) {
         auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
         auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
         auto &&reactions = kernel->createAction<ReactionScheduler>(timeStep);
@@ -154,7 +154,7 @@ protected:
             forces->perform();
             timeForces += c.getSeconds();
         }
-        for (readdy::model::observables::time_step_type t = 0; t < steps; ++t) {
+        for (readdy::time_step_type t = 0; t < steps; ++t) {
             if (verbose) {
                 readdy::log::debug("----------");
                 readdy::log::debug("t = {}", t);

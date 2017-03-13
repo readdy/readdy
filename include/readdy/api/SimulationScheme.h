@@ -52,6 +52,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <readdy/common/common.h>
 #include <readdy/model/Kernel.h>
 
 namespace readdy {
@@ -60,16 +61,16 @@ template<typename SchemeType>
 class SchemeConfigurator;
 
 struct SimulationScheme {
-    using continue_fun_t = std::function<bool(readdy::model::observables::time_step_type)>;
+    using continue_fun_t = std::function<bool(time_step_type)>;
 
     SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
 
     virtual void run(const continue_fun_t &fun) = 0;
 
-    void run(const model::observables::time_step_type steps) {
+    void run(const time_step_type steps) {
         // show every 1% of the simulation
         const std::size_t progressOutputStride = static_cast<std::size_t>(steps / 100);
-        auto defaultContinueCriterion = [this, steps, progressOutputStride](const model::observables::time_step_type current) {
+        auto defaultContinueCriterion = [this, steps, progressOutputStride](const time_step_type current) {
             if (progressOutputStride > 0 && (current - start) % progressOutputStride == 0) {
                 log::debug("Simulation progress: {} / {} steps", (current - start), steps);
             }
@@ -90,7 +91,7 @@ protected:
     std::unique_ptr<model::actions::UpdateNeighborList> neighborList = nullptr;
     std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList = nullptr;
     bool evaluateObservables = true;
-    model::observables::time_step_type start = 0;
+    time_step_type start = 0;
 };
 
 class ReaDDyScheme : public SimulationScheme {
@@ -105,7 +106,7 @@ public:
         if (neighborList) neighborList->perform();
         if (forces) forces->perform();
         if (evaluateObservables) kernel->evaluateObservables(start);
-        model::observables::time_step_type t = start;
+        time_step_type t = start;
         while (continueFun(t)) {
             if (integrator) integrator->perform();
             if (neighborList) neighborList->perform();
@@ -211,7 +212,7 @@ public:
         return ptr;
     }
 
-    void configureAndRun(double timeStep, const model::observables::time_step_type steps) {
+    void configureAndRun(double timeStep, const time_step_type steps) {
         configure(timeStep)->run(steps);
     }
 
@@ -234,7 +235,7 @@ public:
         if (neighborList) neighborList->perform();
         if (forces) forces->perform();
         if (evaluateObservables) kernel->evaluateObservables(start);
-        model::observables::time_step_type t = start;
+        time_step_type t = start;
         while (fun(t)) {
             if (integrator) integrator->perform();
             if (compartments) compartments->perform();
@@ -361,7 +362,7 @@ public:
         return ptr;
     }
 
-    void configureAndRun(double timeStep, const model::observables::time_step_type steps) {
+    void configureAndRun(double timeStep, const time_step_type steps) {
         configure(timeStep)->run(steps);
     }
 

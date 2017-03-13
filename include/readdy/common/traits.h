@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,49 +21,30 @@
 
 
 /**
- * @file Config.h
- * @brief Config class header
+ * << detailed description >>
+ *
+ * @file traits.h
+ * @brief << brief description >>
  * @author clonker
- * @date 05.09.16
+ * @date 13.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_CONFIG_H
-#define READDY_MAIN_CONFIG_H
+#ifndef READDY_MAIN_TRAITS_H
+#define READDY_MAIN_TRAITS_H
 
-namespace readdy {
-namespace util {
-namespace thread {
+#include <array>
+#include "macros.h"
 
-/**
- * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
- * CPU or CPU_Dense kernel.
- */
-struct Config {
-    /**
-     * return type of std::thread::hardware_concurrency()
-     */
-    using n_threads_t = decltype(std::thread::hardware_concurrency());
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
 
-    /**
-     * constructs a new config (should only be performed by the kernels)
-     */
-    Config();
-    /**
-     * Returns the number of threads. Defaults to:
-     *  - hardware_concurrency() if in DEBUG mode
-     *  - 4 * hardware_concurrency() otherwise
-     * @return the number of threads
-     */
-    n_threads_t nThreads() const;
-    /**
-     * Set the number of threads to be used
-     */
-    void setNThreads(const n_threads_t);
-private:
-    n_threads_t m_nThreads;
-};
+template<typename T>
+struct is_std_array : public std::false_type {};
 
-}
-}
-}
-#endif //READDY_MAIN_CONFIG_H
+template<typename T, std::size_t N>
+struct is_std_array<std::array<T, N>> : public std::true_type {};
+
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)
+#endif //READDY_MAIN_TRAITS_H

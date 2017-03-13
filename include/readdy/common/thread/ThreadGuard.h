@@ -21,10 +21,11 @@
 
 
 /**
- * << detailed description >>
+ * Header file containing the ThreadGuard class, which will - given a pointer to a thread - join that thread upon
+ * destruction.
  *
  * @file ThreadGuard.h
- * @brief << brief description >>
+ * @brief ThreadGuard header file
  * @author clonker
  * @date 01.08.16
  */
@@ -37,23 +38,48 @@
 namespace readdy {
 namespace util {
 namespace thread {
+/**
+ * Thread guard class that will, given a pointer to a thread, join that thread upon destruction.
+ */
 class ThreadGuard {
     std::thread *t;
 public:
+    /**
+     * Constructs a new thread guard
+     * @param t pointer to a thread object
+     */
     explicit ThreadGuard(std::thread *const t) : t(t) {}
 
+    /**
+     * Joins the thread if it is not null and joinable
+     */
     ~ThreadGuard() {
         if (t && t->joinable()) t->join();
     }
 
+    /**
+     * Copying is not allowed
+     */
     ThreadGuard(const ThreadGuard &) = delete;
 
+    /**
+     * Copying is not allowed
+     */
     ThreadGuard &operator=(const ThreadGuard &) = delete;
 
+    /**
+     * Moves another ThreadGuard object into this one, setting the other's thread pointer to null in the process.
+     * @param tg the other ThreadGuard object.
+     */
     ThreadGuard(ThreadGuard &&tg) : t(std::move(tg.t)) {
         tg.t = nullptr;
     };
 
+    /**
+     * See move constructor.
+     * @param tg the other ThreadGuard object
+     * @return myself
+     */
     ThreadGuard &operator=(ThreadGuard &&tg) {
         t = std::move(tg.t);
         tg.t = nullptr;

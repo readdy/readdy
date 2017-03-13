@@ -56,7 +56,7 @@ public:
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
     virtual double perform() override {
-        readdy::model::Vec3::entry_t energy = 0;
+        readdy::model::Vec3::value_t energy = 0;
         const auto& particleIndices = potential->getTopology()->getParticles();
         const auto& d = context->getShortestDifferenceFun();
         for(const auto& bond : potential->getBonds()) {
@@ -84,7 +84,7 @@ public:
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
     virtual double perform() override {
-        readdy::model::Vec3::entry_t energy = 0;
+        readdy::model::Vec3::value_t energy = 0;
         const auto& particleIndices = potential->getTopology()->getParticles();
         const auto& d = context->getShortestDifferenceFun();
 
@@ -113,7 +113,7 @@ public:
     }
 
     virtual double perform() override {
-        readdy::model::Vec3::entry_t energy = 0;
+        readdy::model::Vec3::value_t energy = 0;
         const auto& particleIndices = potential->getTopology()->getParticles();
         const auto& d = context->getShortestDifferenceFun();
 

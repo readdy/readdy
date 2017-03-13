@@ -44,6 +44,9 @@ struct SCPUStateModel::Impl {
     std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies;
     SCPUStateModel::topology_action_factory const* topologyActionFactory;
     readdy::model::KernelContext const *context;
+    // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
+    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords {};
+    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts {};
 };
 
 SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const*const taf)
@@ -171,6 +174,22 @@ readdy::model::top::Topology *const SCPUStateModel::addTopology(const std::vecto
     std::vector<std::size_t> ids = pimpl->particleData->addTopologyParticles(particles);
     pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids)));
     return pimpl->topologies.back().get();
+}
+
+std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionRecords() {
+    return pimpl->reactionRecords;
+}
+
+const std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionRecords() const {
+    return pimpl->reactionRecords;
+}
+
+std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() {
+    return pimpl->reactionCounts;
+}
+
+const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() const {
+    return pimpl->reactionCounts;
 }
 
 

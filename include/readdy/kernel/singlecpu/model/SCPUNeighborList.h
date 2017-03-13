@@ -223,9 +223,7 @@ public:
         const auto simBoxSize = ctx->getBoxSize();
         if (maxCutoff > 0) {
 
-            for (auto &&box : boxes) {
-                box.particleIndices.clear();
-            }
+            std::for_each(boxes.begin(), boxes.end(), [](Box& box) {box.particleIndices.clear();});
             super::pairs->clear();
 
             unsigned long idx = 0;
@@ -249,12 +247,12 @@ public:
                 for (long i = 0; i < box.particleIndices.size(); ++i) {
                     const auto pI = box.particleIndices[i];
                     for (long j = i + 1; j < box.particleIndices.size(); ++j) {
-                        super::pairs->insert((*super::pairs).end(), {pI, box.particleIndices[j]});
+                        super::pairs->push_back({pI, box.particleIndices[j]});
                     }
 
                     for (auto &&neighboringBox : box.neighbors) {
                         for (const auto &pJ : neighboringBox->particleIndices) {
-                            super::pairs->insert((*super::pairs).end(), {pI, pJ});
+                            super::pairs->push_back({pI, pJ});
                         }
                     }
                 }

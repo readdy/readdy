@@ -39,6 +39,7 @@
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
+#include <readdy/model/reactions/ReactionRecord.h>
 
 namespace readdy {
 namespace kernel {
@@ -84,6 +85,14 @@ public:
     virtual const model::SCPUNeighborList *getNeighborList() const;
 
     virtual const std::vector<readdy::model::Particle> getParticles() const override;
+
+    std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords();
+
+    const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const;
+
+    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts();
+
+    const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts() const;
 
 private:
     struct Impl;

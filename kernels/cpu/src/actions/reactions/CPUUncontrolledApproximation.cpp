@@ -118,6 +118,23 @@ void CPUUncontrolledApproximation::perform() {
     auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
 
+    if(ctx.recordReactionsWithPositions()) {
+        kernel->getCPUKernelStateModel().reactionRecords().clear();
+    }
+    if(ctx.recordReactionCounts()) {
+        auto& order1 = std::get<0>(kernel->getCPUKernelStateModel().reactionCounts());
+        auto& order2 = std::get<1>(kernel->getCPUKernelStateModel().reactionCounts());
+        if(order1.empty() && order2.empty()) {
+            const auto n_reactions_order1 = kernel->getKernelContext().getAllOrder1Reactions().size();
+            const auto n_reactions_order2 = kernel->getKernelContext().getAllOrder2Reactions().size();
+            order1.resize(n_reactions_order1);
+            order2.resize(n_reactions_order2);
+        } else {
+            std::fill(order1.begin(), order1.end(), 0);
+            std::fill(order2.begin(), order2.end(), 0);
+        }
+    }
+
     // gather events
     std::vector<std::future<std::size_t>> n_eventsFutures;
     std::vector<event_future_t> eventFutures;
@@ -185,7 +202,18 @@ void CPUUncontrolledApproximation::perform() {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
                     auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
-                    performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction);
+                    if(ctx.recordReactionsWithPositions()) {
+                        record_t record;
+                        record.reactionIndex = event.reactionIdx;
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, &record);
+                        fixPos(record.where);
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                    } else {
+                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
+                    }
+                    if(ctx.recordReactionCounts()) {
+                        std::get<0>(kernel->getCPUKernelStateModel().reactionCounts()).at(event.reactionIdx)++;
+                    }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1) {
                             _it2->cumulativeRate = 1;
@@ -193,7 +221,18 @@ void CPUUncontrolledApproximation::perform() {
                     }
                 } else {
                     auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
-                    performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction);
+                    if(ctx.recordReactionsWithPositions()) {
+                        record_t record;
+                        record.reactionIndex = event.reactionIdx;
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
+                        fixPos(record.where);
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                    } else {
+                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
+                    }
+                    if(ctx.recordReactionCounts()) {
+                        std::get<1>(kernel->getCPUKernelStateModel().reactionCounts()).at(event.reactionIdx)++;
+                    }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
                                 _it2 ->idx1 == event.idx2 || _it2->idx2 == event.idx2) {

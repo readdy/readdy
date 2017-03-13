@@ -101,6 +101,26 @@ protected:
     CPUKernel *const kernel;
 };
 
+class CPUReactions : public readdy::model::observables::Reactions {
+public:
+    CPUReactions(CPUKernel *const kernel, unsigned int stride);
+
+    virtual void evaluate() override;
+
+protected:
+    CPUKernel *const kernel;
+
+};
+
+class CPUReactionCounts : public readdy::model::observables::ReactionCounts {
+public:
+    CPUReactionCounts(CPUKernel *const kernel, unsigned int stride);
+
+    virtual void evaluate() override;
+
+protected:
+    CPUKernel *const kernel;
+};
 
 }
 }

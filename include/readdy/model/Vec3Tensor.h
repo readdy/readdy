@@ -87,14 +87,14 @@ public:
         return copy;
     }
 
-    Vec3Tensor<N>& operator*(const Vec3::entry_t& rhs) {
+    Vec3Tensor<N>& operator*(const Vec3::value_t& rhs) {
         for(auto& v : cols) {
             v *= rhs;
         }
         return *this;
     }
 
-    Vec3Tensor<N> operator*(const Vec3::entry_t& rhs) const {
+    Vec3Tensor<N> operator*(const Vec3::value_t& rhs) const {
         Vec3Tensor<N> copy {*this};
         copy = copy * rhs;
         return copy;
@@ -116,7 +116,7 @@ private:
 };
 
 template<std::size_t N>
-Vec3Tensor<N>& operator*(const Vec3::entry_t scalar, Vec3Tensor<N>& tensor) {
+Vec3Tensor<N>& operator*(const Vec3::value_t scalar, Vec3Tensor<N>& tensor) {
     return tensor * scalar;
 }
 

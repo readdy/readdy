@@ -29,7 +29,7 @@
  *
  * Observable derives from ObservableBase and is templateized to a certain result type.
  *
- * Combiner takes two Observables and combines their results into a third result to avoid duplication of
+ * Combiner takes two or more Observables and combines their results into a third result to avoid duplication of
  * work.
  *
  * The callback methods are responsible for triggering the evaluation and forwarding the results to the external callback
@@ -44,6 +44,7 @@
 #ifndef READDY_MAIN_OBSERVABLE_H
 #define READDY_MAIN_OBSERVABLE_H
 
+#include <readdy/common/common.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/common/signals.h>
 #include <readdy/common/logging.h>
@@ -57,136 +58,291 @@ namespace model {
 class Kernel;
 
 namespace observables {
-using time_step_type = unsigned long;
+/**
+ * The signal type for the observable-evaluation callback.
+ */
 using signal_type = readdy::signals::signal<void(time_step_type)>;
+/**
+ * Most general type of observable: A function pointer of type signal_type::slot_type.
+ */
 using observable_type = signal_type::slot_type;
 
-template<typename T>
-struct ObservableName {
-};
-
-
+/**
+ * Base class for all observables, defining interfaces for serialization of results and striding of the evaluation.
+ */
 class ObservableBase {
 public:
 
-    ObservableBase(readdy::model::Kernel *const kernel, unsigned int stride = 1) : stride(stride), kernel(kernel) {
-    };
+    /**
+     * Constructs an object of type ObservableBase. Needs a kernel and a stride, which is defaulted to 1, i.e.,
+     * evaluation in every time step.
+     * @param kernel the kernel
+     * @param stride the stride
+     */
+    ObservableBase(readdy::model::Kernel *const kernel, unsigned int stride = 1)
+            : stride(stride), kernel(kernel) {};
 
-    void setStride(const unsigned int stride) {
-        ObservableBase::stride = stride;
-    }
-
+    /**
+     * The stride at which the observable gets evaluated. Can be 0, which is equivalent to stride = 1.
+     * @return the stride
+     */
     unsigned int getStride() const {
         return stride;
     }
 
-    const observables::time_step_type &getCurrentTimeStep() const {
+    /**
+     * The observable's current time step, i.e., the time step when it was last evaluated.
+     * @return the observable's current time step
+     */
+    const time_step_type &getCurrentTimeStep() const {
         return t_current;
     }
 
+    /**
+     * The destructor.
+     */
     virtual ~ObservableBase() = default;
 
-    virtual void callback(observables::time_step_type t) {
+    /**
+     * Method that will trigger a callback with the current results if shouldExecuteCallback() is true.
+     * @param t
+     */
+    virtual void callback(time_step_type t) {
         if (shouldExecuteCallback(t)) {
             firstCall = false;
             t_current = t;
             evaluate();
+            if (writeToFile) append();
         }
     };
 
-    virtual bool shouldExecuteCallback(observables::time_step_type t) const {
+    /**
+     * Method determining whether the observable should be evaluated at time step t.
+     * @param t the time step
+     * @return true, if we haven't been evaluated in the current time step yet and stride is 0 or a divisor of t
+     */
+    virtual bool shouldExecuteCallback(time_step_type t) const {
         return (t_current != t || firstCall) && (stride == 0 || t % stride == 0);
     }
 
+    /**
+     * Will be called automagically when shouldExecuteCallback() is true. Can also be called manually and will then
+     * place the observable's results into the result member (in case of a readdy::model::Observable),
+     * based on the current state of the system.
+     */
     virtual void evaluate() = 0;
 
+    /**
+     * This should be called if the contents of the observable should be written into a file after evaluation.
+     * @param file the file to write into
+     * @param dataSetName the name of the data set, automatically placed under the group /readdy/observables
+     * @param flushStride performance parameter, determining the hdf5-internal chunk size
+     */
     void enableWriteToFile(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-        this->flushStride = flushStride;
         writeToFile = true;
         initializeDataSet(file, dataSetName, flushStride);
     }
 
+    /**
+     * Write now! Only has an effect if writing to file was enabled, see enableWriteToFile().
+     */
     virtual void flush() = 0;
 
 protected:
+    friend class readdy::model::Kernel;
 
+    /**
+     * Method that will be called upon registration on a kernel and that allows to
+     * modify the simulation setup to the observable's needs.
+     * @param kernel the kernel
+     */
+    virtual void initialize(Kernel *const kernel) {};
+
+    /**
+     * Method that will be called once, if enableWriteToFile() is called and should create a readdy::io::DataSet that
+     * the results are written into.
+     * @param dataSetName the name of the data set to be created
+     * @param flushStride the flush stride, more specifically the internal hdf5 chunk size
+     */
     virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) = 0;
 
+    /**
+     * Called whenever result should be written into the file
+     */
     virtual void append() = 0;
 
+    /**
+     * Stride at which the observable gets evaluated
+     */
     unsigned int stride;
-    unsigned int flushStride = 1;
+    /**
+     * The kernel which created this observable
+     */
     readdy::model::Kernel *const kernel;
-    observables::time_step_type t_current = 0;
+    /**
+     * The current time step of the observable
+     */
+    time_step_type t_current = 0;
+    /**
+     * true if we should write to file, otherwise false
+     */
     bool writeToFile = false;
+    /**
+     * this is only initially true and otherwise false
+     */
     bool firstCall = true;
 };
 
+/**
+ * Base class for builtin observables. Contains a result variable in which the current results will be stored, also
+ * has a callback function which can be set externally and used to retrieve the data.
+ *
+ * @tparam Result Parameter describing the type of result in a time step. For instance,
+ * positions would be of type std::vector<Vec3>.
+ */
 template<typename Result>
 class Observable : public ObservableBase {
 public:
+    /**
+     * type of the callback function
+     */
     using callback_function = std::function<void(const Result &)>;
+    /**
+     * result type
+     */
     typedef Result result_t;
 
+    /**
+     * Constructs an observable belonging to a kernel with a certain stride, default initializing the result.
+     * @param kernel the kernel
+     * @param stride the stride
+     */
     Observable(Kernel *const kernel, unsigned int stride)
             : ObservableBase(kernel, stride), result() {
     }
 
+    /**
+     * Will return the observable's current result (i.e., the state of it's last evaluation).
+     * @return the result
+     */
     const result_t &getResult() {
         return result;
     }
 
+    /**
+     * Set a callback to this observable, which will be invoked every time the observable is evaluated.
+     * @param callbackFun the callback function
+     */
     void setCallback(const callback_function &callbackFun) {
         Observable::externalCallback = std::move(callbackFun);
     }
 
-    virtual void callback(observables::time_step_type t) override {
+    /**
+     * Function that will evaluate the observable and trigger a callback if ObservableBase#shouldExecuteCallback()
+     * is true.
+     * @param t the time step
+     */
+    virtual void callback(time_step_type t) override {
         if (shouldExecuteCallback(t)) {
             ObservableBase::callback(t);
-            if (writeToFile) append();
             externalCallback(result);
         }
     }
 
 protected:
+    /**
+     * the result variable, storing the current state
+     */
     Result result;
+    /**
+     * the callback function
+     */
     callback_function externalCallback = [](const Result) {};
 };
 
+/**
+ * Combiner observable, that unifies a collection of observables and uses their results to compute something.
+ * One should take care, that the parent observables strides fit with the stride of this observable or take into
+ * account, that some values might be outdated.
+ *
+ * @tparam Res_t the result type, see readdy::model::observables::Observable.
+ * @tparam ParentObs_t the parent observables which will be evaluated before this observable gets evaluated
+ */
 template<typename Res_t, typename... ParentObs_t>
 class Combiner : public Observable<Res_t> {
 public:
+    /**
+     * Constructs a combiner observable.
+     * @param kernel the kernel it belongs to
+     * @param stride a stride
+     * @param parents the parent observables
+     */
     Combiner(Kernel *const kernel, unsigned int stride, ParentObs_t *... parents)
             : Observable<Res_t>(kernel, stride), parentObservables(std::forward<ParentObs_t *>(parents)...) {}
 
-    virtual void callback(observables::time_step_type t) override {
+    /**
+     * If ObservableBase#shouldExecuteCallback() is true, this will call the Observable#callback() function
+     * for each of its parents.
+     * @param t the current time
+     */
+    virtual void callback(time_step_type t) override {
         if (ObservableBase::shouldExecuteCallback(t)) {
             readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::callback(t);
         }
     }
 
+    /**
+     * Flushing is not supported, as file operations are not supported for combiner observables.
+     */
     void flush() override {
         throw std::runtime_error("flush not supported for combiner observables");
     }
 
 protected:
+    /**
+     * Not supported, see flush().
+     * @param file the file
+     * @param dataSetName data set name
+     * @param flushStride flush stride
+     */
     void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override {
         throw std::runtime_error("not supported for combiner observables");
     }
 
+    /**
+     * Not supported, see flush().
+     */
     void append() override {
         throw std::runtime_error("not supported for combiner observables");
     }
 
 protected:
+    /**
+     * The parent observables, stored in a tuple
+     */
     std::tuple<ParentObs_t *...> parentObservables;
 private:
+    /**
+     * Callback functor, which will call a parent observable's callback function.
+     */
     struct CallbackFunctor {
-        observables::time_step_type currentTimeStep;
+        /**
+         * its current time step
+         */
+        time_step_type currentTimeStep;
 
-        CallbackFunctor(observables::time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
+        /**
+         * The current time step
+         * @param currentTimeStep current time
+         */
+        CallbackFunctor(time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
 
+        /**
+         * Calling the parent observable's callback function with #currentTimeStep.
+         * @tparam T type of the parent observable
+         * @param obs the parent observable
+         */
         template<typename T>
         void operator()(T *const obs) {
             obs->callback(currentTimeStep);

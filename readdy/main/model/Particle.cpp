@@ -78,6 +78,10 @@ const Particle::type_type &Particle::getType() const {
     return type;
 }
 
+Particle::id_type Particle::nextId() {
+    return std::atomic_fetch_add<id_type>(&id_counter, 1);
+}
+
 
 TopologyParticle::TopologyParticle(double x, double y, double z, Particle::type_type type) : Particle(x, y, z, type) {
     flavor = FLAVOR_TOPOLOGY;

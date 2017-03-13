@@ -64,7 +64,8 @@ Kernel::~Kernel() {
 }
 
 readdy::signals::scoped_connection Kernel::connectObservable(observables::ObservableBase *const observable) {
-    return pimpl->signal->connect_scoped([observable](const observables::time_step_type t) {
+    observable->initialize(this);
+    return pimpl->signal->connect_scoped([observable](const time_step_type t) {
         observable->callback(t);
     });
 }
@@ -76,7 +77,7 @@ Kernel::registerObservable(const observables::observable_type &observable, unsig
     return std::make_tuple(std::move(wrap), std::move(connection));
 }
 
-void Kernel::evaluateObservables(observables::time_step_type t) {
+void Kernel::evaluateObservables(time_step_type t) {
     (*pimpl->signal)(t);
 }
 
