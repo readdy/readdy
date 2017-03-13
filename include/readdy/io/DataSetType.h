@@ -34,6 +34,7 @@
 
 #include <vector>
 #include <readdy/common/logging.h>
+#include <readdy/common/traits.h>
 
 namespace readdy {
 namespace io {
@@ -75,6 +76,16 @@ private:
     NativeDataSetType<type> nativeType;
 };
 
+template<typename T, typename = typename std::enable_if<util::is_std_array<T>::value>::type>
+class READDY_API NativeStdArrayDataSetType : public DataSetType {
+public:
+    using type = typename T::value_type;
+    NativeStdArrayDataSetType();
+    constexpr static std::size_t size = std::tuple_size<T>::value;
+private:
+    NativeDataSetType<type> nativeType;
+};
+
 template<typename T>
 class READDY_API STDDataSetType : public DataSetType {
 public:
@@ -106,6 +117,8 @@ public:
     NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset);
     template<typename T, unsigned int size>
     NativeCompoundTypeBuilder& insertArray(const std::string&name, std::size_t offset);
+    template<typename T, typename = typename std::enable_if<util::is_std_array<T>::value>::type>
+    NativeCompoundTypeBuilder& insertStdArray(const std::string &name, std::size_t offset);
     NativeCompoundType build();
 
 private:

@@ -492,10 +492,10 @@ public:
         using entry_t = readdy::model::reactions::ReactionRecord;
         tid = io::NativeCompoundTypeBuilder(sizeof(entry_t))
                 .insert<decltype(std::declval<entry_t>().type)>("reaction_type", offsetof(entry_t, type))
-                .insertArray<decltype(std::declval<entry_t>().educts), 2>("educts", offsetof(entry_t, educts))
-                .insertArray<decltype(std::declval<entry_t>().products), 2>("products", offsetof(entry_t, products))
+                .insertStdArray<decltype(std::declval<entry_t>().educts)>("educts", offsetof(entry_t, educts))
+                .insertStdArray<decltype(std::declval<entry_t>().products)>("products", offsetof(entry_t, products))
                 .insertArray<Vec3::value_t, 3>("position", offsetof(entry_t, where))
-                .insertArray<decltype(std::declval<entry_t>().types_from), 2>("types_from", offsetof(entry_t, types_from))
+                .insertStdArray<decltype(std::declval<entry_t>().types_from)>("types_from", offsetof(entry_t, types_from))
                 .insert<decltype(std::declval<entry_t>().reactionIndex)>("reaction_index", offsetof(entry_t, reactionIndex))
                 .build().tid;
     }

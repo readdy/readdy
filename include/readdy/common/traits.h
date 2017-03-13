@@ -23,36 +23,28 @@
 /**
  * << detailed description >>
  *
- * @file ReactionRecord.h
+ * @file traits.h
  * @brief << brief description >>
  * @author clonker
- * @date 07.03.17
+ * @date 13.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_REACTIONRECORD_H
-#define READDY_MAIN_REACTIONRECORD_H
+#ifndef READDY_MAIN_TRAITS_H
+#define READDY_MAIN_TRAITS_H
 
-#include <spdlog/fmt/ostr.h>
-#include <readdy/common/common.h>
-#include <readdy/model/Particle.h>
+#include <array>
+#include "macros.h"
 
 NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(util)
 
-struct ReactionRecord {
-    int type; // int corresponding to the enum readdy::model::reactions::ReactionType
-    std::array<Particle::id_type, 2> educts {0, 0};
-    std::array<Particle::id_type, 2> products {0, 0};
-    std::array<Particle::type_type, 2> types_from {0, 0};
-    Vec3 where {0, 0, 0};
-    std::size_t reactionIndex {0};
+template<typename T>
+struct is_std_array : public std::false_type {};
 
-    friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
-};
+template<typename T, std::size_t N>
+struct is_std_array<std::array<T, N>> : public std::true_type {};
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(model)
+NAMESPACE_END(util)
 NAMESPACE_END(readdy)
-#endif //READDY_MAIN_REACTIONRECORD_H
+#endif //READDY_MAIN_TRAITS_H

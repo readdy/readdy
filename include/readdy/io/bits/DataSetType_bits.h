@@ -34,6 +34,7 @@
 
 #include <H5Tpublic.h>
 #include <readdy/common/logging.h>
+#include <readdy/common/traits.h>
 #include "../DataSetType.h"
 
 namespace readdy {
@@ -108,6 +109,13 @@ inline NativeDataSetType<bool>::NativeDataSetType() { tid = std::make_shared<Dat
 template<>
 inline NativeDataSetType<std::string>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_C_S1)); }
 
+template<typename T, typename enable>
+inline NativeStdArrayDataSetType<T, enable>::NativeStdArrayDataSetType() {
+    nativeType = NativeDataSetType<type>{};
+    hsize_t dim[1] = {size};
+    tid = std::make_shared<DataTypeHandle>(H5Tarray_create(nativeType.tid->tid, 1, dim));
+}
+
 template<typename T, unsigned int len>
 inline NativeArrayDataSetType<T, len>::NativeArrayDataSetType() {
     nativeType = NativeDataSetType<type>{};
@@ -148,6 +156,13 @@ inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::s
 template<typename T>
 inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::string& name, std::size_t offset) {
     NativeDataSetType<typename std::decay<T>::type> type;
+    return insert(name, offset, type.tid->tid);
+}
+
+template<typename T, typename enable>
+inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insertStdArray(const std::string &name,
+                                                                            std::size_t offset) {
+    io::NativeStdArrayDataSetType<T> type;
     return insert(name, offset, type.tid->tid);
 }
 
