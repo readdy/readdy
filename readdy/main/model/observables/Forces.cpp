@@ -34,6 +34,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
@@ -42,6 +43,7 @@ namespace observables {
 struct Forces::Impl {
     using data_set_t = io::DataSet<Vec3, true>;
     std::unique_ptr<data_set_t> dataSet;
+    std::unique_ptr<util::TimeSeriesWriter> timeSeries;
 };
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
@@ -56,22 +58,26 @@ Forces::Forces(Kernel *const kernel, unsigned int stride) : Observable(kernel, s
 
 void Forces::flush() {
     if (pimpl->dataSet) pimpl->dataSet->flush();
+    if (pimpl->timeSeries) pimpl->timeSeries->flush();
 }
 
 void Forces::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         auto dataSet = std::make_unique<io::DataSet<Vec3, true>>(
-                dataSetName, file.createGroup(util::OBSERVABLES_GROUP_PATH), fs, dims,
+                "data", group, fs, dims,
                 util::Vec3MemoryType(), util::Vec3FileType()
         );
         pimpl->dataSet = std::move(dataSet);
+        pimpl->timeSeries = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
 
 void Forces::append() {
     pimpl->dataSet->append({1}, &result);
+    pimpl->timeSeries->append(t_current);
 }
 
 Forces::~Forces() = default;

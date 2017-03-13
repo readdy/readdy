@@ -35,11 +35,11 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
 namespace observables {
-
 
 
 struct ReactionCounts::Impl {
@@ -47,6 +47,7 @@ struct ReactionCounts::Impl {
     std::unique_ptr<io::Group> group;
     std::unique_ptr<data_set_t> ds_order1;
     std::unique_ptr<data_set_t> ds_order2;
+    std::unique_ptr<util::TimeSeriesWriter> time;
     bool shouldWrite = false;
     unsigned int flushStride = 0;
     bool firstWrite = true;
@@ -58,12 +59,13 @@ ReactionCounts::ReactionCounts(Kernel *const kernel, unsigned int stride)
 }
 
 void ReactionCounts::flush() {
-    if(pimpl->ds_order1) pimpl->ds_order1->flush();
-    if(pimpl->ds_order2) pimpl->ds_order2->flush();
+    if (pimpl->ds_order1) pimpl->ds_order1->flush();
+    if (pimpl->ds_order2) pimpl->ds_order2->flush();
+    if (pimpl->time) pimpl->time->flush();
 }
 
 void ReactionCounts::initialize(Kernel *const kernel) {
-    if(!kernel->getKernelContext().recordReactionCounts()) {
+    if (!kernel->getKernelContext().recordReactionCounts()) {
         log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
                           "If this is undesired, the observable should not be registered.");
         kernel->getKernelContext().recordReactionCounts() = true;
@@ -71,20 +73,22 @@ void ReactionCounts::initialize(Kernel *const kernel) {
 }
 
 void ReactionCounts::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->group) {
-        pimpl->group = std::make_unique<io::Group>(file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
+    if (!pimpl->group) {
+        pimpl->group = std::make_unique<io::Group>(
+                file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
         pimpl->shouldWrite = true;
         pimpl->flushStride = flushStride;
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
     }
 }
 
 void ReactionCounts::append() {
-    if(pimpl->firstWrite) {
+    if (pimpl->firstWrite) {
         const auto n_reactions_order1 = kernel->getKernelContext().getAllOrder1Reactions().size();
         const auto n_reactions_order2 = kernel->getKernelContext().getAllOrder2Reactions().size();
         std::get<0>(result).resize(n_reactions_order1);
         std::get<1>(result).resize(n_reactions_order2);
-        if(pimpl->shouldWrite) {
+        if (pimpl->shouldWrite) {
             auto subgroup = pimpl->group->createGroup("counts");
             {
                 std::vector<readdy::io::h5::dims_t> fs = {pimpl->flushStride, n_reactions_order1};
@@ -103,13 +107,14 @@ void ReactionCounts::append() {
         pimpl->firstWrite = false;
     }
     {
-        auto& order1Reactions = std::get<0>(result);
+        auto &order1Reactions = std::get<0>(result);
         pimpl->ds_order1->append({1, order1Reactions.size()}, order1Reactions.data());
     }
     {
-        auto& order2Reactions = std::get<1>(result);
+        auto &order2Reactions = std::get<1>(result);
         pimpl->ds_order2->append({1, order2Reactions.size()}, order2Reactions.data());
     }
+    pimpl->time->append(t_current);
 }
 
 ReactionCounts::~ReactionCounts() = default;

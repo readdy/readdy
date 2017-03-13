@@ -34,6 +34,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
@@ -41,11 +42,12 @@ namespace observables {
 
 struct Positions::Impl {
     using writer_t = io::DataSet<Vec3, true>;
-    std::unique_ptr <writer_t> writer;
+    std::unique_ptr<writer_t> writer;
+    std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
-                     std::vector <std::string> typesToCount) :
+                     std::vector<std::string> typesToCount) :
         Positions(kernel, stride,
                   _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
 
@@ -54,27 +56,30 @@ Positions::Positions(Kernel *const kernel, unsigned int stride,
         Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
 
 void Positions::append() {
-    std::vector <Vec3> podVec(result.begin(), result.end());
+    std::vector<Vec3> podVec(result.begin(), result.end());
     pimpl->writer->append({1}, &podVec);
+    pimpl->time->append(t_current);
 }
 
 Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {}
 
 void Positions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->writer) {
-        std::vector <readdy::io::h5::dims_t> fs = {flushStride};
-        std::vector <readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto dataSet = std::make_unique < io::DataSet < Vec3,
-        true >> (
-                dataSetName, file.createGroup(util::OBSERVABLES_GROUP_PATH), fs, dims,
-                        util::Vec3MemoryType(), util::Vec3FileType()
+        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
+        auto dataSet = std::make_unique<io::DataSet<Vec3, true>>(
+                "data", group, fs, dims,
+                util::Vec3MemoryType(), util::Vec3FileType()
         );
         pimpl->writer = std::move(dataSet);
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
 
 void Positions::flush() {
-    pimpl->writer->flush();
+    if (pimpl->writer) pimpl->writer->flush();
+    if (pimpl->time) pimpl->time->flush();
 }
 
 Positions::~Positions() = default;

@@ -33,6 +33,7 @@
 #include <readdy/model/observables/Particles.h>
 #include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
@@ -47,6 +48,7 @@ struct Particles::Impl {
     std::unique_ptr<types_writer_t> dataSetTypes;
     std::unique_ptr<ids_writer_t> dataSetIds;
     std::unique_ptr<pos_writer_t> dataSetPositions;
+    std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
 Particles::Particles(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride),
@@ -71,6 +73,7 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
             );
             pimpl->dataSetPositions = std::move(dataSetPositions);
         }
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
 
@@ -86,12 +89,14 @@ void Particles::append() {
     {
         pimpl->dataSetPositions->append({1}, &std::get<2>(result));
     }
+    pimpl->time->append(t_current);
 }
 
 void Particles::flush() {
     if (pimpl->dataSetTypes) pimpl->dataSetTypes->flush();
     if (pimpl->dataSetIds) pimpl->dataSetIds->flush();
     if (pimpl->dataSetPositions) pimpl->dataSetPositions->flush();
+    if (pimpl->time) pimpl->time->flush();
 }
 
 Particles::~Particles() = default;

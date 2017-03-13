@@ -34,6 +34,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
@@ -56,6 +57,7 @@ NParticles::~NParticles() = default;
 struct NParticles::Impl {
     using data_set_t = io::DataSet<unsigned long, false>;
     std::unique_ptr<data_set_t> ds;
+    std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
 NParticles::NParticles(Kernel *const kernel, unsigned int stride)
@@ -66,21 +68,23 @@ void NParticles::initializeDataSet(io::File &file, const std::string &dataSetNam
         const auto size = typesToCount.empty() ? 1 : typesToCount.size();
         std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
-        auto group = file.createGroup(util::OBSERVABLES_GROUP_PATH);
+        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         auto dataSet = std::make_unique<Impl::data_set_t>(
-                dataSetName, group, fs, dims
+                "data", group, fs, dims
         );
-        log::debug("created data set with path {}", std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         pimpl->ds = std::move(dataSet);
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
 
 void NParticles::append() {
     pimpl->ds->append({1, result.size()}, result.data());
+    pimpl->time->append(t_current);
 }
 
 void NParticles::flush() {
     if (pimpl->ds) pimpl->ds->flush();
+    if(pimpl->time) pimpl->time->flush();
 }
 }
 }

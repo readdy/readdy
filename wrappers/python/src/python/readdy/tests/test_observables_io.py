@@ -68,7 +68,7 @@ class TestObservablesIO(unittest.TestCase):
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
-            data = f2["readdy/observables/particle_positions"][:]
+            data = f2["readdy/observables/particle_positions/data"][:]
             np.testing.assert_equal(len(data), n_timesteps + 1)
             for t, positions in enumerate(data):
                 # we begin with two particles
@@ -189,7 +189,7 @@ class TestObservablesIO(unittest.TestCase):
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
-            com = f2["readdy/observables/com"][:]
+            com = f2["readdy/observables/com/data"][:]
             for t in range(n_time_steps):
                 np.testing.assert_equal(com[t]["x"], callback_com[t][0])
                 np.testing.assert_equal(com[t]["y"], callback_com[t][1])
@@ -218,15 +218,17 @@ class TestObservablesIO(unittest.TestCase):
         def hist_callback(hist):
             callback_hist.append(hist)
 
-        handle = simulation.register_observable_histogram_along_axis(1, hist_callback, bin_borders, 0, ["A", "B"])
+        handle = simulation.register_observable_histogram_along_axis(2, hist_callback, bin_borders, 0, ["A", "B"])
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"hist_along_x_axis", int(3))
             simulation.run(n_time_steps, 0.02)
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
-            histogram = f2["readdy/observables/hist_along_x_axis"][:]
-            for t in range(n_time_steps):
+            histogram = f2["readdy/observables/hist_along_x_axis/data"][:]
+            time_series = f2["readdy/observables/hist_along_x_axis/time"]
+            np.testing.assert_equal(time_series, np.array(range(0, n_time_steps+1))[::2])
+            for t in range(n_time_steps // 2):
                 np.testing.assert_equal(histogram[t], np.array(callback_hist[t]))
 
     def test_n_particles_observable(self):
@@ -267,8 +269,10 @@ class TestObservablesIO(unittest.TestCase):
             handle_a_b_particles.flush()
 
         with h5py.File(fname, "r") as f2:
-            n_a_b_particles = f2["readdy/observables/n_a_b_particles"][:]
-            n_particles = f2["readdy/observables/n_particles"][:]
+            n_a_b_particles = f2["readdy/observables/n_a_b_particles/data"][:]
+            n_particles = f2["readdy/observables/n_particles/data"][:]
+            time_series = f2["readdy/observables/n_a_b_particles/time"]
+            np.testing.assert_equal(time_series, np.array(range(0, n_time_steps+1)))
             for t in range(n_time_steps):
                 np.testing.assert_equal(n_a_b_particles[t][0], callback_n_particles_a_b[t][0])
                 np.testing.assert_equal(n_a_b_particles[t][1], callback_n_particles_a_b[t][1])
@@ -290,13 +294,17 @@ class TestObservablesIO(unittest.TestCase):
         sim.add_particle("B", common.Vec(1.0, 1.0, 1.0))
         sim.add_particle("C", common.Vec(1.1, 1.0, 1.0))
 
+        n_timesteps = 1
+
         handle = sim.register_observable_reactions(1, None)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run(1, 1)
+            sim.run(n_timesteps, 1)
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
+            time_series = f2["readdy/observables/reactions/time"]
+            np.testing.assert_equal(time_series, np.array(range(0, n_timesteps+1)))
             order_1_reactions_with_A = data["registered_reactions/order1/A[id=0]"][:]
             order_2_reactions_with_B_and_C = data["registered_reactions/order2/B[id=1] + C[id=2]"][:]
             np.testing.assert_equal(order_1_reactions_with_A[0], b"mylabel")
@@ -333,13 +341,16 @@ class TestObservablesIO(unittest.TestCase):
         sim.add_particle("B", common.Vec(1.0, 1.0, 1.0))
         sim.add_particle("C", common.Vec(1.1, 1.0, 1.0))
 
+        n_timesteps = 1
         handle = sim.register_observable_reaction_counts(1, None)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run(1, 1)
+            sim.run(n_timesteps, 1)
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
+            time_series = f2["readdy/observables/reactions/time"]
+            np.testing.assert_equal(time_series, np.array(range(0, n_timesteps+1)))
             order_1_reactions_with_A = data["registered_reactions/order1/A[id=0]"][:]
             order_2_reactions_with_B_and_C = data["registered_reactions/order2/B[id=1] + C[id=2]"][:]
             np.testing.assert_equal(order_1_reactions_with_A[0], b"mylabel")
@@ -373,8 +384,10 @@ class TestObservablesIO(unittest.TestCase):
             handle.flush()
 
         with h5py.File(fname, "r") as f2:
-            data = f2["readdy/observables/forces"][:]
+            data = f2["readdy/observables/forces/data"][:]
+            time_series = f2["readdy/observables/forces/time"]
             np.testing.assert_equal(len(data), n_timesteps + 1)
+            np.testing.assert_equal(time_series, np.array(range(0, n_timesteps+1)))
             for t, forces in enumerate(data):
                 # we begin with two particles
                 np.testing.assert_equal(len(forces), t + 2)

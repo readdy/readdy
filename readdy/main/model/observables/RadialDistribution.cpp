@@ -35,6 +35,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/common/numeric.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
@@ -43,6 +44,7 @@ namespace observables {
 struct RadialDistribution::Impl {
     using writer_t = readdy::io::DataSet<double, false>;
     std::unique_ptr<writer_t> writerRadialDistribution;
+    std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
@@ -150,16 +152,19 @@ void RadialDistribution::initializeDataSet(io::File &file, const std::string &da
                 "distribution", group, fs, dims
         );
         pimpl->writerRadialDistribution = std::move(dataSet);
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
 
 void RadialDistribution::append() {
     auto &dist = std::get<1>(result);
     pimpl->writerRadialDistribution->append({1, dist.size()}, dist.data());
+    pimpl->time->append(t_current);
 }
 
 void RadialDistribution::flush() {
     if (pimpl->writerRadialDistribution) pimpl->writerRadialDistribution->flush();
+    if (pimpl->time) pimpl->time->flush();
 }
 
 RadialDistribution::~RadialDistribution() = default;

@@ -36,6 +36,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/model/_internal/Util.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
@@ -45,6 +46,7 @@ namespace observables {
 struct HistogramAlongAxis::Impl {
     using data_set_t = io::DataSet<double, false>;
     std::unique_ptr<data_set_t> dataSet;
+    std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
 HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
@@ -73,19 +75,21 @@ void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &da
         std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
-        auto group = file.createGroup(util::OBSERVABLES_GROUP_PATH);
-        log::debug("created data set with path {}", path);
-        auto dataSet = std::make_unique<Impl::data_set_t>(dataSetName, group, fs, dims);
+        auto group = file.createGroup(path);
+        auto dataSet = std::make_unique<Impl::data_set_t>("data", group, fs, dims);
         pimpl->dataSet = std::move(dataSet);
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
 
 void HistogramAlongAxis::append() {
     pimpl->dataSet->append({1, result.size()}, result.data());
+    pimpl->time->append(t_current);
 }
 
 void HistogramAlongAxis::flush() {
     if (pimpl->dataSet) pimpl->dataSet->flush();
+    if (pimpl->time) pimpl->time->flush();
 }
 
 HistogramAlongAxis::~HistogramAlongAxis() = default;

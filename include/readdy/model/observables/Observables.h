@@ -28,7 +28,6 @@
  *  - CenterOfMass,
  *  - HistogramAlongAxis,
  *  - NParticles,
- *  - TestCombiner,
  *  - Forces,
  *  - Reactions,
  *  - ReactionCounts

@@ -34,6 +34,7 @@
 #include <readdy/model/Kernel.h>
 #include <readdy/model/observables/CenterOfMass.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
 namespace model {
@@ -43,6 +44,7 @@ namespace observables {
 struct CenterOfMass::Impl {
     using writer_t = io::DataSet<Vec3, false>;
     std::unique_ptr<writer_t> ds;
+    std::unique_ptr<util::TimeSeriesWriter> timeSeries;
 };
 
 CenterOfMass::CenterOfMass(readdy::model::Kernel *const kernel, unsigned int stride,
@@ -85,21 +87,24 @@ void CenterOfMass::initializeDataSet(io::File &file, const std::string &dataSetN
     if (!pimpl->ds) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto group = file.createGroup(util::OBSERVABLES_GROUP_PATH);
+        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         auto dataSet = std::make_unique<Impl::writer_t>(
-                dataSetName, group, fs, dims, util::Vec3MemoryType(), util::Vec3FileType()
+                "data", group, fs, dims, util::Vec3MemoryType(), util::Vec3FileType()
         );
         log::debug("created data set with path {}", std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         pimpl->ds = std::move(dataSet);
+        pimpl->timeSeries = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
 
 void CenterOfMass::append() {
     pimpl->ds->append({1}, &result);
+    pimpl->timeSeries->append(t_current);
 }
 
 void CenterOfMass::flush() {
     if (pimpl->ds) pimpl->ds->flush();
+    if (pimpl->timeSeries) pimpl->timeSeries->flush();
 }
 
 CenterOfMass::~CenterOfMass() = default;
