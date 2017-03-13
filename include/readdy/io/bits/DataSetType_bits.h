@@ -29,16 +29,14 @@
  * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_DATASETTYPE_BITS_H
-#define READDY_MAIN_DATASETTYPE_BITS_H
-
+#pragma once
 #include <H5Tpublic.h>
 #include <readdy/common/logging.h>
 #include <readdy/common/traits.h>
 #include "../DataSetType.h"
 
-namespace readdy {
-namespace io {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
 
 template<>
 inline STDDataSetType<short>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_I16LE)); }
@@ -178,6 +176,5 @@ inline STDCompoundType::STDCompoundType(const NativeCompoundType &nativeType) {
     tid = std::make_shared<DataTypeHandle>(copy);
 }
 
-}
-}
-#endif //READDY_MAIN_DATASETTYPE_BITS_H
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

@@ -29,9 +29,7 @@
  * @date 20.10.16
  */
 
-#ifndef READDY_CPUKERNEL_REACTIONUTILS_H
-#define READDY_CPUKERNEL_REACTIONUTILS_H
-
+#pragma once
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
@@ -199,4 +197,3 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
 }
 }
 }
-#endif //READDY_CPUKERNEL_REACTIONUTILS_H

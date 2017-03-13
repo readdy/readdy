@@ -29,9 +29,7 @@
  * @date 27.10.16
  */
 
-#ifndef READDY_KERNEL_CPU_OBSERVABLES_H
-#define READDY_KERNEL_CPU_OBSERVABLES_H
-
+#pragma once
 #include <readdy/model/observables/Observables.h>
 
 namespace readdy {
@@ -126,4 +124,3 @@ protected:
 }
 }
 }
-#endif //READDY_KERNEL_CPU_OBSERVABLES_H

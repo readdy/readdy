@@ -30,14 +30,12 @@
  * @date 18.10.16
  */
 
-#ifndef READDY_MAIN_NODELETE_H
-#define READDY_MAIN_NODELETE_H
-namespace readdy {
-namespace util {
+#pragma once
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
 struct nodelete {
     template<typename T>
     void operator()(T *) {}
 };
-}
-}
-#endif //READDY_MAIN_NODELETE_H
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

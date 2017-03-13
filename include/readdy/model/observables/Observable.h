@@ -41,8 +41,7 @@
  * @date 22.04.16
  */
 
-#ifndef READDY_MAIN_OBSERVABLE_H
-#define READDY_MAIN_OBSERVABLE_H
+#pragma once
 
 #include <readdy/common/common.h>
 #include <readdy/common/make_unique.h>
@@ -50,14 +49,16 @@
 #include <readdy/common/logging.h>
 #include <readdy/common/Utils.h>
 
-namespace readdy {
+NAMESPACE_BEGIN(readdy)
 
-namespace io { class File; }
+NAMESPACE_BEGIN(io)
+class File;
+NAMESPACE_END(io)
 
-namespace model {
+NAMESPACE_BEGIN(model)
 class Kernel;
 
-namespace observables {
+NAMESPACE_BEGIN(observables)
 /**
  * The signal type for the observable-evaluation callback.
  */
@@ -351,7 +352,6 @@ private:
 };
 
 
-}
-}
-}
-#endif //READDY_MAIN_OBSERVABLE_H
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

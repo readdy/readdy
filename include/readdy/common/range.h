@@ -29,10 +29,9 @@
  * @date 20.10.16
  */
 
-#ifndef READDY_MAIN_RANGE_H
-#define READDY_MAIN_RANGE_H
-namespace readdy {
-namespace util {
+#pragma once
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
 /**
  * the range class, which can be used to create ranges
  * @tparam T the type of the range
@@ -121,8 +120,5 @@ private:
     const_iterator begin_it;
     const_iterator end_it;
 };
-}
-}
-
-
-#endif //READDY_MAIN_RANGE_H
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

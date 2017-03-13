@@ -30,10 +30,7 @@
  * @author chrisfroe
  * @date 13.10.16
  */
-
-#ifndef READDY_MAIN_SINGLECPUCOMPARTMENTS_H
-#define READDY_MAIN_SINGLECPUCOMPARTMENTS_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
@@ -56,4 +53,3 @@ protected:
 }
 }
 }
-#endif //READDY_MAIN_SINGLECPUCOMPARTMENTS_H

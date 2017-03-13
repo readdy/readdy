@@ -32,9 +32,7 @@
  * @date 07.03.16
  */
 
-#ifndef READDY_MAIN_KERNEL_H
-#define READDY_MAIN_KERNEL_H
-
+#pragma once
 #include <map> 
 #include <iostream>
 #include <readdy/common/signals.h>
@@ -51,12 +49,13 @@
 #include <readdy/model/compartments/CompartmentFactory.h>
 #include <readdy/model/_internal/Util.h>
 
-namespace readdy {
-namespace model {
-namespace detail {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+
+NAMESPACE_BEGIN(detail)
 template<typename T, typename... Args>
 struct get_reaction_dispatcher;
-}
+NAMESPACE_END(detail)
 
 /**
  * Base class of kernels.
@@ -294,7 +293,5 @@ struct get_reaction_dispatcher<readdy::model::reactions::Decay, Args...> {
 };
 }
 
-}
-}
-
-#endif //READDY_MAIN_KERNEL_H
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

@@ -28,10 +28,7 @@
  * @author clonker
  * @date 22.11.16
  */
-
-#ifndef READDY_DENSE_PARTICLEINDEXPAIR_H
-#define READDY_DENSE_PARTICLEINDEXPAIR_H
-
+#pragma once
 #include <cstddef>
 #include <stdexcept>
 #include <ostream>
@@ -82,4 +79,3 @@ struct ParticleIndexPairHasher {
 }
 }
 }
-#endif //READDY_DENSE_PARTICLEINDEXPAIR_H

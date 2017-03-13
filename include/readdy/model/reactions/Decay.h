@@ -30,14 +30,12 @@
  */
 
 
-#ifndef READDY_MAIN_DEATH_H
-#define READDY_MAIN_DEATH_H
-
+#pragma once
 #include "Reaction.h"
 
-namespace readdy {
-namespace model {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
 
 class Decay : public Reaction<1> {
 
@@ -54,7 +52,6 @@ public:
         return ReactionType::Decay;
     }
 };
-}
-}
-}
-#endif //READDY_MAIN_DEATH_H
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

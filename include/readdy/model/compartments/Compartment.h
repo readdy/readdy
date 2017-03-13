@@ -29,17 +29,15 @@
  * @date 12.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
-
-#ifndef READDY_MAIN_COMPARTMENT_H
-#define READDY_MAIN_COMPARTMENT_H
+#pragma once
 
 #include <readdy/model/Vec3.h>
 #include <readdy/model/Particle.h>
 #include <unordered_map>
 
-namespace readdy {
-namespace model {
-namespace compartments {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(compartments)
 
 class Compartment {
 public:
@@ -76,8 +74,6 @@ protected:
     const std::unordered_map<particleType_t, particleType_t> conversions;
 };
 
-}
-}
-}
-
-#endif //READDY_MAIN_COMPARTMENT_H
+NAMESPACE_END(compartments)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

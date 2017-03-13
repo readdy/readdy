@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TOPOLOGY_H
-#define READDY_MAIN_TOPOLOGY_H
-
+#pragma once
 #include <memory>
 #include <unordered_set>
 #include "BondedPotential.h"
@@ -101,5 +99,3 @@ private:
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-
-#endif //READDY_MAIN_TOPOLOGY_H

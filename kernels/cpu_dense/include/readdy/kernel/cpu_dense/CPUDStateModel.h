@@ -29,9 +29,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_STATE_MODEL_H
-#define READDY_DENSE_STATE_MODEL_H
-
+#pragma once
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu_dense/model/ParticleIndexPair.h>
@@ -86,5 +84,3 @@ private:
 }
 }
 }
-
-#endif //READDY_DENSE_STATE_MODEL_H

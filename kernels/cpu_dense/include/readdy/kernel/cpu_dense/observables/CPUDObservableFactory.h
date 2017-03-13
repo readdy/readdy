@@ -29,10 +29,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_OBSERVABLEFACTORY_H
-#define READDY_DENSE_OBSERVABLEFACTORY_H
-
-
+#pragma once
 #include <readdy/model/observables/ObservableFactory.h>
 
 namespace readdy {
@@ -82,5 +79,3 @@ private:
 }
 }
 }
-
-#endif //READDY_DENSE_OBSERVABLEFACTORY_H

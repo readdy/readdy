@@ -29,9 +29,7 @@
  * @date 20.10.16
  */
 
-#ifndef READDY_CPUKERNEL_GILLESPIE_H
-#define READDY_CPUKERNEL_GILLESPIE_H
-
+#pragma once
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/common/range.h>
 #include "ReactionUtils.h"
@@ -61,5 +59,3 @@ protected:
 }
 }
 }
-
-#endif //READDY_CPUKERNEL_GILLESPIE_H

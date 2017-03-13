@@ -27,16 +27,14 @@
  * @date 16.11.16
  */
 
-#ifndef READDY_MAIN_SEMAPHORE_H
-#define READDY_MAIN_SEMAPHORE_H
+#pragma once
 
 #include <mutex>
 #include <condition_variable>
 
-
-namespace readdy {
-namespace util {
-namespace thread {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
 
 /**
  * counting semaphore implementation
@@ -86,7 +84,6 @@ private:
     mutable int count;
 };
 
-}
-}
-}
-#endif //READDY_MAIN_SEMAPHORE_H
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

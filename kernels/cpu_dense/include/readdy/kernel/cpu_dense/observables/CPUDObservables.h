@@ -28,10 +28,7 @@
  * @author clonker
  * @date 22.11.16
  */
-
-#ifndef READDY_KERNEL_CPU_DENSE_OBSERVABLES_H
-#define READDY_KERNEL_CPU_DENSE_OBSERVABLES_H
-
+#pragma once
 #include <readdy/model/observables/Observables.h>
 
 namespace readdy {
@@ -106,4 +103,3 @@ protected:
 }
 }
 }
-#endif //READDY_KERNEL_CPU_DENSE_OBSERVABLES_H

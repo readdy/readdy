@@ -31,16 +31,14 @@
  * @date 09.06.16
  */
 
-#ifndef READDY_MAIN_POTENTIALSORDER2_H
-#define READDY_MAIN_POTENTIALSORDER2_H
-
+#pragma once
 #include <readdy/model/KernelContext.h>
 #include <ostream>
 #include "PotentialOrder2.h"
 
-namespace readdy {
-namespace model {
-namespace potentials {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(potentials)
 
 class HarmonicRepulsion : public PotentialOrder2 {
     using super = PotentialOrder2;
@@ -204,8 +202,6 @@ const std::string
 getPotentialName(typename std::enable_if<std::is_base_of<LennardJones, T>::value>::type * = 0) {
     return "LennardJones";
 }
-}
-}
-}
-
-#endif //READDY_MAIN_POTENTIALSORDER2_H
+NAMESPACE_END(potentials)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

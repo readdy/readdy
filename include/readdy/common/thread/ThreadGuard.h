@@ -30,14 +30,15 @@
  * @date 01.08.16
  */
 
-#ifndef READDY_CPUKERNEL_THREADGUARD_H
-#define READDY_CPUKERNEL_THREADGUARD_H
+#pragma once
 
 #include <thread>
+#include <readdy/common/macros.h>
 
-namespace readdy {
-namespace util {
-namespace thread {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
+
 /**
  * Thread guard class that will, given a pointer to a thread, join that thread upon destruction.
  */
@@ -86,7 +87,7 @@ public:
         return *this;
     }
 };
-}
-}
-}
-#endif //READDY_CPUKERNEL_THREADGUARD_H
+
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

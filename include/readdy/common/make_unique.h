@@ -29,8 +29,7 @@
  * @date 29.04.16
  */
 
-#ifndef READDY_MAIN_MAKE_UNIQUE_H_H
-#define READDY_MAIN_MAKE_UNIQUE_H_H
+#pragma once
 
 #ifdef READDY_CPP14
 
@@ -78,5 +77,3 @@ make_unique(Args &&...) = delete;
 }
 
 #endif
-
-#endif //READDY_MAIN_MAKE_UNIQUE_H_H

@@ -30,12 +30,12 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_OBSERVABLEHANDLE_MISC_H
-#define READDY_MAIN_OBSERVABLEHANDLE_MISC_H
+#pragma once
 
 #include "../ObservableHandle.h"
 
-namespace readdy {
+NAMESPACE_BEGIN(readdy)
+
 inline ObservableHandle::ObservableHandle(id_t id, model::observables::ObservableBase *const observable)
         : id(id), observable(observable) {}
 
@@ -61,5 +61,4 @@ inline void ObservableHandle::flush() {
 
 inline ObservableHandle::ObservableHandle() : ObservableHandle(0, nullptr) { }
 
-}
-#endif //READDY_MAIN_OBSERVABLEHANDLE_MISC_H
+NAMESPACE_END(readdy)

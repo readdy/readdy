@@ -29,17 +29,15 @@
  * @date 04.03.16
  */
 
-#ifndef READDY_MAIN_PLUGIN_H
-#define READDY_MAIN_PLUGIN_H
-
+#pragma once
 #include <string>
 #include <memory>
 #include <type_traits>
 #include <sstream>
 #include <unordered_map>
 
-namespace readdy {
-namespace model {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 
 class Plugin {
 public:
@@ -48,6 +46,5 @@ public:
     virtual ~Plugin() {};
 };
 
-}
-}
-#endif //READDY_MAIN_PLUGIN_H
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

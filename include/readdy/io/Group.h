@@ -29,8 +29,7 @@
  * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_GROUP_H
-#define READDY_MAIN_GROUP_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -38,8 +37,8 @@
 #include "H5Types.h"
 #include "DataSetType.h"
 
-namespace readdy {
-namespace io {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
 
 class READDY_API Group {
     friend class File;
@@ -73,9 +72,7 @@ protected:
     std::string path;
 };
 
-}
-}
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)
 
 #include "bits/Group_bits.h"
-
-#endif //READDY_MAIN_GROUP_H

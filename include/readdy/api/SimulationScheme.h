@@ -47,16 +47,15 @@
  * @date 23.08.16
  */
 
-#ifndef READDY_MAIN_SIMULATIONSCHEME_H
-#define READDY_MAIN_SIMULATIONSCHEME_H
+#pragma once
 
 #include <memory>
 #include <type_traits>
 #include <readdy/common/common.h>
 #include <readdy/model/Kernel.h>
 
-namespace readdy {
-namespace api {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(api)
 template<typename SchemeType>
 class SchemeConfigurator;
 
@@ -375,6 +374,5 @@ protected:
 
 };
 
-}
-}
-#endif //READDY_MAIN_SIMULATIONSCHEME_H
+NAMESPACE_END(api)
+NAMESPACE_END(readdy)

@@ -29,9 +29,7 @@
  * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_GROUP_BITS_H
-#define READDY_MAIN_GROUP_BITS_H
-
+#pragma once
 #include "../Group.h"
 #include "Util_bits.h"
 #include "String_utils.h"
@@ -39,8 +37,8 @@
 #include <readdy/io/DataSetType.h>
 #include <readdy/io/File.h>
 
-namespace readdy {
-namespace io {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
 
 inline Group::Group(h5::handle_t handle, const std::string &path)
         : handle(handle), path(path) {}
@@ -100,7 +98,5 @@ inline void Group::write<double>(const std::string &dataSetName, const std::vect
     H5LTmake_dataset_double(handle, dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
-}
-}
-
-#endif //READDY_MAIN_GROUP_BITS_H
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

@@ -29,8 +29,7 @@
  * @date 03.06.16
  */
 
-#ifndef READDY_MAIN_SINGLECPUPARTICLEDATA_H
-#define READDY_MAIN_SINGLECPUPARTICLEDATA_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -154,5 +153,3 @@ protected:
 }
 }
 }
-
-#endif //READDY_MAIN_SINGLECPUPARTICLEDATA_H

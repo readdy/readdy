@@ -31,9 +31,7 @@
  * @date 14.10.16
  */
 
-#ifndef READDY_MAIN_SIGNALS_H
-#define READDY_MAIN_SIGNALS_H
-
+#pragma once
 #include <functional>
 #include <list>
 #include <memory>
@@ -41,8 +39,8 @@
 #include "make_unique.h"
 #include "logging.h"
 
-namespace readdy {
-namespace signals {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(signals)
 
 class connection {
 public:
@@ -183,7 +181,5 @@ public:
     }
 };
 
-}
-}
-
-#endif //READDY_MAIN_SIGNALS_H
+NAMESPACE_END(signals)
+NAMESPACE_END(readdy)

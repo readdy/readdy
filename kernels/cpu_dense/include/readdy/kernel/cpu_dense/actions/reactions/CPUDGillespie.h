@@ -29,9 +29,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_GILLESPIE_H
-#define READDY_DENSE_GILLESPIE_H
-
+#pragma once
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 #include <readdy/common/range.h>
 #include "ReactionUtils.h"
@@ -60,5 +58,3 @@ protected:
 }
 }
 }
-
-#endif //READDY_DENSE_GILLESPIE_H

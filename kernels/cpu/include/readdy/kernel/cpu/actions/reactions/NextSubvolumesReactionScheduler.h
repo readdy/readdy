@@ -29,9 +29,7 @@
  * @date 09.09.16
  */
 
-#ifndef READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
-#define READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include "readdy/kernel/cpu/CPUKernel.h"
 
@@ -88,5 +86,3 @@ private:
 }
 }
 }
-
-#endif //READDY_KERNEL_CPU_NEXTSUBVOLUMESREACTIONSCHEDULER_H

@@ -29,14 +29,12 @@
  * @date 20.06.16
  */
 
-#ifndef READDY_MAIN_ENZYMATIC_H
-#define READDY_MAIN_ENZYMATIC_H
-
+#pragma once
 #include "Reaction.h"
 
-namespace readdy {
-namespace model {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
 
 class Enzymatic : public Reaction<2> {
 
@@ -65,7 +63,6 @@ public:
         return ReactionType::Enzymatic;
     }
 };
-}
-}
-}
-#endif //READDY_MAIN_ENZYMATIC_H
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

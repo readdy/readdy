@@ -30,16 +30,14 @@
  * @date 18/04/16
  */
 
-#ifndef READDY_MAIN_KERNELSTATEMODEL_H
-#define READDY_MAIN_KERNELSTATEMODEL_H
-
+#pragma once
 #include <vector>
 #include <readdy/model/topologies/Topology.h>
 #include "Particle.h"
 #include "Vec3.h"
 
-namespace readdy {
-namespace model {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 
 class KernelStateModel {
 public:
@@ -69,6 +67,5 @@ public:
     virtual double getEnergy() const = 0;
 };
 
-}
-}
-#endif //READDY_MAIN_KERNELSTATEMODEL_H
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

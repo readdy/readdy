@@ -29,18 +29,18 @@
  * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_DATASET_BITS_H
-#define READDY_MAIN_DATASET_BITS_H
+#pragma once
 
 #include "../DataSet.h"
 
+#include <sstream>
+#include <iterator>
 #include <H5Ppublic.h>
 #include <readdy/common/logging.h>
 #include <readdy/io/DataSetType.h>
-#include <iterator>
 
-namespace readdy {
-namespace io {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
 template<typename T, bool VLEN>
 inline void DataSet<T, VLEN>::close() {
     if (memorySpace >= 0 && H5Sclose(memorySpace) < 0) {
@@ -277,6 +277,5 @@ inline void DataSet<T, VLEN>::flush() {
     }
 }
 
-}
-}
-#endif //READDY_MAIN_DATASET_BITS_H
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

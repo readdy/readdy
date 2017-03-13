@@ -29,9 +29,7 @@
  * @date 14.07.16
  */
 
-#ifndef READDY_CPUKERNEL_PARTICLEINDEXPAIR_H
-#define READDY_CPUKERNEL_PARTICLEINDEXPAIR_H
-
+#pragma once
 #include <cstddef>
 #include <stdexcept>
 #include <ostream>
@@ -82,4 +80,3 @@ struct ParticleIndexPairHasher {
 }
 }
 }
-#endif //READDY_CPUKERNEL_PARTICLEINDEXPAIR_H

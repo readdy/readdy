@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TOPOLOGYACTIONS_H
-#define READDY_MAIN_TOPOLOGYACTIONS_H
-
+#pragma once
 #include "TopologyAction.h"
 #include <readdy/model/topologies/BondedPotential.h>
 #include <readdy/model/topologies/AnglePotential.h>
@@ -63,4 +61,3 @@ public:
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-#endif //READDY_MAIN_TOPOLOGYACTIONS_H

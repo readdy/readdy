@@ -29,9 +29,7 @@
  * @date 20.10.16
  */
 
-#ifndef READDY_CPUKERNEL_FILTEREDGILLESPIEPARALLEL_H
-#define READDY_CPUKERNEL_FILTEREDGILLESPIEPARALLEL_H
-
+#pragma once
 #include "CPUGillespieParallel.h"
 
 namespace readdy {
@@ -53,4 +51,3 @@ private:
 }
 }
 }
-#endif //READDY_CPUKERNEL_FILTEREDGILLESPIEPARALLEL_H

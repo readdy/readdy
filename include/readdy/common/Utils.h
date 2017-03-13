@@ -34,19 +34,18 @@
  * @date 08.03.16
  */
 
-#ifndef READDY_MAIN_UTILS_H
-#define READDY_MAIN_UTILS_H
-
+#pragma once
 #include <string>
 #include <iostream>
 #include <memory>
 #include <tuple>
 #include <vector>
 #include <algorithm>
+#include <readdy/common/macros.h>
 #include "index_sequence.h"
 
-namespace readdy {
-namespace util {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
 std::string getOS();
 
 bool isWindows();
@@ -55,7 +54,7 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 
 std::vector<std::string> split(const std::string &s, char delim);
 
-namespace collections {
+NAMESPACE_BEGIN(collections)
 
 template<typename MapType, typename KeyType = std::string>
 inline bool hasKey(const MapType &map, const KeyType &key) {
@@ -117,8 +116,7 @@ typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const &it
     return vec.insert(std::upper_bound(vec.begin(), vec.end(), item, pred), item);
 }
 
-
-}
+NAMESPACE_END(collections)
 
 template<typename Derived, typename Base, typename Del>
 std::unique_ptr<Derived, Del> static_unique_ptr_cast( std::unique_ptr<Base, Del>&& p ) {
@@ -141,8 +139,5 @@ std::unique_ptr<Derived, Del> dynamic_unique_ptr_cast( std::unique_ptr<Base, Del
     return std::unique_ptr<Derived, Del>(nullptr, p.get_deleter());
 }
 
-
-}
-}
-
-#endif //READDY_MAIN_UTILS_H
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

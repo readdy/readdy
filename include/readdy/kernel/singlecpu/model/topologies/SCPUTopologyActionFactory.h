@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_SCPUTOPOLOGYACTIONFACTORY_H
-#define READDY_MAIN_SCPUTOPOLOGYACTIONFACTORY_H
-
+#pragma once
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
@@ -65,4 +63,3 @@ NAMESPACE_END(model)
 NAMESPACE_END(scpu)
 NAMESPACE_END(kernel)
 NAMESPACE_END(readdy)
-#endif //READDY_MAIN_SCPUTOPOLOGYACTIONFACTORY_H

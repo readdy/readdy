@@ -29,15 +29,13 @@
  * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_FILE_BITS_H
-#define READDY_MAIN_FILE_BITS_H
+#pragma once
 
 #include "../File.h"
 #include "Util_bits.h"
 
-namespace readdy {
-namespace io {
-
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
 
 inline unsigned getFlagValue(const File::Flag &flag) {
     switch (flag) {
@@ -118,7 +116,5 @@ inline const Group &File::getRootGroup() const {
     return root;
 }
 
-
-}
-}
-#endif //READDY_MAIN_FILE_BITS_H
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

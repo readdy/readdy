@@ -29,10 +29,7 @@
  * @date 13.07.16
  */
 
-#ifndef READDY_CPUKERNEL_CPUSTATEMODEL_H
-#define READDY_CPUKERNEL_CPUSTATEMODEL_H
-
-
+#pragma once
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
@@ -98,5 +95,3 @@ private:
 }
 }
 }
-
-#endif //READDY_CPUKERNEL_CPUSTATEMODEL_H

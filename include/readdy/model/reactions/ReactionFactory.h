@@ -31,9 +31,7 @@
  * @date 21.06.16
  */
 
-#ifndef READDY_MAIN_REACTIONFACTORY_H
-#define READDY_MAIN_REACTIONFACTORY_H
-
+#pragma once
 #include <string>
 #include <unordered_map>
 #include <type_traits>
@@ -44,9 +42,9 @@
 #include "Fusion.h"
 #include "Decay.h"
 
-namespace readdy {
-namespace model {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
 
 class ReactionFactory {
 public:
@@ -100,8 +98,6 @@ READDY_CREATE_FACTORY_DISPATCHER(ReactionFactory, Fission)
 
 READDY_CREATE_FACTORY_DISPATCHER(ReactionFactory, Fusion)
 
-}
-}
-}
-
-#endif //READDY_MAIN_REACTIONFACTORY_H
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

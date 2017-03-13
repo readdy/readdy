@@ -30,15 +30,13 @@
  * @date 03.08.16
  */
 
-#ifndef READDY_MAIN_PARTICLETYPEPAIR_H
-#define READDY_MAIN_PARTICLETYPEPAIR_H
-
+#pragma once
 #include <cstddef>
 #include <tuple>
 #include "hash.h"
 
-namespace readdy {
-namespace util {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
 
 struct ParticleTypePair {
     readdy::model::Particle::type_type t1, t2;
@@ -86,6 +84,5 @@ public:
     }
 };
 
-}
-}
-#endif //READDY_MAIN_PARTICLETYPEPAIR_H
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

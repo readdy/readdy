@@ -30,9 +30,7 @@
  */
 
 
-#ifndef READDY_DENSE_UPDATENEIGHBORLIST_H
-#define READDY_DENSE_UPDATENEIGHBORLIST_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
@@ -66,4 +64,3 @@ private:
 }
 }
 }
-#endif //READDY_DENSE_UPDATENEIGHBORLIST_H

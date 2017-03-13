@@ -29,21 +29,17 @@
  * @date 17.11.16
  */
 
-#ifndef READDY_MAIN_MODEL_UTILS_H
-#define READDY_MAIN_MODEL_UTILS_H
-
+#pragma once
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/observables/Observable.h>
 
-namespace readdy {
-namespace model {
-namespace util {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(util)
 
 double getRecommendedTimeStep(unsigned int N, KernelContext&);
 double getMaximumDisplacement(KernelContext&, const double);
 
-}
-}
-}
-
-#endif //READDY_MAIN_MODEL_UTILS_H
+NAMESPACE_END(util)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

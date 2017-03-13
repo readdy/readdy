@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TOPOLOGYACTION_H
-#define READDY_MAIN_TOPOLOGYACTION_H
-
+#pragma once
 #include <readdy/common/macros.h>
 #include <readdy/model/KernelContext.h>
 
@@ -60,5 +58,3 @@ public:
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-
-#endif //READDY_MAIN_TOPOLOGYACTION_H

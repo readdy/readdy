@@ -29,13 +29,12 @@
  * @date 14.10.16
  */
 
-#ifndef READDY_MAIN_LOGGING_H
-#define READDY_MAIN_LOGGING_H
-
+#pragma once
 #include <spdlog/spdlog.h>
+#include "macros.h"
 
-namespace readdy {
-namespace log {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(log)
 inline std::shared_ptr<spdlog::logger> console() {
     if(!spdlog::get("console")) {
         spdlog::set_sync_mode();
@@ -75,6 +74,5 @@ void info(Args &&... args) {
     console()->info(std::forward<Args>(args)...);
 }
 
-}
-}
-#endif //READDY_MAIN_LOGGING_H
+NAMESPACE_END(log)
+NAMESPACE_END(readdy)

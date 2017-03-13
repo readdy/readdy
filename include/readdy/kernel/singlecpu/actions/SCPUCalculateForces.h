@@ -28,10 +28,7 @@
  * @author clonker
  * @date 20.06.16
  */
-
-#ifndef READDY_MAIN_SINGLECPUCALCULATEFORCES_H
-#define READDY_MAIN_SINGLECPUCALCULATEFORCES_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
@@ -52,5 +49,3 @@ private:
 }
 }
 }
-
-#endif //READDY_MAIN_SINGLECPUCALCULATEFORCES_H

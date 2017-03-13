@@ -29,9 +29,7 @@
  * @date 31.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
-
-#ifndef READDY_MAIN_SCPUREACTIONUTILS_H
-#define READDY_MAIN_SCPUREACTIONUTILS_H
+#pragma once
 namespace readdy {
 namespace kernel {
 namespace scpu {
@@ -127,4 +125,3 @@ void performReaction(
 }
 }
 }
-#endif //READDY_MAIN_SCPUREACTIONUTILS_H

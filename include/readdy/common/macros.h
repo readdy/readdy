@@ -24,11 +24,7 @@
 // Created by mho on 10/10/2016.
 //
 
-
-
-#ifndef READDY_MAIN_MACROS_H
-#define READDY_MAIN_MACROS_H
-
+#pragma once
 
 /**
  * Defines for the current OS
@@ -100,5 +96,3 @@ struct CompartmentFactory::get_dispatcher<TYPE, Args...> { \
 #define likely(x)       !!(x)
 #define unlikely(x)     !!(x)
 #endif
-
-#endif //READDY_MAIN_MACROS_H

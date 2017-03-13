@@ -30,21 +30,23 @@
  * @date 07.11.16
  */
 
-#ifndef READDY_MAIN_AGGREGATORS_H
-#define READDY_MAIN_AGGREGATORS_H
+#pragma once
 
 #include <readdy/model/observables/Observable.h>
 #include <readdy/model/observables/Observables.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(observables)
 
-class MeanSquaredDisplacement : public Combiner<std::pair<std::vector<time_step_type>, std::vector<double>>, Particles> {
+class MeanSquaredDisplacement
+        : public Combiner<std::pair<std::vector<time_step_type>, std::vector<double>>, Particles> {
 public:
-    MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount, Particles *particlesObservable);
+    MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount,
+                            Particles *particlesObservable);
 
-    MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount, Particles *particlesObservable);
+    MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount,
+                            Particles *particlesObservable);
 
     virtual void evaluate() = 0;
 
@@ -53,15 +55,17 @@ protected:
 };
 
 template<typename ParentObs>
-class Trivial : public Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_t>>, ParentObs> {
+class Trivial
+        : public Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_t>>, ParentObs> {
 
     static_assert(
             std::is_base_of<readdy::model::observables::Observable<typename ParentObs::result_t>, ParentObs>::value,
             "ParentObs must extend readdy::model::observables::Observable");
 public:
     Trivial(Kernel *const kernel, unsigned int stride, ParentObs *parentObs)
-            : Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_t>>, ParentObs>(kernel, stride,
-                                                                                                                     parentObs) {}
+            : Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_t>>, ParentObs>(
+            kernel, stride,
+            parentObs) {}
 
     virtual void evaluate() {
         const auto &currentInput = std::get<0>(this->parentObservables)->getResult();
@@ -72,8 +76,6 @@ public:
     };
 };
 
-}
-}
-}
-
-#endif //READDY_MAIN_AGGREGATORS_H
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

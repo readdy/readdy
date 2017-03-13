@@ -30,8 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TRAITS_H
-#define READDY_MAIN_TRAITS_H
+#pragma once
 
 #include <array>
 #include "macros.h"
@@ -47,4 +46,3 @@ struct is_std_array<std::array<T, N>> : public std::true_type {};
 
 NAMESPACE_END(util)
 NAMESPACE_END(readdy)
-#endif //READDY_MAIN_TRAITS_H

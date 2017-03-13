@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_REACTIONRECORD_H
-#define READDY_MAIN_REACTIONRECORD_H
-
+#pragma once
 #include <spdlog/fmt/ostr.h>
 #include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
@@ -55,4 +53,3 @@ struct ReactionRecord {
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-#endif //READDY_MAIN_REACTIONRECORD_H

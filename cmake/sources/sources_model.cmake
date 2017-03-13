@@ -50,6 +50,17 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/BondedPotential.cpp"
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/AnglePotential.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/TorsionPotential.cpp")
 
+# observables
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/CenterOfMass.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/HistogramAlongAxis.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Particles.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/NParticles.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Forces.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Reactions.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/ReactionCounts.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Positions.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/RadialDistribution.cpp")
+
 # internal sources
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/_internal/ObservableWrapper.cpp")
 

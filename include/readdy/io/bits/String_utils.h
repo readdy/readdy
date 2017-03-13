@@ -30,8 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_STRING_UTILS_H
-#define READDY_MAIN_STRING_UTILS_H
+#pragma once
 
 #include <readdy/common/macros.h>
 #include <hdf5.h>
@@ -95,5 +94,3 @@ inline void writeVector(hid_t group, const std::string& dsName, std::vector<std:
 
 NAMESPACE_END(io)
 NAMESPACE_END(readdy)
-
-#endif //READDY_MAIN_STRING_UTILS_H

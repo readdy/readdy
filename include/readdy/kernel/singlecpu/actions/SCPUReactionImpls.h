@@ -29,9 +29,6 @@
  * @date 21.06.16
  */
 
-#ifndef READDY_MAIN_SINGLECPUDEFAULTREACTIONACTION_H
-#define READDY_MAIN_SINGLECPUDEFAULTREACTIONACTION_H
-
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
@@ -96,4 +93,3 @@ protected:
 }
 }
 }
-#endif //READDY_MAIN_SINGLECPUDEFAULTREACTIONACTION_H

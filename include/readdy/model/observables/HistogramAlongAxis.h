@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,34 +23,50 @@
 /**
  * << detailed description >>
  *
- * @file FilteredGillespieParallel.h
+ * @file HistogramAlongAxis.h
  * @brief << brief description >>
  * @author clonker
- * @date 22.11.16
+ * @date 13.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_DENSE_FILTEREDGILLESPIEPARALLEL_H
-#define READDY_DENSE_FILTEREDGILLESPIEPARALLEL_H
+#pragma once
 
-#include "CPUGillespieParallel.h"
+#include <set>
+#include "Observable.h"
 
-namespace readdy {
-namespace kernel {
-namespace cpu_dense {
-namespace actions {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(observables)
 
-class FilteredGillespieParallel : public GillespieParallel {
+class HistogramAlongAxis : public Observable<std::vector<double>> {
+
 public:
-    FilteredGillespieParallel(const kernel_t *const kernel);
+    HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
+                       std::vector<double> binBorders, std::set<unsigned int> typesToCount,
+                       unsigned int axis);
 
-private:
-    virtual void handleBoxReactions() override;
+    HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
+                       std::vector<std::string> typesToCount, unsigned int axis);
+
+    void flush() override;
+
+    virtual ~HistogramAlongAxis();
+
+protected:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
+    std::vector<double> binBorders;
+    std::set<unsigned int> typesToCount;
+
+    unsigned int axis;
 };
 
-}
-}
-}
-}
-}
-#endif //READDY_DENSE_FILTEREDGILLESPIEPARALLEL_H
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

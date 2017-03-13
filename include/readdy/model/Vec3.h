@@ -29,15 +29,13 @@
  * @date 21.04.16
  */
 
-#ifndef READDY_MAIN_VEC3_H
-#define READDY_MAIN_VEC3_H
-
+#pragma once
 #include <array>
 #include <math.h>
 #include <readdy/common/macros.h>
 
-namespace readdy {
-namespace model {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 
 struct READDY_API Vec3 {
 public:
@@ -153,7 +151,5 @@ distSquared(const Vec3 &lhs, const Vec3 &rhs, const Vec3::value_t dx, const Vec3
     return dv * dv;
 };
 
-}
-}
-
-#endif //READDY_MAIN_VEC3_H
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)
