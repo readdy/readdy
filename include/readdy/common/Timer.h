@@ -39,16 +39,31 @@
 
 namespace readdy {
 namespace util {
-struct Timer {
-
+/**
+ * Timer class.
+ */
+class Timer {
+public:
+    /**
+     * constructs a new timer
+     * @param label the label of the timer
+     * @param print if the timer should print the elapsed time when it runs out of scope
+     */
     Timer(const std::string &label, bool print = true) : label(label), print(print) {}
 
+    /**
+     * the destructor of the Timer class. prints the elapsed time if Timer::print is true.
+     */
     ~Timer() {
         if (print) {
             log::debug("Elapsed ({}): {} seconds", label, getSeconds());
         }
     }
 
+    /**
+     * returns the elapsed seconds
+     * @return the elapsed seconds
+     */
     double getSeconds() {
         std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
         long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();

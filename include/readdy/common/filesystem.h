@@ -47,17 +47,51 @@ constexpr char separator =
         '/';
 #endif
 
-struct dir_iterator {
-
+/**
+ * Directory iterator class
+ */
+class dir_iterator {
+public:
+    /**
+     * constructs a new directory iterator for a given path
+     * @param path the path in which to look for directories
+     */
     explicit dir_iterator(const std::string& path);
+    /**
+     * function to determine if there are more directories to come
+     * @return true if there are more directories to be iterated through, false otherwise
+     */
     bool has_next() const;
+    /**
+     * returns the name of the input directory without the leading path
+     * @return the input directory name
+     */
     std::string base_name() const;
+    /**
+     * advances the iterator by one
+     * @return the current directory
+     */
     std::string next();
+    /**
+     * destructor
+     */
     virtual ~dir_iterator();
 
+    /**
+     * copying is not allowed
+     */
     dir_iterator(const dir_iterator&) = delete;
+    /**
+     * copying is not allowed
+     */
     dir_iterator& operator=(const dir_iterator&) = delete;
+    /**
+     * move constructor
+     */
     dir_iterator(dir_iterator&&);
+    /**
+     * move assign
+     */
     dir_iterator& operator=(dir_iterator&&);
 
 private:
@@ -66,12 +100,31 @@ private:
 
 };
 
+/**
+ * returns the current system path
+ * @return the current system path
+ */
 std::string current_path();
 
+/**
+ * checks if a path exists
+ * @param path the path to check
+ * @return true if it exists, otherwise false
+ */
 bool exists(const std::string& path);
 
+/**
+ * checks if the input path resolves to a file
+ * @param path the path
+ * @return true if it is indeed a file, otherwise false
+ */
 bool is_file(const std::string &path);
 
+/**
+ * checks if the input path resolves to a directory
+ * @param path the path
+ * @return true if it is indeed a directory, otherwise false
+ */
 bool is_directory(const std::string &path);
 
 }

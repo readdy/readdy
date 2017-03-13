@@ -21,10 +21,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file Config.h
- * @brief << brief description >>
+ * @brief Config class header
  * @author clonker
  * @date 05.09.16
  */
@@ -36,11 +34,30 @@ namespace readdy {
 namespace util {
 namespace thread {
 
+/**
+ * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
+ * CPU or CPU_Dense kernel.
+ */
 struct Config {
+    /**
+     * return type of std::thread::hardware_concurrency()
+     */
     using n_threads_t = decltype(std::thread::hardware_concurrency());
 
+    /**
+     * constructs a new config (should only be performed by the kernels)
+     */
     Config();
+    /**
+     * Returns the number of threads. Defaults to:
+     *  - hardware_concurrency() if in DEBUG mode
+     *  - 4 * hardware_concurrency() otherwise
+     * @return the number of threads
+     */
     n_threads_t nThreads() const;
+    /**
+     * Set the number of threads to be used
+     */
     void setNThreads(const n_threads_t);
 private:
     n_threads_t m_nThreads;

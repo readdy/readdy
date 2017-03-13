@@ -21,10 +21,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file notification_barrier.h
- * @brief << brief description >>
+ * @brief notofication_barrier header file
  * @author clonker
  * @date 24.11.16
  */
@@ -40,12 +38,18 @@ namespace readdy {
 namespace util {
 namespace thread {
 
+/**
+ * A notification barrier that lets all threads wait until another thread called ready().
+ */
 class notification_barrier {
 public:
+    /**
+     * constructs a new notification barrier
+     */
     explicit notification_barrier() { }
 
     /**
-     * waste time until all threads reached the barrier
+     * waste time until ready() was called
      */
     void wait() const {
         std::unique_lock<std::mutex> lock(mutex);
@@ -54,6 +58,9 @@ public:
         }
     }
 
+    /**
+     * sets notification_barrier::done to true and notifies waiting threads
+     */
     void ready() const {
         done.store(true);
         cv.notify_all();

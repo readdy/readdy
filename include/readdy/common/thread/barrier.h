@@ -21,10 +21,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file barrier.h
- * @brief << brief description >>
+ * @brief header for the barrier class
  * @author clonker
  * @date 16.11.16
  */
@@ -39,8 +37,15 @@ namespace readdy {
 namespace util {
 namespace thread {
 
+/**
+ * thread barrier that syncs up a bunch of threads
+ */
 class barrier {
 public:
+    /**
+     * constructs a new barrier
+     * @param count the number of threads to synchronize
+     */
     explicit barrier(std::size_t count) : fallback(count), count(count), generation(0) { }
 
     /**
