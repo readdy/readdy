@@ -29,16 +29,14 @@
  * @date 13.07.16
  */
 
-#ifndef READDY_MAIN_TIMER_H
-#define READDY_MAIN_TIMER_H
-
+#pragma once
 #include <memory>
 #include <chrono>
 
 #include "logging.h"
 
-namespace readdy {
-namespace util {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
 /**
  * Timer class.
  */
@@ -75,6 +73,5 @@ private :
     std::string label;
     bool print;
 };
-}
-}
-#endif //READDY_MAIN_TIMER_H
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

@@ -29,14 +29,13 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_COMPARTMENTFACTORY_H
-#define READDY_MAIN_COMPARTMENTFACTORY_H
+#pragma once
 
 #include "Compartments.h"
 
-namespace readdy {
-namespace model {
-namespace compartments {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(compartments)
 
 class CompartmentFactory {
 public:
@@ -77,8 +76,6 @@ READDY_CREATE_COMPARTMENT_FACTORY_DISPATCHER(Plane)
 
 READDY_CREATE_COMPARTMENT_FACTORY_DISPATCHER(Sphere)
 
-}
-}
-}
-
-#endif //READDY_MAIN_COMPARTMENTFACTORY_H
+NAMESPACE_END(compartments)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

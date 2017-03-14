@@ -29,10 +29,7 @@
  * @date 23.06.16
  */
 
-
-#ifndef READDY_CPUKERNEL_CPUACTIONFACTORY_H
-#define READDY_CPUKERNEL_CPUACTIONFACTORY_H
-
+#pragma once
 #include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
@@ -70,5 +67,3 @@ protected:
 }
 }
 }
-
-#endif //READDY_CPUKERNEL_CPUACTIONFACTORY_H

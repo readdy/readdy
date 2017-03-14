@@ -30,14 +30,12 @@
  * @date 20.06.16
  */
 
-#ifndef READDY_MAIN_CONVERSION_H
-#define READDY_MAIN_CONVERSION_H
-
+#pragma once
 #include "Reaction.h"
 
-namespace readdy {
-namespace model {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
 
 class Conversion : public Reaction<1> {
 
@@ -60,7 +58,6 @@ public:
         return ReactionType::Conversion;
     }
 };
-}
-}
-}
-#endif //READDY_MAIN_CONVERSION_H
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

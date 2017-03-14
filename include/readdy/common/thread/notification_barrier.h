@@ -26,17 +26,15 @@
  * @author clonker
  * @date 24.11.16
  */
-
-#ifndef READDY_MAIN_NOTIFICATION_BARRIER_H
-#define READDY_MAIN_NOTIFICATION_BARRIER_H
+#pragma once
 
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
 
-namespace readdy {
-namespace util {
-namespace thread {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
 
 /**
  * A notification barrier that lets all threads wait until another thread called ready().
@@ -72,7 +70,6 @@ private:
     mutable std::atomic<bool> done {false};
 };
 
-}
-}
-}
-#endif //READDY_MAIN_NOTIFICATION_BARRIER_H
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

@@ -27,14 +27,14 @@
  * @date 01.08.16
  */
 
-#ifndef READDY_CPUKERNEL_SCOPEDTHREAD_H
-#define READDY_CPUKERNEL_SCOPEDTHREAD_H
+#pragma once
 
 #include <thread>
+#include <readdy/common/macros.h>
 
-namespace readdy {
-namespace util {
-namespace thread {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
 
 /**
  * scoped_thread implementation
@@ -87,7 +87,7 @@ public:
      */
     scoped_thread &operator=(const scoped_thread &) = delete;
 };
-}
-}
-}
-#endif //READDY_CPUKERNEL_SCOPEDTHREAD_H
+
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

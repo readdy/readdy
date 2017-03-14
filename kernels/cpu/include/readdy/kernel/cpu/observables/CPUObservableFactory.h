@@ -29,9 +29,7 @@
  * @date 21.07.16
  */
 
-#ifndef READDY_CPU_OBSERVABLEFACTORY_H
-#define READDY_CPU_OBSERVABLEFACTORY_H
-
+#pragma once
 
 #include <readdy/model/observables/ObservableFactory.h>
 
@@ -83,5 +81,3 @@ private:
 }
 }
 }
-
-#endif //READDY_CPU_OBSERVABLEFACTORY_H

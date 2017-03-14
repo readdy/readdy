@@ -33,9 +33,7 @@
  * @date 17.06.16
  */
 
-#ifndef READDY_MAIN_REACTION_H
-#define READDY_MAIN_REACTION_H
-
+#pragma once
 #include <string>
 #include <ostream>
 #include <spdlog/fmt/ostr.h>
@@ -43,9 +41,9 @@
 #include <readdy/model/RandomProvider.h>
 #include <readdy/common/make_unique.h>
 
-namespace readdy {
-namespace model {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
 
 enum class ReactionType { Conversion, Fusion, Fission, Enzymatic, Decay };
 
@@ -162,8 +160,6 @@ protected:
     double weight1 = .5, weight2 = .5;
 };
 
-}
-}
-}
-
-#endif //READDY_MAIN_REACTION_H
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

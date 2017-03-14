@@ -28,10 +28,7 @@
  * @author clonker
  * @date 11.07.16
  */
-
-#ifndef READDY_MAIN_SINGLECPUUPDATENEIGHBORLIST_H
-#define READDY_MAIN_SINGLECPUUPDATENEIGHBORLIST_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
@@ -56,5 +53,3 @@ private:
 }
 }
 }
-
-#endif //READDY_MAIN_SINGLECPUUPDATENEIGHBORLIST_H

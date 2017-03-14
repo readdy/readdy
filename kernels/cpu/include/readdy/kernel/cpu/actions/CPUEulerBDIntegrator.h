@@ -29,9 +29,7 @@
  * @date 07.07.16
  */
 
-#ifndef READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
-#define READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H
-
+#pragma once
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/model/actions/Actions.h>
 
@@ -53,4 +51,3 @@ private:
 }
 }
 }
-#endif //READDY_CPUKERNEL_CPUEULERBDINTEGRATOR_H

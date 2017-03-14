@@ -29,9 +29,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_MAIN_REACTIONEVENT_H
-#define READDY_MAIN_REACTIONEVENT_H
-
+#pragma once
 #include <spdlog/fmt/ostr.h>
 #include <readdy/kernel/cpu_dense/model/CPUDParticleData.h>
 
@@ -62,4 +60,3 @@ struct Event {
 }
 }
 }
-#endif //READDY_MAIN_REACTIONEVENT_H

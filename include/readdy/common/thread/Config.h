@@ -27,12 +27,11 @@
  * @date 05.09.16
  */
 
-#ifndef READDY_MAIN_CONFIG_H
-#define READDY_MAIN_CONFIG_H
+#pragma once
 
-namespace readdy {
-namespace util {
-namespace thread {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
 
 /**
  * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
@@ -63,7 +62,6 @@ private:
     n_threads_t m_nThreads;
 };
 
-}
-}
-}
-#endif //READDY_MAIN_CONFIG_H
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

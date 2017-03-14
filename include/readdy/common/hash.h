@@ -29,14 +29,14 @@
  * @date 14.10.16
  */
 
-#ifndef READDY_MAIN_HASH_H
-#define READDY_MAIN_HASH_H
+#pragma once
 
 #include <cstddef>
 
-namespace readdy {
-namespace util {
-namespace hash {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(hash)
+
 /**
  * Simplified version of boost hash combine.
  * @param seed the seed
@@ -46,7 +46,7 @@ template<typename T>
 void combine(std::size_t& seed, const T& v) {
     seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
-}
-}
-}
-#endif //READDY_MAIN_HASH_H
+
+NAMESPACE_END(hash)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

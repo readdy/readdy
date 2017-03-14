@@ -41,9 +41,7 @@
  * @todo write docs, is kbt really time indep (or should be treated as such)?
  */
 
-#ifndef READDY_MAIN_KERNELCONTEXT_H
-#define READDY_MAIN_KERNELCONTEXT_H
-
+#pragma once
 #include <array>
 #include <memory>
 #include <vector>
@@ -55,8 +53,8 @@
 #include <readdy/common/ParticleTypePair.h>
 #include <readdy/model/compartments/Compartment.h>
 
-namespace readdy {
-namespace model {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 
 class UnknownParticleType : public std::runtime_error {
 public:
@@ -383,6 +381,5 @@ private:
     bool recordReactionCounts_ = false;
 };
 
-}
-}
-#endif //READDY_MAIN_KERNELCONTEXT_H
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

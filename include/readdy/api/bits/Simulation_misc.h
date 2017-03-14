@@ -30,13 +30,12 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_SIMULATION_MISC_H
-#define READDY_MAIN_SIMULATION_MISC_H
+#pragma once
 
 #include <readdy/plugin/KernelProvider.h>
 #include "../Simulation.h"
 
-namespace readdy {
+NAMESPACE_BEGIN(readdy)
 
 struct Simulation::Impl {
     std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
@@ -76,6 +75,4 @@ inline readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool us
     ensureKernelSelected();
     return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
 }
-
-}
-#endif //READDY_MAIN_SIMULATION_MISC_H
+NAMESPACE_END(readdy)

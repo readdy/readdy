@@ -30,9 +30,7 @@
  * @date 19.04.16
  */
 
-#ifndef READDY_MAIN_PARTICLE_H
-#define READDY_MAIN_PARTICLE_H
-
+#pragma once
 #include <array>
 #include <string>
 #include <atomic>
@@ -40,9 +38,8 @@
 #include <ostream>
 #include "Vec3.h"
 
-namespace readdy {
-namespace model {
-
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 
 class READDY_API Particle {
 public:
@@ -100,6 +97,5 @@ public:
 
 };
 
-}
-}
-#endif //READDY_MAIN_PARTICLE_H
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

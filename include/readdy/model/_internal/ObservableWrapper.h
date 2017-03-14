@@ -31,14 +31,13 @@
  * @date 10.05.16
  */
 
-#ifndef READDY_MAIN_OBSERVABLEWRAPPER_H
-#define READDY_MAIN_OBSERVABLEWRAPPER_H
+#pragma once
 
 #include <readdy/model/observables/Observable.h>
 
-namespace readdy {
-namespace model {
-namespace observables {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(observables)
 
 class ObservableWrapper : public ObservableBase {
 public:
@@ -59,7 +58,6 @@ protected:
     const observables::observable_type observable;
 };
 
-}
-}
-}
-#endif //READDY_MAIN_OBSERVABLEWRAPPER_H
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

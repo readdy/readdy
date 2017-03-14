@@ -30,8 +30,7 @@
  * @date 08.04.16
  */
 
-#ifndef READDY_MAIN_ACTIONFACTORY_H
-#define READDY_MAIN_ACTIONFACTORY_H
+#pragma once
 
 #include <type_traits>
 #include <unordered_map>
@@ -39,9 +38,9 @@
 #include <readdy/model/actions/Action.h>
 #include <readdy/model/actions/Actions.h>
 
-namespace readdy {
-namespace model {
-namespace actions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(actions)
 
 class ActionFactory {
 public:
@@ -144,8 +143,6 @@ READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, GillespieParallel)
 
 READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, NextSubvolumes)
 
-}
-}
-}
-
-#endif //READDY_MAIN_ACTIONFACTORY_H
+NAMESPACE_END(actions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

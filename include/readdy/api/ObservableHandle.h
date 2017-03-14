@@ -30,12 +30,11 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_OBSERVABLEHANDLE_H
-#define READDY_MAIN_OBSERVABLEHANDLE_H
+#pragma once
 
 #include <readdy/model/observables/Observable.h>
 
-namespace readdy {
+NAMESPACE_BEGIN(readdy)
 
 class ObservableHandle {
 
@@ -57,8 +56,6 @@ private:
     readdy::model::observables::ObservableBase *const observable;
 };
 
-}
+NAMESPACE_END(readdy)
 
 #include "bits/ObservableHandle_misc.h"
-
-#endif //READDY_MAIN_OBSERVABLEHANDLE_H

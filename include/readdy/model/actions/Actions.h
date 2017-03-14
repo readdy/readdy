@@ -39,9 +39,7 @@
  * @date 11.04.16
  * @todo provide more detailed descriptions for some of the programs
  */
-
-#ifndef READDY_MAIN_ACTIONS_H
-#define READDY_MAIN_ACTIONS_H
+#pragma once
 
 #include <type_traits>
 #include <readdy/model/Particle.h>
@@ -52,9 +50,9 @@
 #include <functional>
 #endif
 
-namespace readdy {
-namespace model {
-namespace actions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(actions)
 
 class AddParticles : public Action {
 
@@ -187,8 +185,6 @@ const std::string getActionName(typename std::enable_if<std::is_base_of<Evaluate
     return "EvaluateCompartments";
 };
 
-}
-}
-}
-
-#endif //READDY_MAIN_ACTIONS_H
+NAMESPACE_END(actions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

@@ -32,15 +32,14 @@
  * @date 31.05.16
  */
 
-#ifndef READDY_MAIN_POTENTIALORDER1_H
-#define READDY_MAIN_POTENTIALORDER1_H
-
+#pragma once
 #include <readdy/model/potentials/Potential.h>
 
-namespace readdy {
-namespace model {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 class KernelContext;
-namespace potentials {
+
+NAMESPACE_BEGIN(potentials)
 class PotentialOrder1 : public Potential {
 protected:
     using particle_type_type = readdy::model::Particle::type_type;
@@ -62,7 +61,7 @@ protected:
     const std::string particleType;
 
 };
-}
-}
-}
-#endif //READDY_MAIN_POTENTIALORDER1_H
+
+NAMESPACE_END(potentials)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

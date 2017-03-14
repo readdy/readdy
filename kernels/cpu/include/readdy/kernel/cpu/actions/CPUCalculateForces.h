@@ -29,10 +29,7 @@
  * @date 14.07.16
  */
 
-
-#ifndef READDY_CPUKERNEL_CALCULATEFORCES_H
-#define READDY_CPUKERNEL_CALCULATEFORCES_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 
@@ -57,4 +54,3 @@ protected:
 }
 }
 }
-#endif //READDY_CPUKERNEL_CALCULATEFORCES_H

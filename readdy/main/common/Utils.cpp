@@ -27,7 +27,6 @@
 #include <vector>
 #include <sstream>
 #include <readdy/common/Utils.h>
-#include <sstream>
 
 namespace readdy {
 namespace util {

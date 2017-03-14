@@ -29,9 +29,7 @@
  * @date 20.10.16
  */
 
-#ifndef READDY_CPUKERNEL_UNCONTROLLEDAPPROXIMATION_H
-#define READDY_CPUKERNEL_UNCONTROLLEDAPPROXIMATION_H
-
+#pragma once
 #include <readdy/kernel/cpu/CPUKernel.h>
 
 namespace readdy {
@@ -72,4 +70,3 @@ protected:
 }
 }
 }
-#endif //READDY_CPUKERNEL_UNCONTROLLEDAPPROXIMATION_H

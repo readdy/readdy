@@ -29,9 +29,7 @@
  * @date 19.04.16
  */
 
-#ifndef READDY_MAIN_SINGLECPUKERNELSTATEMODEL_H
-#define READDY_MAIN_SINGLECPUKERNELSTATEMODEL_H
-
+#pragma once
 
 #include <readdy/model/KernelStateModel.h>
 #include <memory>
@@ -102,5 +100,3 @@ private:
 }
 }
 }
-
-#endif //READDY_MAIN_SINGLECPUKERNELSTATEMODEL_H

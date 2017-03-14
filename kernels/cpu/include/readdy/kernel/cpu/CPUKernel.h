@@ -30,8 +30,7 @@
  */
 
 
-#ifndef READDY_CPUKERNEL_CPUKERNEL_H
-#define READDY_CPUKERNEL_CPUKERNEL_H
+#pragma once
 
 #include <readdy/model/Kernel.h>
 #include <readdy/common/dll.h>
@@ -89,5 +88,3 @@ protected:
 extern "C" const char* name();
 
 extern "C" readdy::model::Kernel* createKernel();
-
-#endif //READDY_CPUKERNEL_CPUKERNEL_H

@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_CPUTOPOLOGYACTIONFACTORY_H
-#define READDY_MAIN_CPUTOPOLOGYACTIONFACTORY_H
-
+#pragma once
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 
@@ -64,5 +62,3 @@ NAMESPACE_END(model)
 NAMESPACE_END(cpu)
 NAMESPACE_END(kernel)
 NAMESPACE_END(readdy)
-
-#endif //READDY_MAIN_CPUTOPOLOGYACTIONFACTORY_H

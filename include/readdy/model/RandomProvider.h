@@ -30,18 +30,16 @@
  * @date 19.04.16
  */
 
-#ifndef READDY_MAIN_RANDOMPROVIDER_H
-#define READDY_MAIN_RANDOMPROVIDER_H
-
+#pragma once
 #include <memory>
 #include <random>
 #include <time.h>
 #include <thread>
 #include "Vec3.h"
 
-namespace readdy {
-namespace model {
-namespace rnd {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(rnd)
 
 template<typename RealType=double, typename Generator = std::default_random_engine>
 RealType normal(const RealType mean = 0.0, const RealType variance = 1.0) {
@@ -85,8 +83,6 @@ Iter random_element(Iter start, const Iter end) {
     return start;
 }
 
-
-}
-}
-}
-#endif //READDY_MAIN_RANDOMPROVIDER_H
+NAMESPACE_END(rnd)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

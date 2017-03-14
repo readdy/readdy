@@ -29,15 +29,14 @@
  * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_DATASETTYPE_H
-#define READDY_MAIN_DATASETTYPE_H
+#pragma once
 
 #include <vector>
 #include <readdy/common/logging.h>
 #include <readdy/common/traits.h>
 
-namespace readdy {
-namespace io {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
 
 class DataTypeHandle {
 public:
@@ -130,10 +129,7 @@ public:
     STDCompoundType(const NativeCompoundType& nativeType);
 };
 
-
-}
-}
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)
 
 #include "bits/DataSetType_bits.h"
-
-#endif //READDY_MAIN_DATASETTYPE_H

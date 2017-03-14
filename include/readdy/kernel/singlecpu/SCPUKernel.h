@@ -24,9 +24,7 @@
 // Created by clonker on 07.03.16.
 //
 
-#ifndef READDY_MAIN_SINGLECPUKERNEL_H
-#define READDY_MAIN_SINGLECPUKERNEL_H
-
+#pragma once
 #include <readdy/model/RandomProvider.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
@@ -83,5 +81,3 @@ private:
 }
 }
 }
-
-#endif //READDY_MAIN_SINGLECPUKERNEL_H

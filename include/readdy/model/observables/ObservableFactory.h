@@ -30,9 +30,7 @@
  * @author clonker
  * @date 29.04.16
  */
-
-#ifndef READDY_MAIN_OBSERVABLEFACTORY_H
-#define READDY_MAIN_OBSERVABLEFACTORY_H
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -40,12 +38,13 @@
 #include <readdy/common/Utils.h>
 #include <readdy/model/observables/Observables.h>
 #include "Aggregators.h"
+#include "Positions.h"
 
-namespace readdy {
-namespace model {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
 class Kernel;
 
-namespace observables {
+NAMESPACE_BEGIN(observables)
 
 class ObservableFactory {
 public:
@@ -142,7 +141,6 @@ READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(Reactions)
 
 READDY_CREATE_OBSERVABLE_FACTORY_DISPATCHER(ReactionCounts)
 
-}
-}
-}
-#endif //READDY_MAIN_OBSERVABLEFACTORY_H
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

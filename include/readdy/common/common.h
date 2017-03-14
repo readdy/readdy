@@ -30,12 +30,10 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_COMMON_H
-#define READDY_MAIN_COMMON_H
+#pragma once
 
 #include "macros.h"
 
 NAMESPACE_BEGIN(readdy)
 using time_step_type = unsigned long;
 NAMESPACE_END(readdy)
-#endif //READDY_MAIN_COMMON_H

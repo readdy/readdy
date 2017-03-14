@@ -30,15 +30,15 @@
  * @date 09.08.16
  */
 
-#ifndef READDY_MAIN_MODEL_UTIL_H
-#define READDY_MAIN_MODEL_UTIL_H
+#pragma once
 
+#include <set>
 #include <readdy/model/KernelContext.h>
 
-namespace readdy {
-namespace model {
-namespace _internal {
-namespace util {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(_internal)
+NAMESPACE_BEGIN(util)
 
 inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const readdy::model::KernelContext &ctx) {
     std::set<unsigned int> result;
@@ -69,9 +69,7 @@ transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap,
     return result;
 };
 
-}
-}
-}
-}
-
-#endif //READDY_MAIN_MODEL_UTIL_H
+NAMESPACE_END(util)
+NAMESPACE_END(_internal)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_TOPOLOGYPOTENTIAL_H
-#define READDY_MAIN_TOPOLOGYPOTENTIAL_H
-
+#pragma once
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/actions/TopologyAction.h>
 
@@ -60,6 +58,3 @@ protected:
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-
-
-#endif //READDY_MAIN_TOPOLOGYPOTENTIAL_H

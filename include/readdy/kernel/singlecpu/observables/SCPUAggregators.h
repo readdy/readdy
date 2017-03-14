@@ -26,9 +26,7 @@
  * @date 09.11.16
  */
 
-#ifndef READDY_MAIN_SCPUAGGREGATORS_H
-#define READDY_MAIN_SCPUAGGREGATORS_H
-
+#pragma once
 #include <readdy/model/observables/Aggregators.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
 
@@ -98,5 +96,3 @@ protected:
 }
 }
 }
-
-#endif //READDY_MAIN_SCPUAGGREGATORS_H

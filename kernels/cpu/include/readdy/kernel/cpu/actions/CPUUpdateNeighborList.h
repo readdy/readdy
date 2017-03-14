@@ -30,9 +30,7 @@
  */
 
 
-#ifndef READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
-#define READDY_CPUKERNEL_UPDATENEIGHBORLIST_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 
@@ -71,4 +69,3 @@ private:
 }
 }
 }
-#endif //READDY_CPUKERNEL_UPDATENEIGHBORLIST_H

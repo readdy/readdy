@@ -29,14 +29,14 @@
  * @date 09.09.16
  */
 
-#ifndef READDY_MAIN_NUMERIC_H
-#define READDY_MAIN_NUMERIC_H
+#pragma once
 
 #include <type_traits>
+#include "macros.h"
 
-namespace readdy {
-namespace util {
-namespace numeric {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(numeric)
 
 inline constexpr double pi() { return 3.141592653589793238462643383279502884e+00; }
 
@@ -57,7 +57,6 @@ constexpr T clamp_min(T d, T min) {
     return d < min ? min : d;
 }
 
-}
-}
-}
-#endif //READDY_MAIN_NUMERIC_H
+NAMESPACE_END(numeric)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

@@ -30,18 +30,18 @@
  * @date 08.04.16
  */
 
-#ifndef READDY_MAIN_ACTION_H
-#define READDY_MAIN_ACTION_H
+#pragma once
 
 #include <memory>
+#include <readdy/common/macros.h>
 
 #if READDY_OSX
 #include <string>
 #endif
 
-namespace readdy {
-namespace model {
-namespace actions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(actions)
 
 class Action {
 public:
@@ -70,9 +70,6 @@ protected:
     double timeStep;
 };
 
-}
-}
-}
-
-
-#endif //READDY_MAIN_ACTION_H
+NAMESPACE_END(actions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

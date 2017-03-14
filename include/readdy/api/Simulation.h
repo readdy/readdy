@@ -31,14 +31,13 @@
  * @date 08.02.16
  */
 
-#ifndef READDY_SIMULATION_H
-#define READDY_SIMULATION_H
+#pragma once
 
 #include <readdy/model/Kernel.h>
 #include <readdy/api/SimulationScheme.h>
 #include "ObservableHandle.h"
 
-namespace readdy {
+NAMESPACE_BEGIN(readdy)
 /**
  * Simulation is the focus of the high-level C++ API of ReaDDy.
  * This is where the system is set up and run for a certain number of
@@ -442,8 +441,6 @@ public:
     NoKernelSelectedException(const std::string &__arg);
 };
 
-}
+NAMESPACE_END(readdy)
 
 #include "bits/Simulation_misc.h"
-
-#endif //READDY_SIMULATION_H

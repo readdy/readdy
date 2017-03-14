@@ -30,15 +30,14 @@
  * @date 20.06.16
  */
 
-#ifndef READDY_MAIN_FISSION_H
-#define READDY_MAIN_FISSION_H
+#pragma once
 
 #include <readdy/common/logging.h>
 #include "Reaction.h"
 
-namespace readdy {
-namespace model {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
 
 class Fission : public Reaction<1> {
     using super = Reaction<1>;
@@ -56,7 +55,7 @@ public:
             this->weight1 /= sum;
             this->weight2 /= sum;
             log::warn("The weights did not add up to 1, they were changed to weight1={}, weight2={}",
-                                         this->weight1, this->weight2);
+                      this->weight1, this->weight2);
         }
     }
 
@@ -77,7 +76,6 @@ public:
     }
 
 };
-}
-}
-}
-#endif //READDY_MAIN_FISSION_H
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

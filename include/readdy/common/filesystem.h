@@ -30,15 +30,15 @@
  * @date 14.10.16
  */
 
-#ifndef READDY_MAIN_FILESYSTEM_H
-#define READDY_MAIN_FILESYSTEM_H
+#pragma once
 
 #include <string>
 #include <memory>
+#include "macros.h"
 
-namespace readdy {
-namespace util {
-namespace fs {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(fs)
 
 constexpr char separator =
 #if READDY_WINDOWS
@@ -127,7 +127,6 @@ bool is_file(const std::string &path);
  */
 bool is_directory(const std::string &path);
 
-}
-}
-}
-#endif //READDY_MAIN_FILESYSTEM_H
+NAMESPACE_END(fs)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

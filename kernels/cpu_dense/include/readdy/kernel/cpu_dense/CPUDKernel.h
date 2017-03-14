@@ -29,9 +29,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_KERNEL_H
-#define READDY_DENSE_KERNEL_H
-
+#pragma once
 #include <readdy/model/Kernel.h>
 #include <readdy/common/thread/Config.h>
 
@@ -87,6 +85,3 @@ protected:
 extern "C" const char* name();
 
 extern "C" readdy::model::Kernel* createKernel();
-
-
-#endif //READDY_DENSE_KERNEL_H

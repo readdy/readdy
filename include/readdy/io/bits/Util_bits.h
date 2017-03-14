@@ -30,14 +30,13 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_UTIL_BITS_H
-#define READDY_MAIN_UTIL_BITS_H
+#pragma once
 
 #include <readdy/io/Group.h>
 
-namespace readdy {
-namespace io {
-namespace util {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
+NAMESPACE_BEGIN(util)
 inline bool groupExists(const Group &cwd, const std::string &name) {
     hid_t hid = cwd.getHandle();
     H5E_BEGIN_TRY
@@ -51,7 +50,6 @@ inline bool groupExists(const Group &cwd, const std::string &name) {
     return (hid > 0);
 }
 
-}
-}
-}
-#endif //READDY_MAIN_UTIL_BITS_H
+NAMESPACE_END(util)
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

@@ -29,21 +29,20 @@
  * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_TYPES_H
-#define READDY_MAIN_TYPES_H
+#pragma once
 
 #include <hdf5.h>
+#include <readdy/common/macros.h>
 
-namespace readdy {
-namespace io {
-namespace h5 {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
+NAMESPACE_BEGIN(h5)
 
 using handle_t = hid_t;
 using dims_t = hsize_t;
 using data_set_type_t = hid_t;
 const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
 
-}
-}
-}
-#endif //READDY_MAIN_TYPES_H
+NAMESPACE_END(h5)
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

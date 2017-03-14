@@ -29,9 +29,7 @@
  * @date 14.07.16
  */
 
-#ifndef READDY_CPUKERNEL_NEIGHBORLIST_H
-#define READDY_CPUKERNEL_NEIGHBORLIST_H
-
+#pragma once
 #include <memory>
 
 #include <readdy/common/make_unique.h>
@@ -75,7 +73,8 @@ private:
     bool initialSetup = true;
 public:
 
-    CPUNeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config, skin_size_t = 0);
+    CPUNeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config,
+                    skin_size_t = 0);
 
     virtual ~CPUNeighborList();
 
@@ -85,21 +84,25 @@ public:
 
     void clear();
 
-    const std::vector<neighbor_t>& neighbors(const particle_index entry) const;
-    const std::vector<neighbor_t>& find_neighbors(const particle_index) const;
+    const std::vector<neighbor_t> &neighbors(const particle_index entry) const;
+
+    const std::vector<neighbor_t> &find_neighbors(const particle_index) const;
 
     virtual void fillCells();
 
     virtual void create();
 
-    void updateData(data_t::update_t&& update);
+    void updateData(data_t::update_t &&update);
 
-    void displace(data_iter_t iter, const readdy::model::Vec3& vec);
-    void displace(data_t::Entry&, const data_t::particle_type::pos_type& delta);
-    void displace(data_t::index_t entry, const data_t::particle_type::pos_type& delta);
-    void setPosition(data_t::index_t entry, data_t::particle_type::pos_type&& newPosition);
+    void displace(data_iter_t iter, const readdy::model::Vec3 &vec);
 
-    readdy::signals::scoped_connection registerReorderEventListener(const reorder_signal_t::slot_type& slot);
+    void displace(data_t::Entry &, const data_t::particle_type::pos_type &delta);
+
+    void displace(data_t::index_t entry, const data_t::particle_type::pos_type &delta);
+
+    void setPosition(data_t::index_t entry, data_t::particle_type::pos_type &&newPosition);
+
+    readdy::signals::scoped_connection registerReorderEventListener(const reorder_signal_t::slot_type &slot);
 
     void remove(const particle_index);
 
@@ -108,18 +111,23 @@ public:
     iterator begin() {
         return data.neighbors.begin();
     }
+
     iterator end() {
         return data.neighbors.end();
     }
+
     const_iterator cbegin() const {
         return data.neighbors.cbegin();
     }
+
     const_iterator cend() const {
         return data.neighbors.cend();
     }
+
     const_iterator begin() const {
         return cbegin();
     }
+
     const_iterator end() const {
         return cend();
     }
@@ -130,12 +138,15 @@ public:
 
     hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
-    std::unordered_set<Cell*> findDirtyCells();
-    std::size_t hash_pos(const data_t::particle_type::pos_type& pos) const;
-    std::tuple<cell_index, cell_index, cell_index> mapPositionToCell(const data_t::particle_type::pos_type& pos) const;
+    std::unordered_set<Cell *> findDirtyCells();
+
+    std::size_t hash_pos(const data_t::particle_type::pos_type &pos) const;
+
+    std::tuple<cell_index, cell_index, cell_index> mapPositionToCell(const data_t::particle_type::pos_type &pos) const;
+
 protected:
 
-    bool isInCell(const Cell& cell, const data_t::particle_type::pos_type& pos) const;
+    bool isInCell(const Cell &cell, const data_t::particle_type::pos_type &pos) const;
 
     const readdy::model::KernelContext *const ctx;
 
@@ -149,18 +160,19 @@ protected:
     double maxCutoffPlusSkin = 0;
     readdy::util::thread::Config const *const config;
 
-    const Cell* const getCell(const readdy::model::Particle::pos_type &pos) const;
+    const Cell *const getCell(const readdy::model::Particle::pos_type &pos) const;
 
     int getCellIndex(const readdy::model::Particle::pos_type &pos) const;
 
     Cell *getCell(const readdy::model::Particle::pos_type &pos);
+
     Cell *getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k);
 
-    const Cell * const getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) const;
+    const Cell *const getCell(signed_cell_index i, signed_cell_index j, signed_cell_index k) const;
 
-    void setUpCell(CPUNeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun& d2);
+    void setUpCell(CPUNeighborList::Cell &cell, const double cutoffSquared, const ctx_t::dist_squared_fun &d2);
 
-    data_t& data;
+    data_t &data;
 
     std::unique_ptr<reorder_signal_t> reorderSignal;
 
@@ -172,4 +184,3 @@ protected:
 }
 }
 }
-#endif //READDY_CPUKERNEL_NEIGHBORLIST_H

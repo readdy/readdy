@@ -29,10 +29,7 @@
  * @date 22.11.16
  */
 
-
-#ifndef READDY_DENSE_CALCULATEFORCES_H
-#define READDY_DENSE_CALCULATEFORCES_H
-
+#pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
@@ -57,4 +54,3 @@ protected:
 }
 }
 }
-#endif //READDY_DENSE_CALCULATEFORCES_H

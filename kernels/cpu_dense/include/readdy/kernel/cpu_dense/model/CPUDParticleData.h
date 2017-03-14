@@ -29,9 +29,7 @@
  * @date 23.11.16
  */
 
-#ifndef READDY_KERNEL_CPU_DENSE_PARTICLEDATA_H
-#define READDY_KERNEL_CPU_DENSE_PARTICLEDATA_H
-
+#pragma once
 #include <cstddef>
 #include <atomic>
 #include <vector>
@@ -174,5 +172,3 @@ protected:
 }
 }
 }
-
-#endif //READDY_KERNEL_CPU_PARTICLEDATA_H

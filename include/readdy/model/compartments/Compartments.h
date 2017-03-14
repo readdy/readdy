@@ -30,14 +30,13 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_COMPARTMENTS_H
-#define READDY_MAIN_COMPARTMENTS_H
+#pragma once
 
 #include "Compartment.h"
 
-namespace readdy {
-namespace model {
-namespace compartments {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(compartments)
 
 class Sphere : public Compartment {
 public:
@@ -77,8 +76,6 @@ const std::string getCompartmentTypeName(typename std::enable_if<std::is_base_of
     return "Plane";
 }
 
-}
-}
-}
-
-#endif //READDY_MAIN_COMPARTMENTS_H
+NAMESPACE_END(compartments)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

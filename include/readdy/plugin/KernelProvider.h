@@ -30,14 +30,17 @@
  * @date 02.05.16
  */
 
-#ifndef READDY_MAIN_KERNELPROVIDER_H
-#define READDY_MAIN_KERNELPROVIDER_H
-
+#pragma once
 #include <readdy/model/Kernel.h>
 
-namespace readdy {
-namespace util  { namespace dll { class shared_library; }}
-namespace plugin {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(dll)
+class shared_library;
+NAMESPACE_END(dll)
+NAMESPACE_END(util)
+
+NAMESPACE_BEGIN(plugin)
 class KernelDeleter {
     std::shared_ptr<readdy::util::dll::shared_library> ptr;
 public:
@@ -142,6 +145,6 @@ private:
     std::unique_ptr<Impl> pimpl;
 
 };
-}
-}
-#endif //READDY_MAIN_KERNELPROVIDER_H
+
+NAMESPACE_END(plugin)
+NAMESPACE_END(readdy)

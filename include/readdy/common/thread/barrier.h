@@ -27,15 +27,15 @@
  * @date 16.11.16
  */
 
-#ifndef READDY_MAIN_BARRIER_H
-#define READDY_MAIN_BARRIER_H
+#pragma once
 
 #include <mutex>
 #include <condition_variable>
+#include <readdy/common/macros.h>
 
-namespace readdy {
-namespace util {
-namespace thread {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
 
 /**
  * thread barrier that syncs up a bunch of threads
@@ -72,7 +72,6 @@ private:
     mutable std::size_t generation;
 };
 
-}
-}
-}
-#endif //READDY_MAIN_BARRIER_H
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

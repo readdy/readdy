@@ -27,9 +27,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_COMPARTMENTS_H
-#define READDY_DENSE_COMPARTMENTS_H
-
+#pragma once
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
@@ -55,5 +53,3 @@ protected:
 }
 }
 }
-
-#endif //READDY_DENSE_COMPARTMENTS_H

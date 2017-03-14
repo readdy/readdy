@@ -28,10 +28,7 @@
  * @author clonker
  * @date 22.11.16
  */
-
-#ifndef READDY_DENSE_NEIGHBORLIST_H
-#define READDY_DENSE_NEIGHBORLIST_H
-
+#pragma once
 #include <memory>
 
 #include <readdy/common/make_unique.h>
@@ -155,4 +152,3 @@ protected:
 }
 }
 }
-#endif //READDY_DENSE_NEIGHBORLIST_H

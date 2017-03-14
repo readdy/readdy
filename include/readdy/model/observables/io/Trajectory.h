@@ -32,19 +32,21 @@
  * @date 12.12.16
  * @copyright GNU Lesser General Public License v3.0
  */
-#ifndef READDY_MAIN_TRAJECTORY_H
-#define READDY_MAIN_TRAJECTORY_H
+
+#pragma once
 
 #include <array>
 #include <memory>
 #include "readdy/model/Kernel.h"
 
-namespace readdy {
+NAMESPACE_BEGIN(readdy)
 
-namespace io { class File; }
+NAMESPACE_BEGIN(io)
+class File;
+NAMESPACE_END(io)
 
-namespace model {
-namespace observables {
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(observables)
 
 struct TrajectoryEntry {
     using pos_t = readdy::model::Vec3::value_t;
@@ -96,8 +98,6 @@ protected:
     std::unique_ptr<Impl> pimpl;
 };
 
-}
-}
-}
-
-#endif //READDY_MAIN_TRAJECTORY_H
+NAMESPACE_END(observables)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

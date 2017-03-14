@@ -29,9 +29,7 @@
  * @date 30.06.16
  */
 
-
-#ifndef READDY_MAIN_SINGLECPUOBSERVABLES_H
-#define READDY_MAIN_SINGLECPUOBSERVABLES_H
+#pragma once
 
 #include <readdy/model/observables/Observables.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
@@ -319,4 +317,3 @@ protected:
 }
 }
 }
-#endif //READDY_MAIN_SINGLECPUOBSERVABLES_H

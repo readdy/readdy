@@ -31,16 +31,15 @@
  * @date 31.05.16
  */
 
-#ifndef READDY_MAIN_POTENTIAL_H
-#define READDY_MAIN_POTENTIAL_H
+#pragma once
 
 #include <string>
 #include <array>
 #include <readdy/model/Particle.h>
 
-namespace readdy {
-namespace model {
-namespace potentials {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(potentials)
 
 class Potential {
 public:
@@ -69,8 +68,6 @@ private:
     const id_t id;
 };
 
-}
-}
-}
-
-#endif //READDY_MAIN_POTENTIAL_H
+NAMESPACE_END(potentials)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

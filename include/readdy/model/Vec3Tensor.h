@@ -30,9 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_VEC3MAT_H
-#define READDY_MAIN_VEC3MAT_H
-
+#pragma once
 #include "readdy/common/macros.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -133,6 +131,3 @@ Vec3 operator*(const Vec3& vec, const Vec3Tensor<3>& tensor) {
 
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
-
-
-#endif //READDY_MAIN_VEC3MAT_H

@@ -30,16 +30,16 @@
  * @date 14.10.16
  */
 
-#ifndef READDY_MAIN_DLL_H
-#define READDY_MAIN_DLL_H
+#pragma once
 
 #include <string>
 #if READDY_OSX || READDY_LINUX
 #include <dlfcn.h>
 
-namespace readdy {
-namespace util {
-namespace dll {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(dll)
+
 struct shared_library {
 
     void* handle = nullptr;
@@ -79,9 +79,9 @@ struct shared_library {
     };
 
 };
-}
-}
-}
-#endif
 
-#endif //READDY_MAIN_DLL_H
+NAMESPACE_END(dll)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)
+
+#endif

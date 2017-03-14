@@ -29,15 +29,14 @@
  * @date 31.08.16
  */
 
-#ifndef READDY_MAIN_FILE_H
-#define READDY_MAIN_FILE_H
+#pragma once
 
 #include <string>
 #include <vector>
 #include "Group.h"
 
-namespace readdy {
-namespace io {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
 
 class READDY_API File {
     template<typename T, bool VLEN>
@@ -89,9 +88,7 @@ private:
     Group root;
 };
 
-}
-}
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)
 
 #include "bits/File_bits.h"
-
-#endif //READDY_MAIN_FILE_H

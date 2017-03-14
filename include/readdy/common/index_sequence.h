@@ -29,8 +29,7 @@
  * @date 30.08.16
  */
 
-#ifndef READDY_MAIN_INDEX_SEQUENCE_H
-#define READDY_MAIN_INDEX_SEQUENCE_H
+#pragma once
 
 #ifdef READDY_CPP14
 
@@ -73,5 +72,3 @@ namespace std {
     struct make_index_sequence<1> : index_sequence<0> { };
 }
 #endif
-
-#endif //READDY_MAIN_INDEX_SEQUENCE_H

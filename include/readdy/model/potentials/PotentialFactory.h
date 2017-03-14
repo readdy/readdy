@@ -31,8 +31,7 @@
  * @date 31.05.16
  */
 
-#ifndef READDY_MAIN_POTENTIALFACTORY_H
-#define READDY_MAIN_POTENTIALFACTORY_H
+#pragma once
 
 #include <unordered_map>
 #include <functional>
@@ -40,9 +39,9 @@
 #include <readdy/model/potentials/PotentialsOrder1.h>
 #include <readdy/model/potentials/PotentialsOrder2.h>
 
-namespace readdy {
-namespace model {
-namespace potentials {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(potentials)
 
 class PotentialFactory {
 public:
@@ -120,8 +119,6 @@ READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, WeakInteractionPiecewiseHarmo
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, LennardJones)
 
-}
-}
-}
-
-#endif //READDY_MAIN_POTENTIALFACTORY_H
+NAMESPACE_END(potentials)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

@@ -29,9 +29,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_CPUEULERBDINTEGRATOR_H
-#define READDY_DENSE_CPUEULERBDINTEGRATOR_H
-
+#pragma once
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 #include <readdy/model/actions/Actions.h>
 
@@ -53,4 +51,3 @@ private:
 }
 }
 }
-#endif //READDY_DENSE_CPUEULERBDINTEGRATOR_H

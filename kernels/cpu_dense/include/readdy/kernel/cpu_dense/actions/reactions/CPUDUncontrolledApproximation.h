@@ -29,9 +29,7 @@
  * @date 22.11.16
  */
 
-#ifndef READDY_DENSE_UNCONTROLLEDAPPROXIMATION_H
-#define READDY_DENSE_UNCONTROLLEDAPPROXIMATION_H
-
+#pragma once
 #include <readdy/kernel/cpu_dense/CPUDKernel.h>
 
 namespace readdy {
@@ -72,4 +70,3 @@ protected:
 }
 }
 }
-#endif //READDY_DENSE_UNCONTROLLEDAPPROXIMATION_H

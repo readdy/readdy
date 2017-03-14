@@ -29,9 +29,7 @@
  * @date 09.06.16
  */
 
-#ifndef READDY_MAIN_SINGLECPUNEIGHBORLIST_H
-#define READDY_MAIN_SINGLECPUNEIGHBORLIST_H
-
+#pragma once
 #include <unordered_set>
 #include <readdy/model/KernelContext.h>
 #include "SCPUParticleData.h"
@@ -293,5 +291,3 @@ struct READDY_API SCPUNeighborList : public SCPUNotThatNaiveNeighborList<std::ve
 }
 }
 }
-
-#endif //READDY_MAIN_SINGLECPUNEIGHBORLIST_H

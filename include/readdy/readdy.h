@@ -30,11 +30,8 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_READDY_H
-#define READDY_MAIN_READDY_H
+#pragma once
 
 #include "api/ObservableHandle.h"
 #include "api/Simulation.h"
 #include "api/SimulationScheme.h"
-
-#endif //READDY_MAIN_READDY_H

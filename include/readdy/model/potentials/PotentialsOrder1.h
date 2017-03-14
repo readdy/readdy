@@ -35,13 +35,11 @@
 #include <ostream>
 #include "PotentialOrder1.h"
 
-#ifndef READDY_MAIN_POTENTIALSORDER1_H
-#define READDY_MAIN_POTENTIALSORDER1_H
+#pragma once
 
-namespace readdy {
-namespace model {
-
-namespace potentials {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(potentials)
 
 class CubePotential : public PotentialOrder1 {
     using super = PotentialOrder1;
@@ -124,8 +122,7 @@ template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SpherePotential, T>::value>::type* = 0) {
     return "Sphere";
 }
-}
-}
-}
 
-#endif //READDY_MAIN_POTENTIALSORDER1_H
+NAMESPACE_END(potentials)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)
