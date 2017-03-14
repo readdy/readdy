@@ -42,8 +42,8 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
                         double cutoff = 0, double force = 0, double energy = 0)
             : PotentialOrder2(particleType1, particleType2), cutoff(cutoff), force(force), energy(energy) {}
 
-    virtual std::string describe() override {
-        return "NOOPPotential with types " + particleType1 + ", " + particleType2;
+    void describe(std::ostream &os) const override {
+        os << "NOOPPotential with types " + particleType1 + ", " + particleType2;
     }
 
     virtual double getCutoffRadius() const override {

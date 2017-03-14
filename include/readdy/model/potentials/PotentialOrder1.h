@@ -54,6 +54,11 @@ public:
 
     virtual double getRelevantLengthScale() const noexcept = 0;
 
+    friend std::ostream &operator<<(std::ostream &os, const PotentialOrder1 &potential) {
+        potential.describe(os);
+        return os;
+    }
+
 protected:
     friend class readdy::model::KernelContext;
     virtual void configureForType(const KernelContext* const, const particle_type_type type) = 0;

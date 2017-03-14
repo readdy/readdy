@@ -61,15 +61,13 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept override;
 
-    std::string describe() override;
-
-    friend std::ostream &operator<<(std::ostream &os, const CubePotential &potential);
-
     double calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
     void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
+    void describe(std::ostream &os) const override;
 
 protected:
     friend class readdy::model::KernelContext;
@@ -95,15 +93,13 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept override;
 
-    std::string describe() override;
-
-    friend std::ostream &operator<<(std::ostream &os, const SpherePotential &potential);
-
     double calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
     void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
+    void describe(std::ostream &os) const override;
 
 protected:
     friend class readdy::model::KernelContext;

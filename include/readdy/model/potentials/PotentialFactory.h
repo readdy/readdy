@@ -97,6 +97,14 @@ public:
         return new LennardJones(type1, type2, m, n, cutoff, shift, epsilon, sigma);
     }
 
+    ShieldedElectrostatics *
+    createShieldedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+                                 double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent,
+                                 double cutoff) const {
+        return new ShieldedElectrostatics(particleType1, particleType2, electrostaticStrength,
+                                          inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
+    };
+
 protected:
     template<typename T, typename... Args>
     struct get_dispatcher;
@@ -118,6 +126,8 @@ READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, HarmonicRepulsion)
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, WeakInteractionPiecewiseHarmonic)
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, LennardJones)
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, ShieldedElectrostatics)
 
 NAMESPACE_END(potentials)
 NAMESPACE_END(model)

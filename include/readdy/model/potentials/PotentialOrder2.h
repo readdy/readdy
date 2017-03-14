@@ -58,6 +58,11 @@ public:
 
     virtual double getCutoffRadiusSquared() const = 0;
 
+    friend std::ostream &operator<<(std::ostream &os, const PotentialOrder2 &potential) {
+        potential.describe(os);
+        return os;
+    }
+
 protected:
     friend class readdy::model::KernelContext;
 

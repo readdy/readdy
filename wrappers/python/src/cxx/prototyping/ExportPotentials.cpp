@@ -46,8 +46,8 @@ class PyPotentialO1 : public rdy_pot1 {
 public:
     using rdy_pot1::PotentialOrder1;
 
-    std::string describe() override {
-        return "User defined potential order 1 for type " + particleType;
+    void describe(std::ostream &os) const override {
+        os << "User defined potential order 1 for type " + particleType;
     }
 
     virtual double calculateEnergy(const rdy_vec &position) const override {
@@ -92,8 +92,8 @@ public:
 
     using rdy_pot2::PotentialOrder2;
 
-    std::string describe() override {
-        return "User defined potential for types " + particleType1 + " and " + particleType2;
+    void describe(std::ostream &os) const override {
+        os << "User defined potential for types " + particleType1 + " and " + particleType2;
     }
 
     virtual double getMaximalForce(double kbt) const noexcept override {

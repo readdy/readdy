@@ -154,6 +154,16 @@ Simulation::registerLennardJonesPotential(const std::string &type1, const std::s
 
 
 const short
+Simulation::registerShieldedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+                                                    double inverseScreeningDepth, double repulsionStrength, double repulsionDistance,
+                                                    unsigned int exponent, double cutoff) {
+    using potential_t = readdy::model::potentials::ShieldedElectrostatics;
+    ensureKernelSelected();
+    return pimpl->kernel->registerPotential<potential_t>(particleType1, particleType2, electrostaticStrength, inverseScreeningDepth,
+                                                         repulsionStrength, repulsionDistance, exponent, cutoff);
+}
+
+const short
 Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
                                  const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                                  bool considerParticleRadius) {
@@ -197,6 +207,7 @@ void Simulation::deregisterObservable(const unsigned long uuid) {
     }
 }
 
+
 void Simulation::deregisterObservable(const ObservableHandle &uuid) {
     deregisterObservable(uuid.getId());
 }
@@ -207,7 +218,6 @@ std::vector<std::string> Simulation::getAvailableObservables() {
     // TODO compile a list of observables
     return {"hallo"};
 }
-
 
 Simulation &Simulation::operator=(Simulation &&rhs) = default;
 

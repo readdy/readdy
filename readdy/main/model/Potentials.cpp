@@ -98,20 +98,6 @@ void CubePotential::configureForType(const KernelContext *const ctx, const parti
     particleRadius = ctx->getParticleRadius(type);
 }
 
-std::string CubePotential::describe() {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
-}
-
-std::ostream &operator<<(std::ostream &os, const CubePotential &potential) {
-    os << getPotentialName<CubePotential>() << "[type: " << potential.particleType << ", origin: " << potential.origin
-       << ", extent: "
-       << potential.extent << ", min: " << potential.min << ", max: " << potential.max << ", forceConstant: "
-       << potential.forceConstant << ", considerParticleRadius: " << potential.considerParticleRadius << "]";
-    return os;
-}
-
 double CubePotential::calculateEnergy(const Vec3 &position) const {
     auto r = particleRadius;
     if (!isConsiderParticleRadius()) r = 0;
@@ -150,6 +136,12 @@ void CubePotential::calculateForceAndEnergy(Vec3 &force, double &energy, const V
     calculateForce(force, position);
 }
 
+void CubePotential::describe(std::ostream &os) const {
+    os << getPotentialName<CubePotential>() << "[type: " << particleType << ", origin: " << origin
+       << ", extent: " << extent << ", min: " << min << ", max: " << max << ", forceConstant: "
+       << forceConstant << ", considerParticleRadius: " << considerParticleRadius << "]";
+}
+
 /*
  * Sphere Potential
  */
@@ -172,19 +164,6 @@ SpherePotential::SpherePotential(const std::string &particleType, double f, cons
         : super(particleType), origin(origin), radius(radius), forceConstant(f) {}
 
 void SpherePotential::configureForType(const KernelContext *const, const particle_type_type) {}
-
-std::ostream &operator<<(std::ostream &os, const SpherePotential &potential) {
-    os << getPotentialName<SpherePotential>() << "[type: " << potential.particleType << ", origin: " << potential.origin
-       << ", radius: "
-       << potential.radius << ", forceConstant: " << potential.forceConstant << "]";
-    return os;
-}
-
-std::string SpherePotential::describe() {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
-}
 
 double SpherePotential::calculateEnergy(const Vec3 &position) const {
     auto difference = position - origin;
@@ -214,6 +193,11 @@ void SpherePotential::calculateForceAndEnergy(Vec3 &force, double &energy, const
         energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
     }
+}
+
+void SpherePotential::describe(std::ostream &os) const {
+    os << getPotentialName<SpherePotential>() << "[type: " << particleType << ", origin: " << origin
+       << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -251,18 +235,6 @@ void HarmonicRepulsion::configureForTypes(const KernelContext *const ctx, partic
     auto r2 = ctx->getParticleRadius(type2);
     sumOfParticleRadii = r1 + r2;
     sumOfParticleRadiiSquared = sumOfParticleRadii * sumOfParticleRadii;
-}
-
-std::ostream &operator<<(std::ostream &os, const HarmonicRepulsion &repulsion) {
-    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << repulsion.particleType1 << ", type2: "
-       << repulsion.particleType2 << ", forceConstant: " << repulsion.forceConstant << "]";
-    return os;
-}
-
-std::string HarmonicRepulsion::describe() {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
 }
 
 double HarmonicRepulsion::calculateEnergy(const Vec3 &x_ij) const {
@@ -306,6 +278,10 @@ double HarmonicRepulsion::getCutoffRadiusSquared() const {
     return sumOfParticleRadiiSquared;
 }
 
+void HarmonicRepulsion::describe(std::ostream &os) const {
+    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << particleType1 << ", type2: "
+       << particleType2 << ", forceConstant: " << forceConstant << "]";
+}
 
 /**
  * Weak interaction piecewise harmonic
@@ -328,23 +304,10 @@ WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const std::st
                                                                    const Configuration &config)
         : super(particleType1, particleType2), forceConstant(forceConstant), conf(config) {}
 
-std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmonic &harmonic) {
-    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << harmonic.particleType1 << ", type2: "
-       << harmonic.particleType2 << ", configuration[" << harmonic.conf
-       << "], forceConstant: " << harmonic.forceConstant << "]";
-    return os;
-}
-
 std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmonic::Configuration &configuration) {
     os << "desiredParticleDistance: " << configuration.desiredParticleDistance << " depthAtDesiredDistance: "
        << configuration.depthAtDesiredDistance << " noInteractionDistance: " << configuration.noInteractionDistance;
     return os;
-}
-
-std::string WeakInteractionPiecewiseHarmonic::describe() {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
 }
 
 double WeakInteractionPiecewiseHarmonic::calculateEnergy(const Vec3 &x_ij) const {
@@ -411,6 +374,11 @@ double WeakInteractionPiecewiseHarmonic::getCutoffRadiusSquared() const {
     return conf.noInteractionDistanceSquared;
 }
 
+void WeakInteractionPiecewiseHarmonic::describe(std::ostream &os) const {
+    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << particleType1 << ", type2: "
+       << particleType2 << ", configuration[" << conf
+       << "], forceConstant: " << forceConstant << "]";
+}
 
 WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const double desiredParticleDistance,
                                                                const double depthAtDesiredDistance,
@@ -439,19 +407,6 @@ void
 LennardJones::configureForTypes(const KernelContext *const context, particle_type_type type1,
                                 particle_type_type type2) {
 
-}
-
-std::string LennardJones::describe() {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
-}
-
-std::ostream &operator<<(std::ostream &os, const LennardJones &potential) {
-    os << getPotentialName<LennardJones>() << "[m: " << potential.m << " n: "
-       << potential.n << " cutoffDistance: " << potential.cutoffDistance << " shift: " << potential.shift
-       << " epsilon: " << potential.epsilon << " k: " << potential.k << "]";
-    return os;
 }
 
 double LennardJones::calculateEnergy(const Vec3 &x_ij) const {
@@ -489,8 +444,83 @@ double LennardJones::getMaximalForce(double kbt) const noexcept {
     return 0;
 }
 
+void LennardJones::describe(std::ostream &os) const {
+    os << getPotentialName<LennardJones>() << "[m: " << m << " n: "
+       << n << " cutoffDistance: " << cutoffDistance << " shift: " << shift
+       << " epsilon: " << epsilon << " k: " << k << "]";
+}
+
 LennardJones::~LennardJones() = default;
 
+
+ShieldedElectrostatics::ShieldedElectrostatics(const std::string &particleType1, const std::string &particleType2,
+                                               double electrostaticStrength, double inverseScreeningDepth,
+                                               double repulsionStrength, double repulsionDistance, unsigned int exponent,
+                                               double cutoff)
+        : super(particleType1, particleType2), electrostaticStrength(electrostaticStrength), inverseScreeningDepth(inverseScreeningDepth),
+          repulsionStrength(repulsionStrength), repulsionDistance(repulsionDistance), exponent(exponent), cutoff(cutoff),
+          cutoffSquared(cutoff * cutoff) {
+    if (inverseScreeningDepth < 0) {
+        throw std::invalid_argument("inverse screening depth must be positive!");
+    }
+    if (repulsionStrength < 0) {
+        throw std::invalid_argument("repulsion strength must be positive!");
+    }
+    if (repulsionDistance < 0) {
+        throw std::invalid_argument("repulsion distance must be positive!");
+    }
+    if (cutoff < 0) {
+        throw std::invalid_argument("cutoff must be positive!");
+    }
+}
+
+void
+ShieldedElectrostatics::configureForTypes(const KernelContext *const context, particle_type_type type1,
+                                          particle_type_type type2) {
+
+}
+
+double ShieldedElectrostatics::getMaximalForce(double kbt) const noexcept {
+    return 0;
+}
+
+double ShieldedElectrostatics::getCutoffRadius() const {
+    return cutoff;
+}
+
+double ShieldedElectrostatics::getCutoffRadiusSquared() const {
+    return cutoffSquared;
+}
+
+void ShieldedElectrostatics::describe(std::ostream &os) const {
+    os << getPotentialName<ShieldedElectrostatics>() << "[electrostaticStrength: " << electrostaticStrength
+       << " inverseScreeningDepth: " << inverseScreeningDepth
+       << " repulsionStrength: " << repulsionStrength << " repulsionDistance: " << repulsionDistance
+       << " exponent: " << exponent
+       << " cutoff: " << cutoff << "]";
+}
+
+double ShieldedElectrostatics::calculateEnergy(const Vec3 &x_ij) const {
+    const double distance = x_ij.norm();
+    double result = electrostaticStrength * std::exp(-inverseScreeningDepth * distance) / distance;
+    result += repulsionStrength * std::pow(repulsionDistance / distance, exponent);
+    return result;
+}
+
+void ShieldedElectrostatics::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
+    const double distance = x_ij.norm();
+    double forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
+    forceFactor *= (inverseScreeningDepth / distance + 1. / std::pow(distance, 2));
+    forceFactor += repulsionStrength * exponent / repulsionDistance * std::pow( repulsionDistance / distance, exponent + 1);
+    force += forceFactor * (- 1. * x_ij / distance);
+}
+
+void ShieldedElectrostatics::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
+    calculateForce(force, x_ij);
+    energy += calculateEnergy(x_ij);
+}
+
+ShieldedElectrostatics::~ShieldedElectrostatics() = default;
 
 }
 }

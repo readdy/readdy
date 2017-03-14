@@ -45,7 +45,7 @@ class Potential {
 public:
     using id_t = short;
     
-    Potential(const int order) : order(order), id(counter++) { }
+    explicit Potential(const int order) : order(order), id(counter++) { }
 
     virtual ~Potential() = default;
 
@@ -59,7 +59,12 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept = 0;
 
-    virtual std::string describe() = 0;
+    virtual void describe(std::ostream& os) const = 0;
+
+    friend std::ostream &operator<<(std::ostream &os, const Potential &potential) {
+        potential.describe(os);
+        return os;
+    }
 
 private:
     static id_t counter;

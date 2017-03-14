@@ -39,7 +39,7 @@ namespace readdy {
 namespace rpy {
 class PotentialOrder2Wrapper : public readdy::model::potentials::PotentialOrder2 {
 public:
-    std::string describe() override;
+    void describe(std::ostream &os) const override;
 
     PotentialOrder2Wrapper(const std::string &particleType1, const std::string &particleType2,
                            pybind11::object o1, pybind11::object o2);

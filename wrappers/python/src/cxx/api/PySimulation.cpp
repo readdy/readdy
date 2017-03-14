@@ -112,6 +112,7 @@ PYBIND11_PLUGIN (api) {
             .def("register_potential_box", &sim::registerBoxPotential)
             .def("register_potential_sphere", &sim::registerSpherePotential)
             .def("register_potential_lennard_jones", &sim::registerLennardJonesPotential)
+            .def("register_potential_shielded_electrostatics", &sim::registerShieldedElectrostaticsPotential)
             .def("get_particle_positions", &sim::getParticlePositions)
             .def("register_reaction_conversion", &sim::registerConversionReaction, rvp::reference_internal)
             .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, rvp::reference_internal)
