@@ -221,7 +221,7 @@ public:
                                      bool considerParticleRadius);
 
     /**
-     * Register a sphere potential, which is used to confine particles to a spherical volume. The energy function
+     * Register a sphere potential, which is used to confine particles inside a spherical volume. The energy function
      * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
      *
      * @param particleType the particle type for which the sphere potential should take effect
@@ -232,7 +232,20 @@ public:
      * @todo add a considerParticleRadius parameter
      */
     const short
-    registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
+    registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
+
+    /**
+     * Register a sphere potential, which is used to confine particles outside a spherical volume. The energy function
+     * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
+     * 
+     * @param particleType the particle type for which the potential should take effect
+     * @param forceConstant the force constant determines the strength of interaction, like a spring constant
+     * @param origin the center of the sphere
+     * @param radius the extent of the sphere
+     * @return a uuid with which the potential can be removed
+     */
+    const short
+    registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
 
     //----------------------
     // Order 2 potentials

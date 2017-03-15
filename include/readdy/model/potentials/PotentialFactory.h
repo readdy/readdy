@@ -52,25 +52,18 @@ public:
     }
 
     std::vector<std::string> getAvailablePotentials() const {
-        return {getPotentialName<CubePotential>(), getPotentialName<SpherePotential>(),
+        return {getPotentialName<Cube>(), getPotentialName<SphereIn>(),
                 getPotentialName<HarmonicRepulsion>(), getPotentialName<WeakInteractionPiecewiseHarmonic>()};
     }
 
-    virtual CubePotential *createCubePotential(const std::string &particleType, double forceConstant,
-                                               const Vec3 &origin, const Vec3 &extent,
-                                               bool considerParticleRadius) const {
-        return new CubePotential(particleType, forceConstant, origin, extent, considerParticleRadius);
+    virtual Cube *
+    createCube(const std::string &particleType, double forceConstant, const Vec3 &origin, const Vec3 &extent, bool considerParticleRadius) const {
+        return new Cube(particleType, forceConstant, origin, extent, considerParticleRadius);
     };
 
-    CubePotential *createCubePotential(const std::string &particleType, double forceConstant,
-                                       const Vec3 &origin, const Vec3 &extent) const {
-        return createCubePotential(particleType, forceConstant, origin, extent, true);
+    Cube *createCube(const std::string &particleType, double forceConstant, const Vec3 &origin, const Vec3 &extent) const {
+        return createCube(particleType, forceConstant, origin, extent, true);
     }
-
-    virtual SpherePotential *createSpherePotential(const std::string &particleType, double forceConstant,
-                                                   const Vec3 &origin, double radius) const {
-        return new SpherePotential(particleType, forceConstant, origin, radius);
-    };
 
     virtual HarmonicRepulsion *
     createHarmonicRepulsion(const std::string &type1, const std::string &type2, double forceConstant) const {
@@ -105,6 +98,14 @@ public:
                                           inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
     };
 
+    SphereOut *createSphereOut(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius) const {
+        return new SphereOut(particleType, forceConstant, origin, radius);
+    }
+
+    virtual SphereIn *createSphereIn(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius) const {
+        return new SphereIn(particleType, forceConstant, origin, radius);
+    };
+
 protected:
     template<typename T, typename... Args>
     struct get_dispatcher;
@@ -117,9 +118,11 @@ protected:
     };
 };
 
-READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, CubePotential)
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, Cube)
 
-READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SpherePotential)
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SphereIn)
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SphereOut)
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, HarmonicRepulsion)
 

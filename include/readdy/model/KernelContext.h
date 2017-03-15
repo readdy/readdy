@@ -52,6 +52,7 @@
 #include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/common/ParticleTypePair.h>
 #include <readdy/model/compartments/Compartment.h>
+#include "Vec3.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

@@ -70,35 +70,35 @@ Vec3 getMaxExtent(const Vec3 &origin, const Vec3 &extent) {
     return result;
 }
 
-CubePotential::CubePotential(const std::string &particleType, double forceConstant, const Vec3 &origin,
+Cube::Cube(const std::string &particleType, double forceConstant, const Vec3 &origin,
                              const Vec3 &extent, bool considerParticleRadius)
         : super(particleType), origin(origin), extent(extent), forceConstant(forceConstant),
           considerParticleRadius(considerParticleRadius), min(getMinExtent(origin, extent)),
           max(getMaxExtent(origin, extent)), particleRadius(0) {}
 
-const Vec3 &CubePotential::getOrigin() const { return origin; }
+const Vec3 &Cube::getOrigin() const { return origin; }
 
-const Vec3 &CubePotential::getExtent() const { return extent; }
+const Vec3 &Cube::getExtent() const { return extent; }
 
-double CubePotential::getForceConstant() const { return forceConstant; }
+double Cube::getForceConstant() const { return forceConstant; }
 
-bool CubePotential::isConsiderParticleRadius() const { return considerParticleRadius; }
+bool Cube::isConsiderParticleRadius() const { return considerParticleRadius; }
 
-double CubePotential::getParticleRadius() const { return particleRadius; }
+double Cube::getParticleRadius() const { return particleRadius; }
 
-double CubePotential::getMaximalForce(double) const noexcept {
+double Cube::getMaximalForce(double) const noexcept {
     return 0;
 }
 
-double CubePotential::getRelevantLengthScale() const noexcept {
+double Cube::getRelevantLengthScale() const noexcept {
     return std::min(extent[0], std::min(extent[1], extent[2]));
 }
 
-void CubePotential::configureForType(const KernelContext *const ctx, const particle_type_type type) {
+void Cube::configureForType(const KernelContext *const ctx, const particle_type_type type) {
     particleRadius = ctx->getParticleRadius(type);
 }
 
-double CubePotential::calculateEnergy(const Vec3 &position) const {
+double Cube::calculateEnergy(const Vec3 &position) const {
     auto r = particleRadius;
     if (!isConsiderParticleRadius()) r = 0;
 
@@ -117,7 +117,7 @@ double CubePotential::calculateEnergy(const Vec3 &position) const {
     return energy;
 }
 
-void CubePotential::calculateForce(Vec3 &force, const Vec3 &position) const {
+void Cube::calculateForce(Vec3 &force, const Vec3 &position) const {
     auto r = particleRadius;
     if (!isConsiderParticleRadius()) r = 0;
     for (auto i = 0; i < 3; i++) {
@@ -131,52 +131,46 @@ void CubePotential::calculateForce(Vec3 &force, const Vec3 &position) const {
     }
 }
 
-void CubePotential::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+void Cube::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
     energy += calculateEnergy(position);
     calculateForce(force, position);
 }
 
-void CubePotential::describe(std::ostream &os) const {
-    os << getPotentialName<CubePotential>() << "[type: " << particleType << ", origin: " << origin
+void Cube::describe(std::ostream &os) const {
+    os << getPotentialName<Cube>() << "[type: " << particleType << ", origin: " << origin
        << ", extent: " << extent << ", min: " << min << ", max: " << max << ", forceConstant: "
        << forceConstant << ", considerParticleRadius: " << considerParticleRadius << "]";
 }
 
 /*
- * Sphere Potential
+ * Sphere Potentials
  */
 
-const Vec3 &SpherePotential::getOrigin() const { return origin; }
-
-double SpherePotential::getRadius() const { return radius; }
-
-double SpherePotential::getForceConstant() const { return forceConstant; }
-
-double SpherePotential::getRelevantLengthScale() const noexcept {
+double SphereIn::getRelevantLengthScale() const noexcept {
     return radius;
 }
 
-double SpherePotential::getMaximalForce(double) const noexcept {
+double SphereIn::getMaximalForce(double) const noexcept {
     return 0;
 }
 
-SpherePotential::SpherePotential(const std::string &particleType, double f, const Vec3 &origin, double radius)
+SphereIn::SphereIn(const std::string &particleType, double f, const Vec3 &origin, double radius)
         : super(particleType), origin(origin), radius(radius), forceConstant(f) {}
 
-void SpherePotential::configureForType(const KernelContext *const, const particle_type_type) {}
+void SphereIn::configureForType(const KernelContext *const, const particle_type_type) {}
 
-double SpherePotential::calculateEnergy(const Vec3 &position) const {
+double SphereIn::calculateEnergy(const Vec3 &position) const {
     auto difference = position - origin;
     double distanceFromOrigin = sqrt(difference * difference);
     double distanceFromSphere = distanceFromOrigin - radius;
-    double energy = 0;
+    double energy = 0.;
     if (distanceFromSphere > 0) {
         energy = 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
     }
     return energy;
 }
 
-void SpherePotential::calculateForce(Vec3 &force, const Vec3 &position) const {
+void SphereIn::calculateForce(Vec3 &force, const Vec3 &position) const {
     auto difference = position - origin;
     double distanceFromOrigin = sqrt(difference * difference);
     double distanceFromSphere = distanceFromOrigin - radius;
@@ -185,7 +179,7 @@ void SpherePotential::calculateForce(Vec3 &force, const Vec3 &position) const {
     }
 }
 
-void SpherePotential::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+void SphereIn::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
     auto difference = position - origin;
     double distanceFromOrigin = sqrt(difference * difference);
     double distanceFromSphere = distanceFromOrigin - radius;
@@ -195,9 +189,57 @@ void SpherePotential::calculateForceAndEnergy(Vec3 &force, double &energy, const
     }
 }
 
-void SpherePotential::describe(std::ostream &os) const {
-    os << getPotentialName<SpherePotential>() << "[type: " << particleType << ", origin: " << origin
+void SphereIn::describe(std::ostream &os) const {
+    os << getPotentialName<SphereIn>() << "[type: " << particleType << ", origin: " << origin
        << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
+}
+
+SphereOut::SphereOut(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius)
+        : super(particleType), forceConstant(forceConstant), origin(origin), radius(radius) {}
+
+void SphereOut::configureForType(const KernelContext *const ctx, const PotentialOrder1::particle_type_type type) {}
+
+void SphereOut::describe(std::ostream &os) const {
+    os << getPotentialName<SphereIn>() << "[type: " << particleType << ", origin: " << origin
+       << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
+}
+
+double SphereOut::getRelevantLengthScale() const noexcept  {
+    return radius;
+}
+
+double SphereOut::getMaximalForce(double kbt) const noexcept {
+    return 0;
+}
+
+double SphereOut::calculateEnergy(const Vec3 &position) const {
+    auto difference = position - origin;
+    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromSphere = distanceFromOrigin - radius;
+    double energy = 0.;
+    if (distanceFromSphere < 0) {
+        energy = 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
+    }
+    return energy;
+}
+
+void SphereOut::calculateForce(Vec3 &force, const Vec3 &position) const {
+    auto difference = position - origin;
+    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromSphere = distanceFromOrigin - radius;
+    if (distanceFromSphere < 0) {
+        force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
+    }
+}
+
+void SphereOut::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+    auto difference = position - origin;
+    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromSphere = distanceFromOrigin - radius;
+    if (distanceFromSphere < 0) {
+        energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
+        force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

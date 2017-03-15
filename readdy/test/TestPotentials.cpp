@@ -80,7 +80,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
         // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
         readdy::model::Vec3 origin {-1, -1, -1};
         readdy::model::Vec3 extent {2, 2, 2};
-        kernel->registerPotential<readdy::model::potentials::CubePotential>(t, 10, origin, extent, true);
+        kernel->registerPotential<readdy::model::potentials::Cube>(t, 10, origin, extent, true);
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
@@ -109,7 +109,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
         readdy::model::Vec3 origin (0, 0, 0);
-        kernel->registerPotential<readdy::model::potentials::SpherePotential>(t, 20, origin, 3);
+        kernel->registerPotential<readdy::model::potentials::SphereIn>(t, 20, origin, 3);
     }
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
     const double maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
@@ -228,6 +228,55 @@ TEST_P(TestPotentials, ShieldedElectrostatics) {
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::model::Vec3 forceOnParticle0{0.01565262, 0.01956577, -0.02217454};
     readdy::model::Vec3 forceOnParticle1{-0.01565262, -0.01956577, 0.02217454};
+    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-8);
+    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-8);
+}
+
+TEST_P(TestPotentials, SphericalMembrane) {
+    // Combine SphereIn and SphereOut to build a 2D spherical manifold
+    auto &ctx = kernel->getKernelContext();
+    ctx.registerParticleType("A", 1.0, 1.0);
+    ctx.setBoxSize(10, 10, 10);
+    // add two particles, one outside, one inside the sphere
+    auto id0 = kernel->addParticle("A", {2., 1., 1.});
+    auto id1 = kernel->addParticle("A", {4., 3., -3.});
+    double forceConstant = 1.;
+    double radius = 3.;
+    readdy::model::Vec3 origin = {1.,0.,0.};
+    kernel->registerPotential<readdy::model::potentials::SphereOut>("A", forceConstant, origin, radius);
+    kernel->registerPotential<readdy::model::potentials::SphereIn>("A", forceConstant, origin, radius);
+    // record ids to get data-structure-indexes of the two particles later on
+    auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
+    std::vector<readdy::model::Particle::id_type> ids;
+    pObs->setCallback([&ids](const readdy::model::observables::Particles::result_t &result) {
+        const auto &recordedIds = std::get<1>(result);
+        ids.insert(ids.end(), recordedIds.begin(), recordedIds.end());
+    });
+    auto connParticles = kernel->connectObservable(pObs.get());
+    // also record forces
+    auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
+    std::vector<readdy::model::Vec3> collectedForces;
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+        collectedForces.insert(collectedForces.end(), result.begin(), result.end());
+    });
+    auto conn = kernel->connectObservable(fObs.get());
+    // configure the context
+    ctx.configure();
+
+    // we need to update the neighbor list as this is a pair potential
+    auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    neighborList->perform();
+    // calc forces
+    kernel->getKernelStateModel().calculateForces();
+    // give me results
+    kernel->evaluateObservables(1);
+
+    // the reference values were calculated numerically
+    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 0.803847577293 + 2.41154273188);
+    ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
+    ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
+    readdy::model::Vec3 forceOnParticle0{0.73205081, 0.73205081, 0.73205081};
+    readdy::model::Vec3 forceOnParticle1{-1.26794919, -1.26794919, 1.26794919};
     EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-8);
     EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-8);
 }

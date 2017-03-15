@@ -90,13 +90,13 @@ void ReactionCounts::append() {
         std::get<1>(result).resize(n_reactions_order2);
         if (pimpl->shouldWrite) {
             auto subgroup = pimpl->group->createGroup("counts");
-            {
+            if(n_reactions_order1 > 0){
                 std::vector<readdy::io::h5::dims_t> fs = {pimpl->flushStride, n_reactions_order1};
                 std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, n_reactions_order1};
                 auto dataSetTypes = std::make_unique<Impl::data_set_t>("order1", subgroup, fs, dims);
                 pimpl->ds_order1 = std::move(dataSetTypes);
             }
-            {
+            if(n_reactions_order2 > 0){
                 std::vector<readdy::io::h5::dims_t> fs = {pimpl->flushStride, n_reactions_order2};
                 std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, n_reactions_order2};
                 auto dataSetTypes = std::make_unique<Impl::data_set_t>("order2", subgroup, fs, dims);
@@ -106,11 +106,11 @@ void ReactionCounts::append() {
         }
         pimpl->firstWrite = false;
     }
-    {
+    if(pimpl->ds_order1){
         auto &order1Reactions = std::get<0>(result);
         pimpl->ds_order1->append({1, order1Reactions.size()}, order1Reactions.data());
     }
-    {
+    if(pimpl->ds_order2){
         auto &order2Reactions = std::get<1>(result);
         pimpl->ds_order2->append({1, order2Reactions.size()}, order2Reactions.data());
     }

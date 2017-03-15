@@ -167,16 +167,23 @@ const short
 Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
                                  const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                                  bool considerParticleRadius) {
-    using potential_t = readdy::model::potentials::CubePotential;
+    using potential_t = readdy::model::potentials::Cube;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, extent,
                                                          considerParticleRadius);
 }
 
 const short
-Simulation::registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
-                                    double radius) {
-    using potential_t = readdy::model::potentials::SpherePotential;
+Simulation::registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
+                                      double radius) {
+    using potential_t = readdy::model::potentials::SphereIn;
+    ensureKernelSelected();
+    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
+}
+
+const short
+Simulation::registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius) {
+    using potential_t = readdy::model::potentials::SphereOut;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
@@ -200,6 +207,7 @@ ObservableHandle Simulation::registerObservable(readdy::model::observables::Obse
     return {uuid, nullptr};
 }
 
+
 void Simulation::deregisterObservable(const unsigned long uuid) {
     pimpl->observableConnections.erase(uuid);
     if (pimpl->observables.find(uuid) != pimpl->observables.end()) {
@@ -211,7 +219,6 @@ void Simulation::deregisterObservable(const unsigned long uuid) {
 void Simulation::deregisterObservable(const ObservableHandle &uuid) {
     deregisterObservable(uuid.getId());
 }
-
 
 std::vector<std::string> Simulation::getAvailableObservables() {
     ensureKernelSelected();
