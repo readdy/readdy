@@ -35,7 +35,8 @@
 #include <string>
 #include <atomic>
 #include <spdlog/fmt/ostr.h>
-#include <ostream>
+
+#include <readdy/common/common.h>
 #include "Vec3.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -46,7 +47,7 @@ public:
 
     using id_type = unsigned long;
     using pos_type = Vec3;
-    using type_type = unsigned short;
+    using type_type = particle_type_type;
     using flavor_t = std::uint8_t;
 
     static constexpr flavor_t FLAVOR_NORMAL = 0;

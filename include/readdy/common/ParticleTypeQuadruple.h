@@ -23,75 +23,57 @@
 /**
  * << detailed description >>
  *
- * @file Graph.h
+ * @file ParticleTypeQuadruple.h
  * @brief << brief description >>
  * @author clonker
- * @date 16.03.17
+ * @date 17.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <stdexcept>
-#include <unordered_map>
-#include <readdy/common/macros.h>
-#include "Vertex.h"
+#include <utility>
+
+#include "macros.h"
+#include "common.h"
 
 NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(graph)
+NAMESPACE_BEGIN(util)
 
-class Graph {
-public:
-    Graph() = default;
+struct ParticleTypeQuadruple {
+    particle_type_type t1, t2, t3, t4;
+    ParticleTypeQuadruple(particle_type_type t1, particle_type_type t2, particle_type_type t3, particle_type_type t4) {
+        // divide into two sets {a, b} and {c, d} and sort them separately
+        if(t1 > t2) {
+            std::swap(t1, t2);
+        }
+        if(t3 > t4) {
+            std::swap(t3, t4);
+        }
+        // the smallest first element of the two subsets is the overall smallest element
+        if(t1 > t3) {
+            std::swap(t1, t3);
+        }
+        ParticleTypeQuadruple::t1 = t1;
 
-    virtual ~Graph() = default;
-
-    Graph(const Graph &) = delete;
-
-    Graph &operator=(const Graph &) = delete;
-
-    const std::vector<Vertex> &vertices() const;
-
-    void addVertex(const Vertex &);
-
-    void addVertex(Vertex &&);
-
-    void addEdge(std::size_t v1, std::size_t v2);
-
-    void addEdge(std::size_t v1, const std::string &v2);
-
-    void addEdge(const std::string &v1, std::size_t v2);
-
-    void addEdge(const std::string &v1, const std::string &v2);
-
-    void removeEdge(std::size_t v1, std::size_t v2);
-
-    void removeEdge(std::size_t v1, const std::string &v2);
-
-    void removeEdge(const std::string &v1, std::size_t v2);
-
-    void removeEdge(const std::string &v1, const std::string &v2);
-
-    void removeVertex(std::size_t index);
-
-    void removeVertex(Vertex *vertex);
-
-    void removeVertex(const std::string &name);
-
-    void removeParticle(std::size_t particleIndex);
-
-private:
-    std::vector<Vertex> vertices_;
-    std::unordered_map<std::string, Vertex *> namedVertices;
-
-    void removeNeighborsEdges(Vertex *vertex);
-
-    void removeEdge(Vertex *v1, Vertex *v2);
+        // now we have {t1, a}, {b, c} of which we know that {b < a} and {t1 < c}
+        // check if b < c or c < b:
+        if(t3 > t4) {
+            ParticleTypeQuadruple::t2 = t4;
+            ParticleTypeQuadruple::t3 = t3;
+            ParticleTypeQuadruple::t4 = t2;
+        } else {
+            ParticleTypeQuadruple::t2 = t3;
+            if(t2 > t4) {
+                ParticleTypeQuadruple::t3 = t4;
+                ParticleTypeQuadruple::t4 = t2;
+            } else {
+                ParticleTypeQuadruple::t3 = t2;
+                ParticleTypeQuadruple::t4 = t4;
+            }
+        }
+    }
 };
 
-NAMESPACE_END(graph)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
+NAMESPACE_END(util)
 NAMESPACE_END(readdy)

@@ -27,7 +27,11 @@ Created on 19.12.2016
 
 import h5py as h5
 import numpy as np
-import itertools
+
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 
 def is_readdy_trajectory_file(h5file):
     """
@@ -71,7 +75,7 @@ class TrajectoryEntry:
 def to_trajectory_entries(data, time):
     if isinstance(data, np.ndarray):
         return [[TrajectoryEntry(x["typeId"], t, x["id"], x["pos"], x["flavor"]) for x in d] for (d, t) in
-                itertools.izip(data, time)]
+                izip(data, time)]
     else:
         return TrajectoryEntry(data["typeId"], time, data["id"], data["pos"], data["flavor"])
 

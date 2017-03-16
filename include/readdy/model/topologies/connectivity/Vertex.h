@@ -32,18 +32,74 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <vector>
+#include <readdy/common/macros.h>
+#include <readdy/model/Particle.h>
+#include <ostream>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(graph)
 
+/**
+ * Struct representing a vertex in a topology-connectivity-graph
+ */
 struct Vertex {
-    using vertex_edge = Vertex*;
+    /**
+     * edge in the graph (i.e., pointer to neighboring vertex)
+     */
+    using vertex_edge = Vertex *;
 
+    /**
+     * default constructor
+     */
+    Vertex() = default;
+
+    /**
+     * constructs a vertex to a graph
+     * @param particleIndex the particle index this vertex belongs to
+     * @param name named vertex, can be left empty and is then ignored
+     * @param neighbors neighbors of the vertex (i.e., edges)
+     */
+    Vertex(std::size_t particleIndex, const std::string &name = "", const std::vector<vertex_edge> &neighbors = {})
+            : neighbors(neighbors), particleIndex(particleIndex), name(name) {}
+
+    /**
+     * default destructor
+     */
+    virtual ~Vertex() = default;
+
+    /**
+     * the edges (i.e., pointers to neighboring vertices)
+     */
     std::vector<vertex_edge> neighbors;
+    /**
+     * vertex' name, can be left empty and is then ignored
+     */
+    std::string name;
+    /**
+     * particle index in the topology this vertex belongs to
+     */
+    std::size_t particleIndex;
+
+    bool operator==(const Vertex &rhs) const {
+        return particleIndex == rhs.particleIndex;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex) {
+        os << "Vertex[name: " << vertex.name << " particleIndex: "
+           << vertex.particleIndex << " neighbors=[";
+        for (const auto neighbor : vertex.neighbors) {
+            os << neighbor->particleIndex << ",";
+        }
+        os << "]]";
+        return os;
+    }
+
+    bool operator!=(const Vertex &rhs) const {
+        return !(rhs == *this);
+    }
 };
 
 NAMESPACE_END(graph)

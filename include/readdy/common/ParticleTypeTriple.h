@@ -23,75 +23,43 @@
 /**
  * << detailed description >>
  *
- * @file Graph.h
+ * @file ParticleTypeTriple.h
  * @brief << brief description >>
  * @author clonker
- * @date 16.03.17
+ * @date 17.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <stdexcept>
-#include <unordered_map>
-#include <readdy/common/macros.h>
-#include "Vertex.h"
+#include <utility>
+#include <cstddef>
+#include <tuple>
+
+#include "common.h"
+#include "hash.h"
 
 NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(graph)
+NAMESPACE_BEGIN(util)
 
-class Graph {
-public:
-    Graph() = default;
+struct ParticleTypeTriple {
+    particle_type_type t1, t2, t3;
 
-    virtual ~Graph() = default;
-
-    Graph(const Graph &) = delete;
-
-    Graph &operator=(const Graph &) = delete;
-
-    const std::vector<Vertex> &vertices() const;
-
-    void addVertex(const Vertex &);
-
-    void addVertex(Vertex &&);
-
-    void addEdge(std::size_t v1, std::size_t v2);
-
-    void addEdge(std::size_t v1, const std::string &v2);
-
-    void addEdge(const std::string &v1, std::size_t v2);
-
-    void addEdge(const std::string &v1, const std::string &v2);
-
-    void removeEdge(std::size_t v1, std::size_t v2);
-
-    void removeEdge(std::size_t v1, const std::string &v2);
-
-    void removeEdge(const std::string &v1, std::size_t v2);
-
-    void removeEdge(const std::string &v1, const std::string &v2);
-
-    void removeVertex(std::size_t index);
-
-    void removeVertex(Vertex *vertex);
-
-    void removeVertex(const std::string &name);
-
-    void removeParticle(std::size_t particleIndex);
-
-private:
-    std::vector<Vertex> vertices_;
-    std::unordered_map<std::string, Vertex *> namedVertices;
-
-    void removeNeighborsEdges(Vertex *vertex);
-
-    void removeEdge(Vertex *v1, Vertex *v2);
+    ParticleTypeTriple(particle_type_type t1, particle_type_type t2, particle_type_type t3) {
+        if(t1 > t2) {
+            std::swap(t1, t2);
+        }
+        if(t1 > t3) {
+            std::swap(t1, t3);
+        }
+        if(t2 > t3) {
+            std::swap(t2, t3);
+        }
+        ParticleTypeTriple::t1 = t1;
+        ParticleTypeTriple::t2 = t2;
+        ParticleTypeTriple::t3 = t3;
+    }
 };
 
-NAMESPACE_END(graph)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
+NAMESPACE_END(util)
 NAMESPACE_END(readdy)

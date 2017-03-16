@@ -31,17 +31,19 @@
  */
 
 #pragma once
-#include <cstddef>
+
 #include <tuple>
+
+#include "common.h"
 #include "hash.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 
 struct ParticleTypePair {
-    readdy::model::Particle::type_type t1, t2;
+    particle_type_type t1, t2;
 
-    ParticleTypePair(readdy::model::Particle::type_type t1, readdy::model::Particle::type_type t2) {
+    ParticleTypePair(particle_type_type t1, particle_type_type t2) {
         if (t1 <= t2) {
             ParticleTypePair::t1 = t1;
             ParticleTypePair::t2 = t2;
@@ -69,7 +71,7 @@ public:
         return hash_value(k);
     }
 
-    std::size_t operator()(const std::tuple<readdy::model::Particle::type_type, readdy::model::Particle::type_type> &k) const {
+    std::size_t operator()(const std::tuple<particle_type_type, particle_type_type> &k) const {
         std::size_t seed = 0;
         const auto &t1 = std::get<0>(k);
         const auto &t2 = std::get<1>(k);

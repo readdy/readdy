@@ -23,72 +23,26 @@
 /**
  * << detailed description >>
  *
- * @file Graph.h
+ * @file PotentialConfiguration.h
  * @brief << brief description >>
  * @author clonker
- * @date 16.03.17
+ * @date 17.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <stdexcept>
-#include <unordered_map>
 #include <readdy/common/macros.h>
-#include "Vertex.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(graph)
 
-class Graph {
-public:
-    Graph() = default;
-
-    virtual ~Graph() = default;
-
-    Graph(const Graph &) = delete;
-
-    Graph &operator=(const Graph &) = delete;
-
-    const std::vector<Vertex> &vertices() const;
-
-    void addVertex(const Vertex &);
-
-    void addVertex(Vertex &&);
-
-    void addEdge(std::size_t v1, std::size_t v2);
-
-    void addEdge(std::size_t v1, const std::string &v2);
-
-    void addEdge(const std::string &v1, std::size_t v2);
-
-    void addEdge(const std::string &v1, const std::string &v2);
-
-    void removeEdge(std::size_t v1, std::size_t v2);
-
-    void removeEdge(std::size_t v1, const std::string &v2);
-
-    void removeEdge(const std::string &v1, std::size_t v2);
-
-    void removeEdge(const std::string &v1, const std::string &v2);
-
-    void removeVertex(std::size_t index);
-
-    void removeVertex(Vertex *vertex);
-
-    void removeVertex(const std::string &name);
-
-    void removeParticle(std::size_t particleIndex);
-
-private:
-    std::vector<Vertex> vertices_;
-    std::unordered_map<std::string, Vertex *> namedVertices;
-
-    void removeNeighborsEdges(Vertex *vertex);
-
-    void removeEdge(Vertex *v1, Vertex *v2);
+struct PotentialConfiguration {
+    // map particle type pair -> bonds
+    // map particle type triple -> angles
+    // map particle type quadruple -> torsion potentials
 };
 
 NAMESPACE_END(graph)

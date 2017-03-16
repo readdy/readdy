@@ -31,12 +31,15 @@
  */
 
 #pragma once
+
 #include <memory>
 #include <unordered_set>
+
 #include "BondedPotential.h"
 #include "AnglePotential.h"
 #include "TorsionPotential.h"
 #include "TopologyActionFactory.h"
+#include "connectivity/Graph.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -55,16 +58,22 @@ class Topology {
 public:
     using particles_t = std::vector<std::size_t>;
 
-    Topology(particles_t&&);
-    Topology(const Topology&) = delete;
-    Topology& operator=(const Topology&) = delete;
-    Topology(Topology&&);
-    Topology& operator=(Topology&&);
+    Topology(particles_t &&);
+
+    Topology(const Topology &) = delete;
+
+    Topology &operator=(const Topology &) = delete;
+
+    Topology(Topology &&);
+
+    Topology &operator=(Topology &&);
+
     virtual ~Topology();
 
     particles_t::size_type getNParticles() const;
 
     const particles_t &getParticles() const;
+
     particles_t &getParticles();
 
     const std::vector<std::unique_ptr<BondedPotential>> &getBondedPotentials() const;
@@ -77,23 +86,30 @@ public:
     typename std::enable_if<std::is_base_of<BondedPotential, T>::value>::type addBondedPotential(Args &&...args) {
         bondedPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
     };
-    void addBondedPotential(std::unique_ptr<BondedPotential>&&);
+
+    void addBondedPotential(std::unique_ptr<BondedPotential> &&);
+
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<AnglePotential, T>::value>::type addAnglePotential(Args &&...args) {
         anglePotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
     };
-    void addAnglePotential(std::unique_ptr<AnglePotential>&&);
+
+    void addAnglePotential(std::unique_ptr<AnglePotential> &&);
+
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<TorsionPotential, T>::value>::type addTorsionPotential(Args &&...args) {
         torsionPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
     };
-    void addTorsionPotential(std::unique_ptr<TorsionPotential>&&);
+
+    void addTorsionPotential(std::unique_ptr<TorsionPotential> &&);
 
 private:
     particles_t particles;
     std::vector<std::unique_ptr<BondedPotential>> bondedPotentials;
     std::vector<std::unique_ptr<AnglePotential>> anglePotentials;
     std::vector<std::unique_ptr<TorsionPotential>> torsionPotentials;
+
+    std::unique_ptr<graph::Graph> connectivityGraph;
 };
 
 NAMESPACE_END(top)
