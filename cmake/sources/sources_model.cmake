@@ -48,6 +48,7 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/TopologyPotential.cp
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/BondedPotential.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/AnglePotential.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/TorsionPotential.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/connectivity/Graph.cpp")
 
 # observables
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Trajectory.cpp")
