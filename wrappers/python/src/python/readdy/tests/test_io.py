@@ -46,7 +46,7 @@ class TestSchemeApi(unittest.TestCase):
         shutil.rmtree(cls.dir, ignore_errors=True)
 
     def test_write_trajectory(self):
-        common.set_logging_level("debug")
+        common.set_logging_level("error")
         traj_fname = os.path.join(self.dir, "traj.h5")
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
@@ -60,6 +60,34 @@ class TestSchemeApi(unittest.TestCase):
         simulation.record_trajectory(traj_fname, 0, 3)
         simulation.run_scheme_readdy(True).configure(1).run(20)
         simulation.close_trajectory_file()
+
+        r = TrajectoryReader(traj_fname)
+        trajectory_items = r[:]
+        for idx, items in enumerate(trajectory_items):
+            np.testing.assert_equal(len(items), idx+1)
+            for item in items:
+                np.testing.assert_equal(item.t, idx)
+                np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
+
+        common.set_logging_level("debug")
+
+    def test_write_trajectory_as_observable(self):
+        common.set_logging_level("error")
+        traj_fname = os.path.join(self.dir, "traj_as_obs.h5")
+        simulation = Simulation()
+        simulation.set_kernel("SingleCPU")
+        simulation.box_size = common.Vec(5,5,5)
+        simulation.register_particle_type("A", 0.0, 0.0)
+
+        def callback(_):
+            simulation.add_particle("A", common.Vec(0, 0, 0))
+
+        simulation.register_observable_n_particles(1, callback, ["A"])
+        traj_handle = simulation.register_observable_trajectory(1)
+
+        with closing(io.File(traj_fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            traj_handle.enable_write_to_file(f, u"", int(3))
+            simulation.run_scheme_readdy(True).configure(1).run(20)
 
         r = TrajectoryReader(traj_fname)
         trajectory_items = r[:]

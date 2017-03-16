@@ -27,7 +27,7 @@ Created on 19.12.2016
 
 import h5py as h5
 import numpy as np
-
+import itertools
 
 def is_readdy_trajectory_file(h5file):
     """
@@ -40,11 +40,12 @@ def is_readdy_trajectory_file(h5file):
 
 
 class TrajectoryEntry:
-    def __init__(self, type_id, t, particle_id, px, py, pz):
+    def __init__(self, type_id, t, particle_id, pos, flavor):
         self._type_id = type_id
         self._t = t
         self._id = particle_id
-        self._pos = np.array([px, py, pz], dtype=np.float64)
+        self._pos = pos
+        self._flavor = flavor
 
     @property
     def type_id(self):
@@ -62,26 +63,43 @@ class TrajectoryEntry:
     def position(self):
         return self._pos
 
+    @property
+    def flavor(self):
+        return self._flavor
 
-def to_trajectory_entries(data):
+
+def to_trajectory_entries(data, time):
     if isinstance(data, np.ndarray):
-        return [[TrajectoryEntry(x[0], x[1], x[2], x[3], x[4], x[5]) for x in arr] for arr in data]
+        return [[TrajectoryEntry(x["typeId"], t, x["id"], x["pos"], x["flavor"]) for x in d] for (d, t) in
+                itertools.izip(data, time)]
     else:
-        return TrajectoryEntry(data[0], data[1], data[2], data[3], data[4], data[5])
+        return TrajectoryEntry(data["typeId"], time, data["id"], data["pos"], data["flavor"])
 
 
 class TrajectoryReader(object):
     @classmethod
-    def data_set_path(cls):
-        return "/readdy/trajectory"
+    def data_set_path(cls, name):
+        if len(name) > 0:
+            return "/readdy/trajectory/" + name + "/records"
+        else:
+            return "/readdy/trajectory/records"
 
-    def __init__(self, h5file):
+    @classmethod
+    def time_information_path(cls, name):
+        if len(name) > 0:
+            return "/readdy/trajectory/" + name + "/time"
+        else:
+            return "/readdy/trajectory/time"
+
+    def __init__(self, h5file, name=""):
         assert is_readdy_trajectory_file(h5file), "the provided file was no readdy trajectory file!"
+        self._name = name
         with h5.File(h5file) as f:
-            ds = f[self.data_set_path()]
+            ds = f[self.data_set_path(name)]
             self.n_frames = len(ds)
         self._h5file = h5file
 
     def __getitem__(self, item):
         with h5.File(self._h5file) as f:
-            return to_trajectory_entries(f[self.data_set_path()][item])
+            return to_trajectory_entries(f[self.data_set_path(self._name)][item],
+                                         f[self.time_information_path(self._name)][item])

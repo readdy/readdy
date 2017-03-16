@@ -37,6 +37,7 @@
 #include <readdy/model/observables/Observables.h>
 #include <readdy/api/Simulation.h>
 #include <pybind11/numpy.h>
+#include <readdy/model/observables/io/Trajectory.h>
 #include "PyFunction.h"
 
 namespace py = pybind11;
@@ -163,6 +164,10 @@ inline obs_handle_t registerObservable_ForcesObservable(sim &self, unsigned int 
     }
 }
 
+inline obs_handle_t registerObservable_Trajectory(sim& self, unsigned int stride) {
+    return self.registerObservable<readdy::model::observables::Trajectory>(stride);
+}
+
 template <typename type_, typename... options>
 void exportObservables(py::module &apiModule, py::class_<type_, options...> &simulation) {
     py::class_<obs_handle_t>(apiModule, "ObservableHandle")
@@ -196,6 +201,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
             .def("register_observable_forces", &registerObservable_ForcesObservable)
             .def("register_observable_reactions", &registerObservable_Reactions)
             .def("register_observable_reaction_counts", &registerObservable_ReactionCounts)
+            .def("register_observable_trajectory", &registerObservable_Trajectory)
             .def("deregister_observable", [](sim &self, const obs_handle_t &handle) {
                 self.deregisterObservable(handle.getId());
             });

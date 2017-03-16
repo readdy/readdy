@@ -39,6 +39,9 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
 template<>
+inline STDDataSetType<unsigned char>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_I8LE)); }
+
+template<>
 inline STDDataSetType<short>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_STD_I16LE)); }
 
 template<>
@@ -70,6 +73,9 @@ inline STDDataSetType<double>::STDDataSetType() { tid = std::make_shared<DataTyp
 
 template<>
 inline STDDataSetType<std::string>::STDDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_C_S1)); }
+
+template<>
+inline NativeDataSetType<unsigned char>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_UCHAR)); }
 
 template<>
 inline NativeDataSetType<short>::NativeDataSetType() { tid = std::make_shared<DataTypeHandle>(H5Tcopy(H5T_NATIVE_SHORT)); }

@@ -21,57 +21,44 @@
 
 
 /**
- * The observable Trajectory is a time series of all particles' positions. A single particle is represented by the
- * TrajectoryEntry. Unlike other observables, Trajectory must be constructed with a File object, because a trajectory
- * is not of much use except writing it to disk.
+ * << detailed description >>
  *
- * @file Trajectory.h
- * @brief A trajectory keeps track of all particles' positions and saves them to a file.
- * @author chrisfroe
+ * @file TrajectoryEntry.h
+ * @brief << brief description >>
  * @author clonker
- * @date 12.12.16
+ * @date 16.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <array>
-#include <memory>
-#include "readdy/model/Kernel.h"
-#include "TrajectoryEntry.h"
+#include <spdlog/fmt/ostr.h>
+#include <readdy/common/common.h>
+#include <readdy/model/Particle.h>
+#include <readdy/model/Vec3.h>
 
 NAMESPACE_BEGIN(readdy)
-
-NAMESPACE_BEGIN(io)
-class File;
-NAMESPACE_END(io)
-
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class Trajectory : public Observable<std::vector<TrajectoryEntry>> {
-    using super = Observable<std::vector<TrajectoryEntry>>;
-public:
+struct TrajectoryEntry {
 
-    const static std::string TRAJECTORY_GROUP_PATH;
+    TrajectoryEntry(const readdy::model::Particle &p)
+            : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(p.getFlavor()) {}
 
-    Trajectory(model::Kernel *const kernel, unsigned int stride);
+    readdy::model::Particle::type_type typeId;
+    readdy::model::Particle::id_type id;
+    readdy::model::Particle::flavor_t flavor;
+    readdy::model::Particle::pos_type pos;
 
-    ~Trajectory();
-
-    virtual void evaluate() override;
-
-    virtual void flush() override;
-
-protected:
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
-
-    void append() override;
-
-protected:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
+    friend std::ostream &operator<<(std::ostream &, const TrajectoryEntry &);
 };
+
+inline std::ostream &operator<<(std::ostream &os, const TrajectoryEntry &p) {
+    os << "TrajectoryEntry(id=" << p.id << ", type=" << p.typeId << ", position=" << p.pos << ", flavor=" << p.flavor
+       << ")";
+    return os;
+}
 
 NAMESPACE_END(observables)
 NAMESPACE_END(model)

@@ -36,6 +36,7 @@
 #include <readdy/io/DataSetType.h>
 #include <readdy/model/Vec3.h>
 #include <readdy/model/reactions/ReactionRecord.h>
+#include "TrajectoryEntry.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -98,6 +99,29 @@ public:
             H5Tpack(file_type);
             return file_type;
         }());
+    }
+};
+
+class TrajectoryEntryMemoryType : public readdy::io::NativeCompoundType {
+    static readdy::io::NativeCompoundType get() {
+        using entry_t = readdy::model::observables::TrajectoryEntry;
+
+        static readdy::io::NativeCompoundType type = readdy::io::NativeCompoundTypeBuilder(sizeof(entry_t))
+                .insert<decltype(std::declval<entry_t>().id)>("id", offsetof(entry_t, id))
+                .insert<decltype(std::declval<entry_t>().typeId)>("typeId", offsetof(entry_t, typeId))
+                .insert<decltype(std::declval<entry_t>().flavor)>("flavor", offsetof(entry_t, flavor))
+                .insertArray<Vec3::value_t, 3>("pos", offsetof(entry_t, pos))
+                .build();
+        return type;
+    }
+public:
+
+    TrajectoryEntryMemoryType() : NativeCompoundType(get()){ }
+};
+
+class TrajectoryEntryFileType : public readdy::io::STDCompoundType {
+public:
+    TrajectoryEntryFileType() : STDCompoundType(TrajectoryEntryMemoryType()) {
     }
 };
 

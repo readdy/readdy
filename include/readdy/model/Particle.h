@@ -65,6 +65,8 @@ public:
 
     Vec3 &getPos();
 
+    flavor_t getFlavor() const;
+
     const type_type &getType() const;
 
     const id_type getId() const;

@@ -307,8 +307,9 @@ Simulation::recordTrajectory(const std::string &fileName, const unsigned int str
     pimpl->trajectoryFileId = uuid;
     pimpl->trajectoryFile.reset(new io::File(fileName, io::File::Action::CREATE));
     std::unique_ptr<model::observables::Trajectory> trajectory = std::make_unique<model::observables::Trajectory>(
-            pimpl->kernel.get(), stride, flushStride, *pimpl->trajectoryFile
+            pimpl->kernel.get(), stride
     );
+    trajectory->enableWriteToFile(*pimpl->trajectoryFile, "", flushStride);
     auto &&connection = pimpl->kernel->connectObservable(trajectory.get());
     pimpl->observables.emplace(uuid, std::move(trajectory));
     pimpl->observableConnections.emplace(uuid, std::move(connection));
