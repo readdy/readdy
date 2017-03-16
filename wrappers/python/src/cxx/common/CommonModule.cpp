@@ -41,11 +41,7 @@ namespace py = pybind11;
 
 void exportIO(py::module &);
 
-// module
-PYBIND11_PLUGIN (common) {
-
-    py::module common("common", "ReaDDy common python module");
-
+void exportCommon(py::module& common) {
     common.def("set_logging_level", [](const std::string &level) -> void {
         readdy::log::console()->set_level([&level] {
             if (level == "trace") {
@@ -93,6 +89,4 @@ PYBIND11_PLUGIN (common) {
             .def("__getitem__", [](const readdy::model::Vec3 &self, unsigned int i) {
                 return self[i];
             });
-
-    return common.ptr();
 }

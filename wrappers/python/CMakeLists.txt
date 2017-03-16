@@ -45,7 +45,7 @@ if (PYTHON)
     add_custom_command(OUTPUT ${OUTPUT}
             COMMAND ${PYTHON} ${SETUP_PY} build
             COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
-            DEPENDS api prototyping common)
+            DEPENDS readdybinding)
 
     add_custom_target(target ALL DEPENDS ${OUTPUT})
 

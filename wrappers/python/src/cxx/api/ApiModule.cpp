@@ -61,11 +61,7 @@ enum class ParticleTypeFlavor {
     NORMAL = 0, TOPOLOGY, MEMBRANE
 };
 
-// module
-PYBIND11_PLUGIN (api) {
-
-    py::module api("api", "ReaDDy c++-api python module");
-
+void exportApi(py::module& api) {
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
     exportSchemeApi<readdy::api::AdvancedScheme>(api, "AdvancedScheme");
 
@@ -155,7 +151,4 @@ PYBIND11_PLUGIN (api) {
             .def("calc_force", &pot2::calculateForce);
 
     py::class_<kern>(api, "Kernel").def("get_name", &kern::getName, rvp::reference);
-
-    return api.ptr();
-
 }

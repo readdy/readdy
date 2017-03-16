@@ -29,9 +29,9 @@ import tempfile
 import shutil
 import h5py
 import numpy as np
-import readdy._internal.common as common
-import readdy._internal.common.io as io
-from readdy._internal.api import Simulation
+import readdy._internal.readdybinding.common as common
+import readdy._internal.readdybinding.common.io as io
+from readdy._internal.readdybinding.api import Simulation
 from readdy.util.trajectory_utils import TrajectoryReader
 from contextlib import closing
 

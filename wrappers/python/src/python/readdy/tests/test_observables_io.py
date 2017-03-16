@@ -30,10 +30,10 @@ import unittest
 import tempfile
 import shutil
 import h5py
-import readdy._internal.common as common
-import readdy._internal.common.io as io
-from readdy._internal.api import Simulation
-from readdy._internal.api import KernelProvider
+import readdy._internal.readdybinding.common as common
+import readdy._internal.readdybinding.common.io as io
+from readdy._internal.readdybinding.api import Simulation
+from readdy._internal.readdybinding.api import KernelProvider
 from readdy.util import platform_utils
 
 from contextlib import closing

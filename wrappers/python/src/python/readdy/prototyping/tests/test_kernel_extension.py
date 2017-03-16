@@ -22,7 +22,7 @@
 
 import unittest
 
-import readdy._internal.prototyping as pr
+import readdy._internal.readdybinding.prototyping as pr
 
 
 class SingleCPUExtension(pr.SingleCPUKernel):

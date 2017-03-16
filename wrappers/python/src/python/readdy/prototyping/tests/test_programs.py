@@ -23,10 +23,8 @@
 import unittest
 import numpy as np
 
-import readdy._internal.common as cmn
-import readdy._internal.prototyping as pr
-import readdy._internal.api as sim
-
+import readdy._internal.readdybinding.common as cmn
+import readdy._internal.readdybinding.prototyping as pr
 
 class TestPrograms(unittest.TestCase):
     def test_custom_state_model(self):

@@ -22,7 +22,7 @@
 
 import unittest
 
-from readdy._internal.common import Vec
+from readdy._internal.readdybinding.common import Vec
 
 
 class TestVectorClass(unittest.TestCase):

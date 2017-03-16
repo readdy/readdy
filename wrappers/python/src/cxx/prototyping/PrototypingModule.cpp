@@ -57,12 +57,7 @@ using core_kernel_wrap_t = readdy::rpy::KernelWrap;
 using core_program_factory = readdy::model::actions::ActionFactory;
 using core_program_t = readdy::model::actions::Action;
 
-
-// module
-PYBIND11_PLUGIN (prototyping) {
-
-    py::module proto("prototyping", "ReaDDy prototyping python module");
-
+void exportPrototyping(py::module& proto) {
     exportPrograms(proto);
     exportModelClasses(proto);
     exportPotentials(proto);
@@ -78,5 +73,4 @@ PYBIND11_PLUGIN (prototyping) {
             .def("get_topology_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::top::TopologyActionFactory*  {return self.getTopologyActionFactory();}, rvp::reference_internal)
             .def("get_action_factory", [](const scpu_kernel_t &self) -> const readdy::model::actions::ActionFactory& {return self.getActionFactory();}, rvp::reference_internal);
 
-    return proto.ptr();
 }
