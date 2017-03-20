@@ -36,9 +36,8 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(Topology::particles_t &&particles)
-        : Topology(std::move(particles)), graph_(std::make_unique<graph::Graph>()) {
-}
+GraphTopology::GraphTopology(Topology::particles_t &&particles, const graph::PotentialConfiguration *const config)
+        : Topology(std::move(particles)), graph_(std::make_unique<graph::Graph>()), config(config) {}
 
 graph::Graph &GraphTopology::graph() {
     return *graph_;

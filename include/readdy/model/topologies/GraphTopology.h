@@ -33,6 +33,7 @@
 #pragma once
 
 #include <readdy/common/macros.h>
+#include <readdy/model/topologies/connectivity/PotentialConfiguration.h>
 #include "Topology.h"
 #include "connectivity/Graph.h"
 
@@ -42,7 +43,7 @@ NAMESPACE_BEGIN(top)
 
 class GraphTopology : public Topology {
 public:
-    GraphTopology(particles_t &&);
+    GraphTopology(particles_t &&, const graph::PotentialConfiguration* const config);
 
     GraphTopology(const GraphTopology &) = delete;
 
@@ -58,6 +59,7 @@ public:
 
 private:
     std::unique_ptr<graph::Graph> graph_;
+    const graph::PotentialConfiguration* const config;
 };
 
 NAMESPACE_END(top)

@@ -68,7 +68,7 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
                     potential->calculateForceAndEnergy(force, energyUpdate, myPos);
                 }
             }
-            
+
             //
             // 2nd order potentials
             //
