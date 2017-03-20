@@ -66,6 +66,8 @@ public:
 
     void addVertex(Vertex &&);
 
+    void setVertexLabel(std::size_t vertex, const std::string& label);
+
     void addEdge(std::size_t v1, std::size_t v2);
 
     void addEdge(std::size_t v1, const std::string &v2);

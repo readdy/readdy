@@ -222,7 +222,7 @@ void CPUDStateModel::removeAllParticles() {
     pimpl->data().clear();
 }
 
-readdy::model::top::Topology *const CPUDStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::Topology *const CPUDStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles, bool /*withGraph*/) {
     return nullptr;
 }
 

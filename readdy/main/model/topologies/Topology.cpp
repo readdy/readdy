@@ -37,7 +37,13 @@ namespace model {
 namespace top {
 readdy::model::top::Topology::~Topology() = default;
 
-Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) {}
+Topology::Topology(Topology::particles_t &&p, const graph::PotentialConfiguration *const config, bool withGraph)
+        : particles(std::move(p)), graph_(withGraph ? std::make_unique<graph::Graph>() : nullptr), config(config) {
+    if (withGraph) {
+        std::for_each(this->particles.begin(), this->particles.end(),
+                      [this](std::size_t id) { graph()->addVertex({id}); });
+    }
+}
 
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
@@ -64,29 +70,41 @@ const std::vector<std::unique_ptr<TorsionPotential>> &Topology::getTorsionPotent
 }
 
 void Topology::addAnglePotential(std::unique_ptr<AnglePotential> &&pot) {
-    if(pot->getTopology() != this) {
+    if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     anglePotentials.push_back(std::move(pot));
 }
 
 void Topology::addTorsionPotential(std::unique_ptr<TorsionPotential> &&pot) {
-    if(pot->getTopology() != this) {
+    if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     torsionPotentials.push_back(std::move(pot));
 }
 
 void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
-    if(pot->getTopology() != this) {
+    if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     bondedPotentials.push_back(std::move(pot));
 }
 
-Topology &Topology::operator=(Topology &&) = default;
+graph::Graph *const Topology::graph() {
+    return graph_.get();
+}
 
-Topology::Topology(Topology &&) = default;
+const graph::Graph *const Topology::graph() const {
+    return graph_.get();
+}
+
+void Topology::configureByGraph() {
+    if (!graph()) {
+        log::critical("This should not be called if the topology was requested without graph!");
+    } else {
+
+    }
+}
 
 }
 }

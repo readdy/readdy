@@ -42,6 +42,7 @@
  */
 
 #pragma once
+
 #include <array>
 #include <memory>
 #include <vector>
@@ -53,6 +54,7 @@
 #include <readdy/model/compartments/Compartment.h>
 #include "Vec3.h"
 #include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/model/topologies/connectivity/PotentialConfiguration.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -337,6 +339,19 @@ public:
      */
     bool &recordReactionCounts();
 
+    void
+    configureTopologyBondPotential(const std::string &type1, const std::string &type2, const top::graph::Bond &bond);
+
+    void configureTopologyAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                         const top::graph::Angle &angle);
+
+    void configureTopologyTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                           const std::string &type4, const top::graph::TorsionAngle &torsionAngle);
+
+    top::graph::PotentialConfiguration &topologyPotentialConfiguration();
+
+    const top::graph::PotentialConfiguration &topologyPotentialConfiguration() const;
+
     // ctor and dtor
     KernelContext();
 
@@ -365,6 +380,8 @@ private:
     reaction_o2_registry reactionTwoEductsRegistry{};
     reaction_o2_registry_internal reactionTwoEductsRegistryInternal{};
     reaction_o2_registry_external reactionTwoEductsRegistryExternal{};
+
+    top::graph::PotentialConfiguration potentialConfiguration_{};
 
     rdy_pot_1_registry potentialO1Registry{};
     rdy_pot_2_registry potentialO2Registry{};

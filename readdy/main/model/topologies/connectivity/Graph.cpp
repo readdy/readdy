@@ -230,6 +230,15 @@ auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vert
     return vertices_.end();
 }
 
+void Graph::setVertexLabel(std::size_t vertex, const std::string& label) {
+    auto it = namedVertices.find(label);
+    if(it == namedVertices.end()){
+        namedVertices[label] = &vertices_.at(vertex);
+    } else {
+        throw std::invalid_argument("the label " + label + " already existed in this topology!");
+    }
+}
+
 
 }
 }

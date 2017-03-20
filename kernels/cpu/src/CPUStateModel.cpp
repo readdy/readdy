@@ -298,9 +298,9 @@ model::CPUNeighborList *const CPUStateModel::getNeighborList() {
 }
 
 readdy::model::top::Topology *const
-CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles, bool withGraph) {
     std::vector<std::size_t> ids = pimpl->data<false>().addTopologyParticles(particles);
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids)));
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids), &pimpl->context->topologyPotentialConfiguration(), withGraph));
     return pimpl->topologies.back().get();
 }
 

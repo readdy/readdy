@@ -70,7 +70,7 @@ public:
 
     data_t *const getParticleData() const;
 
-    virtual readdy::model::top::Topology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
+    virtual readdy::model::top::Topology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles, bool withGraph=true) override;
 
     model::CPUDNeighborList *const getNeighborList() const;
 

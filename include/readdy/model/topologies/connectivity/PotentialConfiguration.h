@@ -42,16 +42,32 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(graph)
 
+enum class BondType { HARMONIC };
+enum class AngleType { HARMONIC };
+enum class TorsionType { COS_DIHEDRAL };
+
+struct Bond {
+    double forceConstant, length;
+    BondType type = BondType::HARMONIC;
+};
+
+struct Angle {
+    double forceConstant, equilibriumAngle;
+    AngleType type = AngleType::HARMONIC;
+};
+
+struct TorsionAngle {
+    double forceConstant, phi_0, multiplicity;
+    TorsionType type = TorsionType::COS_DIHEDRAL;
+};
+
 struct PotentialConfiguration {
-    using pair_potential_map = std::unordered_map<util::particle_type_pair, std::vector<int>, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
-    using angle_potential_map = std::unordered_map<util::particle_type_triple, std::vector<int>, util::particle_type_triple_hasher, util::particle_type_triple_equal_to>;
-    using torsion_potential_map = std::unordered_map<util::particle_type_quadruple, std::vector<int>, util::particle_type_quadruple_hasher, util::particle_type_quadruple_equal_to>;
+    using pair_potential_map = std::unordered_map<util::particle_type_pair, std::vector<Bond>, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
+    using angle_potential_map = std::unordered_map<util::particle_type_triple, std::vector<Angle>, util::particle_type_triple_hasher, util::particle_type_triple_equal_to>;
+    using torsion_potential_map = std::unordered_map<util::particle_type_quadruple, std::vector<TorsionAngle>, util::particle_type_quadruple_hasher, util::particle_type_quadruple_equal_to>;
     pair_potential_map pairPotentials;
     angle_potential_map anglePotentials;
     torsion_potential_map torsionPotentials;
-    // map particle type pair -> bonds
-    // map particle type triple -> angles
-    // map particle type quadruple -> torsion potentials
 };
 
 NAMESPACE_END(graph)

@@ -27,6 +27,7 @@
 #include <readdy/common/logging.h>
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/topologies/connectivity/Graph.h>
+#include <readdy/plugin/KernelProvider.h>
 
 /**
  * << detailed description >>
@@ -37,6 +38,9 @@
  * @date 20.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
+using particle_t = readdy::model::Particle;
+using topology_particle_t = readdy::model::TopologyParticle;
 
 TEST(TestTopologyGraphs, TestQuadruple) {
     readdy::util::particle_type_quadruple_hasher hasher;
@@ -110,10 +114,37 @@ TEST(TestTopologyGraphs, TestGraphWithIndices) {
     EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.size(), 0);
 }
 
-TEST(TestTopologyGraphs, TestPotentialTable) {
-
-}
-
 TEST(TestTopologyGraphs, TestTopologyWithGraph) {
+    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    auto &ctx = kernel->getKernelContext();
 
+    ctx.registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.registerParticleType("Topology B", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+
+    ctx.configureTopologyBondPotential("Topology A", "Topology B", {1.0, 1.0});
+    ctx.configureTopologyAnglePotential("Topology B", "Topology A", "Topology A", {1.0, 1.0});
+    ctx.configureTopologyTorsionPotential("Topology A", "Topology B", "Topology A", "Topology A", {1.0, 1.0, 3.0});
+
+    ctx.setBoxSize(10, 10, 10);
+    topology_particle_t x_i{-1, 0, 0, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.getParticleTypeID("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.getParticleTypeID("Topology B")};
+    topology_particle_t x_l{1, .1, 1, ctx.getParticleTypeID("Topology A")};
+
+    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
+    EXPECT_TRUE(top->graph() != nullptr);
+    EXPECT_EQ(top->graph()->vertices().size(), 4);
+    top->graph()->addEdge(0, 1);
+    top->graph()->addEdge(1, 2);
+    top->graph()->addEdge(2, 3);
+
+    top->graph()->setVertexLabel(0, "begin");
+    top->graph()->setVertexLabel(3, "end");
+
+    top->graph()->addEdge("begin", "end");
+
+    top->graph()->removeVertex("end");
+
+    // todo
+    top->configureByGraph();
 }
