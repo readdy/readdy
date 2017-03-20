@@ -23,38 +23,31 @@
 /**
  * << detailed description >>
  *
- * @file PotentialConfiguration.h
+ * @file GraphTopology.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 17.03.17
+ * @date 20.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
+#include <readdy/model/topologies/GraphTopology.h>
 
-#include <unordered_map>
+namespace readdy {
+namespace model {
+namespace top {
 
-#include <readdy/common/common.h>
-#include <readdy/common/ParticleTypeTuple.h>
+GraphTopology::GraphTopology(Topology::particles_t &&particles)
+        : Topology(std::move(particles)), graph_(std::make_unique<graph::Graph>()) {
+}
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(graph)
+graph::Graph &GraphTopology::graph() {
+    return *graph_;
+}
 
-struct PotentialConfiguration {
-    using pair_potential_map = std::unordered_map<util::particle_type_pair, std::vector<int>, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
-    using angle_potential_map = std::unordered_map<util::particle_type_triple, std::vector<int>, util::particle_type_triple_hasher, util::particle_type_triple_equal_to>;
-    using torsion_potential_map = std::unordered_map<util::particle_type_quadruple, std::vector<int>, util::particle_type_quadruple_hasher, util::particle_type_quadruple_equal_to>;
-    pair_potential_map pairPotentials;
-    angle_potential_map anglePotentials;
-    torsion_potential_map torsionPotentials;
-    // map particle type pair -> bonds
-    // map particle type triple -> angles
-    // map particle type quadruple -> torsion potentials
-};
+const graph::Graph &GraphTopology::graph() const {
+    return *graph_;
+}
 
-NAMESPACE_END(graph)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}

@@ -23,87 +23,43 @@
 /**
  * << detailed description >>
  *
- * @file Graph.h
+ * @file GraphTopology.h
  * @brief << brief description >>
  * @author clonker
- * @date 16.03.17
+ * @date 20.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <stdexcept>
-#include <unordered_map>
 #include <readdy/common/macros.h>
-#include "Vertex.h"
+#include "Topology.h"
+#include "connectivity/Graph.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(graph)
 
-class Graph {
+class GraphTopology : public Topology {
 public:
-    Graph() = default;
+    GraphTopology(particles_t &&);
 
-    virtual ~Graph() = default;
+    GraphTopology(const GraphTopology &) = delete;
 
-    Graph(const Graph &) = delete;
+    GraphTopology &operator=(const GraphTopology &) = delete;
 
-    Graph &operator=(const Graph &) = delete;
+    GraphTopology(GraphTopology &&) = delete;
 
-    Graph(Graph&&) = default;
+    GraphTopology &operator=(GraphTopology &&) = delete;
 
-    Graph &operator=(Graph&&) = default;
+    graph::Graph &graph();
 
-    const std::vector<Vertex> &vertices() const;
-
-    const Vertex* const namedVertex(const std::string& name) const;
-
-    const Vertex* const vertexForParticleIndex(std::size_t particleIndex) const;
-
-    void addVertex(const Vertex &);
-
-    void addVertex(Vertex &&);
-
-    void addEdge(std::size_t v1, std::size_t v2);
-
-    void addEdge(std::size_t v1, const std::string &v2);
-
-    void addEdge(const std::string &v1, std::size_t v2);
-
-    void addEdge(const std::string &v1, const std::string &v2);
-
-    void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
-
-    void removeEdge(std::size_t v1, std::size_t v2);
-
-    void removeEdge(std::size_t v1, const std::string &v2);
-
-    void removeEdge(const std::string &v1, std::size_t v2);
-
-    void removeEdge(const std::string &v1, const std::string &v2);
-
-    void removeVertex(std::size_t index);
-
-    void removeVertex(Vertex *vertex);
-
-    void removeVertex(const std::string &name);
-
-    void removeParticle(std::size_t particleIndex);
+    const graph::Graph &graph() const;
 
 private:
-    std::vector<Vertex> vertices_;
-    std::unordered_map<std::string, Vertex *> namedVertices;
-
-    void removeNeighborsEdges(Vertex *vertex);
-
-    void removeEdge(Vertex *v1, Vertex *v2);
-
-    auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin());
+    std::unique_ptr<graph::Graph> graph_;
 };
 
-NAMESPACE_END(graph)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

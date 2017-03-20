@@ -24,7 +24,6 @@
 
 #include <gtest/gtest.h>
 
-#include <readdy/common/tuple_utils.h>
 #include <readdy/common/logging.h>
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/topologies/connectivity/Graph.h>
@@ -65,6 +64,16 @@ TEST(TestTopologyGraphs, TestTriple) {
     EXPECT_EQ(hasher(std::make_tuple(2, 1, 3)), hasher(std::make_tuple(3, 1, 2)));
 }
 
+TEST(TestTopologyGraphs, TestTuple) {
+    readdy::util::particle_type_pair_hasher hasher;
+    EXPECT_EQ(hasher(std::make_tuple(1, 2)), hasher(std::make_tuple(2, 1)));
+    std::unordered_map<readdy::util::particle_type_pair, int, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to> map;
+    int a = 1, b = 2;
+    map[std::make_tuple(a, b)] = 5;
+    EXPECT_EQ(map[std::make_tuple(1, 2)], 5);
+    EXPECT_EQ(map[std::make_tuple(2, 1)], 5);
+}
+
 TEST(TestTopologyGraphs, TestGraphWithNamedVertices) {
     readdy::model::top::graph::Graph graph;
     graph.addVertex({0, "myVertex"});
@@ -99,4 +108,12 @@ TEST(TestTopologyGraphs, TestGraphWithIndices) {
     EXPECT_EQ(graph.vertices().size(), 1);
     EXPECT_EQ(graph.vertexForParticleIndex(1)->particleIndex, 1);
     EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.size(), 0);
+}
+
+TEST(TestTopologyGraphs, TestPotentialTable) {
+
+}
+
+TEST(TestTopologyGraphs, TestTopologyWithGraph) {
+
 }

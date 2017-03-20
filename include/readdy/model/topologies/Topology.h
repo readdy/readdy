@@ -39,7 +39,6 @@
 #include "AnglePotential.h"
 #include "TorsionPotential.h"
 #include "TopologyActionFactory.h"
-#include "connectivity/Graph.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -103,13 +102,11 @@ public:
 
     void addTorsionPotential(std::unique_ptr<TorsionPotential> &&);
 
-private:
+protected:
     particles_t particles;
     std::vector<std::unique_ptr<BondedPotential>> bondedPotentials;
     std::vector<std::unique_ptr<AnglePotential>> anglePotentials;
     std::vector<std::unique_ptr<TorsionPotential>> torsionPotentials;
-
-    std::unique_ptr<graph::Graph> connectivityGraph;
 };
 
 NAMESPACE_END(top)

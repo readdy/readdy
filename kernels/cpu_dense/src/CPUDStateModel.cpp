@@ -70,7 +70,7 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
         if(secondOrder) {
             for (const auto &neighbor : *neighbors_it) {
                 auto &neighborEntry = data.entry_at(neighbor.idx);
-                auto potit = pot2.find({it->type, neighborEntry.type});
+                auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
                 if (potit != pot2.end()) {
                     for (const auto &potential : potit->second) {
                         if (neighbor.d2 < potential->getCutoffRadiusSquared()) {

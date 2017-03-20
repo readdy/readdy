@@ -219,7 +219,7 @@ KernelContext::getOrder2Potentials(const std::string &type1, const std::string &
 
 const std::vector<potentials::PotentialOrder2 *> &
 KernelContext::getOrder2Potentials(const particle_t::type_type type1, const particle_t::type_type type2) const {
-    return readdy::util::collections::getOrDefault(potentialO2Registry, {type1, type2},
+    return readdy::util::collections::getOrDefault(potentialO2Registry, std::make_tuple(type1, type2),
                                                    pimpl->defaultPotentialsO2);
 }
 
@@ -228,7 +228,7 @@ KernelContext::getAllOrder2RegisteredPotentialTypes() const {
     std::vector<std::tuple<particle_t::type_type, particle_t::type_type>> result{};
     for (auto it = potentialO2Registry.begin();
          it != potentialO2Registry.end(); ++it) {
-        result.push_back(std::make_tuple(it->first.t1, it->first.t2));
+        result.push_back(it->first);
     }
     return result;
 }
@@ -296,14 +296,14 @@ KernelContext::getOrder2Reactions(const std::string &type1, const std::string &t
 
 const std::vector<reactions::Reaction<2> *> &
 KernelContext::getOrder2Reactions(const particle_t::type_type type1, const particle_t::type_type type2) const {
-    return readdy::util::collections::getOrDefault(reactionTwoEductsRegistry, {type1, type2},
+    return readdy::util::collections::getOrDefault(reactionTwoEductsRegistry, std::make_tuple(type1, type2),
                                                    pimpl->defaultReactionsO2);
 }
 
 const std::vector<const reactions::Reaction<1> *> KernelContext::getAllOrder1Reactions() const {
     auto result = std::vector<const reactions::Reaction<1> *>();
     for (const auto &mapEntry : reactionOneEductRegistry) {
-        for (const auto &reaction : mapEntry.second) {
+        for (const auto reaction : mapEntry.second) {
             result.push_back(reaction);
         }
     }
@@ -323,7 +323,7 @@ const reactions::Reaction<1> *const KernelContext::getReactionOrder1WithName(con
 const std::vector<const reactions::Reaction<2> *> KernelContext::getAllOrder2Reactions() const {
     auto result = std::vector<const reactions::Reaction<2> *>();
     for (const auto &mapEntry : reactionTwoEductsRegistry) {
-        for (const auto &reaction : mapEntry.second) {
+        for (const auto reaction : mapEntry.second) {
             result.push_back(reaction);
         }
     }
@@ -353,7 +353,7 @@ const KernelContext::shortest_dist_fun &KernelContext::getShortestDifferenceFun(
 
 void KernelContext::configure(bool debugOutput) {
     namespace coll = readdy::util::collections;
-    using pair = util::ParticleTypePair;
+    using pair = util::particle_type_pair;
     using pot1 = potentials::PotentialOrder1;
     using pot1_ptr = std::unique_ptr<potentials::PotentialOrder1>;
     using pot2_ptr = std::unique_ptr<potentials::PotentialOrder2>;
@@ -370,13 +370,13 @@ void KernelContext::configure(bool debugOutput) {
         ptr->configureForType(this, type); (potentialO1Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO2RegistryInternal, [&](const pair& type, const pot2_ptr& ptr) {
-        ptr->configureForTypes(this, type.t1, type.t2); (potentialO2Registry)[type].push_back(ptr.get());
+        ptr->configureForTypes(this, std::get<0>(type), std::get<1>(type)); (potentialO2Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO1RegistryExternal, [&](const particle_t::type_type type, pot1* ptr) {
         ptr->configureForType(this, type); (potentialO1Registry)[type].push_back(ptr);
     });
     coll::for_each_value(potentialO2RegistryExternal, [&](const pair& type, pot2* ptr) {
-        ptr->configureForTypes(this, type.t1, type.t2); (potentialO2Registry)[type].push_back(ptr);
+        ptr->configureForTypes(this, std::get<0>(type), std::get<1>(type)); (potentialO2Registry)[type].push_back(ptr);
     });
     coll::for_each_value(reactionOneEductRegistryInternal, [&](const particle_t::type_type type, const reaction1ptr& ptr) {
         (reactionOneEductRegistry)[type].push_back(ptr.get());
@@ -420,8 +420,8 @@ void KernelContext::configure(bool debugOutput) {
         if (!getAllOrder2Potentials().empty()) {
             log::debug(" - potentials of order 2:");
             for (const auto& types : getAllOrder2Potentials()) {
-                log::debug("     * for types {} and {}", find_pot_name(types.first.t1),
-                                      find_pot_name(types.first.t2));
+                log::debug("     * for types {} and {}", find_pot_name(std::get<0>(types.first)),
+                                      find_pot_name(std::get<1>(types.first)));
                 for (auto pot : types.second) {
                     log::debug("         * {}", _internal::util::to_string(pot));
                 }
@@ -463,8 +463,7 @@ KernelContext::getAllOrder1Potentials() const {
     return potentialO1Registry;
 }
 
-const std::unordered_map<readdy::util::ParticleTypePair, std::vector<potentials::PotentialOrder2 *>, readdy::util::ParticleTypePairHasher>
-KernelContext::getAllOrder2Potentials() const {
+const KernelContext::rdy_pot_2_registry KernelContext::getAllOrder2Potentials() const {
     return potentialO2Registry;
 }
 
