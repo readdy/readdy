@@ -115,15 +115,13 @@ void Graph::removeVertex(std::size_t index) {
 }
 
 void Graph::removeParticle(std::size_t particleIndex) {
-    auto it = std::find_if(vertices_.begin(), vertices_.end(), [particleIndex](const Vertex &vertex) {
-        return vertex.particleIndex == particleIndex;
-    });
-    if (it != vertices_.end()) {
-        removeNeighborsEdges(&*it);
-        if(!it->name.empty()) {
-            namedVertices.erase(namedVertices.find(it->name));
+    auto v = vertexItForParticleIndex(particleIndex);
+    if (v != vertices_.end()) {
+        removeNeighborsEdges(&*v);
+        if(!v->name.empty()) {
+            namedVertices.erase(namedVertices.find(v->name));
         }
-        vertices_.erase(it);
+        vertices_.erase(v);
     } else {
         throw std::invalid_argument(
                 "the vertex corresponding to the particle with topology index " + std::to_string(particleIndex) +
@@ -198,6 +196,38 @@ void Graph::removeEdge(const std::string &v1, const std::string &v2) {
     assert(namedVertices.find(v1) != namedVertices.end());
     assert(namedVertices.find(v2) != namedVertices.end());
     removeEdge(namedVertices.at(v1), namedVertices.at(v2));
+}
+
+const Vertex *const Graph::namedVertex(const std::string &name) const {
+    decltype(namedVertices.begin()) it;
+    if((it = namedVertices.find(name)) == namedVertices.end()) {
+        throw std::invalid_argument("the requested vertex " + name + " did not exist.");
+    }
+    return it->second;
+}
+
+void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
+
+}
+
+const Vertex *const Graph::vertexForParticleIndex(std::size_t particleIndex) const {
+    auto it = std::find_if(vertices_.begin(), vertices_.end(), [particleIndex](const Vertex &vertex) {
+        return vertex.particleIndex == particleIndex;
+    });
+    if(it != vertices_.end()) {
+        return &*it;
+    }
+    return nullptr;
+}
+
+auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin()) {
+    auto it = std::find_if(vertices_.begin(), vertices_.end(), [particleIndex](const Vertex &vertex) {
+        return vertex.particleIndex == particleIndex;
+    });
+    if(it != vertices_.end()) {
+        return it;
+    }
+    return vertices_.end();
 }
 
 

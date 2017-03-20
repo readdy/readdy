@@ -54,6 +54,10 @@ public:
 
     const std::vector<Vertex> &vertices() const;
 
+    const Vertex* const namedVertex(const std::string& name) const;
+
+    const Vertex* const vertexForParticleIndex(std::size_t particleIndex) const;
+
     void addVertex(const Vertex &);
 
     void addVertex(Vertex &&);
@@ -65,6 +69,8 @@ public:
     void addEdge(const std::string &v1, std::size_t v2);
 
     void addEdge(const std::string &v1, const std::string &v2);
+
+    void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
 
     void removeEdge(std::size_t v1, std::size_t v2);
 
@@ -89,6 +95,8 @@ private:
     void removeNeighborsEdges(Vertex *vertex);
 
     void removeEdge(Vertex *v1, Vertex *v2);
+
+    auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin());
 };
 
 NAMESPACE_END(graph)

@@ -27,6 +27,7 @@
 #include <readdy/common/tuple_utils.h>
 #include <readdy/common/logging.h>
 #include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/model/topologies/connectivity/Graph.h>
 
 /**
  * << detailed description >>
@@ -62,4 +63,40 @@ TEST(TestTopologyGraphs, TestTriple) {
     } while (std::next_permutation(range.begin(), range.end()));
     EXPECT_EQ(hasher(std::make_tuple(1, 2, 3)), hasher(std::make_tuple(3, 2, 1)));
     EXPECT_EQ(hasher(std::make_tuple(2, 1, 3)), hasher(std::make_tuple(3, 1, 2)));
+}
+
+TEST(TestTopologyGraphs, TestGraphWithNamedVertices) {
+    readdy::model::top::graph::Graph graph;
+    graph.addVertex({0, "myVertex"});
+    graph.addVertex({1, "myVertex2"});
+    graph.addEdge("myVertex", "myVertex2");
+    EXPECT_EQ(graph.vertices().size(), 2);
+    EXPECT_EQ(graph.vertices().front().name, "myVertex");
+    EXPECT_EQ(graph.vertices().back().name, "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex")->neighbors.size(), 1);
+    EXPECT_EQ(graph.namedVertex("myVertex2")->neighbors.size(), 1);
+    EXPECT_EQ(graph.namedVertex("myVertex")->neighbors.front()->name, "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex2")->neighbors.front()->name, "myVertex");
+    graph.removeVertex("myVertex");
+    EXPECT_EQ(graph.vertices().size(), 1);
+    EXPECT_EQ(graph.vertices().front().name, "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex2")->neighbors.size(), 0);
+}
+
+TEST(TestTopologyGraphs, TestGraphWithIndices) {
+    readdy::model::top::graph::Graph graph;
+    graph.addVertex({0});
+    graph.addVertex({1});
+    graph.addEdge(0, 1);
+    EXPECT_EQ(graph.vertices().size(), 2);
+    EXPECT_EQ(graph.vertexForParticleIndex(0)->particleIndex, 0);
+    EXPECT_EQ(graph.vertexForParticleIndex(1)->particleIndex, 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(0)->neighbors.size(), 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.size(), 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(0)->neighbors.front()->particleIndex, 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.front()->particleIndex, 0);
+    graph.removeParticle(0);
+    EXPECT_EQ(graph.vertices().size(), 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(1)->particleIndex, 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.size(), 0);
 }
