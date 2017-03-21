@@ -33,6 +33,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <list>
 #include <unordered_map>
 #include <readdy/common/macros.h>
 #include "Vertex.h"
@@ -44,6 +45,8 @@ NAMESPACE_BEGIN(graph)
 
 class Graph {
 public:
+    using vertices_t = std::list<Vertex>;
+
     Graph() = default;
 
     virtual ~Graph() = default;
@@ -52,55 +55,49 @@ public:
 
     Graph &operator=(const Graph &) = delete;
 
-    Graph(Graph&&) = default;
+    Graph(Graph &&) = default;
 
-    Graph &operator=(Graph&&) = default;
+    Graph &operator=(Graph &&) = default;
 
-    const std::vector<Vertex> &vertices() const;
+    const vertices_t &vertices() const;
 
-    const Vertex* const namedVertex(const std::string& name) const;
+    vertices_t &vertices();
 
-    const Vertex* const vertexForParticleIndex(std::size_t particleIndex) const;
+    vertices_t::iterator firstVertex();
 
-    void addVertex(const Vertex &);
+    vertices_t::iterator lastVertex();
 
-    void addVertex(Vertex &&);
+    const Vertex &namedVertex(const std::string &name) const;
 
-    void setVertexLabel(std::size_t vertex, const std::string& label);
+    Vertex &namedVertex(const std::string &name);
 
-    void addEdge(std::size_t v1, std::size_t v2);
+    const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
 
-    void addEdge(std::size_t v1, const std::string &v2);
+    void addVertex(std::size_t particleIndex, const std::string &label = "");
 
-    void addEdge(const std::string &v1, std::size_t v2);
+    void setVertexLabel(vertices_t::iterator vertex, const std::string &label);
+
+    void addEdge(vertices_t::iterator v1, vertices_t::iterator v2);
 
     void addEdge(const std::string &v1, const std::string &v2);
 
     void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
 
-    void removeEdge(std::size_t v1, std::size_t v2);
-
-    void removeEdge(std::size_t v1, const std::string &v2);
-
-    void removeEdge(const std::string &v1, std::size_t v2);
+    void removeEdge(vertices_t::iterator v1, vertices_t::iterator v2);
 
     void removeEdge(const std::string &v1, const std::string &v2);
 
-    void removeVertex(std::size_t index);
-
-    void removeVertex(Vertex *vertex);
+    void removeVertex(vertices_t::iterator vertex);
 
     void removeVertex(const std::string &name);
 
     void removeParticle(std::size_t particleIndex);
 
 private:
-    std::vector<Vertex> vertices_;
-    std::unordered_map<std::string, Vertex *> namedVertices;
+    vertices_t vertices_;
+    std::unordered_map<std::string, vertices_t::iterator> namedVertices{};
 
-    void removeNeighborsEdges(Vertex *vertex);
-
-    void removeEdge(Vertex *v1, Vertex *v2);
+    void removeNeighborsEdges(vertices_t::iterator vertex);
 
     auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin());
 };

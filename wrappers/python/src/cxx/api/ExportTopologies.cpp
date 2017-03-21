@@ -30,14 +30,14 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <readdy/model/Particle.h>
-#include <readdy/model/topologies/Topology.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
 
 using particle = readdy::model::Particle;
 using topology_particle = readdy::model::TopologyParticle;
-using topology = readdy::model::top::Topology;
+using topology = readdy::model::top::GraphTopology;
 using topology_potential = readdy::model::top::TopologyPotential;
 using bonded_potential = readdy::model::top::BondedPotential;
 using angle_potential = readdy::model::top::AnglePotential;

@@ -40,23 +40,22 @@ namespace top {
 GraphTopology::GraphTopology(Topology::particles_t &&particles, const graph::PotentialConfiguration *const config)
         : Topology(std::move(particles)), config(config), graph_(std::make_unique<graph::Graph>()) {
     std::for_each(this->particles.begin(), this->particles.end(),
-                  [this](std::size_t id) { graph()->addVertex({id}); });
+                  [this](std::size_t id) { graph().addVertex({id}); });
 }
 
-graph::Graph *const GraphTopology::graph() {
-    return graph_.get();
+graph::Graph &GraphTopology::graph() {
+    return *graph_;
 }
 
-const graph::Graph *const GraphTopology::graph() const {
-    return graph_.get();
+const graph::Graph &GraphTopology::graph() const {
+    return *graph_;
 }
 
 void GraphTopology::configureByGraph() {
-    if (!graph()) {
-        log::critical("This should not be called if the topology was requested without graph!");
-    } else {
 
-    }
+}
+
+void GraphTopology::validate() {
 }
 
 }

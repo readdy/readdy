@@ -32,10 +32,12 @@
 
 #pragma once
 
-#include <vector>
-#include <readdy/common/macros.h>
-#include <readdy/model/Particle.h>
 #include <ostream>
+#include <list>
+#include <vector>
+#include <algorithm>
+#include <readdy/common/common.h>
+#include <readdy/model/Particle.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -45,11 +47,12 @@ NAMESPACE_BEGIN(graph)
 /**
  * Struct representing a vertex in a topology-connectivity-graph
  */
-struct Vertex {
+class Vertex {
+public:
     /**
      * edge in the graph (i.e., pointer to neighboring vertex)
      */
-    using vertex_edge = Vertex *;
+    using vertex_edge = std::list<Vertex>::iterator;
 
     /**
      * default constructor
@@ -59,11 +62,14 @@ struct Vertex {
     /**
      * constructs a vertex to a graph
      * @param particleIndex the particle index this vertex belongs to
-     * @param name named vertex, can be left empty and is then ignored
-     * @param neighbors neighbors of the vertex (i.e., edges)
      */
-    Vertex(std::size_t particleIndex, const std::string &name = "", const std::vector<vertex_edge> &neighbors = {})
-            : neighbors(neighbors), particleIndex(particleIndex), name(name) {}
+    Vertex(std::size_t particleIndex, std::size_t index, const std::string& label = "")
+            : particleIndex(particleIndex), index(index), label(label) {}
+
+    Vertex(const Vertex&) = delete;
+    Vertex& operator=(const Vertex&) = delete;
+    Vertex(Vertex&&) = default;
+    Vertex& operator=(Vertex&&) = default;
 
     /**
      * default destructor
@@ -71,26 +77,26 @@ struct Vertex {
     virtual ~Vertex() = default;
 
     /**
-     * the edges (i.e., pointers to neighboring vertices)
-     */
-    std::vector<vertex_edge> neighbors;
-    /**
      * vertex' name, can be left empty and is then ignored
      */
-    std::string name;
+    std::string label {""};
     /**
      * particle index in the topology this vertex belongs to
      */
     std::size_t particleIndex;
+    /**
+     * the vertex' index (used in neighbors)
+     */
+    std::size_t index;
 
     bool operator==(const Vertex &rhs) const {
         return particleIndex == rhs.particleIndex;
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex) {
-        os << "Vertex[name: " << vertex.name << " particleIndex: "
+        os << "Vertex[label: " << vertex.label << " particleIndex: "
            << vertex.particleIndex << " neighbors=[";
-        for (const auto neighbor : vertex.neighbors) {
+        for (const auto neighbor : vertex.neighbors_) {
             os << neighbor->particleIndex << ",";
         }
         os << "]]";
@@ -100,6 +106,33 @@ struct Vertex {
     bool operator!=(const Vertex &rhs) const {
         return !(rhs == *this);
     }
+
+    void addNeighbor(const vertex_edge& edge) {
+        if(std::find(neighbors_.begin(), neighbors_.end(), edge) == neighbors_.end()) {
+            neighbors_.push_back(edge);
+        } else {
+            log::warn("tried to add an already existing edge ({} - {})", particleIndex, edge->particleIndex);
+        }
+    }
+
+    void removeNeighbor(const vertex_edge& edge) {
+        decltype(neighbors_.begin()) it;
+        if((it = std::find(neighbors_.begin(), neighbors_.end(), edge)) != neighbors_.end()) {
+            neighbors_.erase(it);
+        } else {
+            log::warn("tried to remove an unexisting edge {} - {}", particleIndex, edge->particleIndex);
+        }
+    }
+
+    const std::vector<vertex_edge>& neighbors() const {
+        return neighbors_;
+    }
+
+private:
+    /**
+     * the edges (i.e., pointers to neighboring vertices)
+     */
+    std::vector<vertex_edge> neighbors_ {};
 };
 
 NAMESPACE_END(graph)

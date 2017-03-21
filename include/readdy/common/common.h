@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "macros.h"
+#include "logging.h"
 
 NAMESPACE_BEGIN(readdy)
 using time_step_type = unsigned long;

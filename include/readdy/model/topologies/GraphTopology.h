@@ -45,20 +45,25 @@ class GraphTopology : public Topology {
 public:
     GraphTopology(particles_t &&, const graph::PotentialConfiguration *const config);
 
-    GraphTopology(GraphTopology&&) = delete;
-    GraphTopology& operator=(GraphTopology&&) = delete;
-    GraphTopology(const GraphTopology&) = delete;
-    GraphTopology& operator=(const GraphTopology&) = delete;
+    GraphTopology(GraphTopology &&) = delete;
 
-    graph::Graph* const graph();
+    GraphTopology &operator=(GraphTopology &&) = delete;
 
-    const graph::Graph* const graph() const;
+    GraphTopology(const GraphTopology &) = delete;
+
+    GraphTopology &operator=(const GraphTopology &) = delete;
+
+    graph::Graph &graph();
+
+    const graph::Graph &graph() const;
 
     void configureByGraph();
 
+    void validate();
+
 private:
     std::unique_ptr<graph::Graph> graph_;
-    const graph::PotentialConfiguration* const config;
+    const graph::PotentialConfiguration *const config;
 };
 
 

@@ -80,38 +80,38 @@ TEST(TestTopologyGraphs, TestTuple) {
 
 TEST(TestTopologyGraphs, TestGraphWithNamedVertices) {
     readdy::model::top::graph::Graph graph;
-    graph.addVertex({0, "myVertex"});
-    graph.addVertex({1, "myVertex2"});
+    graph.addVertex(0, "myVertex");
+    graph.addVertex(1, "myVertex2");
     graph.addEdge("myVertex", "myVertex2");
     EXPECT_EQ(graph.vertices().size(), 2);
-    EXPECT_EQ(graph.vertices().front().name, "myVertex");
-    EXPECT_EQ(graph.vertices().back().name, "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex")->neighbors.size(), 1);
-    EXPECT_EQ(graph.namedVertex("myVertex2")->neighbors.size(), 1);
-    EXPECT_EQ(graph.namedVertex("myVertex")->neighbors.front()->name, "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex2")->neighbors.front()->name, "myVertex");
+    EXPECT_EQ(graph.vertices().front().label, "myVertex");
+    EXPECT_EQ(graph.vertices().back().label, "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().size(), 1);
+    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 1);
+    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().front()->label, "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().back()->label, "myVertex");
     graph.removeVertex("myVertex");
     EXPECT_EQ(graph.vertices().size(), 1);
-    EXPECT_EQ(graph.vertices().front().name, "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex2")->neighbors.size(), 0);
+    EXPECT_EQ(graph.vertices().front().label, "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 0);
 }
 
 TEST(TestTopologyGraphs, TestGraphWithIndices) {
     readdy::model::top::graph::Graph graph;
-    graph.addVertex({0});
-    graph.addVertex({1});
-    graph.addEdge(0, 1);
+    graph.addVertex(0);
+    graph.addVertex(1);
+    graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
     EXPECT_EQ(graph.vertices().size(), 2);
-    EXPECT_EQ(graph.vertexForParticleIndex(0)->particleIndex, 0);
-    EXPECT_EQ(graph.vertexForParticleIndex(1)->particleIndex, 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(0)->neighbors.size(), 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.size(), 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(0)->neighbors.front()->particleIndex, 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.front()->particleIndex, 0);
+    EXPECT_EQ(graph.vertexForParticleIndex(0).particleIndex, 0);
+    EXPECT_EQ(graph.vertexForParticleIndex(1).particleIndex, 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(0).neighbors().size(), 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors().size(), 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex, 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex, 0);
     graph.removeParticle(0);
     EXPECT_EQ(graph.vertices().size(), 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1)->particleIndex, 1);
-    EXPECT_EQ(graph.vertexForParticleIndex(1)->neighbors.size(), 0);
+    EXPECT_EQ(graph.vertexForParticleIndex(1).particleIndex, 1);
+    EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors().size(), 0);
 }
 
 TEST(TestTopologyGraphs, TestTopologyWithGraph) {
@@ -132,18 +132,19 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     topology_particle_t x_l{1, .1, 1, ctx.getParticleTypeID("Topology A")};
 
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
-    EXPECT_TRUE(top->graph() != nullptr);
-    EXPECT_EQ(top->graph()->vertices().size(), 4);
-    top->graph()->addEdge(0, 1);
-    top->graph()->addEdge(1, 2);
-    top->graph()->addEdge(2, 3);
+    EXPECT_EQ(top->graph().vertices().size(), 4);
+    auto it = top->graph().vertices().begin();
+    auto it2 = ++top->graph().vertices().begin();
+    top->graph().addEdge(it++, it2++);
+    top->graph().addEdge(it++, it2++);
+    top->graph().addEdge(it++, it2++);
 
-    top->graph()->setVertexLabel(0, "begin");
-    top->graph()->setVertexLabel(3, "end");
+    top->graph().setVertexLabel(top->graph().firstVertex(), "begin");
+    top->graph().setVertexLabel(top->graph().lastVertex(), "end");
 
-    top->graph()->addEdge("begin", "end");
+    top->graph().addEdge("begin", "end");
 
-    top->graph()->removeVertex("end");
+    top->graph().removeVertex("end");
 
     // todo
     top->configureByGraph();

@@ -39,35 +39,6 @@ namespace model {
 namespace top {
 namespace graph {
 
-void Graph::addEdge(std::size_t v1, std::size_t v2) {
-    if (v1 > vertices().size() || v2 > vertices().size() || v1 == v2) {
-        throw std::invalid_argument(
-                "When adding an edge the start and end vertices must not be equal and the "
-                        "indices be contained in the vertices vector. v1=" + std::to_string(v1) + ", v2=" +
-                std::to_string(v2) + ", #vertices=" + std::to_string(vertices().size()));
-    }
-    auto &vertex1 = vertices_.at(v1);
-    auto &vertex2 = vertices_.at(v2);
-    vertex1.neighbors.push_back(&vertex2);
-    vertex2.neighbors.push_back(&vertex1);
-}
-
-void Graph::addEdge(std::size_t v1, const std::string &v2) {
-    if (v1 > vertices().size()) {
-        throw std::invalid_argument("the provided vertex index " + std::to_string(v1) +
-                                    " was larger than the current number of vertices (" +
-                                    std::to_string(vertices().size()) + ")!");
-    }
-    auto findIt = namedVertices.find(v2);
-    if (findIt == namedVertices.end()) {
-        throw std::invalid_argument("the provided vertex " + v2 + " is not contained in this graph.");
-    }
-    auto &vertex1 = vertices_.at(v1);
-    auto vertex2Ptr = findIt->second;
-    vertex1.neighbors.push_back(vertex2Ptr);
-    vertex2Ptr->neighbors.push_back(&vertex1);
-}
-
 void Graph::addEdge(const std::string &v1, const std::string &v2) {
     auto findIt1 = namedVertices.find(v1);
     auto findIt2 = namedVertices.find(v2);
@@ -77,70 +48,34 @@ void Graph::addEdge(const std::string &v1, const std::string &v2) {
     if (findIt2 == namedVertices.end()) {
         throw std::invalid_argument("the provided vertex " + v2 + " is not contained in this graph.");
     }
-    findIt1->second->neighbors.push_back(findIt2->second);
-    findIt2->second->neighbors.push_back(findIt1->second);
+    findIt1->second->addNeighbor(findIt2->second);
+    findIt2->second->addNeighbor(findIt1->second);
 }
 
-const std::vector<Vertex> &Graph::vertices() const {
+const Graph::vertices_t &Graph::vertices() const {
     return vertices_;
 }
 
-void Graph::addVertex(Vertex &&v) {
-    if (!v.name.empty()) {
-        if (namedVertices.find(v.name) != namedVertices.end()) {
-            throw std::invalid_argument("the named vertex \"" + v.name + "\" already existed!");
-        }
-        auto name = v.name;
-        vertices_.push_back(std::move(v));
-        namedVertices[name] = &vertices_.back();
-    } else {
-        vertices_.push_back(std::move(v));
+void Graph::removeVertex(vertices_t::iterator vertex) {
+    removeNeighborsEdges(vertex);
+    if (!vertex->label.empty()) {
+        namedVertices.erase(namedVertices.find(vertex->label));
     }
-}
-
-void Graph::addVertex(const Vertex &v) {
-    addVertex(Vertex(v));
-}
-
-void Graph::removeVertex(std::size_t index) {
-    if (index >= vertices_.size()) {
-        throw std::invalid_argument("the index provided exceeded the number of vertices in this graph");
-    }
-    auto it = vertices_.begin() + index;
-    removeNeighborsEdges(&*it);
-    if(!it->name.empty()) {
-        namedVertices.erase(namedVertices.find(it->name));
-    }
-    vertices_.erase(it);
+    vertices_.erase(vertex);
 }
 
 void Graph::removeParticle(std::size_t particleIndex) {
     auto v = vertexItForParticleIndex(particleIndex);
     if (v != vertices_.end()) {
-        removeNeighborsEdges(&*v);
-        if(!v->name.empty()) {
-            namedVertices.erase(namedVertices.find(v->name));
+        removeNeighborsEdges(v);
+        if(!v->label.empty()) {
+            namedVertices.erase(namedVertices.find(v->label));
         }
         vertices_.erase(v);
     } else {
         throw std::invalid_argument(
                 "the vertex corresponding to the particle with topology index " + std::to_string(particleIndex) +
                 " did not exist in the graph");
-    }
-}
-
-void Graph::removeVertex(Vertex *vertex) {
-    removeNeighborsEdges(vertex);
-    auto it = std::find(vertices_.begin(), vertices_.end(), *vertex);
-    if(!it->name.empty()) {
-        namedVertices.erase(namedVertices.find(it->name));
-    }
-    if (it != vertices_.end()) {
-        vertices_.erase(it);
-    } else {
-        std::stringstream ss;
-        ss << *vertex;
-        throw std::invalid_argument("the vertex " + ss.str() + " that was to be removed did not exist in the graph!");
     }
 }
 
@@ -152,44 +87,16 @@ void Graph::removeVertex(const std::string &name) {
     removeVertex(it->second);
 }
 
-void Graph::removeNeighborsEdges(Vertex *vertex) {
-    // need to remove myself from neighbors
-    for (auto neighbor : vertex->neighbors) {
-        auto it = std::find(neighbor->neighbors.begin(), neighbor->neighbors.end(), vertex);
-        // I should always be my neighbors neighbor.
-        assert(it != neighbor->neighbors.end());
-        neighbor->neighbors.erase(it);
+void Graph::removeNeighborsEdges(vertices_t::iterator vertex) {
+    for (auto neighbor : vertex->neighbors()) {
+        neighbor->removeNeighbor(vertex);
     }
 }
 
-void Graph::addEdge(const std::string &v1, std::size_t v2) {
-    addEdge(v2, v1);
-}
-
-void Graph::removeEdge(Vertex *v1, Vertex *v2) {
+void Graph::removeEdge(vertices_t::iterator v1, vertices_t::iterator v2) {
     assert(v1 != v2);
-    auto it1 = std::find(v1->neighbors.begin(), v1->neighbors.end(), v2);
-    assert(it1 != v1->neighbors.end());
-    auto it2 = std::find(v2->neighbors.begin(), v2->neighbors.end(), v1);
-    assert(it2 != v2->neighbors.end());
-    v1->neighbors.erase(it1);
-    v2->neighbors.erase(it2);
-}
-
-void Graph::removeEdge(std::size_t v1, std::size_t v2) {
-    assert(v1 < vertices_.size());
-    assert(v2 < vertices_.size());
-    removeEdge(&vertices_.at(v1), &vertices_.at(v2));
-}
-
-void Graph::removeEdge(std::size_t v1, const std::string &v2) {
-    assert(v1 < vertices_.size());
-    assert(namedVertices.find(v2) != namedVertices.end());
-    removeEdge(&vertices_.at(v1), namedVertices.at(v2));
-}
-
-void Graph::removeEdge(const std::string &v1, std::size_t v2) {
-    removeEdge(v2, v1);
+    v1->removeNeighbor(v2);
+    v2->removeNeighbor(v1);
 }
 
 void Graph::removeEdge(const std::string &v1, const std::string &v2) {
@@ -198,26 +105,45 @@ void Graph::removeEdge(const std::string &v1, const std::string &v2) {
     removeEdge(namedVertices.at(v1), namedVertices.at(v2));
 }
 
-const Vertex *const Graph::namedVertex(const std::string &name) const {
+const Vertex &Graph::namedVertex(const std::string &name) const {
     decltype(namedVertices.begin()) it;
-    if((it = namedVertices.find(name)) == namedVertices.end()) {
+    if ((it = namedVertices.find(name)) == namedVertices.end()) {
         throw std::invalid_argument("the requested vertex " + name + " did not exist.");
     }
-    return it->second;
+    return *it->second;
 }
 
-void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
-
-}
-
-const Vertex *const Graph::vertexForParticleIndex(std::size_t particleIndex) const {
+const Vertex &Graph::vertexForParticleIndex(std::size_t particleIndex) const {
     auto it = std::find_if(vertices_.begin(), vertices_.end(), [particleIndex](const Vertex &vertex) {
         return vertex.particleIndex == particleIndex;
     });
-    if(it != vertices_.end()) {
-        return &*it;
+    if (it != vertices_.end()) {
+        return *it;
+    } else {
+        throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
     }
-    return nullptr;
+}
+
+void Graph::setVertexLabel(vertices_t::iterator vertex, const std::string &label) {
+    auto it = namedVertices.find(label);
+    if (it == namedVertices.end()) {
+        namedVertices[label] = vertex;
+        vertex->label = label;
+    } else {
+        throw std::invalid_argument("the label " + label + " already existed in this topology!");
+    }
+}
+
+void Graph::addVertex(std::size_t particleIndex, const std::string &label) {
+    if (!label.empty()) {
+        if (namedVertices.find(label) != namedVertices.end()) {
+            throw std::invalid_argument("the named vertex \"" + label + "\" already existed!");
+        }
+        vertices_.emplace_back(particleIndex, vertices_.size(), label);
+        namedVertices[label] = --vertices().end();
+    } else {
+        vertices_.emplace_back(particleIndex, vertices_.size());
+    }
 }
 
 auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin()) {
@@ -230,15 +156,37 @@ auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vert
     return vertices_.end();
 }
 
-void Graph::setVertexLabel(std::size_t vertex, const std::string& label) {
-    auto it = namedVertices.find(label);
-    if(it == namedVertices.end()){
-        namedVertices[label] = &vertices_.at(vertex);
+void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
+    auto it1 = vertexItForParticleIndex(particleIndex1);
+    auto it2 = vertexItForParticleIndex(particleIndex2);
+    if(it1 != vertices_.end() && it2 != vertices_.end()) {
+        it1->addNeighbor(it2);
+        it2->addNeighbor(it1);
     } else {
-        throw std::invalid_argument("the label " + label + " already existed in this topology!");
+        throw std::invalid_argument("the particles indices did not exist...");
     }
 }
 
+void Graph::addEdge(vertices_t::iterator v1, vertices_t::iterator v2) {
+    v1->addNeighbor(v2);
+    v2->addNeighbor(v1);
+}
+
+Graph::vertices_t &Graph::vertices() {
+    return vertices_;
+}
+
+Vertex &Graph::namedVertex(const std::string &name) {
+    return *namedVertices.at(name);
+}
+
+std::list<readdy::model::top::graph::Vertex>::iterator Graph::firstVertex() {
+    return vertices().begin();
+}
+
+std::list<readdy::model::top::graph::Vertex>::iterator Graph::lastVertex() {
+    return --vertices().end();
+}
 
 }
 }
