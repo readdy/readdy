@@ -66,6 +66,7 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
         //
         // 2nd order potentials
         //
+        double mySecondOrderEnergy = 0.;
         if(secondOrder) {
             for (const auto &neighbor : *neighbors_it) {
                 auto &neighborEntry = data.entry_at(neighbor.idx);
@@ -74,13 +75,14 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
                     for (const auto &potential : potit->second) {
                         if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
                             readdy::model::Vec3 updateVec{0, 0, 0};
-                            potential->calculateForceAndEnergy(updateVec, energyUpdate, neighborEntry.pos - it->pos);
+                            potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, neighborEntry.pos - it->pos);
                             force += updateVec;
                         }
                     }
                 }
             }
         }
+        energyUpdate += 0.5 * mySecondOrderEnergy;
 
         it->force = force;
     }
@@ -157,10 +159,6 @@ void CPUDStateModel::calculateForces() {
         }
 
     }
-    /**
-     * We need to take 0.5*energy as we iterate over every particle-neighbor-pair twice.
-     */
-    pimpl->currentEnergy /= 2.0;
 }
 
 const std::vector<readdy::model::Vec3> CPUDStateModel::getParticlePositions() const {

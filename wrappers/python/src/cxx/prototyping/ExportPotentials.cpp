@@ -46,8 +46,8 @@ class PyPotentialO1 : public rdy_pot1 {
 public:
     using rdy_pot1::PotentialOrder1;
 
-    std::string describe() override {
-        return "User defined potential order 1 for type " + particleType;
+    void describe(std::ostream &os) const override {
+        os << "User defined potential order 1 for type " + particleType;
     }
 
     virtual double calculateEnergy(const rdy_vec &position) const override {
@@ -92,8 +92,8 @@ public:
 
     using rdy_pot2::PotentialOrder2;
 
-    std::string describe() override {
-        return "User defined potential for types " + particleType1 + " and " + particleType2;
+    void describe(std::ostream &os) const override {
+        os << "User defined potential for types " + particleType1 + " and " + particleType2;
     }
 
     virtual double getMaximalForce(double kbt) const noexcept override {
@@ -143,8 +143,8 @@ protected:
 void exportPotentials(py::module &proto) {
 
     py::class_<rdy_pot>(proto, "Potential");
-    py::class_<pot::CubePotential, rdy_pot>(proto, pot::getPotentialName<pot::CubePotential>().c_str())
-            .def("get_name", &pot::getPotentialName < pot::CubePotential > );
+    py::class_<pot::Cube, rdy_pot>(proto, pot::getPotentialName<pot::Cube>().c_str())
+            .def("get_name", &pot::getPotentialName < pot::Cube> );
     py::class_<pot::HarmonicRepulsion, rdy_pot>(proto, pot::getPotentialName<pot::HarmonicRepulsion>().c_str())
             .def("get_name", &pot::getPotentialName < pot::HarmonicRepulsion > );
     py::class_<pot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto,
@@ -169,7 +169,7 @@ void exportPotentials(py::module &proto) {
                  [](rdy_pot_factory &self, const std::string &particleType, double forceConstant,
                     const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                     bool considerParticleRadius) {
-                     return self.createPotential<pot::CubePotential>(particleType, forceConstant, origin, extent,
+                     return self.createPotential<pot::Cube>(particleType, forceConstant, origin, extent,
                                                                      considerParticleRadius).release();
                  }, rvp::take_ownership)
             .def("create_harmonic_repulsion",

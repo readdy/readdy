@@ -221,7 +221,7 @@ public:
                                      bool considerParticleRadius);
 
     /**
-     * Register a sphere potential, which is used to confine particles to a spherical volume. The energy function
+     * Register a sphere potential, which is used to confine particles inside a spherical volume. The energy function
      * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
      *
      * @param particleType the particle type for which the sphere potential should take effect
@@ -232,7 +232,20 @@ public:
      * @todo add a considerParticleRadius parameter
      */
     const short
-    registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
+    registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
+
+    /**
+     * Register a sphere potential, which is used to confine particles outside a spherical volume. The energy function
+     * increases quadratically with respect to the distance from the sphere edge, resulting in a harmonic repulsion.
+     * 
+     * @param particleType the particle type for which the potential should take effect
+     * @param forceConstant the force constant determines the strength of interaction, like a spring constant
+     * @param origin the center of the sphere
+     * @param radius the extent of the sphere
+     * @return a uuid with which the potential can be removed
+     */
+    const short
+    registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
 
     //----------------------
     // Order 2 potentials
@@ -284,10 +297,37 @@ public:
     * @param shift if it should be shifted or not
     * @param epsilon the well depth
     * @param sigma the distance at which the inter-particle potential is zero
+    * @return a uuid with which the potential can be removed again
     */
     const short
     registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
                                   double cutoff, bool shift, double epsilon, double sigma);
+
+    /**
+     * Constructs a potential that describes screened electrostatics with a hard-core repulsion between two
+     * particle types A and B (where possibly A = B) of the form
+     *
+     * \f[ V(r) = C \frac{\exp(-\kappa r)}{r} + D\left(\frac{\sigma}{r}\right)^n, \f]
+     *
+     * where the first term is the electrostatic interaction, the constant C has the dimensions of an energy times distance. Its value
+     * can be positive or negative and depends on the valencies of the particles (see Debye-Hueckel theory). \f$\kappa\f$ is
+     * the inverse screening depth. The second term is a hard-core repulsion, that ensures
+     * that the potential does not diverge to negative infinity.
+     *
+     * @param particleType1 particle type A
+     * @param particleType2 particle type B
+     * @param electrostaticStrength C
+     * @param inverseScreeningDepth \f$\kappa\f$
+     * @param repulsionStrength D
+     * @param repulsionDistance \f$\sigma\f$
+     * @param exponent n
+     * @param cutoff the distance from which no energies and forces are calculated further
+     * @return a uuid with which the potential can be removed again
+     */
+    const short
+    registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+                                            double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent,
+                                            double cutoff);
 
     void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr);
 

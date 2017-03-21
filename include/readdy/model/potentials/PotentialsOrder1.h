@@ -41,10 +41,10 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(potentials)
 
-class CubePotential : public PotentialOrder1 {
+class Cube : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    CubePotential(const std::string& particleType, double forceConstant, const Vec3& origin, const Vec3& extent,
+    Cube(const std::string& particleType, double forceConstant, const Vec3& origin, const Vec3& extent,
                   bool considerParticleRadius = true);
 
     const Vec3 &getOrigin() const;
@@ -61,15 +61,13 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept override;
 
-    std::string describe() override;
-
-    friend std::ostream &operator<<(std::ostream &os, const CubePotential &potential);
-
     double calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
     void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
+    void describe(std::ostream &os) const override;
 
 protected:
     friend class readdy::model::KernelContext;
@@ -82,28 +80,23 @@ protected:
     double particleRadius;
 };
 
-class SpherePotential : public PotentialOrder1 {
+// @todo modify this, so that you can choose whether the sphere keeps particles in or out
+class SphereIn : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SpherePotential(const std::string& particleType, double forceConstant, const Vec3& origin, double radius);
-
-    const Vec3 &getOrigin() const;
-    double getRadius() const;
-    double getForceConstant() const;
+    SphereIn(const std::string& particleType, double forceConstant, const Vec3& origin, double radius);
 
     virtual double getRelevantLengthScale() const noexcept override;
 
     virtual double getMaximalForce(double kbt) const noexcept override;
-
-    std::string describe() override;
-
-    friend std::ostream &operator<<(std::ostream &os, const SpherePotential &potential);
 
     double calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
     void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
+    void describe(std::ostream &os) const override;
 
 protected:
     friend class readdy::model::KernelContext;
@@ -114,13 +107,42 @@ protected:
     const double radius, forceConstant;
 };
 
+class SphereOut : public PotentialOrder1 {
+    using super = PotentialOrder1;
+public:
+    SphereOut(const std::string& particleType, double forceConstant, const Vec3& origin, double radius);
+
+    virtual double getRelevantLengthScale() const noexcept override;
+
+    virtual double getMaximalForce(double kbt) const noexcept override;
+
+    double calculateEnergy(const Vec3 &position) const override;
+
+    void calculateForce(Vec3 &force, const Vec3 &position) const override;
+
+    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
+    void describe(std::ostream &os) const override;
+protected:
+    friend class readdy::model::KernelContext;
+
+    void configureForType(const KernelContext *const ctx, const particle_type_type type) override;
+
+    const Vec3 origin;
+    const double radius, forceConstant;
+};
+
 template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<CubePotential, T>::value>::type * = 0) {
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<Cube, T>::value>::type * = 0) {
     return "Cube";
 }
 template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<SpherePotential, T>::value>::type* = 0) {
-    return "Sphere";
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphereIn, T>::value>::type* = 0) {
+    return "SphereIn";
+}
+template <typename T>
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphereOut, T>::value>::type* = 0) {
+    return "SphereOut";
 }
 
 NAMESPACE_END(potentials)

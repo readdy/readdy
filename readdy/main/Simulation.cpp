@@ -154,19 +154,36 @@ Simulation::registerLennardJonesPotential(const std::string &type1, const std::s
 
 
 const short
+Simulation::registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+                                                    double inverseScreeningDepth, double repulsionStrength, double repulsionDistance,
+                                                    unsigned int exponent, double cutoff) {
+    using potential_t = readdy::model::potentials::ScreenedElectrostatics;
+    ensureKernelSelected();
+    return pimpl->kernel->registerPotential<potential_t>(particleType1, particleType2, electrostaticStrength, inverseScreeningDepth,
+                                                         repulsionStrength, repulsionDistance, exponent, cutoff);
+}
+
+const short
 Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
                                  const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                                  bool considerParticleRadius) {
-    using potential_t = readdy::model::potentials::CubePotential;
+    using potential_t = readdy::model::potentials::Cube;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, extent,
                                                          considerParticleRadius);
 }
 
 const short
-Simulation::registerSpherePotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
-                                    double radius) {
-    using potential_t = readdy::model::potentials::SpherePotential;
+Simulation::registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
+                                      double radius) {
+    using potential_t = readdy::model::potentials::SphereIn;
+    ensureKernelSelected();
+    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
+}
+
+const short
+Simulation::registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius) {
+    using potential_t = readdy::model::potentials::SphereOut;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
@@ -190,6 +207,7 @@ ObservableHandle Simulation::registerObservable(readdy::model::observables::Obse
     return {uuid, nullptr};
 }
 
+
 void Simulation::deregisterObservable(const unsigned long uuid) {
     pimpl->observableConnections.erase(uuid);
     if (pimpl->observables.find(uuid) != pimpl->observables.end()) {
@@ -197,17 +215,16 @@ void Simulation::deregisterObservable(const unsigned long uuid) {
     }
 }
 
+
 void Simulation::deregisterObservable(const ObservableHandle &uuid) {
     deregisterObservable(uuid.getId());
 }
-
 
 std::vector<std::string> Simulation::getAvailableObservables() {
     ensureKernelSelected();
     // TODO compile a list of observables
     return {"hallo"};
 }
-
 
 Simulation &Simulation::operator=(Simulation &&rhs) = default;
 

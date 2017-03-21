@@ -31,6 +31,7 @@
 
 #include <readdy/model/KernelContext.h>
 #include <readdy/common/Utils.h>
+#include <readdy/model/_internal/Util.h>
 
 namespace readdy {
 namespace model {
@@ -412,7 +413,7 @@ void KernelContext::configure(bool debugOutput) {
             for (const auto& types : getAllOrder1Potentials()) {
                 log::debug("     * for type {}", find_pot_name(types.first));
                 for (auto pot : types.second) {
-                    log::debug("         * {}", pot->describe());
+                    log::debug("         * {}", _internal::util::to_string(pot));
                 }
             }
         }
@@ -422,7 +423,7 @@ void KernelContext::configure(bool debugOutput) {
                 log::debug("     * for types {} and {}", find_pot_name(types.first.t1),
                                       find_pot_name(types.first.t2));
                 for (auto pot : types.second) {
-                    log::debug("         * {}", pot->describe());
+                    log::debug("         * {}", _internal::util::to_string(pot));
                 }
             }
         }

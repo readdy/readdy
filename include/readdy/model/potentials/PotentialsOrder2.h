@@ -32,6 +32,7 @@
  */
 
 #pragma once
+
 #include <readdy/model/KernelContext.h>
 #include <ostream>
 #include "PotentialOrder2.h"
@@ -49,13 +50,11 @@ public:
 
     double getSumOfParticleRadiiSquared() const;
 
+    void describe(std::ostream &os) const override;
+
     double getForceConstant() const;
 
     virtual double getMaximalForce(double kbt) const noexcept override;
-
-    friend std::ostream &operator<<(std::ostream &os, const HarmonicRepulsion &repulsion);
-
-    std::string describe() override;
 
     double calculateEnergy(const Vec3 &x_ij) const override;
 
@@ -80,6 +79,7 @@ protected:
 class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
+    void describe(std::ostream &os) const override;
 
     class Configuration {
     public:
@@ -98,10 +98,6 @@ public:
                                      const double forceConstant, const Configuration &config);
 
     virtual double getMaximalForce(double kbt) const noexcept override;
-
-    friend std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmonic &harmonic);
-
-    std::string describe() override;
 
     double calculateEnergy(const Vec3 &x_ij) const override;
 
@@ -151,14 +147,12 @@ public:
      * @param sigma the distance at which the inter-particle potential is zero
      */
     LennardJones(const std::string &particleType1, const std::string &particleType2,
-                          unsigned int m, unsigned int n, double cutoffDistance,
-                          bool shift, double epsilon, double sigma);
+                 unsigned int m, unsigned int n, double cutoffDistance,
+                 bool shift, double epsilon, double sigma);
+
+    void describe(std::ostream &os) const override;
 
     virtual ~LennardJones();
-
-    virtual std::string describe() override;
-
-    friend std::ostream &operator<<(std::ostream &os, const LennardJones &potential);
 
     virtual double calculateEnergy(const Vec3 &x_ij) const override;
 
@@ -178,12 +172,49 @@ protected:
     double energy(double r) const;
 
     virtual void configureForTypes(const KernelContext *const context, particle_type_type type1, particle_type_type type2) override;
+
     double m, n;
     double cutoffDistance, cutoffDistanceSquared;
     bool shift; // V_LJ_trunc = V_LJ(r) - V_LJ(r_cutoff)
     double epsilon; // depth
     double sigma;
     double k;
+};
+
+class ScreenedElectrostatics : public PotentialOrder2 {
+    using super = PotentialOrder2;
+public:
+    ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+                           double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent, double cutoff);
+
+    virtual ~ScreenedElectrostatics();
+
+    virtual double calculateEnergy(const Vec3 &x_ij) const override;
+
+    virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
+
+    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+
+    virtual double getCutoffRadius() const override;
+
+    void describe(std::ostream &os) const override;
+
+    virtual double getCutoffRadiusSquared() const override;
+
+    double getMaximalForce(double kbt) const noexcept override;
+
+protected:
+    friend class readdy::model::KernelContext;
+
+    virtual void configureForTypes(const KernelContext *const context, particle_type_type type1, particle_type_type type2) override;
+
+    double electrostaticStrength;
+    double inverseScreeningDepth;
+    double repulsionStrength;
+    double repulsionDistance;
+    double exponent;
+    double cutoff;
+    double cutoffSquared;
 };
 
 template<typename T>
@@ -201,6 +232,12 @@ template<typename T>
 const std::string
 getPotentialName(typename std::enable_if<std::is_base_of<LennardJones, T>::value>::type * = 0) {
     return "LennardJones";
+}
+
+template<typename T>
+const std::string
+getPotentialName(typename std::enable_if<std::is_base_of<ScreenedElectrostatics, T>::value>::type * = 0) {
+    return "ScreenedElectrostatics";
 }
 NAMESPACE_END(potentials)
 NAMESPACE_END(model)

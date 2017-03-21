@@ -56,25 +56,23 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
     double energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it) {
         if (!it->is_deactivated()) {
+            readdy::model::Vec3 force{0, 0, 0};
+            const auto &myPos = it->position();
 
             //
             // 1st order potentials
             //
-
-            readdy::model::Vec3 force{0, 0, 0};
-            const auto &myPos = it->position();
-
             auto find_it = pot1.find(it->type);
             if (find_it != pot1.end()) {
                 for (const auto &potential : find_it->second) {
                     potential->calculateForceAndEnergy(force, energyUpdate, myPos);
                 }
             }
-
+            
             //
             // 2nd order potentials
             //
-
+            double mySecondOrderEnergy = 0.;
             for (const auto neighbor : *neighbors_it) {
                 auto &neighborEntry = data.entry_at(neighbor);
                 auto potit = pot2.find({it->type, neighborEntry.type});
@@ -84,12 +82,15 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
                     for (const auto &potential : potit->second) {
                         if (distSquared < potential->getCutoffRadiusSquared()) {
                             readdy::model::Vec3 updateVec{0, 0, 0};
-                            potential->calculateForceAndEnergy(updateVec, energyUpdate, x_ij);
+                            potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
                             force += updateVec;
                         }
                     }
                 }
             }
+            // The contribution of second order potentials must be halved since we parallelise over particles.
+            // Thus every particle pair potential is seen twice
+            energyUpdate += 0.5*mySecondOrderEnergy;
 
             it->force = force;
         }
@@ -194,10 +195,6 @@ void CPUStateModel::calculateForces() {
             pimpl->currentEnergy += f.get();
         }
     }
-    /**
-     * We need to take 0.5*energy as we iterate over every particle-neighbor-pair twice.
-     */
-    pimpl->currentEnergy /= 2.0;
 
     for (auto t_it = pimpl->topologies.cbegin(); t_it != pimpl->topologies.cend(); ++t_it) {
         const auto &top = *t_it;

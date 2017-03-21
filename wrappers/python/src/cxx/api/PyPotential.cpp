@@ -69,8 +69,8 @@ void PotentialOrder2Wrapper::configureForTypes(const model::KernelContext *const
                                                particle_type_type type2) {
 }
 
-std::string PotentialOrder2Wrapper::describe() {
-    return "Python wrapped potential order 2";
+void PotentialOrder2Wrapper::describe(std::ostream &os) const {
+    os << "Python wrapped potential order 2";
 }
 
 

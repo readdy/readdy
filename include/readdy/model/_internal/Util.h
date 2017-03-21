@@ -34,6 +34,7 @@
 
 #include <set>
 #include <readdy/model/KernelContext.h>
+#include <sstream>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -68,6 +69,13 @@ transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap,
     }
     return result;
 };
+
+template<typename T>
+std::string to_string(const T* const ptr) {
+    std::stringstream ss;
+    ss << *ptr;
+    return ss.str();
+}
 
 NAMESPACE_END(util)
 NAMESPACE_END(_internal)
