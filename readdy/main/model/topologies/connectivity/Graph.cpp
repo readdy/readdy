@@ -33,6 +33,7 @@
 #include <readdy/model/topologies/connectivity/Graph.h>
 #include <algorithm>
 #include <sstream>
+#include <unordered_set>
 
 namespace readdy {
 namespace model {
@@ -68,7 +69,7 @@ void Graph::removeParticle(std::size_t particleIndex) {
     auto v = vertexItForParticleIndex(particleIndex);
     if (v != vertices_.end()) {
         removeNeighborsEdges(v);
-        if(!v->label.empty()) {
+        if (!v->label.empty()) {
             namedVertices.erase(namedVertices.find(v->label));
         }
         vertices_.erase(v);
@@ -139,10 +140,10 @@ void Graph::addVertex(std::size_t particleIndex, const std::string &label) {
         if (namedVertices.find(label) != namedVertices.end()) {
             throw std::invalid_argument("the named vertex \"" + label + "\" already existed!");
         }
-        vertices_.emplace_back(particleIndex, vertices_.size(), label);
+        vertices_.emplace_back(particleIndex, label);
         namedVertices[label] = --vertices().end();
     } else {
-        vertices_.emplace_back(particleIndex, vertices_.size());
+        vertices_.emplace_back(particleIndex);
     }
 }
 
@@ -150,7 +151,7 @@ auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vert
     auto it = std::find_if(vertices_.begin(), vertices_.end(), [particleIndex](const Vertex &vertex) {
         return vertex.particleIndex == particleIndex;
     });
-    if(it != vertices_.end()) {
+    if (it != vertices_.end()) {
         return it;
     }
     return vertices_.end();
@@ -159,7 +160,7 @@ auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vert
 void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
     auto it1 = vertexItForParticleIndex(particleIndex1);
     auto it2 = vertexItForParticleIndex(particleIndex2);
-    if(it1 != vertices_.end() && it2 != vertices_.end()) {
+    if (it1 != vertices_.end() && it2 != vertices_.end()) {
         it1->addNeighbor(it2);
         it2->addNeighbor(it1);
     } else {
@@ -186,6 +187,25 @@ std::list<readdy::model::top::graph::Vertex>::iterator Graph::firstVertex() {
 
 std::list<readdy::model::top::graph::Vertex>::iterator Graph::lastVertex() {
     return --vertices().end();
+}
+
+bool Graph::isConnected() {
+    std::for_each(vertices_.begin(), vertices_.end(), [](Vertex &v) { v.visited = false; });
+    std::vector<vertices_t::iterator> unvisited;
+    unvisited.push_back(vertices_.begin());
+    std::size_t n_visited = 0;
+    while(!unvisited.empty()) {
+        auto vertex = unvisited.back();
+        unvisited.pop_back();
+        vertex->visited = true;
+        ++n_visited;
+        for(auto neighbor : vertex->neighbors()) {
+            if(!neighbor->visited) {
+                unvisited.push_back(neighbor);
+            }
+        }
+    }
+    return n_visited == vertices_.size();
 }
 
 }

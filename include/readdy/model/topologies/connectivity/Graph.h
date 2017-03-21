@@ -93,6 +93,8 @@ public:
 
     void removeParticle(std::size_t particleIndex);
 
+    bool isConnected();
+
 private:
     vertices_t vertices_;
     std::unordered_map<std::string, vertices_t::iterator> namedVertices{};

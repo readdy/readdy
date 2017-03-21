@@ -45,6 +45,11 @@ NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(graph)
 
 /**
+ * Forward declaration of graph.
+ */
+class Graph;
+
+/**
  * Struct representing a vertex in a topology-connectivity-graph
  */
 class Vertex {
@@ -63,8 +68,8 @@ public:
      * constructs a vertex to a graph
      * @param particleIndex the particle index this vertex belongs to
      */
-    Vertex(std::size_t particleIndex, std::size_t index, const std::string& label = "")
-            : particleIndex(particleIndex), index(index), label(label) {}
+    Vertex(std::size_t particleIndex, const std::string& label = "")
+            : particleIndex(particleIndex), label(label) {}
 
     Vertex(const Vertex&) = delete;
     Vertex& operator=(const Vertex&) = delete;
@@ -84,10 +89,6 @@ public:
      * particle index in the topology this vertex belongs to
      */
     std::size_t particleIndex;
-    /**
-     * the vertex' index (used in neighbors)
-     */
-    std::size_t index;
 
     bool operator==(const Vertex &rhs) const {
         return particleIndex == rhs.particleIndex;
@@ -129,6 +130,12 @@ public:
     }
 
 private:
+    friend class Graph;
+
+    /**
+     * flag if this vertex has been visited (for BFS/DFS)
+     */
+    bool visited;
     /**
      * the edges (i.e., pointers to neighboring vertices)
      */

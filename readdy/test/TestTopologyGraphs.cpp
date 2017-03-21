@@ -135,17 +135,18 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     EXPECT_EQ(top->graph().vertices().size(), 4);
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();
+    EXPECT_FALSE(top->graph().isConnected());
     top->graph().addEdge(it++, it2++);
+    EXPECT_FALSE(top->graph().isConnected());
     top->graph().addEdge(it++, it2++);
+    EXPECT_FALSE(top->graph().isConnected());
     top->graph().addEdge(it++, it2++);
+    EXPECT_TRUE(top->graph().isConnected());
 
     top->graph().setVertexLabel(top->graph().firstVertex(), "begin");
     top->graph().setVertexLabel(top->graph().lastVertex(), "end");
 
     top->graph().addEdge("begin", "end");
 
-    top->graph().removeVertex("end");
-
-    // todo
     top->configureByGraph();
 }
