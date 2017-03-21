@@ -40,8 +40,6 @@
 #include "TorsionPotential.h"
 #include "TopologyActionFactory.h"
 
-#include "connectivity/Graph.h"
-
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
@@ -59,7 +57,7 @@ class Topology {
 public:
     using particles_t = std::vector<std::size_t>;
 
-    Topology(particles_t &&, const graph::PotentialConfiguration* const config, bool withGraph = true);
+    Topology(particles_t &&particles);
 
     Topology(const Topology &) = delete;
 
@@ -104,20 +102,11 @@ public:
 
     void addTorsionPotential(std::unique_ptr<TorsionPotential> &&);
 
-    graph::Graph* const graph();
-
-    const graph::Graph* const graph() const;
-
-    void configureByGraph();
-
 protected:
     particles_t particles;
     std::vector<std::unique_ptr<BondedPotential>> bondedPotentials;
     std::vector<std::unique_ptr<AnglePotential>> anglePotentials;
     std::vector<std::unique_ptr<TorsionPotential>> torsionPotentials;
-
-    std::unique_ptr<graph::Graph> graph_;
-    const graph::PotentialConfiguration* const config;
 };
 
 NAMESPACE_END(top)

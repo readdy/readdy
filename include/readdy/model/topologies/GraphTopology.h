@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,51 +21,47 @@
 
 
 /**
- * The KernelStateModel keeps information about the current state of the system, like particle positions and forces.
- * A listener can be attached, that fires when the time step changes.
+ * << detailed description >>
  *
- * @file KernelStateModel.h
- * @brief Defines the KernelStateModel, which gives information about the system's current state.
+ * @file GraphTopology.h
+ * @brief << brief description >>
  * @author clonker
- * @date 18/04/16
+ * @date 21.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
-#include <vector>
-#include <readdy/model/topologies/GraphTopology.h>
-#include "Particle.h"
-#include "Vec3.h"
+
+#include <readdy/common/macros.h>
+
+#include "Topology.h"
+#include "connectivity/Graph.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
 
-class KernelStateModel {
+class GraphTopology : public Topology {
 public:
-    virtual ~KernelStateModel() = default;
+    GraphTopology(particles_t &&, const graph::PotentialConfiguration *const config);
 
-    // const accessor methods
-    virtual const std::vector<Vec3> getParticlePositions() const = 0;
+    GraphTopology(GraphTopology&&) = delete;
+    GraphTopology& operator=(GraphTopology&&) = delete;
+    GraphTopology(const GraphTopology&) = delete;
+    GraphTopology& operator=(const GraphTopology&) = delete;
 
-    virtual const std::vector<Particle> getParticles() const = 0;
+    graph::Graph* const graph();
 
-    virtual void updateNeighborList() = 0;
+    const graph::Graph* const graph() const;
 
-    virtual void clearNeighborList() = 0;
+    void configureByGraph();
 
-    virtual void calculateForces() = 0;
-
-    virtual void addParticle(const Particle &p) = 0;
-
-    virtual void addParticles(const std::vector<Particle> &p) = 0;
-
-    virtual readdy::model::top::GraphTopology *const addTopology(const std::vector<TopologyParticle> &particles) = 0;
-
-    virtual void removeParticle(const Particle &p) = 0;
-
-    virtual void removeAllParticles() = 0;
-
-    virtual double getEnergy() const = 0;
+private:
+    std::unique_ptr<graph::Graph> graph_;
+    const graph::PotentialConfiguration* const config;
 };
 
+
+NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

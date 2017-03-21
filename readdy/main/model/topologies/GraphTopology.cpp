@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,51 +21,45 @@
 
 
 /**
- * The KernelStateModel keeps information about the current state of the system, like particle positions and forces.
- * A listener can be attached, that fires when the time step changes.
+ * << detailed description >>
  *
- * @file KernelStateModel.h
- * @brief Defines the KernelStateModel, which gives information about the system's current state.
+ * @file GraphTopology.cpp
+ * @brief << brief description >>
  * @author clonker
- * @date 18/04/16
+ * @date 21.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
-#include <vector>
 #include <readdy/model/topologies/GraphTopology.h>
-#include "Particle.h"
-#include "Vec3.h"
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
 
-class KernelStateModel {
-public:
-    virtual ~KernelStateModel() = default;
+namespace readdy {
+namespace model {
+namespace top {
 
-    // const accessor methods
-    virtual const std::vector<Vec3> getParticlePositions() const = 0;
+GraphTopology::GraphTopology(Topology::particles_t &&particles, const graph::PotentialConfiguration *const config)
+        : Topology(std::move(particles)), config(config), graph_(std::make_unique<graph::Graph>()) {
+    std::for_each(this->particles.begin(), this->particles.end(),
+                  [this](std::size_t id) { graph()->addVertex({id}); });
+}
 
-    virtual const std::vector<Particle> getParticles() const = 0;
+graph::Graph *const GraphTopology::graph() {
+    return graph_.get();
+}
 
-    virtual void updateNeighborList() = 0;
+const graph::Graph *const GraphTopology::graph() const {
+    return graph_.get();
+}
 
-    virtual void clearNeighborList() = 0;
+void GraphTopology::configureByGraph() {
+    if (!graph()) {
+        log::critical("This should not be called if the topology was requested without graph!");
+    } else {
 
-    virtual void calculateForces() = 0;
+    }
+}
 
-    virtual void addParticle(const Particle &p) = 0;
+}
+}
+}
 
-    virtual void addParticles(const std::vector<Particle> &p) = 0;
-
-    virtual readdy::model::top::GraphTopology *const addTopology(const std::vector<TopologyParticle> &particles) = 0;
-
-    virtual void removeParticle(const Particle &p) = 0;
-
-    virtual void removeAllParticles() = 0;
-
-    virtual double getEnergy() const = 0;
-};
-
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)

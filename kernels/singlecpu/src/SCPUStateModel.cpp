@@ -41,7 +41,7 @@ struct SCPUStateModel::Impl {
     double currentEnergy = 0;
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
-    std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies;
+    std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies;
     SCPUStateModel::topology_action_factory const* topologyActionFactory;
     readdy::model::KernelContext const *context;
     // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
@@ -170,9 +170,9 @@ void SCPUStateModel::removeAllParticles() {
     pimpl->particleData->clear();
 }
 
-readdy::model::top::Topology *const SCPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles, bool withGraph) {
+readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = pimpl->particleData->addTopologyParticles(particles);
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids), &pimpl->context->topologyPotentialConfiguration(), withGraph));
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), &pimpl->context->topologyPotentialConfiguration()));
     return pimpl->topologies.back().get();
 }
 

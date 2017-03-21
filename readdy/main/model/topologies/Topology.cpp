@@ -37,13 +37,7 @@ namespace model {
 namespace top {
 readdy::model::top::Topology::~Topology() = default;
 
-Topology::Topology(Topology::particles_t &&p, const graph::PotentialConfiguration *const config, bool withGraph)
-        : particles(std::move(p)), graph_(withGraph ? std::make_unique<graph::Graph>() : nullptr), config(config) {
-    if (withGraph) {
-        std::for_each(this->particles.begin(), this->particles.end(),
-                      [this](std::size_t id) { graph()->addVertex({id}); });
-    }
-}
+Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) { }
 
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
@@ -90,21 +84,6 @@ void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
     bondedPotentials.push_back(std::move(pot));
 }
 
-graph::Graph *const Topology::graph() {
-    return graph_.get();
-}
-
-const graph::Graph *const Topology::graph() const {
-    return graph_.get();
-}
-
-void Topology::configureByGraph() {
-    if (!graph()) {
-        log::critical("This should not be called if the topology was requested without graph!");
-    } else {
-
-    }
-}
 
 }
 }

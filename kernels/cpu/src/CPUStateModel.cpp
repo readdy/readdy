@@ -41,7 +41,7 @@ namespace cpu {
 namespace thd = readdy::util::thread;
 
 using entries_it = CPUStateModel::data_t::entries_t::iterator;
-using topologies_it = std::vector<std::unique_ptr<readdy::model::top::Topology>>::const_iterator;
+using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
 using neighbors_it = decltype(std::declval<readdy::kernel::cpu::model::CPUNeighborList>().cbegin());
 using pot1Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder1Potentials());
 using pot2Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder2Potentials());
@@ -123,7 +123,7 @@ struct CPUStateModel::Impl {
     std::unique_ptr<readdy::kernel::cpu::model::CPUNeighborList> neighborList;
     double currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
-    std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies{};
+    std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords {};
     std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts {};
@@ -297,10 +297,10 @@ model::CPUNeighborList *const CPUStateModel::getNeighborList() {
     return pimpl->neighborList.get();
 }
 
-readdy::model::top::Topology *const
-CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles, bool withGraph) {
+readdy::model::top::GraphTopology *const
+CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = pimpl->data<false>().addTopologyParticles(particles);
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids), &pimpl->context->topologyPotentialConfiguration(), withGraph));
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), &pimpl->context->topologyPotentialConfiguration()));
     return pimpl->topologies.back().get();
 }
 

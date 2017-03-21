@@ -81,8 +81,8 @@ public:
 
     virtual void clearNeighborList() override;
 
-    virtual readdy::model::top::Topology *const
-    addTopology(const std::vector<readdy::model::TopologyParticle> &particles, bool withGraph=true) override;
+    virtual readdy::model::top::GraphTopology *const
+    addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords();
 
