@@ -304,7 +304,7 @@ public:
                                   double cutoff, bool shift, double epsilon, double sigma);
 
     /**
-     * Constructs a potential that describes shielded electrostatics with a hard-core repulsion between two
+     * Constructs a potential that describes screened electrostatics with a hard-core repulsion between two
      * particle types A and B (where possibly A = B) of the form
      *
      * \f[ V(r) = C \frac{\exp(-\kappa r)}{r} + D\left(\frac{\sigma}{r}\right)^n, \f]
@@ -325,7 +325,7 @@ public:
      * @return a uuid with which the potential can be removed again
      */
     const short
-    registerShieldedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+    registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
                                             double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent,
                                             double cutoff);
 

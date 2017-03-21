@@ -181,13 +181,13 @@ protected:
     double k;
 };
 
-class ShieldedElectrostatics : public PotentialOrder2 {
+class ScreenedElectrostatics : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    ShieldedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+    ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
                            double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent, double cutoff);
 
-    virtual ~ShieldedElectrostatics();
+    virtual ~ScreenedElectrostatics();
 
     virtual double calculateEnergy(const Vec3 &x_ij) const override;
 
@@ -236,8 +236,8 @@ getPotentialName(typename std::enable_if<std::is_base_of<LennardJones, T>::value
 
 template<typename T>
 const std::string
-getPotentialName(typename std::enable_if<std::is_base_of<ShieldedElectrostatics, T>::value>::type * = 0) {
-    return "ShieldedElectrostatics";
+getPotentialName(typename std::enable_if<std::is_base_of<ScreenedElectrostatics, T>::value>::type * = 0) {
+    return "ScreenedElectrostatics";
 }
 NAMESPACE_END(potentials)
 NAMESPACE_END(model)

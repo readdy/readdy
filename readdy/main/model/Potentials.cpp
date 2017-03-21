@@ -495,7 +495,7 @@ void LennardJones::describe(std::ostream &os) const {
 LennardJones::~LennardJones() = default;
 
 
-ShieldedElectrostatics::ShieldedElectrostatics(const std::string &particleType1, const std::string &particleType2,
+ScreenedElectrostatics::ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2,
                                                double electrostaticStrength, double inverseScreeningDepth,
                                                double repulsionStrength, double repulsionDistance, unsigned int exponent,
                                                double cutoff)
@@ -517,39 +517,39 @@ ShieldedElectrostatics::ShieldedElectrostatics(const std::string &particleType1,
 }
 
 void
-ShieldedElectrostatics::configureForTypes(const KernelContext *const context, particle_type_type type1,
+ScreenedElectrostatics::configureForTypes(const KernelContext *const context, particle_type_type type1,
                                           particle_type_type type2) {
 
 }
 
-double ShieldedElectrostatics::getMaximalForce(double kbt) const noexcept {
+double ScreenedElectrostatics::getMaximalForce(double kbt) const noexcept {
     return 0;
 }
 
-double ShieldedElectrostatics::getCutoffRadius() const {
+double ScreenedElectrostatics::getCutoffRadius() const {
     return cutoff;
 }
 
-double ShieldedElectrostatics::getCutoffRadiusSquared() const {
+double ScreenedElectrostatics::getCutoffRadiusSquared() const {
     return cutoffSquared;
 }
 
-void ShieldedElectrostatics::describe(std::ostream &os) const {
-    os << getPotentialName<ShieldedElectrostatics>() << "[electrostaticStrength: " << electrostaticStrength
+void ScreenedElectrostatics::describe(std::ostream &os) const {
+    os << getPotentialName<ScreenedElectrostatics>() << "[electrostaticStrength: " << electrostaticStrength
        << " inverseScreeningDepth: " << inverseScreeningDepth
        << " repulsionStrength: " << repulsionStrength << " repulsionDistance: " << repulsionDistance
        << " exponent: " << exponent
        << " cutoff: " << cutoff << "]";
 }
 
-double ShieldedElectrostatics::calculateEnergy(const Vec3 &x_ij) const {
+double ScreenedElectrostatics::calculateEnergy(const Vec3 &x_ij) const {
     const double distance = x_ij.norm();
     double result = electrostaticStrength * std::exp(-inverseScreeningDepth * distance) / distance;
     result += repulsionStrength * std::pow(repulsionDistance / distance, exponent);
     return result;
 }
 
-void ShieldedElectrostatics::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
+void ScreenedElectrostatics::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
     const double distance = x_ij.norm();
     double forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
     forceFactor *= (inverseScreeningDepth / distance + 1. / std::pow(distance, 2));
@@ -557,12 +557,12 @@ void ShieldedElectrostatics::calculateForce(Vec3 &force, const Vec3 &x_ij) const
     force += forceFactor * (- 1. * x_ij / distance);
 }
 
-void ShieldedElectrostatics::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
+void ScreenedElectrostatics::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
     calculateForce(force, x_ij);
     energy += calculateEnergy(x_ij);
 }
 
-ShieldedElectrostatics::~ShieldedElectrostatics() = default;
+ScreenedElectrostatics::~ScreenedElectrostatics() = default;
 
 }
 }

@@ -154,10 +154,10 @@ Simulation::registerLennardJonesPotential(const std::string &type1, const std::s
 
 
 const short
-Simulation::registerShieldedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+Simulation::registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
                                                     double inverseScreeningDepth, double repulsionStrength, double repulsionDistance,
                                                     unsigned int exponent, double cutoff) {
-    using potential_t = readdy::model::potentials::ShieldedElectrostatics;
+    using potential_t = readdy::model::potentials::ScreenedElectrostatics;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType1, particleType2, electrostaticStrength, inverseScreeningDepth,
                                                          repulsionStrength, repulsionDistance, exponent, cutoff);

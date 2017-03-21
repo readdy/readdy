@@ -181,7 +181,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
 }
 
-TEST_P(TestPotentials, ShieldedElectrostatics) {
+TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto &ctx = kernel->getKernelContext();
     ctx.registerParticleType("A", 1.0, 1.0);
     ctx.setBoxSize(10, 10, 10);
@@ -194,7 +194,7 @@ TEST_P(TestPotentials, ShieldedElectrostatics) {
     double sigma = 1.;
     double cutoff = 8.;
     unsigned int exponent = 6;
-    kernel->registerPotential<readdy::model::potentials::ShieldedElectrostatics>("A", "A", electrostaticStrength, 1. / screeningDepth,
+    kernel->registerPotential<readdy::model::potentials::ScreenedElectrostatics>("A", "A", electrostaticStrength, 1. / screeningDepth,
                                                                                  repulsionStrength, sigma, exponent, cutoff);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);

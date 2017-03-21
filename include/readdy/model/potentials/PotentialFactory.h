@@ -90,11 +90,11 @@ public:
         return new LennardJones(type1, type2, m, n, cutoff, shift, epsilon, sigma);
     }
 
-    ShieldedElectrostatics *
-    createShieldedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
+    ScreenedElectrostatics *
+    createScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
                                  double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent,
                                  double cutoff) const {
-        return new ShieldedElectrostatics(particleType1, particleType2, electrostaticStrength,
+        return new ScreenedElectrostatics(particleType1, particleType2, electrostaticStrength,
                                           inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
     };
 
@@ -130,7 +130,7 @@ READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, WeakInteractionPiecewiseHarmo
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, LennardJones)
 
-READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, ShieldedElectrostatics)
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, ScreenedElectrostatics)
 
 NAMESPACE_END(potentials)
 NAMESPACE_END(model)
