@@ -52,7 +52,7 @@ const CosineDihedralPotential::dihedrals_t &CosineDihedralPotential::getDihedral
 }
 
 double CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
-                                                const CosineDihedralPotential::Dihedral &dihedral) const {
+                                                const dihedral_t &dihedral) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm = x_jk.norm();
     x_jk_norm = x_jk_norm < SMALL ? SMALL : x_jk_norm;
@@ -69,8 +69,9 @@ double CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_
 }
 
 void
-CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
-                                        const CosineDihedralPotential::Dihedral &dih) const {
+CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj,
+                                        const Vec3 &x_kl,
+                                        const dihedral_t &dih) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm_squared = x_jk.normSquared();
     x_jk_norm_squared = x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared;
@@ -114,9 +115,9 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     const auto dcos_phi_prefactor = 1. / n_m_norm;
     const auto dcos_phi_dxi = dcos_phi_prefactor * (n * dm_dxi - (cos_phi * n_norm) * dm_norm_dxi);
     const auto dcos_phi_dxj = dcos_phi_prefactor * (n * dm_dxj + m * dn_dxj - (cos_phi * n_norm) * dm_norm_dxj -
-                                                  (cos_phi * m_norm) * dn_norm_dxj);
+                                                    (cos_phi * m_norm) * dn_norm_dxj);
     const auto dcos_phi_dxk = dcos_phi_prefactor * (n * dm_dxk + m * dn_dxk - (cos_phi * n_norm) * dm_norm_dxk -
-                                                  (cos_phi * m_norm) * dn_norm_dxk);
+                                                    (cos_phi * m_norm) * dn_norm_dxk);
     const auto dcos_phi_dxl = dcos_phi_prefactor * (m * dn_dxl - (cos_phi * m_norm) * dn_norm_dxl);
 
     const Vec3Tensor<3> dmxn_dxi{{{dm_dxi.at(0).cross(n), dm_dxi.at(1).cross(n), dm_dxi.at(2).cross(n)}}};
@@ -130,9 +131,10 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
 
     const auto dsin_phi_prefactor = (1. / (n_m_norm * x_jk_norm));
     const auto dsin_phi_dxi = dsin_phi_prefactor * (x_jk * dmxn_dxi - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxi);
-    const auto dsin_phi_dxj = dsin_phi_prefactor * (x_jk * dmxn_dxj - 1 * m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxj -
-                                                    (sin_phi * m_norm * x_jk_norm) * dn_norm_dxj +
-                                                    (sin_phi * n_m_norm / x_jk_norm) * x_jk);
+    const auto dsin_phi_dxj =
+            dsin_phi_prefactor * (x_jk * dmxn_dxj - 1 * m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxj -
+                                  (sin_phi * m_norm * x_jk_norm) * dn_norm_dxj +
+                                  (sin_phi * n_m_norm / x_jk_norm) * x_jk);
     const auto dsin_phi_dxk = dsin_phi_prefactor *
                               (x_jk * dmxn_dxk + m_x_n - (sin_phi * n_norm * x_jk_norm) * dm_norm_dxk -
                                (sin_phi * m_norm * x_jk_norm) * dn_norm_dxk - (sin_phi * n_m_norm / x_jk_norm) * x_jk);
@@ -157,8 +159,8 @@ CosineDihedralPotential::createForceAndEnergyAction(const TopologyActionFactory 
     return factory->createCalculateCosineDihedralPotential(this);
 }
 
-CosineDihedralPotential::Dihedral::Dihedral(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant,
-                                            double multiplicity, double equilibriumAngle)
+DihedralConfiguration::DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant,
+                                             double multiplicity, double equilibriumAngle)
         : idx1(idx1), idx2(idx2), idx3(idx3), idx4(idx4), forceConstant(forceConstant),
           phi_0(equilibriumAngle), multiplicity(multiplicity) {
     if (equilibriumAngle > readdy::util::numeric::pi() || equilibriumAngle < -readdy::util::numeric::pi()) {

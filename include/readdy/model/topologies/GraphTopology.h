@@ -43,7 +43,10 @@ NAMESPACE_BEGIN(top)
 
 class GraphTopology : public Topology {
 public:
-    GraphTopology(particles_t &&, const graph::PotentialConfiguration *const config);
+    GraphTopology(const particles_t& particles, const std::vector<particle_type_type> &types,
+                  const graph::PotentialConfiguration *const config);
+
+    virtual ~GraphTopology() = default;
 
     GraphTopology(GraphTopology &&) = delete;
 
@@ -57,11 +60,15 @@ public:
 
     const graph::Graph &graph() const;
 
-    void configureByGraph();
+    void configure();
 
     void validate();
 
+    virtual void permuteIndices(const std::vector<std::size_t> &permutation) override;
+
 private:
+    using vertex_ptr = graph::Graph::vertices_t::iterator;
+
     std::unique_ptr<graph::Graph> graph_;
     const graph::PotentialConfiguration *const config;
 };

@@ -65,6 +65,8 @@ public:
 
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
+    virtual readdy::model::Particle getParticleForIndex(const std::size_t index) const override;
+
     virtual double getEnergy() const override;
 
     virtual void increaseEnergy(double increase);

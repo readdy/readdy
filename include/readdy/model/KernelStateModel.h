@@ -48,6 +48,8 @@ public:
 
     virtual const std::vector<Particle> getParticles() const = 0;
 
+    virtual Particle getParticleForIndex(const std::size_t index) const = 0;
+
     virtual void updateNeighborList() = 0;
 
     virtual void clearNeighborList() = 0;

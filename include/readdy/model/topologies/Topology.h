@@ -33,7 +33,7 @@
 #pragma once
 
 #include <memory>
-#include <unordered_set>
+#include <vector>
 
 #include "BondedPotential.h"
 #include "AnglePotential.h"
@@ -58,6 +58,8 @@ public:
     using particles_t = std::vector<std::size_t>;
 
     Topology(particles_t &&particles);
+
+    Topology(const particles_t &particles);
 
     Topology(const Topology &) = delete;
 
@@ -101,6 +103,8 @@ public:
     };
 
     void addTorsionPotential(std::unique_ptr<TorsionPotential> &&);
+
+    virtual void permuteIndices(const std::vector<std::size_t> &permutation);
 
 protected:
     particles_t particles;

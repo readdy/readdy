@@ -92,6 +92,8 @@ public:
 
     const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &reactionCounts() const;
 
+    virtual readdy::model::Particle getParticleForIndex(const std::size_t index) const override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;

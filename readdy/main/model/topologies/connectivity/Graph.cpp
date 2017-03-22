@@ -135,15 +135,15 @@ void Graph::setVertexLabel(vertices_t::iterator vertex, const std::string &label
     }
 }
 
-void Graph::addVertex(std::size_t particleIndex, const std::string &label) {
+void Graph::addVertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label) {
     if (!label.empty()) {
         if (namedVertices.find(label) != namedVertices.end()) {
             throw std::invalid_argument("the named vertex \"" + label + "\" already existed!");
         }
-        vertices_.emplace_back(particleIndex, label);
+        vertices_.emplace_back(particleIndex, particleType, label);
         namedVertices[label] = --vertices().end();
     } else {
-        vertices_.emplace_back(particleIndex);
+        vertices_.emplace_back(particleIndex, particleType);
     }
 }
 

@@ -39,6 +39,8 @@ readdy::model::top::Topology::~Topology() = default;
 
 Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) { }
 
+Topology::Topology(const Topology::particles_t &particles) : particles(particles){}
+
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
 }
@@ -84,6 +86,11 @@ void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
     bondedPotentials.push_back(std::move(pot));
 }
 
+void Topology::permuteIndices(const std::vector<std::size_t> &permutation) {
+    std::transform(particles.begin(), particles.end(), particles.begin(), [&permutation](std::size_t index) {
+        return permutation[index];
+    });
+}
 
 }
 }

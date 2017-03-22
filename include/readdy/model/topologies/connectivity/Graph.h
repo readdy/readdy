@@ -73,7 +73,7 @@ public:
 
     const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
 
-    void addVertex(std::size_t particleIndex, const std::string &label = "");
+    void addVertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label = "");
 
     void setVertexLabel(vertices_t::iterator vertex, const std::string &label);
 

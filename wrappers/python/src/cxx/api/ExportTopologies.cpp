@@ -54,7 +54,6 @@ void exportTopologies(py::module &m) {
             .def("get_id", [](topology_particle& self) {return self.getId();});
     py::class_<topology>(m, "Topology")
             .def("get_n_particles", &topology::getNParticles)
-            .def("get_particles", [](const topology& slfe) {return slfe.getParticles();})
             .def("add_harmonic_angle_potential", [](topology &self, const harmonic_angle::angles_t &angles) {
                 self.addAnglePotential<harmonic_angle>(angles);
             })
@@ -67,16 +66,16 @@ void exportTopologies(py::module &m) {
     py::class_<topology_potential>(m, "TopologyPotential");
     {
         py::class_<bonded_potential, topology_potential>(m, "BondedPotential");
-        py::class_<harmonic_bond::Bond>(m, "HarmonicBondPotentialBond")
+        py::class_<harmonic_bond::bond_t>(m, "HarmonicBondPotentialBond")
                 .def(py::init<std::size_t, std::size_t, double, double>())
-                .def_readonly("idx1", &harmonic_bond::Bond::idx1)
-                .def_readonly("idx2", &harmonic_bond::Bond::idx2)
-                .def_readonly("length", &harmonic_bond::Bond::length)
-                .def_readonly("force_constant", &harmonic_bond::Bond::forceConstant);
+                .def_readonly("idx1", &harmonic_bond::bond_t::idx1)
+                .def_readonly("idx2", &harmonic_bond::bond_t::idx2)
+                .def_readonly("length", &harmonic_bond::bond_t::length)
+                .def_readonly("force_constant", &harmonic_bond::bond_t::forceConstant);
         py::class_<harmonic_bond, bonded_potential>(m, "HarmonicBondPotential")
                 .def("get_bonds", &harmonic_bond::getBonds)
                 .def("calculate_energy", &harmonic_bond::calculateEnergy)
-                .def("calculate_force", [](harmonic_bond &self, const vec3 &x_ij, const harmonic_bond::Bond &bond) {
+                .def("calculate_force", [](harmonic_bond &self, const vec3 &x_ij, const harmonic_bond::bond_t &bond) {
                     vec3 force(0, 0, 0);
                     self.calculateForce(force, x_ij, bond);
                     return force;
@@ -84,18 +83,18 @@ void exportTopologies(py::module &m) {
     }
     {
         py::class_<angle_potential, topology_potential>(m, "AnglePotential");
-        py::class_<harmonic_angle::Angle>(m, "HarmonicAnglePotentialAngle")
+        py::class_<harmonic_angle::angle_t>(m, "HarmonicAnglePotentialAngle")
                 .def(py::init<std::size_t, std::size_t, std::size_t, double, double>())
-                .def_readonly("idx1", &harmonic_angle::Angle::idx1)
-                .def_readonly("idx2", &harmonic_angle::Angle::idx2)
-                .def_readonly("idx3", &harmonic_angle::Angle::idx3)
-                .def_readonly("equilibrium_angle", &harmonic_angle::Angle::equilibriumAngle)
-                .def_readonly("force_constant", &harmonic_angle::Angle::forceConstant);
+                .def_readonly("idx1", &harmonic_angle::angle_t::idx1)
+                .def_readonly("idx2", &harmonic_angle::angle_t::idx2)
+                .def_readonly("idx3", &harmonic_angle::angle_t::idx3)
+                .def_readonly("equilibrium_angle", &harmonic_angle::angle_t::equilibriumAngle)
+                .def_readonly("force_constant", &harmonic_angle::angle_t::forceConstant);
         py::class_<harmonic_angle, angle_potential>(m, "HarmonicAnglePotential")
                 .def("get_angles", &harmonic_angle::getAngles)
                 .def("calculate_energy", &harmonic_angle::calculateEnergy)
                 .def("calculate_force", [](harmonic_angle &self, const vec3 &x_ij, const vec3 &x_kj,
-                                           const harmonic_angle::Angle &angle) {
+                                           const harmonic_angle::angle_t &angle) {
                     vec3 f1(0, 0, 0), f2(0, 0, 0), f3(0, 0, 0);
                     self.calculateForce(f1, f2, f3, x_ij, x_kj, angle);
                     return std::make_tuple(std::move(f1), std::move(f2), std::move(f3));
@@ -103,20 +102,20 @@ void exportTopologies(py::module &m) {
     }
     {
         py::class_<torsion_potential, topology_potential>(m, "TorsionPotential");
-        py::class_<cosine_dihedral::Dihedral>(m, "CosineDihedralPotentialDihedral")
+        py::class_<cosine_dihedral::dihedral_t>(m, "CosineDihedralPotentialDihedral")
                 .def(py::init<std::size_t, std::size_t, std::size_t, std::size_t, double, double, double>())
-                .def_readonly("idx1", &cosine_dihedral::Dihedral::idx1)
-                .def_readonly("idx2", &cosine_dihedral::Dihedral::idx2)
-                .def_readonly("idx3", &cosine_dihedral::Dihedral::idx3)
-                .def_readonly("idx4", &cosine_dihedral::Dihedral::idx4)
-                .def_readonly("force_constant", &cosine_dihedral::Dihedral::forceConstant)
-                .def_readonly("phi_0", &cosine_dihedral::Dihedral::phi_0)
-                .def_readonly("multiplicity", &cosine_dihedral::Dihedral::multiplicity);
+                .def_readonly("idx1", &cosine_dihedral::dihedral_t::idx1)
+                .def_readonly("idx2", &cosine_dihedral::dihedral_t::idx2)
+                .def_readonly("idx3", &cosine_dihedral::dihedral_t::idx3)
+                .def_readonly("idx4", &cosine_dihedral::dihedral_t::idx4)
+                .def_readonly("force_constant", &cosine_dihedral::dihedral_t::forceConstant)
+                .def_readonly("phi_0", &cosine_dihedral::dihedral_t::phi_0)
+                .def_readonly("multiplicity", &cosine_dihedral::dihedral_t::multiplicity);
         py::class_<cosine_dihedral>(m, "CosineDihedralPotential")
                 .def("get_dihedrals", &cosine_dihedral::getDihedrals)
                 .def("calculate_energy", &cosine_dihedral::calculateEnergy)
                 .def("calculate_force", [](cosine_dihedral &self, const vec3 &x_ji, const vec3 &x_kj, const vec3 &x_kl,
-                                           const cosine_dihedral::Dihedral &dih) {
+                                           const cosine_dihedral::dihedral_t &dih) {
                     vec3 f1(0, 0, 0), f2(0, 0, 0), f3(0, 0, 0), f4(0, 0, 0);
                     self.calculateForce(f1, f2, f3, f4, x_ji, x_kj, x_kl, dih);
                     return std::make_tuple(f1, f2, f3, f4);

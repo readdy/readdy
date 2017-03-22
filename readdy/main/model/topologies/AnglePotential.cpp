@@ -55,7 +55,7 @@ const HarmonicAnglePotential::angles_t &HarmonicAnglePotential::getAngles() cons
 }
 
 double HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
-                                               const HarmonicAnglePotential::Angle &angle) const {
+                                               const angle_t &angle) const {
     const double scalarProduct = x_ij * x_kj;
     const double norm_ij = std::sqrt(x_ij * x_ij);
     const double norm_kj = std::sqrt(x_kj * x_kj);
@@ -64,7 +64,7 @@ double HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_k
 }
 
 void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk,
-                                            const HarmonicAnglePotential::Angle &angle) const {
+                                            const angle_t &angle) const {
     const double scalarProduct = x_ji * x_jk;
     const double norm_ji_2 = x_ji * x_ji;
     const double norm_ji = std::sqrt(norm_ji_2);
@@ -92,7 +92,7 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
     f_k += force_k;
 }
 
-HarmonicAnglePotential::Angle::Angle(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double theta_0)
+AngleConfiguration::AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double theta_0)
         : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
 }
 }

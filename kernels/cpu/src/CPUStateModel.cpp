@@ -264,10 +264,7 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
     pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             pimpl->neighborList->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : pimpl->topologies) {
-                    auto &particles = top->getParticles();
-                    std::transform(particles.begin(), particles.end(), particles.begin(), [&indices](std::size_t index) {
-                        return indices[index];
-                    });
+                    top->permuteIndices(indices);
                 }
             }));
 
@@ -300,7 +297,12 @@ model::CPUNeighborList *const CPUStateModel::getNeighborList() {
 readdy::model::top::GraphTopology *const
 CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = pimpl->data<false>().addTopologyParticles(particles);
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), &pimpl->context->topologyPotentialConfiguration()));
+    std::vector<particle_type_type> types;
+    types.reserve(ids.size());
+    for(const auto& p : particles) {
+        types.push_back(p.getType());
+    }
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topologyPotentialConfiguration()));
     return pimpl->topologies.back().get();
 }
 
@@ -318,6 +320,10 @@ std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::r
 
 const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() const {
     return pimpl->reactionCounts;
+}
+
+readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {
+    return pimpl->cdata<false>().getParticle(index);
 }
 
 CPUStateModel::~CPUStateModel() = default;

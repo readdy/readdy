@@ -41,7 +41,6 @@ namespace readdy {
 namespace kernel {
 namespace cpu_dense {
 class CPUDStateModel : public readdy::model::KernelStateModel {
-
 public:
 
     using data_t = readdy::kernel::cpu_dense::model::CPUDParticleData;
@@ -49,6 +48,8 @@ public:
     CPUDStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config);
 
     ~CPUDStateModel();
+
+    virtual readdy::model::Particle getParticleForIndex(const std::size_t index) const override;
 
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 

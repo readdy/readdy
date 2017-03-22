@@ -226,6 +226,10 @@ readdy::model::top::GraphTopology *const CPUDStateModel::addTopology(const std::
     return nullptr;
 }
 
+readdy::model::Particle CPUDStateModel::getParticleForIndex(const std::size_t index) const {
+    return pimpl->cdata().toParticle(pimpl->cdata().entry_at(index));
+}
+
 CPUDStateModel::~CPUDStateModel() = default;
 
 
