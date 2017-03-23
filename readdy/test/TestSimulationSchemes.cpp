@@ -26,36 +26,36 @@
  * @file TestSimulationSchemes.cpp
  * @brief << brief description >>
  * @author clonker
+ * @author chrisfro**
  * @date 23.08.16
  */
 
 #include <gtest/gtest.h>
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/api/Simulation.h>
+#include <readdy/testing/Utils.h>
 
 namespace api = readdy::api;
 
 namespace {
 
-TEST(TestSchemes, Sanity) {
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    api::SchemeConfigurator <api::ReaDDyScheme> c(kernel.get());
-    c.evaluateObservables(false)
-            .includeForces(false)
-            .withIntegrator(kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1))
-            .configure(1)->run(10);
-}
+class TestSchemes : public ::testing::TestWithParam<std::string> {
+public:
+    readdy::Simulation simulation;
 
-TEST(TestSchemes, SimulationObject) {
-    readdy::Simulation sim;
-    sim.setKernel("SingleCPU");
-    sim.setBoxSize(1, 1, 1);
-    sim.runScheme().configureAndRun(.5, 5);
+    explicit TestSchemes() {
+        simulation.setKernel(GetParam());
+    }
+};
+
+TEST_P(TestSchemes, SimulationObject) {
+    simulation.setBoxSize(1, 1, 1);
+    simulation.runScheme().configureAndRun(.5, 5);
 
     /**
      * use ReaDDyScheme without defaults
      */
-    sim.runScheme<readdy::api::ReaDDyScheme>(false)
+    simulation.runScheme<readdy::api::ReaDDyScheme>(false)
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
             .configureAndRun(.5, 100);
@@ -63,7 +63,7 @@ TEST(TestSchemes, SimulationObject) {
     /**
      * default: readdy scheme, use defaults = true
      */
-    sim.runScheme()
+    simulation.runScheme()
             .includeForces(false)
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
@@ -72,48 +72,42 @@ TEST(TestSchemes, SimulationObject) {
     /**
      * use AdvancedScheme
      */
-    sim.runScheme<readdy::api::AdvancedScheme>(false)
+    simulation.runScheme<readdy::api::AdvancedScheme>(false)
             .includeForces(true)
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .includeCompartments(true)
             .configureAndRun(.5, 100);
 }
 
-TEST(TestSchemes, CorrectNumberOfTimesteps) {
-    readdy::Simulation sim;
-    sim.setKernel("SingleCPU");
+TEST_P(TestSchemes, CorrectNumberOfTimesteps) {
     unsigned int counter = 0;
     auto increment = [&counter](readdy::model::observables::NParticles::result_t result) {
         counter++;
     };
-    auto obsHandle = sim.registerObservable<readdy::model::observables::NParticles>(increment, 1);
-    sim.run(3, 0.1);
+    auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
+    simulation.run(3, 0.1);
     EXPECT_EQ(counter, 4);
 }
 
-TEST(TestSchemes, StoppingCriterionSimple) {
-    readdy::Simulation sim;
-    sim.setKernel("SingleCPU");
+TEST_P(TestSchemes, StoppingCriterionSimple) {
     unsigned int counter = 0;
     auto increment = [&counter](readdy::model::observables::NParticles::result_t result) {
         counter++;
     };
-    auto obsHandle = sim.registerObservable<readdy::model::observables::NParticles>(increment, 1);
+    auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
     auto shallContinue = [](readdy::time_step_type currentStep) {
         return currentStep < 5;
     };
-    auto scheme = sim.runScheme(true).configure(0.1);
+    auto scheme = simulation.runScheme(true).configure(0.1);
     scheme->run(shallContinue);
     EXPECT_EQ(counter, 6);
 }
 
-TEST(TestSchemes, ComplexStoppingCriterion) {
-    readdy::Simulation sim;
-    sim.setKernel("SingleCPU");
-    sim.registerParticleType("A", 0., 0.1);
+TEST_P(TestSchemes, ComplexStoppingCriterion) {
+    simulation.registerParticleType("A", 0., 0.1);
     // A -> A + A, with probability = 1 each timestep. After 3 timesteps there will be 8 particles. The counter will be 4 by then.
-    sim.registerFissionReaction("bla", "A", "A", "A", 1000., 0.);
-    sim.addParticle(0, 0, 0, "A");
+    simulation.registerFissionReaction("bla", "A", "A", "A", 1000., 0.);
+    simulation.addParticle(0, 0, 0, "A");
     unsigned int counter = 0;
     bool doStop = false;
     auto increment = [&counter, &doStop](readdy::model::observables::NParticles::result_t result) {
@@ -122,13 +116,28 @@ TEST(TestSchemes, ComplexStoppingCriterion) {
             doStop = true;
         }
     };
-    auto obsHandle = sim.registerObservable<readdy::model::observables::NParticles>(increment, 1);
+    auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
     auto shallContinue = [&doStop](readdy::time_step_type currentStep) {
         return !doStop;
     };
-    auto scheme = sim.runScheme(true).configure(1.);
+    auto scheme = simulation.runScheme(true).configure(1.);
     scheme->run(shallContinue);
     EXPECT_EQ(counter, 4);
 }
+
+TEST_P(TestSchemes, SkinSizeSanity) {
+    simulation.registerParticleType("A", 1., 1.);
+    simulation.setBoxSize(10., 10., 10.);
+    simulation.setPeriodicBoundary({true, true, true});
+    simulation.registerHarmonicRepulsionPotential("A", "A", 1.);
+    simulation.addParticle(0., 0., 0., "A");
+    simulation.addParticle(1.5, 0., 0., "A");
+    readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme> configurator = simulation.runScheme(true);
+    configurator.withSkinSize(1.);
+    auto scheme = configurator.configure(0.001);
+    scheme->run(10);
+}
+
+INSTANTIATE_TEST_CASE_P(TestSchemesCore, TestSchemes, ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 
 }

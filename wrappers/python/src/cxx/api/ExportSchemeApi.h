@@ -66,6 +66,7 @@ void exportSchemeApi(pybind11::module &module, std::string schemeName) {
                  py::return_value_policy::reference_internal, "reaction_scheduler_name"_a)
             .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal,
                  "do_evaluate"_a = true)
+            .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
             .def("configure", &conf::configure, "time_step"_a)
             .def("configure_and_run", [](conf& self, double dt, const readdy::time_step_type steps) {
                 py::gil_scoped_release release;
@@ -103,6 +104,7 @@ void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, std:
                  },
                  py::return_value_policy::reference_internal, "reaction_scheduler_name"_a)
             .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal, "do_evaluate"_a = true)
+            .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
             .def("configure", &conf::configure, "time_step"_a)
             .def("configure_and_run", [](conf& self, double dt, const readdy::time_step_type steps) {
                 py::gil_scoped_release release;
