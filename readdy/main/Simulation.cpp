@@ -344,7 +344,7 @@ bool Simulation::kernelSupportsTopologies() const {
     return getSelectedKernel()->supportsTopologies();
 }
 
-readdy::model::top::Topology *Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::GraphTopology *Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     ensureKernelSelected();
     if(getSelectedKernel()->supportsTopologies()) {
         return getSelectedKernel()->getKernelStateModel().addTopology(particles);

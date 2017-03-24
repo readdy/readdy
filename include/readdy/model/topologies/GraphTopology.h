@@ -45,9 +45,6 @@ class GraphTopology : public Topology {
 public:
 
     using vertex_ptr = graph::Graph::vertices_t::iterator;
-    using vertex_ptr_tuple = std::tuple<vertex_ptr, vertex_ptr>;
-    using vertex_ptr_triple = std::tuple<vertex_ptr, vertex_ptr, vertex_ptr>;
-    using vertex_ptr_quadruple = std::tuple<vertex_ptr, vertex_ptr, vertex_ptr, vertex_ptr>;
 
     GraphTopology(const particles_t& particles, const std::vector<particle_type_type> &types,
                   const graph::PotentialConfiguration *const config);
@@ -66,15 +63,9 @@ public:
 
     const graph::Graph &graph() const;
 
-    void findNTuples(const std::function<void(const vertex_ptr_tuple&)> &tuple_callback,
-                     const std::function<void(const vertex_ptr_triple&)> &triple_callback,
-                     const std::function<void(const vertex_ptr_quadruple&)> &quadruple_callback);
-
     void configure();
 
     void validate();
-
-    virtual void permuteIndices(const std::vector<std::size_t> &permutation) override;
 
 private:
     std::unique_ptr<graph::Graph> graph_;

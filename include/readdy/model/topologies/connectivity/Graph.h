@@ -46,6 +46,10 @@ NAMESPACE_BEGIN(graph)
 class Graph {
 public:
     using vertices_t = std::list<Vertex>;
+    using vertex_ptr = vertices_t::iterator;
+    using vertex_ptr_tuple = std::tuple<vertex_ptr, vertex_ptr>;
+    using vertex_ptr_triple = std::tuple<vertex_ptr, vertex_ptr, vertex_ptr>;
+    using vertex_ptr_quadruple = std::tuple<vertex_ptr, vertex_ptr, vertex_ptr, vertex_ptr>;
 
     Graph() = default;
 
@@ -71,6 +75,8 @@ public:
 
     Vertex &namedVertex(const std::string &name);
 
+    vertices_t::iterator namedVertexPtr(const std::string& name);
+
     const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
 
     void addVertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label = "");
@@ -94,6 +100,13 @@ public:
     void removeParticle(std::size_t particleIndex);
 
     bool isConnected();
+
+    void findNTuples(const std::function<void(const vertex_ptr_tuple &)> &tuple_callback,
+                     const std::function<void(const vertex_ptr_triple &)> &triple_callback,
+                     const std::function<void(const vertex_ptr_quadruple &)> &quadruple_callback);
+
+    std::tuple<std::vector<vertex_ptr_tuple>, std::vector<vertex_ptr_triple>, std::vector<vertex_ptr_quadruple>>
+    findNTuples();
 
 private:
     vertices_t vertices_;

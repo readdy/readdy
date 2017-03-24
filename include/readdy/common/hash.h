@@ -43,9 +43,16 @@ NAMESPACE_BEGIN(hash)
  * @param v the value
  */
 template<typename T>
-void combine(std::size_t& seed, const T& v) {
+void combine(std::size_t &seed, const T &v) {
     seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
+
+struct EnumClassHash {
+    template<typename T>
+    std::size_t operator()(T t) const {
+        return static_cast<std::size_t>(t);
+    }
+};
 
 NAMESPACE_END(hash)
 NAMESPACE_END(util)

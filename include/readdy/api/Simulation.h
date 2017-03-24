@@ -103,7 +103,7 @@ public:
 
     bool kernelSupportsTopologies() const;
 
-    readdy::model::top::Topology* addTopology(const std::vector<readdy::model::TopologyParticle> &particles);
+    readdy::model::top::GraphTopology* addTopology(const std::vector<readdy::model::TopologyParticle> &particles);
 
     /**
      * Method to set the box size.
