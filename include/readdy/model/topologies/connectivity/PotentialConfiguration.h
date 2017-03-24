@@ -57,7 +57,7 @@ struct Angle {
 };
 
 struct TorsionAngle {
-    double forceConstant, phi_0, multiplicity;
+    double forceConstant, multiplicity, phi_0;
     TorsionType type = TorsionType::COS_DIHEDRAL;
 };
 

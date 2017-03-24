@@ -51,7 +51,7 @@ struct DihedralConfiguration {
              double equilibriumAngle);
 
     std::size_t idx1, idx2, idx3, idx4;
-    double forceConstant, phi_0, multiplicity;
+    double forceConstant, multiplicity, phi_0;
 };
 
 class CosineDihedralPotential : public TorsionPotential {
