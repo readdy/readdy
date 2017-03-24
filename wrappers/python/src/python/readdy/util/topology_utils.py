@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 def plot_networkx_topology_graph(topology):
     G = nx.Graph()
     top_graph = topology.get_graph()
