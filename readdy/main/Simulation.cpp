@@ -126,7 +126,7 @@ void Simulation::deregisterPotential(const short uuid) {
 };
 
 const short
-Simulation::registerHarmonicRepulsionPotential(const std::string& particleTypeA, const std::string& particleTypeB,
+Simulation::registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
                                                double forceConstant) {
     using potential_t = readdy::model::potentials::HarmonicRepulsion;
     ensureKernelSelected();
@@ -134,8 +134,8 @@ Simulation::registerHarmonicRepulsionPotential(const std::string& particleTypeA,
 }
 
 const short
-Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string& particleTypeA,
-                                                              const std::string& particleTypeB, double forceConstant,
+Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string &particleTypeA,
+                                                              const std::string &particleTypeB, double forceConstant,
                                                               double desiredParticleDistance, double depth,
                                                               double noInteractionDistance) {
     using potential_t = readdy::model::potentials::WeakInteractionPiecewiseHarmonic;
@@ -154,12 +154,15 @@ Simulation::registerLennardJonesPotential(const std::string &type1, const std::s
 
 
 const short
-Simulation::registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
-                                                    double inverseScreeningDepth, double repulsionStrength, double repulsionDistance,
+Simulation::registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2,
+                                                    double electrostaticStrength,
+                                                    double inverseScreeningDepth, double repulsionStrength,
+                                                    double repulsionDistance,
                                                     unsigned int exponent, double cutoff) {
     using potential_t = readdy::model::potentials::ScreenedElectrostatics;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleType1, particleType2, electrostaticStrength, inverseScreeningDepth,
+    return pimpl->kernel->registerPotential<potential_t>(particleType1, particleType2, electrostaticStrength,
+                                                         inverseScreeningDepth,
                                                          repulsionStrength, repulsionDistance, exponent, cutoff);
 }
 
@@ -182,7 +185,8 @@ Simulation::registerSphereInPotential(std::string particleType, double forceCons
 }
 
 const short
-Simulation::registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius) {
+Simulation::registerSphereOutPotential(std::string particleType, double forceConstant,
+                                       const readdy::model::Vec3 &origin, double radius) {
     using potential_t = readdy::model::potentials::SphereOut;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
@@ -320,16 +324,22 @@ void Simulation::closeTrajectoryFile() {
     pimpl->trajectoryFile.reset();
 }
 
-const short Simulation::registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
-                                                  const model::Vec3 &origin, const double radius, const bool largerOrLess) {
+const short Simulation::registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
+                                                  const std::string &name,
+                                                  const model::Vec3 &origin, const double radius,
+                                                  const bool largerOrLess) {
     ensureKernelSelected();
-    return getSelectedKernel()->registerCompartment<model::compartments::Sphere>(conversionsMap, name, origin, radius, largerOrLess);
+    return getSelectedKernel()->registerCompartment<model::compartments::Sphere>(conversionsMap, name, origin, radius,
+                                                                                 largerOrLess);
 }
 
-const short Simulation::registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
-                                                 const model::Vec3 &normalCoefficients, const double distanceFromPlane, const bool largerOrLess) {
+const short Simulation::registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
+                                                 const std::string &name,
+                                                 const model::Vec3 &normalCoefficients, const double distanceFromPlane,
+                                                 const bool largerOrLess) {
     ensureKernelSelected();
-    return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name, normalCoefficients, distanceFromPlane,
+    return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name,
+                                                                                normalCoefficients, distanceFromPlane,
                                                                                 largerOrLess);
 }
 
@@ -344,10 +354,19 @@ bool Simulation::kernelSupportsTopologies() const {
     return getSelectedKernel()->supportsTopologies();
 }
 
-readdy::model::top::GraphTopology *Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::GraphTopology *
+Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
+                        const std::vector<std::string> &labels) {
+    assert(particles.size() == labels.size() || labels.empty());
     ensureKernelSelected();
-    if(getSelectedKernel()->supportsTopologies()) {
-        return getSelectedKernel()->getKernelStateModel().addTopology(particles);
+    if (getSelectedKernel()->supportsTopologies()) {
+        auto top = getSelectedKernel()->getKernelStateModel().addTopology(particles);
+        auto it_labels = labels.begin();
+        auto it_vertices = top->graph().vertices().begin();
+        for (; it_labels != labels.end(); ++it_labels, ++it_vertices) {
+            top->graph().setVertexLabel(it_vertices, *it_labels);
+        }
+        return top;
     } else {
         throw std::logic_error("the selected kernel does not support topologies!");
     }
@@ -361,6 +380,31 @@ void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrd
 void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
     ensureKernelSelected();
     getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+}
+
+void
+Simulation::configureTopologyBondPotential(const std::string &type1, const std::string &type2, double forceConstant,
+                                           double length, api::BondType type) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().configureTopologyBondPotential(type1, type2, {forceConstant, length, type});
+}
+
+void Simulation::configureTopologyAnglePotential(const std::string &type1, const std::string &type2,
+                                                 const std::string &type3, double forceConstant,
+                                                 double equilibriumAngle, api::AngleType type) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().configureTopologyAnglePotential(type1, type2, type3,
+                                                                            {forceConstant, equilibriumAngle, type});
+}
+
+void Simulation::configureTopologyTorsionPotential(const std::string &type1, const std::string &type2,
+                                                   const std::string &type3, const std::string &type4,
+                                                   double forceConstant, unsigned int multiplicity, double phi_0,
+                                                   api::TorsionType type) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().configureTopologyTorsionPotential(
+            type1, type2, type3, type4, {forceConstant, static_cast<double>(multiplicity), phi_0, type}
+    );
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};

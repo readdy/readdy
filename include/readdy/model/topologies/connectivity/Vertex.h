@@ -90,8 +90,8 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex) {
-        os << "Vertex[label: " << vertex.label << " particleIndex: "
-           << vertex.particleIndex << " neighbors=[";
+        os << "Vertex[label: " << vertex.label << ", particleIndex: "
+           << vertex.particleIndex << ", neighbors=[";
         for (const auto neighbor : vertex.neighbors_) {
             os << neighbor->particleIndex << ",";
         }

@@ -47,7 +47,7 @@ public:
     using vertex_ptr = graph::Graph::vertices_t::iterator;
 
     GraphTopology(const particles_t& particles, const std::vector<particle_type_type> &types,
-                  const graph::PotentialConfiguration *const config);
+                  const api::PotentialConfiguration *const config);
 
     virtual ~GraphTopology() = default;
 
@@ -69,7 +69,7 @@ public:
 
 private:
     std::unique_ptr<graph::Graph> graph_;
-    const graph::PotentialConfiguration *const config;
+    const api::PotentialConfiguration *const config;
 };
 
 

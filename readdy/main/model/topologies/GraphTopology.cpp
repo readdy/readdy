@@ -38,7 +38,7 @@ namespace model {
 namespace top {
 
 GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::vector<particle_type_type> &types,
-                             const graph::PotentialConfiguration *const config)
+                             const api::PotentialConfiguration *const config)
         : Topology(particles), config(config), graph_(std::make_unique<graph::Graph>()) {
     assert(types.size() == particles.size());
     std::size_t i = 0;
@@ -60,9 +60,9 @@ void GraphTopology::configure() {
     anglePotentials.clear();
     torsionPotentials.clear();
 
-    std::unordered_map<graph::BondType, std::vector<BondConfiguration>, readdy::util::hash::EnumClassHash> bonds;
-    std::unordered_map<graph::AngleType, std::vector<AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
-    std::unordered_map<graph::TorsionType, std::vector<DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
+    std::unordered_map<api::BondType, std::vector<BondConfiguration>, readdy::util::hash::EnumClassHash> bonds;
+    std::unordered_map<api::AngleType, std::vector<AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
+    std::unordered_map<api::TorsionType, std::vector<DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
     graph_->findNTuples([&](const graph::Graph::vertex_ptr_tuple &tuple) {
         auto it = config->pairPotentials.find(
@@ -101,7 +101,7 @@ void GraphTopology::configure() {
     });
     for(const auto& bond : bonds) {
         switch (bond.first) {
-            case graph::BondType::HARMONIC: {
+            case api::BondType::HARMONIC: {
                 addBondedPotential(std::make_unique<HarmonicBondPotential>(this, bond.second));
                 break;
             };
@@ -109,7 +109,7 @@ void GraphTopology::configure() {
     }
     for(const auto& angle : angles) {
         switch(angle.first) {
-            case graph::AngleType::HARMONIC: {
+            case api::AngleType::HARMONIC: {
                 addAnglePotential(std::make_unique<HarmonicAnglePotential>(this, angle.second));
                 break;
             };
@@ -117,7 +117,7 @@ void GraphTopology::configure() {
     }
     for(const auto& dih : dihedrals) {
         switch(dih.first) {
-            case graph::TorsionType::COS_DIHEDRAL: {
+            case api::TorsionType::COS_DIHEDRAL: {
                 addTorsionPotential(std::make_unique<CosineDihedralPotential>(this, dih.second));
                 break;
             };

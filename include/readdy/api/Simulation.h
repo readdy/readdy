@@ -99,11 +99,13 @@ public:
 
     void closeTrajectoryFile();
 
-    readdy::model::TopologyParticle createTopologyParticle(const std::string& type, const readdy::model::Vec3& pos) const;
+    readdy::model::TopologyParticle
+    createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const;
 
     bool kernelSupportsTopologies() const;
 
-    readdy::model::top::GraphTopology* addTopology(const std::vector<readdy::model::TopologyParticle> &particles);
+    readdy::model::top::GraphTopology *addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
+                                                   const std::vector<std::string> &labels = {});
 
     /**
      * Method to set the box size.
@@ -232,7 +234,8 @@ public:
      * @todo add a considerParticleRadius parameter
      */
     const short
-    registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
+    registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
+                              double radius);
 
     /**
      * Register a sphere potential, which is used to confine particles outside a spherical volume. The energy function
@@ -245,7 +248,8 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin, double radius);
+    registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
+                               double radius);
 
     //----------------------
     // Order 2 potentials
@@ -325,8 +329,10 @@ public:
      * @return a uuid with which the potential can be removed again
      */
     const short
-    registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
-                                            double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent,
+    registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2,
+                                            double electrostaticStrength,
+                                            double inverseScreeningDepth, double repulsionStrength,
+                                            double repulsionDistance, unsigned int exponent,
                                             double cutoff);
 
     void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr);
@@ -454,11 +460,26 @@ public:
                                       const double rate);
 
     const short
-    registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name, const model::Vec3 &origin,
+    registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
+                              const std::string &name, const model::Vec3 &origin,
                               const double radius, const bool largerOrLess);
 
-    const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap, const std::string &name,
-                                         const model::Vec3 &normalCoefficients, const double distanceFromPlane, const bool largerOrLess);
+    const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
+                                         const std::string &name,
+                                         const model::Vec3 &normalCoefficients, const double distanceFromPlane,
+                                         const bool largerOrLess);
+
+    void
+    configureTopologyBondPotential(const std::string &type1, const std::string &type2, double forceConstant,
+                                   double length, api::BondType type = api::BondType::HARMONIC);
+
+    void configureTopologyAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                         double forceConstant, double equilibriumAngle,
+                                         api::AngleType type = api::AngleType::HARMONIC);
+
+    void configureTopologyTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                           const std::string &type4, double forceConstant, unsigned int multiplicity,
+                                           double phi_0, api::TorsionType type = api::TorsionType::COS_DIHEDRAL);
 
     virtual void run(const time_step_type steps, const double timeStep);
 

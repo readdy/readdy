@@ -27,6 +27,7 @@
 #include <readdy/api/Simulation.h>
 #include <readdy/io/File.h>
 #include <readdy/common/nodelete.h>
+#include <readdy/api/PotentialConfiguration.h>
 #include "ExportSchemeApi.h"
 #include "PyPotential.h"
 #include "ExportObservables.h"
@@ -61,7 +62,7 @@ enum class ParticleTypeFlavor {
     NORMAL = 0, TOPOLOGY, MEMBRANE
 };
 
-void exportApi(py::module& api) {
+void exportApi(py::module &api) {
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
     exportSchemeApi<readdy::api::AdvancedScheme>(api, "AdvancedScheme");
 
@@ -72,6 +73,10 @@ void exportApi(py::module& api) {
             .value("NORMAL", ParticleTypeFlavor::NORMAL)
             .value("TOPOLOGY", ParticleTypeFlavor::TOPOLOGY)
             .value("MEMBRANE", ParticleTypeFlavor::MEMBRANE);
+
+    py::enum_<readdy::api::BondType>(api, "BondType").value("HARMONIC", readdy::api::BondType::HARMONIC);
+    py::enum_<readdy::api::AngleType>(api, "AngleType").value("HARMONIC", readdy::api::AngleType::HARMONIC);
+    py::enum_<readdy::api::TorsionType>(api, "TorsionType").value("COS_DIHEDRAL", readdy::api::TorsionType::COS_DIHEDRAL);
 
     py::class_ <sim> simulation(api, "Simulation");
     simulation.def(py::init<>())
@@ -121,7 +126,17 @@ void exportApi(py::module& api) {
             .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
             .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
             .def("create_topology_particle", &sim::createTopologyParticle)
-            .def("add_topology", &sim::addTopology, rvp::reference)
+            .def("configure_topology_bond_potential", &sim::configureTopologyBondPotential, py::arg("type1"),
+                 py::arg("type2"), py::arg("force_constant"), py::arg("length"),
+                 py::arg("type") = readdy::api::BondType::HARMONIC)
+            .def("configure_topology_angle_potential", &sim::configureTopologyAnglePotential, py::arg("type1"),
+                 py::arg("type2"), py::arg("type3"), py::arg("force_constant"), py::arg("equilibrium_angle"),
+                 py::arg("type") = readdy::api::AngleType::HARMONIC)
+            .def("configure_topology_dihedral_potential", &sim::configureTopologyTorsionPotential, py::arg("type1"),
+                 py::arg("type2"), py::arg("type3"), py::arg("type4"), py::arg("force_constant"),
+                 py::arg("multiplicity"), py::arg("phi_0"), py::arg("type") = readdy::api::TorsionType::COS_DIHEDRAL)
+            .def("add_topology", &sim::addTopology, rvp::reference, py::arg("particles"),
+                 py::arg("labels") = std::vector<std::string>())
             .def("set_kernel", &sim::setKernel)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(

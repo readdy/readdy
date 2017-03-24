@@ -71,6 +71,13 @@ transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap,
 };
 
 template<typename T>
+std::string to_string(const T& ref) {
+    std::stringstream ss;
+    ss << ref;
+    return ss.str();
+}
+
+template<typename T>
 std::string to_string(const T* const ptr) {
     std::stringstream ss;
     ss << *ptr;

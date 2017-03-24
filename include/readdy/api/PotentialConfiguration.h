@@ -38,9 +38,7 @@
 #include <readdy/common/ParticleTypeTuple.h>
 
 NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(graph)
+NAMESPACE_BEGIN(api)
 
 enum class BondType { HARMONIC };
 enum class AngleType { HARMONIC };
@@ -70,7 +68,5 @@ struct PotentialConfiguration {
     torsion_potential_map torsionPotentials;
 };
 
-NAMESPACE_END(graph)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
+NAMESPACE_END(api)
 NAMESPACE_END(readdy)

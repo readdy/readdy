@@ -31,6 +31,7 @@
 #include <pybind11/stl.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/topologies/GraphTopology.h>
+#include <readdy/model/_internal/Util.h>
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -38,6 +39,8 @@ using rvp = py::return_value_policy;
 using particle = readdy::model::Particle;
 using topology_particle = readdy::model::TopologyParticle;
 using topology = readdy::model::top::GraphTopology;
+using graph = readdy::model::top::graph::Graph;
+using vertex = readdy::model::top::graph::Vertex;
 using topology_potential = readdy::model::top::TopologyPotential;
 using bonded_potential = readdy::model::top::BondedPotential;
 using angle_potential = readdy::model::top::AnglePotential;
@@ -49,9 +52,10 @@ using vec3 = readdy::model::Vec3;
 
 void exportTopologies(py::module &m) {
     py::class_<topology_particle>(m, "TopologyParticle")
-            .def("get_position", [](topology_particle& self) {return self.getPos();})
-            .def("get_type", [](topology_particle& self) {return self.getType();})
-            .def("get_id", [](topology_particle& self) {return self.getId();});
+            .def("get_position", [](topology_particle &self) { return self.getPos(); })
+            .def("get_type", [](topology_particle &self) { return self.getType(); })
+            .def("get_id", [](topology_particle &self) { return self.getId(); });
+
     py::class_<topology>(m, "Topology")
             .def("get_n_particles", &topology::getNParticles)
             .def("add_harmonic_angle_potential", [](topology &self, const harmonic_angle::angles_t &angles) {
@@ -62,7 +66,45 @@ void exportTopologies(py::module &m) {
             })
             .def("add_cosine_dihedral_potential", [](topology &self, const cosine_dihedral::dihedrals_t &dihedrals) {
                 self.addTorsionPotential<cosine_dihedral>(dihedrals);
+            })
+            .def("get_graph", [](topology &self) -> graph & { return self.graph(); }, rvp::reference_internal)
+            .def("configure", &topology::configure)
+            .def("validate", &topology::validate);
+
+    py::class_<graph>(m, "Graph")
+            .def("get_vertices", [](graph &self) -> graph::vertices_t & { return self.vertices(); },
+                 rvp::reference_internal)
+            .def("add_edge", [](graph &self, const std::string &v1, const std::string &v2) {
+                self.addEdge(v1, v2);
+            })
+            .def("add_edge", [](graph &self, std::size_t v1, std::size_t v2) {
+                if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
+                    auto it1 = self.vertices().begin();
+                    std::advance(it1, v1);
+                    auto it2 = self.vertices().begin();
+                    std::advance(it2, v2);
+                    self.addEdge(it1, it2);
+                } else {
+                    throw std::invalid_argument("vertices out of bounds!");
+                }
             });
+
+    py::class_<vertex::vertex_edge>(m, "VertexPointer")
+            .def("get", [](const vertex::vertex_edge &edge) -> const vertex & { return *edge; });
+
+    py::class_<vertex>(m, "Vertex")
+            .def_readonly("label", &vertex::label)
+            .def_readonly("particle_index", &vertex::particleIndex)
+            .def("particle_type", &vertex::particleType)
+            .def("neighbors", [](const vertex &self) { return self.neighbors(); })
+            .def("__len__", [](const vertex &v) { return v.neighbors().size(); })
+            .def("__iter__", [](vertex &v) {
+                return py::make_iterator(v.neighbors().begin(), v.neighbors().end());
+            }, py::keep_alive<0, 1>())
+            .def("__repr__", [](const vertex &v) {
+                return readdy::model::_internal::util::to_string(v);
+            });
+
     py::class_<topology_potential>(m, "TopologyPotential");
     {
         py::class_<bonded_potential, topology_potential>(m, "BondedPotential");

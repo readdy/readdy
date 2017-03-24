@@ -126,12 +126,23 @@ const Vertex &Graph::vertexForParticleIndex(std::size_t particleIndex) const {
 }
 
 void Graph::setVertexLabel(vertices_t::iterator vertex, const std::string &label) {
-    auto it = namedVertices.find(label);
-    if (it == namedVertices.end()) {
-        namedVertices[label] = vertex;
-        vertex->label = label;
+    if(!label.empty()) {
+        auto it = namedVertices.find(label);
+        if (it == namedVertices.end()) {
+            namedVertices[label] = vertex;
+            vertex->label = label;
+        } else {
+            throw std::invalid_argument("the label " + label + " already existed in this topology!");
+        }
     } else {
-        throw std::invalid_argument("the label " + label + " already existed in this topology!");
+        auto it = namedVertices.begin();
+        for(; it != namedVertices.end();) {
+            if(it->second == vertex) {
+                it = namedVertices.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 }
 

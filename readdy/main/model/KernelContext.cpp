@@ -535,29 +535,29 @@ bool &KernelContext::recordReactionCounts() {
     return recordReactionCounts_;
 }
 
-top::graph::PotentialConfiguration &KernelContext::topologyPotentialConfiguration() {
+api::PotentialConfiguration &KernelContext::topologyPotentialConfiguration() {
     return potentialConfiguration_;
 }
 
-const top::graph::PotentialConfiguration &KernelContext::topologyPotentialConfiguration() const {
+const api::PotentialConfiguration &KernelContext::topologyPotentialConfiguration() const {
     return potentialConfiguration_;
 }
 
 void KernelContext::configureTopologyBondPotential(const std::string &type1, const std::string &type2,
-                                                   const top::graph::Bond &bond) {
+                                                   const api::Bond &bond) {
     potentialConfiguration_.pairPotentials[std::make_tuple(getParticleTypeID(type1),
                                                            getParticleTypeID(type2))].push_back(bond);
 }
 
 void KernelContext::configureTopologyAnglePotential(const std::string &type1, const std::string &type2,
-                                                    const std::string &type3, const top::graph::Angle &angle) {
+                                                    const std::string &type3, const api::Angle &angle) {
     potentialConfiguration_.anglePotentials[std::make_tuple(getParticleTypeID(type1), getParticleTypeID(type2),
                                                             getParticleTypeID(type3))].push_back(angle);
 }
 
 void KernelContext::configureTopologyTorsionPotential(const std::string &type1, const std::string &type2,
                                                       const std::string &type3, const std::string &type4,
-                                                      const top::graph::TorsionAngle &torsionAngle) {
+                                                      const api::TorsionAngle &torsionAngle) {
     potentialConfiguration_.torsionPotentials[std::make_tuple(getParticleTypeID(type1), getParticleTypeID(type2),
                                                               getParticleTypeID(type3),
                                                               getParticleTypeID(type4))].push_back(torsionAngle);
