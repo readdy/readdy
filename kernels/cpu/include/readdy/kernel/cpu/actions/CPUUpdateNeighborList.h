@@ -42,7 +42,7 @@ class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList 
     using super = readdy::model::actions::UpdateNeighborList;
 public:
 
-    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, double skin) : super(op, skin), kernel(kernel) { }
+    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, double skin) : super(op, skin), kernel(kernel) {}
 
     virtual void perform() override {
         switch (operation) {

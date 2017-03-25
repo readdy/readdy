@@ -42,6 +42,10 @@ class CPUDUpdateNeighborList : public readdy::model::actions::UpdateNeighborList
     using super = readdy::model::actions::UpdateNeighborList;
 public:
 
+    bool supportsSkin() const override {
+        return false;
+    }
+
     CPUDUpdateNeighborList(CPUDKernel *const kernel, super::Operation op, double skin)
             : super(op, skin), kernel(kernel) { }
 

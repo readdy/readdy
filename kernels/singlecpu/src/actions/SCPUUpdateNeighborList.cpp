@@ -51,6 +51,10 @@ void SCPUUpdateNeighborList::perform() {
 SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *const kernel, core_actions::UpdateNeighborList::Operation op,
                                                double skinSize)
         : UpdateNeighborList(op, skinSize), kernel(kernel){ }
+
+bool SCPUUpdateNeighborList::supportsSkin() const {
+    return false;
+}
 }
 }
 }

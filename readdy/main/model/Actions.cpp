@@ -37,15 +37,8 @@ namespace model {
 namespace actions {
 
 
-bool UpdateNeighborList::supportsSkin() const {
-    return false;
-}
-
 UpdateNeighborList::UpdateNeighborList(UpdateNeighborList::Operation operation, double skinSize)
         : operation(operation), skinSize(skinSize) {
-    if(skinSize >= 0 && !supportsSkin()) {
-        log::warn("The selected kernel has no Verlet list implemented, thus ignoring the skin size");
-    }
 }
 
 EulerBDIntegrator::EulerBDIntegrator(double timeStep) : TimeStepDependentAction(timeStep) {}

@@ -542,7 +542,7 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     double relativeDisplacement[numbersSize][skinSizesSize];
     double reactivity[numbersSize][skinSizesSize];
 
-    readdy::log::console()->set_level(spdlog::level::warn);
+    readdy::log::console()->set_level(spdlog::level::debug);
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
             readdy::log::error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j,
