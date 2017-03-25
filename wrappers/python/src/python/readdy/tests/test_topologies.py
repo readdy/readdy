@@ -28,10 +28,10 @@ Created on 09.02.17
 """
 import unittest
 import numpy as np
-import readdy._internal.common as common
-from readdy._internal.api import Simulation
-from readdy._internal.api import ParticleTypeFlavor
-from readdy._internal.api.top import HarmonicBondPotentialBond
+import readdy._internal.readdybinding.common as common
+from readdy._internal.readdybinding.api import Simulation
+from readdy._internal.readdybinding.api import ParticleTypeFlavor
+from readdy._internal.readdybinding.api.top import HarmonicBondPotentialBond
 
 
 class TestTopologies(unittest.TestCase):

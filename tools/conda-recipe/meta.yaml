@@ -26,6 +26,8 @@ requirements:
     - hdf5
     - bzip2
     - numpy
+    - matplotlib
+    - networkx
     - vs2015_runtime  # [win]
 
   run:
@@ -42,3 +44,5 @@ test:
     - nose
     - h5py
     - hdf5
+    - matplotlib
+    - networkx

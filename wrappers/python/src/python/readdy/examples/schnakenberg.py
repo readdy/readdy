@@ -31,8 +31,8 @@ Page 30
 """
 
 import numpy as np
-from readdy._internal.api import KernelProvider, Simulation
-from readdy._internal.common import Vec
+from readdy._internal.readdybinding.api import KernelProvider, Simulation
+from readdy._internal.readdybinding.common import Vec
 from readdy.util import platform_utils
 
 from scipy.optimize import brentq

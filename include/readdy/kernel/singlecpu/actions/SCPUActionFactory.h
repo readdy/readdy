@@ -38,6 +38,8 @@ class SCPUActionFactory : public readdy::model::actions::ActionFactory {
 public:
     SCPUActionFactory(SCPUKernel *const kernel);
 
+    virtual std::vector<std::string> getAvailableActions() const override;
+
 protected:
     readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
 

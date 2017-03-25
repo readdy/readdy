@@ -37,7 +37,9 @@ namespace model {
 namespace top {
 readdy::model::top::Topology::~Topology() = default;
 
-Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) {}
+Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) { }
+
+Topology::Topology(const Topology::particles_t &particles) : particles(particles){}
 
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
@@ -64,29 +66,31 @@ const std::vector<std::unique_ptr<TorsionPotential>> &Topology::getTorsionPotent
 }
 
 void Topology::addAnglePotential(std::unique_ptr<AnglePotential> &&pot) {
-    if(pot->getTopology() != this) {
+    if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     anglePotentials.push_back(std::move(pot));
 }
 
 void Topology::addTorsionPotential(std::unique_ptr<TorsionPotential> &&pot) {
-    if(pot->getTopology() != this) {
+    if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     torsionPotentials.push_back(std::move(pot));
 }
 
 void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
-    if(pot->getTopology() != this) {
+    if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     bondedPotentials.push_back(std::move(pot));
 }
 
-Topology &Topology::operator=(Topology &&) = default;
-
-Topology::Topology(Topology &&) = default;
+void Topology::permuteIndices(const std::vector<std::size_t> &permutation) {
+    std::transform(particles.begin(), particles.end(), particles.begin(), [&permutation](std::size_t index) {
+        return permutation[index];
+    });
+}
 
 }
 }

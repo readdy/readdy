@@ -512,7 +512,7 @@ void CPUNeighborList::create() {
     } catch (const ParticleTravelledTooFarException &) {
         initialSetup = true;
         redoFillCells = true;
-        log::warn("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
+        log::debug("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
                                      "it might have left its cell linked-list cell. This should, if at all, only happen "
                                      "very rarely and triggers a complete rebuild of the neighbor list.",
                              maxCutoff, skin_size, maxCutoffPlusSkin);

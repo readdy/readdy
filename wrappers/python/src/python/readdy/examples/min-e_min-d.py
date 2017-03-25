@@ -22,8 +22,8 @@
 
 # coding=utf-8
 from __future__ import print_function
-from readdy._internal.api import KernelProvider, Simulation
-from readdy._internal.common import Vec
+from readdy._internal.readdybinding.api import KernelProvider, Simulation
+from readdy._internal.readdybinding.common import Vec
 
 from readdy.util import platform_utils
 from scipy.optimize import brentq

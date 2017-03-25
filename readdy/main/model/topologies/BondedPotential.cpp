@@ -47,7 +47,7 @@ BondedPotential::BondedPotential(Topology *const topology) : TopologyPotential(t
  * Harmonic bond
  */
 
-HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds)
+HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const bonds_t &bonds)
         : BondedPotential(topology), bonds(bonds) {
     const auto n = topology->getNParticles();
     for(const auto& bond : bonds) {
@@ -60,17 +60,17 @@ HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const std
     }
 }
 
-const std::vector<HarmonicBondPotential::Bond> &HarmonicBondPotential::getBonds() const {
+const HarmonicBondPotential::bonds_t &HarmonicBondPotential::getBonds() const {
     return bonds;
 }
 
-double HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const HarmonicBondPotential::Bond &bond) const {
+double HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const BondConfiguration &bond) const {
     const auto norm = std::sqrt(x_ij * x_ij);
     return bond.forceConstant * (norm - bond.length) * (norm - bond.length);
 }
 
 void
-HarmonicBondPotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const HarmonicBondPotential::Bond &bond) const {
+HarmonicBondPotential::calculateForce(Vec3 &force, const Vec3 &x_ij, const BondConfiguration &bond) const {
     const auto norm = std::sqrt(x_ij * x_ij);
     force += (2. * bond.forceConstant * (norm - bond.length) / norm) * x_ij;
 }
@@ -80,7 +80,7 @@ HarmonicBondPotential::createForceAndEnergyAction(const TopologyActionFactory *c
     return factory->createCalculateHarmonicBondPotential(this);
 }
 
-HarmonicBondPotential::Bond::Bond(std::size_t idx1, std::size_t idx2, double forceConstant, double length)
+BondConfiguration::BondConfiguration(std::size_t idx1, std::size_t idx2, double forceConstant, double length)
         : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
 }
 }

@@ -106,14 +106,14 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     {
         const auto foo = stateModel.getParticles();
         for(const auto& bar : foo) {
-            readdy::log::debug("got particle: {}", bar);
+            readdy::log::trace("got particle: {}", bar);
         }
     }
     stateModel.updateNeighborList();
     {
         const auto foo = stateModel.getParticles();
         for(const auto& bar : foo) {
-            readdy::log::debug("-> got particle: {}", bar);
+            readdy::log::trace("-> got particle: {}", bar);
         }
     }
     stateModel.calculateForces();
@@ -121,7 +121,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
         {
             const auto foo = stateModel.getParticles();
             for(const auto& bar : foo) {
-                readdy::log::debug("--> got particle: {}", bar);
+                readdy::log::trace("--> got particle: {}", bar);
             }
         }
     }
@@ -145,7 +145,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
         {
             const auto foo = stateModel.getParticles();
             for(const auto& bar : foo) {
-                readdy::log::debug("---> got particle: {}", bar);
+                readdy::log::trace("---> got particle: {}", bar);
             }
         }
     }

@@ -68,19 +68,31 @@ core_actions::reactions::Gillespie *SCPUActionFactory::createGillespie(double ti
 
 core_actions::reactions::GillespieParallel *SCPUActionFactory::createGillespieParallel(double) const {
     log::critical("SingleCPU kernel does not support the \"{}\" action",
-                             core_actions::getActionName<core_actions::reactions::GillespieParallel>());
+                  core_actions::getActionName<core_actions::reactions::GillespieParallel>());
     return nullptr;
 }
 
 core_actions::reactions::NextSubvolumes *SCPUActionFactory::createNextSubvolumes(double) const {
     log::critical("SingleCPU kernel does not support the \"{}\" action",
-                             core_actions::getActionName<core_actions::reactions::NextSubvolumes>());
+                  core_actions::getActionName<core_actions::reactions::NextSubvolumes>());
     return nullptr;
 }
 
 readdy::model::actions::AddParticles *
 SCPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
     return new readdy::model::actions::AddParticles(kernel, particles);
+}
+
+namespace rma = readdy::model::actions;
+
+std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
+    return {
+            rma::getActionName<rma::AddParticles>(), rma::getActionName<rma::EulerBDIntegrator>(),
+            rma::getActionName<rma::CalculateForces>(),
+            rma::getActionName<rma::UpdateNeighborList>(),
+            rma::getActionName<rma::reactions::UncontrolledApproximation>(),
+            rma::getActionName<rma::reactions::Gillespie>()
+    };
 }
 
 }

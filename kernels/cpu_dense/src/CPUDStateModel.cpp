@@ -70,7 +70,7 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
         if(secondOrder) {
             for (const auto &neighbor : *neighbors_it) {
                 auto &neighborEntry = data.entry_at(neighbor.idx);
-                auto potit = pot2.find({it->type, neighborEntry.type});
+                auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
                 if (potit != pot2.end()) {
                     for (const auto &potential : potit->second) {
                         if (neighbor.d2 < potential->getCutoffRadiusSquared()) {
@@ -222,8 +222,12 @@ void CPUDStateModel::removeAllParticles() {
     pimpl->data().clear();
 }
 
-readdy::model::top::Topology *const CPUDStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::GraphTopology *const CPUDStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     return nullptr;
+}
+
+readdy::model::Particle CPUDStateModel::getParticleForIndex(const std::size_t index) const {
+    return pimpl->cdata().toParticle(pimpl->cdata().entry_at(index));
 }
 
 CPUDStateModel::~CPUDStateModel() = default;

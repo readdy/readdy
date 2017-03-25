@@ -50,7 +50,7 @@ public:
         return std::unique_ptr<R>(get_dispatcher<R, Args...>::impl(this, std::forward<Args>(args)...));
     }
 
-    std::vector<std::string> getAvailableActions() const {
+    virtual std::vector<std::string> getAvailableActions() const {
         return {
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
                 getActionName<UpdateNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),

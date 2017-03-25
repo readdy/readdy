@@ -42,6 +42,7 @@
  */
 
 #pragma once
+
 #include <array>
 #include <memory>
 #include <vector>
@@ -50,9 +51,10 @@
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionFactory.h>
-#include <readdy/common/ParticleTypePair.h>
 #include <readdy/model/compartments/Compartment.h>
 #include "Vec3.h"
+#include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/api/PotentialConfiguration.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -79,11 +81,12 @@ class KernelContext {
     using rea_ptr_vec1 = std::vector<std::unique_ptr<reactions::Reaction<1>>>;
     using rea_ptr_vec2 = std::vector<std::unique_ptr<reactions::Reaction<2>>>;
 
-    using rdy_ptp = readdy::util::ParticleTypePair;
-    using rdy_ptp_hasher = readdy::util::ParticleTypePairHasher;
+    using rdy_ptp = readdy::util::particle_type_pair;
+    using rdy_ptp_hasher = readdy::util::particle_type_pair_hasher;
+    using rdy_ptp_eq = readdy::util::particle_type_pair_equal_to;
 
     using reaction_o1_registry_internal = std::unordered_map<particle_t::type_type, rea_ptr_vec1>;
-    using reaction_o2_registry_internal = std::unordered_map<rdy_ptp, rea_ptr_vec2, rdy_ptp_hasher>;
+    using reaction_o2_registry_internal = std::unordered_map<rdy_ptp, rea_ptr_vec2, rdy_ptp_hasher, rdy_ptp_eq>;
 
     using pot_ptr_vec1 = std::vector<std::unique_ptr<potentials::PotentialOrder1>>;
     using pot_ptr_vec1_external = std::vector<potentials::PotentialOrder1 *>;
@@ -91,7 +94,7 @@ class KernelContext {
     using pot_ptr_vec2_external = std::vector<potentials::PotentialOrder2 *>;
 
     using potential_o1_registry_internal = std::unordered_map<particle_t::type_type, pot_ptr_vec1>;
-    using potential_o2_registry_internal = std::unordered_map<rdy_ptp, pot_ptr_vec2, rdy_ptp_hasher>;
+    using potential_o2_registry_internal = std::unordered_map<rdy_ptp, pot_ptr_vec2, rdy_ptp_hasher, rdy_ptp_eq>;
 
 public:
 
@@ -102,10 +105,10 @@ public:
     using rdy_pot_1_registry = std::unordered_map<particle_t::type_type, std::vector<rdy_pot_1 *>>;
 
     using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
-    using rdy_pot_2_registry = std::unordered_map<rdy_ptp, std::vector<rdy_pot_2 *>, rdy_ptp_hasher>;
+    using rdy_pot_2_registry = std::unordered_map<rdy_ptp, std::vector<rdy_pot_2 *>, rdy_ptp_hasher, rdy_ptp_eq>;
 
     using reaction_o1_registry = std::unordered_map<particle_t::type_type, std::vector<reactions::Reaction<1> *>>;
-    using reaction_o2_registry = std::unordered_map<rdy_ptp, std::vector<reactions::Reaction<2> *>, rdy_ptp_hasher>;
+    using reaction_o2_registry = std::unordered_map<rdy_ptp, std::vector<reactions::Reaction<2> *>, rdy_ptp_hasher, rdy_ptp_eq>;
 
     using compartment_registry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
 
@@ -189,7 +192,7 @@ public:
         const auto t1 = r->getEducts()[0];
         const auto t2 = r->getEducts()[1];
 
-        const readdy::util::ParticleTypePair pp{t1, t2};
+        const auto pp = std::tie(t1, t2);
         if (reactionTwoEductsRegistryInternal.find(pp) == reactionTwoEductsRegistryInternal.end()) {
             reactionTwoEductsRegistryInternal.emplace(pp, rea_ptr_vec2());
         }
@@ -203,9 +206,7 @@ public:
     }
 
     const short registerExternalReaction(reactions::Reaction<2> *r) {
-        reactionTwoEductsRegistryExternal[
-                readdy::util::ParticleTypePair(r->getEducts()[0], r->getEducts()[1])
-        ].push_back(r);
+        reactionTwoEductsRegistryExternal[std::tie(r->getEducts()[0], r->getEducts()[1])].push_back(r);
         return r->getId();
     }
 
@@ -222,7 +223,7 @@ public:
         const auto id = potential->getId();
         auto type1Id = getParticleTypeID(potential->particleType1);
         auto type2Id = getParticleTypeID(potential->particleType2);
-        readdy::util::ParticleTypePair pp{type1Id, type2Id};
+        auto pp = std::tie(type1Id, type2Id);
         if (potentialO2RegistryExternal.find(pp) == potentialO2RegistryExternal.end()) {
             potentialO2RegistryExternal.emplace(pp, pot_ptr_vec2_external());
         }
@@ -248,7 +249,7 @@ public:
         const auto id = potential->getId();
         auto type1Id = getParticleTypeID(potential->particleType1);
         auto type2Id = getParticleTypeID(potential->particleType2);
-        readdy::util::ParticleTypePair pp{type1Id, type2Id};
+        auto pp = std::tie(type1Id, type2Id);
         if (potentialO2RegistryInternal.find(pp) == potentialO2RegistryInternal.end()) {
             potentialO2RegistryInternal.emplace(pp, pot_ptr_vec2());
         }
@@ -338,6 +339,19 @@ public:
      */
     bool &recordReactionCounts();
 
+    void
+    configureTopologyBondPotential(const std::string &type1, const std::string &type2, const api::Bond &bond);
+
+    void configureTopologyAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                         const api::Angle &angle);
+
+    void configureTopologyTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                           const std::string &type4, const api::TorsionAngle &torsionAngle);
+
+    api::PotentialConfiguration &topologyPotentialConfiguration();
+
+    const api::PotentialConfiguration &topologyPotentialConfiguration() const;
+
     // ctor and dtor
     KernelContext();
 
@@ -366,6 +380,8 @@ private:
     reaction_o2_registry reactionTwoEductsRegistry{};
     reaction_o2_registry_internal reactionTwoEductsRegistryInternal{};
     reaction_o2_registry_external reactionTwoEductsRegistryExternal{};
+
+    api::PotentialConfiguration potentialConfiguration_{};
 
     rdy_pot_1_registry potentialO1Registry{};
     rdy_pot_2_registry potentialO2Registry{};

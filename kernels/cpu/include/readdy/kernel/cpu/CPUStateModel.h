@@ -30,6 +30,7 @@
  */
 
 #pragma once
+
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
@@ -47,7 +48,8 @@ public:
 
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
 
-    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config, readdy::model::top::TopologyActionFactory const *const  taf);
+    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config,
+                  readdy::model::top::TopologyActionFactory const *const taf);
 
     ~CPUStateModel();
 
@@ -69,23 +71,28 @@ public:
 
     virtual double getEnergy() const override;
 
-    data_t const*const getParticleData() const;
+    data_t const *const getParticleData() const;
+
     data_t *const getParticleData();
 
-    model::CPUNeighborList const*const getNeighborList() const;
+    model::CPUNeighborList const *const getNeighborList() const;
+
     model::CPUNeighborList *const getNeighborList();
 
     virtual void clearNeighborList() override;
 
-    virtual readdy::model::top::Topology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
+    virtual readdy::model::top::GraphTopology *const
+    addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
 
-    std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords();
+    std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords();
 
-    const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const;
+    const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
 
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts();
+    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &reactionCounts();
 
-    const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts() const;
+    const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &reactionCounts() const;
+
+    virtual readdy::model::Particle getParticleForIndex(const std::size_t index) const override;
 
 private:
     struct Impl;

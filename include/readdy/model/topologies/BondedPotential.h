@@ -48,32 +48,32 @@ public:
     virtual ~BondedPotential() = default;
 };
 
+struct BondConfiguration {
+    BondConfiguration(std::size_t idx1, std::size_t idx2, double forceConstant, double length);
+
+    std::size_t idx1, idx2;
+    double length, forceConstant;
+};
+
 class HarmonicBondPotential : public BondedPotential {
 public:
-    struct Bond;
-    using bonds_t = std::vector<Bond>;
+    using bond_t = BondConfiguration;
+    using bonds_t = std::vector<bond_t>;
 
-    HarmonicBondPotential(Topology *const topology, const std::vector<Bond> &bonds);
+    HarmonicBondPotential(Topology *const topology, const bonds_t &bonds);
     virtual ~HarmonicBondPotential() = default;
 
     const bonds_t &getBonds() const;
 
-    double calculateEnergy(const Vec3 &x_ij, const Bond &bond) const;
+    double calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij, const Bond &bond) const;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_t &bond) const;
 
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const) override;
 
 protected:
     bonds_t bonds;
-};
-
-struct HarmonicBondPotential::Bond {
-    Bond(std::size_t idx1, std::size_t idx2, double forceConstant, double length);
-
-    std::size_t idx1, idx2;
-    double length, forceConstant;
 };
 
 NAMESPACE_END(top)

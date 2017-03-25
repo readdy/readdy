@@ -41,7 +41,7 @@ namespace cpu {
 namespace thd = readdy::util::thread;
 
 using entries_it = CPUStateModel::data_t::entries_t::iterator;
-using topologies_it = std::vector<std::unique_ptr<readdy::model::top::Topology>>::const_iterator;
+using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
 using neighbors_it = decltype(std::declval<readdy::kernel::cpu::model::CPUNeighborList>().cbegin());
 using pot1Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder1Potentials());
 using pot2Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder2Potentials());
@@ -68,14 +68,14 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
                     potential->calculateForceAndEnergy(force, energyUpdate, myPos);
                 }
             }
-            
+
             //
             // 2nd order potentials
             //
             double mySecondOrderEnergy = 0.;
             for (const auto neighbor : *neighbors_it) {
                 auto &neighborEntry = data.entry_at(neighbor);
-                auto potit = pot2.find({it->type, neighborEntry.type});
+                auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
                 if (potit != pot2.end()) {
                     auto x_ij = d(myPos, neighborEntry.position());
                     auto distSquared = x_ij * x_ij;
@@ -123,7 +123,7 @@ struct CPUStateModel::Impl {
     std::unique_ptr<readdy::kernel::cpu::model::CPUNeighborList> neighborList;
     double currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
-    std::vector<std::unique_ptr<readdy::model::top::Topology>> topologies{};
+    std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords {};
     std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts {};
@@ -264,10 +264,7 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
     pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             pimpl->neighborList->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : pimpl->topologies) {
-                    auto &particles = top->getParticles();
-                    std::transform(particles.begin(), particles.end(), particles.begin(), [&indices](std::size_t index) {
-                        return indices[index];
-                    });
+                    top->permuteIndices(indices);
                 }
             }));
 
@@ -297,10 +294,15 @@ model::CPUNeighborList *const CPUStateModel::getNeighborList() {
     return pimpl->neighborList.get();
 }
 
-readdy::model::top::Topology *const
+readdy::model::top::GraphTopology *const
 CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = pimpl->data<false>().addTopologyParticles(particles);
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::Topology>(std::move(ids)));
+    std::vector<particle_type_type> types;
+    types.reserve(ids.size());
+    for(const auto& p : particles) {
+        types.push_back(p.getType());
+    }
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topologyPotentialConfiguration()));
     return pimpl->topologies.back().get();
 }
 
@@ -318,6 +320,10 @@ std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::r
 
 const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() const {
     return pimpl->reactionCounts;
+}
+
+readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {
+    return pimpl->cdata<false>().getParticle(index);
 }
 
 CPUStateModel::~CPUStateModel() = default;

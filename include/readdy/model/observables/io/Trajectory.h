@@ -38,6 +38,7 @@
 #include <array>
 #include <memory>
 #include "readdy/model/Kernel.h"
+#include "TrajectoryEntry.h"
 
 NAMESPACE_BEGIN(readdy)
 
@@ -48,41 +49,17 @@ NAMESPACE_END(io)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-struct TrajectoryEntry {
-    using pos_t = readdy::model::Vec3::value_t;
-
-    TrajectoryEntry(const readdy::model::Particle &p, time_step_type t) : typeId(
-            p.getType()), id(p.getId()), px(p.getPos()[0]), py(p.getPos()[1]), pz(p.getPos()[2]), t(t) {}
-
-    TrajectoryEntry(const model::Particle::type_type typeId, const model::Particle::id_type id,
-                    const model::Vec3 &position, time_step_type t)
-            : typeId(typeId), id(id), px(position[0]), py(position[1]), pz(position[2]), t(t) {}
-
-    readdy::model::Particle::type_type typeId;
-    time_step_type t;
-    readdy::model::Particle::id_type id;
-    pos_t px, py, pz;
-
-    friend std::ostream &operator<<(std::ostream &, const TrajectoryEntry&);
-};
-
-class Trajectory : public model::observables::Observable<std::vector<std::vector<TrajectoryEntry>>> {
-
-    using observable_entry_t = std::vector<std::vector<TrajectoryEntry>>;
-    using base_t = model::observables::Observable<observable_entry_t>;
-
+class Trajectory : public Observable<std::vector<TrajectoryEntry>> {
+    using super = Observable<std::vector<TrajectoryEntry>>;
 public:
 
     const static std::string TRAJECTORY_GROUP_PATH;
-    const static std::string TRAJECTORY_DATA_SET_NAME;
 
-    Trajectory(model::Kernel *const kernel, unsigned int stride, unsigned int fStride, readdy::io::File &file);
+    Trajectory(model::Kernel *const kernel, unsigned int stride);
 
     ~Trajectory();
 
     virtual void evaluate() override;
-
-    virtual void append(observable_entry_t &);
 
     virtual void flush() override;
 
@@ -92,8 +69,6 @@ protected:
     void append() override;
 
 protected:
-    unsigned int count = 0;
-    unsigned int flushStride = 0;
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 };

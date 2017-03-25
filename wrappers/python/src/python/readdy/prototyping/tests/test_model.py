@@ -23,8 +23,8 @@
 from __future__ import print_function
 import unittest
 
-import readdy._internal.prototyping as pr
-import readdy._internal.common as cmn
+import readdy._internal.readdybinding.prototyping as pr
+import readdy._internal.readdybinding.common as cmn
 
 import numpy as np
 

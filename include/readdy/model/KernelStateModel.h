@@ -32,7 +32,7 @@
 
 #pragma once
 #include <vector>
-#include <readdy/model/topologies/Topology.h>
+#include <readdy/model/topologies/GraphTopology.h>
 #include "Particle.h"
 #include "Vec3.h"
 
@@ -48,6 +48,8 @@ public:
 
     virtual const std::vector<Particle> getParticles() const = 0;
 
+    virtual Particle getParticleForIndex(const std::size_t index) const = 0;
+
     virtual void updateNeighborList() = 0;
 
     virtual void clearNeighborList() = 0;
@@ -58,7 +60,7 @@ public:
 
     virtual void addParticles(const std::vector<Particle> &p) = 0;
 
-    virtual readdy::model::top::Topology *const addTopology(const std::vector<TopologyParticle> &particles) = 0;
+    virtual readdy::model::top::GraphTopology *const addTopology(const std::vector<TopologyParticle> &particles) = 0;
 
     virtual void removeParticle(const Particle &p) = 0;
 

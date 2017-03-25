@@ -47,7 +47,7 @@
 #include <readdy/common/make_unique.h>
 #include <readdy/common/signals.h>
 #include <readdy/common/logging.h>
-#include <readdy/common/Utils.h>
+#include <readdy/common/tuple_utils.h>
 
 NAMESPACE_BEGIN(readdy)
 
@@ -288,7 +288,7 @@ public:
      */
     virtual void callback(time_step_type t) override {
         if (ObservableBase::shouldExecuteCallback(t)) {
-            readdy::util::collections::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
+            readdy::util::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::callback(t);
         }
     }
