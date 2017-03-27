@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,52 +21,34 @@
 
 
 /**
- * Header file containing a console() logger which gives the spd console logger.
+ * << detailed description >>
  *
- * @file logging.h
- * @brief Header responsible for the logging system.
+ * @file logging.cpp
+ * @brief << brief description >>
+ * @author chrisfrö
  * @author clonker
- * @date 14.10.16
+ * @date 27.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
-#include <spdlog/spdlog.h>
-#include "macros.h"
+#include <readdy/common/logging.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(log)
+namespace readdy {
+namespace log {
 
-std::shared_ptr<spdlog::logger> console();
-
-template<typename... Args>
-void trace(Args &&... args) {
-    console()->trace(std::forward<Args>(args)...);
+std::shared_ptr<spdlog::logger> get() {
+    if(!spdlog::get("console")) {
+        spdlog::set_sync_mode();
+        auto console = spdlog::stdout_color_mt("console");
+        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+    }
+    return spdlog::get("console");
 }
 
-template<typename... Args>
-void debug(Args &&... args) {
-    console()->debug(std::forward<Args>(args)...);
+std::shared_ptr<spdlog::logger> console() {
+    static std::shared_ptr<spdlog::logger> logger = get();
+    return logger;
 }
 
-template<typename... Args>
-void critical(Args &&... args) {
-    console()->critical(std::forward<Args>(args)...);
 }
-
-template<typename... Args>
-void warn(Args &&... args) {
-    console()->warn(std::forward<Args>(args)...);
 }
-
-template<typename... Args>
-void error(Args &&... args) {
-    console()->error(std::forward<Args>(args)...);
-}
-
-template<typename... Args>
-void info(Args &&... args) {
-    console()->info(std::forward<Args>(args)...);
-}
-
-NAMESPACE_END(log)
-NAMESPACE_END(readdy)
