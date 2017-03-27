@@ -55,7 +55,7 @@ public:
     virtual double getRelevantLengthScale() const noexcept = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const PotentialOrder1 &potential) {
-        potential.describe(os);
+        os << potential.describe();
         return os;
     }
 

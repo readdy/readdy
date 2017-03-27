@@ -67,7 +67,7 @@ public:
 
     void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
 
-    void describe(std::ostream &os) const override;
+    std::string describe() const override;
 
 protected:
     friend class readdy::model::KernelContext;
@@ -96,7 +96,7 @@ public:
 
     void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
 
-    void describe(std::ostream &os) const override;
+    std::string describe() const override;
 
 protected:
     friend class readdy::model::KernelContext;
@@ -122,7 +122,7 @@ public:
 
     void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
 
-    void describe(std::ostream &os) const override;
+    std::string describe() const override;
 protected:
     friend class readdy::model::KernelContext;
 

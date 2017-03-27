@@ -50,7 +50,7 @@ public:
 
     double getSumOfParticleRadiiSquared() const;
 
-    void describe(std::ostream &os) const override;
+    std::string describe() const override;
 
     double getForceConstant() const;
 
@@ -79,7 +79,7 @@ protected:
 class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    void describe(std::ostream &os) const override;
+    std::string describe() const override;
 
     class Configuration {
     public:
@@ -150,7 +150,7 @@ public:
                  unsigned int m, unsigned int n, double cutoffDistance,
                  bool shift, double epsilon, double sigma);
 
-    void describe(std::ostream &os) const override;
+    std::string describe() const override;
 
     virtual ~LennardJones();
 
@@ -197,7 +197,7 @@ public:
 
     virtual double getCutoffRadius() const override;
 
-    void describe(std::ostream &os) const override;
+    std::string describe() const override;
 
     virtual double getCutoffRadiusSquared() const override;
 

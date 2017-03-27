@@ -85,7 +85,7 @@ public:
 
     UpdateNeighborList(Operation operation = Operation::create, double skinSize = -1);
 
-    virtual bool supportsSkin() const;
+    virtual bool supportsSkin() const = 0;
 
 
 protected:

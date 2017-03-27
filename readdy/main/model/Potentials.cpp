@@ -136,10 +136,12 @@ void Cube::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &posi
     calculateForce(force, position);
 }
 
-void Cube::describe(std::ostream &os) const {
-    os << getPotentialName<Cube>() << "[type: " << particleType << ", origin: " << origin
+std::string Cube::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<Cube>() << "[type: " << particleType << ", origin: " << origin
        << ", extent: " << extent << ", min: " << min << ", max: " << max << ", forceConstant: "
        << forceConstant << ", considerParticleRadius: " << considerParticleRadius << "]";
+    return ss.str();
 }
 
 /*
@@ -189,9 +191,11 @@ void SphereIn::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &
     }
 }
 
-void SphereIn::describe(std::ostream &os) const {
-    os << getPotentialName<SphereIn>() << "[type: " << particleType << ", origin: " << origin
+std::string SphereIn::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<SphereIn>() << "[type: " << particleType << ", origin: " << origin
        << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
+    return ss.str();
 }
 
 SphereOut::SphereOut(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius)
@@ -199,9 +203,11 @@ SphereOut::SphereOut(const std::string &particleType, double forceConstant, cons
 
 void SphereOut::configureForType(const KernelContext *const ctx, const PotentialOrder1::particle_type_type type) {}
 
-void SphereOut::describe(std::ostream &os) const {
-    os << getPotentialName<SphereIn>() << "[type: " << particleType << ", origin: " << origin
+std::string SphereOut::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<SphereIn>() << "[type: " << particleType << ", origin: " << origin
        << ", radius: " << radius << ", forceConstant: " << forceConstant << "]";
+    return ss.str();
 }
 
 double SphereOut::getRelevantLengthScale() const noexcept  {
@@ -320,9 +326,11 @@ double HarmonicRepulsion::getCutoffRadiusSquared() const {
     return sumOfParticleRadiiSquared;
 }
 
-void HarmonicRepulsion::describe(std::ostream &os) const {
-    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << particleType1 << ", type2: "
+std::string HarmonicRepulsion::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<HarmonicRepulsion>() << "[type1: " << particleType1 << ", type2: "
        << particleType2 << ", forceConstant: " << forceConstant << "]";
+    return ss.str();
 }
 
 /**
@@ -416,10 +424,12 @@ double WeakInteractionPiecewiseHarmonic::getCutoffRadiusSquared() const {
     return conf.noInteractionDistanceSquared;
 }
 
-void WeakInteractionPiecewiseHarmonic::describe(std::ostream &os) const {
-    os << getPotentialName<HarmonicRepulsion>() << "[type1: " << particleType1 << ", type2: "
+std::string WeakInteractionPiecewiseHarmonic::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<HarmonicRepulsion>() << "[type1: " << particleType1 << ", type2: "
        << particleType2 << ", configuration[" << conf
        << "], forceConstant: " << forceConstant << "]";
+    return ss.str();
 }
 
 WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const double desiredParticleDistance,
@@ -486,10 +496,12 @@ double LennardJones::getMaximalForce(double kbt) const noexcept {
     return 0;
 }
 
-void LennardJones::describe(std::ostream &os) const {
-    os << getPotentialName<LennardJones>() << "[m: " << m << " n: "
+std::string LennardJones::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<LennardJones>() << "[m: " << m << " n: "
        << n << " cutoffDistance: " << cutoffDistance << " shift: " << shift
        << " epsilon: " << epsilon << " k: " << k << "]";
+    return ss.str();
 }
 
 LennardJones::~LennardJones() = default;
@@ -534,12 +546,14 @@ double ScreenedElectrostatics::getCutoffRadiusSquared() const {
     return cutoffSquared;
 }
 
-void ScreenedElectrostatics::describe(std::ostream &os) const {
-    os << getPotentialName<ScreenedElectrostatics>() << "[electrostaticStrength: " << electrostaticStrength
+std::string ScreenedElectrostatics::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<ScreenedElectrostatics>() << "[electrostaticStrength: " << electrostaticStrength
        << " inverseScreeningDepth: " << inverseScreeningDepth
        << " repulsionStrength: " << repulsionStrength << " repulsionDistance: " << repulsionDistance
        << " exponent: " << exponent
        << " cutoff: " << cutoff << "]";
+    return ss.str();
 }
 
 double ScreenedElectrostatics::calculateEnergy(const Vec3 &x_ij) const {

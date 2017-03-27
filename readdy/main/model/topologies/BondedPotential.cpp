@@ -41,14 +41,19 @@ namespace top {
  * Super class
  */
 
-BondedPotential::BondedPotential(Topology *const topology) : TopologyPotential(topology) {}
+BondedPotential::BondedPotential(Topology *const topology, const bonds_t &bonds)
+        : TopologyPotential(topology), bonds(bonds) {}
+
+const BondedPotential::bonds_t &BondedPotential::getBonds() const {
+    return bonds;
+}
 
 /*
  * Harmonic bond
  */
 
 HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const bonds_t &bonds)
-        : BondedPotential(topology), bonds(bonds) {
+        : BondedPotential(topology, bonds) {
     const auto n = topology->getNParticles();
     for(const auto& bond : bonds) {
         if (bond.idx1 >= n) {
@@ -58,10 +63,6 @@ HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const bon
             throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
         }
     }
-}
-
-const HarmonicBondPotential::bonds_t &HarmonicBondPotential::getBonds() const {
-    return bonds;
 }
 
 double HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const BondConfiguration &bond) const {

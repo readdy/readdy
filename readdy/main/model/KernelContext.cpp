@@ -419,7 +419,7 @@ void KernelContext::configure(bool debugOutput) {
             for (const auto &types : getAllOrder1Potentials()) {
                 log::debug("     * for type {}", find_pot_name(types.first));
                 for (auto pot : types.second) {
-                    log::debug("         * {}", _internal::util::to_string(pot));
+                    log::debug("         * {}", pot->describe());
                 }
             }
         }
@@ -429,7 +429,7 @@ void KernelContext::configure(bool debugOutput) {
                 log::debug("     * for types {} and {}", find_pot_name(std::get<0>(types.first)),
                            find_pot_name(std::get<1>(types.first)));
                 for (auto pot : types.second) {
-                    log::debug("         * {}", _internal::util::to_string(pot));
+                    log::debug("         * {}", pot->describe());
                 }
             }
         }

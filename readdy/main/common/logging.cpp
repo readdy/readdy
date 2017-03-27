@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,49 +23,32 @@
 /**
  * << detailed description >>
  *
- * @file Programs.cpp
+ * @file logging.cpp
  * @brief << brief description >>
+ * @author chrisfrö
  * @author clonker
- * @date 17.11.16
+ * @date 27.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/actions/Actions.h>
-#include <readdy/model/Kernel.h>
+#include <readdy/common/logging.h>
 
 namespace readdy {
-namespace model {
-namespace actions {
+namespace log {
 
-
-UpdateNeighborList::UpdateNeighborList(UpdateNeighborList::Operation operation, double skinSize)
-        : operation(operation), skinSize(skinSize) {
-}
-
-EulerBDIntegrator::EulerBDIntegrator(double timeStep) : TimeStepDependentAction(timeStep) {}
-
-reactions::UncontrolledApproximation::UncontrolledApproximation(double timeStep) : TimeStepDependentAction(timeStep) {}
-
-reactions::Gillespie::Gillespie(double timeStep) : TimeStepDependentAction(timeStep) {}
-
-reactions::GillespieParallel::GillespieParallel(double timeStep) : TimeStepDependentAction(timeStep) {}
-
-reactions::NextSubvolumes::NextSubvolumes(double timeStep) : TimeStepDependentAction(timeStep) {}
-
-AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
-        : particles(particles), kernel(kernel) {}
-
-AddParticles::AddParticles(Kernel *const kernel, const Particle &particle)
-        : AddParticles(kernel, std::vector<Particle>{particle}) {}
-
-void AddParticles::perform() {
-    if(kernel) {
-        kernel->getKernelStateModel().addParticles(particles);
-    } else {
-        log::critical("Tried to perform {} without providing a valid kernel!", getActionName<AddParticles>());
+std::shared_ptr<spdlog::logger> get() {
+    if(!spdlog::get("console")) {
+        spdlog::set_sync_mode();
+        auto console = spdlog::stdout_color_mt("console");
+        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
     }
+    return spdlog::get("console");
 }
 
-CalculateForces::CalculateForces() : Action() {}
+std::shared_ptr<spdlog::logger> console() {
+    static std::shared_ptr<spdlog::logger> logger = get();
+    return logger;
 }
+
 }
 }

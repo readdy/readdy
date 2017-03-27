@@ -35,14 +35,8 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(log)
-inline std::shared_ptr<spdlog::logger> console() {
-    if(!spdlog::get("console")) {
-        spdlog::set_sync_mode();
-        auto console = spdlog::stdout_color_mt("console");
-        console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-    }
-    return spdlog::get("console");
-}
+
+std::shared_ptr<spdlog::logger> console();
 
 template<typename... Args>
 void trace(Args &&... args) {

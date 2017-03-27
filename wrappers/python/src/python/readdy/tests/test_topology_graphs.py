@@ -68,6 +68,38 @@ class TestTopologyGraphs(unittest.TestCase):
         top.configure()
         sim.run_scheme_readdy(True).configure_and_run(1, 0)
 
+    def test_unconnected_graph(self):
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+        sim.box_size = common.Vec(10, 10, 10)
+        np.testing.assert_equal(sim.kernel_supports_topologies(), True)
+        sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.configure_topology_bond_potential("T", "T", 10., 11.)
+        particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(4)]
+        top = sim.add_topology(particles)
+        graph = top.get_graph()
+        graph.add_edge(0, 1)
+        graph.add_edge(1, 2)
+        with (np.testing.assert_raises(ValueError)):
+            top.configure()
+
+    def test_unbonded_edge(self):
+        sim = Simulation()
+        sim.set_kernel("SingleCPU")
+        sim.box_size = common.Vec(10, 10, 10)
+        np.testing.assert_equal(sim.kernel_supports_topologies(), True)
+        sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.register_particle_type("D", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.configure_topology_bond_potential("T", "T", 10., 11.)
+        particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(3)]
+        particles.append(sim.create_topology_particle("D", common.Vec(0, 0, 0)))
+        top = sim.add_topology(particles)
+        graph = top.get_graph()
+        graph.add_edge(0, 1)
+        graph.add_edge(1, 2)
+        graph.add_edge(2, 3)
+        with (np.testing.assert_raises(ValueError)):
+            top.configure()
 
 if __name__ == '__main__':
     unittest.main()

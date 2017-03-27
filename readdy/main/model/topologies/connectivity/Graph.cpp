@@ -208,11 +208,13 @@ bool Graph::isConnected() {
     while(!unvisited.empty()) {
         auto vertex = unvisited.back();
         unvisited.pop_back();
-        vertex->visited = true;
-        ++n_visited;
-        for(auto neighbor : vertex->neighbors()) {
-            if(!neighbor->visited) {
-                unvisited.push_back(neighbor);
+        if(!vertex->visited) {
+            vertex->visited = true;
+            ++n_visited;
+            for (auto neighbor : vertex->neighbors()) {
+                if (!neighbor->visited) {
+                    unvisited.push_back(neighbor);
+                }
             }
         }
     }

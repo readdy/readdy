@@ -59,10 +59,10 @@ public:
 
     virtual double getMaximalForce(double kbt) const noexcept = 0;
 
-    virtual void describe(std::ostream& os) const = 0;
+    virtual std::string describe() const = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const Potential &potential) {
-        potential.describe(os);
+        os << potential.describe();
         return os;
     }
 
