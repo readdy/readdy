@@ -47,7 +47,11 @@ public:
     }
 
     CPUDUpdateNeighborList(CPUDKernel *const kernel, super::Operation op, double skin)
-            : super(op, skin), kernel(kernel) { }
+            : super(op, skin), kernel(kernel) {
+        if(skin >= 0) {
+            log::warn("Ignoring skin size for CPU_Dense kernel, as there is no Verlet list implementation");
+        }
+    }
 
     virtual void perform() override {
         switch (operation) {

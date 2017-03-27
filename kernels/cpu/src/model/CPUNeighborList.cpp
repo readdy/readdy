@@ -160,7 +160,7 @@ void CPUNeighborList::setupCells() {
             setupNeighboringCells(0, 0, 0);
         }
     }
-    log::warn("got {} in total with ({}, {}, {}) in each direction", cells.size(), nCells[0], nCells[1], nCells[2]);
+    log::trace("got {} in total with ({}, {}, {}) in each direction", cells.size(), nCells[0], nCells[1], nCells[2]);
 }
 
 void

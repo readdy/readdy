@@ -40,19 +40,22 @@ namespace cpu {
 namespace actions {
 class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
     using super = readdy::model::actions::UpdateNeighborList;
+    bool firstRun = true;
 public:
 
     CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, double skin) : super(op, skin), kernel(kernel) {}
 
     virtual void perform() override {
+        if(firstRun) {
+            if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->setSkinSize(skinSize);
+            firstRun = false;
+        }
         switch (operation) {
             case create:
                 kernel->getKernelStateModel().updateNeighborList();
-                if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->setSkinSize(skinSize);
                 break;
             case clear:
                 kernel->getKernelStateModel().clearNeighborList();
-                if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->setSkinSize(skinSize);
                 break;
         }
 
