@@ -31,6 +31,7 @@
  */
 
 #include <readdy/model/topologies/GraphTopology.h>
+#include <sstream>
 
 
 namespace readdy {
@@ -56,6 +57,9 @@ const graph::Graph &GraphTopology::graph() const {
 }
 
 void GraphTopology::configure() {
+
+    validate();
+
     bondedPotentials.clear();
     anglePotentials.clear();
     torsionPotentials.clear();
@@ -65,13 +69,29 @@ void GraphTopology::configure() {
     std::unordered_map<api::TorsionType, std::vector<DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
     graph_->findNTuples([&](const graph::Graph::vertex_ptr_tuple &tuple) {
+        auto v1 = std::get<0>(tuple);
+        auto v2 = std::get<1>(tuple);
         auto it = config->pairPotentials.find(
-                std::tie(std::get<0>(tuple)->particleType(), std::get<1>(tuple)->particleType()));
+                std::tie(v1->particleType(), v2->particleType()));
         if (it != config->pairPotentials.end()) {
             for (const auto &cfg : it->second) {
-                bonds[cfg.type].emplace_back(std::get<0>(tuple)->particleIndex, std::get<1>(tuple)->particleIndex,
+                bonds[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex,
                                              cfg.forceConstant, cfg.length);
             }
+        } else {
+            std::ostringstream ss;
+
+            ss << "The edge " << v1->particleIndex;
+            if (!v1->label.empty()) {
+                ss << " (" << v1->label << ")";
+            }
+            ss << " -- " << v2->particleIndex;
+            if (!v2->label.empty()) {
+                ss << " (" << v2->label << ")";
+            }
+            ss << " has no bond configured! (See KernelContext.configureTopologyBondPotential())";
+
+            throw std::invalid_argument(ss.str());
         }
     }, [&](const graph::Graph::vertex_ptr_triple &triple) {
         const auto &v1 = std::get<0>(triple);
@@ -99,7 +119,7 @@ void GraphTopology::configure() {
             }
         }
     });
-    for(const auto& bond : bonds) {
+    for (const auto &bond : bonds) {
         switch (bond.first) {
             case api::BondType::HARMONIC: {
                 addBondedPotential(std::make_unique<HarmonicBondPotential>(this, bond.second));
@@ -107,16 +127,16 @@ void GraphTopology::configure() {
             };
         }
     }
-    for(const auto& angle : angles) {
-        switch(angle.first) {
+    for (const auto &angle : angles) {
+        switch (angle.first) {
             case api::AngleType::HARMONIC: {
                 addAnglePotential(std::make_unique<HarmonicAnglePotential>(this, angle.second));
                 break;
             };
         }
     }
-    for(const auto& dih : dihedrals) {
-        switch(dih.first) {
+    for (const auto &dih : dihedrals) {
+        switch (dih.first) {
             case api::TorsionType::COS_DIHEDRAL: {
                 addTorsionPotential(std::make_unique<CosineDihedralPotential>(this, dih.second));
                 break;
@@ -127,7 +147,7 @@ void GraphTopology::configure() {
 
 void GraphTopology::validate() {
     if (!graph().isConnected()) {
-        log::warn("The graph is not connected!");
+        throw std::invalid_argument("The graph is not connected!");
     }
 }
 

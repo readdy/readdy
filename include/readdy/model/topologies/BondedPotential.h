@@ -42,12 +42,6 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-class BondedPotential : public TopologyPotential {
-public:
-    BondedPotential(Topology *const topology);
-    virtual ~BondedPotential() = default;
-};
-
 struct BondConfiguration {
     BondConfiguration(std::size_t idx1, std::size_t idx2, double forceConstant, double length);
 
@@ -55,15 +49,26 @@ struct BondConfiguration {
     double length, forceConstant;
 };
 
-class HarmonicBondPotential : public BondedPotential {
+
+class BondedPotential : public TopologyPotential {
 public:
     using bond_t = BondConfiguration;
     using bonds_t = std::vector<bond_t>;
 
-    HarmonicBondPotential(Topology *const topology, const bonds_t &bonds);
-    virtual ~HarmonicBondPotential() = default;
+    BondedPotential(Topology *const topology, const bonds_t &bonds);
+    virtual ~BondedPotential() = default;
 
     const bonds_t &getBonds() const;
+protected:
+    bonds_t bonds;
+};
+
+
+class HarmonicBondPotential : public BondedPotential {
+public:
+
+    HarmonicBondPotential(Topology *const topology, const bonds_t &bonds);
+    virtual ~HarmonicBondPotential() = default;
 
     double calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
 
@@ -72,8 +77,6 @@ public:
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const) override;
 
-protected:
-    bonds_t bonds;
 };
 
 NAMESPACE_END(top)
