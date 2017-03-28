@@ -202,6 +202,10 @@ SCPUParticleData::index_t SCPUParticleData::n_deactivated() const {
     return blanks.size();
 }
 
+void SCPUParticleData::reserve(std::size_t n) {
+    entries.reserve(n);
+}
+
 bool Entry::is_deactivated() const {
     return deactivated;
 }

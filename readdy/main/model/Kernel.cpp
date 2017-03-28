@@ -223,7 +223,15 @@ TopologyParticle Kernel::createTopologyParticle(const std::string &type, const V
 }
 
 bool Kernel::supportsTopologies() const {
-    return getTopologyActionFactory() ? true : false;
+    return getTopologyActionFactory() != nullptr;
+}
+
+void Kernel::expected_n_particles(const std::size_t n) {
+    if(n >= 0) {
+        getKernelStateModel().expected_n_particles(n);
+    } else {
+        throw std::invalid_argument("expected number of particles should be larger than 0");
+    }
 }
 
 Kernel &Kernel::operator=(Kernel &&rhs) = default;

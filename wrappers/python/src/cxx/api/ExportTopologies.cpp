@@ -51,6 +51,7 @@ using cosine_dihedral = readdy::model::top::CosineDihedralPotential;
 using vec3 = readdy::model::Vec3;
 
 void exportTopologies(py::module &m) {
+    using namespace py::literals;
     py::class_<topology_particle>(m, "TopologyParticle")
             .def("get_position", [](topology_particle &self) { return self.getPos(); })
             .def("get_type", [](topology_particle &self) { return self.getType(); })
@@ -60,13 +61,13 @@ void exportTopologies(py::module &m) {
             .def("get_n_particles", &topology::getNParticles)
             .def("add_harmonic_angle_potential", [](topology &self, const harmonic_angle::angles_t &angles) {
                 self.addAnglePotential<harmonic_angle>(angles);
-            })
+            }, "angles"_a)
             .def("add_harmonic_bond_potential", [](topology &self, const harmonic_bond::bonds_t &bonds) {
                 self.addBondedPotential<harmonic_bond>(bonds);
-            })
+            }, "bonds"_a)
             .def("add_cosine_dihedral_potential", [](topology &self, const cosine_dihedral::dihedrals_t &dihedrals) {
                 self.addTorsionPotential<cosine_dihedral>(dihedrals);
-            })
+            }, "dihedrals"_a)
             .def("get_graph", [](topology &self) -> graph & { return self.graph(); }, rvp::reference_internal)
             .def("configure", &topology::configure)
             .def("validate", &topology::validate);
@@ -76,7 +77,7 @@ void exportTopologies(py::module &m) {
                  rvp::reference_internal)
             .def("add_edge", [](graph &self, const std::string &v1, const std::string &v2) {
                 self.addEdge(v1, v2);
-            })
+            }, "vertex_label_1"_a, "vertex_label_2"_a)
             .def("add_edge", [](graph &self, std::size_t v1, std::size_t v2) {
                 if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
                     auto it1 = self.vertices().begin();
@@ -87,7 +88,7 @@ void exportTopologies(py::module &m) {
                 } else {
                     throw std::invalid_argument("vertices out of bounds!");
                 }
-            });
+            }, "vertex_index_1"_a, "vertex_index_2"_a);
 
     py::class_<vertex::vertex_edge>(m, "VertexPointer")
             .def("get", [](const vertex::vertex_edge &edge) -> const vertex & { return *edge; });
@@ -109,24 +110,25 @@ void exportTopologies(py::module &m) {
     {
         py::class_<bonded_potential, topology_potential>(m, "BondedPotential");
         py::class_<harmonic_bond::bond_t>(m, "HarmonicBondPotentialBond")
-                .def(py::init<std::size_t, std::size_t, double, double>())
+                .def(py::init<std::size_t, std::size_t, double, double>(), "index1"_a, "index2"_a, "force_constant"_a, "length"_a)
                 .def_readonly("idx1", &harmonic_bond::bond_t::idx1)
                 .def_readonly("idx2", &harmonic_bond::bond_t::idx2)
                 .def_readonly("length", &harmonic_bond::bond_t::length)
                 .def_readonly("force_constant", &harmonic_bond::bond_t::forceConstant);
         py::class_<harmonic_bond, bonded_potential>(m, "HarmonicBondPotential")
                 .def("get_bonds", &harmonic_bond::getBonds)
-                .def("calculate_energy", &harmonic_bond::calculateEnergy)
+                .def("calculate_energy", &harmonic_bond::calculateEnergy, "x_ij"_a, "bond"_a)
                 .def("calculate_force", [](harmonic_bond &self, const vec3 &x_ij, const harmonic_bond::bond_t &bond) {
                     vec3 force(0, 0, 0);
                     self.calculateForce(force, x_ij, bond);
                     return force;
-                });
+                }, "x_ij"_a, "bond"_a);
     }
     {
         py::class_<angle_potential, topology_potential>(m, "AnglePotential");
         py::class_<harmonic_angle::angle_t>(m, "HarmonicAnglePotentialAngle")
-                .def(py::init<std::size_t, std::size_t, std::size_t, double, double>())
+                .def(py::init<std::size_t, std::size_t, std::size_t, double, double>(),
+                     "index1"_a, "index2"_a, "index3"_a, "force_constant"_a, "equilibrium_angle"_a)
                 .def_readonly("idx1", &harmonic_angle::angle_t::idx1)
                 .def_readonly("idx2", &harmonic_angle::angle_t::idx2)
                 .def_readonly("idx3", &harmonic_angle::angle_t::idx3)
@@ -134,18 +136,20 @@ void exportTopologies(py::module &m) {
                 .def_readonly("force_constant", &harmonic_angle::angle_t::forceConstant);
         py::class_<harmonic_angle, angle_potential>(m, "HarmonicAnglePotential")
                 .def("get_angles", &harmonic_angle::getAngles)
-                .def("calculate_energy", &harmonic_angle::calculateEnergy)
+                .def("calculate_energy", &harmonic_angle::calculateEnergy, "x_ji"_a, "x_jk"_a, "angle"_a)
                 .def("calculate_force", [](harmonic_angle &self, const vec3 &x_ij, const vec3 &x_kj,
                                            const harmonic_angle::angle_t &angle) {
                     vec3 f1(0, 0, 0), f2(0, 0, 0), f3(0, 0, 0);
                     self.calculateForce(f1, f2, f3, x_ij, x_kj, angle);
                     return std::make_tuple(std::move(f1), std::move(f2), std::move(f3));
-                });
+                }, "x_ij"_a, "x_kj"_a, "angle"_a);
     }
     {
         py::class_<torsion_potential, topology_potential>(m, "TorsionPotential");
         py::class_<cosine_dihedral::dihedral_t>(m, "CosineDihedralPotentialDihedral")
-                .def(py::init<std::size_t, std::size_t, std::size_t, std::size_t, double, double, double>())
+                .def(py::init<std::size_t, std::size_t, std::size_t, std::size_t, double, double, double>(),
+                     "index1"_a, "index2"_a, "index3"_a, "index4"_a, "force_constant"_a, "multiplicity"_a,
+                     "equilibrium_angle"_a)
                 .def_readonly("idx1", &cosine_dihedral::dihedral_t::idx1)
                 .def_readonly("idx2", &cosine_dihedral::dihedral_t::idx2)
                 .def_readonly("idx3", &cosine_dihedral::dihedral_t::idx3)
@@ -155,12 +159,12 @@ void exportTopologies(py::module &m) {
                 .def_readonly("multiplicity", &cosine_dihedral::dihedral_t::multiplicity);
         py::class_<cosine_dihedral>(m, "CosineDihedralPotential")
                 .def("get_dihedrals", &cosine_dihedral::getDihedrals)
-                .def("calculate_energy", &cosine_dihedral::calculateEnergy)
+                .def("calculate_energy", &cosine_dihedral::calculateEnergy, "x_ji"_a, "x_kj"_a, "x_kl"_a, "dihedral"_a)
                 .def("calculate_force", [](cosine_dihedral &self, const vec3 &x_ji, const vec3 &x_kj, const vec3 &x_kl,
                                            const cosine_dihedral::dihedral_t &dih) {
                     vec3 f1(0, 0, 0), f2(0, 0, 0), f3(0, 0, 0), f4(0, 0, 0);
                     self.calculateForce(f1, f2, f3, f4, x_ji, x_kj, x_kl, dih);
                     return std::make_tuple(f1, f2, f3, f4);
-                });
+                }, "x_ji"_a, "x_kj"_a, "x_kl"_a, "dihedral"_a);
     }
 }

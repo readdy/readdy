@@ -326,6 +326,13 @@ readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t ind
     return pimpl->cdata<false>().getParticle(index);
 }
 
+void CPUStateModel::expected_n_particles(const std::size_t n) {
+    auto& data = pimpl->data<false>();
+    if(data.size() < n) {
+        data.reserve(n);
+    }
+}
+
 CPUStateModel::~CPUStateModel() = default;
 
 

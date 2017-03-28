@@ -59,7 +59,7 @@ class TestTopologies(unittest.TestCase):
         def callback(result):
             forces.append(result)
 
-        sim.register_observable_forces(1, callback, ["T"])
+        sim.register_observable_forces(1, ["T"], callback)
         sim.run_scheme_readdy(True).configure_and_run(1, 0)
         np.testing.assert_equal(len(forces), 1)
         np.testing.assert_equal(len(forces[0]), 4)

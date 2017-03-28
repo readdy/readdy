@@ -227,6 +227,8 @@ public:
     const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const;
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
 
+    void expected_n_particles(const std::size_t n);
+
 protected:
 
     unsigned int getTypeIdRequireNormalFlavor(const std::string &) const;

@@ -407,6 +407,11 @@ void Simulation::configureTopologyTorsionPotential(const std::string &type1, con
     );
 }
 
+void Simulation::setExpectedMaxNParticles(const std::size_t n) {
+    ensureKernelSelected();
+    getSelectedKernel()->expected_n_particles(n);
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};
 
 }

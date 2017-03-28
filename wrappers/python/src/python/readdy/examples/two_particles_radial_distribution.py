@@ -65,7 +65,7 @@ if __name__ == '__main__':
     simulation.add_particle("A", Vec(-2.5, 0, 0))
     simulation.add_particle("B", Vec(0, 0, 0))
 
-    simulation.register_observable_radial_distribution(10, rdf_callback, np.arange(0, 5, .01), ["A"], ["B"], 1. / (box_size[0] * box_size[1] * box_size[2]))
+    simulation.register_observable_radial_distribution(10, np.arange(0, 5, .01), ["A"], ["B"], 1. / (box_size[0] * box_size[1] * box_size[2]), rdf_callback)
     simulation.run(T, 0.02)
 
     print("n_calls=%s" % n_calls)

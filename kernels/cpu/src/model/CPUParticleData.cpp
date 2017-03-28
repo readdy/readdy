@@ -295,6 +295,11 @@ CPUParticleData::addTopologyParticles(const std::vector<CPUParticleData::top_par
     return indices;
 }
 
+void CPUParticleData::reserve(std::size_t n) {
+    entries.reserve(n);
+    neighbors.reserve(n);
+}
+
 }
 }
 }

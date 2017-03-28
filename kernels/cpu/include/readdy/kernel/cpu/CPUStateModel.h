@@ -79,6 +79,8 @@ public:
 
     model::CPUNeighborList *const getNeighborList();
 
+    virtual void expected_n_particles(const std::size_t n) override;
+
     virtual void clearNeighborList() override;
 
     virtual readdy::model::top::GraphTopology *const

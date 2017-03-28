@@ -129,6 +129,8 @@ public:
 
     index_t n_deactivated() const;
 
+    void reserve(std::size_t n);
+
     void clear();
 
     const Entry &entry_at(index_t) const;

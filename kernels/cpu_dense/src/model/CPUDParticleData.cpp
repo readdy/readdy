@@ -241,6 +241,10 @@ void CPUDParticleData::deactivate(CPUDParticleData::index_t idx) {
     deactivate(entry_at(idx));
 }
 
+void CPUDParticleData::reserve(std::size_t n) {
+    entries.reserve(n);
+}
+
 CPUDParticleData::~CPUDParticleData() = default;
 
 }

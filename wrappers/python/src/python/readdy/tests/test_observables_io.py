@@ -59,8 +59,8 @@ class TestObservablesIO(unittest.TestCase):
         sim.register_particle_type("A", .1, .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
-        sim.register_observable_n_particles(1, lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)), ["A"])
-        handle = sim.register_observable_particle_positions(1, None, [])
+        sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
+        handle = sim.register_observable_particle_positions(1, [])
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"particle_positions", int(3))
@@ -92,8 +92,8 @@ class TestObservablesIO(unittest.TestCase):
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(0, 0, 0))
         # every time step, add one particle
-        sim.register_observable_n_particles(1, lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)), ["A"])
-        handle = sim.register_observable_particles(1, None)
+        sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
+        handle = sim.register_observable_particles(1)
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"particles", int(3))
@@ -148,7 +148,7 @@ class TestObservablesIO(unittest.TestCase):
             callback_centers.append(pair[0])
             callback_rdf.append(pair[1])
 
-        handle = simulation.register_observable_radial_distribution(1, rdf_callback, bin_borders, ["A"], ["B"], density)
+        handle = simulation.register_observable_radial_distribution(1, bin_borders, ["A"], ["B"], density, rdf_callback)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"radial_distribution", int(3))
             simulation.run(n_time_steps, 0.02)
@@ -182,7 +182,7 @@ class TestObservablesIO(unittest.TestCase):
         def com_callback(vec):
             callback_com.append(vec)
 
-        handle = simulation.register_observable_center_of_mass(1, com_callback, ["A", "B"])
+        handle = simulation.register_observable_center_of_mass(1, ["A", "B"], com_callback)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"com", 3)
             simulation.run(n_time_steps, 0.02)
@@ -218,7 +218,7 @@ class TestObservablesIO(unittest.TestCase):
         def hist_callback(hist):
             callback_hist.append(hist)
 
-        handle = simulation.register_observable_histogram_along_axis(2, hist_callback, bin_borders, 0, ["A", "B"])
+        handle = simulation.register_observable_histogram_along_axis(2, bin_borders, 0, ["A", "B"], hist_callback)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"hist_along_x_axis", int(3))
             simulation.run(n_time_steps, 0.02)
@@ -259,8 +259,8 @@ class TestObservablesIO(unittest.TestCase):
             simulation.add_particle("A", common.Vec(-1, -1, -1))
             simulation.add_particle("B", common.Vec(-1, -1, -1))
 
-        handle_a_b_particles = simulation.register_observable_n_particles(1, callback_ab, ["A", "B"])
-        handle_all = simulation.register_observable_n_particles(1, callback_all, [])
+        handle_a_b_particles = simulation.register_observable_n_particles(1, ["A", "B"], callback_ab)
+        handle_all = simulation.register_observable_n_particles(1, [], callback_all)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle_a_b_particles.enable_write_to_file(f, u"n_a_b_particles", int(3))
             handle_all.enable_write_to_file(f, u"n_particles", int(5))
@@ -296,7 +296,7 @@ class TestObservablesIO(unittest.TestCase):
 
         n_timesteps = 1
 
-        handle = sim.register_observable_reactions(1, None)
+        handle = sim.register_observable_reactions(1)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
             sim.run(n_timesteps, 1)
@@ -342,7 +342,7 @@ class TestObservablesIO(unittest.TestCase):
         sim.add_particle("C", common.Vec(1.1, 1.0, 1.0))
 
         n_timesteps = 1
-        handle = sim.register_observable_reaction_counts(1, None)
+        handle = sim.register_observable_reaction_counts(1)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
             sim.run(n_timesteps, 1)
@@ -375,8 +375,8 @@ class TestObservablesIO(unittest.TestCase):
         sim.register_particle_type("A", .1, .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
-        sim.register_observable_n_particles(1, lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)), ["A"])
-        handle = sim.register_observable_forces(1, None, [])
+        sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
+        handle = sim.register_observable_forces(1, [])
         n_timesteps = 19
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"forces", int(3))

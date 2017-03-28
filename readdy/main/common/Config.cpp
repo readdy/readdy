@@ -30,8 +30,9 @@
  */
 
 #include <thread>
+#include <algorithm>
+
 #include <readdy/common/logging.h>
-#include <readdy/common/macros.h>
 
 #include "readdy/common/thread/Config.h"
 
@@ -44,11 +45,11 @@ namespace util {
 namespace thread {
 
 Config::Config() {
-    // magic number 4 to enable some load balancing
 #ifdef READDY_DEBUG
-    m_nThreads = std::thread::hardware_concurrency();
+    m_nThreads = std::max(std::thread::hardware_concurrency(), 1u);
 #else
-    m_nThreads = 4*std::thread::hardware_concurrency();
+    // magic number 4 to enable some load balancing
+    m_nThreads = std::max(4*std::thread::hardware_concurrency(), 1u);
 #endif
 
     const char *env = std::getenv("READDY_N_CORES");
