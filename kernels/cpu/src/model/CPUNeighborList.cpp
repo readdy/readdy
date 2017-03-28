@@ -34,7 +34,7 @@
 #include <future>
 
 #include <readdy/common/numeric.h>
-#include <readdy/common/thread/scoped_thread.h>
+#include <readdy/common/thread/scoped_async.h>
 #include <readdy/common/thread/barrier.h>
 #include <readdy/common/thread/semaphore.h>
 #include <readdy/common/Timer.h>
@@ -300,20 +300,16 @@ void CPUNeighborList::fillCells() {
                         };
 
                         {
-                            std::vector<thd::scoped_thread> threads;
+                            std::vector<thd::scoped_async> threads;
                             threads.reserve(config->nThreads());
                             auto data_it = data.begin();
                             auto hilberts_it = hilbert_indices.begin();
                             for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
-                                threads.push_back(
-                                        thd::scoped_thread(std::thread(
-                                                worker, data_it, data_it + grainSize, hilberts_it
-                                        )));
+                                threads.emplace_back(worker, data_it, data_it + grainSize, hilberts_it);
                                 data_it += grainSize;
                                 hilberts_it += grainSize;
                             }
-                            threads.push_back(thd::scoped_thread(
-                                    std::thread(worker, data_it, data.end(), hilberts_it)));
+                            threads.emplace_back(worker, data_it, data.end(), hilberts_it);
                         }
                         {
                             std::sort(indices.begin(), indices.end(),
@@ -395,15 +391,15 @@ void CPUNeighborList::fillCells() {
                 }
             };
 
-            std::vector<thd::scoped_thread> threads;
+            std::vector<thd::scoped_async> threads;
             threads.reserve(config->nThreads());
 
             auto it_cells = cells.begin();
             for (int i = 0; i < config->nThreads() - 1; ++i) {
-                threads.push_back(thd::scoped_thread(std::thread(worker, it_cells, it_cells + grainSize)));
+                threads.emplace_back(worker, it_cells, it_cells + grainSize);
                 it_cells += grainSize;
             }
-            threads.push_back(thd::scoped_thread(std::thread(worker, it_cells, cells.end())));
+            threads.emplace_back(worker, it_cells, cells.end());
         } else {
             auto dirtyCells = findDirtyCells();
 
@@ -477,7 +473,7 @@ void CPUNeighborList::fillCells() {
                 // readdy::util::Timer t("        update dirty cells");
                 thd::barrier b(config->nThreads());
 
-                std::vector<thd::scoped_thread> threads;
+                std::vector<thd::scoped_async> threads;
                 threads.reserve(config->nThreads());
 
                 // log::warn("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
@@ -486,11 +482,10 @@ void CPUNeighborList::fillCells() {
                     auto it_cells = dirtyCells.begin();
                     for (int i = 0; i < config->nThreads() - 1; ++i) {
                         auto advanced = std::next(it_cells, grainSize);
-                        threads.push_back(thd::scoped_thread(std::thread(worker, it_cells, advanced, std::cref(b))));
+                        threads.emplace_back(worker, it_cells, advanced, std::cref(b));
                         it_cells = advanced;
                     }
-                    threads.push_back(
-                            thd::scoped_thread(std::thread(worker, it_cells, dirtyCells.end(), std::cref(b))));
+                    threads.emplace_back(worker, it_cells, dirtyCells.end(), std::cref(b));
                 }
             }
             {
@@ -742,29 +737,25 @@ std::unordered_set<CPUNeighborList::Cell *> CPUNeighborList::findDirtyCells() {
     };
 
     std::atomic<bool> interrupt(false);
-    thd::barrier b(config->nThreads());
+    thd::barrier barrier(config->nThreads());
 
     std::vector<future_t> dirtyCells;
     dirtyCells.reserve(config->nThreads());
     {
         auto it_cells = cells.begin();
-        std::vector<thd::scoped_thread> threads;
+        std::vector<thd::scoped_async> threads;
         const std::size_t grainSize = cells.size() / config->nThreads();
         for (int i = 0; i < config->nThreads() - 1; ++i) {
             promise_t promise;
             dirtyCells.push_back(promise.get_future());
-            threads.push_back(
-                    thd::scoped_thread(
-                            std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b),
-                                        std::ref(interrupt)))
-            );
+            threads.emplace_back(worker, it_cells, it_cells + grainSize, std::move(promise),
+                                 std::cref(barrier), std::ref(interrupt));
             it_cells += grainSize;
         }
         promise_t promise;
         dirtyCells.push_back(promise.get_future());
-        threads.push_back(thd::scoped_thread(
-                std::thread(worker, it_cells, it_cells + grainSize, std::move(promise), std::cref(b),
-                            std::ref(interrupt))));
+        threads.emplace_back(worker, it_cells, it_cells + grainSize, std::move(promise),
+                             std::cref(barrier), std::ref(interrupt));
     }
     if (interrupt.load()) {
         throw ParticleTravelledTooFarException();

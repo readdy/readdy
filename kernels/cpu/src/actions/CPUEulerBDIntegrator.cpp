@@ -29,7 +29,7 @@
  * @date 07.07.16
  */
 
-#include <readdy/common/thread/scoped_thread.h>
+#include <readdy/common/thread/scoped_async.h>
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
 
 namespace readdy {
@@ -43,7 +43,7 @@ namespace thd = readdy::util::thread;
 void CPUEulerBDIntegrator::perform() {
     auto& pd = *kernel->getCPUKernelStateModel().getParticleData();
     const auto size = pd.size();
-    std::vector<thd::scoped_thread> threads;
+    std::vector<thd::scoped_async> threads;
     threads.reserve(kernel->getNThreads());
     const std::size_t grainSize = size / kernel->getNThreads();
 
@@ -68,10 +68,10 @@ void CPUEulerBDIntegrator::perform() {
     auto work_iter = pd.begin();
     {
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
-            threads.push_back(thd::scoped_thread(std::thread(worker, work_iter, work_iter + grainSize)));
+            threads.emplace_back(worker, work_iter, work_iter + grainSize);
             work_iter += grainSize;
         }
-        threads.push_back(thd::scoped_thread(std::thread(worker, work_iter, pd.end())));
+        threads.emplace_back(worker, work_iter, pd.end());
     }
 
 }

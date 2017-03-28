@@ -31,7 +31,7 @@
 
 #include <future>
 
-#include <readdy/common/thread/scoped_thread.h>
+#include <readdy/common/thread/scoped_async.h>
 
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/Event.h>
@@ -141,7 +141,7 @@ void CPUUncontrolledApproximation::perform() {
     {
         const std::size_t grainSize = data.size() / kernel->getNThreads();
 
-        std::vector<thd::scoped_thread> threads;
+        std::vector<thd::scoped_async> threads;
 
         auto it = data.cbegin();
         auto it_nl = nl.cbegin();
@@ -151,10 +151,8 @@ void CPUUncontrolledApproximation::perform() {
             std::promise<std::size_t> n_events;
             n_eventsFutures.push_back(n_events.get_future());
 
-            threads.push_back(thd::scoped_thread(
-                    std::thread(findEvents, it, it + grainSize, it_nl, kernel, timeStep, true,
-                                std::move(eventPromise), std::move(n_events))
-            ));
+            threads.emplace_back(findEvents, it, it + grainSize, it_nl, kernel, timeStep, true,
+                                 std::move(eventPromise), std::move(n_events));
             it += grainSize;
             it_nl += grainSize;
         }
@@ -164,10 +162,8 @@ void CPUUncontrolledApproximation::perform() {
             std::promise<std::size_t> n_events;
             n_eventsFutures.push_back(n_events.get_future());
 
-            threads.push_back(thd::scoped_thread(
-                    std::thread(findEvents, it, data.cend(), it_nl, kernel, timeStep, true,
-                                std::move(eventPromise), std::move(n_events))
-            ));
+            threads.emplace_back(findEvents, it, data.cend(), it_nl, kernel, timeStep, true,
+                                 std::move(eventPromise), std::move(n_events));
         }
     }
 
