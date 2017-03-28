@@ -31,6 +31,7 @@
 
 #include <readdy/common/thread/scoped_async.h>
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -43,7 +44,7 @@ namespace thd = readdy::util::thread;
 void CPUEulerBDIntegrator::perform() {
     auto& pd = *kernel->getCPUKernelStateModel().getParticleData();
     const auto size = pd.size();
-    std::vector<thd::scoped_async> threads;
+    std::vector<threading_model> threads;
     threads.reserve(kernel->getNThreads());
     const std::size_t grainSize = size / kernel->getNThreads();
 

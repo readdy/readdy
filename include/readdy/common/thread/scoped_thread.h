@@ -46,7 +46,9 @@ public:
      * Creates a new scoped_thread based on a thread object
      * @param _t the reference thread
      */
-    explicit scoped_thread(std::thread _t) : t(std::move(_t)) {
+    template<typename Function, typename... Args>
+    explicit scoped_thread(Function &&fun, Args &&... args)
+            : t(std::forward<Function>(fun), std::forward<Args>(args)...) {
         if (!t.joinable()) throw std::logic_error("No thread!");
     }
 

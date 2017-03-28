@@ -33,6 +33,7 @@
 #include <readdy/kernel/cpu/CPUStateModel.h>
 #include <readdy/common/thread/barrier.h>
 #include <readdy/common/thread/scoped_async.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -160,7 +161,7 @@ void CPUStateModel::calculateForces() {
         std::vector<std::future<double>> energyFutures;
         energyFutures.reserve(config->nThreads());
         {
-            std::vector<thd::scoped_async> threads;
+            std::vector<threading_model> threads;
             threads.reserve(config->nThreads());
             const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
             const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();

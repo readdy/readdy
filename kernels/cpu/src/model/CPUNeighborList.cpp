@@ -43,6 +43,7 @@
 #include <readdy/kernel/cpu/util/hilbert.h>
 #include <readdy/common/thread/notification_barrier.h>
 #include <readdy/common/Utils.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -300,7 +301,7 @@ void CPUNeighborList::fillCells() {
                         };
 
                         {
-                            std::vector<thd::scoped_async> threads;
+                            std::vector<threading_model> threads;
                             threads.reserve(config->nThreads());
                             auto data_it = data.begin();
                             auto hilberts_it = hilbert_indices.begin();
@@ -391,7 +392,7 @@ void CPUNeighborList::fillCells() {
                 }
             };
 
-            std::vector<thd::scoped_async> threads;
+            std::vector<threading_model> threads;
             threads.reserve(config->nThreads());
 
             auto it_cells = cells.begin();
@@ -473,7 +474,7 @@ void CPUNeighborList::fillCells() {
                 // readdy::util::Timer t("        update dirty cells");
                 thd::barrier b(config->nThreads());
 
-                std::vector<thd::scoped_async> threads;
+                std::vector<threading_model> threads;
                 threads.reserve(config->nThreads());
 
                 // log::warn("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
@@ -743,7 +744,7 @@ std::unordered_set<CPUNeighborList::Cell *> CPUNeighborList::findDirtyCells() {
     dirtyCells.reserve(config->nThreads());
     {
         auto it_cells = cells.begin();
-        std::vector<thd::scoped_async> threads;
+        std::vector<threading_model> threads;
         const std::size_t grainSize = cells.size() / config->nThreads();
         for (int i = 0; i < config->nThreads() - 1; ++i) {
             promise_t promise;

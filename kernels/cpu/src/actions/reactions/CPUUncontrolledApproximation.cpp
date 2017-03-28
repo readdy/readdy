@@ -36,6 +36,7 @@
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/Event.h>
 #include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -141,7 +142,7 @@ void CPUUncontrolledApproximation::perform() {
     {
         const std::size_t grainSize = data.size() / kernel->getNThreads();
 
-        std::vector<thd::scoped_async> threads;
+        std::vector<threading_model> threads;
 
         auto it = data.cbegin();
         auto it_nl = nl.cbegin();

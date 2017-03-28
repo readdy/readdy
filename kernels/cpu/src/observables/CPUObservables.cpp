@@ -35,6 +35,7 @@
 
 #include <readdy/kernel/cpu/observables/CPUObservables.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -106,7 +107,7 @@ void CPUHistogramAlongAxis::evaluate() {
     {
         const std::size_t grainSize = data->size() / kernel->getNThreads();
 
-        std::vector<thd::scoped_async> threads;
+        std::vector<threading_model> threads;
         Iter workIter = data->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             std::promise<result_t> promise;

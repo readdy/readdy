@@ -38,6 +38,7 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
+#include <readdy/common/thread/scoped_async.h>
 
 namespace readdy {
 namespace kernel {

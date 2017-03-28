@@ -34,6 +34,7 @@
 
 #include <readdy/common/thread/scoped_async.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 
 using rdy_particle_t = readdy::model::Particle;
@@ -259,7 +260,7 @@ void CPUGillespieParallel::handleBoxReactions() {
     auto &stateModel = kernel->getCPUKernelStateModel();
     {
         //readdy::util::Timer t ("\t run threads");
-        std::vector<thd::scoped_async> threads;
+        std::vector<threading_model> threads;
         for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
             // nboxes == nthreads
             promise_t promise;
