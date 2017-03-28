@@ -67,6 +67,8 @@ public:
     virtual void removeAllParticles() = 0;
 
     virtual double getEnergy() const = 0;
+
+    virtual void expected_n_particles(const std::size_t n) = 0;
 };
 
 NAMESPACE_END(model)

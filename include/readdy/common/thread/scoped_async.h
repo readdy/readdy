@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,50 +23,43 @@
 /**
  * << detailed description >>
  *
- * @file Config.cpp
+ * @file scoped_async.h
  * @brief << brief description >>
  * @author clonker
- * @date 05.09.16
+ * @date 28.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <thread>
-#include <algorithm>
+#pragma once
 
+#include <future>
+#include <readdy/common/macros.h>
 #include <readdy/common/logging.h>
 
-#include "readdy/common/thread/Config.h"
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
 
-#if READDY_OSX
-#include <cstdlib>
-#endif
+class scoped_async {
+    std::future<void> async_;
+public:
+    template<typename Function, typename... Args>
+    explicit scoped_async(Function &&fun, Args &&... args)
+            : async_(std::async(std::launch::async, std::forward<Function>(fun), std::forward<Args>(args)...)) {}
 
-namespace readdy {
-namespace util {
-namespace thread {
-
-Config::Config() {
-#ifdef READDY_DEBUG
-    m_nThreads = std::max(std::thread::hardware_concurrency(), 1u);
-#else
-    // magic number 4 to enable some load balancing
-    m_nThreads = std::max(4*std::thread::hardware_concurrency(), 1u);
-#endif
-
-    const char *env = std::getenv("READDY_N_CORES");
-    if (env) {
-        m_nThreads = static_cast<n_threads_t>(std::stol(env));
-        log::debug("Using {} threads (by environment variable READDY_N_CORES", m_nThreads);
+    ~scoped_async() {
+        if(async_.valid()) async_.wait();
     }
-}
 
-Config::n_threads_t Config::nThreads() const {
-    return m_nThreads;
-}
+    scoped_async(const scoped_async &) = delete;
 
-void Config::setNThreads(const Config::n_threads_t n) {
-    m_nThreads = n;
-}
+    scoped_async &operator=(const scoped_async &) = delete;
 
-}
-}
-}
+    scoped_async(scoped_async &&) = default;
+
+    scoped_async &operator=(scoped_async &&) = default;
+};
+
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

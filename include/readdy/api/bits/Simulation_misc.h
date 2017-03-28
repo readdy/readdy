@@ -38,11 +38,9 @@
 NAMESPACE_BEGIN(readdy)
 
 struct Simulation::Impl {
-    std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
-    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables{};
     plugin::KernelProvider::kernel_ptr kernel;
-    std::unique_ptr<io::File> trajectoryFile;
-    unsigned long trajectoryFileId;
+    std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables{};
+    std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
     unsigned long counter = 0;
 };
 

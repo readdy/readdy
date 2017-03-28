@@ -31,10 +31,11 @@
 
 #include <future>
 
-#include <readdy/common/thread/scoped_thread.h>
+#include <readdy/common/thread/scoped_async.h>
 
 #include <readdy/kernel/cpu/observables/CPUObservables.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -106,17 +107,17 @@ void CPUHistogramAlongAxis::evaluate() {
     {
         const std::size_t grainSize = data->size() / kernel->getNThreads();
 
-        std::vector<thd::scoped_thread> threads;
+        std::vector<threading_model> threads;
         Iter workIter = data->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             std::promise<result_t> promise;
             updates.push_back(promise.get_future());
-            threads.push_back(thd::scoped_thread(std::thread(worker, workIter, workIter + grainSize, std::move(promise))));
+            threads.emplace_back(worker, workIter, workIter + grainSize, std::move(promise));
             workIter += grainSize;
         }
         std::promise<result_t> promise;
         updates.push_back(promise.get_future());
-        threads.push_back(thd::scoped_thread(std::thread(worker, workIter, data->cend(), std::move(promise))));
+        threads.emplace_back(worker, workIter, data->cend(), std::move(promise));
     }
 
     for (auto &update : updates) {

@@ -68,6 +68,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
 #include <readdy/io/File.h>
+#include <readdy/api/Simulation.h>
 
 namespace {
 
@@ -542,7 +543,7 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     double relativeDisplacement[numbersSize][skinSizesSize];
     double reactivity[numbersSize][skinSizesSize];
 
-    readdy::log::console()->set_level(spdlog::level::debug);
+    readdy::log::console()->set_level(spdlog::level::warn);
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
             readdy::log::error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j,
@@ -650,8 +651,23 @@ void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) 
 TEST(TestPerformance, ReactiveCPU) {
     //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::Gillespie>("SingleCPU", true);
     //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>("CPU_Dense", false);
-    scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>(
-            "CPU", false);
+    //scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>(
+            //"CPU", false);
+    readdy::Simulation sim;
+    sim.setKernel("CPU");
+    sim.setBoxSize(100, 100, 100);
+    sim.setPeriodicBoundary({true, true, true});
+    sim.registerParticleType("A", 1.0, 1.0);
+    for(int i = 0; i < 200; ++i) {
+        sim.addParticle(0, 0, 0, "A");
+    }
+    readdy::log::console()->set_level(spdlog::level::debug);
+    {
+        using timer = readdy::util::Timer;
+        timer c {"timer"};
+        sim.runScheme(true).includeForces(false).evaluateObservables(false).configureAndRun(1, 100000);
+    }
+
 }
 
 }

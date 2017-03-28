@@ -63,6 +63,7 @@ enum class ParticleTypeFlavor {
 };
 
 void exportApi(py::module &api) {
+    using namespace pybind11::literals;
     exportSchemeApi<readdy::api::ReaDDyScheme>(api, "ReaDDyScheme");
     exportSchemeApi<readdy::api::AdvancedScheme>(api, "AdvancedScheme");
 
@@ -83,6 +84,7 @@ void exportApi(py::module &api) {
             .def_property("kbt", &sim::getKBT, &sim::setKBT)
             .def_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)
+            .def("set_expected_max_n_particles", &sim::setExpectedMaxNParticles, "n"_a)
             .def("register_particle_type",
                  [](sim &self, const std::string &name, double diffusionCoefficient, double radius,
                     ParticleTypeFlavor flavor) {
@@ -97,73 +99,85 @@ void exportApi(py::module &api) {
                          }
                      }();
                      return self.registerParticleType(name, diffusionCoefficient, radius);
-                 }, py::arg("name"), py::arg("diffusion_coefficient"), py::arg("radius"),
-                 py::arg("flavor") = ParticleTypeFlavor::NORMAL)
+                 }, "name"_a, "diffusion_coefficient"_a, "radius"_a, "flavor"_a = ParticleTypeFlavor::NORMAL)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(pos[0], pos[1], pos[2], type);
-            })
+            }, "type"_a, "pos"_a)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
-            .def("record_trajectory", &sim::recordTrajectory)
-            .def("close_trajectory_file", &sim::closeTrajectoryFile)
-            .def("register_potential_order_2", &registerPotentialOrder2)
-            .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential)
+            .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)
+            .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential,
+                 "type_a"_a, "type_b"_a, "force_constant"_a)
             .def("register_potential_piecewise_weak_interaction",
-                 &sim::registerWeakInteractionPiecewiseHarmonicPotential)
-            .def("register_potential_box", &sim::registerBoxPotential)
-            .def("register_potential_sphere_in", &sim::registerSphereInPotential)
-            .def("register_potential_sphere_out", &sim::registerSphereOutPotential)
-            .def("register_potential_lennard_jones", &sim::registerLennardJonesPotential)
-            .def("register_potential_screened_electrostatics", &sim::registerScreenedElectrostaticsPotential)
+                 &sim::registerWeakInteractionPiecewiseHarmonicPotential, "type_a"_a, "type_b"_a, "force_constant"_a,
+                 "desired_particle_distance"_a, "depth"_a, "no_interaction_distance"_a)
+            .def("register_potential_box", &sim::registerBoxPotential, "particle_type"_a, "force_constant"_a,
+                 "origin"_a, "extent"_a, "consider_particle_radius"_a)
+            .def("register_potential_sphere_in", &sim::registerSphereInPotential, "particle_type"_a, "force_constant"_a,
+                 "origin"_a, "radius"_a)
+            .def("register_potential_sphere_out", &sim::registerSphereOutPotential, "particle_type"_a,
+                 "force_constant"_a, "origin"_a, "radius"_a)
+            .def("register_potential_lennard_jones", &sim::registerLennardJonesPotential, "particle_type_a"_a,
+                 "particle_type_b"_a, "exponent_m"_a, "exponent_n"_a, "cutoff"_a, "shift"_a, "epsilon"_a, "sigma"_a)
+            .def("register_potential_screened_electrostatics", &sim::registerScreenedElectrostaticsPotential,
+                 "particle_type_a"_a, "particle_type_b"_a, "electrostatic_strength"_a, "inverse_screening_depth"_a,
+                 "repulsion_strength"_a, "repulsion_distance"_a, "exponent"_a, "cutoff"_a)
             .def("get_particle_positions", &sim::getParticlePositions)
-            .def("register_reaction_conversion", &sim::registerConversionReaction, rvp::reference_internal)
-            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, rvp::reference_internal)
-            .def("register_reaction_fission", &sim::registerFissionReaction, rvp::reference_internal)
-            .def("register_reaction_fusion", &sim::registerFusionReaction, rvp::reference_internal)
-            .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal)
-            .def("register_compartment_sphere", &sim::registerCompartmentSphere)
-            .def("register_compartment_plane", &sim::registerCompartmentPlane)
-            .def("get_recommended_time_step", &sim::getRecommendedTimeStep)
+            .def("register_reaction_conversion", &sim::registerConversionReaction, rvp::reference_internal,
+                 "label"_a, "from_type"_a, "to_type"_a, "rate"_a)
+            .def("register_reaction_enzymatic", &sim::registerEnzymaticReaction, rvp::reference_internal,
+                 "label"_a, "catalyst_type"_a, "from_type"_a, "to_type"_a, "rate"_a, "educt_distance"_a)
+            .def("register_reaction_fission", &sim::registerFissionReaction, rvp::reference_internal,
+                 "label"_a, "from_type"_a, "to_type1"_a, "to_type2"_a, "rate"_a, "product_distance"_a,
+                 "weight1"_a = .5, "weight2"_a = .5)
+            .def("register_reaction_fusion", &sim::registerFusionReaction, rvp::reference_internal, "label"_a,
+                 "from_type1"_a, "from_type2"_a, "to_type"_a, "rate"_a, "educt_distance"_a,
+                 "weight1"_a = .5, "weight2"_a = .5)
+            .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal,
+                 "label"_a, "particle_type"_a, "rate"_a)
+            .def("register_compartment_sphere", &sim::registerCompartmentSphere,
+                 "conversion_map"_a, "name"_a, "origin"_a, "radius"_a, "larger_or_less"_a)
+            .def("register_compartment_plane", &sim::registerCompartmentPlane, "conversion_map"_a, "name"_a,
+                 "normal_coefficients"_a, "distance_from_plane"_a, "larger_or_less"_a)
+            .def("get_recommended_time_step", &sim::getRecommendedTimeStep, "n"_a)
             .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
-            .def("create_topology_particle", &sim::createTopologyParticle)
-            .def("configure_topology_bond_potential", &sim::configureTopologyBondPotential, py::arg("type1"),
-                 py::arg("type2"), py::arg("force_constant"), py::arg("length"),
-                 py::arg("type") = readdy::api::BondType::HARMONIC)
-            .def("configure_topology_angle_potential", &sim::configureTopologyAnglePotential, py::arg("type1"),
-                 py::arg("type2"), py::arg("type3"), py::arg("force_constant"), py::arg("equilibrium_angle"),
-                 py::arg("type") = readdy::api::AngleType::HARMONIC)
-            .def("configure_topology_dihedral_potential", &sim::configureTopologyTorsionPotential, py::arg("type1"),
-                 py::arg("type2"), py::arg("type3"), py::arg("type4"), py::arg("force_constant"),
-                 py::arg("multiplicity"), py::arg("phi_0"), py::arg("type") = readdy::api::TorsionType::COS_DIHEDRAL)
-            .def("add_topology", &sim::addTopology, rvp::reference, py::arg("particles"),
-                 py::arg("labels") = std::vector<std::string>())
-            .def("set_kernel", &sim::setKernel)
+            .def("create_topology_particle", &sim::createTopologyParticle, "type"_a, "position"_a)
+            .def("configure_topology_bond_potential", &sim::configureTopologyBondPotential, "type1"_a, "type2"_a,
+                 "force_constant"_a, "length"_a, "type"_a = readdy::api::BondType::HARMONIC)
+            .def("configure_topology_angle_potential", &sim::configureTopologyAnglePotential, "type1"_a, "type2"_a,
+                 "type3"_a, "force_constant"_a, "equilibrium_angle"_a, "type"_a = readdy::api::AngleType::HARMONIC)
+            .def("configure_topology_dihedral_potential", &sim::configureTopologyTorsionPotential, "type1"_a,
+                 "type2"_a, "type3"_a, "type4"_a, "force_constant"_a, "multiplicity"_a, "phi_0"_a,
+                 "type"_a = readdy::api::TorsionType::COS_DIHEDRAL)
+            .def("add_topology", &sim::addTopology, rvp::reference, "particles"_a,
+                 "labels"_a = std::vector<std::string>())
+            .def("set_kernel", &sim::setKernel, "name"_a)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)
                      );
-                 }, py::arg("defaults")
+                 }, "defaults"_a
             )
             .def("run_scheme_advanced", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::AdvancedScheme>>(
                              self.runScheme<readdy::api::AdvancedScheme>(defaults)
                      );
-                 }, py::arg("defaults")
+                 }, "defaults"_a
             )
             .def("run", [](sim &self, const readdy::time_step_type steps, const double timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);
-            });
+            }, "n_steps"_a, "time_step"_a);
     exportObservables(api, simulation);
 
     py::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
             .def_static("get", &kp::getInstance, rvp::reference)
-            .def("load_from_dir", &kp::loadKernelsFromDirectory);
+            .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a);
 
     py::class_<pot2>(api, "Pot2")
             .def(py::init<std::string, std::string, py::object, py::object>())
-            .def("calc_energy", &pot2::calculateEnergy)
-            .def("calc_force", &pot2::calculateForce);
+            .def("calc_energy", &pot2::calculateEnergy, "x_ij"_a)
+            .def("calc_force", &pot2::calculateForce, "force"_a, "x_ij"_a);
 
     py::class_<kern>(api, "Kernel").def("get_name", &kern::getName, rvp::reference);
 }

@@ -179,6 +179,11 @@ public:
         return *this;
     }
 
+    SchemeConfigurator &withSkinSize(double skin = -1) {
+        skinSize = skin;
+        return *this;
+    }
+
     virtual std::unique_ptr<SchemeType> configure(double timeStep) {
         using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
         using default_reactions_t = readdy::model::actions::reactions::Gillespie;
@@ -200,7 +205,7 @@ public:
         }
         if (scheme->forces || scheme->reactionScheduler) {
             scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, -1);
+                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skinSize);
             scheme->clearNeighborList = scheme->kernel
                     ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
         }
@@ -220,6 +225,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     std::unique_ptr<SchemeType> scheme = nullptr;
+    double skinSize = -1;
 };
 
 class AdvancedScheme : public SimulationScheme {
@@ -268,7 +274,7 @@ public:
     SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<AdvancedScheme>(kernel)),
                                                                                useDefaults(useDefaults) {}
 
-    SchemeConfigurator &includeCompartments(bool include = false) {
+    SchemeConfigurator &includeCompartments(bool include = true) {
         if (include) {
             scheme->compartments = scheme->kernel->template createAction<readdy::model::actions::EvaluateCompartments>();
         } else {
@@ -326,6 +332,11 @@ public:
         return *this;
     }
 
+    SchemeConfigurator &withSkinSize(double skin = -1) {
+        skinSize = skin;
+        return *this;
+    }
+
     std::unique_ptr<AdvancedScheme> configure(double timeStep) {
         using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
         using default_reactions_t = readdy::model::actions::reactions::Gillespie;
@@ -350,7 +361,7 @@ public:
         }
         if (scheme->forces || scheme->reactionScheduler) {
             scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, -1);
+                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skinSize);
             scheme->clearNeighborList = scheme->kernel
                     ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
         }
@@ -371,6 +382,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     bool includeCompartmentsSet = false;
+    double skinSize = -1;
 
 };
 

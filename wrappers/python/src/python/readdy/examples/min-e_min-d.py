@@ -297,20 +297,19 @@ class MinEMinDSimulation(object):
         self.stride = stride
         print("using stride=%s" % stride)
         bins = np.linspace(-7, 7, 80)
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minD, bins, 2, ["D"])
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDP, bins, 2, ["D_P"])
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDPB, bins, 2, ["D_PB"])
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minE, bins, 2, ["E"])
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_minDE, bins, 2, ["DE"])
-        simulation.register_observable_histogram_along_axis(stride, self.histogram_callback_M, bins, 2, ["D", "D_P", "D_PB", "DE"])
-        simulation.register_observable_n_particles(stride, self.n_particles_callback, ["D", "D_P", "D_PB", "E", "DE"])
+        simulation.register_observable_histogram_along_axis(stride, bins, 2, ["D"], self.histogram_callback_minD)
+        simulation.register_observable_histogram_along_axis(stride, bins, 2, ["D_P"], self.histogram_callback_minDP)
+        simulation.register_observable_histogram_along_axis(stride, bins, 2, ["D_PB"], self.histogram_callback_minDPB)
+        simulation.register_observable_histogram_along_axis(stride, bins, 2, ["E"], self.histogram_callback_minE)
+        simulation.register_observable_histogram_along_axis(stride, bins, 2, ["DE"], self.histogram_callback_minDE)
+        simulation.register_observable_histogram_along_axis(stride, bins, 2, ["D", "D_P", "D_PB", "DE"], self.histogram_callback_M)
+        simulation.register_observable_n_particles(stride, ["D", "D_P", "D_PB", "E", "DE"], self.n_particles_callback)
         print("histogram end")
 
         self.n_timesteps = int(1200./self.timestep)
 
         print("starting simulation for effectively %s sec" % (self.timestep * self.n_timesteps))
-        simulation.set_time_step(self.timestep)
-        simulation.run_scheme_readdy(True).with_reaction_scheduler("GillespieParallel").configure().run(self.n_timesteps)
+        simulation.run_scheme_readdy(True).with_reaction_scheduler("GillespieParallel").configure(self.timestep).run(self.n_timesteps)
 
         if self._result_fname is not None:
             with open(self._result_fname, 'w') as f:

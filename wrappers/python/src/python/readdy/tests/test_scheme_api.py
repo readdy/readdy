@@ -81,7 +81,7 @@ class TestSchemeApi(unittest.TestCase):
         def increment(result):
             counter[0] += 1
 
-        sim.register_observable_n_particles(1, increment, ["A"])
+        sim.register_observable_n_particles(1, ["A"], increment)
         scheme = sim.run_scheme_readdy(True).configure(0.1)
         do_continue = lambda t: t < 5
         scheme.run_with_criterion(do_continue)
@@ -101,7 +101,7 @@ class TestSchemeApi(unittest.TestCase):
             if result[0] >= 8:
                 shall_stop[0] = True
 
-        sim.register_observable_n_particles(1, increment, ["A"])
+        sim.register_observable_n_particles(1, ["A"], increment)
         scheme = sim.run_scheme_readdy(True).configure(1.)
         do_continue = lambda t: not shall_stop[0]
         scheme.run_with_criterion(do_continue)

@@ -102,7 +102,9 @@ public:
     /**
      * The destructor.
      */
-    virtual ~ObservableBase() = default;
+    virtual ~ObservableBase() {
+        log::trace("destroying observable base");
+    };
 
     /**
      * Method that will trigger a callback with the current results if shouldExecuteCallback() is true.

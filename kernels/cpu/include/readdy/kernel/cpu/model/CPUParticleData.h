@@ -112,6 +112,8 @@ public:
 
     std::size_t size() const;
 
+    void reserve(std::size_t n);
+
     bool empty() const;
 
     void clear();

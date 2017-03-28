@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,50 +23,23 @@
 /**
  * << detailed description >>
  *
- * @file Config.cpp
+ * @file config.h
  * @brief << brief description >>
  * @author clonker
- * @date 05.09.16
+ * @date 28.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <thread>
-#include <algorithm>
+#pragma once
 
-#include <readdy/common/logging.h>
-
-#include "readdy/common/thread/Config.h"
-
-#if READDY_OSX
-#include <cstdlib>
-#endif
+#include <readdy/common/thread/scoped_async.h>
+#include <readdy/common/thread/scoped_thread.h>
 
 namespace readdy {
-namespace util {
-namespace thread {
-
-Config::Config() {
-#ifdef READDY_DEBUG
-    m_nThreads = std::max(std::thread::hardware_concurrency(), 1u);
-#else
-    // magic number 4 to enable some load balancing
-    m_nThreads = std::max(4*std::thread::hardware_concurrency(), 1u);
-#endif
-
-    const char *env = std::getenv("READDY_N_CORES");
-    if (env) {
-        m_nThreads = static_cast<n_threads_t>(std::stol(env));
-        log::debug("Using {} threads (by environment variable READDY_N_CORES", m_nThreads);
-    }
-}
-
-Config::n_threads_t Config::nThreads() const {
-    return m_nThreads;
-}
-
-void Config::setNThreads(const Config::n_threads_t n) {
-    m_nThreads = n;
-}
-
+namespace kernel {
+namespace cpu {
+//using threading_model = readdy::util::thread::scoped_thread;
+using threading_model = readdy::util::thread::scoped_async;
 }
 }
 }

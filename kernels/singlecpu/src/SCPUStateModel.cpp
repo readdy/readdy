@@ -201,6 +201,12 @@ readdy::model::Particle SCPUStateModel::getParticleForIndex(const std::size_t in
     return pimpl->particleData->getParticle(index);
 }
 
+void SCPUStateModel::expected_n_particles(const std::size_t n) {
+    if(pimpl->particleData->size() < n) {
+        pimpl->particleData->reserve(n);
+    }
+}
+
 
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) = default;
 

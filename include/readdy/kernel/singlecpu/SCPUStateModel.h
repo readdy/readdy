@@ -94,6 +94,8 @@ public:
 
     const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts() const;
 
+    virtual void expected_n_particles(const std::size_t n) override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;

@@ -38,6 +38,7 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
+#include <readdy/common/thread/scoped_async.h>
 
 namespace readdy {
 namespace kernel {
@@ -78,6 +79,8 @@ public:
     model::CPUNeighborList const *const getNeighborList() const;
 
     model::CPUNeighborList *const getNeighborList();
+
+    virtual void expected_n_particles(const std::size_t n) override;
 
     virtual void clearNeighborList() override;
 

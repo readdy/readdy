@@ -109,6 +109,8 @@ public:
 
     std::size_t size() const;
 
+    void reserve(std::size_t n);
+
     std::size_t max_size() const;
 
     Entry& entry_at(const index_t);

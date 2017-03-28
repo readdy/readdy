@@ -56,10 +56,11 @@ class TestSchemeApi(unittest.TestCase):
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
 
-        simulation.register_observable_n_particles(1, callback, ["A"])
-        simulation.record_trajectory(traj_fname, 0, 3)
-        simulation.run_scheme_readdy(True).configure(1).run(20)
-        simulation.close_trajectory_file()
+        simulation.register_observable_n_particles(1, ["A"], callback)
+        traj_handle = simulation.register_observable_trajectory(0)
+        with closing(io.File(traj_fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            traj_handle.enable_write_to_file(f, u"", 3)
+            simulation.run_scheme_readdy(True).configure(1).run(20)
 
         r = TrajectoryReader(traj_fname)
         trajectory_items = r[:]
@@ -82,7 +83,7 @@ class TestSchemeApi(unittest.TestCase):
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
 
-        simulation.register_observable_n_particles(1, callback, ["A"])
+        simulation.register_observable_n_particles(1, ["A"], callback)
         traj_handle = simulation.register_observable_trajectory(1)
 
         with closing(io.File(traj_fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
