@@ -235,8 +235,7 @@ Simulation &Simulation::operator=(Simulation &&rhs) = default;
 Simulation::Simulation(Simulation &&rhs) = default;
 
 Simulation::~Simulation() {
-    // close trajectory file if present
-    closeTrajectoryFile();
+    log::trace("destroying simulation");
 };
 
 const short
@@ -302,26 +301,6 @@ double Simulation::getRecommendedTimeStep(unsigned int N) const {
 
 readdy::model::Kernel *const Simulation::getSelectedKernel() const {
     return pimpl->kernel.get();
-}
-
-void
-Simulation::recordTrajectory(const std::string &fileName, const unsigned int stride, const unsigned int flushStride) {
-    ensureKernelSelected();
-    auto uuid = pimpl->counter++;
-    pimpl->trajectoryFileId = uuid;
-    pimpl->trajectoryFile.reset(new io::File(fileName, io::File::Action::CREATE));
-    std::unique_ptr<model::observables::Trajectory> trajectory = std::make_unique<model::observables::Trajectory>(
-            pimpl->kernel.get(), stride
-    );
-    trajectory->enableWriteToFile(*pimpl->trajectoryFile, "", flushStride);
-    auto &&connection = pimpl->kernel->connectObservable(trajectory.get());
-    pimpl->observables.emplace(uuid, std::move(trajectory));
-    pimpl->observableConnections.emplace(uuid, std::move(connection));
-}
-
-void Simulation::closeTrajectoryFile() {
-    deregisterObservable(pimpl->trajectoryFileId);
-    pimpl->trajectoryFile.reset();
 }
 
 const short Simulation::registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,

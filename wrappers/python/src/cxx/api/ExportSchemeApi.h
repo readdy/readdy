@@ -96,7 +96,6 @@ void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, std:
                  [](conf &self, std::string name) -> conf & { return self.withIntegrator(name); },
                  py::return_value_policy::reference_internal, "integrator_name"_a)
             .def("include_forces", &conf::includeForces, py::return_value_policy::reference_internal, "do_include"_a = true)
-            /* fixme @chrisfroe: see comment in SimulationScheme.h */
             .def("include_compartments", &conf::includeCompartments, py::return_value_policy::reference_internal, "do_include"_a = true)
             .def("with_reaction_scheduler",
                  [](conf &self, std::string name) -> conf & {

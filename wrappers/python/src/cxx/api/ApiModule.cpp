@@ -105,8 +105,6 @@ void exportApi(py::module &api) {
             }, "type"_a, "pos"_a)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
-            .def("record_trajectory", &sim::recordTrajectory, "file_name"_a, "stride"_a, "chunk_size"_a)
-            .def("close_trajectory_file", &sim::closeTrajectoryFile)
             .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)
             .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential,
                  "type_a"_a, "type_b"_a, "force_constant"_a)

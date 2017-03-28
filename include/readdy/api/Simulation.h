@@ -86,19 +86,6 @@ public:
      */
     readdy::model::Vec3 getBoxSize() const;
 
-    /**
-     * If this method is called, a trajectory file will be created and the simulation trajectory will be recorded
-     * into that file. The simulation trajectory consists out of every "stride"-th frame and will be flushed every
-     * "stride * flushStride"-th frame.
-     *
-     * @param fileName The file name
-     * @param stride the stride at which to record the trajectory
-     * @param flushStride parameter determining how often the trajectory will be written to disk
-     */
-    void recordTrajectory(const std::string &fileName, const unsigned int stride, const unsigned int flushStride);
-
-    void closeTrajectoryFile();
-
     readdy::model::TopologyParticle
     createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const;
 

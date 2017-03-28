@@ -274,8 +274,7 @@ public:
     SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<AdvancedScheme>(kernel)),
                                                                                useDefaults(useDefaults) {}
 
-    // fixme @chrisfroe: shouldn't this be include = true?
-    SchemeConfigurator &includeCompartments(bool include = false) {
+    SchemeConfigurator &includeCompartments(bool include = true) {
         if (include) {
             scheme->compartments = scheme->kernel->template createAction<readdy::model::actions::EvaluateCompartments>();
         } else {

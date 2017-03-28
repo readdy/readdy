@@ -61,6 +61,7 @@ Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()
 }
 
 Kernel::~Kernel() {
+    log::trace("destroying kernel instance");
 }
 
 readdy::signals::scoped_connection Kernel::connectObservable(observables::ObservableBase *const observable) {
