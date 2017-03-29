@@ -99,7 +99,7 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
     ensureKernelSelected();
     const auto &&s = getBoxSize();
     if (fabs(x) <= .5 * s[0] && fabs(y) <= .5 * s[1] && fabs(z) <= .5 * s[2]) {
-        readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
+        readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().particleTypeRegistry().getParticleTypeID(type)};
         pimpl->kernel->getKernelStateModel().addParticle(p);
     } else {
         log::error("particle position was not in bounds of the simulation box!");
@@ -112,8 +112,8 @@ Simulation::registerParticleType(const std::string &name, const double diffusion
                                  readdy::model::Particle::flavor_t flavor) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->getKernelContext();
-    context.registerParticleType(name, diffusionCoefficient, radius, flavor);
-    return context.getParticleTypeID(name);
+    context.particleTypeRegistry().registerParticleType(name, diffusionCoefficient, radius, flavor);
+    return context.particleTypeRegistry().getParticleTypeID(name);
 }
 
 const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() const {
@@ -122,7 +122,7 @@ const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() con
 }
 
 void Simulation::deregisterPotential(const short uuid) {
-    pimpl->kernel->getKernelContext().deregisterPotential(uuid);
+    pimpl->kernel->getKernelContext().potentialRegistry().deregisterPotential(uuid);
 };
 
 const short
@@ -284,7 +284,7 @@ Simulation::registerDecayReaction(const std::string &name, const std::string &pa
 }
 
 std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string type) {
-    unsigned int typeId = pimpl->kernel->getKernelContext().getParticleTypeID(type);
+    unsigned int typeId = pimpl->kernel->getKernelContext().particleTypeRegistry().getParticleTypeID(type);
     const auto particles = pimpl->kernel->getKernelStateModel().getParticles();
     std::vector<readdy::model::Vec3> positions;
     for (auto &&p : particles) {
@@ -353,12 +353,12 @@ Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &part
 
 void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+    getSelectedKernel()->getKernelContext().potentialRegistry().registerExternalPotential(ptr);
 }
 
 void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+    getSelectedKernel()->getKernelContext().potentialRegistry().registerExternalPotential(ptr);
 }
 
 void

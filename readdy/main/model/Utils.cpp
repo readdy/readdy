@@ -45,13 +45,13 @@ double getMaximumDisplacement(KernelContext& context, const double timeStep) {
     double kbt = context.getKBT();
 
     double maximum_displacement = 0;
-    for (auto &&pI : context.getAllRegisteredParticleTypes()) {
-        double D = context.getDiffusionConstant(pI);
+    for (auto &&pI : context.particleTypeRegistry().getAllRegisteredParticleTypes()) {
+        double D = context.particleTypeRegistry().getDiffusionConstant(pI);
         double fMax = 0;
 
-        for (auto &&pJ : context.getAllRegisteredParticleTypes()) {
+        for (auto &&pJ : context.particleTypeRegistry().getAllRegisteredParticleTypes()) {
 
-            for (auto &&pot : context.getOrder2Potentials(pI, pJ)) {
+            for (auto &&pot : context.potentialRegistry().getOrder2Potentials(pI, pJ)) {
                 if (pot->getCutoffRadius() > 0) {
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
                 }
@@ -82,8 +82,8 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
 
     double tDMin = 0;
     std::unordered_map<unsigned int, double> fMaxes;
-    for (auto &&pI : context.getAllRegisteredParticleTypes()) {
-        double D = context.getDiffusionConstant(pI);
+    for (auto &&pI : context.particleTypeRegistry().getAllRegisteredParticleTypes()) {
+        double D = context.particleTypeRegistry().getDiffusionConstant(pI);
         double tD = 0;
         double xi = 0; // 1/(beta*Fmax)
         double fMax = 0;
@@ -95,14 +95,14 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
             }
         }
 
-        for (auto &&pot : context.getOrder1Potentials(pI)) {
+        for (auto &&pot : context.potentialRegistry().getOrder1Potentials(pI)) {
             fMax = std::max(pot->getMaximalForce(kbt), fMax);
             if (pot->getRelevantLengthScale() > 0) {
                 rMin = std::min(rMin, pot->getRelevantLengthScale());
             }
         }
 
-        for (auto &&pJ : context.getAllRegisteredParticleTypes()) {
+        for (auto &&pJ : context.particleTypeRegistry().getAllRegisteredParticleTypes()) {
 
             for (auto &&reaction : context.reactionRegistry().order2_by_type(pI, pJ)) {
                 if (reaction->getEductDistance() > 0) {
@@ -113,7 +113,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
                 }
             }
 
-            for (auto &&pot : context.getOrder2Potentials(pI, pJ)) {
+            for (auto &&pot : context.potentialRegistry().getOrder2Potentials(pI, pJ)) {
                 if (pot->getCutoffRadius() > 0) {
                     rMin = std::min(rMin, pot->getCutoffRadius());
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
@@ -130,7 +130,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
             tD = .5 * rho * rho / D;
         }
         fMaxes.emplace(pI, fMax);
-        log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.getParticleName(pI), tD, xi, rho);
+        log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.particleTypeRegistry().getParticleName(pI), tD, xi, rho);
         if (tDMin == 0) {
             tDMin = tD;
         } else {
@@ -139,10 +139,10 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     }
 
     log::debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
-    for (auto &&pI : context.getAllRegisteredParticleTypes()) {
-        double D = context.getDiffusionConstant(pI);
+    for (auto &&pI : context.particleTypeRegistry().getAllRegisteredParticleTypes()) {
+        double D = context.particleTypeRegistry().getDiffusionConstant(pI);
         double xmax = std::sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
-        log::debug("\t - {}: {} + {} = {}" , context.getParticleName(pI), std::sqrt(2 * D * tDMin),
+        log::debug("\t - {}: {} + {} = {}" , context.particleTypeRegistry().getParticleName(pI), std::sqrt(2 * D * tDMin),
                               D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 

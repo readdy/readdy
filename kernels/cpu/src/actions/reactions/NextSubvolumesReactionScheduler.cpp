@@ -96,7 +96,7 @@ void CPUNextSubvolumes::setUpGrid() {
     if (cells.empty()) {
         const auto &simBoxSize = kernel->getKernelContext().getBoxSize();
         const auto minCellWidth = getMaxReactionRadius();
-        const auto nTypes = kernel->getKernelContext().getAllRegisteredParticleTypes().size();
+        const auto nTypes = kernel->getKernelContext().particleTypeRegistry().getAllRegisteredParticleTypes().size();
         for (unsigned int i = 0; i < 3; ++i) {
             nCells[i] = minCellWidth > 0 ? static_cast<unsigned int>(floor(simBoxSize[i] / minCellWidth)) : 1;
             if (nCells[i] == 0) nCells[i] = 1;

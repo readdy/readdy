@@ -45,6 +45,7 @@ namespace rpy = readdy::rpy;
 using rvp = py::return_value_policy;
 
 using rdy_ctx_t = readdy::model::KernelContext;
+using type_registry = readdy::model::ParticleTypeRegistry;
 using rdy_particle_t = readdy::model::Particle;
 
 using rdy_scpu_model_t = readdy::kernel::scpu::SCPUStateModel;
@@ -70,6 +71,8 @@ void exportModelClasses(py::module &proto) {
             .def(py::self == py::self)
             .def(py::self != py::self);
 
+    py::class_<type_registry>(proto, "ParticleTypeRegistry");
+
     py::class_<rdy_ctx_t>(proto, "Context")
             .def_property("kbt", &rdy_ctx_t::getKBT, &rdy_ctx_t::setKBT)
             .def("get_box_size", [](rdy_ctx_t &self) { return readdy::model::Vec3(self.getBoxSize()); })
@@ -78,14 +81,14 @@ void exportModelClasses(py::module &proto) {
                           [](rdy_ctx_t &self, std::array<bool, 3> periodic) {
                               self.setPeriodicBoundary(periodic[0], periodic[1], periodic[2]);
                           })
-            .def("register_particle_type", &rdy_ctx_t::registerParticleType)
-            .def("get_diffusion_constant",
-                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getDiffusionConstant)
+            /*.def("register_particle_type", &rdy_ctx_t::registerParticleType)*/
+            /*.def("get_diffusion_constant",
+                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getDiffusionConstant)*/
             .def("get_fix_position_fun", &rdy_ctx_t::getFixPositionFun)
             .def("get_shortest_difference_fun", &rdy_ctx_t::getShortestDifferenceFun)
             .def("get_dist_squared_fun", &rdy_ctx_t::getDistSquaredFun)
-            .def("get_particle_radius",
-                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)
+            /*.def("get_particle_radius",
+                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)*/
             .def("register_conversion_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Conversion* r) -> const short {
                      return self.reactionRegistry().add_external(r);
@@ -106,7 +109,7 @@ void exportModelClasses(py::module &proto) {
                  [](rdy_ctx_t &self, readdy::model::reactions::Decay *r) -> const short {
                      return self.reactionRegistry().add_external(r);
                  }, rvp::reference_internal)
-            .def("register_potential_order_1",
+            /*.def("register_potential_order_1",
                  [](rdy_ctx_t &self, rdy_pot_1 &pot) -> const short {
                      return self.registerExternalPotential(&pot);
                  }, rvp::reference_internal)
@@ -114,7 +117,7 @@ void exportModelClasses(py::module &proto) {
                  [](rdy_ctx_t &self, rdy_pot_2 *p) -> const short {
                      return self.registerExternalPotential(p);
                  }, rvp::reference_internal)
-            .def("get_particle_type_id", &rdy_ctx_t::getParticleTypeID)
+            .def("get_particle_type_id", &rdy_ctx_t::getParticleTypeID)*/
             .def("configure", &rdy_ctx_t::configure, py::arg("debugOutput") = false);
 
     py::class_ <rdy_scpu_model_t, rdy_scpu_model_wrap_t> model(proto, "Model");

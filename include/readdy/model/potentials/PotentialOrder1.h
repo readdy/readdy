@@ -37,9 +37,10 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
-class KernelContext;
+class ParticleTypeRegistry;
 
 NAMESPACE_BEGIN(potentials)
+class PotentialRegistry;
 class PotentialOrder1 : public Potential {
 protected:
     using particle_type_type = readdy::model::Particle::type_type;
@@ -60,8 +61,8 @@ public:
     }
 
 protected:
-    friend class readdy::model::KernelContext;
-    virtual void configureForType(const KernelContext* const, const particle_type_type type) = 0;
+    friend class readdy::model::potentials::PotentialRegistry;
+    virtual void configureForType(const ParticleTypeRegistry* const, const particle_type_type type) = 0;
 
     const std::string particleType;
 

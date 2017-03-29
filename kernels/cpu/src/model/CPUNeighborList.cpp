@@ -116,8 +116,8 @@ CPUNeighborList::CPUNeighborList(const ctx_t *const context, data_t &data, readd
 void CPUNeighborList::setupCells() {
     if (cells.empty()) {
         double maxCutoff = 0;
-        for (auto &&e : ctx->getAllOrder2RegisteredPotentialTypes()) {
-            for (auto &&p : ctx->getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
+        for (auto &&e : ctx->potentialRegistry().getAllOrder2RegisteredPotentialTypes()) {
+            for (auto &&p : ctx->potentialRegistry().getOrder2Potentials(std::get<0>(e), std::get<1>(e))) {
                 maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
             }
         }

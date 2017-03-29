@@ -40,7 +40,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().registerParticleType("X", .55, 1.);
+    kernel->getKernelContext().particleTypeRegistry().registerParticleType("X", .55, 1.);
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->registerReaction<readdy::model::reactions::Decay>("X decay", "X", .5);
     kernel->registerReaction<readdy::model::reactions::Fission>("X fission", "X", "X", "X", .00, .5);
@@ -54,7 +54,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 500;
-    const auto typeId = kernel->getKernelContext().getParticleTypeID("X");
+    const auto typeId = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     readdy::log::debug("n_particles={}", particlesToBeginWith.size());
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);

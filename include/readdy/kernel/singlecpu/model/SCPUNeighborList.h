@@ -183,7 +183,7 @@ public:
         if (boxes.empty()) {
             const auto simBoxSize = ctx->getBoxSize();
             double maxCutoff = 0;
-            for (auto &&p : ctx->getVectorAllOrder2Potentials()) {
+            for (auto &&p : ctx->potentialRegistry().getVectorAllOrder2Potentials()) {
                 maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
             }
             for (auto &&e : ctx->reactionRegistry().order2_flat()) {

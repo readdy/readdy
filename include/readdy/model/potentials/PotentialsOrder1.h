@@ -70,9 +70,9 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::KernelContext;
+    friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForType(const KernelContext *const ctx, const particle_type_type type) override;
+    void configureForType(const ParticleTypeRegistry *const registry, const particle_type_type type) override;
 
     const Vec3 origin, extent, min, max;
     const double forceConstant;
@@ -99,9 +99,9 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::KernelContext;
+    friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForType(const KernelContext *const ctx, const particle_type_type type) override;
+    void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
 
     const Vec3 origin;
     const double radius, forceConstant;
@@ -124,9 +124,9 @@ public:
 
     std::string describe() const override;
 protected:
-    friend class readdy::model::KernelContext;
+    friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForType(const KernelContext *const ctx, const particle_type_type type) override;
+    void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
 
     const Vec3 origin;
     const double radius, forceConstant;

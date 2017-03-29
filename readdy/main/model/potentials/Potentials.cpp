@@ -94,8 +94,8 @@ double Cube::getRelevantLengthScale() const noexcept {
     return std::min(extent[0], std::min(extent[1], extent[2]));
 }
 
-void Cube::configureForType(const KernelContext *const ctx, const particle_type_type type) {
-    particleRadius = ctx->getParticleRadius(type);
+void Cube::configureForType(const ParticleTypeRegistry *const registry, const particle_type_type type) {
+    particleRadius = registry->getParticleRadius(type);
 }
 
 double Cube::calculateEnergy(const Vec3 &position) const {
@@ -159,7 +159,7 @@ double SphereIn::getMaximalForce(double) const noexcept {
 SphereIn::SphereIn(const std::string &particleType, double f, const Vec3 &origin, double radius)
         : super(particleType), origin(origin), radius(radius), forceConstant(f) {}
 
-void SphereIn::configureForType(const KernelContext *const, const particle_type_type) {}
+void SphereIn::configureForType(const ParticleTypeRegistry *const, const particle_type_type) {}
 
 double SphereIn::calculateEnergy(const Vec3 &position) const {
     auto difference = position - origin;
@@ -201,7 +201,7 @@ std::string SphereIn::describe() const {
 SphereOut::SphereOut(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius)
         : super(particleType), forceConstant(forceConstant), origin(origin), radius(radius) {}
 
-void SphereOut::configureForType(const KernelContext *const ctx, const PotentialOrder1::particle_type_type type) {}
+void SphereOut::configureForType(const ParticleTypeRegistry *const, const PotentialOrder1::particle_type_type) {}
 
 std::string SphereOut::describe() const {
     std::ostringstream ss;
@@ -277,10 +277,10 @@ double HarmonicRepulsion::getMaximalForce(double) const noexcept {
     return forceConstant * getCutoffRadius();
 }
 
-void HarmonicRepulsion::configureForTypes(const KernelContext *const ctx, particle_type_type type1,
+void HarmonicRepulsion::configureForTypes(const ParticleTypeRegistry *const registry, particle_type_type type1,
                                           particle_type_type type2) {
-    auto r1 = ctx->getParticleRadius(type1);
-    auto r2 = ctx->getParticleRadius(type2);
+    auto r1 = registry->getParticleRadius(type1);
+    auto r2 = registry->getParticleRadius(type2);
     sumOfParticleRadii = r1 + r2;
     sumOfParticleRadiiSquared = sumOfParticleRadii * sumOfParticleRadii;
 }
@@ -345,7 +345,7 @@ double WeakInteractionPiecewiseHarmonic::getMaximalForce(double) const noexcept 
 }
 
 
-void WeakInteractionPiecewiseHarmonic::configureForTypes(const KernelContext *const, particle_type_type,
+void WeakInteractionPiecewiseHarmonic::configureForTypes(const ParticleTypeRegistry *const, particle_type_type,
                                                          particle_type_type) {}
 
 WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const std::string &particleType1,
@@ -456,7 +456,7 @@ LennardJones::LennardJones(const std::string &particleType1, const std::string &
 }
 
 void
-LennardJones::configureForTypes(const KernelContext *const context, particle_type_type type1,
+LennardJones::configureForTypes(const ParticleTypeRegistry *const context, particle_type_type type1,
                                 particle_type_type type2) {
 
 }
@@ -529,7 +529,7 @@ ScreenedElectrostatics::ScreenedElectrostatics(const std::string &particleType1,
 }
 
 void
-ScreenedElectrostatics::configureForTypes(const KernelContext *const context, particle_type_type type1,
+ScreenedElectrostatics::configureForTypes(const ParticleTypeRegistry *const context, particle_type_type type1,
                                           particle_type_type type2) {
 
 }

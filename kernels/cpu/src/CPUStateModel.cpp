@@ -44,8 +44,8 @@ namespace thd = readdy::util::thread;
 using entries_it = CPUStateModel::data_t::entries_t::iterator;
 using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
 using neighbors_it = decltype(std::declval<readdy::kernel::cpu::model::CPUNeighborList>().cbegin());
-using pot1Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder1Potentials());
-using pot2Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder2Potentials());
+using pot1Map = decltype(std::declval<readdy::model::KernelContext>().potentialRegistry().getAllOrder1Potentials());
+using pot2Map = decltype(std::declval<readdy::model::KernelContext>().potentialRegistry().getAllOrder2Potentials());
 using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
 using top_action_factory = readdy::model::top::TopologyActionFactory;
 
@@ -154,8 +154,8 @@ private:
 void CPUStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
     const auto &particleData = pimpl->cdata<true>();
-    const auto potOrder1 = pimpl->context->getAllOrder1Potentials();
-    const auto potOrder2 = pimpl->context->getAllOrder2Potentials();
+    const auto potOrder1 = pimpl->context->potentialRegistry().getAllOrder1Potentials();
+    const auto potOrder2 = pimpl->context->potentialRegistry().getAllOrder2Potentials();
     auto d = pimpl->context->getShortestDifferenceFun();
     {
         std::vector<std::future<double>> energyFutures;

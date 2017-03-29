@@ -39,7 +39,7 @@ namespace reactions {
 
 const std::vector<const reactions::Reaction<1> *> ReactionRegistry::order1_flat() const {
     auto result = std::vector<const reactions::Reaction<1> *>();
-    for (const auto &mapEntry : reactionOneEductRegistry) {
+    for (const auto &mapEntry : one_educt_registry) {
         for (const auto reaction : mapEntry.second) {
             result.push_back(reaction);
         }
@@ -48,7 +48,7 @@ const std::vector<const reactions::Reaction<1> *> ReactionRegistry::order1_flat(
 }
 
 const reactions::Reaction<1> *const ReactionRegistry::order1_by_name(const std::string &name) const {
-    for (const auto &mapEntry : reactionOneEductRegistry) {
+    for (const auto &mapEntry : one_educt_registry) {
         for (const auto &reaction : mapEntry.second) {
             if (reaction->getName() == name) return reaction;
         }
@@ -59,7 +59,7 @@ const reactions::Reaction<1> *const ReactionRegistry::order1_by_name(const std::
 
 const std::vector<const reactions::Reaction<2> *> ReactionRegistry::order2_flat() const {
     auto result = std::vector<const reactions::Reaction<2> *>();
-    for (const auto &mapEntry : reactionTwoEductsRegistry) {
+    for (const auto &mapEntry : two_educts_registry) {
         for (const auto reaction : mapEntry.second) {
             result.push_back(reaction);
         }
@@ -68,11 +68,11 @@ const std::vector<const reactions::Reaction<2> *> ReactionRegistry::order2_flat(
 }
 
 const std::vector<Reaction<1> *> &ReactionRegistry::order1_by_type(const Particle::type_type type) const {
-    return util::collections::getOrDefault(reactionOneEductRegistry, type, defaultReactionsO1);
+    return util::collections::getOrDefault(one_educt_registry, type, defaultReactionsO1);
 }
 
 const reactions::Reaction<2> *const ReactionRegistry::order2_by_name(const std::string &name) const {
-    for (const auto &mapEntry : reactionTwoEductsRegistry) {
+    for (const auto &mapEntry : two_educts_registry) {
         for (const auto &reaction : mapEntry.second) {
             if (reaction->getName() == name) return reaction;
         }
@@ -82,8 +82,8 @@ const reactions::Reaction<2> *const ReactionRegistry::order2_by_name(const std::
 
 const std::vector<Reaction<2> *> &
 ReactionRegistry::order2_by_type(const Particle::type_type type1, const Particle::type_type type2) const {
-    decltype(reactionTwoEductsRegistry.find(std::tie(type1, type2))) it;
-    if((it = reactionTwoEductsRegistry.find(std::tie(type1, type2))) != reactionTwoEductsRegistry.end()) {
+    decltype(two_educts_registry.find(std::tie(type1, type2))) it;
+    if((it = two_educts_registry.find(std::tie(type1, type2))) != two_educts_registry.end()) {
         return it->second;
     }
     return defaultReactionsO2;
@@ -95,37 +95,37 @@ void ReactionRegistry::configure() {
     using reaction1ptr = std::unique_ptr<reactions::Reaction<1>>;
     using reaction2ptr = std::unique_ptr<reactions::Reaction<2>>;
 
-    reactionOneEductRegistry.clear();
-    reactionTwoEductsRegistry.clear();
-    coll::for_each_value(reactionOneEductRegistryInternal,
+    one_educt_registry.clear();
+    two_educts_registry.clear();
+    coll::for_each_value(one_educt_registry_internal,
                          [&](const particle_t::type_type type, const reaction1ptr &ptr) {
-                             (reactionOneEductRegistry)[type].push_back(ptr.get());
+                             (one_educt_registry)[type].push_back(ptr.get());
                          });
-    coll::for_each_value(reactionTwoEductsRegistryInternal, [&](const pair &type, const reaction2ptr &r) {
-        (reactionTwoEductsRegistry)[type].push_back(r.get());
+    coll::for_each_value(two_educts_registry_internal, [&](const pair &type, const reaction2ptr &r) {
+        (two_educts_registry)[type].push_back(r.get());
     });
-    coll::for_each_value(reactionOneEductRegistryExternal,
+    coll::for_each_value(one_educt_registry_external,
                          [&](const particle_t::type_type type, reactions::Reaction<1> *ptr) {
-                             (reactionOneEductRegistry)[type].push_back(ptr);
+                             (one_educt_registry)[type].push_back(ptr);
                          });
-    coll::for_each_value(reactionTwoEductsRegistryExternal, [&](const pair &type, reactions::Reaction<2> *r) {
-        (reactionTwoEductsRegistry)[type].push_back(r);
+    coll::for_each_value(two_educts_registry_external, [&](const pair &type, reactions::Reaction<2> *r) {
+        (two_educts_registry)[type].push_back(r);
     });
 }
 
 void ReactionRegistry::debug_output() const {
-    if (!reactionOneEductRegistry.empty()) {
+    if (!one_educt_registry.empty()) {
         log::debug(" - reactions of order 1:");
-        for(const auto& entry : reactionOneEductRegistry) {
+        for(const auto& entry : one_educt_registry) {
             for(const auto& reaction : entry.second) {
                 log::debug("     * reaction {}", *reaction);
 
             }
         }
     }
-    if (!reactionTwoEductsRegistry.empty()) {
+    if (!two_educts_registry.empty()) {
         log::debug(" - reactions of order 2:");
-        for(const auto& entry : reactionTwoEductsRegistry) {
+        for(const auto& entry : two_educts_registry) {
             for(const auto& reaction : entry.second) {
                 log::debug("     * reaction {}", *reaction);
             }
@@ -142,14 +142,25 @@ const std::size_t &ReactionRegistry::n_order2() const {
 }
 
 const short ReactionRegistry::add_external(reactions::Reaction<1> *r) {
-    reactionOneEductRegistryExternal[r->getEducts()[0]].push_back(r);
-    ++n_order1_;
+    one_educt_registry_external[r->getEducts()[0]].push_back(r);
+    n_order1_ += 1;
     return r->getId();
 }
 
+ReactionRegistry::ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref) : typeRegistry(ref) {}
+
+const std::vector<Reaction<1> *> &ReactionRegistry::order1_by_type(const std::string &type) const {
+    return order1_by_type(typeRegistry.getParticleTypeID(type));
+}
+
+const std::vector<Reaction<2> *> &
+ReactionRegistry::order2_by_type(const std::string &type1, const std::string &type2) const {
+    return order2_by_type(typeRegistry.getParticleTypeID(type1), typeRegistry.getParticleTypeID(type2));
+}
+
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {
-    reactionTwoEductsRegistryExternal[std::tie(r->getEducts()[0], r->getEducts()[1])].push_back(r);
-    ++n_order2_;
+    two_educts_registry_external[std::tie(r->getEducts()[0], r->getEducts()[1])].push_back(r);
+    n_order2_ += 1;
     return r->getId();
 }
 

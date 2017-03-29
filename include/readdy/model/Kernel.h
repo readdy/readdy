@@ -147,7 +147,7 @@ public:
     template<typename T, typename... Args>
     potentials::Potential::id_t registerPotential(Args &&... args) {
         auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
-        return getKernelContext().registerPotential(std::move(pot));
+        return getKernelContext().potentialRegistry().registerPotential(std::move(pot));
     };
 
     template<typename T, typename... Args>

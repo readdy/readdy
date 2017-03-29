@@ -77,13 +77,13 @@ TEST_F(TestKernelContext, BoxSize) {
 
 TEST_F(TestKernelContext, PotentialOrder2Map) {
     m::KernelContext ctx;
-    ctx.registerParticleType("a", 1., 1.);
-    ctx.registerParticleType("b", 1., 1.);
+    ctx.particleTypeRegistry().registerParticleType("a", 1., 1.);
+    ctx.particleTypeRegistry().registerParticleType("b", 1., 1.);
     auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>("a", "b");
-    ctx.registerPotential(std::move(noop));
-    ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("b", "a"));
+    ctx.potentialRegistry().registerPotential(std::move(noop));
+    ctx.potentialRegistry().registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("b", "a"));
     ctx.configure();
-    auto vector = ctx.getOrder2Potentials("b", "a");
+    auto vector = ctx.potentialRegistry().getOrder2Potentials("b", "a");
     EXPECT_EQ(vector.size(), 2);
 }
 
@@ -95,10 +95,10 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
     auto &ctx = kernel->getKernelContext();
 
-    ctx.registerParticleType("A", 1.0, 1.0);
-    ctx.registerParticleType("B", 3.0, 2.0);
-    ctx.registerParticleType("C", 4.0, 3.0);
-    ctx.registerParticleType("D", 2.0, 4.0);
+    ctx.particleTypeRegistry().registerParticleType("A", 1.0, 1.0);
+    ctx.particleTypeRegistry().registerParticleType("B", 3.0, 2.0);
+    ctx.particleTypeRegistry().registerParticleType("C", 4.0, 3.0);
+    ctx.particleTypeRegistry().registerParticleType("D", 2.0, 4.0);
 
     std::vector<short> idsToRemove;
     short uuid2_1, uuid2_2;
@@ -122,65 +122,65 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     // test that order 1 potentials are set up correctly
     {
         {
-            const auto &pot1_A = ctx.getOrder1Potentials("A");
+            const auto &pot1_A = ctx.potentialRegistry().getOrder1Potentials("A");
             EXPECT_EQ(pot1_A.size(), 1);
             EXPECT_EQ(dynamic_cast<rmp::Cube *>(pot1_A[0])->getParticleRadius(), 1.0);
         }
         {
-            const auto &pot1_B = ctx.getOrder1Potentials("B");
+            const auto &pot1_B = ctx.potentialRegistry().getOrder1Potentials("B");
             EXPECT_EQ(pot1_B.size(), 1);
             EXPECT_EQ(dynamic_cast<rmp::Cube *>(pot1_B[0])->getParticleRadius(), 2.0);
         }
         {
-            const auto &pot1_C = ctx.getOrder1Potentials("C");
+            const auto &pot1_C = ctx.potentialRegistry().getOrder1Potentials("C");
             EXPECT_EQ(pot1_C.size(), 2);
             for (auto &&ptr : pot1_C) {
                 EXPECT_EQ(dynamic_cast<rmp::Cube *>(ptr)->getParticleRadius(), 3.0);
             }
         }
         {
-            const auto &pot1_D = ctx.getOrder1Potentials("D");
+            const auto &pot1_D = ctx.potentialRegistry().getOrder1Potentials("D");
             EXPECT_EQ(pot1_D.size(), 1);
             EXPECT_EQ(dynamic_cast<rmp::Cube *>(pot1_D[0])->getParticleRadius(), 4.0);
         }
     }
     // test that order 2 potentials are set up correctly
     {
-        EXPECT_EQ(ctx.getOrder2Potentials("A", "A").size(), 0);
-        EXPECT_EQ(ctx.getOrder2Potentials("A", "B").size(), 0);
-        EXPECT_EQ(ctx.getOrder2Potentials("A", "D").size(), 0);
-        EXPECT_EQ(ctx.getOrder2Potentials("B", "B").size(), 0);
-        EXPECT_EQ(ctx.getOrder2Potentials("B", "D").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("A", "A").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("A", "B").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("A", "D").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("B", "B").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("B", "D").size(), 0);
 
-        EXPECT_EQ(ctx.getOrder2Potentials("A", "C").size(), 1);
-        EXPECT_EQ(ctx.getOrder2Potentials("B", "C").size(), 1);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("A", "C").size(), 1);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("B", "C").size(), 1);
         {
-            const auto &pot2_AC = ctx.getOrder2Potentials("A", "C");
+            const auto &pot2_AC = ctx.potentialRegistry().getOrder2Potentials("A", "C");
             EXPECT_EQ(pot2_AC[0]->getId(), uuid2_1);
             EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_AC[0])->getSumOfParticleRadii(), 1 + 3);
         }
         {
-            const auto &pot2_BC = ctx.getOrder2Potentials("B", "C");
+            const auto &pot2_BC = ctx.potentialRegistry().getOrder2Potentials("B", "C");
             EXPECT_EQ(pot2_BC[0]->getId(), uuid2_2);
             EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_BC[0])->getSumOfParticleRadii(), 2 + 3);
         }
     }
 
     // now remove
-    std::for_each(idsToRemove.begin(), idsToRemove.end(), [&](const short id) { ctx.deregisterPotential(id); });
+    std::for_each(idsToRemove.begin(), idsToRemove.end(), [&](const short id) { ctx.potentialRegistry().deregisterPotential(id); });
     {
         // only one potential for particle type B has a different uuid
         ctx.configure();
-        EXPECT_EQ(ctx.getOrder1Potentials("A").size(), 0);
-        EXPECT_EQ(ctx.getOrder1Potentials("B").size(), 1);
-        EXPECT_EQ(ctx.getOrder1Potentials("C").size(), 0);
-        EXPECT_EQ(ctx.getOrder1Potentials("D").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder1Potentials("A").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder1Potentials("B").size(), 1);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder1Potentials("C").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder1Potentials("D").size(), 0);
 
         // remove 2nd potential
-        ctx.deregisterPotential(uuid2_2);
+        ctx.potentialRegistry().deregisterPotential(uuid2_2);
         ctx.configure();
-        EXPECT_EQ(ctx.getOrder2Potentials("A", "C").size(), 1);
-        EXPECT_EQ(ctx.getOrder2Potentials("B", "C").size(), 0);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("A", "C").size(), 1);
+        EXPECT_EQ(ctx.potentialRegistry().getOrder2Potentials("B", "C").size(), 0);
     }
 
 }

@@ -52,11 +52,11 @@ struct TestNeighborList : ::testing::Test {
 
     TestNeighborList() : kernel(std::make_unique<cpu::CPUDKernel>()) {
         auto &ctx = kernel->getKernelContext();
-        ctx.registerParticleType("A", 1.0, 1.0);
+        ctx.particleTypeRegistry().registerParticleType("A", 1.0, 1.0);
         double eductDistance = 1.2;
         ctx.reactionRegistry().add(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
-        ctx.registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
-        typeIdA = ctx.getParticleTypeID("A");
+        ctx.potentialRegistry().registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
+        typeIdA = ctx.particleTypeRegistry().getParticleTypeID("A");
         ctx.configure();
     }
 

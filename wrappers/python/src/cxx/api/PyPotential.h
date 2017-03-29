@@ -64,7 +64,7 @@ public:
 
 
 protected:
-    void configureForTypes(const model::KernelContext *const context, particle_type_type type1, particle_type_type type2) override;
+    void configureForTypes(const model::ParticleTypeRegistry *const context, particle_type_type type1, particle_type_type type2) override;
 
     std::shared_ptr<pybind11::object> calcEnergyFun;
     std::shared_ptr<pybind11::object> calcForceFun;

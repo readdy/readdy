@@ -34,6 +34,7 @@
 
 #include <readdy/common/common.h>
 #include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/model/ParticleTypeRegistry.h>
 #include "Reaction.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -49,7 +50,7 @@ class ReactionRegistry {
 
 public:
 
-    ReactionRegistry() = default;
+    ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
     ReactionRegistry(const ReactionRegistry &) = delete;
 
@@ -79,17 +80,23 @@ public:
     const std::vector<reactions::Reaction<2> *> &order2_by_type(const particle_t::type_type type1,
                                                                 const particle_t::type_type type2) const;
 
+
+    const std::vector<reactions::Reaction<1> *> &order1_by_type(const std::string &type) const;
+
+    const std::vector<reactions::Reaction<2> *> &order2_by_type(const std::string &type1,
+                                                                    const std::string &type2) const;
+
     template<typename R>
     const short add(std::unique_ptr<R> r,
                     typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type * = 0) {
         log::trace("registering reaction {}", *r);
         const auto id = r->getId();
         const auto type = r->getEducts()[0];
-        if (reactionOneEductRegistryInternal.find(type) == reactionOneEductRegistryInternal.end()) {
-            reactionOneEductRegistryInternal.emplace(type, rea_ptr_vec1());
+        if (one_educt_registry_internal.find(type) == one_educt_registry_internal.end()) {
+            one_educt_registry_internal.emplace(type, rea_ptr_vec1());
         }
-        reactionOneEductRegistryInternal[type].push_back(std::move(r));
-        ++n_order1_;
+        one_educt_registry_internal[type].push_back(std::move(r));
+        n_order1_ += 1;
         return id;
     }
 
@@ -102,11 +109,11 @@ public:
         const auto t2 = r->getEducts()[1];
 
         const auto pp = std::tie(t1, t2);
-        if (reactionTwoEductsRegistryInternal.find(pp) == reactionTwoEductsRegistryInternal.end()) {
-            reactionTwoEductsRegistryInternal.emplace(pp, rea_ptr_vec2());
+        if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
+            two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
         }
-        reactionTwoEductsRegistryInternal[pp].push_back(std::move(r));
-        ++n_order2_;
+        two_educts_registry_internal[pp].push_back(std::move(r));
+        n_order2_ += 1;
         return id;
     }
 
@@ -122,16 +129,17 @@ private:
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
 
-    std::size_t n_order1_;
-    std::size_t n_order2_;
+    std::size_t n_order1_ = 0;
+    std::size_t n_order2_ = 0;
 
+    const ParticleTypeRegistry& typeRegistry;
 
-    reaction_o1_registry reactionOneEductRegistry{};
-    reaction_o1_registry_internal reactionOneEductRegistryInternal{};
-    reaction_o1_registry_external reactionOneEductRegistryExternal{};
-    reaction_o2_registry reactionTwoEductsRegistry{};
-    reaction_o2_registry_internal reactionTwoEductsRegistryInternal{};
-    reaction_o2_registry_external reactionTwoEductsRegistryExternal{};
+    reaction_o1_registry one_educt_registry{};
+    reaction_o1_registry_internal one_educt_registry_internal{};
+    reaction_o1_registry_external one_educt_registry_external{};
+    reaction_o2_registry two_educts_registry{};
+    reaction_o2_registry_internal two_educts_registry_internal{};
+    reaction_o2_registry_external two_educts_registry_external{};
 
     std::vector<reactions::Reaction<1> *> defaultReactionsO1{};
     std::vector<reactions::Reaction<2> *> defaultReactionsO2{};

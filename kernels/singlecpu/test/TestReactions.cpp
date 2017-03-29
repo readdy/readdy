@@ -43,7 +43,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().registerParticleType("X", .25, 1.);
+    kernel->getKernelContext().particleTypeRegistry().registerParticleType("X", .25, 1.);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
 
@@ -61,7 +61,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->getKernelContext().getParticleTypeID("X");
+    const auto typeId = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
     kernel->getKernelContext().configure();
@@ -118,11 +118,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
 
-    kernel->getKernelContext().registerParticleType("A", .25, 1.);
-    kernel->getKernelContext().registerParticleType("B", .25, 1.);
-    kernel->getKernelContext().registerParticleType("C", .25, 1.);
-    kernel->getKernelContext().registerParticleType("D", .25, 1.);
-    kernel->getKernelContext().registerParticleType("E", .25, 1.);
+    kernel->getKernelContext().particleTypeRegistry().registerParticleType("A", .25, 1.);
+    kernel->getKernelContext().particleTypeRegistry().registerParticleType("B", .25, 1.);
+    kernel->getKernelContext().particleTypeRegistry().registerParticleType("C", .25, 1.);
+    kernel->getKernelContext().particleTypeRegistry().registerParticleType("D", .25, 1.);
+    kernel->getKernelContext().particleTypeRegistry().registerParticleType("E", .25, 1.);
 
     kernel->registerReaction<death_t>("A decay", "A", 1);
     kernel->registerReaction<fusion_t>("B+C->E", "B", "C", "E", 1, 17);
@@ -135,11 +135,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
 
-    const auto typeId_A = kernel->getKernelContext().getParticleTypeID("A");
-    const auto typeId_B = kernel->getKernelContext().getParticleTypeID("B");
-    const auto typeId_C = kernel->getKernelContext().getParticleTypeID("C");
-    const auto typeId_D = kernel->getKernelContext().getParticleTypeID("D");
-    const auto typeId_E = kernel->getKernelContext().getParticleTypeID("E");
+    const auto typeId_A = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("A");
+    const auto typeId_B = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("B");
+    const auto typeId_C = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("C");
+    const auto typeId_D = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("D");
+    const auto typeId_E = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("E");
 
     kernel->getKernelStateModel().addParticle({4, 4, 4, typeId_A});
     kernel->getKernelStateModel().addParticle({-2, 0, 0, typeId_B});
