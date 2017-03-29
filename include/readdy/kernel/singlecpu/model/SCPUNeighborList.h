@@ -186,7 +186,7 @@ public:
             for (auto &&p : ctx->getVectorAllOrder2Potentials()) {
                 maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
             }
-            for (auto &&e : ctx->getAllOrder2Reactions()) {
+            for (auto &&e : ctx->reactionRegistry().order2_flat()) {
                 maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
             }
             SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;

@@ -63,7 +63,7 @@ struct CPUNextSubvolumes::ReactionEvent {
 struct CPUNextSubvolumes::GridCell {
     using particle_index = data_t::index_t;
 
-    const cell_index_t i, j, k, id;
+    cell_index_t i, j, k, id;
     std::vector<const GridCell *> neighbors;
     std::unordered_map<particle_type::type_type, std::vector<particle_index>> particles;
     std::vector<unsigned long> typeCounts;
@@ -249,7 +249,7 @@ void CPUNextSubvolumes::evaluateReactions() {
 
 double CPUNextSubvolumes::getMaxReactionRadius() const {
     double maxReactionRadius = 0.0;
-    for (auto &&e : kernel->getKernelContext().getAllOrder2Reactions()) {
+    for (auto &&e : kernel->getKernelContext().reactionRegistry().order2_flat()) {
         maxReactionRadius = std::max(maxReactionRadius, e->getEductDistance());
     }
     return maxReactionRadius;
@@ -311,7 +311,7 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
         const auto pType = it.first;
         for(auto i = 0; i < it.second.size(); ++i) {
             std::size_t reactionIdx = 0;
-            for (const auto reactionOrder1 : ctx.getOrder1Reactions(pType)) {
+            for (const auto reactionOrder1 : ctx.reactionRegistry().order1_by_type(pType)) {
                 const auto rateUpdate = cell.typeCounts[pType] * reactionOrder1->getRate();
                 if (rateUpdate > 0) {
                     cell.cellRate += rateUpdate;
@@ -327,7 +327,7 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
     // order 2 reactions
     {
         std::size_t reactionIdx = 0;
-        for (const auto reactionOrder2 : ctx.getAllOrder2Reactions()) {
+        for (const auto reactionOrder2 : ctx.reactionRegistry().order2_flat()) {
             for (int perm = 0; perm < 2; ++perm) {
                 const auto typeA = reactionOrder2->getEducts()[(0 + perm) % 2];
                 const auto typeB = reactionOrder2->getEducts()[(1 + perm) % 2];

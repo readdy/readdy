@@ -59,8 +59,6 @@ struct KernelContext::Impl {
         return dv * dv;
     };
 
-    std::vector<reactions::Reaction<1> *> defaultReactionsO1{};
-    std::vector<reactions::Reaction<2> *> defaultReactionsO2{};
     std::vector<potentials::PotentialOrder1 *> defaultPotentialsO1{};
     std::vector<potentials::PotentialOrder2 *> defaultPotentialsO2{};
 
@@ -242,12 +240,7 @@ std::vector<potentials::PotentialOrder1 *> KernelContext::getOrder1Potentials(co
 }
 
 std::unordered_set<particle_t::type_type> KernelContext::getAllOrder1RegisteredPotentialTypes() const {
-    std::unordered_set<particle_t::type_type> result{};
-    for (auto it = potentialO1RegistryInternal.begin();
-         it != potentialO1RegistryInternal.end(); ++it) {
-        result.insert(it->first);
-    }
-    return result;
+
 }
 
 void KernelContext::deregisterPotential(const short potential) {
@@ -282,61 +275,12 @@ void KernelContext::deregisterPotential(const short potential) {
 }
 
 const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const std::string &type) const {
-    return getOrder1Reactions(pimpl->typeMapping[type]);
-}
-
-const std::vector<reactions::Reaction<1> *> &KernelContext::getOrder1Reactions(const particle_t::type_type type) const {
-    return readdy::util::collections::getOrDefault(reactionOneEductRegistry, type, pimpl->defaultReactionsO1);
+    return reactionRegistry_.order1_by_type(pimpl->typeMapping[type]);
 }
 
 const std::vector<reactions::Reaction<2> *> &
 KernelContext::getOrder2Reactions(const std::string &type1, const std::string &type2) const {
-    return getOrder2Reactions(pimpl->typeMapping[type1], pimpl->typeMapping[type2]);
-}
-
-const std::vector<reactions::Reaction<2> *> &
-KernelContext::getOrder2Reactions(const particle_t::type_type type1, const particle_t::type_type type2) const {
-    return readdy::util::collections::getOrDefault(reactionTwoEductsRegistry, std::make_tuple(type1, type2),
-                                                   pimpl->defaultReactionsO2);
-}
-
-const std::vector<const reactions::Reaction<1> *> KernelContext::getAllOrder1Reactions() const {
-    auto result = std::vector<const reactions::Reaction<1> *>();
-    for (const auto &mapEntry : reactionOneEductRegistry) {
-        for (const auto reaction : mapEntry.second) {
-            result.push_back(reaction);
-        }
-    }
-    return result;
-}
-
-const reactions::Reaction<1> *const KernelContext::getReactionOrder1WithName(const std::string &name) const {
-    for (const auto &mapEntry : reactionOneEductRegistry) {
-        for (const auto &reaction : mapEntry.second) {
-            if (reaction->getName() == name) return reaction;
-        }
-    }
-
-    return nullptr;
-}
-
-const std::vector<const reactions::Reaction<2> *> KernelContext::getAllOrder2Reactions() const {
-    auto result = std::vector<const reactions::Reaction<2> *>();
-    for (const auto &mapEntry : reactionTwoEductsRegistry) {
-        for (const auto reaction : mapEntry.second) {
-            result.push_back(reaction);
-        }
-    }
-    return result;
-}
-
-const reactions::Reaction<2> *const KernelContext::getReactionOrder2WithName(const std::string &name) const {
-    for (const auto &mapEntry : reactionTwoEductsRegistry) {
-        for (const auto &reaction : mapEntry.second) {
-            if (reaction->getName() == name) return reaction;
-        }
-    }
-    return nullptr;
+    return reactionRegistry_.order2_by_type(pimpl->typeMapping[type1], pimpl->typeMapping[type2]);
 }
 
 const KernelContext::fix_pos_fun &KernelContext::getFixPositionFun() const {
@@ -358,44 +302,29 @@ void KernelContext::configure(bool debugOutput) {
     using pot1_ptr = std::unique_ptr<potentials::PotentialOrder1>;
     using pot2_ptr = std::unique_ptr<potentials::PotentialOrder2>;
     using pot2 = potentials::PotentialOrder2;
-    using reaction1ptr = std::unique_ptr<reactions::Reaction<1>>;
-    using reaction2ptr = std::unique_ptr<reactions::Reaction<2>>;
 
-    potentialO1Registry.clear();
-    potentialO2Registry.clear();
-    reactionOneEductRegistry.clear();
-    reactionTwoEductsRegistry.clear();
+    reactionRegistry_.configure();
+    {
+        potentialO1Registry.clear();
+        potentialO2Registry.clear();
 
-    coll::for_each_value(potentialO1RegistryInternal, [&](const particle_t::type_type type, const pot1_ptr &ptr) {
-        ptr->configureForType(this, type);
-        (potentialO1Registry)[type].push_back(ptr.get());
-    });
-    coll::for_each_value(potentialO2RegistryInternal, [&](const pair &type, const pot2_ptr &ptr) {
-        ptr->configureForTypes(this, std::get<0>(type), std::get<1>(type));
-        (potentialO2Registry)[type].push_back(ptr.get());
-    });
-    coll::for_each_value(potentialO1RegistryExternal, [&](const particle_t::type_type type, pot1 *ptr) {
-        ptr->configureForType(this, type);
-        (potentialO1Registry)[type].push_back(ptr);
-    });
-    coll::for_each_value(potentialO2RegistryExternal, [&](const pair &type, pot2 *ptr) {
-        ptr->configureForTypes(this, std::get<0>(type), std::get<1>(type));
-        (potentialO2Registry)[type].push_back(ptr);
-    });
-    coll::for_each_value(reactionOneEductRegistryInternal,
-                         [&](const particle_t::type_type type, const reaction1ptr &ptr) {
-                             (reactionOneEductRegistry)[type].push_back(ptr.get());
-                         });
-    coll::for_each_value(reactionTwoEductsRegistryInternal, [&](const pair &type, const reaction2ptr &r) {
-        (reactionTwoEductsRegistry)[type].push_back(r.get());
-    });
-    coll::for_each_value(reactionOneEductRegistryExternal,
-                         [&](const particle_t::type_type type, reactions::Reaction<1> *ptr) {
-                             (reactionOneEductRegistry)[type].push_back(ptr);
-                         });
-    coll::for_each_value(reactionTwoEductsRegistryExternal, [&](const pair &type, reactions::Reaction<2> *r) {
-        (reactionTwoEductsRegistry)[type].push_back(r);
-    });
+        coll::for_each_value(potentialO1RegistryInternal, [&](const particle_t::type_type type, const pot1_ptr &ptr) {
+            ptr->configureForType(this, type);
+            (potentialO1Registry)[type].push_back(ptr.get());
+        });
+        coll::for_each_value(potentialO2RegistryInternal, [&](const pair &type, const pot2_ptr &ptr) {
+            ptr->configureForTypes(this, std::get<0>(type), std::get<1>(type));
+            (potentialO2Registry)[type].push_back(ptr.get());
+        });
+        coll::for_each_value(potentialO1RegistryExternal, [&](const particle_t::type_type type, pot1 *ptr) {
+            ptr->configureForType(this, type);
+            (potentialO1Registry)[type].push_back(ptr);
+        });
+        coll::for_each_value(potentialO2RegistryExternal, [&](const pair &type, pot2 *ptr) {
+            ptr->configureForTypes(this, std::get<0>(type), std::get<1>(type));
+            (potentialO2Registry)[type].push_back(ptr);
+        });
+    }
 
     /**
      * Info output
@@ -433,18 +362,7 @@ void KernelContext::configure(bool debugOutput) {
                 }
             }
         }
-        if (!getAllOrder1Reactions().empty()) {
-            log::debug(" - reactions of order 1:");
-            for (const auto &reaction : getAllOrder1Reactions()) {
-                log::debug("     * reaction {}", *reaction);
-            }
-        }
-        if (!getAllOrder2Reactions().empty()) {
-            log::debug(" - reactions of order 2:");
-            for (const auto &reaction : getAllOrder2Reactions()) {
-                log::debug("     * reaction {}", *reaction);
-            }
-        }
+        reactionRegistry_.debug_output();
     }
 
 }
@@ -563,9 +481,13 @@ void KernelContext::configureTopologyTorsionPotential(const std::string &type1, 
                                                               getParticleTypeID(type4))].push_back(torsionAngle);
 }
 
-KernelContext &KernelContext::operator=(KernelContext &&rhs) = default;
+reactions::ReactionRegistry &KernelContext::reactionRegistry() {
+    return reactionRegistry_;
+}
 
-KernelContext::KernelContext(KernelContext &&rhs) = default;
+const reactions::ReactionRegistry &KernelContext::reactionRegistry() const {
+    return reactionRegistry_;
+}
 
 KernelContext::~KernelContext() = default;
 

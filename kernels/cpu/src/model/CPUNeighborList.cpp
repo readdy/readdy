@@ -121,7 +121,7 @@ void CPUNeighborList::setupCells() {
                 maxCutoff = maxCutoff < p->getCutoffRadius() ? p->getCutoffRadius() : maxCutoff;
             }
         }
-        for (auto &&e : ctx->getAllOrder2Reactions()) {
+        for (auto &&e : ctx->reactionRegistry().order2_flat()) {
             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
         }
         CPUNeighborList::maxCutoff = maxCutoff;

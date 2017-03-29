@@ -244,7 +244,7 @@ Simulation::registerConversionReaction(const std::string &name, const std::strin
     ensureKernelSelected();
     namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createConversionReaction(name, from, to, rate);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactionRegistry().add(std::move(reaction));
 }
 
 const short
@@ -254,7 +254,7 @@ Simulation::registerEnzymaticReaction(const std::string &name, const std::string
     ensureKernelSelected();
     namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactionRegistry().add(std::move(reaction));
 }
 
 const short
@@ -264,7 +264,7 @@ Simulation::registerFissionReaction(const std::string &name, const std::string &
                                     const double weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFissionReaction(name, from, to1, to2, rate, productDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactionRegistry().add(std::move(reaction));
 }
 
 const short
@@ -273,14 +273,14 @@ Simulation::registerFusionReaction(const std::string &name, const std::string &f
                                    const double eductDistance, const double weight1, const double weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactionRegistry().add(std::move(reaction));
 }
 
 const short
 Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const double rate) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createDecayReaction(name, particleType, rate);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactionRegistry().add(std::move(reaction));
 }
 
 std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string type) {

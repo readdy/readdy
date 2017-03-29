@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,39 +23,19 @@
 /**
  * << detailed description >>
  *
- * @file Event.cpp
+ * @file TestTopologyReactions.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 23.11.16
+ * @date 29.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <gtest/gtest.h>
 
-#include <readdy/kernel/cpu_dense/actions/reactions/Event.h>
+namespace {
 
-namespace readdy {
-namespace kernel {
-namespace cpu_dense {
-namespace actions {
-namespace reactions {
-
-Event::Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
-             double cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2)
-        : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
-          cumulativeRate(cumulativeRate), reactionIdx(reactionIdx), t1(t1), t2(t2) {
-}
-
-std::ostream &operator<<(std::ostream &os, const Event &evt) {
-    os << "Event(" << evt.idx1 << "[type=" << evt.t1 << "]";
-    if (evt.nEducts == 2) {
-        os << " + " << evt.idx2 << "[type=" << evt.t2 << "]";
-    }
-    os << ", rate=" << evt.reactionRate << ", cumulativeRate=" << evt.cumulativeRate
-       << ", reactionIdx=" << evt.reactionIdx;
-    return os;
-}
+TEST(TestTopologyReactions, TestConversion) {
 
 }
-}
-}
-}
+
 }

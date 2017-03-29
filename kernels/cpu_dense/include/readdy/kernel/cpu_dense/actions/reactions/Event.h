@@ -45,12 +45,12 @@ struct Event {
     unsigned int nProducts;
     index_type idx1, idx2;
     reaction_index_type reactionIdx;
-    unsigned int t1, t2;
+    particle_type_type t1, t2;
     double reactionRate;
     double cumulativeRate;
 
     Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
-          double cumulativeRate, reaction_index_type reactionIdx, unsigned int t1, unsigned int t2);
+          double cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2);
 
     friend std::ostream &operator<<(std::ostream &, const Event &);
 

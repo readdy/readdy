@@ -169,7 +169,7 @@ public:
 
     template<typename T, typename... Args>
     const short registerReaction(Args &&... args) {
-        return getKernelContext().registerReaction(
+        return getKernelContext().reactionRegistry().add(
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
     };
 

@@ -55,6 +55,7 @@
 #include "Vec3.h"
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/api/PotentialConfiguration.h>
+#include <readdy/model/reactions/ReactionRegistry.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -78,15 +79,9 @@ struct ParticleTypeInfo {
 class KernelContext {
     using particle_t = readdy::model::Particle;
 
-    using rea_ptr_vec1 = std::vector<std::unique_ptr<reactions::Reaction<1>>>;
-    using rea_ptr_vec2 = std::vector<std::unique_ptr<reactions::Reaction<2>>>;
-
     using rdy_ptp = readdy::util::particle_type_pair;
     using rdy_ptp_hasher = readdy::util::particle_type_pair_hasher;
     using rdy_ptp_eq = readdy::util::particle_type_pair_equal_to;
-
-    using reaction_o1_registry_internal = std::unordered_map<particle_t::type_type, rea_ptr_vec1>;
-    using reaction_o2_registry_internal = std::unordered_map<rdy_ptp, rea_ptr_vec2, rdy_ptp_hasher, rdy_ptp_eq>;
 
     using pot_ptr_vec1 = std::vector<std::unique_ptr<potentials::PotentialOrder1>>;
     using pot_ptr_vec1_external = std::vector<potentials::PotentialOrder1 *>;
@@ -106,9 +101,6 @@ public:
 
     using rdy_pot_2 = readdy::model::potentials::PotentialOrder2;
     using rdy_pot_2_registry = std::unordered_map<rdy_ptp, std::vector<rdy_pot_2 *>, rdy_ptp_hasher, rdy_ptp_eq>;
-
-    using reaction_o1_registry = std::unordered_map<particle_t::type_type, std::vector<reactions::Reaction<1> *>>;
-    using reaction_o2_registry = std::unordered_map<rdy_ptp, std::vector<reactions::Reaction<2> *>, rdy_ptp_hasher, rdy_ptp_eq>;
 
     using compartment_registry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
 
@@ -138,6 +130,11 @@ public:
 
     const shortest_dist_fun &getShortestDifferenceFun() const;
 
+    const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const std::string &type) const;
+
+    const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const std::string &type1,
+                                                                    const std::string &type2) const;
+
     void registerParticleType(const std::string &name, const double diffusionConst, const double radius,
                               const readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
@@ -152,63 +149,6 @@ public:
     double getParticleRadius(const std::string &type) const;
 
     double getParticleRadius(const particle_t::type_type type) const;
-
-    const std::vector<const reactions::Reaction<1> *> getAllOrder1Reactions() const;
-
-    const reactions::Reaction<1> *const getReactionOrder1WithName(const std::string &name) const;
-
-    const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const std::string &type) const;
-
-    const std::vector<reactions::Reaction<1> *> &getOrder1Reactions(const particle_t::type_type type) const;
-
-    const std::vector<const reactions::Reaction<2> *> getAllOrder2Reactions() const;
-
-    const reactions::Reaction<2> *const getReactionOrder2WithName(const std::string &name) const;
-
-    const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const std::string &type1,
-                                                                    const std::string &type2) const;
-
-    const std::vector<reactions::Reaction<2> *> &getOrder2Reactions(const particle_t::type_type type1,
-                                                                    const particle_t::type_type type2) const;
-
-    template<typename R>
-    const short registerReaction(std::unique_ptr<R> r,
-                                 typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type * = 0) {
-        log::trace("registering reaction {}", *r);
-        const auto id = r->getId();
-        const auto type = r->getEducts()[0];
-        if (reactionOneEductRegistryInternal.find(type) == reactionOneEductRegistryInternal.end()) {
-            reactionOneEductRegistryInternal.emplace(type, rea_ptr_vec1());
-        }
-        reactionOneEductRegistryInternal[type].push_back(std::move(r));
-        return id;
-    }
-
-    template<typename R>
-    const short registerReaction(std::unique_ptr<R> r,
-                                 typename std::enable_if<std::is_base_of<reactions::Reaction<2>, R>::value>::type * = 0) {
-        log::trace("registering reaction {}", *r);
-        const auto id = r->getId();
-        const auto t1 = r->getEducts()[0];
-        const auto t2 = r->getEducts()[1];
-
-        const auto pp = std::tie(t1, t2);
-        if (reactionTwoEductsRegistryInternal.find(pp) == reactionTwoEductsRegistryInternal.end()) {
-            reactionTwoEductsRegistryInternal.emplace(pp, rea_ptr_vec2());
-        }
-        reactionTwoEductsRegistryInternal[pp].push_back(std::move(r));
-        return id;
-    }
-
-    const short registerExternalReaction(reactions::Reaction<1> *r) {
-        reactionOneEductRegistryExternal[r->getEducts()[0]].push_back(r);
-        return r->getId();
-    }
-
-    const short registerExternalReaction(reactions::Reaction<2> *r) {
-        reactionTwoEductsRegistryExternal[std::tie(r->getEducts()[0], r->getEducts()[1])].push_back(r);
-        return r->getId();
-    }
 
     const short registerExternalPotential(potentials::PotentialOrder1 *potential) {
         auto typeId = getParticleTypeID(potential->particleType);
@@ -352,15 +292,19 @@ public:
 
     const api::PotentialConfiguration &topologyPotentialConfiguration() const;
 
+    reactions::ReactionRegistry &reactionRegistry();
+
+    const reactions::ReactionRegistry &reactionRegistry() const;
+
     // ctor and dtor
     KernelContext();
 
     ~KernelContext();
 
     // move
-    KernelContext(KernelContext &&rhs);
+    KernelContext(KernelContext &&rhs) = delete;
 
-    KernelContext &operator=(KernelContext &&rhs);
+    KernelContext &operator=(KernelContext &&rhs) = delete;
 
     // copy
     KernelContext(const KernelContext &rhs) = delete;
@@ -371,17 +315,9 @@ private:
     struct Impl;
     std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
 
-    using reaction_o1_registry_external = reaction_o1_registry;
-    using reaction_o2_registry_external = reaction_o2_registry;
-
-    reaction_o1_registry reactionOneEductRegistry{};
-    reaction_o1_registry_internal reactionOneEductRegistryInternal{};
-    reaction_o1_registry_external reactionOneEductRegistryExternal{};
-    reaction_o2_registry reactionTwoEductsRegistry{};
-    reaction_o2_registry_internal reactionTwoEductsRegistryInternal{};
-    reaction_o2_registry_external reactionTwoEductsRegistryExternal{};
-
     api::PotentialConfiguration potentialConfiguration_{};
+
+    reactions::ReactionRegistry reactionRegistry_;
 
     rdy_pot_1_registry potentialO1Registry{};
     rdy_pot_2_registry potentialO2Registry{};

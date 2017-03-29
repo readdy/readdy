@@ -73,10 +73,10 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     double kbt = context.getKBT();
     double kReactionMax = 0;
 
-    for (auto &&reactionO1 : context.getAllOrder1Reactions()) {
+    for (auto &&reactionO1 : context.reactionRegistry().order1_flat()) {
         kReactionMax = std::max(kReactionMax, reactionO1->getRate());
     }
-    for (auto &&reactionO2 : context.getAllOrder2Reactions()) {
+    for (auto &&reactionO2 : context.reactionRegistry().order2_flat()) {
         kReactionMax = std::max(kReactionMax, reactionO2->getRate());
     }
 
@@ -89,7 +89,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
         double fMax = 0;
         double rMin = std::numeric_limits<double>::max();
 
-        for (auto &&reaction : context.getOrder1Reactions(pI)) {
+        for (auto &&reaction : context.reactionRegistry().order1_by_type(pI)) {
             if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
                 rMin = std::min(rMin, reaction->getProductDistance());
             }
@@ -104,7 +104,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
 
         for (auto &&pJ : context.getAllRegisteredParticleTypes()) {
 
-            for (auto &&reaction : context.getOrder2Reactions(pI, pJ)) {
+            for (auto &&reaction : context.reactionRegistry().order2_by_type(pI, pJ)) {
                 if (reaction->getEductDistance() > 0) {
                     rMin = std::min(rMin, reaction->getEductDistance());
                 }

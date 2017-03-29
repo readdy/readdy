@@ -88,23 +88,23 @@ void exportModelClasses(py::module &proto) {
                  (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)
             .def("register_conversion_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Conversion* r) -> const short {
-                     return self.registerExternalReaction(r);
+                     return self.reactionRegistry().add_external(r);
                  }, rvp::reference_internal)
             .def("register_enzymatic_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Enzymatic* r) -> const short {
-                     return self.registerExternalReaction(r);
+                     return self.reactionRegistry().add_external(r);
                  }, rvp::reference_internal)
             .def("register_fission_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Fission* r) -> const short {
-                     return self.registerExternalReaction(r);
+                     return self.reactionRegistry().add_external(r);
                  }, rvp::reference_internal)
             .def("register_fusion_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Fusion *r) -> const short {
-                     return self.registerExternalReaction(r);
+                     return self.reactionRegistry().add_external(r);
                  }, rvp::reference_internal)
             .def("register_decay_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Decay *r) -> const short {
-                     return self.registerExternalReaction(r);
+                     return self.reactionRegistry().add_external(r);
                  }, rvp::reference_internal)
             .def("register_potential_order_1",
                  [](rdy_ctx_t &self, rdy_pot_1 &pot) -> const short {
