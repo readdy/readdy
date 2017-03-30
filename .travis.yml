@@ -53,6 +53,7 @@ script:
 - conda build -q tools/conda-recipe
 
 after_success:
+- tools/ci/travis/upload_conda_package.sh
 - tools/ci/travis/make_docs.sh
 
 notifications:
