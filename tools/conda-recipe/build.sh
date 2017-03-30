@@ -51,6 +51,7 @@ for flag in ${CMAKE_FLAGS// /$'\n'}
 do
     echo "   $flag"
 done
+
 cmake .. ${CMAKE_FLAGS}
 make -j${CPU_COUNT}
 make install &> /dev/null
