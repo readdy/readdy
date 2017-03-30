@@ -41,8 +41,8 @@ namespace thd = readdy::util::thread;
 
 using entries_it = CPUDStateModel::data_t::entries_t::iterator;
 using neighbors_it = decltype(std::declval<readdy::kernel::cpu_dense::model::CPUDNeighborList>().cbegin());
-using pot1Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder1Potentials());
-using pot2Map = decltype(std::declval<readdy::model::KernelContext>().getAllOrder2Potentials());
+using pot1Map = decltype(std::declval<readdy::model::KernelContext>().potentials().potentials_order1());
+using pot2Map = decltype(std::declval<readdy::model::KernelContext>().potentials().potentials_order2());
 
 void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighbors_it,
                            std::promise<double> energyPromise, const CPUDStateModel::data_t &data,
@@ -104,10 +104,8 @@ struct CPUDStateModel::Impl {
         return *particleData;
     }
 
-    Impl(readdy::model::KernelContext *context) {
-        particleData = std::make_unique<CPUDStateModel::data_t>(context);
-        this->context = context;
-    }
+    Impl(readdy::model::KernelContext *context)
+            : particleData(std::make_unique<CPUDStateModel::data_t>(context)), context(context) {}
 
 private:
     std::unique_ptr<readdy::kernel::cpu_dense::model::CPUDParticleData> particleData;
@@ -116,8 +114,8 @@ private:
 void CPUDStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
     const auto &particleData = pimpl->cdata();
-    const auto potOrder1 = pimpl->context->getAllOrder1Potentials();
-    const auto potOrder2 = pimpl->context->getAllOrder2Potentials();
+    const auto potOrder1 = pimpl->context->potentials().potentials_order1();
+    const auto potOrder2 = pimpl->context->potentials().potentials_order2();
     {
         std::vector<std::future<double>> energyFutures;
         energyFutures.reserve(config->nThreads());

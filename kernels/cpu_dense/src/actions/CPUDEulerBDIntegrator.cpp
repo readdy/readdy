@@ -57,7 +57,7 @@ void CPUDEulerBDIntegrator::perform() {
         const auto &fixPos = context.getFixPositionFun();
         const auto kbt = context.getKBT();
         for (iter_t it = entry_begin; it != entry_end; ++it) {
-            const double D = context.getDiffusionConstant(it->type);
+            const double D = context.particle_types().diffusion_constant_of(it->type);
             const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3(0, 1);
             const auto deterministicDisplacement = it->force * dt * D / kbt;
             pd.displace(*it, randomDisplacement + deterministicDisplacement);

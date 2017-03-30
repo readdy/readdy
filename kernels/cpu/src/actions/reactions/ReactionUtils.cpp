@@ -76,7 +76,7 @@ data_t::update_t handleEventsGillespie(
 
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
-                            auto reaction = ctx.getOrder1Reactions(event.t1)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
                             if(maybeRecords) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
@@ -90,7 +90,7 @@ data_t::update_t handleEventsGillespie(
                                 std::get<0>(*maybeCounts).at(event.reactionIdx)++;
                             }
                         } else {
-                            auto reaction = ctx.getOrder2Reactions(event.t1, event.t2)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
                             if(maybeRecords) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;

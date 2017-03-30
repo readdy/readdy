@@ -147,7 +147,7 @@ public:
     template<typename T, typename... Args>
     potentials::Potential::id_t registerPotential(Args &&... args) {
         auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
-        return getKernelContext().registerPotential(std::move(pot));
+        return getKernelContext().potentials().add(std::move(pot));
     };
 
     template<typename T, typename... Args>
@@ -169,7 +169,7 @@ public:
 
     template<typename T, typename... Args>
     const short registerReaction(Args &&... args) {
-        return getKernelContext().registerReaction(
+        return getKernelContext().reactions().add(
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
     };
 

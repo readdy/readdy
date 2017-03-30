@@ -37,7 +37,7 @@
 #include <readdy/kernel/cpu/util/config.h>
 
 
-using rdy_particle_t = readdy::model::Particle;
+using particle_t = readdy::model::Particle;
 
 namespace readdy {
 namespace kernel {
@@ -83,8 +83,8 @@ void CPUGillespieParallel::perform() {
         auto &order1 = std::get<0>(kernel->getCPUKernelStateModel().reactionCounts());
         auto &order2 = std::get<1>(kernel->getCPUKernelStateModel().reactionCounts());
         if (order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().getAllOrder1Reactions().size();
-            const auto n_reactions_order2 = kernel->getKernelContext().getAllOrder2Reactions().size();
+            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
+            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
             order1.resize(n_reactions_order1);
             order2.resize(n_reactions_order2);
         } else {
@@ -110,7 +110,7 @@ CPUGillespieParallel::CPUGillespieParallel(kernel_t *const kernel, double timeSt
 void CPUGillespieParallel::setupBoxes() {
     if (boxes.empty()) {
         double maxReactionRadius = 0.0;
-        for (auto &&e : kernel->getKernelContext().getAllOrder2Reactions()) {
+        for (auto &&e : kernel->getKernelContext().reactions().order2_flat()) {
             maxReactionRadius = std::max(maxReactionRadius, e->getEductDistance());
         }
 
@@ -225,8 +225,8 @@ void CPUGillespieParallel::handleBoxReactions() {
                 reaction_counts_t local_counts{};
                 reaction_counts_t *local_counts_ptr = nullptr;
                 if (ctx.recordReactionCounts()) {
-                    const auto n_reactions_order1 = kernel->getKernelContext().getAllOrder1Reactions().size();
-                    const auto n_reactions_order2 = kernel->getKernelContext().getAllOrder2Reactions().size();
+                    const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
+                    const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
                     std::get<0>(local_counts).resize(n_reactions_order1);
                     std::get<1>(local_counts).resize(n_reactions_order2);
                     local_counts_ptr = &local_counts;
@@ -360,7 +360,7 @@ void CPUGillespieParallel::findProblematicParticles(
 
     for (const auto neighbor : nl->find_neighbors(index)) {
         const auto &neighborEntry = data.entry_at(neighbor);
-        const auto &reactions = ctx.getOrder2Reactions(me.type, neighborEntry.type);
+        const auto &reactions = ctx.reactions().order2_by_type(me.type, neighborEntry.type);
         if (!reactions.empty()) {
             const auto distSquared = d2(neighborEntry.position(), me.position());
             for (const auto &r : reactions) {
@@ -396,7 +396,7 @@ void CPUGillespieParallel::findProblematicParticles(
             if (box.isInBox(x_neighbor_entry.position())
                 && std::abs(x_shell_idx - box.getShellIndex(x_neighbor_entry.position())) <= 1.0) {
                 //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor was in box and adjacent shell";
-                const auto &reactions = ctx.getOrder2Reactions(x_entry.type, x_neighbor_entry.type);
+                const auto &reactions = ctx.reactions().order2_by_type(x_entry.type, x_neighbor_entry.type);
                 if (!reactions.empty()) {
                     //BOOST_LOG_TRIVIAL(debug) << "\t\t neighbor had potentially conflicting reactions";
                     const bool alreadyProblematic = problematic.find(x_neighbor) != problematic.end();

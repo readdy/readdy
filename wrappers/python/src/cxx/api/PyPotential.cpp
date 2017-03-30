@@ -65,7 +65,7 @@ double PotentialOrder2Wrapper::getCutoffRadiusSquared() const {
     return getCutoffRadius() * getCutoffRadius();
 }
 
-void PotentialOrder2Wrapper::configureForTypes(const model::KernelContext *const context, particle_type_type type1,
+void PotentialOrder2Wrapper::configureForTypes(const model::ParticleTypeRegistry *const context, particle_type_type type1,
                                                particle_type_type type2) {
 }
 

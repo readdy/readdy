@@ -67,9 +67,9 @@ public:
     double getCutoffRadiusSquared() const override;
 
 protected:
-    friend class readdy::model::KernelContext;
+    friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForTypes(const KernelContext *const ctx, particle_type_type type1, particle_type_type type2) override;
+    void configureForTypes(const ParticleTypeRegistry *const ctx, particle_type_type type1, particle_type_type type2) override;
 
     double sumOfParticleRadii;
     double sumOfParticleRadiiSquared;
@@ -110,9 +110,9 @@ public:
     double getCutoffRadiusSquared() const override;
 
 protected:
-    friend class readdy::model::KernelContext;
+    friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForTypes(const KernelContext *const ctx, particle_type_type type1, particle_type_type type2) override;
+    void configureForTypes(const ParticleTypeRegistry *const ctx, particle_type_type type1, particle_type_type type2) override;
 
     const Configuration conf;
     const double forceConstant;
@@ -167,11 +167,11 @@ public:
     double getMaximalForce(double kbt) const noexcept override;
 
 protected:
-    friend class readdy::model::KernelContext;
+    friend class readdy::model::potentials::PotentialRegistry;
 
     double energy(double r) const;
 
-    virtual void configureForTypes(const KernelContext *const context, particle_type_type type1, particle_type_type type2) override;
+    virtual void configureForTypes(const ParticleTypeRegistry *const context, particle_type_type type1, particle_type_type type2) override;
 
     double m, n;
     double cutoffDistance, cutoffDistanceSquared;
@@ -204,9 +204,9 @@ public:
     double getMaximalForce(double kbt) const noexcept override;
 
 protected:
-    friend class readdy::model::KernelContext;
+    friend class readdy::model::potentials::PotentialRegistry;
 
-    virtual void configureForTypes(const KernelContext *const context, particle_type_type type1, particle_type_type type2) override;
+    virtual void configureForTypes(const ParticleTypeRegistry *const context, particle_type_type type1, particle_type_type type2) override;
 
     double electrostaticStrength;
     double inverseScreeningDepth;

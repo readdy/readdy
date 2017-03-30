@@ -41,8 +41,8 @@ struct TestReactions : KernelTest {
 };
 
 TEST_P(TestReactions, TestReactionFactory) {
-    kernel->getKernelContext().registerParticleType("B", 2.0, 1.0);
-    kernel->getKernelContext().registerParticleType("A", 1.0, 1.0);
+    kernel->getKernelContext().particle_types().add("B", 2.0, 1.0);
+    kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
     kernel->registerReaction<readdy::model::reactions::Conversion>("A to B", "A", "B", 0.55);
 
     {
@@ -62,9 +62,9 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
     };
 
-    kernel->getKernelContext().registerParticleType("A", 1.0, 1.0);
-    kernel->getKernelContext().registerParticleType("B", 1.0, 1.0);
-    kernel->getKernelContext().registerParticleType("AB", 0.0, 1.0);
+    kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
+    kernel->getKernelContext().particle_types().add("B", 1.0, 1.0);
+    kernel->getKernelContext().particle_types().add("AB", 0.0, 1.0);
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->getKernelContext().setBoxSize(5, 5, 5);
     kernel->registerReaction<readdy::model::reactions::Fusion>("Form complex", "A", "B", "AB", .5, 1.0);

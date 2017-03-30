@@ -38,24 +38,24 @@ void writeReactionInformation(io::Group &group, const KernelContext &context) {
     auto subgroup = group.createGroup("./registered_reactions");
     auto groupO1 = subgroup.createGroup("./order1");
     auto groupO2 = subgroup.createGroup("./order2");
-    for (const auto &t1 : context.getAllRegisteredParticleTypes()) {
-        const auto &rO1 = context.getOrder1Reactions(t1);
+    for (const auto &t1 : context.particle_types().types_flat()) {
+        const auto &rO1 = context.reactions().order1_by_type(t1);
         std::vector<std::string> lO1;
         lO1.reserve(rO1.size());
         std::for_each(rO1.begin(), rO1.end(), [&lO1](reactions::Reaction<1> *r) { lO1.push_back(r->getName()); });
         if (!lO1.empty()) {
-            groupO1.write(context.getParticleName(t1) + "[id=" + std::to_string(t1) + "]", lO1);
+            groupO1.write(context.particle_types().name_of(t1) + "[id=" + std::to_string(t1) + "]", lO1);
         }
-        for (const auto &t2 : context.getAllRegisteredParticleTypes()) {
+        for (const auto &t2 : context.particle_types().types_flat()) {
             if (t2 < t1) continue;
-            const auto &rO2 = context.getOrder2Reactions(t1, t2);
+            const auto &rO2 = context.reactions().order2_by_type(t1, t2);
             std::vector<std::string> lO2;
             lO2.reserve(rO2.size());
             std::for_each(rO2.begin(), rO2.end(), [&lO2](reactions::Reaction<2> *r) { lO2.push_back(r->getName()); });
             if (!lO2.empty()) {
                 groupO2.write(
-                        context.getParticleName(t1) + "[id=" + std::to_string(t1) + "] + " +
-                        context.getParticleName(t2) + "[id=" + std::to_string(t2) + "]", lO2);
+                        context.particle_types().name_of(t1) + "[id=" + std::to_string(t1) + "] + " +
+                                context.particle_types().name_of(t2) + "[id=" + std::to_string(t2) + "]", lO2);
             }
         }
     }

@@ -54,7 +54,7 @@ CenterOfMass::CenterOfMass(readdy::model::Kernel *const kernel, unsigned int str
 
 CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
                            const std::string &particleType)
-        : CenterOfMass(kernel, stride, kernel->getKernelContext().getParticleTypeID(particleType)) {}
+        : CenterOfMass(kernel, stride, kernel->getKernelContext().particle_types().id_of(particleType)) {}
 
 void CenterOfMass::evaluate() {
     readdy::model::Vec3 com{0, 0, 0};
@@ -78,7 +78,7 @@ CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
 CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType)
         : Observable(kernel, stride), pimpl(std::make_unique<Impl>()), particleTypes() {
     for (auto &&pt : particleType) {
-        particleTypes.emplace(kernel->getKernelContext().getParticleTypeID(pt));
+        particleTypes.emplace(kernel->getKernelContext().particle_types().id_of(pt));
     }
 
 }

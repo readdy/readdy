@@ -99,7 +99,7 @@ void Simulation::addParticle(double x, double y, double z, const std::string &ty
     ensureKernelSelected();
     const auto &&s = getBoxSize();
     if (fabs(x) <= .5 * s[0] && fabs(y) <= .5 * s[1] && fabs(z) <= .5 * s[2]) {
-        readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().getParticleTypeID(type)};
+        readdy::model::Particle p{x, y, z, pimpl->kernel->getKernelContext().particle_types().id_of(type)};
         pimpl->kernel->getKernelStateModel().addParticle(p);
     } else {
         log::error("particle position was not in bounds of the simulation box!");
@@ -112,8 +112,8 @@ Simulation::registerParticleType(const std::string &name, const double diffusion
                                  readdy::model::Particle::flavor_t flavor) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->getKernelContext();
-    context.registerParticleType(name, diffusionCoefficient, radius, flavor);
-    return context.getParticleTypeID(name);
+    context.particle_types().add(name, diffusionCoefficient, radius, flavor);
+    return context.particle_types().id_of(name);
 }
 
 const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() const {
@@ -122,7 +122,7 @@ const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() con
 }
 
 void Simulation::deregisterPotential(const short uuid) {
-    pimpl->kernel->getKernelContext().deregisterPotential(uuid);
+    pimpl->kernel->getKernelContext().potentials().remove(uuid);
 };
 
 const short
@@ -244,7 +244,7 @@ Simulation::registerConversionReaction(const std::string &name, const std::strin
     ensureKernelSelected();
     namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createConversionReaction(name, from, to, rate);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
 const short
@@ -254,7 +254,7 @@ Simulation::registerEnzymaticReaction(const std::string &name, const std::string
     ensureKernelSelected();
     namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
 const short
@@ -264,7 +264,7 @@ Simulation::registerFissionReaction(const std::string &name, const std::string &
                                     const double weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFissionReaction(name, from, to1, to2, rate, productDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
 const short
@@ -273,18 +273,18 @@ Simulation::registerFusionReaction(const std::string &name, const std::string &f
                                    const double eductDistance, const double weight1, const double weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
 const short
 Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const double rate) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createDecayReaction(name, particleType, rate);
-    return pimpl->kernel->getKernelContext().registerReaction(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
 std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string type) {
-    unsigned int typeId = pimpl->kernel->getKernelContext().getParticleTypeID(type);
+    unsigned int typeId = pimpl->kernel->getKernelContext().particle_types().id_of(type);
     const auto particles = pimpl->kernel->getKernelStateModel().getParticles();
     std::vector<readdy::model::Vec3> positions;
     for (auto &&p : particles) {
@@ -353,12 +353,12 @@ Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &part
 
 void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+    getSelectedKernel()->getKernelContext().potentials().add_external(ptr);
 }
 
 void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().registerExternalPotential(ptr);
+    getSelectedKernel()->getKernelContext().potentials().add_external(ptr);
 }
 
 void

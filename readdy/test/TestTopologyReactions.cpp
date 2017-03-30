@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,30 +23,19 @@
 /**
  * << detailed description >>
  *
- * @file CPUTestMain.cpp
+ * @file TestTopologyReactions.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 23.06.16
+ * @date 29.03.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/testing/Utils.h>
-#include <readdy/plugin/KernelProvider.h>
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-int perform_tests(int argc, char **argv) {
-    readdy::plugin::KernelProvider::getInstance().loadKernelsFromDirectory(readdy::testing::getPluginsDirectory());
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+namespace {
+
+TEST(TestTopologyReactions, TestConversion) {
+
 }
 
-int main(int argc, char **argv) {
-    spdlog::set_sync_mode();
-    auto console = spdlog::stdout_color_mt("console");
-    console->set_level(spdlog::level::warn);
-    console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-
-    int result = perform_tests(argc, argv);
-
-    spdlog::drop_all();
-    return result;
 }

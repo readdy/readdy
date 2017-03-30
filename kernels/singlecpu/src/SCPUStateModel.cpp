@@ -119,7 +119,7 @@ void SCPUStateModel::calculateForces() {
         const readdy::model::Vec3 zero{0, 0, 0};
         for(auto &e : *pimpl->particleData) {
             e.force = zero;
-            for (const auto &po1 : pimpl->context->getOrder1Potentials(e.type)) {
+            for (const auto &po1 : pimpl->context->potentials().potentials_of(e.type)) {
                 po1->calculateForceAndEnergy(e.force, pimpl->currentEnergy, e.position());
             }
         }
@@ -134,7 +134,7 @@ void SCPUStateModel::calculateForces() {
             auto j = it->idx2;
             auto& entry_i = pimpl->particleData->entry_at(i);
             auto& entry_j = pimpl->particleData->entry_at(j);
-            const auto &potentials = pimpl->context->getOrder2Potentials(entry_i.type, entry_j.type);
+            const auto &potentials = pimpl->context->potentials().potentials_of(entry_i.type, entry_j.type);
             for (const auto &potential : potentials) {
                 potential->calculateForceAndEnergy(forceVec, pimpl->currentEnergy, difference(entry_i.position(), entry_j.position()));
                 entry_i.force += forceVec;
@@ -177,7 +177,7 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
     for(const auto& p : particles) {
         types.push_back(p.getType());
     }
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topologyPotentialConfiguration()));
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topology_potentials()));
     return pimpl->topologies.back().get();
 }
 

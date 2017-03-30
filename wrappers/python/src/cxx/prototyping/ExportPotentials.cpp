@@ -80,7 +80,7 @@ public:
     }
 
 protected:
-    void configureForType(const readdy::model::KernelContext *const context, const particle_type_type type) override {
+    void configureForType(const readdy::model::ParticleTypeRegistry *const context, const particle_type_type type) override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot1, "configure_for_type", configureForType, type);
     }
@@ -131,7 +131,7 @@ public:
     }
 
 protected:
-    void configureForTypes(const readdy::model::KernelContext *const context, particle_type_type type1,
+    void configureForTypes(const readdy::model::ParticleTypeRegistry *const context, particle_type_type type1,
                            particle_type_type type2) override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot2, "configure_for_types", configureForType, type1, type2);

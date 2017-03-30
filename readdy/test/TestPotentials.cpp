@@ -43,8 +43,8 @@ class TestPotentials : public KernelTest {
 };
 
 void setupParticles(readdy::model::Kernel &kernel) {
-    kernel.getKernelContext().registerParticleType("A", 1., 0.1);
-    kernel.getKernelContext().registerParticleType("B", 0.1, 0.01);
+    kernel.getKernelContext().particle_types().add("A", 1., 0.1);
+    kernel.getKernelContext().particle_types().add("B", 0.1, 0.01);
     kernel.getKernelContext().setPeriodicBoundary(false, false, false);
     const unsigned int nParticlesA = 10;
     const unsigned int nParticlesB = 10;
@@ -134,7 +134,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     // test system where the particles are closer together than they should be, i.e., the force should be repellent
     auto& ctx = kernel->getKernelContext();
     // one particle type A
-    ctx.registerParticleType("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0, 1.0);
     // large enough box
     ctx.setBoxSize(10, 10, 10);
     // particles are aligned in the x-y plane and have a distance of .09
@@ -183,7 +183,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto &ctx = kernel->getKernelContext();
-    ctx.registerParticleType("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0, 1.0);
     ctx.setBoxSize(10, 10, 10);
     // distance of particles is 2.56515106768
     auto id0 = kernel->addParticle("A", {0, 0, 0});
@@ -235,7 +235,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
 TEST_P(TestPotentials, SphericalMembrane) {
     // Combine SphereIn and SphereOut to build a 2D spherical manifold
     auto &ctx = kernel->getKernelContext();
-    ctx.registerParticleType("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0, 1.0);
     ctx.setBoxSize(10, 10, 10);
     // add two particles, one outside, one inside the sphere
     auto id0 = kernel->addParticle("A", {2., 1., 1.});

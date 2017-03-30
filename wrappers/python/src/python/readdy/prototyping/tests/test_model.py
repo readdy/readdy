@@ -50,9 +50,9 @@ class TestModel(unittest.TestCase):
         np.testing.assert_equal(self.ctx.periodic_boundary, [True, False, True])
 
     def test_kernel_context_register_particle_type(self):
-        self.ctx.register_particle_type("A", 13.0, 17.0, 0)
-        np.testing.assert_equal(self.ctx.get_diffusion_constant("A"), 13.0)
-        np.testing.assert_equal(self.ctx.get_particle_radius("A"), 17.0)
+        self.ctx.particle_types().add("A", 13.0, 17.0, 0)
+        np.testing.assert_equal(self.ctx.particle_types().diffusion_constant_of("A"), 13.0)
+        np.testing.assert_equal(self.ctx.particle_types().radius_of("A"), 17.0)
 
     def test_kernel_context_fix_position_fun(self):
         self.ctx.set_box_size(cmn.Vec(1, 1, 1))
@@ -106,10 +106,10 @@ class TestModel(unittest.TestCase):
             def get_maximal_force(self, kbt):
                 return kbt
 
-        self.ctx.register_particle_type("A", 1.0, 1.0, 0)
+        self.ctx.particle_types().add("A", 1.0, 1.0, 0)
         pot = MyPot1("A")
-        self.ctx.register_potential_order_1(pot)
-        particles = [pr.Particle(0, 0, .5, self.ctx.get_particle_type_id("A"))]
+        self.ctx.potentials().add_external_order1(pot)
+        particles = [pr.Particle(0, 0, .5, self.ctx.particle_types().id_of("A"))]
         add_particles_program = self.progs.create_add_particles(particles)
         add_particles_program.perform()
         self.ctx.configure()
@@ -149,12 +149,12 @@ class TestModel(unittest.TestCase):
             def get_maximal_force(self, kbt):
                 return kbt
 
-        self.ctx.register_particle_type("A", 1.0, 1.0, 0)
-        self.ctx.register_particle_type("B", 1.0, 1.0, 0)
+        self.ctx.particle_types().add("A", 1.0, 1.0, 0)
+        self.ctx.particle_types().add("B", 1.0, 1.0, 0)
         pot = MyPot2("A", "B")
-        self.ctx.register_potential_order_2(pot)
-        particles = [pr.Particle(0, 0, 0, self.ctx.get_particle_type_id("A")),
-                     pr.Particle(1, 1, 1, self.ctx.get_particle_type_id("B"))]
+        self.ctx.potentials().add_external_order2(pot)
+        particles = [pr.Particle(0, 0, 0, self.ctx.particle_types().id_of("A")),
+                     pr.Particle(1, 1, 1, self.ctx.particle_types().id_of("B"))]
         add_particles_program = self.progs.create_add_particles(particles)
         add_particles_program.perform()
         self.ctx.configure()
@@ -165,7 +165,7 @@ class TestModel(unittest.TestCase):
 
         it = self.model.get_particle_data().entries
         entry = next(it)
-        if entry.type == self.ctx.get_particle_type_id("A"):
+        if entry.type == self.ctx.particle_types().id_of("A"):
             np.testing.assert_equal(entry.force, cmn.Vec(.5, .5, .5))
             np.testing.assert_equal(next(it).force, cmn.Vec(-.5, -.5, -.5))
         else:
@@ -176,8 +176,8 @@ class TestModel(unittest.TestCase):
             next(it)
 
     def test_potential_factory(self):
-        self.ctx.register_particle_type("A", 1.0, 1.0, 0)
-        self.ctx.register_particle_type("B", 1.0, 1.0, 0)
+        self.ctx.particle_types().add("A", 1.0, 1.0, 0)
+        self.ctx.particle_types().add("B", 1.0, 1.0, 0)
         cube_pot = self.pots.create_cube_potential("A", 1, cmn.Vec(0, 0, 0), cmn.Vec(1, 1, 1), True)
         np.testing.assert_equal(cube_pot.get_name(), "Cube")
 

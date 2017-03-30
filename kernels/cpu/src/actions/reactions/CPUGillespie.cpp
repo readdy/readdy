@@ -51,8 +51,8 @@ void CPUGillespie::perform() {
         auto& order1 = std::get<0>(kernel->getCPUKernelStateModel().reactionCounts());
         auto& order2 = std::get<1>(kernel->getCPUKernelStateModel().reactionCounts());
         if(order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().getAllOrder1Reactions().size();
-            const auto n_reactions_order2 = kernel->getKernelContext().getAllOrder2Reactions().size();
+            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
+            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
             order1.resize(n_reactions_order1);
             order2.resize(n_reactions_order2);
         } else {

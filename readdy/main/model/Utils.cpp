@@ -45,13 +45,13 @@ double getMaximumDisplacement(KernelContext& context, const double timeStep) {
     double kbt = context.getKBT();
 
     double maximum_displacement = 0;
-    for (auto &&pI : context.getAllRegisteredParticleTypes()) {
-        double D = context.getDiffusionConstant(pI);
+    for (auto &&pI : context.particle_types().types_flat()) {
+        double D = context.particle_types().diffusion_constant_of(pI);
         double fMax = 0;
 
-        for (auto &&pJ : context.getAllRegisteredParticleTypes()) {
+        for (auto &&pJ : context.particle_types().types_flat()) {
 
-            for (auto &&pot : context.getOrder2Potentials(pI, pJ)) {
+            for (auto &&pot : context.potentials().potentials_of(pI, pJ)) {
                 if (pot->getCutoffRadius() > 0) {
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
                 }
@@ -73,38 +73,38 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     double kbt = context.getKBT();
     double kReactionMax = 0;
 
-    for (auto &&reactionO1 : context.getAllOrder1Reactions()) {
+    for (auto &&reactionO1 : context.reactions().order1_flat()) {
         kReactionMax = std::max(kReactionMax, reactionO1->getRate());
     }
-    for (auto &&reactionO2 : context.getAllOrder2Reactions()) {
+    for (auto &&reactionO2 : context.reactions().order2_flat()) {
         kReactionMax = std::max(kReactionMax, reactionO2->getRate());
     }
 
     double tDMin = 0;
     std::unordered_map<unsigned int, double> fMaxes;
-    for (auto &&pI : context.getAllRegisteredParticleTypes()) {
-        double D = context.getDiffusionConstant(pI);
+    for (auto &&pI : context.particle_types().types_flat()) {
+        double D = context.particle_types().diffusion_constant_of(pI);
         double tD = 0;
         double xi = 0; // 1/(beta*Fmax)
         double fMax = 0;
         double rMin = std::numeric_limits<double>::max();
 
-        for (auto &&reaction : context.getOrder1Reactions(pI)) {
+        for (auto &&reaction : context.reactions().order1_by_type(pI)) {
             if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
                 rMin = std::min(rMin, reaction->getProductDistance());
             }
         }
 
-        for (auto &&pot : context.getOrder1Potentials(pI)) {
+        for (auto &&pot : context.potentials().potentials_of(pI)) {
             fMax = std::max(pot->getMaximalForce(kbt), fMax);
             if (pot->getRelevantLengthScale() > 0) {
                 rMin = std::min(rMin, pot->getRelevantLengthScale());
             }
         }
 
-        for (auto &&pJ : context.getAllRegisteredParticleTypes()) {
+        for (auto &&pJ : context.particle_types().types_flat()) {
 
-            for (auto &&reaction : context.getOrder2Reactions(pI, pJ)) {
+            for (auto &&reaction : context.reactions().order2_by_type(pI, pJ)) {
                 if (reaction->getEductDistance() > 0) {
                     rMin = std::min(rMin, reaction->getEductDistance());
                 }
@@ -113,7 +113,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
                 }
             }
 
-            for (auto &&pot : context.getOrder2Potentials(pI, pJ)) {
+            for (auto &&pot : context.potentials().potentials_of(pI, pJ)) {
                 if (pot->getCutoffRadius() > 0) {
                     rMin = std::min(rMin, pot->getCutoffRadius());
                     fMax = std::max(pot->getMaximalForce(kbt), fMax);
@@ -130,7 +130,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
             tD = .5 * rho * rho / D;
         }
         fMaxes.emplace(pI, fMax);
-        log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.getParticleName(pI), tD, xi, rho);
+        log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.particle_types().name_of(pI), tD, xi, rho);
         if (tDMin == 0) {
             tDMin = tD;
         } else {
@@ -139,10 +139,10 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     }
 
     log::debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
-    for (auto &&pI : context.getAllRegisteredParticleTypes()) {
-        double D = context.getDiffusionConstant(pI);
+    for (auto &&pI : context.particle_types().types_flat()) {
+        double D = context.particle_types().diffusion_constant_of(pI);
         double xmax = std::sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
-        log::debug("\t - {}: {} + {} = {}" , context.getParticleName(pI), std::sqrt(2 * D * tDMin),
+        log::debug("\t - {}: {} + {} = {}" , context.particle_types().name_of(pI), std::sqrt(2 * D * tDMin),
                               D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 

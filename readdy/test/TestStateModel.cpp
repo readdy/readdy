@@ -46,14 +46,14 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
-    ctx.registerParticleType("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0, 1.0);
     ctx.setBoxSize(4., 4., 4.);
     ctx.setPeriodicBoundary(false, false, false);
 
     kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "A", 1.0);
 
     ctx.configure();
-    auto typeIdA = ctx.getParticleTypeID("A");
+    auto typeIdA = ctx.particle_types().id_of("A");
     auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
     stateModel.addParticles(twoParticles);
     stateModel.updateNeighborList();
@@ -75,16 +75,16 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     // similar situation as before but now with repulsion between A and B
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.registerParticleType("A", 1.0, 1.0);
-    ctx.registerParticleType("B", 1.0, 2.0);
+    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("B", 1.0, 2.0);
     ctx.setBoxSize(10., 10., 10.);
     ctx.setPeriodicBoundary(true, true, false);
 
     kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "B", 1.0);
 
     ctx.configure();
-    auto typeIdA = ctx.getParticleTypeID("A");
-    auto typeIdB = ctx.getParticleTypeID("B");
+    auto typeIdA = ctx.particle_types().id_of("A");
+    auto typeIdB = ctx.particle_types().id_of("B");
     /**
      * There are 6 particles. 0-2 are A particles. 3-5 are B particles.
      * The second B particle is a bit further away
@@ -184,13 +184,13 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     // several particles without potentials -> forces must all be zero
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.registerParticleType("A", 1.0, 1.0);
-    ctx.registerParticleType("B", 1.0, 2.0);
+    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("B", 1.0, 2.0);
     ctx.setBoxSize(4., 4., 4.);
     ctx.setPeriodicBoundary(false, false, false);
     ctx.configure();
-    auto typeIdA = ctx.getParticleTypeID("A");
-    auto typeIdB = ctx.getParticleTypeID("B");
+    auto typeIdA = ctx.particle_types().id_of("A");
+    auto typeIdB = ctx.particle_types().id_of("B");
     auto particlesA = std::vector<m::Particle> {
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0.8, 0, typeIdA), m::Particle(0.2, 0, -0.2, typeIdA)
     };

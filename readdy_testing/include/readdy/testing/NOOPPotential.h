@@ -74,9 +74,9 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
 
     double cutoff, force, energy;
 protected:
-    friend class readdy::model::KernelContext;
-    void configureForTypes(const model::KernelContext *const context, particle_type_type, particle_type_type) override {
-    }
+    friend class readdy::model::potentials::PotentialRegistry;
+
+    virtual void configureForTypes(const readdy::model::ParticleTypeRegistry *const context, particle_type_type type1, particle_type_type type2) override {};
 };
 }
 }

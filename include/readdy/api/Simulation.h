@@ -340,7 +340,6 @@ public:
     void registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr);
 
 
-    //void registerReaction(const Reaction& reaction);
     //void registerReactionByDescriptor(const std::string descriptor);
 
     /**
