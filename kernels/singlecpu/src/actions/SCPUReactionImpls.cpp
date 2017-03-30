@@ -33,7 +33,7 @@
 #include <readdy/kernel/singlecpu/actions/SCPUReactionUtils.h>
 
 
-using rdy_particle_t = readdy::model::Particle;
+using particle_t = readdy::model::Particle;
 
 namespace readdy {
 namespace kernel {
@@ -88,7 +88,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, double dt, bool 
         for (const auto &e : data) {
             if (!e.is_deactivated()) {
                 // order 1
-                const auto &reactions = kernel->getKernelContext().reactionRegistry().order1_by_type(e.type);
+                const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(e.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
@@ -111,7 +111,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, double dt, bool 
 
             // order 2
             const auto &neighbor = data.entry_at(it_nl->idx2);
-            const auto &reactions = kernel->getKernelContext().reactionRegistry().order2_by_type(entry.type,
+            const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
                                                                                                  neighbor.type);
             if (!reactions.empty()) {
                 const auto distSquared = d2(neighbor.position(), entry.position());
@@ -142,8 +142,8 @@ void SCPUUncontrolledApproximation::perform() {
         auto& order1 = std::get<0>(stateModel.reactionCounts());
         auto& order2 = std::get<1>(stateModel.reactionCounts());
         if(order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().reactionRegistry().n_order1();
-            const auto n_reactions_order2 = kernel->getKernelContext().reactionRegistry().n_order2();
+            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
+            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
             order1.resize(n_reactions_order1);
             order2.resize(n_reactions_order2);
         } else {
@@ -169,7 +169,7 @@ void SCPUUncontrolledApproximation::perform() {
             if (event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
-                    auto reaction = ctx.reactionRegistry().order1_by_type(event.t1)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
@@ -187,7 +187,7 @@ void SCPUUncontrolledApproximation::perform() {
                         }
                     }
                 } else {
-                    auto reaction = ctx.reactionRegistry().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
@@ -240,7 +240,7 @@ void gatherEvents(SCPUKernel const *const kernel,
         std::size_t index = 0;
         for (const auto &entry : data) {
             if(!entry.is_deactivated()) {
-                const auto &reactions = kernel->getKernelContext().reactionRegistry().order1_by_type(entry.type);
+                const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
                     if (rate > 0) {
@@ -260,7 +260,7 @@ void gatherEvents(SCPUKernel const *const kernel,
         if (!entry.is_deactivated()) {
             // order 2
             const auto &neighbor = data.entry_at(it_nl->idx2);
-            const auto &reactions = kernel->getKernelContext().reactionRegistry().order2_by_type(entry.type,
+            const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
                                                                                                  neighbor.type);
             if (!reactions.empty()) {
                 const auto distSquared = d2(neighbor.position(), entry.position());
@@ -318,7 +318,7 @@ data_t::update_t handleEventsGillespie(
                     {
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
-                            auto reaction = ctx.reactionRegistry().order1_by_type(event.t1)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
                             if(ctx.recordReactionsWithPositions()) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
@@ -333,7 +333,7 @@ data_t::update_t handleEventsGillespie(
                                 std::get<0>(model.reactionCounts()).at(event.reactionIdx)++;
                             }
                         } else {
-                            auto reaction = ctx.reactionRegistry().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
                             if(ctx.recordReactionsWithPositions()) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
@@ -410,8 +410,8 @@ void SCPUGillespie::perform() {
         auto& order1 = std::get<0>(stateModel.reactionCounts());
         auto& order2 = std::get<1>(stateModel.reactionCounts());
         if(order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().reactionRegistry().n_order1();
-            const auto n_reactions_order2 = kernel->getKernelContext().reactionRegistry().n_order2();
+            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
+            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
             order1.resize(n_reactions_order1);
             order2.resize(n_reactions_order2);
         } else {

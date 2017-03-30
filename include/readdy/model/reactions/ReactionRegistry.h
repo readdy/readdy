@@ -63,7 +63,7 @@ public:
     using reaction_o1_registry = std::unordered_map<particle_t::type_type, std::vector<reactions::Reaction<1> *>>;
     using reaction_o2_registry = std::unordered_map<util::particle_type_pair, std::vector<reactions::Reaction<2> *>, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
 
-    const std::size_t& n_order1() const;
+    const std::size_t &n_order1() const;
 
     const std::vector<const reactions::Reaction<1> *> order1_flat() const;
 
@@ -71,7 +71,7 @@ public:
 
     const std::vector<reactions::Reaction<1> *> &order1_by_type(const particle_t::type_type type) const;
 
-    const std::size_t& n_order2() const;
+    const std::size_t &n_order2() const;
 
     const std::vector<const reactions::Reaction<2> *> order2_flat() const;
 
@@ -84,7 +84,7 @@ public:
     const std::vector<reactions::Reaction<1> *> &order1_by_type(const std::string &type) const;
 
     const std::vector<reactions::Reaction<2> *> &order2_by_type(const std::string &type1,
-                                                                    const std::string &type2) const;
+                                                                const std::string &type2) const;
 
     template<typename R>
     const short add(std::unique_ptr<R> r,
@@ -132,7 +132,7 @@ private:
     std::size_t n_order1_ = 0;
     std::size_t n_order2_ = 0;
 
-    const ParticleTypeRegistry& typeRegistry;
+    const ParticleTypeRegistry &typeRegistry;
 
     reaction_o1_registry one_educt_registry{};
     reaction_o1_registry_internal one_educt_registry_internal{};

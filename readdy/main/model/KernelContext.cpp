@@ -240,11 +240,11 @@ bool &KernelContext::recordReactionCounts() {
     return recordReactionCounts_;
 }
 
-api::PotentialConfiguration &KernelContext::topologyPotentialConfiguration() {
+api::PotentialConfiguration &KernelContext::topology_potentials() {
     return potentialConfiguration_;
 }
 
-const api::PotentialConfiguration &KernelContext::topologyPotentialConfiguration() const {
+const api::PotentialConfiguration &KernelContext::topology_potentials() const {
     return potentialConfiguration_;
 }
 
@@ -273,11 +273,11 @@ void KernelContext::configureTopologyTorsionPotential(const std::string &type1, 
                                                                       type4))].push_back(torsionAngle);
 }
 
-reactions::ReactionRegistry &KernelContext::reactionRegistry() {
+reactions::ReactionRegistry &KernelContext::reactions() {
     return reactionRegistry_;
 }
 
-const reactions::ReactionRegistry &KernelContext::reactionRegistry() const {
+const reactions::ReactionRegistry &KernelContext::reactions() const {
     return reactionRegistry_;
 }
 

@@ -76,10 +76,10 @@ data_t::update_t handleEventsGillespie(
 
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
-                            auto reaction = ctx.reactionRegistry().order1_by_type(event.t1)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
                             performReaction(*data, entry1, entry1, newParticles, reaction);
                         } else {
-                            auto reaction = ctx.reactionRegistry().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
                             performReaction(*data, entry1, event.idx2, newParticles, reaction);
                         }
                     }

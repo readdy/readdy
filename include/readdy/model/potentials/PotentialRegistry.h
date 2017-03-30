@@ -54,6 +54,14 @@ public:
 
     PotentialRegistry(particle_type_registry_ref typeRegistry);
 
+    PotentialRegistry(const PotentialRegistry &) = delete;
+
+    PotentialRegistry &operator=(const PotentialRegistry &) = delete;
+
+    PotentialRegistry(PotentialRegistry &&) = delete;
+
+    PotentialRegistry &operator=(PotentialRegistry &&) = delete;
+
     using potentials_o1 = std::vector<PotentialOrder1 *>;
     using potentials_o2 = std::vector<PotentialOrder2 *>;
 
@@ -77,8 +85,6 @@ public:
     const potentials_o2 &potentials_of(const particle_type_type t1, const particle_type_type t2) const;
 
     const potential_o2_registry &potentials_order2() const;
-
-    std::vector<util::particle_type_pair> getAllOrder2RegisteredPotentialTypes() const;
 
     const potentials_o1 &potentials_of(const std::string &type) const;
 

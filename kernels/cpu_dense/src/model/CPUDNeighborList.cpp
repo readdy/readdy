@@ -63,7 +63,7 @@ void CPUDNeighborList::setupCells() {
                 maxCutoff = maxCutoff < potential->getCutoffRadius() ? potential->getCutoffRadius() : maxCutoff;
             }
         }
-        for (auto &&e : ctx->reactionRegistry().order2_flat()) {
+        for (auto &&e : ctx->reactions().order2_flat()) {
             maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
         }
         CPUDNeighborList::maxCutoff = maxCutoff;

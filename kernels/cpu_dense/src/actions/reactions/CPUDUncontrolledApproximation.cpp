@@ -73,7 +73,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
         if (!entry.deactivated) {
             // order 1
             {
-                const auto &reactions = kernel->getKernelContext().reactionRegistry().order1_by_type(entry.type);
+                const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(entry.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, timeStep, approximateRate)) {
@@ -89,7 +89,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
                 const auto neighbor_index = it_neighbors->idx;
                 if (index > neighbor_index) continue;
                 const auto &neighbor = data.entry_at(neighbor_index);
-                const auto &reactions = kernel->getKernelContext().reactionRegistry().order2_by_type(entry.type,
+                const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
                                                                                                      neighbor.type);
                 if (!reactions.empty()) {
                     const auto distSquared = it_neighbors->d2;
@@ -185,10 +185,10 @@ void CPUDUncontrolledApproximation::perform() {
             if(event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
-                    auto reaction = ctx.reactionRegistry().order1_by_type(event.t1)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
                     performReaction<true>(data, entry1, entry1, newParticles, reaction);
                 } else {
-                    auto reaction = ctx.reactionRegistry().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
                     performReaction<true>(data, entry1, event.idx2, newParticles, reaction);
                 }
             }

@@ -49,7 +49,7 @@ void exportPotentials(py::module &);
 
 namespace scpu = readdy::kernel::scpu;
 
-using rdy_scpu_model_t = scpu::SCPUStateModel;
+using model = scpu::SCPUStateModel;
 using scpu_kernel_t = scpu::SCPUKernel;
 
 using core_kernel_t = readdy::model::Kernel;

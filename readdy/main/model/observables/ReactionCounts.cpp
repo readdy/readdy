@@ -84,8 +84,8 @@ void ReactionCounts::initializeDataSet(io::File &file, const std::string &dataSe
 
 void ReactionCounts::append() {
     if (pimpl->firstWrite) {
-        const auto n_reactions_order1 = kernel->getKernelContext().reactionRegistry().n_order1();
-        const auto n_reactions_order2 = kernel->getKernelContext().reactionRegistry().n_order2();
+        const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
+        const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
         std::get<0>(result).resize(n_reactions_order1);
         std::get<1>(result).resize(n_reactions_order2);
         if (pimpl->shouldWrite) {

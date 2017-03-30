@@ -303,7 +303,7 @@ CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &p
         types.push_back(p.getType());
     }
     pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types),
-                                                                                    &pimpl->context->topologyPotentialConfiguration()));
+                                                                                    &pimpl->context->topology_potentials()));
     return pimpl->topologies.back().get();
 }
 

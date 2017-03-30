@@ -54,7 +54,7 @@ struct TestNeighborList : ::testing::Test {
         auto &ctx = kernel->getKernelContext();
         ctx.particle_types().add("A", 1.0, 1.0);
         double eductDistance = 1.2;
-        ctx.reactionRegistry().add(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
+        ctx.reactions().add(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
         ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
         typeIdA = ctx.particle_types().id_of("A");
         ctx.configure();

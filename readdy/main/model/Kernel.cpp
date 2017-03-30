@@ -228,11 +228,7 @@ bool Kernel::supportsTopologies() const {
 }
 
 void Kernel::expected_n_particles(const std::size_t n) {
-    if(n >= 0) {
-        getKernelStateModel().expected_n_particles(n);
-    } else {
-        throw std::invalid_argument("expected number of particles should be larger than 0");
-    }
+    getKernelStateModel().expected_n_particles(n);
 }
 
 Kernel &Kernel::operator=(Kernel &&rhs) = default;

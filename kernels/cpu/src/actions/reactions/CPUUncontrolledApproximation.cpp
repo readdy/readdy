@@ -75,7 +75,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
         if (!entry.is_deactivated()) {
             // order 1
             {
-                const auto &reactions = kernel->getKernelContext().reactionRegistry().order1_by_type(entry.type);
+                const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(entry.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
@@ -90,7 +90,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
             for (const auto idx_neighbor : *it_nl) {
                 if (index > idx_neighbor) continue;
                 const auto &neighbor = data.entry_at(idx_neighbor);
-                const auto &reactions = kernel->getKernelContext().reactionRegistry().order2_by_type(entry.type,
+                const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
                                                                                                      neighbor.type);
                 if (!reactions.empty()) {
                     const auto distSquared = d2(neighbor.position(), entry.position());
@@ -127,8 +127,8 @@ void CPUUncontrolledApproximation::perform() {
         auto& order1 = std::get<0>(kernel->getCPUKernelStateModel().reactionCounts());
         auto& order2 = std::get<1>(kernel->getCPUKernelStateModel().reactionCounts());
         if(order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().reactionRegistry().n_order1();
-            const auto n_reactions_order2 = kernel->getKernelContext().reactionRegistry().n_order2();
+            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
+            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
             order1.resize(n_reactions_order1);
             order2.resize(n_reactions_order2);
         } else {
@@ -199,7 +199,7 @@ void CPUUncontrolledApproximation::perform() {
             if(event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
-                    auto reaction = ctx.reactionRegistry().order1_by_type(event.t1)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
@@ -218,7 +218,7 @@ void CPUUncontrolledApproximation::perform() {
                         }
                     }
                 } else {
-                    auto reaction = ctx.reactionRegistry().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;

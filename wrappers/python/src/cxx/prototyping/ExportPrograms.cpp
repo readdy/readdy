@@ -44,7 +44,7 @@ namespace py = pybind11;
 using rvp = py::return_value_policy;
 namespace rpy = readdy::rpy;
 
-using rdy_particle_t = readdy::model::Particle;
+using particle_t = readdy::model::Particle;
 
 using prog_factory_t = readdy::model::actions::ActionFactory;
 

@@ -145,8 +145,7 @@ public:
      */
     bool &recordReactionCounts();
 
-    void
-    configureTopologyBondPotential(const std::string &type1, const std::string &type2, const api::Bond &bond);
+    void configureTopologyBondPotential(const std::string &type1, const std::string &type2, const api::Bond &bond);
 
     void configureTopologyAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
                                          const api::Angle &angle);
@@ -154,20 +153,21 @@ public:
     void configureTopologyTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
                                            const std::string &type4, const api::TorsionAngle &torsionAngle);
 
-    api::PotentialConfiguration &topologyPotentialConfiguration();
+    api::PotentialConfiguration &topology_potentials();
 
-    const api::PotentialConfiguration &topologyPotentialConfiguration() const;
+    const api::PotentialConfiguration &topology_potentials() const;
 
-    reactions::ReactionRegistry &reactionRegistry();
+    reactions::ReactionRegistry &reactions();
 
-    const reactions::ReactionRegistry &reactionRegistry() const;
+    const reactions::ReactionRegistry &reactions() const;
 
     ParticleTypeRegistry &particle_types();
 
     const ParticleTypeRegistry &particle_types() const;
 
-    potentials::PotentialRegistry& potentials();
-    const potentials::PotentialRegistry& potentials() const;
+    potentials::PotentialRegistry &potentials();
+
+    const potentials::PotentialRegistry &potentials() const;
 
     // ctor and dtor
     KernelContext();

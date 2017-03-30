@@ -39,7 +39,7 @@ void writeReactionInformation(io::Group &group, const KernelContext &context) {
     auto groupO1 = subgroup.createGroup("./order1");
     auto groupO2 = subgroup.createGroup("./order2");
     for (const auto &t1 : context.particle_types().types_flat()) {
-        const auto &rO1 = context.reactionRegistry().order1_by_type(t1);
+        const auto &rO1 = context.reactions().order1_by_type(t1);
         std::vector<std::string> lO1;
         lO1.reserve(rO1.size());
         std::for_each(rO1.begin(), rO1.end(), [&lO1](reactions::Reaction<1> *r) { lO1.push_back(r->getName()); });
@@ -48,7 +48,7 @@ void writeReactionInformation(io::Group &group, const KernelContext &context) {
         }
         for (const auto &t2 : context.particle_types().types_flat()) {
             if (t2 < t1) continue;
-            const auto &rO2 = context.reactionRegistry().order2_by_type(t1, t2);
+            const auto &rO2 = context.reactions().order2_by_type(t1, t2);
             std::vector<std::string> lO2;
             lO2.reserve(rO2.size());
             std::for_each(rO2.begin(), rO2.end(), [&lO2](reactions::Reaction<2> *r) { lO2.push_back(r->getName()); });

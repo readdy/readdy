@@ -102,16 +102,6 @@ const PotentialRegistry::potential_o1_registry& PotentialRegistry::potentials_or
     return potentialO1Registry;
 }
 
-std::vector<util::particle_type_pair>
-PotentialRegistry::getAllOrder2RegisteredPotentialTypes() const {
-    std::vector<util::particle_type_pair> result{};
-    result.reserve(potentialO2Registry.size());
-    for (auto it = potentialO2Registry.begin(); it != potentialO2Registry.end(); ++it) {
-        result.push_back(it->first);
-    }
-    return result;
-}
-
 const std::vector<PotentialOrder2 *> &
 PotentialRegistry::potentials_of(const particle_type_type t1, const particle_type_type t2) const {
     auto it = potentialO2Registry.find(std::tie(t1, t2));
