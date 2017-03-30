@@ -52,48 +52,48 @@ struct ParticleTypeInfo {
 class ParticleTypeRegistry {
 public:
 
-    using rdy_type_mapping = std::unordered_map<std::string, particle_type_type>;
-    using rdy_reverse_type_mapping = std::unordered_map<particle_type_type, std::string>;
+    using type_mapping_t = std::unordered_map<std::string, particle_type_type>;
 
     ParticleTypeRegistry() = default;
-    ParticleTypeRegistry(const ParticleTypeRegistry&) = delete;
-    ParticleTypeRegistry& operator=(const ParticleTypeRegistry&) = delete;
-    ParticleTypeRegistry(ParticleTypeRegistry&&) = delete;
-    ParticleTypeRegistry& operator=(ParticleTypeRegistry&&) = delete;
 
-    particle_type_type getParticleTypeID(const std::string &name) const;
+    ParticleTypeRegistry(const ParticleTypeRegistry &) = delete;
 
-    void registerParticleType(const std::string &name, const double diffusionConst, const double radius,
-                              const readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
+    ParticleTypeRegistry &operator=(const ParticleTypeRegistry &) = delete;
 
-    const ParticleTypeInfo &getParticleTypeInfo(const std::string &name) const;
+    ParticleTypeRegistry(ParticleTypeRegistry &&) = delete;
 
-    const ParticleTypeInfo &getParticleTypeInfo(const Particle::type_type type) const;
+    ParticleTypeRegistry &operator=(ParticleTypeRegistry &&) = delete;
 
-    double getDiffusionConstant(const std::string &particleType) const;
+    particle_type_type id_of(const std::string &name) const;
 
-    double getDiffusionConstant(const particle_type_type particleType) const;
+    void add(const std::string &name, const double diffusionConst, const double radius,
+             const readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
-    double getParticleRadius(const std::string &type) const;
+    const ParticleTypeInfo &info_of(const std::string &name) const;
 
-    double getParticleRadius(const particle_type_type type) const;
+    const ParticleTypeInfo &info_of(const Particle::type_type type) const;
 
-    std::vector<particle_type_type> getAllRegisteredParticleTypes() const;
+    double diffusion_constant_of(const std::string &particleType) const;
 
-    std::string getParticleName(particle_type_type id) const;
+    double diffusion_constant_of(const particle_type_type particleType) const;
 
-    const rdy_type_mapping &getTypeMapping() const;
+    double radius_of(const std::string &type) const;
 
-    /**
-     * Generate a map from particle_type_t to string. As there is no book-keeping of this reversed
-     * structure, it is generated in place and then returned.
-     */
-    const rdy_reverse_type_mapping generateReverseTypeMapping() const;
+    double radius_of(const particle_type_type type) const;
+
+    const std::size_t &n_types() const;
+
+    std::vector<particle_type_type> types_flat() const;
+
+    std::string name_of(particle_type_type id) const;
+
+    const type_mapping_t &type_mapping() const;
 
 private:
-    particle_type_type typeCounter = 0;
-    rdy_type_mapping typeMapping;
-    std::unordered_map<particle_type_type, ParticleTypeInfo> particleInfo;
+    std::size_t n_types_ = 0;
+    particle_type_type type_counter_ = 0;
+    type_mapping_t type_mapping_;
+    std::unordered_map<particle_type_type, ParticleTypeInfo> particle_info_;
 
 };
 

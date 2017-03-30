@@ -41,72 +41,64 @@ ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const double diffusi
         : name(name), diffusionConstant(diffusionConstant), radius(radius), flavor(flavor), typeId(typeId) {}
 
 
-const ParticleTypeInfo &ParticleTypeRegistry::getParticleTypeInfo(const std::string &name) const {
-    return getParticleTypeInfo(typeMapping.at(name));
+const ParticleTypeInfo &ParticleTypeRegistry::info_of(const std::string &name) const {
+    return info_of(type_mapping_.at(name));
 }
 
-const ParticleTypeInfo &ParticleTypeRegistry::getParticleTypeInfo(const Particle::type_type type) const {
-    return particleInfo.at(type);
+const ParticleTypeInfo &ParticleTypeRegistry::info_of(const Particle::type_type type) const {
+    return particle_info_.at(type);
 }
 
-const ParticleTypeRegistry::rdy_reverse_type_mapping ParticleTypeRegistry::generateReverseTypeMapping() const {
-    const auto &typeMapping = getTypeMapping();
-    rdy_reverse_type_mapping reverseTypeMapping;
-    auto it = typeMapping.cbegin();
-    while (it != typeMapping.cend()) {
-        auto key = (*it).first;
-        auto value = (*it).second;
-        reverseTypeMapping.emplace(std::make_pair(value, key));
-        ++it;
-    }
-    return reverseTypeMapping;
+const ParticleTypeRegistry::type_mapping_t &ParticleTypeRegistry::type_mapping() const {
+    return type_mapping_;
 }
 
-const ParticleTypeRegistry::rdy_type_mapping &ParticleTypeRegistry::getTypeMapping() const {
-    return typeMapping;
-}
-
-std::string ParticleTypeRegistry::getParticleName(particle_type_type id) const {
-    for (const auto &e : typeMapping) {
+std::string ParticleTypeRegistry::name_of(particle_type_type id) const {
+    for (const auto &e : type_mapping_) {
         if (e.second == id) return e.first;
     }
     return "";
 }
 
-std::vector<particle_type_type> ParticleTypeRegistry::getAllRegisteredParticleTypes() const {
+std::vector<particle_type_type> ParticleTypeRegistry::types_flat() const {
     std::vector<particle_type_type> v;
-    for (auto &&entry : typeMapping) {
+    for (auto &&entry : type_mapping_) {
         v.push_back(entry.second);
     }
     return v;
 }
 
-double ParticleTypeRegistry::getParticleRadius(const particle_type_type type) const {
-    return particleInfo.at(type).radius;
+double ParticleTypeRegistry::radius_of(const particle_type_type type) const {
+    return particle_info_.at(type).radius;
 }
 
-double ParticleTypeRegistry::getParticleRadius(const std::string &type) const {
-    return getParticleRadius(getParticleTypeID(type));
+double ParticleTypeRegistry::radius_of(const std::string &type) const {
+    return radius_of(id_of(type));
 }
 
-double ParticleTypeRegistry::getDiffusionConstant(const particle_type_type particleType) const {
-    return particleInfo.at(particleType).diffusionConstant;
+double ParticleTypeRegistry::diffusion_constant_of(const particle_type_type particleType) const {
+    return particle_info_.at(particleType).diffusionConstant;
 }
 
-double ParticleTypeRegistry::getDiffusionConstant(const std::string &particleType) const {
-    return getDiffusionConstant(getParticleTypeID(particleType));
+double ParticleTypeRegistry::diffusion_constant_of(const std::string &particleType) const {
+    return diffusion_constant_of(id_of(particleType));
 }
 
 void
-ParticleTypeRegistry::registerParticleType(const std::string &name, const double diffusionConst, const double radius,
-                                           const Particle::flavor_t flavor) {
-    particle_type_type t_id = typeCounter++;
-    typeMapping.emplace(name, t_id);
-    particleInfo.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, radius, flavor, t_id}));
+ParticleTypeRegistry::add(const std::string &name, const double diffusionConst, const double radius,
+                          const Particle::flavor_t flavor) {
+    particle_type_type t_id = type_counter_++;
+    type_mapping_.emplace(name, t_id);
+    particle_info_.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, radius, flavor, t_id}));
+    n_types_++;
 }
 
-particle_type_type ParticleTypeRegistry::getParticleTypeID(const std::string &name) const {
-    return typeMapping.at(name);
+particle_type_type ParticleTypeRegistry::id_of(const std::string &name) const {
+    return type_mapping_.at(name);
+}
+
+const std::size_t &ParticleTypeRegistry::n_types() const {
+    return n_types_;
 }
 }
 }

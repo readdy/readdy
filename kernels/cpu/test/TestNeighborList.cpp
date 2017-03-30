@@ -53,12 +53,12 @@ struct TestNeighborList : ::testing::Test {
 
     TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
         auto &ctx = kernel->getKernelContext();
-        ctx.particleTypeRegistry().registerParticleType("A", 1., 1.);
+        ctx.particle_types().add("A", 1., 1.);
         double eductDistance = 1.2;
         ctx.reactionRegistry().add(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
 
-        ctx.potentialRegistry().registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
-        typeIdA = ctx.particleTypeRegistry().getParticleTypeID("A");
+        ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
+        typeIdA = ctx.particle_types().id_of("A");
         ctx.configure();
     }
 

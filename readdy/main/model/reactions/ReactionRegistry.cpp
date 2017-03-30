@@ -150,12 +150,12 @@ const short ReactionRegistry::add_external(reactions::Reaction<1> *r) {
 ReactionRegistry::ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref) : typeRegistry(ref) {}
 
 const std::vector<Reaction<1> *> &ReactionRegistry::order1_by_type(const std::string &type) const {
-    return order1_by_type(typeRegistry.getParticleTypeID(type));
+    return order1_by_type(typeRegistry.id_of(type));
 }
 
 const std::vector<Reaction<2> *> &
 ReactionRegistry::order2_by_type(const std::string &type1, const std::string &type2) const {
-    return order2_by_type(typeRegistry.getParticleTypeID(type1), typeRegistry.getParticleTypeID(type2));
+    return order2_by_type(typeRegistry.id_of(type1), typeRegistry.id_of(type2));
 }
 
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {

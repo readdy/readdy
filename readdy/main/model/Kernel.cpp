@@ -87,15 +87,15 @@ std::vector<std::string> Kernel::getAvailablePotentials() const {
 }
 
 readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, const Vec3 &pos) {
-    readdy::model::Particle particle {pos[0], pos[1], pos[2], getKernelContext().particleTypeRegistry().getParticleTypeID(type)};
+    readdy::model::Particle particle {pos[0], pos[1], pos[2], getKernelContext().particle_types().id_of(type)};
     getKernelStateModel().addParticle(particle);
     return particle.getId();
 }
 
 unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
-    auto findIt = getKernelContext().particleTypeRegistry().getTypeMapping().find(name);
-    if (findIt != getKernelContext().particleTypeRegistry().getTypeMapping().end()) {
-        const auto &info = getKernelContext().particleTypeRegistry().getParticleTypeInfo(findIt->second);
+    auto findIt = getKernelContext().particle_types().type_mapping().find(name);
+    if (findIt != getKernelContext().particle_types().type_mapping().end()) {
+        const auto &info = getKernelContext().particle_types().info_of(findIt->second);
         if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
             return findIt->second;
         } else {
@@ -220,7 +220,7 @@ readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactor
 }
 
 TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-    return TopologyParticle(pos, getKernelContext().particleTypeRegistry().getParticleTypeID(type));
+    return TopologyParticle(pos, getKernelContext().particle_types().id_of(type));
 }
 
 bool Kernel::supportsTopologies() const {

@@ -44,9 +44,9 @@ class TestObservables : public KernelTest {
 
 TEST_P(TestObservables, TestParticlePositions) {
     const unsigned int n_particles = 100;
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("type", 1., 1.);
+    kernel->getKernelContext().particle_types().add("type", 1., 1.);
     const double timeStep = 1.0;
-    const auto particleTypeId = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("type");
+    const auto particleTypeId = kernel->getKernelContext().particle_types().id_of("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->getKernelStateModel().addParticles(particles);
     auto &&obs = kernel->createObservable<m::observables::Positions>(3);
@@ -76,10 +76,10 @@ TEST_P(TestObservables, TestParticlePositions) {
 
 TEST_P(TestObservables, TestForcesObservable) {
     // Setup particles
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("A", 42., 1.);
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("B", 1337., 1.);
-    const auto typeIdA = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("A");
-    const auto typeIdB = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("B");
+    kernel->getKernelContext().particle_types().add("A", 42., 1.);
+    kernel->getKernelContext().particle_types().add("B", 1337., 1.);
+    const auto typeIdA = kernel->getKernelContext().particle_types().id_of("A");
+    const auto typeIdB = kernel->getKernelContext().particle_types().id_of("B");
     const unsigned int n_particles = 50; // There will be 55 Bs
     const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, typeIdA));
     const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0, 0, 0, typeIdB));
@@ -111,8 +111,8 @@ TEST_P(TestObservables, TestForcesObservable) {
     // Two particles C and C with radius 1 and harmonic repulsion at distance 1.5 -> force = kappa * (radiiSum - 1.5)
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(5, 5, 5);
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("C", 1., 1.);
-    const auto typeIdC = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("C");
+    kernel->getKernelContext().particle_types().add("C", 1., 1.);
+    const auto typeIdC = kernel->getKernelContext().particle_types().id_of("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
     kernel->getKernelStateModel().addParticles(particlesC);
 

@@ -252,7 +252,7 @@ public:
         ctx.setBoxSize(boxLength, boxLength, boxLength);
         ctx.setPeriodicBoundary(true, true, true);
         for (const std::string &type : {"A", "B", "C"}) {
-            ctx.particleTypeRegistry().registerParticleType(type, diffusionConstants[type], radii[type]);
+            ctx.particle_types().add(type, diffusionConstants[type], radii[type]);
         }
 
         kernel->registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", rateOn, 4.5);
@@ -265,7 +265,7 @@ public:
             auto uniform = [this]() {
                 return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
             };
-            const auto &typeMapping = ctx.particleTypeRegistry().getTypeMapping();
+            const auto &typeMapping = ctx.particle_types().type_mapping();
             const auto typeA = typeMapping.at("A");
             const auto typeB = typeMapping.at("B");
             const auto typeC = typeMapping.at("C");
@@ -322,7 +322,7 @@ public:
         ctx.setBoxSize(boxLength, boxLength, boxLength);
         ctx.setPeriodicBoundary(true, true, true);
         for (const std::string &type : {"A", "B", "C"}) {
-            ctx.particleTypeRegistry().registerParticleType(type, diffusionConstants[type], radii[type]);
+            ctx.particle_types().add(type, diffusionConstants[type], radii[type]);
         }
         kernel->registerReaction<readdy::model::reactions::Fusion>("A+B->C", "A", "B", "C", rateOn, 4.5);
         kernel->registerReaction<readdy::model::reactions::Fission>("C->A+B", "C", "A", "B", rateOff, 4.5);
@@ -343,7 +343,7 @@ public:
             auto uniform = [this]() {
                 return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
             };
-            const auto &typeMapping = ctx.particleTypeRegistry().getTypeMapping();
+            const auto &typeMapping = ctx.particle_types().type_mapping();
             const auto typeA = typeMapping.at("A");
             const auto typeB = typeMapping.at("B");
             const auto typeC = typeMapping.at("C");
@@ -397,7 +397,7 @@ public:
         ctx.setBoxSize(boxLength, boxLength, boxLength);
         ctx.setPeriodicBoundary(true, true, true);
         for (const std::string &type : {"A", "B", "C"}) {
-            ctx.particleTypeRegistry().registerParticleType(type, diffusionConstants[type], radii[type]);
+            ctx.particle_types().add(type, diffusionConstants[type], radii[type]);
         }
         std::vector<std::pair<std::string, std::string>> pairs = {{"A", "B"},
                                                                   {"B", "C"},
@@ -415,7 +415,7 @@ public:
             auto uniform = [this]() {
                 return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
             };
-            const auto &typeMapping = ctx.particleTypeRegistry().getTypeMapping();
+            const auto &typeMapping = ctx.particle_types().type_mapping();
             const auto typeA = typeMapping.at("A");
             const auto typeB = typeMapping.at("B");
             const auto typeC = typeMapping.at("C");

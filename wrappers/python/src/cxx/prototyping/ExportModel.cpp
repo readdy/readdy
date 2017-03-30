@@ -81,14 +81,14 @@ void exportModelClasses(py::module &proto) {
                           [](rdy_ctx_t &self, std::array<bool, 3> periodic) {
                               self.setPeriodicBoundary(periodic[0], periodic[1], periodic[2]);
                           })
-            /*.def("register_particle_type", &rdy_ctx_t::registerParticleType)*/
+            /*.def("register_particle_type", &rdy_ctx_t::add)*/
             /*.def("get_diffusion_constant",
-                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getDiffusionConstant)*/
+                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::diffusion_constant_of)*/
             .def("get_fix_position_fun", &rdy_ctx_t::getFixPositionFun)
             .def("get_shortest_difference_fun", &rdy_ctx_t::getShortestDifferenceFun)
             .def("get_dist_squared_fun", &rdy_ctx_t::getDistSquaredFun)
             /*.def("get_particle_radius",
-                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::getParticleRadius)*/
+                 (double (rdy_ctx_t::*)(const std::string &) const) &rdy_ctx_t::radius_of)*/
             .def("register_conversion_reaction",
                  [](rdy_ctx_t &self, readdy::model::reactions::Conversion* r) -> const short {
                      return self.reactionRegistry().add_external(r);
@@ -111,13 +111,13 @@ void exportModelClasses(py::module &proto) {
                  }, rvp::reference_internal)
             /*.def("register_potential_order_1",
                  [](rdy_ctx_t &self, rdy_pot_1 &pot) -> const short {
-                     return self.registerExternalPotential(&pot);
+                     return self.add_external(&pot);
                  }, rvp::reference_internal)
             .def("register_potential_order_2",
                  [](rdy_ctx_t &self, rdy_pot_2 *p) -> const short {
-                     return self.registerExternalPotential(p);
+                     return self.add_external(p);
                  }, rvp::reference_internal)
-            .def("get_particle_type_id", &rdy_ctx_t::getParticleTypeID)*/
+            .def("get_particle_type_id", &rdy_ctx_t::id_of)*/
             .def("configure", &rdy_ctx_t::configure, py::arg("debugOutput") = false);
 
     py::class_ <rdy_scpu_model_t, rdy_scpu_model_wrap_t> model(proto, "Model");

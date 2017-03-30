@@ -50,11 +50,11 @@ struct NeighborListTest : ::testing::Test {
 
     NeighborListTest() : kernel(std::make_unique<kernel_t>()) {
         readdy::model::KernelContext &ctx = kernel->getKernelContext();
-        ctx.particleTypeRegistry().registerParticleType("A", 1.0, 1.);
+        ctx.particle_types().add("A", 1.0, 1.);
         double eductDistance = 1.2;
         kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", 0., eductDistance);
-        ctx.potentialRegistry().registerPotential(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1,0,0));
-        typeIdA = ctx.particleTypeRegistry().getParticleTypeID("A");
+        ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0, 0));
+        typeIdA = ctx.particle_types().id_of("A");
         ctx.configure();
     }
 };

@@ -130,8 +130,8 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     auto &ctx = kernel->getKernelContext();
 
-    ctx.particleTypeRegistry().registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
-    ctx.particleTypeRegistry().registerParticleType("Topology B", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.particle_types().add("Topology B", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
 
     ctx.configureTopologyBondPotential("Topology A", "Topology B", {1.0, 1.0});
     ctx.configureTopologyBondPotential("Topology A", "Topology A", {1.0, 1.0});
@@ -139,10 +139,10 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     ctx.configureTopologyTorsionPotential("Topology A", "Topology B", "Topology A", "Topology A", {1.0, 1.0, 3.0});
 
     ctx.setBoxSize(10, 10, 10);
-    topology_particle_t x_i{-1, 0, 0, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particleTypeRegistry().getParticleTypeID("Topology B")};
-    topology_particle_t x_l{1, .1, 1, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
+    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology B")};
+    topology_particle_t x_l{1, .1, 1, ctx.particle_types().id_of("Topology A")};
 
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
     EXPECT_EQ(top->graph().vertices().size(), 4);
@@ -248,11 +248,11 @@ TEST(TestTopologyGraphs, TestFindNTuplesInTriangle) {
 
 TEST_P(TestTopologyGraphs, BondedPotential) {
     auto &ctx = kernel->getKernelContext();
-    ctx.particleTypeRegistry().registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
     ctx.setBoxSize(10, 10, 10);
     ctx.configureTopologyBondPotential("Topology A", "Topology A", {10, 5});
-    topology_particle_t x_i{4, 0, 0, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_j{1, 0, 0, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
+    topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j});
     top->graph().addEdge(top->graph().vertices().begin(), ++top->graph().vertices().begin());
     top->configure();
@@ -281,13 +281,13 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
 
 TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     auto &ctx = kernel->getKernelContext();
-    ctx.particleTypeRegistry().registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
     ctx.setBoxSize(10, 10, 10);
     ctx.configureTopologyBondPotential("Topology A", "Topology A", { 0., 1.});
     ctx.configureTopologyAnglePotential("Topology A", "Topology A", "Topology A", { 1.0, readdy::util::numeric::pi() });
-    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_k{1.0, 0.5, -.3, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
+    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k});
     {
         auto it = top->graph().vertices().begin();
@@ -327,12 +327,12 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
 
 TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     auto &ctx = kernel->getKernelContext();
-    ctx.particleTypeRegistry().registerParticleType("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
     ctx.setBoxSize(10, 10, 10);
-    topology_particle_t x_i{-1, 0, 0, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
-    topology_particle_t x_l{1, 3, 1, ctx.particleTypeRegistry().getParticleTypeID("Topology A")};
+    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_l{1, 3, 1, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();

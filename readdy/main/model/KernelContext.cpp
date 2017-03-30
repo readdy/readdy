@@ -250,26 +250,26 @@ const api::PotentialConfiguration &KernelContext::topologyPotentialConfiguration
 
 void KernelContext::configureTopologyBondPotential(const std::string &type1, const std::string &type2,
                                                    const api::Bond &bond) {
-    potentialConfiguration_.pairPotentials[std::make_tuple(particleTypeRegistry_.getParticleTypeID(type1),
-                                                           particleTypeRegistry_.getParticleTypeID(type2))].push_back(
+    potentialConfiguration_.pairPotentials[std::make_tuple(particleTypeRegistry_.id_of(type1),
+                                                           particleTypeRegistry_.id_of(type2))].push_back(
             bond);
 }
 
 void KernelContext::configureTopologyAnglePotential(const std::string &type1, const std::string &type2,
                                                     const std::string &type3, const api::Angle &angle) {
-    potentialConfiguration_.anglePotentials[std::make_tuple(particleTypeRegistry_.getParticleTypeID(type1),
-                                                            particleTypeRegistry_.getParticleTypeID(type2),
-                                                            particleTypeRegistry_.getParticleTypeID(type3))].push_back(
+    potentialConfiguration_.anglePotentials[std::make_tuple(particleTypeRegistry_.id_of(type1),
+                                                            particleTypeRegistry_.id_of(type2),
+                                                            particleTypeRegistry_.id_of(type3))].push_back(
             angle);
 }
 
 void KernelContext::configureTopologyTorsionPotential(const std::string &type1, const std::string &type2,
                                                       const std::string &type3, const std::string &type4,
                                                       const api::TorsionAngle &torsionAngle) {
-    potentialConfiguration_.torsionPotentials[std::make_tuple(particleTypeRegistry_.getParticleTypeID(type1),
-                                                              particleTypeRegistry_.getParticleTypeID(type2),
-                                                              particleTypeRegistry_.getParticleTypeID(type3),
-                                                              particleTypeRegistry_.getParticleTypeID(
+    potentialConfiguration_.torsionPotentials[std::make_tuple(particleTypeRegistry_.id_of(type1),
+                                                              particleTypeRegistry_.id_of(type2),
+                                                              particleTypeRegistry_.id_of(type3),
+                                                              particleTypeRegistry_.id_of(
                                                                       type4))].push_back(torsionAngle);
 }
 
@@ -281,19 +281,19 @@ const reactions::ReactionRegistry &KernelContext::reactionRegistry() const {
     return reactionRegistry_;
 }
 
-ParticleTypeRegistry &KernelContext::particleTypeRegistry() {
+ParticleTypeRegistry &KernelContext::particle_types() {
     return particleTypeRegistry_;
 }
 
-const ParticleTypeRegistry &KernelContext::particleTypeRegistry() const {
+const ParticleTypeRegistry &KernelContext::particle_types() const {
     return particleTypeRegistry_;
 }
 
-const potentials::PotentialRegistry &KernelContext::potentialRegistry() const {
+const potentials::PotentialRegistry &KernelContext::potentials() const {
     return potentialRegistry_;
 }
 
-potentials::PotentialRegistry &KernelContext::potentialRegistry() {
+potentials::PotentialRegistry &KernelContext::potentials() {
     return potentialRegistry_;
 }
 

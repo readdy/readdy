@@ -95,7 +95,7 @@ double Cube::getRelevantLengthScale() const noexcept {
 }
 
 void Cube::configureForType(const ParticleTypeRegistry *const registry, const particle_type_type type) {
-    particleRadius = registry->getParticleRadius(type);
+    particleRadius = registry->radius_of(type);
 }
 
 double Cube::calculateEnergy(const Vec3 &position) const {
@@ -279,8 +279,8 @@ double HarmonicRepulsion::getMaximalForce(double) const noexcept {
 
 void HarmonicRepulsion::configureForTypes(const ParticleTypeRegistry *const registry, particle_type_type type1,
                                           particle_type_type type2) {
-    auto r1 = registry->getParticleRadius(type1);
-    auto r2 = registry->getParticleRadius(type2);
+    auto r1 = registry->radius_of(type1);
+    auto r2 = registry->radius_of(type2);
     sumOfParticleRadii = r1 + r2;
     sumOfParticleRadiiSquared = sumOfParticleRadii * sumOfParticleRadii;
 }

@@ -162,12 +162,12 @@ public:
 
     const reactions::ReactionRegistry &reactionRegistry() const;
 
-    ParticleTypeRegistry &particleTypeRegistry();
+    ParticleTypeRegistry &particle_types();
 
-    const ParticleTypeRegistry &particleTypeRegistry() const;
+    const ParticleTypeRegistry &particle_types() const;
 
-    potentials::PotentialRegistry& potentialRegistry();
-    const potentials::PotentialRegistry& potentialRegistry() const;
+    potentials::PotentialRegistry& potentials();
+    const potentials::PotentialRegistry& potentials() const;
 
     // ctor and dtor
     KernelContext();

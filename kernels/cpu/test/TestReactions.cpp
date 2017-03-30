@@ -66,9 +66,9 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(100, 100, 100);
     const auto diff = kernel->getKernelContext().getShortestDifferenceFun();
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("A", .1, 1.); // type id 0
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("B", .1, 1.); // type id 1
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("C", .1, 1.); // type id 2
+    kernel->getKernelContext().particle_types().add("A", .1, 1.); // type id 0
+    kernel->getKernelContext().particle_types().add("B", .1, 1.); // type id 1
+    kernel->getKernelContext().particle_types().add("C", .1, 1.); // type id 2
 
     // test conversion
     {
@@ -207,7 +207,7 @@ TEST(CPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("X", .25, 1.);
+    kernel->getKernelContext().particle_types().add("X", .25, 1.);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
 
@@ -223,7 +223,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("X");
+    const auto typeId = kernel->getKernelContext().particle_types().id_of("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
     kernel->getKernelContext().configure();
@@ -257,18 +257,18 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->getKernelContext().setBoxSize(10, 10, 30);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);
 
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("A", .25, 1.);
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("B", .25, 1.);
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("C", .25, 1.);
+    kernel->getKernelContext().particle_types().add("A", .25, 1.);
+    kernel->getKernelContext().particle_types().add("B", .25, 1.);
+    kernel->getKernelContext().particle_types().add("C", .25, 1.);
     double reactionRadius = 1.0;
     kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, reactionRadius);
     kernel->registerReaction<fusion_t>("very unlikely", "A", "C", "A", std::numeric_limits<double>::min(),
                                        reactionRadius);
     kernel->registerReaction<fusion_t>("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
-    const auto typeA = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("A");
-    const auto typeB = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("B");
-    const auto typeC = kernel->getKernelContext().particleTypeRegistry().getParticleTypeID("C");
+    const auto typeA = kernel->getKernelContext().particle_types().id_of("A");
+    const auto typeB = kernel->getKernelContext().particle_types().id_of("B");
+    const auto typeC = kernel->getKernelContext().particle_types().id_of("C");
 
     // this particle goes right into the middle, i.e., into the halo region
     kernel->getKernelStateModel().addParticle({0, 0, 0, typeA});            // 0
@@ -349,7 +349,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
 TEST(TestNextSubvolumes, ReactionRadii) {
     using fusion_t = readdy::model::reactions::Fusion;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-    kernel->getKernelContext().particleTypeRegistry().registerParticleType("A", 1.0, 1.);
+    kernel->getKernelContext().particle_types().add("A", 1.0, 1.);
 
     auto nextSubvolumes = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUNextSubvolumes>(
             kernel->createAction<readdy::model::actions::reactions::NextSubvolumes>(1)

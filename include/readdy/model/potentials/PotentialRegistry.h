@@ -49,92 +49,58 @@ class PotentialRegistry {
     using pot_ptr_vec1_external = std::vector<potentials::PotentialOrder1 *>;
     using pot_ptr_vec2 = std::vector<std::unique_ptr<potentials::PotentialOrder2>>;
     using pot_ptr_vec2_external = std::vector<potentials::PotentialOrder2 *>;
-
-    using rdy_ptp = readdy::util::particle_type_pair;
-    using rdy_ptp_hasher = readdy::util::particle_type_pair_hasher;
-    using rdy_ptp_eq = readdy::util::particle_type_pair_equal_to;
-
-    using potential_o1_registry_internal = std::unordered_map<particle_type_type, pot_ptr_vec1>;
-    using potential_o2_registry_internal = std::unordered_map<rdy_ptp, pot_ptr_vec2, rdy_ptp_hasher, rdy_ptp_eq>;
 public:
     using particle_type_registry_ref = std::reference_wrapper<const ParticleTypeRegistry>;
 
     PotentialRegistry(particle_type_registry_ref typeRegistry);
 
-    using potentials_o1 = std::vector<PotentialOrder1*>;
-    using potentials_o2 = std::vector<PotentialOrder2*>;
+    using potentials_o1 = std::vector<PotentialOrder1 *>;
+    using potentials_o2 = std::vector<PotentialOrder2 *>;
 
-    using rdy_pot_1_registry = std::unordered_map<particle_type_type, potentials_o1>;
+    using potential_o1_registry = std::unordered_map<particle_type_type, potentials_o1>;
+    using potential_o2_registry = std::unordered_map<util::particle_type_pair, potentials_o2, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
 
-    using rdy_pot_2_registry = std::unordered_map<rdy_ptp, potentials_o2, rdy_ptp_hasher, rdy_ptp_eq>;
+    const Potential::id_t add_external(potentials::PotentialOrder1 *potential);
 
-    const short registerExternalPotential(potentials::PotentialOrder1 *potential);
+    const Potential::id_t add_external(potentials::PotentialOrder2 *potential);
 
-    const short registerExternalPotential(potentials::PotentialOrder2 *potential);
+    const Potential::id_t add(std::unique_ptr<PotentialOrder1> potential);
 
-    template<typename R>
-    const short registerPotential(std::unique_ptr<R> potential,
-                                  typename std::enable_if<std::is_base_of<potentials::PotentialOrder1, R>::value>::type * = 0) {
-        const auto id = potential->getId();
-        auto typeId = typeRegistry.getParticleTypeID(potential->particleType);
-        if (potentialO1RegistryInternal.find(typeId) == potentialO1RegistryInternal.end()) {
-            potentialO1RegistryInternal.insert(std::make_pair(typeId, pot_ptr_vec1()));
-        }
-        potentialO1RegistryInternal[typeId].push_back(std::move(potential));
-        return id;
-    }
+    const Potential::id_t add(std::unique_ptr<PotentialOrder2> potential);
 
-    template<typename R>
-    const short registerPotential(std::unique_ptr<R> potential,
-                                  typename std::enable_if<std::is_base_of<potentials::PotentialOrder2, R>::value>::type * = 0) {
-        const auto id = potential->getId();
-        auto type1Id = typeRegistry.getParticleTypeID(potential->particleType1);
-        auto type2Id = typeRegistry.getParticleTypeID(potential->particleType2);
-        auto pp = std::tie(type1Id, type2Id);
-        if (potentialO2RegistryInternal.find(pp) == potentialO2RegistryInternal.end()) {
-            potentialO2RegistryInternal.emplace(pp, pot_ptr_vec2());
-        }
-        potentialO2RegistryInternal[pp].push_back(std::move(potential));
-        return id;
-    }
+    void remove(const Potential::id_t handle);
 
-    void deregisterPotential(const short handle);
+    const potentials_o1 &potentials_of(const particle_type_type type) const;
 
-    const potentials_o1& getOrder1Potentials(const particle_type_type type) const;
+    const potential_o1_registry &potentials_order1() const;
 
-    const rdy_pot_1_registry& getAllOrder1Potentials() const;
+    const potentials_o2 &potentials_of(const particle_type_type t1, const particle_type_type t2) const;
 
-    std::vector<particle_type_type> getAllOrder1RegisteredPotentialTypes() const;
-
-    const potentials_o2 &getOrder2Potentials(const particle_type_type t1, const particle_type_type t2) const;
-
-    const rdy_pot_2_registry& getAllOrder2Potentials() const;
+    const potential_o2_registry &potentials_order2() const;
 
     std::vector<util::particle_type_pair> getAllOrder2RegisteredPotentialTypes() const;
 
-    /**
-     * Get an unstructured list of all second order potentials. Useful in neighborlists, where maxcutoff is required.
-     */
-    const potentials_o2 getVectorAllOrder2Potentials() const;
+    const potentials_o1 &potentials_of(const std::string &type) const;
 
-    const potentials_o1& getOrder1Potentials(const std::string &type) const;
-
-    const potentials_o2 &getOrder2Potentials(const std::string &t1, const std::string &t2) const;
+    const potentials_o2 &potentials_of(const std::string &t1, const std::string &t2) const;
 
     void configure();
 
     void debug_output() const;
 
 private:
-    const ParticleTypeRegistry& typeRegistry;
+    using potential_o1_registry_internal = std::unordered_map<particle_type_type, pot_ptr_vec1>;
+    using potential_o2_registry_internal = std::unordered_map<util::particle_type_pair, pot_ptr_vec2, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
 
-    rdy_pot_1_registry potentialO1Registry{};
-    rdy_pot_2_registry potentialO2Registry{};
+    const ParticleTypeRegistry &typeRegistry;
+
+    potential_o1_registry potentialO1Registry{};
+    potential_o2_registry potentialO2Registry{};
 
     potential_o1_registry_internal potentialO1RegistryInternal{};
-    rdy_pot_1_registry potentialO1RegistryExternal{};
+    potential_o1_registry potentialO1RegistryExternal{};
     potential_o2_registry_internal potentialO2RegistryInternal{};
-    rdy_pot_2_registry potentialO2RegistryExternal{};
+    potential_o2_registry potentialO2RegistryExternal{};
 
     pot_ptr_vec1_external defaultPotentialsO1{};
     pot_ptr_vec2_external defaultPotentialsO2{};

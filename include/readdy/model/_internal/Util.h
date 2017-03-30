@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(util)
 inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const readdy::model::KernelContext &ctx) {
     std::set<unsigned int> result;
     for (const auto &t : types) {
-        result.insert(ctx.particleTypeRegistry().getParticleTypeID(t));
+        result.insert(ctx.particle_types().id_of(t));
     }
     return result;
 }
@@ -54,7 +54,7 @@ transformTypes2(const std::vector<std::string> &types, const readdy::model::Kern
     std::vector<unsigned int> result;
     result.reserve(types.size());
     for (auto &t : types) {
-        result.push_back(ctx.particleTypeRegistry().getParticleTypeID(t));
+        result.push_back(ctx.particle_types().id_of(t));
     }
     return result;
 }
@@ -63,8 +63,8 @@ inline std::unordered_map<Particle::type_type, Particle::type_type>
 transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap, const readdy::model::KernelContext &ctx) {
     std::unordered_map<Particle::type_type, Particle::type_type> result;
     for (const auto &pair : stringMap) {
-        const auto id1 = ctx.particleTypeRegistry().getParticleTypeID(pair.first);
-        const auto id2 = ctx.particleTypeRegistry().getParticleTypeID(pair.second);
+        const auto id1 = ctx.particle_types().id_of(pair.first);
+        const auto id2 = ctx.particle_types().id_of(pair.second);
         result.emplace(id1, id2);
     }
     return result;
