@@ -48,17 +48,9 @@ void CPUGillespie::perform() {
     const auto nl = stateModel.getNeighborList();
 
     if(ctx.recordReactionCounts()) {
-        auto& order1 = std::get<0>(kernel->getCPUKernelStateModel().reactionCounts());
-        auto& order2 = std::get<1>(kernel->getCPUKernelStateModel().reactionCounts());
-        if(order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
-            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
-            order1.resize(n_reactions_order1);
-            order2.resize(n_reactions_order2);
-        } else {
-            std::fill(order1.begin(), order1.end(), 0);
-            std::fill(order2.begin(), order2.end(), 0);
-        }
+        auto &countsOrder1 = stateModel.reactionCountsOrder1();
+        auto &countsOrder2 = stateModel.reactionCountsOrder2();
+        readdy::model::observables::util::initializeReactionCountMapping(countsOrder1, countsOrder2, ctx);
     }
 
     double alpha = 0.0;
@@ -68,25 +60,24 @@ void CPUGillespie::perform() {
         stateModel.reactionRecords().clear();
         if(ctx.recordReactionCounts()) {
             auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events), &stateModel.reactionRecords(),
-                                                         &stateModel.reactionCounts());
+                                                         &stateModel.reactionCountsOrder1(), &stateModel.reactionCountsOrder2());
             nl->updateData(std::move(particlesUpdate));
         } else {
             auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events), &stateModel.reactionRecords(),
-                                                         nullptr);
+                                                         nullptr, nullptr);
             nl->updateData(std::move(particlesUpdate));
         }
     } else {
         if(ctx.recordReactionCounts()) {
             auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events), nullptr,
-                                                         &stateModel.reactionCounts());
+                                                         &stateModel.reactionCountsOrder1(), &stateModel.reactionCountsOrder2());
             nl->updateData(std::move(particlesUpdate));
         } else {
             auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events), nullptr,
-                                                         nullptr);
+                                                         nullptr, nullptr);
             nl->updateData(std::move(particlesUpdate));
         }
     }
-
 }
 
 }

@@ -38,15 +38,22 @@ namespace readdy {
 namespace kernel {
 namespace scpu {
 struct SCPUStateModel::Impl {
+    using particle_t = readdy::model::Particle;
+    using reaction_counts_order1_map = std::unordered_map<particle_t::type_type, std::vector<std::size_t>>;
+    using reaction_counts_order2_map = std::unordered_map<util::particle_type_pair, std::vector<std::size_t>,
+            util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
     double currentEnergy = 0;
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
     std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies;
-    SCPUStateModel::topology_action_factory const* topologyActionFactory;
+    SCPUStateModel::topology_action_factory const *topologyActionFactory;
     readdy::model::KernelContext const *context;
     // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
-    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords {};
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts {};
+    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
+    // reaction counts map from particle type to vector of count numbers,
+    // the position in the vector corresponds to the reaction index, i.e. for each particle type there is a new reaction index space
+    reaction_counts_order1_map reactionCountsOrder1 {};
+    reaction_counts_order2_map reactionCountsOrder2 {};
 };
 
 SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const*const taf)
@@ -189,12 +196,20 @@ const std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::rea
     return pimpl->reactionRecords;
 }
 
-std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() {
-    return pimpl->reactionCounts;
+SCPUStateModel::reaction_counts_order1_map &SCPUStateModel::reactionCountsOrder1() {
+    return pimpl->reactionCountsOrder1;
 }
 
-const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() const {
-    return pimpl->reactionCounts;
+const SCPUStateModel::reaction_counts_order1_map &SCPUStateModel::reactionCountsOrder1() const {
+    return pimpl->reactionCountsOrder1;
+}
+
+SCPUStateModel::reaction_counts_order2_map &SCPUStateModel::reactionCountsOrder2() {
+    return pimpl->reactionCountsOrder2;
+}
+
+const SCPUStateModel::reaction_counts_order2_map &SCPUStateModel::reactionCountsOrder2() const {
+    return pimpl->reactionCountsOrder2;
 }
 
 readdy::model::Particle SCPUStateModel::getParticleForIndex(const std::size_t index) const {

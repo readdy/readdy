@@ -345,7 +345,7 @@ class TestObservablesIO(unittest.TestCase):
         handle = sim.register_observable_reaction_counts(1)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run(n_timesteps, 1)
+            sim.run_scheme_readdy(True).with_reaction_scheduler("GillespieParallel").configure_and_run(1, n_timesteps)
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
@@ -356,13 +356,16 @@ class TestObservablesIO(unittest.TestCase):
             np.testing.assert_equal(order_1_reactions_with_A[0], b"mylabel")
             np.testing.assert_equal(order_1_reactions_with_A[1], b"A->B")
             np.testing.assert_equal(order_2_reactions_with_B_and_C[0], b"B+C->A")
-            # counts of first time step
-            np.testing.assert_equal(data["counts/order1"][0], np.array([0, 0]))
-            np.testing.assert_equal(data["counts/order2"][0], np.array([0]))
+            index_of_mylabel = list(data["registered_reactions/order1/A[id=0]"]).index(b'mylabel')
+            index_of_a_to_b = list(data["registered_reactions/order1/A[id=0]"]).index(b'A->B')
+            # counts of first time step, time is first index
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, index_of_mylabel], np.array([0]))
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, index_of_a_to_b], np.array([0]))
+            np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][0, 0], np.array([0]))
             # counts of second time step
-            np.testing.assert_equal(data["counts/order1"][1], np.array([0, 1]))
-            np.testing.assert_equal(data["counts/order2"][1], np.array([1]))
-
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, index_of_mylabel], np.array([0]))
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, index_of_a_to_b], np.array([1]))
+            np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][1, 0], np.array([1]))
 
         common.set_logging_level("error")
         # register_observable_reaction_counts

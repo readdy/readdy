@@ -120,6 +120,10 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
 }
 
 struct CPUStateModel::Impl {
+    using particle_t = readdy::model::Particle;
+    using reaction_counts_order1_map = std::unordered_map<particle_t::type_type, std::vector<std::size_t>>;
+    using reaction_counts_order2_map = std::unordered_map<util::particle_type_pair, std::vector<std::size_t>,
+            util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
     readdy::model::KernelContext *context;
     std::unique_ptr<readdy::kernel::cpu::model::CPUNeighborList> neighborList;
     double currentEnergy = 0;
@@ -127,7 +131,8 @@ struct CPUStateModel::Impl {
     std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts{};
+    reaction_counts_order1_map reactionCountsOrder1 {};
+    reaction_counts_order2_map reactionCountsOrder2 {};
 
     template<bool fixpos = true>
     const model::CPUParticleData &cdata() const {
@@ -315,12 +320,20 @@ const std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reac
     return pimpl->reactionRecords;
 }
 
-std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() {
-    return pimpl->reactionCounts;
+CPUStateModel::reaction_counts_order1_map &CPUStateModel::reactionCountsOrder1() {
+    return pimpl->reactionCountsOrder1;
 }
 
-const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() const {
-    return pimpl->reactionCounts;
+const CPUStateModel::reaction_counts_order1_map &CPUStateModel::reactionCountsOrder1() const {
+    return pimpl->reactionCountsOrder1;
+}
+
+CPUStateModel::reaction_counts_order2_map &CPUStateModel::reactionCountsOrder2() {
+    return pimpl->reactionCountsOrder2;
+}
+
+const CPUStateModel::reaction_counts_order2_map &CPUStateModel::reactionCountsOrder2() const {
+    return pimpl->reactionCountsOrder2;
 }
 
 readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {

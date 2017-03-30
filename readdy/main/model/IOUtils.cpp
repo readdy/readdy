@@ -39,23 +39,25 @@ void writeReactionInformation(io::Group &group, const KernelContext &context) {
     auto groupO1 = subgroup.createGroup("./order1");
     auto groupO2 = subgroup.createGroup("./order2");
     for (const auto &t1 : context.particle_types().types_flat()) {
-        const auto &rO1 = context.reactions().order1_by_type(t1);
-        std::vector<std::string> lO1;
-        lO1.reserve(rO1.size());
-        std::for_each(rO1.begin(), rO1.end(), [&lO1](reactions::Reaction<1> *r) { lO1.push_back(r->getName()); });
-        if (!lO1.empty()) {
-            groupO1.write(context.particle_types().name_of(t1) + "[id=" + std::to_string(t1) + "]", lO1);
+        const auto &reactionsOrder1 = context.reactions().order1_by_type(t1);
+        std::vector<std::string> labelsOrder1;
+        labelsOrder1.reserve(reactionsOrder1.size());
+        std::for_each(reactionsOrder1.begin(), reactionsOrder1.end(),
+                      [&labelsOrder1](reactions::Reaction<1> *r) { labelsOrder1.push_back(r->getName()); });
+        if (!labelsOrder1.empty()) {
+            groupO1.write(context.particle_types().name_of(t1) + "[id=" + std::to_string(t1) + "]", labelsOrder1);
         }
         for (const auto &t2 : context.particle_types().types_flat()) {
             if (t2 < t1) continue;
-            const auto &rO2 = context.reactions().order2_by_type(t1, t2);
-            std::vector<std::string> lO2;
-            lO2.reserve(rO2.size());
-            std::for_each(rO2.begin(), rO2.end(), [&lO2](reactions::Reaction<2> *r) { lO2.push_back(r->getName()); });
-            if (!lO2.empty()) {
+            const auto &reactionsOrder2 = context.reactions().order2_by_type(t1, t2);
+            std::vector<std::string> labelsOrder2;
+            labelsOrder2.reserve(reactionsOrder2.size());
+            std::for_each(reactionsOrder2.begin(), reactionsOrder2.end(),
+                          [&labelsOrder2](reactions::Reaction<2> *r) { labelsOrder2.push_back(r->getName()); });
+            if (!labelsOrder2.empty()) {
                 groupO2.write(
                         context.particle_types().name_of(t1) + "[id=" + std::to_string(t1) + "] + " +
-                                context.particle_types().name_of(t2) + "[id=" + std::to_string(t2) + "]", lO2);
+                        context.particle_types().name_of(t2) + "[id=" + std::to_string(t2) + "]", labelsOrder2);
             }
         }
     }

@@ -45,6 +45,10 @@ namespace scpu {
 
 class SCPUStateModel : public readdy::model::KernelStateModel {
     using topology_action_factory = readdy::model::top::TopologyActionFactory;
+    using particle_t = readdy::model::Particle;
+    using reaction_counts_order1_map = std::unordered_map<particle_t::type_type, std::vector<std::size_t>>;
+    using reaction_counts_order2_map = std::unordered_map<util::particle_type_pair, std::vector<std::size_t>,
+            util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
 public:
 
     virtual void updateNeighborList() override;
@@ -90,9 +94,13 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const;
 
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts();
+    reaction_counts_order1_map &reactionCountsOrder1();
 
-    const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>& reactionCounts() const;
+    const reaction_counts_order1_map &reactionCountsOrder1() const;
+
+    reaction_counts_order2_map &reactionCountsOrder2();
+
+    const reaction_counts_order2_map &reactionCountsOrder2() const;
 
     virtual void expected_n_particles(const std::size_t n) override;
 
