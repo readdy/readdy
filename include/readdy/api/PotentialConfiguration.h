@@ -60,9 +60,9 @@ struct TorsionAngle {
 };
 
 struct PotentialConfiguration {
-    using pair_potential_map = std::unordered_map<util::particle_type_pair, std::vector<Bond>, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
-    using angle_potential_map = std::unordered_map<util::particle_type_triple, std::vector<Angle>, util::particle_type_triple_hasher, util::particle_type_triple_equal_to>;
-    using torsion_potential_map = std::unordered_map<util::particle_type_quadruple, std::vector<TorsionAngle>, util::particle_type_quadruple_hasher, util::particle_type_quadruple_equal_to>;
+    using pair_potential_map = util::particle_type_pair_unordered_map<std::vector<Bond>>;
+    using angle_potential_map = util::particle_type_triple_unordered_map<std::vector<Angle>>;
+    using torsion_potential_map = util::particle_type_quadruple_unordered_map<std::vector<TorsionAngle>>;
     pair_potential_map pairPotentials;
     angle_potential_map anglePotentials;
     torsion_potential_map torsionPotentials;

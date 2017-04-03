@@ -83,7 +83,7 @@ TEST(TestTopologyGraphs, TestTriple) {
 TEST(TestTopologyGraphs, TestTuple) {
     readdy::util::particle_type_pair_hasher hasher;
     EXPECT_EQ(hasher(std::make_tuple(1, 2)), hasher(std::make_tuple(2, 1)));
-    std::unordered_map<readdy::util::particle_type_pair, int, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to> map;
+    readdy::util::particle_type_pair_unordered_map<int> map;
     int a = 1, b = 2;
     map[std::make_tuple(a, b)] = 5;
     EXPECT_EQ(map[std::make_tuple(1, 2)], 5);

@@ -69,12 +69,15 @@ public:
 using particle_type_pair = std::tuple<particle_type_type, particle_type_type>;
 using particle_type_pair_hasher = ForwardBackwardTupleHasher<particle_type_pair>;
 using particle_type_pair_equal_to = ForwardBackwardTupleEquality<particle_type_pair>;
+template<typename T> using particle_type_pair_unordered_map = std::unordered_map<particle_type_pair, T, particle_type_pair_hasher, particle_type_pair_equal_to>;
 using particle_type_triple = std::tuple<particle_type_type, particle_type_type, particle_type_type>;
 using particle_type_triple_hasher = ForwardBackwardTupleHasher<particle_type_triple>;
 using particle_type_triple_equal_to = ForwardBackwardTupleEquality<particle_type_triple>;
+template<typename T> using particle_type_triple_unordered_map = std::unordered_map<particle_type_triple, T, particle_type_triple_hasher, particle_type_triple_equal_to>;
 using particle_type_quadruple = std::tuple<particle_type_type, particle_type_type, particle_type_type, particle_type_type>;
 using particle_type_quadruple_hasher = ForwardBackwardTupleHasher<particle_type_quadruple>;
 using particle_type_quadruple_equal_to = ForwardBackwardTupleEquality<particle_type_quadruple>;
+template<typename T> using particle_type_quadruple_unordered_map = std::unordered_map<particle_type_quadruple, T, particle_type_quadruple_hasher, particle_type_quadruple_equal_to>;
 
 inline particle_type_triple sortTypeTriple(particle_type_type t1, particle_type_type t2, particle_type_type t3) {
     if (t1 > t2) {
