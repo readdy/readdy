@@ -36,6 +36,7 @@
 
 #include "Topology.h"
 #include "connectivity/Graph.h"
+#include "reactions/TopologyReaction.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -43,8 +44,14 @@ NAMESPACE_BEGIN(top)
 
 class GraphTopology : public Topology {
 public:
-
+    /**
+     * a pointer to a vertex in this topologies' graph
+     */
     using vertex_ptr = graph::Graph::vertices_t::iterator;
+    /**
+     * a list of (reaction, (current) rate)
+     */
+    using topology_reactions = std::vector<std::tuple<reactions::TopologyReaction, double>>;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
@@ -54,17 +61,17 @@ public:
      * @param config the configuration table
      */
     GraphTopology(const particles_t &particles, const std::vector<particle_type_type> &types,
-                  std::reference_wrapper<const api::PotentialConfiguration> config);
+                  const api::PotentialConfiguration &config);
 
     /**
      * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
      * of the graph will map to the i-th particles in the particles list.
      * @param particles the particles list
      * @param graph the already existing graph
-     * @param config configuration table reference wrapper
+     * @param config the configuration table
      */
     GraphTopology(const particles_t &particles, graph::Graph &&graph,
-                  std::reference_wrapper<const api::PotentialConfiguration> config);
+                  const api::PotentialConfiguration &config);
 
     virtual ~GraphTopology() = default;
 
@@ -82,11 +89,16 @@ public:
 
     void configure();
 
+    void updateReactionRates();
+
     void validate();
+
+    void addReaction(const reactions::TopologyReaction &reaction);
 
 private:
     graph::Graph graph_;
     const api::PotentialConfiguration &config;
+    topology_reactions reactions_;
 };
 
 

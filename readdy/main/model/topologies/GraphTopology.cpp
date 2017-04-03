@@ -39,7 +39,7 @@ namespace model {
 namespace top {
 
 GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::vector<particle_type_type> &types,
-                             std::reference_wrapper<const api::PotentialConfiguration> config)
+                             const api::PotentialConfiguration& config)
         : Topology(particles), config(config), graph_() {
     assert(types.size() == particles.size());
     std::size_t i = 0;
@@ -49,7 +49,7 @@ GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::
 }
 
 GraphTopology::GraphTopology(const Topology::particles_t &particles, graph::Graph &&graph,
-                             std::reference_wrapper<const api::PotentialConfiguration> config)
+                             const api::PotentialConfiguration& config)
         : Topology(particles), config(config), graph_(std::move(graph)) {
     assert(GraphTopology::graph().vertices().size() == particles.size());
     if (GraphTopology::graph().vertices().size() != particles.size()) {
@@ -164,6 +164,16 @@ void GraphTopology::validate() {
     if (!graph().isConnected()) {
         throw std::invalid_argument("The graph is not connected!");
     }
+}
+
+void GraphTopology::updateReactionRates() {
+    for(auto&& reaction : reactions_) {
+        std::get<1>(reaction) = std::get<0>(reaction).rate(*this);
+    }
+}
+
+void GraphTopology::addReaction(const reactions::TopologyReaction &reaction) {
+    reactions_.push_back(std::make_tuple(reaction, 0));
 }
 
 }
