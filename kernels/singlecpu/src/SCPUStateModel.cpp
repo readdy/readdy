@@ -180,8 +180,9 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    pimpl->topologies.push_back(
-            std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topology_potentials()));
+    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
+            std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
+    );
     return pimpl->topologies.back().get();
 }
 

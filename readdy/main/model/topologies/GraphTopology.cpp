@@ -39,8 +39,8 @@ namespace model {
 namespace top {
 
 GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::vector<particle_type_type> &types,
-                             const api::PotentialConfiguration *const config)
-        : Topology(particles), config(config), graph_(std::make_unique<graph::Graph>()) {
+                             std::reference_wrapper<const api::PotentialConfiguration> config)
+        : Topology(particles), config(config), graph_() {
     assert(types.size() == particles.size());
     std::size_t i = 0;
     for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
@@ -48,12 +48,27 @@ GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::
     }
 }
 
+GraphTopology::GraphTopology(const Topology::particles_t &particles, graph::Graph &&graph,
+                             std::reference_wrapper<const api::PotentialConfiguration> config)
+        : Topology(particles), config(config), graph_(std::move(graph)) {
+    assert(GraphTopology::graph().vertices().size() == particles.size());
+    if (GraphTopology::graph().vertices().size() != particles.size()) {
+        throw std::invalid_argument("the number of particles and the number of vertices should match when creating"
+                                            "a graph in this way!");
+    }
+    std::size_t idx = 0;
+    auto &vertices = GraphTopology::graph().vertices();
+    for (auto it = vertices.begin(); it != vertices.end(); ++it) {
+        it->particleIndex = idx++;
+    }
+}
+
 graph::Graph &GraphTopology::graph() {
-    return *graph_;
+    return graph_;
 }
 
 const graph::Graph &GraphTopology::graph() const {
-    return *graph_;
+    return graph_;
 }
 
 void GraphTopology::configure() {
@@ -68,12 +83,12 @@ void GraphTopology::configure() {
     std::unordered_map<api::AngleType, std::vector<AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
-    graph_->findNTuples([&](const graph::Graph::vertex_ptr_tuple &tuple) {
+    graph_.findNTuples([&](const graph::Graph::vertex_ptr_tuple &tuple) {
         auto v1 = std::get<0>(tuple);
         auto v2 = std::get<1>(tuple);
-        auto it = config->pairPotentials.find(
+        auto it = config.pairPotentials.find(
                 std::tie(v1->particleType(), v2->particleType()));
-        if (it != config->pairPotentials.end()) {
+        if (it != config.pairPotentials.end()) {
             for (const auto &cfg : it->second) {
                 bonds[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex,
                                              cfg.forceConstant, cfg.length);
@@ -97,8 +112,8 @@ void GraphTopology::configure() {
         const auto &v1 = std::get<0>(triple);
         const auto &v2 = std::get<1>(triple);
         const auto &v3 = std::get<2>(triple);
-        auto it = config->anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
-        if (it != config->anglePotentials.end()) {
+        auto it = config.anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
+        if (it != config.anglePotentials.end()) {
             for (const auto &cfg : it->second) {
                 angles[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
                                               cfg.forceConstant, cfg.equilibriumAngle);
@@ -109,9 +124,9 @@ void GraphTopology::configure() {
         const auto &v2 = std::get<1>(quadruple);
         const auto &v3 = std::get<2>(quadruple);
         const auto &v4 = std::get<3>(quadruple);
-        auto it = config->torsionPotentials.find(
+        auto it = config.torsionPotentials.find(
                 std::tie(v1->particleType(), v2->particleType(), v3->particleType(), v4->particleType()));
-        if (it != config->torsionPotentials.end()) {
+        if (it != config.torsionPotentials.end()) {
             for (const auto &cfg : it->second) {
                 dihedrals[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
                                                  v4->particleIndex, cfg.forceConstant, cfg.multiplicity,

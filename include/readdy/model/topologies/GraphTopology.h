@@ -46,8 +46,25 @@ public:
 
     using vertex_ptr = graph::Graph::vertices_t::iterator;
 
-    GraphTopology(const particles_t& particles, const std::vector<particle_type_type> &types,
-                  const api::PotentialConfiguration *const config);
+    /**
+     * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
+     * particles handed in.
+     * @param particles the particles
+     * @param types particle's types
+     * @param config the configuration table
+     */
+    GraphTopology(const particles_t &particles, const std::vector<particle_type_type> &types,
+                  std::reference_wrapper<const api::PotentialConfiguration> config);
+
+    /**
+     * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
+     * of the graph will map to the i-th particles in the particles list.
+     * @param particles the particles list
+     * @param graph the already existing graph
+     * @param config configuration table reference wrapper
+     */
+    GraphTopology(const particles_t &particles, graph::Graph &&graph,
+                  std::reference_wrapper<const api::PotentialConfiguration> config);
 
     virtual ~GraphTopology() = default;
 
@@ -68,8 +85,8 @@ public:
     void validate();
 
 private:
-    std::unique_ptr<graph::Graph> graph_;
-    const api::PotentialConfiguration *const config;
+    graph::Graph graph_;
+    const api::PotentialConfiguration &config;
 };
 
 
