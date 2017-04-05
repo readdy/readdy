@@ -51,6 +51,8 @@ reactions::GillespieParallel::GillespieParallel(double timeStep) : TimeStepDepen
 
 reactions::NextSubvolumes::NextSubvolumes(double timeStep) : TimeStepDependentAction(timeStep) {}
 
+reactions::TopologyReactions::TopologyReactions(double timeStep) : TimeStepDependentAction(timeStep) {}
+
 AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
         : particles(particles), kernel(kernel) {}
 
@@ -66,6 +68,7 @@ void AddParticles::perform() {
 }
 
 CalculateForces::CalculateForces() : Action() {}
+
 }
 }
 }

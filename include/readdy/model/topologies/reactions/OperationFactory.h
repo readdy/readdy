@@ -23,39 +23,36 @@
 /**
  * << detailed description >>
  *
- * @file TopologyReaction.cpp
+ * @file OperationFactory.h
  * @brief << brief description >>
  * @author clonker
- * @date 03.04.17
+ * @date 05.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
+#pragma once
 
-#include <readdy/model/topologies/reactions/TopologyReaction.h>
+#include <readdy/common/macros.h>
+#include "Operation.h"
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace reactions {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(op)
 
-TopologyReaction::TopologyReaction(reaction_operations operations, const rate_function &rate_function)
-        : operations_(std::move(operations)), rate_function_(rate_function) { }
+class OperationFactory {
+public:
 
-double TopologyReaction::rate(const GraphTopology &topology) const {
-    return rate_function_(topology);
-}
+    virtual OperationRef createChangeParticleType() const = 0;
 
-const TopologyReaction::reaction_operations &TopologyReaction::operations() const {
-    return operations_;
-}
+    virtual OperationRef createAddEdge() const = 0;
 
-const Mode &TopologyReaction::mode() const {
-    return mode_;
-}
+    virtual OperationRef createRemoveEdge() const = 0;
 
-Mode &TopologyReaction::mode() {
-    return mode_;
-}
-}
-}
-}
-}
+};
+
+NAMESPACE_END(op)
+NAMESPACE_END(reactions)
+NAMESPACE_END(top)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

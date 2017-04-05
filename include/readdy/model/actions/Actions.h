@@ -129,6 +129,12 @@ public:
 struct NextSubvolumes : public TimeStepDependentAction {
     NextSubvolumes(double timeStep);
 };
+
+class TopologyReactions : public TimeStepDependentAction {
+public:
+    TopologyReactions(double timeStep);
+};
+
 }
 
 class EvaluateCompartments : public Action {

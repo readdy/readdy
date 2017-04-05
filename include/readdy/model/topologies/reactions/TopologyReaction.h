@@ -46,6 +46,10 @@ NAMESPACE_BEGIN(top)
 class GraphTopology;
 NAMESPACE_BEGIN(reactions)
 
+enum class Mode{
+    RAISE, ROLLBACK
+};
+
 class TopologyReaction {
 public:
     using reaction_operations = std::vector<op::OperationRef>;
@@ -57,9 +61,14 @@ public:
 
     const reaction_operations &operations() const;
 
+    const Mode& mode() const;
+
+    Mode& mode();
+
 private:
     rate_function rate_function_;
     reaction_operations operations_;
+    Mode mode_ {Mode::RAISE};
 };
 
 NAMESPACE_END(reactions)
