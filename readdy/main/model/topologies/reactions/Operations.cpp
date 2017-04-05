@@ -44,34 +44,34 @@ Operation::Operation(GraphTopology *const topology) : topology(topology){ }
 ChangeParticleType::ChangeParticleType(GraphTopology *const topology) : Operation(topology) {}
 
 void ChangeParticleType::execute() {
-
+    //todo
 }
 
 void ChangeParticleType::undo() {
-
+    //todo
 }
 
 
-AddEdge::AddEdge(GraphTopology *const topology) : Operation(topology) {}
+AddEdge::AddEdge(GraphTopology *const topology, const graph::edge& edge) : Operation(topology), edge(edge) {}
 
 
 void AddEdge::execute() {
-
+    topology->graph().addEdge(edge);
 }
 
 void AddEdge::undo() {
-
+    topology->graph().removeEdge(edge);
 }
 
 
-RemoveEdge::RemoveEdge(GraphTopology *const topology) : Operation(topology) {}
+RemoveEdge::RemoveEdge(GraphTopology *const topology, const graph::edge& edge) : Operation(topology), edge(edge) {}
 
 void RemoveEdge::execute() {
-
+    topology->graph().removeEdge(edge);
 }
 
 void RemoveEdge::undo() {
-
+    topology->graph().addEdge(edge);
 }
 
 

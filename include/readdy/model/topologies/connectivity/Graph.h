@@ -75,19 +75,23 @@ public:
 
     void addVertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label = "");
 
-    void setVertexLabel(vertex_list::iterator vertex, const std::string &label);
+    void setVertexLabel(vertex_ref vertex, const std::string &label);
 
-    void addEdge(vertex_list::iterator v1, vertex_list::iterator v2);
+    void addEdge(vertex_ref v1, vertex_ref v2);
 
     void addEdge(const std::string &v1, const std::string &v2);
 
+    void addEdge(const edge& edge);
+
     void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
 
-    void removeEdge(vertex_list::iterator v1, vertex_list::iterator v2);
+    void removeEdge(vertex_ref v1, vertex_ref v2);
 
     void removeEdge(const std::string &v1, const std::string &v2);
 
-    void removeVertex(vertex_list::iterator vertex);
+    void removeEdge(const edge& edge);
+
+    void removeVertex(vertex_ref vertex);
 
     void removeVertex(const std::string &name);
 
@@ -104,9 +108,9 @@ public:
 
 private:
     vertex_list vertices_;
-    std::unordered_map<std::string, vertex_list::iterator> namedVertices{};
+    std::unordered_map<std::string, vertex_ref> namedVertices{};
 
-    void removeNeighborsEdges(vertex_list::iterator vertex);
+    void removeNeighborsEdges(vertex_ref vertex);
 
     auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin());
 };

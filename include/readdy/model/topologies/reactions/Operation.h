@@ -34,6 +34,7 @@
 
 #include <memory>
 #include <readdy/common/macros.h>
+#include <readdy/model/topologies/connectivity/Vertex.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -74,20 +75,26 @@ private:
 
 class AddEdge : public Operation {
 public:
-    AddEdge(GraphTopology *const topology);
+    AddEdge(GraphTopology *const topology, const graph::edge& edge);
 
     void execute() override;
 
     void undo() override;
+
+private:
+    graph::edge edge;
 };
 
 class RemoveEdge : public Operation {
 public:
-    RemoveEdge(GraphTopology *const topology);
+    RemoveEdge(GraphTopology *const topology, const graph::edge& edge);
 
     void execute() override;
 
     void undo() override;
+
+private:
+    graph::edge edge;
 };
 
 NAMESPACE_END(op)

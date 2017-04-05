@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(graph)
 
-2class Vertex;
+class Vertex;
 
 using vertex_list = std::list<Vertex>;
 using vertex_ref = vertex_list::iterator;

@@ -57,7 +57,7 @@ const vertex_list &Graph::vertices() const {
     return vertices_;
 }
 
-void Graph::removeVertex(vertex_list::iterator vertex) {
+void Graph::removeVertex(vertex_ref vertex) {
     removeNeighborsEdges(vertex);
     if (!vertex->label.empty()) {
         namedVertices.erase(namedVertices.find(vertex->label));
@@ -88,13 +88,13 @@ void Graph::removeVertex(const std::string &name) {
     removeVertex(it->second);
 }
 
-void Graph::removeNeighborsEdges(vertex_list::iterator vertex) {
+void Graph::removeNeighborsEdges(vertex_ref vertex) {
     for (auto neighbor : vertex->neighbors()) {
         neighbor->removeNeighbor(vertex);
     }
 }
 
-void Graph::removeEdge(vertex_list::iterator v1, vertex_list::iterator v2) {
+void Graph::removeEdge(vertex_ref v1, vertex_ref v2) {
     assert(v1 != v2);
     v1->removeNeighbor(v2);
     v2->removeNeighbor(v1);
@@ -125,7 +125,7 @@ const Vertex &Graph::vertexForParticleIndex(std::size_t particleIndex) const {
     }
 }
 
-void Graph::setVertexLabel(vertex_list::iterator vertex, const std::string &label) {
+void Graph::setVertexLabel(vertex_ref vertex, const std::string &label) {
     if(!label.empty()) {
         auto it = namedVertices.find(label);
         if (it == namedVertices.end()) {
@@ -179,7 +179,7 @@ void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t part
     }
 }
 
-void Graph::addEdge(vertex_list::iterator v1, vertex_list::iterator v2) {
+void Graph::addEdge(vertex_ref v1, vertex_ref v2) {
     v1->addNeighbor(v2);
     v2->addNeighbor(v1);
 }
@@ -202,7 +202,7 @@ vertex_ref Graph::lastVertex() {
 
 bool Graph::isConnected() {
     std::for_each(vertices_.begin(), vertices_.end(), [](Vertex &v) { v.visited = false; });
-    std::vector<vertex_list::iterator> unvisited;
+    std::vector<vertex_ref> unvisited;
     unvisited.push_back(vertices_.begin());
     std::size_t n_visited = 0;
     while(!unvisited.empty()) {
@@ -290,6 +290,14 @@ Graph::findNTuples() {
 
 vertex_ref Graph::namedVertexPtr(const std::string &name) {
     return namedVertices.at(name);
+}
+
+void Graph::addEdge(const edge &edge) {
+    addEdge(std::get<0>(edge), std::get<1>(edge));
+}
+
+void Graph::removeEdge(const edge &edge) {
+    removeEdge(std::get<0>(edge), std::get<1>(edge));
 }
 
 }
