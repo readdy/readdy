@@ -53,11 +53,11 @@ void Graph::addEdge(const std::string &v1, const std::string &v2) {
     findIt2->second->addNeighbor(findIt1->second);
 }
 
-const Graph::vertices_t &Graph::vertices() const {
+const vertex_list &Graph::vertices() const {
     return vertices_;
 }
 
-void Graph::removeVertex(vertices_t::iterator vertex) {
+void Graph::removeVertex(vertex_list::iterator vertex) {
     removeNeighborsEdges(vertex);
     if (!vertex->label.empty()) {
         namedVertices.erase(namedVertices.find(vertex->label));
@@ -88,13 +88,13 @@ void Graph::removeVertex(const std::string &name) {
     removeVertex(it->second);
 }
 
-void Graph::removeNeighborsEdges(vertices_t::iterator vertex) {
+void Graph::removeNeighborsEdges(vertex_list::iterator vertex) {
     for (auto neighbor : vertex->neighbors()) {
         neighbor->removeNeighbor(vertex);
     }
 }
 
-void Graph::removeEdge(vertices_t::iterator v1, vertices_t::iterator v2) {
+void Graph::removeEdge(vertex_list::iterator v1, vertex_list::iterator v2) {
     assert(v1 != v2);
     v1->removeNeighbor(v2);
     v2->removeNeighbor(v1);
@@ -125,7 +125,7 @@ const Vertex &Graph::vertexForParticleIndex(std::size_t particleIndex) const {
     }
 }
 
-void Graph::setVertexLabel(vertices_t::iterator vertex, const std::string &label) {
+void Graph::setVertexLabel(vertex_list::iterator vertex, const std::string &label) {
     if(!label.empty()) {
         auto it = namedVertices.find(label);
         if (it == namedVertices.end()) {
@@ -179,12 +179,12 @@ void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t part
     }
 }
 
-void Graph::addEdge(vertices_t::iterator v1, vertices_t::iterator v2) {
+void Graph::addEdge(vertex_list::iterator v1, vertex_list::iterator v2) {
     v1->addNeighbor(v2);
     v2->addNeighbor(v1);
 }
 
-Graph::vertices_t &Graph::vertices() {
+vertex_list &Graph::vertices() {
     return vertices_;
 }
 
@@ -192,17 +192,17 @@ Vertex &Graph::namedVertex(const std::string &name) {
     return *namedVertices.at(name);
 }
 
-std::list<readdy::model::top::graph::Vertex>::iterator Graph::firstVertex() {
+vertex_ref Graph::firstVertex() {
     return vertices().begin();
 }
 
-std::list<readdy::model::top::graph::Vertex>::iterator Graph::lastVertex() {
+vertex_ref Graph::lastVertex() {
     return --vertices().end();
 }
 
 bool Graph::isConnected() {
     std::for_each(vertices_.begin(), vertices_.end(), [](Vertex &v) { v.visited = false; });
-    std::vector<vertices_t::iterator> unvisited;
+    std::vector<vertex_list::iterator> unvisited;
     unvisited.push_back(vertices_.begin());
     std::size_t n_visited = 0;
     while(!unvisited.empty()) {
@@ -221,9 +221,9 @@ bool Graph::isConnected() {
     return n_visited == vertices_.size();
 }
 
-void Graph::findNTuples(const std::function<void(const vertex_ptr_tuple &)> &tuple_callback,
-                        const std::function<void(const vertex_ptr_triple &)> &triple_callback,
-                        const std::function<void(const vertex_ptr_quadruple &)> &quadruple_callback) {
+void Graph::findNTuples(const std::function<void(const edge &)> &tuple_callback,
+                        const std::function<void(const path_len_2 &)> &triple_callback,
+                        const std::function<void(const path_len_3 &)> &quadruple_callback) {
     for (auto &v : vertices_) {
         v.visited = false;
     }
@@ -275,20 +275,20 @@ void Graph::findNTuples(const std::function<void(const vertex_ptr_tuple &)> &tup
     }
 }
 
-std::tuple<std::vector<Graph::vertex_ptr_tuple>, std::vector<Graph::vertex_ptr_triple>, std::vector<Graph::vertex_ptr_quadruple>>
+std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
 Graph::findNTuples() {
-    auto tuple = std::make_tuple(std::vector<vertex_ptr_tuple>(), std::vector<vertex_ptr_triple>(), std::vector<vertex_ptr_quadruple>());
-    findNTuples([&](const vertex_ptr_tuple& tup) {
+    auto tuple = std::make_tuple(std::vector<edge>(), std::vector<path_len_2>(), std::vector<path_len_3>());
+    findNTuples([&](const edge& tup) {
         std::get<0>(tuple).push_back(tup);
-    }, [&](const vertex_ptr_triple& trip) {
-        std::get<1>(tuple).push_back(trip);
-    }, [&](const vertex_ptr_quadruple& quad) {
-        std::get<2>(tuple).push_back(quad);
+    }, [&](const path_len_2& path2) {
+        std::get<1>(tuple).push_back(path2);
+    }, [&](const path_len_3& path3) {
+        std::get<2>(tuple).push_back(path3);
     });
     return tuple;
 }
 
-std::list<readdy::model::top::graph::Vertex>::iterator Graph::namedVertexPtr(const std::string &name) {
+vertex_ref Graph::namedVertexPtr(const std::string &name) {
     return namedVertices.at(name);
 }
 

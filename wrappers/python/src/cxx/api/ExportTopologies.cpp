@@ -73,7 +73,7 @@ void exportTopologies(py::module &m) {
             .def("validate", &topology::validate);
 
     py::class_<graph>(m, "Graph")
-            .def("get_vertices", [](graph &self) -> graph::vertices_t & { return self.vertices(); },
+            .def("get_vertices", [](graph &self) -> readdy::model::top::graph::vertex_list & { return self.vertices(); },
                  rvp::reference_internal)
             .def("add_edge", [](graph &self, const std::string &v1, const std::string &v2) {
                 self.addEdge(v1, v2);

@@ -83,7 +83,7 @@ void GraphTopology::configure() {
     std::unordered_map<api::AngleType, std::vector<AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
-    graph_.findNTuples([&](const graph::Graph::vertex_ptr_tuple &tuple) {
+    graph_.findNTuples([&](const graph::edge &tuple) {
         auto v1 = std::get<0>(tuple);
         auto v2 = std::get<1>(tuple);
         auto it = config.pairPotentials.find(
@@ -108,7 +108,7 @@ void GraphTopology::configure() {
 
             throw std::invalid_argument(ss.str());
         }
-    }, [&](const graph::Graph::vertex_ptr_triple &triple) {
+    }, [&](const graph::path_len_2 &triple) {
         const auto &v1 = std::get<0>(triple);
         const auto &v2 = std::get<1>(triple);
         const auto &v3 = std::get<2>(triple);
@@ -119,7 +119,7 @@ void GraphTopology::configure() {
                                               cfg.forceConstant, cfg.equilibriumAngle);
             }
         }
-    }, [&](const graph::Graph::vertex_ptr_quadruple &quadruple) {
+    }, [&](const graph::path_len_3 &quadruple) {
         const auto &v1 = std::get<0>(quadruple);
         const auto &v2 = std::get<1>(quadruple);
         const auto &v3 = std::get<2>(quadruple);

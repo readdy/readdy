@@ -45,10 +45,6 @@ NAMESPACE_BEGIN(top)
 class GraphTopology : public Topology {
 public:
     /**
-     * a pointer to a vertex in this topologies' graph
-     */
-    using vertex_ptr = graph::Graph::vertices_t::iterator;
-    /**
      * a list of (reaction, (current) rate)
      */
     using topology_reactions = std::vector<std::tuple<reactions::TopologyReaction, double>>;

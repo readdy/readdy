@@ -45,12 +45,6 @@ NAMESPACE_BEGIN(graph)
 
 class Graph {
 public:
-    using vertices_t = std::list<Vertex>;
-    using vertex_ptr = vertices_t::iterator;
-    using vertex_ptr_tuple = std::tuple<vertex_ptr, vertex_ptr>;
-    using vertex_ptr_triple = std::tuple<vertex_ptr, vertex_ptr, vertex_ptr>;
-    using vertex_ptr_quadruple = std::tuple<vertex_ptr, vertex_ptr, vertex_ptr, vertex_ptr>;
-
     Graph() = default;
 
     virtual ~Graph() = default;
@@ -63,37 +57,37 @@ public:
 
     Graph &operator=(Graph &&) = default;
 
-    const vertices_t &vertices() const;
+    const vertex_list &vertices() const;
 
-    vertices_t &vertices();
+    vertex_list &vertices();
 
-    vertices_t::iterator firstVertex();
+    vertex_ref firstVertex();
 
-    vertices_t::iterator lastVertex();
+    vertex_ref lastVertex();
 
     const Vertex &namedVertex(const std::string &name) const;
 
     Vertex &namedVertex(const std::string &name);
 
-    vertices_t::iterator namedVertexPtr(const std::string& name);
+    vertex_ref namedVertexPtr(const std::string& name);
 
     const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
 
     void addVertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label = "");
 
-    void setVertexLabel(vertices_t::iterator vertex, const std::string &label);
+    void setVertexLabel(vertex_list::iterator vertex, const std::string &label);
 
-    void addEdge(vertices_t::iterator v1, vertices_t::iterator v2);
+    void addEdge(vertex_list::iterator v1, vertex_list::iterator v2);
 
     void addEdge(const std::string &v1, const std::string &v2);
 
     void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
 
-    void removeEdge(vertices_t::iterator v1, vertices_t::iterator v2);
+    void removeEdge(vertex_list::iterator v1, vertex_list::iterator v2);
 
     void removeEdge(const std::string &v1, const std::string &v2);
 
-    void removeVertex(vertices_t::iterator vertex);
+    void removeVertex(vertex_list::iterator vertex);
 
     void removeVertex(const std::string &name);
 
@@ -101,18 +95,18 @@ public:
 
     bool isConnected();
 
-    void findNTuples(const std::function<void(const vertex_ptr_tuple &)> &tuple_callback,
-                     const std::function<void(const vertex_ptr_triple &)> &triple_callback,
-                     const std::function<void(const vertex_ptr_quadruple &)> &quadruple_callback);
+    void findNTuples(const std::function<void(const edge &)> &tuple_callback,
+                     const std::function<void(const path_len_2 &)> &triple_callback,
+                     const std::function<void(const path_len_3 &)> &quadruple_callback);
 
-    std::tuple<std::vector<vertex_ptr_tuple>, std::vector<vertex_ptr_triple>, std::vector<vertex_ptr_quadruple>>
+    std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
     findNTuples();
 
 private:
-    vertices_t vertices_;
-    std::unordered_map<std::string, vertices_t::iterator> namedVertices{};
+    vertex_list vertices_;
+    std::unordered_map<std::string, vertex_list::iterator> namedVertices{};
 
-    void removeNeighborsEdges(vertices_t::iterator vertex);
+    void removeNeighborsEdges(vertex_list::iterator vertex);
 
     auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin());
 };
