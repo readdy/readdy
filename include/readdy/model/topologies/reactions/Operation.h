@@ -32,28 +32,62 @@
 
 #pragma once
 
+#include <memory>
 #include <readdy/common/macros.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+class GraphTopology;
 NAMESPACE_BEGIN(reactions)
 NAMESPACE_BEGIN(op)
 
-class Operation{
+class Operation;
+using OperationRef = std::shared_ptr<Operation>;
+
+class Operation {
 public:
+    Operation(GraphTopology *const topology);
+
+    virtual ~Operation() = default;
+
+    virtual void execute() = 0;
+
+    virtual void undo() = 0;
+
+protected:
+    GraphTopology *const topology;
 };
 
 class ChangeParticleType : public Operation {
+public:
+
+    ChangeParticleType(GraphTopology *const topology);
+
+    void execute() override;
+
+    void undo() override;
+
+private:
 
 };
 
 class AddEdge : public Operation {
+public:
+    AddEdge(GraphTopology *const topology);
 
+    void execute() override;
+
+    void undo() override;
 };
 
 class RemoveEdge : public Operation {
+public:
+    RemoveEdge(GraphTopology *const topology);
 
+    void execute() override;
+
+    void undo() override;
 };
 
 NAMESPACE_END(op)

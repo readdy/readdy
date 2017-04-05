@@ -23,46 +23,61 @@
 /**
  * << detailed description >>
  *
- * @file TopologyReaction.h
+ * @file Operations.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 03.04.17
+ * @date 05.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
+#include <readdy/model/topologies/reactions/Operation.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
-#include <vector>
-#include <memory>
-#include <functional>
+namespace readdy {
+namespace model {
+namespace top {
+namespace reactions {
+namespace op {
 
-#include <readdy/common/macros.h>
+Operation::Operation(GraphTopology *const topology) : topology(topology){ }
 
-#include "Operation.h"
+ChangeParticleType::ChangeParticleType(GraphTopology *const topology) : Operation(topology) {}
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-class GraphTopology;
-NAMESPACE_BEGIN(reactions)
+void ChangeParticleType::execute() {
 
-class TopologyReaction {
-public:
-    using reaction_operations = std::vector<op::OperationRef>;
-    using rate_function = std::function<double(const GraphTopology &)>;
+}
 
-    TopologyReaction(reaction_operations operations, const rate_function &rate_function);
+void ChangeParticleType::undo() {
 
-    double rate(const GraphTopology &topology) const;
+}
 
-    const reaction_operations &operations() const;
 
-private:
-    rate_function rate_function_;
-    reaction_operations operations_;
-};
+AddEdge::AddEdge(GraphTopology *const topology) : Operation(topology) {}
 
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+
+void AddEdge::execute() {
+
+}
+
+void AddEdge::undo() {
+
+}
+
+
+RemoveEdge::RemoveEdge(GraphTopology *const topology) : Operation(topology) {}
+
+void RemoveEdge::execute() {
+
+}
+
+void RemoveEdge::undo() {
+
+}
+
+
+
+}
+}
+}
+}
+}
