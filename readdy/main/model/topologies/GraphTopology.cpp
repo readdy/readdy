@@ -79,9 +79,9 @@ void GraphTopology::configure() {
     anglePotentials.clear();
     torsionPotentials.clear();
 
-    std::unordered_map<api::BondType, std::vector<BondConfiguration>, readdy::util::hash::EnumClassHash> bonds;
-    std::unordered_map<api::AngleType, std::vector<AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
-    std::unordered_map<api::TorsionType, std::vector<DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
+    std::unordered_map<api::BondType, std::vector<pot::BondConfiguration>, readdy::util::hash::EnumClassHash> bonds;
+    std::unordered_map<api::AngleType, std::vector<pot::AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
+    std::unordered_map<api::TorsionType, std::vector<pot::DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
     graph_.findNTuples([&](const graph::edge &tuple) {
         auto v1 = std::get<0>(tuple);
@@ -137,7 +137,7 @@ void GraphTopology::configure() {
     for (const auto &bond : bonds) {
         switch (bond.first) {
             case api::BondType::HARMONIC: {
-                addBondedPotential(std::make_unique<HarmonicBondPotential>(this, bond.second));
+                addBondedPotential(std::make_unique<harmonic_bond>(this, bond.second));
                 break;
             };
         }
@@ -145,7 +145,7 @@ void GraphTopology::configure() {
     for (const auto &angle : angles) {
         switch (angle.first) {
             case api::AngleType::HARMONIC: {
-                addAnglePotential(std::make_unique<HarmonicAnglePotential>(this, angle.second));
+                addAnglePotential(std::make_unique<harmonic_angle>(this, angle.second));
                 break;
             };
         }
@@ -153,7 +153,7 @@ void GraphTopology::configure() {
     for (const auto &dih : dihedrals) {
         switch (dih.first) {
             case api::TorsionType::COS_DIHEDRAL: {
-                addTorsionPotential(std::make_unique<CosineDihedralPotential>(this, dih.second));
+                addTorsionPotential(std::make_unique<cos_dihedral>(this, dih.second));
                 break;
             };
         }

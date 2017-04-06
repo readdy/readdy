@@ -41,13 +41,13 @@ using topology_particle = readdy::model::TopologyParticle;
 using topology = readdy::model::top::GraphTopology;
 using graph = readdy::model::top::graph::Graph;
 using vertex = readdy::model::top::graph::Vertex;
-using topology_potential = readdy::model::top::TopologyPotential;
-using bonded_potential = readdy::model::top::BondedPotential;
-using angle_potential = readdy::model::top::AnglePotential;
-using torsion_potential = readdy::model::top::TorsionPotential;
-using harmonic_bond = readdy::model::top::HarmonicBondPotential;
-using harmonic_angle = readdy::model::top::HarmonicAnglePotential;
-using cosine_dihedral = readdy::model::top::CosineDihedralPotential;
+using topology_potential = readdy::model::top::pot::TopologyPotential;
+using bonded_potential = readdy::model::top::pot::BondedPotential;
+using angle_potential = readdy::model::top::pot::AnglePotential;
+using torsion_potential = readdy::model::top::pot::TorsionPotential;
+using harmonic_bond = readdy::model::top::pot::HarmonicBondPotential;
+using harmonic_angle = readdy::model::top::pot::HarmonicAnglePotential;
+using cosine_dihedral = readdy::model::top::pot::CosineDihedralPotential;
 using vec3 = readdy::model::Vec3;
 
 void exportTopologies(py::module &m) {

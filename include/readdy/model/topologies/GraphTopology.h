@@ -35,7 +35,7 @@
 #include <readdy/common/macros.h>
 
 #include "Topology.h"
-#include "connectivity/Graph.h"
+#include "graph/Graph.h"
 #include "reactions/TopologyReaction.h"
 
 NAMESPACE_BEGIN(readdy)

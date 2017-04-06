@@ -23,24 +23,40 @@
 /**
  * << detailed description >>
  *
- * @file TopologyPotential.cpp
+ * @file TopologyAction.h
  * @brief << brief description >>
  * @author clonker
  * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/TopologyPotential.h>
-#include <readdy/model/topologies/Topology.h>
-namespace readdy {
-namespace model {
-namespace top {
-TopologyPotential::TopologyPotential(Topology *const topology) : topology(topology) {}
+#pragma once
+#include <readdy/common/macros.h>
+#include <readdy/model/KernelContext.h>
 
-Topology *const TopologyPotential::getTopology() const {
-    return topology;
-}
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(pot)
 
-}
-}
-}
+class TopologyPotentialAction {
+public:
+    TopologyPotentialAction(const KernelContext *const context) : context(context) {}
+    virtual ~TopologyPotentialAction() = default;
+
+protected:
+    const KernelContext* const context;
+};
+
+class EvaluatePotentialAction : public TopologyPotentialAction {
+public:
+    EvaluatePotentialAction(const KernelContext *const context) : TopologyPotentialAction(context) {}
+    virtual ~EvaluatePotentialAction() = default;
+
+    virtual double perform() = 0;
+};
+
+NAMESPACE_END(pot)
+NAMESPACE_END(top)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

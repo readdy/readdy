@@ -31,8 +31,8 @@
 #include <readdy/common/logging.h>
 #include <readdy/common/numeric.h>
 #include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/model/topologies/connectivity/Graph.h>
-#include <readdy/model/topologies/TorsionPotential.h>
+#include <readdy/model/topologies/graph/Graph.h>
+#include <readdy/model/topologies/potentials/TorsionPotential.h>
 #include <readdy/plugin/KernelProvider.h>
 
 struct TestTopologyGraphs : KernelTest {
@@ -52,7 +52,7 @@ struct TestTopologyGraphs : KernelTest {
 using particle_t = readdy::model::Particle;
 using topology_particle_t = readdy::model::TopologyParticle;
 
-using dihedral_bond = readdy::model::top::CosineDihedralPotential;
+using dihedral_bond = readdy::model::top::pot::CosineDihedralPotential;
 
 TEST(TestTopologyGraphs, TestQuadruple) {
     readdy::util::particle_type_quadruple_hasher hasher;

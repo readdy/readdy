@@ -23,65 +23,26 @@
 /**
  * << detailed description >>
  *
- * @file AnglePotential.h
+ * @file TopologyPotential.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
+#include <readdy/model/topologies/potentials/TopologyPotential.h>
+#include <readdy/model/topologies/Topology.h>
+namespace readdy {
+namespace model {
+namespace top {
+namespace pot {
+TopologyPotential::TopologyPotential(Topology *const topology) : topology(topology) {}
 
-#include <cstddef>
-#include <tuple>
-#include <vector>
-#include "TopologyPotential.h"
+Topology *const TopologyPotential::getTopology() const {
+    return topology;
+}
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-
-class AnglePotential : public TopologyPotential {
-public:
-    using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
-
-    AnglePotential(Topology *const topology);
-
-    virtual ~AnglePotential() = default;
-};
-
-struct AngleConfiguration {
-
-    AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double equilibriumAngle);
-
-    const std::size_t idx1, idx2, idx3;
-    const double equilibriumAngle, forceConstant;
-};
-
-
-class HarmonicAnglePotential : public AnglePotential {
-public:
-    using angle_t = AngleConfiguration;
-    using angles_t = std::vector<AngleConfiguration>;
-
-    HarmonicAnglePotential(Topology *const topology, const angles_t &angles);
-
-    virtual ~HarmonicAnglePotential() = default;
-
-    virtual std::unique_ptr<EvaluatePotentialAction>
-    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
-
-    const angles_t &getAngles() const;
-
-    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
-
-    void
-    calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
-
-protected:
-    angles_t angles;
-};
-
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}
+}

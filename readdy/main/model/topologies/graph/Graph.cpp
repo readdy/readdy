@@ -30,10 +30,10 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/connectivity/Graph.h>
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
+#include <readdy/model/topologies/graph/Graph.h>
 
 namespace readdy {
 namespace model {

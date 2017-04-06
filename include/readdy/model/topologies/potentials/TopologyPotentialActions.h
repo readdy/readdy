@@ -23,63 +23,46 @@
 /**
  * << detailed description >>
  *
- * @file Operations.cpp
+ * @file TopologyActions.h
  * @brief << brief description >>
  * @author clonker
- * @date 05.04.17
+ * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/reactions/Operation.h>
-#include <readdy/model/topologies/GraphTopology.h>
+#pragma once
+#include "TopologyPotentialAction.h"
+#include "BondedPotential.h"
+#include "AnglePotential.h"
+#include "TorsionPotential.h"
 
-namespace readdy {
-namespace model {
-namespace top {
-namespace reactions {
-namespace op {
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(pot)
 
-Operation::Operation(GraphTopology *const topology) : topology(topology){ }
+class CalculateHarmonicBondPotential : public EvaluatePotentialAction {
+public:
+    using harmonic_bond = HarmonicBondPotential;
+    CalculateHarmonicBondPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    virtual ~CalculateHarmonicBondPotential() = default;
+};
 
-ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const graph::vertex_ref &v,
-                                       const particle_type_type &type_to)
-        : Operation(topology), vertex(v), type_to(type_to), previous_type(0){}
+class CalculateHarmonicAnglePotential : public EvaluatePotentialAction {
+public:
+    using harmonic_angle = HarmonicAnglePotential;
+    CalculateHarmonicAnglePotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    virtual ~CalculateHarmonicAnglePotential() = default;
+};
 
-void ChangeParticleType::execute() {
-    //todo
-}
+class CalculateCosineDihedralPotential : public EvaluatePotentialAction {
+public:
+    using cos_dihedral = CosineDihedralPotential;
+    CalculateCosineDihedralPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    virtual ~CalculateCosineDihedralPotential() = default;
+};
 
-void ChangeParticleType::undo() {
-    //todo
-}
-
-
-AddEdge::AddEdge(GraphTopology *const topology, const graph::edge& edge) : Operation(topology), edge(edge) {}
-
-
-void AddEdge::execute() {
-    topology->graph().addEdge(edge);
-}
-
-void AddEdge::undo() {
-    topology->graph().removeEdge(edge);
-}
-
-
-RemoveEdge::RemoveEdge(GraphTopology *const topology, const graph::edge& edge) : Operation(topology), edge(edge) {}
-
-void RemoveEdge::execute() {
-    topology->graph().removeEdge(edge);
-}
-
-void RemoveEdge::undo() {
-    topology->graph().addEdge(edge);
-}
-
-
-
-}
-}
-}
-}
-}
+NAMESPACE_END(pot)
+NAMESPACE_END(top)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

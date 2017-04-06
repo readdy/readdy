@@ -34,7 +34,7 @@
 
 #include <memory>
 #include <readdy/common/macros.h>
-#include <readdy/model/topologies/connectivity/Vertex.h>
+#include <readdy/model/topologies/graph/Vertex.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -44,6 +44,7 @@ NAMESPACE_BEGIN(reactions)
 NAMESPACE_BEGIN(op)
 
 class Operation;
+
 using OperationRef = std::shared_ptr<Operation>;
 
 class Operation {
@@ -63,19 +64,20 @@ protected:
 class ChangeParticleType : public Operation {
 public:
 
-    ChangeParticleType(GraphTopology *const topology);
+    ChangeParticleType(GraphTopology *const topology, const graph::vertex_ref &v, const particle_type_type &type_to);
 
     void execute() override;
 
     void undo() override;
 
 private:
-
+    graph::vertex_ref vertex;
+    particle_type_type type_to, previous_type;
 };
 
 class AddEdge : public Operation {
 public:
-    AddEdge(GraphTopology *const topology, const graph::edge& edge);
+    AddEdge(GraphTopology *const topology, const graph::edge &edge);
 
     void execute() override;
 
@@ -87,7 +89,7 @@ private:
 
 class RemoveEdge : public Operation {
 public:
-    RemoveEdge(GraphTopology *const topology, const graph::edge& edge);
+    RemoveEdge(GraphTopology *const topology, const graph::edge &edge);
 
     void execute() override;
 

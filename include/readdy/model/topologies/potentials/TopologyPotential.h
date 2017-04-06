@@ -23,38 +23,39 @@
 /**
  * << detailed description >>
  *
- * @file TopologyAction.h
+ * @file TopologyPotential.h
  * @brief << brief description >>
  * @author clonker
- * @date 30.01.17
+ * @date 27.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 #include <readdy/common/macros.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/topologies/potentials/TopologyPotentialAction.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+class Topology;
+class TopologyActionFactory;
+NAMESPACE_BEGIN(pot)
 
-class TopologyAction {
+class TopologyPotential {
 public:
-    TopologyAction(const KernelContext *const context) : context(context) {}
-    virtual ~TopologyAction() = default;
+    TopologyPotential(Topology *const topology);
+
+    virtual ~TopologyPotential() = default;
+
+    Topology *const getTopology() const;
+
+    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) = 0;
 
 protected:
-    const KernelContext* const context;
+    Topology *const topology;
 };
 
-class EvaluatePotentialAction : public TopologyAction {
-public:
-    EvaluatePotentialAction(const KernelContext *const context) : TopologyAction(context) {}
-    virtual ~EvaluatePotentialAction() = default;
-
-    virtual double perform() = 0;
-};
-
+NAMESPACE_END(pot)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

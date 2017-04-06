@@ -23,38 +23,61 @@
 /**
  * << detailed description >>
  *
- * @file TopologyPotential.h
+ * @file TorsionPotential.h
  * @brief << brief description >>
  * @author clonker
- * @date 27.01.17
+ * @date 26.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
-#include <readdy/common/macros.h>
-#include <readdy/model/topologies/actions/TopologyAction.h>
+#include <cstddef>
+#include <tuple>
+#include <vector>
+#include "TopologyPotential.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(pot)
 
-class Topology;
-class TopologyActionFactory;
-
-class TopologyPotential {
+class TorsionPotential : public TopologyPotential {
 public:
-    TopologyPotential(Topology *const topology);
-
-    virtual ~TopologyPotential() = default;
-
-    Topology *const getTopology() const;
-
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) = 0;
-
-protected:
-    Topology *const topology;
+    TorsionPotential(Topology *const topology);
+    virtual ~TorsionPotential() = default;
 };
 
+struct DihedralConfiguration {
+    DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant, double multiplicity,
+             double equilibriumAngle);
+
+    std::size_t idx1, idx2, idx3, idx4;
+    double forceConstant, multiplicity, phi_0;
+};
+
+class CosineDihedralPotential : public TorsionPotential {
+public:
+    using dihedral_t = DihedralConfiguration;
+    using dihedrals_t = std::vector<dihedral_t>;
+
+    CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
+    virtual ~CosineDihedralPotential() = default;
+
+    const dihedrals_t &getDihedrals() const;
+
+    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_t &) const;
+
+    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
+                        const dihedral_t &) const;
+
+    virtual std::unique_ptr<EvaluatePotentialAction>
+    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
+
+protected:
+    dihedrals_t dihedrals;
+};
+
+NAMESPACE_END(pot)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
