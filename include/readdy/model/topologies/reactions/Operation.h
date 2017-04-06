@@ -66,11 +66,7 @@ public:
 
     ChangeParticleType(GraphTopology *const topology, const graph::vertex_ref &v, const particle_type_type &type_to);
 
-    void execute() override;
-
-    void undo() override;
-
-private:
+protected:
     graph::vertex_ref vertex;
     particle_type_type type_to, previous_type;
 };

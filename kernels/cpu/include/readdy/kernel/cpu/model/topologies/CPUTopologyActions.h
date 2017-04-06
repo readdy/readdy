@@ -131,6 +131,29 @@ public:
     }
 };
 
+NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(op)
+
+class CPUChangeParticleType : public readdy::model::top::reactions::op::ChangeParticleType {
+    CPUParticleData *const data;
+public:
+    CPUChangeParticleType(CPUParticleData *const data, top::GraphTopology *const topology, const top::graph::vertex_ref &v,
+                          const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
+
+    virtual void execute() override {
+        const auto globalIndex = topology->getParticles().at(vertex->particleIndex);
+        std::swap(data->entry_at(globalIndex).type, previous_type);
+    }
+
+    virtual void undo() override {
+        execute();
+    }
+
+};
+
+NAMESPACE_END(op)
+NAMESPACE_END(reactions)
+
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(cpu)

@@ -68,6 +68,6 @@ top::reactions::op::OperationRef
 ctop::CPUTopologyActionFactory::createChangeParticleType(
         top::GraphTopology *const topology, const top::graph::vertex_ref &v,
         const readdy::particle_type_type &type_to) const {
-    // todo
-    return nullptr;
+    return std::make_shared<reactions::op::CPUChangeParticleType>(kernel->getCPUKernelStateModel().getParticleData(),
+                                                                  topology, v, type_to);
 }

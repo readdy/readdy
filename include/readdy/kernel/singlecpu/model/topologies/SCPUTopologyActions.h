@@ -32,6 +32,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
@@ -130,6 +132,29 @@ public:
         return energy;
     }
 };
+
+NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(op)
+
+class SCPUChangeParticleType : public readdy::model::top::reactions::op::ChangeParticleType {
+    SCPUParticleData *const data;
+public:
+    SCPUChangeParticleType(SCPUParticleData *const data, top::GraphTopology *const topology, const top::graph::vertex_ref &v,
+                           const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
+
+    virtual void execute() override {
+        auto globalIndex = topology->getParticles().at(vertex->particleIndex);
+        std::swap(data->entry_at(globalIndex).type, previous_type);
+    }
+
+    virtual void undo() override {
+        execute();
+    }
+
+};
+
+NAMESPACE_END(op)
+NAMESPACE_END(reactions)
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)
