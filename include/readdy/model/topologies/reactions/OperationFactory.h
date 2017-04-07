@@ -42,15 +42,16 @@ NAMESPACE_BEGIN(op)
 
 class OperationFactory {
 public:
-
-    virtual OperationRef createChangeParticleType(GraphTopology *const topology, const graph::vertex_ref &v,
+    using graph_t = Operation::graph_t;
+    using operation_ref = Operation::OperationRef;
+    virtual operation_ref createChangeParticleType(GraphTopology *const topology, const graph_t::vertex_ref &v,
                                                   const particle_type_type &type_to) const = 0;
 
-    OperationRef createAddEdge(GraphTopology *const topology, const graph::edge &edge) const {
+    operation_ref createAddEdge(GraphTopology *const topology, const graph_t::edge &edge) const {
         return std::make_shared<op::AddEdge>(topology, edge);
     };
 
-    OperationRef createRemoveEdge(GraphTopology *const topology, const graph::edge &edge) const {
+    operation_ref createRemoveEdge(GraphTopology *const topology, const graph_t::edge &edge) const {
         return std::make_shared<op::RemoveEdge>(topology, edge);
     };
 

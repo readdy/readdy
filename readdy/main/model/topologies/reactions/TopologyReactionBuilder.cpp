@@ -23,52 +23,33 @@
 /**
  * << detailed description >>
  *
- * @file TopologyReaction.h
+ * @file TopologyReactionBuilder.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 03.04.17
+ * @date 07.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
+#include <readdy/model/topologies/reactions/TopologyReactionBuilder.h>
 
-#include <vector>
-#include <memory>
-#include <functional>
+namespace readdy {
+namespace model {
+namespace top {
+namespace reactions {
 
-#include <readdy/common/macros.h>
 
-#include "Operation.h"
+TopologyReactionBuilder::TopologyReactionBuilder() {}
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-class GraphTopology;
-NAMESPACE_BEGIN(reactions)
+TopologyReaction TopologyReactionBuilder::build(const Mode &mode, const TopologyReaction::rate_function &rate) {
+    auto operations_copy = operations;
+    operations.clear();
+    return TopologyReaction(
+            [operations_copy, mode](const GraphTopology &topology) { return std::tie(mode, operations_copy); }, rate
+    );
+}
 
-enum class Mode{
-    RAISE, ROLLBACK
-};
 
-class TopologyReaction {
-public:
-    using reaction_operations = std::vector<op::Operation::OperationRef>;
-    using reaction_recipe = std::tuple<Mode, reaction_operations>;
-    using reaction_function = std::function<reaction_recipe(const GraphTopology&)>;
-    using rate_function = std::function<double(const GraphTopology &)>;
-
-    TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
-
-    double rate(const GraphTopology &topology) const;
-
-    reaction_recipe operations(const GraphTopology &topology) const;
-
-private:
-    rate_function rate_function_;
-    reaction_function reaction_function_;
-};
-
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}
+}

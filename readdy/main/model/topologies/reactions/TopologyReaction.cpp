@@ -37,23 +37,15 @@ namespace model {
 namespace top {
 namespace reactions {
 
-TopologyReaction::TopologyReaction(reaction_operations operations, const rate_function &rate_function)
-        : operations_(std::move(operations)), rate_function_(rate_function) { }
+TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
+        : reaction_function_(reaction_function), rate_function_(rate_function) { }
 
 double TopologyReaction::rate(const GraphTopology &topology) const {
     return rate_function_(topology);
 }
 
-const TopologyReaction::reaction_operations &TopologyReaction::operations() const {
-    return operations_;
-}
-
-const Mode &TopologyReaction::mode() const {
-    return mode_;
-}
-
-Mode &TopologyReaction::mode() {
-    return mode_;
+TopologyReaction::reaction_recipe TopologyReaction::operations(const GraphTopology &topology) const {
+    return reaction_function_(topology);
 }
 }
 }

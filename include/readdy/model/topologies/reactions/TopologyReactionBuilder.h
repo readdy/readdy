@@ -33,15 +33,25 @@
 #pragma once
 
 #include <readdy/common/macros.h>
+#include "TopologyReaction.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+class GraphTopology;
 NAMESPACE_BEGIN(reactions)
 
+/**
+ * Easier: fixed operations list, no dependence on the actual graph (except for the rate function)
+ */
 class TopologyReactionBuilder {
 public:
     TopologyReactionBuilder();
+
+    TopologyReaction build(const Mode &mode, const TopologyReaction::rate_function &rate);
+
+private:
+    TopologyReaction::reaction_operations operations;
 };
 
 NAMESPACE_END(reactions)

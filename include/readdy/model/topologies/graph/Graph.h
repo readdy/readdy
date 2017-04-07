@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <functional>
 #include <stdexcept>
 #include <list>
 #include <unordered_map>
@@ -45,6 +46,17 @@ NAMESPACE_BEGIN(graph)
 
 class Graph {
 public:
+
+    using vertex_list = std::list<Vertex>;
+    using vertex_ref = vertex_list::iterator;
+    using edge = std::tuple<vertex_ref, vertex_ref>;
+    using path_len_2 = std::tuple<vertex_ref, vertex_ref, vertex_ref>;
+    using path_len_3 = std::tuple<vertex_ref, vertex_ref, vertex_ref, vertex_ref>;
+
+    using edge_callback = std::function<void(const edge &)>;
+    using path_len_2_callback = std::function<void(const path_len_2 &)>;
+    using path_len_3_callback = std::function<void(const path_len_3 &)>;
+
     Graph() = default;
 
     virtual ~Graph() = default;
@@ -99,9 +111,9 @@ public:
 
     bool isConnected();
 
-    void findNTuples(const std::function<void(const edge &)> &tuple_callback,
-                     const std::function<void(const path_len_2 &)> &triple_callback,
-                     const std::function<void(const path_len_3 &)> &quadruple_callback);
+    void findNTuples(const edge_callback &tuple_callback,
+                     const path_len_2_callback &triple_callback,
+                     const path_len_3_callback &quadruple_callback);
 
     std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
     findNTuples();

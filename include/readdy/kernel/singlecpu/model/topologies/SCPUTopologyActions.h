@@ -139,7 +139,7 @@ NAMESPACE_BEGIN(op)
 class SCPUChangeParticleType : public readdy::model::top::reactions::op::ChangeParticleType {
     SCPUParticleData *const data;
 public:
-    SCPUChangeParticleType(SCPUParticleData *const data, top::GraphTopology *const topology, const top::graph::vertex_ref &v,
+    SCPUChangeParticleType(SCPUParticleData *const data, top::GraphTopology *const topology, const graph_t::vertex_ref &v,
                            const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
     virtual void execute() override {

@@ -44,6 +44,9 @@ NAMESPACE_BEGIN(top)
 
 class GraphTopology : public Topology {
 public:
+    
+    using graph_t = graph::Graph;
+    
     /**
      * a list of (reaction, (current) rate)
      */
@@ -66,7 +69,7 @@ public:
      * @param graph the already existing graph
      * @param config the configuration table
      */
-    GraphTopology(const particles_t &particles, graph::Graph &&graph,
+    GraphTopology(const particles_t &particles, graph_t &&graph,
                   const api::PotentialConfiguration &config);
 
     virtual ~GraphTopology() = default;
@@ -79,9 +82,9 @@ public:
 
     GraphTopology &operator=(const GraphTopology &) = delete;
 
-    graph::Graph &graph();
+    graph_t &graph();
 
-    const graph::Graph &graph() const;
+    const graph_t &graph() const;
 
     void configure();
 
@@ -92,7 +95,7 @@ public:
     void addReaction(const reactions::TopologyReaction &reaction);
 
 private:
-    graph::Graph graph_;
+    graph_t graph_;
     const api::PotentialConfiguration &config;
     topology_reactions reactions_;
 };

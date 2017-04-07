@@ -53,7 +53,7 @@ void Graph::addEdge(const std::string &v1, const std::string &v2) {
     findIt2->second->addNeighbor(findIt1->second);
 }
 
-const vertex_list &Graph::vertices() const {
+const Graph::vertex_list &Graph::vertices() const {
     return vertices_;
 }
 
@@ -184,7 +184,7 @@ void Graph::addEdge(vertex_ref v1, vertex_ref v2) {
     v2->addNeighbor(v1);
 }
 
-vertex_list &Graph::vertices() {
+Graph::vertex_list &Graph::vertices() {
     return vertices_;
 }
 
@@ -192,11 +192,11 @@ Vertex &Graph::namedVertex(const std::string &name) {
     return *namedVertices.at(name);
 }
 
-vertex_ref Graph::firstVertex() {
+Graph::vertex_ref Graph::firstVertex() {
     return vertices().begin();
 }
 
-vertex_ref Graph::lastVertex() {
+Graph::vertex_ref Graph::lastVertex() {
     return --vertices().end();
 }
 
@@ -221,9 +221,9 @@ bool Graph::isConnected() {
     return n_visited == vertices_.size();
 }
 
-void Graph::findNTuples(const std::function<void(const edge &)> &tuple_callback,
-                        const std::function<void(const path_len_2 &)> &triple_callback,
-                        const std::function<void(const path_len_3 &)> &quadruple_callback) {
+void Graph::findNTuples(const edge_callback &tuple_callback,
+                        const path_len_2_callback &triple_callback,
+                        const path_len_3_callback &quadruple_callback) {
     for (auto &v : vertices_) {
         v.visited = false;
     }
@@ -275,7 +275,7 @@ void Graph::findNTuples(const std::function<void(const edge &)> &tuple_callback,
     }
 }
 
-std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
+std::tuple<std::vector<Graph::edge>, std::vector<Graph::path_len_2>, std::vector<Graph::path_len_3>>
 Graph::findNTuples() {
     auto tuple = std::make_tuple(std::vector<edge>(), std::vector<path_len_2>(), std::vector<path_len_3>());
     findNTuples([&](const edge& tup) {
@@ -288,7 +288,7 @@ Graph::findNTuples() {
     return tuple;
 }
 
-vertex_ref Graph::namedVertexPtr(const std::string &name) {
+Graph::vertex_ref Graph::namedVertexPtr(const std::string &name) {
     return namedVertices.at(name);
 }
 

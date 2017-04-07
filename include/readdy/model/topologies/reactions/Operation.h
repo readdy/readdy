@@ -34,7 +34,7 @@
 
 #include <memory>
 #include <readdy/common/macros.h>
-#include <readdy/model/topologies/graph/Vertex.h>
+#include <readdy/model/topologies/graph/Graph.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -45,10 +45,10 @@ NAMESPACE_BEGIN(op)
 
 class Operation;
 
-using OperationRef = std::shared_ptr<Operation>;
-
 class Operation {
 public:
+    using OperationRef = std::shared_ptr<Operation>;
+    using graph_t = graph::Graph;
     Operation(GraphTopology *const topology);
 
     virtual ~Operation() = default;
@@ -64,35 +64,35 @@ protected:
 class ChangeParticleType : public Operation {
 public:
 
-    ChangeParticleType(GraphTopology *const topology, const graph::vertex_ref &v, const particle_type_type &type_to);
+    ChangeParticleType(GraphTopology *const topology, const graph_t::vertex_ref &v, const particle_type_type &type_to);
 
 protected:
-    graph::vertex_ref vertex;
+    graph_t::vertex_ref vertex;
     particle_type_type type_to, previous_type;
 };
 
 class AddEdge : public Operation {
 public:
-    AddEdge(GraphTopology *const topology, const graph::edge &edge);
+    AddEdge(GraphTopology *const topology, const graph_t::edge &edge);
 
     void execute() override;
 
     void undo() override;
 
 private:
-    graph::edge edge;
+    graph_t::edge edge;
 };
 
 class RemoveEdge : public Operation {
 public:
-    RemoveEdge(GraphTopology *const topology, const graph::edge &edge);
+    RemoveEdge(GraphTopology *const topology, const graph_t::edge &edge);
 
     void execute() override;
 
     void undo() override;
 
 private:
-    graph::edge edge;
+    graph_t::edge edge;
 };
 
 NAMESPACE_END(op)

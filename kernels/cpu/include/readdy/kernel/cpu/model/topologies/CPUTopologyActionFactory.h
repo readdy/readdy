@@ -56,8 +56,8 @@ public:
     virtual std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
     createCalculateCosineDihedralPotential(const cos_dihedral *const potential) const override;
 
-    virtual top::reactions::op::OperationRef
-    createChangeParticleType(top::GraphTopology *const topology, const top::graph::vertex_ref &v,
+    virtual operation_ref
+    createChangeParticleType(top::GraphTopology *const topology, const graph_t::vertex_ref &v,
                              const particle_type_type &type_to) const override;
 };
 

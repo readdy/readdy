@@ -41,13 +41,11 @@ namespace op {
 
 Operation::Operation(GraphTopology *const topology) : topology(topology){ }
 
-ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const graph::vertex_ref &v,
+ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const graph_t::vertex_ref &v,
                                        const particle_type_type &type_to)
         : Operation(topology), vertex(v), type_to(type_to), previous_type(type_to){}
 
-
-AddEdge::AddEdge(GraphTopology *const topology, const graph::edge& edge) : Operation(topology), edge(edge) {}
-
+AddEdge::AddEdge(GraphTopology *const topology, const graph_t::edge& edge) : Operation(topology), edge(edge) {}
 
 void AddEdge::execute() {
     topology->graph().addEdge(edge);
@@ -58,7 +56,7 @@ void AddEdge::undo() {
 }
 
 
-RemoveEdge::RemoveEdge(GraphTopology *const topology, const graph::edge& edge) : Operation(topology), edge(edge) {}
+RemoveEdge::RemoveEdge(GraphTopology *const topology, const graph_t::edge& edge) : Operation(topology), edge(edge) {}
 
 void RemoveEdge::execute() {
     topology->graph().removeEdge(edge);
