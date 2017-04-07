@@ -45,17 +45,15 @@ namespace observables {
 struct ReactionCounts::Impl {
     using data_set_t = io::DataSet<std::size_t, false>;
     std::unique_ptr<io::Group> group;
-    std::unordered_map<readdy::model::Particle::type_type, std::unique_ptr<data_set_t>> ds_order1;
-    std::unordered_map<readdy::util::particle_type_pair, std::unique_ptr<data_set_t>,
+    std::unordered_map<readdy::particle_type_type, data_set_t> ds_order1;
+    std::unordered_map<readdy::util::particle_type_pair, data_set_t,
             readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to> ds_order2;
     std::unique_ptr<util::TimeSeriesWriter> time;
     bool shouldWrite = false;
     unsigned int flushStride = 0;
     bool firstWrite = true;
-    std::function<void(std::unique_ptr<data_set_t>&)> flushFun = [](std::unique_ptr<data_set_t> &value){
-        if (value) {
-            value->flush();
-        }
+    std::function<void(data_set_t&)> flushFun = [](data_set_t &value){
+        value.flush();
     };
 };
 
@@ -99,10 +97,9 @@ void ReactionCounts::append() {
                 if (numberOrder1Reactions > 0) {
                     std::vector<readdy::io::h5::dims_t> chunkSize = {pimpl->flushStride, numberOrder1Reactions};
                     std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, numberOrder1Reactions};
-                    auto dataSet = std::make_unique<Impl::data_set_t>(
+                    pimpl->ds_order1.emplace(std::piecewise_construct, std::forward_as_tuple(pType), std::forward_as_tuple(
                             ctx.particle_types().name_of(pType) + "[id=" + std::to_string(pType) + "]",
-                            order1Subgroup, chunkSize, dims);
-                    pimpl->ds_order1[pType] = std::move(dataSet);
+                            order1Subgroup, chunkSize, dims));
                 }
             }
             auto order2Subgroup = subgroup.createGroup("order2");
@@ -115,12 +112,10 @@ void ReactionCounts::append() {
                     if (numberOrder2Reactions > 0) {
                         std::vector<readdy::io::h5::dims_t> chunkSize = {pimpl->flushStride, numberOrder2Reactions};
                         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, numberOrder2Reactions};
-                        auto dataSet = std::make_unique<Impl::data_set_t>(
+                        pimpl->ds_order2.emplace(std::piecewise_construct, std::forward_as_tuple(std::tie(pType1, pType2)), std::forward_as_tuple(
                                 ctx.particle_types().name_of(pType1) + "[id=" + std::to_string(pType1) + "] + " +
                                 ctx.particle_types().name_of(pType2) + "[id=" + std::to_string(pType2) + "]",
-                                order2Subgroup, chunkSize, dims);
-                        readdy::util::particle_type_pair particleTypePair(pType1, pType2);
-                        pimpl->ds_order2[particleTypePair] = std::move(dataSet);
+                                order2Subgroup, chunkSize, dims));
                     }
                 }
             }

@@ -106,7 +106,7 @@ protected:
         for (const auto &entry : countsMap) {
             auto &dataSet = dsetMap.at(entry.first);
             const auto &counts = entry.second;
-            dataSet->append({1, counts.size()}, counts.data());
+            dataSet.append({1, counts.size()}, counts.data());
         }
     }
 
