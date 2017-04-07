@@ -39,8 +39,7 @@ namespace reactions {
 
 data_t::update_t handleEventsGillespie(
         CPUKernel *const kernel, double timeStep, bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_order1_map *maybeCountsOrder1,
-        reaction_counts_order2_map *maybeCountsOrder2) {
+        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
     const auto& fixPos = kernel->getKernelContext().getFixPositionFun();
 
@@ -87,8 +86,8 @@ data_t::update_t handleEventsGillespie(
                             } else {
                                 performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                             }
-                            if(maybeCountsOrder1) {
-                                auto &countsOrder1 = *maybeCountsOrder1;
+                            if(maybeCounts) {
+                                auto &countsOrder1 = std::get<0>(*maybeCounts);
                                 countsOrder1.at(event.t1).at(event.reactionIdx)++;
                             }
                         } else {
@@ -104,8 +103,8 @@ data_t::update_t handleEventsGillespie(
                                 performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 nullptr);
                             }
-                            if(maybeCountsOrder2) {
-                                auto &countsOrder2 = *maybeCountsOrder2;
+                            if(maybeCounts) {
+                                auto &countsOrder2 = std::get<1>(*maybeCounts);
                                 countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
                             }
                         }

@@ -131,10 +131,10 @@ void ReactionCounts::append() {
 
     // actual writing of data
     const auto &countsOrder1 = std::get<0>(result);
-    util::writeCountsToDataSets(countsOrder1, pimpl->ds_order1);
+    writeCountsToDataSets(countsOrder1, pimpl->ds_order1);
 
     const auto &countsOrder2 = std::get<1>(result);
-    util::writeCountsToDataSets(countsOrder2, pimpl->ds_order2);
+    writeCountsToDataSets(countsOrder2, pimpl->ds_order2);
 
     pimpl->time->append(t_current);
 }

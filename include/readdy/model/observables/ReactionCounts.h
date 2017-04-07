@@ -42,17 +42,57 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
 class ReactionCounts : public Observable<std::pair<
-        std::unordered_map<readdy::model::Particle::type_type, std::vector<std::size_t>>,
+        std::unordered_map<particle_type_type, std::vector<std::size_t>>,
         std::unordered_map<readdy::util::particle_type_pair, std::vector<std::size_t>, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>
 >> {
 public:
-    using reaction_counts_order1_map = std::unordered_map<readdy::model::Particle::type_type, std::vector<std::size_t>>;
-    using reaction_counts_order2_map = std::unordered_map<readdy::util::particle_type_pair, std::vector<std::size_t>, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>;
+    using reaction_counts_order1_map = typename std::tuple_element<0, result_t>::type;
+    using reaction_counts_order2_map = typename std::tuple_element<1, result_t>::type;
+
     ReactionCounts(Kernel *const kernel, unsigned int stride);
 
     virtual ~ReactionCounts();
 
     virtual void flush() override;
+
+    /*
+     * Initialize the maps corresponding to first and second order reaction counts. If they were not used before, that means creating key-value pairs in
+     * the maps and setting the values, which are vectors, to the correct size. If they were used before, all counts within the value-vectors will be
+     * filled with zeros. This is used for the reaction-counts object in the state-model as well as the result object of the corresponding observable.
+     */
+    static void
+    initializeCounts(std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
+                     const readdy::model::KernelContext &ctx) {
+        auto &order1Counts = std::get<0>(reactionCounts);
+        auto &order2Counts = std::get<1>(reactionCounts);
+        for (const auto &entry1 : ctx.particle_types().type_mapping()) {
+            const auto &pType1 = entry1.second;
+            const auto numberReactionsOrder1 = ctx.reactions().order1_by_type(pType1).size();
+            if (numberReactionsOrder1 > 0) {
+                // will create an entry for pType1 if necessary
+                auto &countsForType = order1Counts[pType1];
+                if (countsForType.empty()) {
+                    countsForType.resize(numberReactionsOrder1);
+                } else {
+                    std::fill(countsForType.begin(), countsForType.end(), 0);
+                }
+            }
+            for (const auto &entry2: ctx.particle_types().type_mapping()) {
+                const auto &pType2 = entry2.second;
+                if (pType2 < pType1) continue;
+                const auto numberReactionsOrder2 = ctx.reactions().order2_by_type(pType1, pType2).size();
+                if (numberReactionsOrder2 > 0) {
+                    // will create an entry for particle-type-pair if necessary
+                    auto &countsForPair = order2Counts[std::tie(pType1, pType2)];
+                    if (countsForPair.empty()) {
+                        countsForPair.resize(numberReactionsOrder2);
+                    } else {
+                        std::fill(countsForPair.begin(), countsForPair.end(), 0);
+                    }
+                }
+            }
+        }
+    }
 
 protected:
     virtual void initialize(Kernel *const kernel) override;
@@ -61,83 +101,27 @@ protected:
 
     virtual void append() override;
 
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-};
-
-NAMESPACE_BEGIN(util)
-
-/*
- * Initialize the maps corresponding to first and second order reaction counts. If they were not used before, that means creating key-value pairs in
- * the maps and setting the values, which are vectors, to the correct size. If they were used before, all counts within the value-vectors will be
- * filled with zeros. This is used for the reaction-counts object in the state-model as well as the result object of the corresponding observable.
- */
-inline void initializeReactionCountMapping(ReactionCounts::reaction_counts_order1_map &order1Counts,
-                                           ReactionCounts::reaction_counts_order2_map &order2Counts,
-                                           const readdy::model::KernelContext &ctx) {
-    for (const auto &entry1 : ctx.particle_types().type_mapping()) {
-        const auto& pType1 = entry1.second;
-        const auto numberReactionsOrder1 = ctx.reactions().order1_by_type(pType1).size();
-        if (numberReactionsOrder1 > 0) {
-            // will create an entry for pType1 if necessary
-            auto &countsForType = order1Counts[pType1];
-            if (countsForType.empty()) {
-                countsForType.resize(numberReactionsOrder1);
-            } else {
-                std::fill(countsForType.begin(), countsForType.end(), 0);
-            }
-        }
-        for (const auto &entry2: ctx.particle_types().type_mapping()) {
-            const auto &pType2 = entry2.second;
-            if (pType2 < pType1) continue;
-            const auto numberReactionsOrder2 = ctx.reactions().order2_by_type(pType1, pType2).size();
-            if (numberReactionsOrder2 > 0) {
-                readdy::util::particle_type_pair particleTypePair(pType1, pType2);
-                // will create an entry for particleTypePair if necessary
-                auto &countsForPair = order2Counts[particleTypePair];
-                if (countsForPair.empty()) {
-                    countsForPair.resize(numberReactionsOrder2);
-                } else {
-                    std::fill(countsForPair.begin(), countsForPair.end(), 0);
-                }
-            }
-        }
-    }
-}
-
-inline void copyCountsFromStateToResult(const ReactionCounts::reaction_counts_order1_map& countsOrder1From,
-                                        const ReactionCounts::reaction_counts_order2_map& countsOrder2From,
-                                        ReactionCounts::reaction_counts_order1_map & countsOrder1To,
-                                        ReactionCounts::reaction_counts_order2_map & countsOrder2To) {
-    // Do not just copy the whole map, only copy over parts, that actually exist in the state-model.
-    // This might be nothing, if the reaction-handler did not run yet. However the observable-result-maps
-    // should have the correct structure dictated by the initialize step.
-    for (const auto &entry : countsOrder1From) {
-        const auto &countsForType = entry.second;
-        if (!countsForType.empty()) {
-            countsOrder1To[entry.first] = countsForType;
-        }
-    }
-    for (const auto &entry : countsOrder2From) {
-        const auto &countsForPair = entry.second;
-        if (!countsForPair.empty()) {
-            countsOrder2To[entry.first] = countsForPair;
-        }
-    }
-}
-
-template <typename counts_map_t, typename dset_map_t>
-inline void writeCountsToDataSets(const counts_map_t &countsMap, dset_map_t &dsetMap) {
-    for (const auto &entry : countsMap) {
-        auto& dataSet = dsetMap.at(entry.first);
-        const auto &counts = entry.second;
-        if (dataSet) {
+    template<typename counts_map_t, typename dset_map_t>
+    void writeCountsToDataSets(const counts_map_t &countsMap, dset_map_t &dsetMap) {
+        for (const auto &entry : countsMap) {
+            auto &dataSet = dsetMap.at(entry.first);
+            const auto &counts = entry.second;
             dataSet->append({1, counts.size()}, counts.data());
         }
     }
-}
 
-NAMESPACE_END(util)
+    template<typename counts_map_t>
+    void assignVectorsOfMap(const counts_map_t &from, counts_map_t &to) {
+        for (const auto &entry: from) {
+            const auto &fromVector = entry.second;
+            auto &toVector = to.at(entry.first);
+            toVector.assign(fromVector.begin(), fromVector.end());
+        }
+    }
+
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+};
 
 NAMESPACE_END(observables)
 NAMESPACE_END(model)

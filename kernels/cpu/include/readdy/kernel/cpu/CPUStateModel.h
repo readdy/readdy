@@ -39,6 +39,7 @@
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/common/thread/scoped_async.h>
+#include <readdy/model/observables/ReactionCounts.h>
 
 namespace readdy {
 namespace kernel {
@@ -49,9 +50,8 @@ public:
 
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
     using particle_t = readdy::model::Particle;
-    using reaction_counts_order1_map = std::unordered_map<particle_t::type_type, std::vector<std::size_t>>;
-    using reaction_counts_order2_map = std::unordered_map<util::particle_type_pair, std::vector<std::size_t>,
-            util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
+    using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
+    using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 
     CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config,
                   readdy::model::top::TopologyActionFactory const *const taf);
@@ -95,13 +95,9 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
 
-    reaction_counts_order1_map &reactionCountsOrder1();
+    const std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts() const;
 
-    const reaction_counts_order1_map &reactionCountsOrder1() const;
-
-    reaction_counts_order2_map &reactionCountsOrder2();
-
-    const reaction_counts_order2_map &reactionCountsOrder2() const;
+    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
     virtual particle_t getParticleForIndex(const std::size_t index) const override;
 

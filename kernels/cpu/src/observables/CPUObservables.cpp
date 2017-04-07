@@ -219,15 +219,16 @@ CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int strid
         : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void CPUReactionCounts::evaluate() {
-    // the initialize is necessary if evaluate is called before the reaction counts have been recorded by the state-model/reaction-handler
-    // this becomes important not only when writing the result to file but also when other observables depend on this result
-    readdy::model::observables::util::initializeReactionCountMapping(std::get<0>(result), std::get<1>(result), kernel->getKernelContext());
-    auto &stateModel = kernel->getCPUKernelStateModel();
-    const auto& countsOrder1 = stateModel.reactionCountsOrder1();
-    const auto& countsOrder2 = stateModel.reactionCountsOrder2();
-
-    readdy::model::observables::util::copyCountsFromStateToResult(countsOrder1, countsOrder2, std::get<0>(result), std::get<1>(result));
+    readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->getKernelContext());
+    auto &reactionCounts = kernel->getCPUKernelStateModel().reactionCounts();
+    const auto& countsOrder1 = std::get<0>(reactionCounts);
+    const auto& countsOrder2 = std::get<1>(reactionCounts);
+    auto &resultOrder1 = std::get<0>(result);
+    auto &resultOrder2 = std::get<1>(result);
+    assignVectorsOfMap(countsOrder1, resultOrder1);
+    assignVectorsOfMap(countsOrder2, resultOrder2);
 }
+
 }
 }
 }

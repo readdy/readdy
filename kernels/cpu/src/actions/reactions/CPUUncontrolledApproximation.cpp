@@ -125,9 +125,7 @@ void CPUUncontrolledApproximation::perform() {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
     }
     if(ctx.recordReactionCounts()) {
-        auto &countsOrder1 = stateModel.reactionCountsOrder1();
-        auto &countsOrder2 = stateModel.reactionCountsOrder2();
-        readdy::model::observables::util::initializeReactionCountMapping(countsOrder1, countsOrder2, ctx);
+        readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
     }
 
     // gather events
@@ -203,7 +201,8 @@ void CPUUncontrolledApproximation::perform() {
                         performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if(ctx.recordReactionCounts()) {
-                        stateModel.reactionCountsOrder1().at(event.t1).at(event.reactionIdx)++;
+                        auto& countsOrder1 = std::get<0>(stateModel.reactionCounts());
+                        countsOrder1.at(event.t1).at(event.reactionIdx)++;
                     }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1) {
@@ -222,7 +221,8 @@ void CPUUncontrolledApproximation::perform() {
                         performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if(ctx.recordReactionCounts()) {
-                        stateModel.reactionCountsOrder2().at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
+                        auto& countsOrder2 = std::get<1>(stateModel.reactionCounts());
+                        countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
                     }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
