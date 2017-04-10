@@ -288,7 +288,7 @@ Graph::findNTuples() {
     return tuple;
 }
 
-Graph::vertex_ref Graph::namedVertexPtr(const std::string &name) {
+Graph::vertex_ref Graph::namedVertexPtr(const std::string &name) const {
     return namedVertices.at(name);
 }
 
@@ -298,6 +298,18 @@ void Graph::addEdge(const edge &edge) {
 
 void Graph::removeEdge(const edge &edge) {
     removeEdge(std::get<0>(edge), std::get<1>(edge));
+}
+
+void Graph::addEdge(const Graph::label_edge &edge) {
+    addEdge(std::get<0>(edge), std::get<1>(edge));
+}
+
+void Graph::removeEdge(const Graph::label_edge &edge) {
+    removeEdge(std::get<0>(edge), std::get<1>(edge));
+}
+
+Graph::edge Graph::namedEdge(const Graph::label_edge &edge) const {
+    return std::make_tuple(namedVertexPtr(std::get<0>(edge)), namedVertexPtr(std::get<1>(edge)));
 }
 
 }

@@ -50,6 +50,8 @@ public:
     using vertex_list = std::list<Vertex>;
     using vertex_ref = vertex_list::iterator;
     using edge = std::tuple<vertex_ref, vertex_ref>;
+    using label = std::string;
+    using label_edge = std::tuple<label, label>;
     using path_len_2 = std::tuple<vertex_ref, vertex_ref, vertex_ref>;
     using path_len_3 = std::tuple<vertex_ref, vertex_ref, vertex_ref, vertex_ref>;
 
@@ -77,21 +79,25 @@ public:
 
     vertex_ref lastVertex();
 
-    const Vertex &namedVertex(const std::string &name) const;
+    const Vertex &namedVertex(const label &name) const;
 
-    Vertex &namedVertex(const std::string &name);
+    Vertex &namedVertex(const label &name);
 
-    vertex_ref namedVertexPtr(const std::string& name);
+    edge namedEdge(const label_edge& edge) const;
+
+    vertex_ref namedVertexPtr(const label& name) const;
 
     const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
 
-    void addVertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label = "");
+    void addVertex(std::size_t particleIndex, particle_type_type particleType, const label &label = "");
 
-    void setVertexLabel(vertex_ref vertex, const std::string &label);
+    void setVertexLabel(vertex_ref vertex, const label &label);
 
     void addEdge(vertex_ref v1, vertex_ref v2);
 
-    void addEdge(const std::string &v1, const std::string &v2);
+    void addEdge(const label &v1, const label &v2);
+
+    void addEdge(const label_edge& edge);
 
     void addEdge(const edge& edge);
 
@@ -99,7 +105,9 @@ public:
 
     void removeEdge(vertex_ref v1, vertex_ref v2);
 
-    void removeEdge(const std::string &v1, const std::string &v2);
+    void removeEdge(const label &v1, const label &v2);
+
+    void removeEdge(const label_edge &edge);
 
     void removeEdge(const edge& edge);
 

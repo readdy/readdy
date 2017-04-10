@@ -47,6 +47,48 @@ double TopologyReaction::rate(const GraphTopology &topology) const {
 TopologyReaction::reaction_recipe TopologyReaction::operations(const GraphTopology &topology) const {
     return reaction_function_(topology);
 }
+
+const bool TopologyReaction::raises_if_invalid() const {
+    return mode_.flags.test(mode::raise_or_rollback_flag);
+}
+
+void TopologyReaction::raise_if_invalid() {
+    if(!raises_if_invalid()) {
+        mode_.flags.flip(mode::raise_or_rollback_flag);
+    }
+}
+
+const bool TopologyReaction::rolls_back_if_invalid() const {
+    return !raises_if_invalid();
+}
+
+void TopologyReaction::roll_back_if_invalid() {
+    if(raises_if_invalid()) {
+        mode_.flags.flip(mode::raise_or_rollback_flag);
+    }
+}
+
+const bool TopologyReaction::expects_connected_after_reaction() const {
+    return mode_.flags.test(mode::expect_connected_or_create_children_flag);
+}
+
+void TopologyReaction::expect_connected_after_reaction() {
+    if(!expects_connected_after_reaction()) {
+        mode_.flags.test(mode::expect_connected_or_create_children_flag);
+    }
+}
+
+const bool TopologyReaction::creates_child_topologies_after_reaction() const {
+    return !expects_connected_after_reaction();
+}
+
+void TopologyReaction::create_child_topologies_after_reaction() {
+    if(expects_connected_after_reaction()) {
+        mode_.flags.flip(mode::expect_connected_or_create_children_flag);
+    }
+}
+
+
 }
 }
 }

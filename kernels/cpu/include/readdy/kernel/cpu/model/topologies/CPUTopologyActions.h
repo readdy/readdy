@@ -141,7 +141,7 @@ public:
                           const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
     virtual void execute() override {
-        const auto globalIndex = topology->getParticles().at(vertex->particleIndex);
+        const auto globalIndex = topology->getParticles().at(vertex()->particleIndex);
         std::swap(data->entry_at(globalIndex).type, previous_type);
     }
 
