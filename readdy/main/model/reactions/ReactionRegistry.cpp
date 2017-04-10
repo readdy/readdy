@@ -98,14 +98,14 @@ void ReactionRegistry::configure() {
     one_educt_registry.clear();
     two_educts_registry.clear();
     coll::for_each_value(one_educt_registry_internal,
-                         [&](const particle_t::type_type type, const reaction1ptr &ptr) {
+                         [&](const particle_type_type type, const reaction1ptr &ptr) {
                              (one_educt_registry)[type].push_back(ptr.get());
                          });
     coll::for_each_value(two_educts_registry_internal, [&](const pair &type, const reaction2ptr &r) {
         (two_educts_registry)[type].push_back(r.get());
     });
     coll::for_each_value(one_educt_registry_external,
-                         [&](const particle_t::type_type type, reactions::Reaction<1> *ptr) {
+                         [&](const particle_type_type type, reactions::Reaction<1> *ptr) {
                              (one_educt_registry)[type].push_back(ptr);
                          });
     coll::for_each_value(two_educts_registry_external, [&](const pair &type, reactions::Reaction<2> *r) {

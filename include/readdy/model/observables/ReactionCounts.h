@@ -33,18 +33,36 @@
 #pragma once
 
 #include "Observable.h"
+#include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/model/Particle.h>
+#include <readdy/model/KernelContext.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class ReactionCounts : public Observable<std::tuple<std::vector<std::size_t>, std::vector<std::size_t>>> {
+class ReactionCounts : public Observable<std::pair<
+        std::unordered_map<particle_type_type, std::vector<std::size_t>>,
+        std::unordered_map<readdy::util::particle_type_pair, std::vector<std::size_t>, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>
+>> {
 public:
+    using reaction_counts_order1_map = typename std::tuple_element<0, result_t>::type;
+    using reaction_counts_order2_map = typename std::tuple_element<1, result_t>::type;
+
     ReactionCounts(Kernel *const kernel, unsigned int stride);
 
     virtual ~ReactionCounts();
 
     virtual void flush() override;
+
+    /*
+     * Initialize the maps corresponding to first and second order reaction counts. If they were not used before, that means creating key-value pairs in
+     * the maps and setting the values, which are vectors, to the correct size. If they were used before, all counts within the value-vectors will be
+     * filled with zeros. This is used for the reaction-counts object in the state-model as well as the result object of the corresponding observable.
+     */
+    static void
+    initializeCounts(std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
+                     const readdy::model::KernelContext &ctx);
 
 protected:
     virtual void initialize(Kernel *const kernel) override;
@@ -53,10 +71,11 @@ protected:
 
     virtual void append() override;
 
+    void assignCountsToResult(const result_t &from, result_t &to);
+
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 };
-
 
 NAMESPACE_END(observables)
 NAMESPACE_END(model)

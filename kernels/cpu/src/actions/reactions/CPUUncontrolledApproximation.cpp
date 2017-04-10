@@ -117,24 +117,15 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
 void CPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto &stateModel = kernel->getCPUKernelStateModel();
+    auto &data = *stateModel.getParticleData();
     auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
 
     if(ctx.recordReactionsWithPositions()) {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
     }
     if(ctx.recordReactionCounts()) {
-        auto& order1 = std::get<0>(kernel->getCPUKernelStateModel().reactionCounts());
-        auto& order2 = std::get<1>(kernel->getCPUKernelStateModel().reactionCounts());
-        if(order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
-            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
-            order1.resize(n_reactions_order1);
-            order2.resize(n_reactions_order2);
-        } else {
-            std::fill(order1.begin(), order1.end(), 0);
-            std::fill(order2.begin(), order2.end(), 0);
-        }
+        readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
     }
 
     // gather events
@@ -210,7 +201,8 @@ void CPUUncontrolledApproximation::perform() {
                         performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if(ctx.recordReactionCounts()) {
-                        std::get<0>(kernel->getCPUKernelStateModel().reactionCounts()).at(event.reactionIdx)++;
+                        auto& countsOrder1 = std::get<0>(stateModel.reactionCounts());
+                        countsOrder1.at(event.t1).at(event.reactionIdx)++;
                     }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1) {
@@ -229,7 +221,8 @@ void CPUUncontrolledApproximation::perform() {
                         performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if(ctx.recordReactionCounts()) {
-                        std::get<1>(kernel->getCPUKernelStateModel().reactionCounts()).at(event.reactionIdx)++;
+                        auto& countsOrder2 = std::get<1>(stateModel.reactionCounts());
+                        countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
                     }
                     for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
                         if(_it2->idx1 == entry1 || _it2->idx2 == entry1 ||

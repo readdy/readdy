@@ -120,6 +120,8 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
 }
 
 struct CPUStateModel::Impl {
+    using reaction_counts_order1_map = CPUStateModel::reaction_counts_order1_map;
+    using reaction_counts_order2_map = CPUStateModel::reaction_counts_order2_map;
     readdy::model::KernelContext *context;
     std::unique_ptr<readdy::kernel::cpu::model::CPUNeighborList> neighborList;
     double currentEnergy = 0;
@@ -127,7 +129,7 @@ struct CPUStateModel::Impl {
     std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts{};
+    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
 
     template<bool fixpos = true>
     const model::CPUParticleData &cdata() const {
@@ -315,14 +317,6 @@ const std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reac
     return pimpl->reactionRecords;
 }
 
-std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() {
-    return pimpl->reactionCounts;
-}
-
-const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &CPUStateModel::reactionCounts() const {
-    return pimpl->reactionCounts;
-}
-
 readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {
     return pimpl->cdata<false>().getParticle(index);
 }
@@ -332,6 +326,14 @@ void CPUStateModel::expected_n_particles(const std::size_t n) {
     if(data.size() < n) {
         data.reserve(n);
     }
+}
+
+const std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() const {
+    return pimpl->reactionCounts;
+}
+
+std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() {
+    return pimpl->reactionCounts;
 }
 
 CPUStateModel::~CPUStateModel() = default;

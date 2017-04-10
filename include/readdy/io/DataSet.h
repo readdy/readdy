@@ -48,6 +48,11 @@ public:
 
     virtual ~DataSet();
 
+    DataSet(DataSet&& rhs) = default;
+    DataSet& operator=(DataSet&&) = delete;
+    DataSet(const DataSet&) = delete;
+    DataSet& operator=(const DataSet&) = delete;
+
     void close();
 
     template<bool no_vlen = !VLEN>

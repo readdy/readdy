@@ -27,29 +27,32 @@
  * @brief << brief description >>
  * @author clonker
  * @date 19.04.16
- * @todo
  */
 
 #include <algorithm>
-#include <readdy/model/Particle.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
 
 namespace readdy {
 namespace kernel {
 namespace scpu {
 struct SCPUStateModel::Impl {
+    using reaction_counts_order1_map = SCPUStateModel::reaction_counts_order1_map;
+    using reaction_counts_order2_map = SCPUStateModel::reaction_counts_order2_map;
     double currentEnergy = 0;
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
     std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies;
-    SCPUStateModel::topology_action_factory const* topologyActionFactory;
+    SCPUStateModel::topology_action_factory const *topologyActionFactory;
     readdy::model::KernelContext const *context;
     // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
-    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords {};
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> reactionCounts {};
+    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
+    // reaction counts map from particle-type (or type-pair) to vector of count numbers,
+    // the position in the vector corresponds to the reaction index,
+    // i.e. for each particle-type (or type-pair) there is a new reaction index space
+    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
 };
 
-SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const*const taf)
+SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const *const taf)
         : pimpl(std::make_unique<SCPUStateModel::Impl>()) {
     pimpl->particleData = std::make_unique<model::SCPUParticleData>();
     pimpl->neighborList = std::make_unique<model::SCPUNeighborList>(context);
@@ -71,7 +74,7 @@ readdy::kernel::scpu::SCPUStateModel::getParticlePositions() const {
     std::vector<readdy::model::Vec3> target{};
     target.reserve(data.size());
     for (const auto &entry : data) {
-        if(!entry.is_deactivated()) target.push_back(entry.position());
+        if (!entry.is_deactivated()) target.push_back(entry.position());
     }
     return target;
 }
@@ -117,7 +120,7 @@ void SCPUStateModel::calculateForces() {
     // update forces and energy order 1 potentials
     {
         const readdy::model::Vec3 zero{0, 0, 0};
-        for(auto &e : *pimpl->particleData) {
+        for (auto &e : *pimpl->particleData) {
             e.force = zero;
             for (const auto &po1 : pimpl->context->potentials().potentials_of(e.type)) {
                 po1->calculateForceAndEnergy(e.force, pimpl->currentEnergy, e.position());
@@ -132,8 +135,8 @@ void SCPUStateModel::calculateForces() {
         for (auto it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
             auto i = it->idx1;
             auto j = it->idx2;
-            auto& entry_i = pimpl->particleData->entry_at(i);
-            auto& entry_j = pimpl->particleData->entry_at(j);
+            auto &entry_i = pimpl->particleData->entry_at(i);
+            auto &entry_j = pimpl->particleData->entry_at(j);
             const auto &potentials = pimpl->context->potentials().potentials_of(entry_i.type, entry_j.type);
             for (const auto &potential : potentials) {
                 potential->calculateForceAndEnergy(forceVec, pimpl->currentEnergy, difference(entry_i.position(), entry_j.position()));
@@ -144,17 +147,17 @@ void SCPUStateModel::calculateForces() {
     }
     // update forces and energy for topologies
     {
-        for(const auto& topology : pimpl->topologies) {
+        for (const auto &topology : pimpl->topologies) {
             // calculate bonded potentials
-            for(const auto& bondedPot : topology->getBondedPotentials()) {
+            for (const auto &bondedPot : topology->getBondedPotentials()) {
                 auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
                 pimpl->currentEnergy += energy;
             }
-            for(const auto& anglePot : topology->getAnglePotentials()) {
+            for (const auto &anglePot : topology->getAnglePotentials()) {
                 auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
                 pimpl->currentEnergy += energy;
             }
-            for(const auto& torsionPot : topology->getTorsionPotentials()) {
+            for (const auto &torsionPot : topology->getTorsionPotentials()) {
                 auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
                 pimpl->currentEnergy += energy;
             }
@@ -174,10 +177,11 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
     std::vector<std::size_t> ids = pimpl->particleData->addTopologyParticles(particles);
     std::vector<particle_type_type> types;
     types.reserve(ids.size());
-    for(const auto& p : particles) {
+    for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topology_potentials()));
+    pimpl->topologies.push_back(
+            std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topology_potentials()));
     return pimpl->topologies.back().get();
 }
 
@@ -189,11 +193,11 @@ const std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::rea
     return pimpl->reactionRecords;
 }
 
-std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() {
+std::pair<SCPUStateModel::reaction_counts_order1_map, SCPUStateModel::reaction_counts_order2_map> &SCPUStateModel::reactionCounts() {
     return pimpl->reactionCounts;
 }
 
-const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &SCPUStateModel::reactionCounts() const {
+const std::pair<SCPUStateModel::reaction_counts_order1_map, SCPUStateModel::reaction_counts_order2_map> &SCPUStateModel::reactionCounts() const {
     return pimpl->reactionCounts;
 }
 
@@ -202,17 +206,17 @@ readdy::model::Particle SCPUStateModel::getParticleForIndex(const std::size_t in
 }
 
 void SCPUStateModel::expected_n_particles(const std::size_t n) {
-    if(pimpl->particleData->size() < n) {
+    if (pimpl->particleData->size() < n) {
         pimpl->particleData->reserve(n);
     }
 }
-
 
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) = default;
 
 SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) = default;
 
 SCPUStateModel::~SCPUStateModel() = default;
+
 }
 }
 }

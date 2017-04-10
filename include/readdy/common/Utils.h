@@ -79,6 +79,13 @@ inline void for_each_value(const Collection& collection, Fun f)  {
     }
 }
 
+template <typename map_t, typename value_t>
+inline void for_each_value_in_map(map_t &map, const std::function<void(value_t&)> &fun) {
+    for (auto&& entry : map) {
+        fun(entry.second);
+    }
+}
+
 template<typename order_iterator, typename value_iterator>
 void reorder_destructive(order_iterator order_begin, order_iterator order_end, value_iterator v) {
     typedef typename std::iterator_traits<value_iterator>::value_type value_t;

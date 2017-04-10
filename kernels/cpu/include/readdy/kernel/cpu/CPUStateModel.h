@@ -39,6 +39,7 @@
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/common/thread/scoped_async.h>
+#include <readdy/model/observables/ReactionCounts.h>
 
 namespace readdy {
 namespace kernel {
@@ -48,6 +49,9 @@ class CPUStateModel : public readdy::model::KernelStateModel {
 public:
 
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
+    using particle_t = readdy::model::Particle;
+    using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
+    using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 
     CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config,
                   readdy::model::top::TopologyActionFactory const *const taf);
@@ -56,17 +60,17 @@ public:
 
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
-    virtual const std::vector<readdy::model::Particle> getParticles() const override;
+    virtual const std::vector<particle_t> getParticles() const override;
 
     virtual void updateNeighborList() override;
 
     virtual void calculateForces() override;
 
-    virtual void addParticle(const readdy::model::Particle &p) override;
+    virtual void addParticle(const particle_t &p) override;
 
-    virtual void addParticles(const std::vector<readdy::model::Particle> &p) override;
+    virtual void addParticles(const std::vector<particle_t> &p) override;
 
-    virtual void removeParticle(const readdy::model::Particle &p) override;
+    virtual void removeParticle(const particle_t &p) override;
 
     virtual void removeAllParticles() override;
 
@@ -91,11 +95,11 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
 
-    std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &reactionCounts();
+    const std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts() const;
 
-    const std::tuple<std::vector<std::size_t>, std::vector<std::size_t>> &reactionCounts() const;
+    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
-    virtual readdy::model::Particle getParticleForIndex(const std::size_t index) const override;
+    virtual particle_t getParticleForIndex(const std::size_t index) const override;
 
 private:
     struct Impl;

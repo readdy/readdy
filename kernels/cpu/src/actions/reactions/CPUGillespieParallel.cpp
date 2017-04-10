@@ -37,8 +37,6 @@
 #include <readdy/kernel/cpu/util/config.h>
 
 
-using particle_t = readdy::model::Particle;
-
 namespace readdy {
 namespace kernel {
 namespace cpu {
@@ -79,17 +77,11 @@ bool CPUGillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
 }
 
 void CPUGillespieParallel::perform() {
-    if (kernel->getKernelContext().recordReactionCounts()) {
-        auto &order1 = std::get<0>(kernel->getCPUKernelStateModel().reactionCounts());
-        auto &order2 = std::get<1>(kernel->getCPUKernelStateModel().reactionCounts());
-        if (order1.empty() && order2.empty()) {
-            const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
-            const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
-            order1.resize(n_reactions_order1);
-            order2.resize(n_reactions_order2);
-        } else {
-            std::fill(order1.begin(), order1.end(), 0);
-            std::fill(order2.begin(), order2.end(), 0);
+    {
+        const auto &ctx = kernel->getKernelContext();
+        if (ctx.recordReactionCounts()) {
+            auto &stateModel = kernel->getCPUKernelStateModel();
+            readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
         }
     }
 
@@ -222,31 +214,26 @@ void CPUGillespieParallel::handleBoxReactions() {
             gatherEvents(kernel, box.particleIndices, nl, *data, localAlpha, localEvents, d2);
             // handle events
             {
-                reaction_counts_t local_counts{};
-                reaction_counts_t *local_counts_ptr = nullptr;
+                reaction_counts_t localCounts{};
+                reaction_counts_t *localCountsPtr = nullptr;
                 if (ctx.recordReactionCounts()) {
-                    const auto n_reactions_order1 = kernel->getKernelContext().reactions().n_order1();
-                    const auto n_reactions_order2 = kernel->getKernelContext().reactions().n_order2();
-                    std::get<0>(local_counts).resize(n_reactions_order1);
-                    std::get<1>(local_counts).resize(n_reactions_order2);
-                    local_counts_ptr = &local_counts;
+                    readdy::model::observables::ReactionCounts::initializeCounts(localCounts, ctx);
+                    localCountsPtr = &localCounts;
                 }
                 if (ctx.recordReactionsWithPositions()) {
                     std::vector<record_t> records;
-                    auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate,
-                                                        std::move(localEvents),
-                                                        &records, local_counts_ptr);
+                    auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(localEvents),
+                                                        &records, localCountsPtr);
                     newParticles.set_value(std::move(result));
                     promiseRecords.set_value(std::move(records));
                 } else {
-                    auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate,
-                                                        std::move(localEvents),
-                                                        nullptr, local_counts_ptr);
+                    auto result = handleEventsGillespie(kernel, timeStep, false, approximateRate, std::move(localEvents),
+                                                        nullptr, localCountsPtr);
                     newParticles.set_value(std::move(result));
                     std::vector<record_t> no_records;
                     promiseRecords.set_value(std::move(no_records));
                 }
-                counts.set_value(local_counts);
+                counts.set_value(localCounts);
             }
 
         }
@@ -279,9 +266,10 @@ void CPUGillespieParallel::handleBoxReactions() {
     std::vector<std::vector<record_t>> attainedRecords;
     attainedRecords.reserve(records.size() + 1);
     {
+        const auto &ctx = kernel->getKernelContext();
         //readdy::util::Timer t ("\t fix marked");
         auto &data = *stateModel.getParticleData();
-        const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
+        const auto &d2 = ctx.getDistSquaredFun();
         auto neighbor_list = stateModel.getNeighborList();
         std::vector<event_t> evilEvents{};
         double alpha = 0;
@@ -291,12 +279,15 @@ void CPUGillespieParallel::handleBoxReactions() {
             n_local_problematic += local_problematic.size();
             gatherEvents(kernel, std::move(local_problematic), neighbor_list, data, alpha, evilEvents, d2);
         }
-        auto count_ptr = kernel->getKernelContext().recordReactionCounts() ? &stateModel.reactionCounts() : nullptr;
-        if (kernel->getKernelContext().recordReactionsWithPositions()) {
+        auto countsPtr = &stateModel.reactionCounts();
+        if (!ctx.recordReactionCounts()) {
+            countsPtr = nullptr;
+        }
+        if (ctx.recordReactionsWithPositions()) {
             std::vector<record_t> newRecords;
             auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate,
-                                                             std::move(evilEvents), &newRecords, count_ptr);
-            const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
+                                                             std::move(evilEvents), &newRecords, countsPtr);
+            const auto &fixPos = ctx.getFixPositionFun();
             for (auto &&future : newParticles) {
                 neighbor_list->updateData(std::move(future.get()));
             }
@@ -315,8 +306,8 @@ void CPUGillespieParallel::handleBoxReactions() {
             }
         } else {
             auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate,
-                                                             std::move(evilEvents), nullptr, count_ptr);
-            const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
+                                                             std::move(evilEvents), nullptr, countsPtr);
+            const auto &fixPos = ctx.getFixPositionFun();
             for (auto &&future : newParticles) {
                 neighbor_list->updateData(std::move(future.get()));
             }
@@ -325,17 +316,25 @@ void CPUGillespieParallel::handleBoxReactions() {
         {
             // update counts
             auto &modelCounts = stateModel.reactionCounts();
-            auto &o1 = std::get<0>(modelCounts);
-            auto &o2 = std::get<1>(modelCounts);
+            auto &modelCountsOrder1 = std::get<0>(modelCounts);
+            auto &modelCountsOrder2 = std::get<1>(modelCounts);
             for (auto &&future : counts) {
                 auto c = std::move(future.get());
-                std::transform(o1.begin(), o1.end(), std::get<0>(c).begin(), o1.begin(), std::plus<std::size_t>());
-                std::transform(o2.begin(), o2.end(), std::get<1>(c).begin(), o2.begin(), std::plus<std::size_t>());
+                const auto &countsOrder1 = std::get<0>(c);
+                const auto &countsOrder2 = std::get<1>(c);
+                for (const auto &entry : countsOrder1) {
+                    auto &correspondingModelValue = modelCountsOrder1.at(entry.first);
+                    std::transform(correspondingModelValue.begin(), correspondingModelValue.end(), entry.second.begin(),
+                                   correspondingModelValue.begin(), std::plus<std::size_t>());
+                }
+                for (const auto &entry : countsOrder2) {
+                    auto &correspondingModelValue = modelCountsOrder2.at(entry.first);
+                    std::transform(correspondingModelValue.begin(), correspondingModelValue.end(), entry.second.begin(),
+                                   correspondingModelValue.begin(), std::plus<std::size_t>());
+                }
             }
         }
-
     }
-
 }
 
 void CPUGillespieParallel::findProblematicParticles(
