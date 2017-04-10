@@ -23,28 +23,76 @@
 /**
  * << detailed description >>
  *
- * @file Types.h
+ * @file Handle.h
  * @brief << brief description >>
  * @author clonker
- * @date 04/01/2017
+ * @date 10.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <hdf5.h>
-#include <readdy/common/macros.h>
-#include "Handle.h"
+#include <utility>
+#include <stdexcept>
+#include <H5Ipublic.h>
+#include <readdy/common/common.h>
+#include <ostream>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
-NAMESPACE_BEGIN(h5)
 
-using handle_t = Handle;
-using dims_t = hsize_t;
-using data_set_type_t = hid_t;
-using group_info_t = H5G_info_t;
-const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
+class Handle {
+public:
+    Handle() : hid_(H5I_INVALID_HID) {};
 
-NAMESPACE_END(h5)
+    Handle(hid_t hid) : hid_(hid) {};
+
+    Handle(Handle &&rhs) : hid_(std::move(rhs.hid_)) {
+        rhs.hid_ = H5I_INVALID_HID;
+    }
+
+    Handle &operator=(Handle &&rhs) {
+        hid_ = std::move(rhs.hid_);
+        rhs.hid_ = H5I_INVALID_HID;
+        return *this;
+    }
+
+    Handle(const Handle &rhs) : hid_(rhs.hid_) {
+        if (rhs.valid() && H5Iinc_ref(hid_) < 0) {
+            throw std::runtime_error("failure in increasing reference counting of handle");
+        }
+    }
+
+    Handle &operator=(const Handle &rhs) {
+        hid_ = rhs.hid_;
+        if (rhs.valid() && H5Iinc_ref(hid_) < 0) {
+            throw std::runtime_error("failure in increasing reference counting of handle");
+        }
+        return *this;
+    }
+
+    virtual ~Handle() {
+        if (valid() && H5Idec_ref(hid_) < 0) {
+            log::warn("failure in decreasing reference counting of handle");
+        }
+    }
+
+    bool valid() const {
+        return hid_ != H5I_INVALID_HID && H5Iis_valid(hid_) != 0;
+    }
+
+    const hid_t hid() const {
+        return hid_;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const Handle &handle) {
+        os << "Handle(hid: " << handle.hid_ << ")";
+        return os;
+    }
+
+private:
+    hid_t hid_;
+};
+
 NAMESPACE_END(io)
 NAMESPACE_END(readdy)
