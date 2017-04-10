@@ -62,37 +62,7 @@ public:
      */
     static void
     initializeCounts(std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
-                     const readdy::model::KernelContext &ctx) {
-        auto &order1Counts = std::get<0>(reactionCounts);
-        auto &order2Counts = std::get<1>(reactionCounts);
-        for (const auto &entry1 : ctx.particle_types().type_mapping()) {
-            const auto &pType1 = entry1.second;
-            const auto numberReactionsOrder1 = ctx.reactions().order1_by_type(pType1).size();
-            if (numberReactionsOrder1 > 0) {
-                // will create an entry for pType1 if necessary
-                auto &countsForType = order1Counts[pType1];
-                if (countsForType.empty()) {
-                    countsForType.resize(numberReactionsOrder1);
-                } else {
-                    std::fill(countsForType.begin(), countsForType.end(), 0);
-                }
-            }
-            for (const auto &entry2: ctx.particle_types().type_mapping()) {
-                const auto &pType2 = entry2.second;
-                if (pType2 < pType1) continue;
-                const auto numberReactionsOrder2 = ctx.reactions().order2_by_type(pType1, pType2).size();
-                if (numberReactionsOrder2 > 0) {
-                    // will create an entry for particle-type-pair if necessary
-                    auto &countsForPair = order2Counts[std::tie(pType1, pType2)];
-                    if (countsForPair.empty()) {
-                        countsForPair.resize(numberReactionsOrder2);
-                    } else {
-                        std::fill(countsForPair.begin(), countsForPair.end(), 0);
-                    }
-                }
-            }
-        }
-    }
+                     const readdy::model::KernelContext &ctx);
 
 protected:
     virtual void initialize(Kernel *const kernel) override;
@@ -101,23 +71,7 @@ protected:
 
     virtual void append() override;
 
-    template<typename counts_map_t, typename dset_map_t>
-    void writeCountsToDataSets(const counts_map_t &countsMap, dset_map_t &dsetMap) {
-        for (const auto &entry : countsMap) {
-            auto &dataSet = dsetMap.at(entry.first);
-            const auto &counts = entry.second;
-            dataSet.append({1, counts.size()}, counts.data());
-        }
-    }
-
-    template<typename counts_map_t>
-    void assignVectorsOfMap(const counts_map_t &from, counts_map_t &to) {
-        for (const auto &entry: from) {
-            const auto &fromVector = entry.second;
-            auto &toVector = to.at(entry.first);
-            toVector.assign(fromVector.begin(), fromVector.end());
-        }
-    }
+    void assignCountsToResult(const result_t &from, result_t &to);
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

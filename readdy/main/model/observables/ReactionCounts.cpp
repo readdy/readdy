@@ -41,13 +41,15 @@ namespace readdy {
 namespace model {
 namespace observables {
 
+using data_set_t = io::DataSet<std::size_t, false>;
+using data_set_order1_map = std::unordered_map<readdy::particle_type_type, data_set_t>;
+using data_set_order2_map = std::unordered_map<readdy::util::particle_type_pair, data_set_t,
+        readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>;
 
 struct ReactionCounts::Impl {
-    using data_set_t = io::DataSet<std::size_t, false>;
     std::unique_ptr<io::Group> group;
-    std::unordered_map<readdy::particle_type_type, data_set_t> ds_order1;
-    std::unordered_map<readdy::util::particle_type_pair, data_set_t,
-            readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to> ds_order2;
+    data_set_order1_map ds_order1;
+    data_set_order2_map ds_order2;
     std::unique_ptr<util::TimeSeriesWriter> time;
     bool shouldWrite = false;
     unsigned int flushStride = 0;
@@ -82,6 +84,46 @@ void ReactionCounts::initializeDataSet(io::File &file, const std::string &dataSe
         pimpl->shouldWrite = true;
         pimpl->flushStride = flushStride;
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
+    }
+}
+
+static void writeCountsToDataSets(const ReactionCounts::result_t &counts,data_set_order1_map &dSetOrder1, data_set_order2_map &dSetOrder2) {
+    {
+        const auto &countsMap = std::get<0>(counts);
+        for (const auto &entry : countsMap) {
+            auto &dataSet = dSetOrder1.at(entry.first);
+            const auto &counts = entry.second;
+            dataSet.append({1, counts.size()}, counts.data());
+        }
+    }
+    {
+        const auto &countsMap = std::get<1>(counts);
+        for (const auto &entry : countsMap) {
+            auto &dataSet = dSetOrder2.at(entry.first);
+            const auto &counts = entry.second;
+            dataSet.append({1, counts.size()}, counts.data());
+        }
+    }
+}
+
+void ReactionCounts::assignCountsToResult(const ReactionCounts::result_t &from, ReactionCounts::result_t &to) {
+    {
+        const auto &fromMap = std::get<0>(from);
+        auto &toMap = std::get<0>(to);
+        for (const auto &entry: fromMap) {
+            const auto &fromVector = entry.second;
+            auto &toVector = toMap.at(entry.first);
+            toVector.assign(fromVector.begin(), fromVector.end());
+        }
+    }
+    {
+        const auto &fromMap = std::get<1>(from);
+        auto &toMap = std::get<1>(to);
+        for (const auto &entry: fromMap) {
+            const auto &fromVector = entry.second;
+            auto &toVector = toMap.at(entry.first);
+            toVector.assign(fromVector.begin(), fromVector.end());
+        }
     }
 }
 
@@ -125,13 +167,43 @@ void ReactionCounts::append() {
     }
 
     // actual writing of data
-    const auto &countsOrder1 = std::get<0>(result);
-    writeCountsToDataSets(countsOrder1, pimpl->ds_order1);
-
-    const auto &countsOrder2 = std::get<1>(result);
-    writeCountsToDataSets(countsOrder2, pimpl->ds_order2);
+    writeCountsToDataSets(result, pimpl->ds_order1, pimpl->ds_order2);
 
     pimpl->time->append(t_current);
+}
+
+void
+ReactionCounts::initializeCounts(std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
+                 const readdy::model::KernelContext &ctx) {
+    auto &order1Counts = std::get<0>(reactionCounts);
+    auto &order2Counts = std::get<1>(reactionCounts);
+    for (const auto &entry1 : ctx.particle_types().type_mapping()) {
+        const auto &pType1 = entry1.second;
+        const auto numberReactionsOrder1 = ctx.reactions().order1_by_type(pType1).size();
+        if (numberReactionsOrder1 > 0) {
+            // will create an entry for pType1 if necessary
+            auto &countsForType = order1Counts[pType1];
+            if (countsForType.empty()) {
+                countsForType.resize(numberReactionsOrder1);
+            } else {
+                std::fill(countsForType.begin(), countsForType.end(), 0);
+            }
+        }
+        for (const auto &entry2: ctx.particle_types().type_mapping()) {
+            const auto &pType2 = entry2.second;
+            if (pType2 < pType1) continue;
+            const auto numberReactionsOrder2 = ctx.reactions().order2_by_type(pType1, pType2).size();
+            if (numberReactionsOrder2 > 0) {
+                // will create an entry for particle-type-pair if necessary
+                auto &countsForPair = order2Counts[std::tie(pType1, pType2)];
+                if (countsForPair.empty()) {
+                    countsForPair.resize(numberReactionsOrder2);
+                } else {
+                    std::fill(countsForPair.begin(), countsForPair.end(), 0);
+                }
+            }
+        }
+    }
 }
 
 ReactionCounts::~ReactionCounts() = default;

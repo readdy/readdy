@@ -220,13 +220,7 @@ CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int strid
 
 void CPUReactionCounts::evaluate() {
     readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->getKernelContext());
-    auto &reactionCounts = kernel->getCPUKernelStateModel().reactionCounts();
-    const auto& countsOrder1 = std::get<0>(reactionCounts);
-    const auto& countsOrder2 = std::get<1>(reactionCounts);
-    auto &resultOrder1 = std::get<0>(result);
-    auto &resultOrder2 = std::get<1>(result);
-    assignVectorsOfMap(countsOrder1, resultOrder1);
-    assignVectorsOfMap(countsOrder2, resultOrder2);
+    assignCountsToResult(kernel->getCPUKernelStateModel().reactionCounts(), result);
 }
 
 }
