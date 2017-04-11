@@ -41,57 +41,31 @@ namespace op {
 
 Operation::Operation(GraphTopology *const topology) : topology(topology){ }
 
-Operation::graph_t::edge Operation::get_edge(const optional_edge &edge, const optional_label_edge &label_edge) const {
-    // one needs to be true, the other one false
-    assert(std::get<0>(edge) != std::get<0>(label_edge));
-    if(std::get<0>(edge)) {
-        return std::get<1>(edge);
-    } else {
-        return topology->graph().namedEdge(std::get<1>(label_edge));
-    }
-}
-
-Operation::graph_t::vertex_ref Operation::get_vertex(const optional_vertex &v, const optional_label_vertex &lbl) const {
-    // one needs to be true, the other one false
-    assert(std::get<0>(v) != std::get<0>(lbl));
-    if(std::get<0>(v)) {
-        return std::get<1>(v);
-    } else {
-        return topology->graph().namedVertexPtr(std::get<1>(lbl));
-    }
-}
-
-ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const graph_t::vertex_ref &v,
+ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const label_vertex &v,
                                        const particle_type_type &type_to)
-        : Operation(topology), optional_vertex_({true, v}), type_to(type_to), previous_type(type_to){}
+        : Operation(topology), label_vertex (v), type_to(type_to), previous_type(type_to){}
 
-Operation::graph_t::vertex_ref ChangeParticleType::vertex() const {
-    return get_vertex(optional_vertex_, optional_label_vertex_);
-}
-
-AddEdge::AddEdge(GraphTopology *const topology, const graph_t::edge& edge)
-        : Operation(topology), optional_edge_({true, edge}) {}
+AddEdge::AddEdge(GraphTopology *const topology, const label_edge &edge)
+        : Operation(topology), label_edge(edge) {}
 
 void AddEdge::execute() {
-    topology->graph().addEdge(get_edge(optional_edge_, optional_label_edge_));
+    topology->graph().addEdge(label_edge_);
 }
 
 void AddEdge::undo() {
-    topology->graph().removeEdge(get_edge(optional_edge_, optional_label_edge_));
+    topology->graph().removeEdge(label_edge_);
 }
 
-RemoveEdge::RemoveEdge(GraphTopology *const topology, const graph_t::edge& edge)
-        : Operation(topology), optional_edge_({true, edge}) {}
+RemoveEdge::RemoveEdge(GraphTopology *const topology, const label_edge& edge)
+        : Operation(topology), label_edge_(edge) {}
 
 void RemoveEdge::execute() {
-    topology->graph().removeEdge(get_edge(optional_edge_, optional_label_edge_));
+    topology->graph().removeEdge(label_edge_);
 }
 
 void RemoveEdge::undo() {
-    topology->graph().addEdge(get_edge(optional_edge_, optional_label_edge_));
+    topology->graph().addEdge(label_edge_);
 }
-
-
 
 }
 }

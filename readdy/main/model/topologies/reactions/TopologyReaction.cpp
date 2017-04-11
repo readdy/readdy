@@ -37,8 +37,9 @@ namespace model {
 namespace top {
 namespace reactions {
 
-TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
-        : reaction_function_(reaction_function), rate_function_(rate_function) { }
+TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function,
+                                   const mode &mode)
+        : reaction_function_(reaction_function), rate_function_(rate_function), mode_(mode) { }
 
 double TopologyReaction::rate(const GraphTopology &topology) const {
     return rate_function_(topology);

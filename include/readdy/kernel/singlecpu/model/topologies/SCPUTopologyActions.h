@@ -143,8 +143,8 @@ public:
                            const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
     virtual void execute() override {
-        auto globalIndex = topology->getParticles().at(vertex()->particleIndex);
-        std::swap(data->entry_at(globalIndex).type, previous_type);
+        const auto idx = topology->getParticles().at(topology->graph().namedVertexPtr(label_vertex_)->particleIndex);
+        std::swap(data->entry_at(idx).type, previous_type);
     }
 
     virtual void undo() override {

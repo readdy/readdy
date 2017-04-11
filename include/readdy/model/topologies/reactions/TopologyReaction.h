@@ -62,11 +62,11 @@ class TopologyReaction {
 public:
     using mode = Mode;
     using reaction_operations = std::vector<op::Operation::OperationRef>;
-    using reaction_recipe = std::tuple<mode, reaction_operations>;
+    using reaction_recipe = reaction_operations;
     using reaction_function = std::function<reaction_recipe(const GraphTopology &)>;
     using rate_function = std::function<double(const GraphTopology &)>;
 
-    TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
+    TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function, const mode &mode);
 
     double rate(const GraphTopology &topology) const;
 

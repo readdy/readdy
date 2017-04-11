@@ -50,11 +50,8 @@ public:
     using OperationRef = std::shared_ptr<Operation>;
     using graph_t = graph::Graph;
 
-    using optional_label_edge = std::tuple<bool, graph_t::label_edge>;
-    using optional_edge = std::tuple<bool, graph_t::edge>;
-
-    using optional_label_vertex = std::tuple<bool, graph_t::label>;
-    using optional_vertex = std::tuple<bool, graph_t::vertex_ref>;
+    using label_edge = graph_t::label_edge;
+    using label_vertex = graph_t::label;
 
     Operation(GraphTopology *const topology);
 
@@ -65,48 +62,41 @@ public:
     virtual void undo() = 0;
 
 protected:
-    graph_t::edge get_edge(const optional_edge& edge, const optional_label_edge& label_edge) const;
-    graph_t::vertex_ref get_vertex(const optional_vertex& vertex, const optional_label_vertex& label_vertex) const;
     GraphTopology *const topology;
 };
 
 class ChangeParticleType : public Operation {
 public:
 
-    ChangeParticleType(GraphTopology *const topology, const graph_t::vertex_ref &v, const particle_type_type &type_to);
+    ChangeParticleType(GraphTopology *const topology, const label_vertex &v, const particle_type_type &type_to);
 
 protected:
-    optional_vertex optional_vertex_;
-    optional_label_vertex optional_label_vertex_;
+    label_vertex label_vertex_;
     particle_type_type type_to, previous_type;
-
-    graph_t::vertex_ref vertex() const;
 };
 
 class AddEdge : public Operation {
 public:
-    AddEdge(GraphTopology *const topology, const graph_t::edge &edge);
+    AddEdge(GraphTopology *const topology, const label_edge &edge);
 
     void execute() override;
 
     void undo() override;
 
 private:
-    optional_label_edge optional_label_edge_;
-    optional_edge optional_edge_;
+    label_edge label_edge_;
 };
 
 class RemoveEdge : public Operation {
 public:
-    RemoveEdge(GraphTopology *const topology, const graph_t::edge &edge);
+    RemoveEdge(GraphTopology *const topology, const label_edge &edge);
 
     void execute() override;
 
     void undo() override;
 
 private:
-    optional_label_edge optional_label_edge_;
-    optional_edge optional_edge_;
+    label_edge label_edge_;
 };
 
 NAMESPACE_END(op)

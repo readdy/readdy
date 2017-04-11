@@ -43,7 +43,7 @@ struct ParticleTypeInfo {
     double diffusionConstant;
     double radius;
     readdy::model::Particle::flavor_t flavor;
-    readdy::model::Particle::type_type typeId;
+    particle_type_type typeId;
 
     ParticleTypeInfo(const std::string &name, const double diffusionConstant, const double radius,
                      const Particle::flavor_t flavor, const Particle::type_type typeId);
