@@ -44,14 +44,17 @@ class OperationFactory {
 public:
     using graph_t = Operation::graph_t;
     using operation_ref = Operation::OperationRef;
-    virtual operation_ref createChangeParticleType(GraphTopology *const topology, const graph_t::vertex_ref &v,
+    using vertex_t = Operation::label_vertex;
+    using edge_t = Operation::label_edge;
+
+    virtual operation_ref createChangeParticleType(GraphTopology *const topology, const vertex_t &v,
                                                   const particle_type_type &type_to) const = 0;
 
-    operation_ref createAddEdge(GraphTopology *const topology, const graph_t::edge &edge) const {
+    operation_ref createAddEdge(GraphTopology *const topology, const edge_t &edge) const {
         return std::make_shared<op::AddEdge>(topology, edge);
     };
 
-    operation_ref createRemoveEdge(GraphTopology *const topology, const graph_t::edge &edge) const {
+    operation_ref createRemoveEdge(GraphTopology *const topology, const edge_t &edge) const {
         return std::make_shared<op::RemoveEdge>(topology, edge);
     };
 

@@ -43,10 +43,10 @@ Operation::Operation(GraphTopology *const topology) : topology(topology){ }
 
 ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const label_vertex &v,
                                        const particle_type_type &type_to)
-        : Operation(topology), label_vertex (v), type_to(type_to), previous_type(type_to){}
+        : Operation(topology), label_vertex_(v), type_to(type_to), previous_type(type_to){}
 
 AddEdge::AddEdge(GraphTopology *const topology, const label_edge &edge)
-        : Operation(topology), label_edge(edge) {}
+        : Operation(topology), label_edge_(edge) {}
 
 void AddEdge::execute() {
     topology->graph().addEdge(label_edge_);

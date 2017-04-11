@@ -66,7 +66,7 @@ ctop::CPUTopologyActionFactory::createCalculateCosineDihedralPotential(
 
 ctop::CPUTopologyActionFactory::operation_ref
 ctop::CPUTopologyActionFactory::createChangeParticleType(
-        top::GraphTopology *const topology, const graph_t::vertex_ref &v,
+        top::GraphTopology *const topology, const vertex_t &v,
         const readdy::particle_type_type &type_to) const {
     return std::make_shared<reactions::op::CPUChangeParticleType>(kernel->getCPUKernelStateModel().getParticleData(),
                                                                   topology, v, type_to);

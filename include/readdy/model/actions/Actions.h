@@ -93,7 +93,7 @@ protected:
     const double skinSize;
 };
 
-namespace reactions {
+NAMESPACE_BEGIN(reactions)
 
 class UncontrolledApproximation : public TimeStepDependentAction {
 
@@ -130,12 +130,18 @@ struct NextSubvolumes : public TimeStepDependentAction {
     NextSubvolumes(double timeStep);
 };
 
-class TopologyReactions : public TimeStepDependentAction {
+NAMESPACE_END(reactions)
+
+NAMESPACE_BEGIN(top)
+
+class EvaluateTopologyReactions : public TimeStepDependentAction {
 public:
-    TopologyReactions(double timeStep);
+    EvaluateTopologyReactions(double timeStep);
+
+    virtual void perform() override;
 };
 
-}
+NAMESPACE_END(top)
 
 class EvaluateCompartments : public Action {
 public:
@@ -185,6 +191,10 @@ getActionName(typename std::enable_if<std::is_base_of<reactions::NextSubvolumes,
     return "NextSubvolumes";
 };
 
+template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<top::EvaluateTopologyReactions, T>::value>::type * = 0) {
+    return "EvaluateTopologyReactions";
+};
 
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<EvaluateCompartments, T>::value>::type * = 0) {
