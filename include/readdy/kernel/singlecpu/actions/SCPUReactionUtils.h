@@ -109,7 +109,7 @@ void performReaction(
             if (reaction->getEducts()[0] == entry1.type) {
                 entry1.pos += reaction->getWeight1() * (e2Pos - e1Pos);
             } else {
-                entry1.pos += reaction->getWeight1() * (e1Pos - e2Pos);
+                entry1.pos += reaction->getWeight2() * (e2Pos - e1Pos);
             }
             fixPos(entry1.pos);
             entry1.type = reaction->getProducts()[0];

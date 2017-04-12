@@ -103,6 +103,66 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
 }
 
+// Compare two vectors via their distance to the (1,1,1) plane in 3d space. This is quite arbitrary and only used to construct an ordered set.
+struct Vec3ProjectedLess {
+    bool operator()(const readdy::model::Vec3& lhs, const readdy::model::Vec3& rhs) const {
+        return (lhs.x + lhs.y + lhs.z) < (rhs.x + rhs.y + rhs.z);
+    }
+};
+
+TEST_P(TestReactions, FusionFissionWeights) {
+    /* A diffuses, F is fixed
+     * Also during reactions, weights are chosen such that F does not move.
+     * Idea: position F particles and remember their positions (ordered set), do a time-step and check if current positions are still the same.
+     */
+    kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
+    kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
+    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
+    kernel->getKernelContext().setBoxSize(20, 20, 20);
+
+    const double weightF = 0.;
+    const double weightA = 1.;
+    kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
+    kernel->registerReaction<readdy::model::reactions::Fission>("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
+
+    std::set<readdy::model::Vec3, Vec3ProjectedLess> fPositions;
+    auto n3 = readdy::model::rnd::normal3<>;
+    for (std::size_t i = 0; i < 15; ++i) {
+        auto fPos = n3(0., 0.8);
+        fPositions.emplace(fPos);
+        kernel->addParticle("F", fPos);
+        kernel->addParticle("A", n3(0., 1.));
+    }
+
+    auto obs = kernel->createObservable<readdy::model::observables::Positions>(1, std::vector<std::string>({"F"}));
+    obs->setCallback(
+            [&fPositions](const readdy::model::observables::Positions::result_t &result) {
+                std::set<readdy::model::Vec3, Vec3ProjectedLess> checklist;
+                for (const auto &pos : result) {
+                    checklist.emplace(pos);
+                }
+                EXPECT_EQ(fPositions.size(), checklist.size());
+                auto itPos = fPositions.begin();
+                auto itCheck = checklist.begin();
+                while (itPos != fPositions.end()) {
+                    EXPECT_VEC3_NEAR(*itPos, *itCheck, 1e-8);
+                    ++itPos;
+                    ++itCheck;
+                }
+            }
+    );
+    auto connection = kernel->connectObservable(obs.get());
+
+    {
+        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
+        const auto progs = kernel->getAvailableActions();
+        if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
+            conf = std::move(conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>());
+        }
+        conf.configureAndRun(0.5, 1);
+    }
+}
+
 INSTANTIATE_TEST_CASE_P(TestReactionsCore, TestReactions,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 }
