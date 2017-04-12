@@ -37,9 +37,8 @@ namespace model {
 namespace top {
 namespace reactions {
 
-TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function,
-                                   const mode &mode)
-        : reaction_function_(reaction_function), rate_function_(rate_function), mode_(mode) { }
+TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
+        : reaction_function_(reaction_function), rate_function_(rate_function) { }
 
 double TopologyReaction::rate(const GraphTopology &topology) const {
     return rate_function_(topology);
@@ -75,7 +74,7 @@ const bool TopologyReaction::expects_connected_after_reaction() const {
 
 void TopologyReaction::expect_connected_after_reaction() {
     if(!expects_connected_after_reaction()) {
-        mode_.flags.test(mode::expect_connected_or_create_children_flag);
+        mode_.flags.flip(mode::expect_connected_or_create_children_flag);
     }
 }
 

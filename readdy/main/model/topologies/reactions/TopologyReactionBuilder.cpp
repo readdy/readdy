@@ -44,7 +44,7 @@ TopologyReaction TopologyReactionBuilder::build(const Mode &mode, const Topology
     auto operations_copy = operations;
     operations.clear();
     return TopologyReaction(
-            [operations_copy](const GraphTopology &topology) { return operations_copy; }, rate, mode
+            [operations_copy](const GraphTopology &topology) { return operations_copy; }, rate
     );
 }
 

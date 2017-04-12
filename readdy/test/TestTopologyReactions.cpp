@@ -31,11 +31,33 @@
  */
 
 #include <gtest/gtest.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
 namespace {
 
-TEST(TestTopologyReactions, TestConversion) {
+TEST(TestTopologyReactions, ModeFlags) {
+    using namespace readdy::model::top;
+    reactions::TopologyReaction topologyReaction {[](const GraphTopology&) {
+        reactions::TopologyReaction::reaction_recipe recipe;
+        return recipe;
+    }, [](const GraphTopology&) {
+        return 0;
+    }};
+    topologyReaction.expect_connected_after_reaction();
+    ASSERT_TRUE(topologyReaction.expects_connected_after_reaction());
+    ASSERT_FALSE(topologyReaction.creates_child_topologies_after_reaction());
 
+    topologyReaction.create_child_topologies_after_reaction();
+    EXPECT_FALSE(topologyReaction.expects_connected_after_reaction());
+    EXPECT_TRUE(topologyReaction.creates_child_topologies_after_reaction());
+
+    topologyReaction.raise_if_invalid();
+    EXPECT_TRUE(topologyReaction.raises_if_invalid());
+    EXPECT_FALSE(topologyReaction.rolls_back_if_invalid());
+
+    topologyReaction.roll_back_if_invalid();
+    EXPECT_FALSE(topologyReaction.raises_if_invalid());
+    EXPECT_TRUE(topologyReaction.rolls_back_if_invalid());
 }
 
 }

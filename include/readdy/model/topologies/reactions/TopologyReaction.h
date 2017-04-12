@@ -66,7 +66,7 @@ public:
     using reaction_function = std::function<reaction_recipe(const GraphTopology &)>;
     using rate_function = std::function<double(const GraphTopology &)>;
 
-    TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function, const mode &mode);
+    TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
 
     double rate(const GraphTopology &topology) const;
 
