@@ -163,7 +163,7 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
             if (reaction->getEducts()[0] == entry1.type) {
                 data.displace(entry1, reaction->getWeight1() * (e2Pos - e1Pos));
             } else {
-                data.displace(entry1, reaction->getWeight1() * (e1Pos - e2Pos));
+                data.displace(entry1, reaction->getWeight2() * (e2Pos - e1Pos));
             }
             entry1.type = reaction->getProducts()[0];
             data.deactivate(entry2);
