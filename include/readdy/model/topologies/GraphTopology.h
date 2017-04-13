@@ -36,7 +36,7 @@
 
 #include "Topology.h"
 #include "graph/Graph.h"
-#include "reactions/TopologyReaction.h"
+#include "reactions/reactions.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -94,12 +94,11 @@ public:
 
     void addReaction(const reactions::TopologyReaction &reaction);
 
-private:
+protected:
     graph_t graph_;
     const api::PotentialConfiguration &config;
     topology_reactions reactions_;
 };
-
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)

@@ -53,9 +53,7 @@ const bool TopologyReaction::raises_if_invalid() const {
 }
 
 void TopologyReaction::raise_if_invalid() {
-    if(!raises_if_invalid()) {
-        mode_.flags.flip(mode::raise_or_rollback_flag);
-    }
+    mode_.raise();
 }
 
 const bool TopologyReaction::rolls_back_if_invalid() const {
@@ -63,9 +61,7 @@ const bool TopologyReaction::rolls_back_if_invalid() const {
 }
 
 void TopologyReaction::roll_back_if_invalid() {
-    if(raises_if_invalid()) {
-        mode_.flags.flip(mode::raise_or_rollback_flag);
-    }
+    mode_.rollback();
 }
 
 const bool TopologyReaction::expects_connected_after_reaction() const {
@@ -73,9 +69,7 @@ const bool TopologyReaction::expects_connected_after_reaction() const {
 }
 
 void TopologyReaction::expect_connected_after_reaction() {
-    if(!expects_connected_after_reaction()) {
-        mode_.flags.flip(mode::expect_connected_or_create_children_flag);
-    }
+    mode_.expect_connected();
 }
 
 const bool TopologyReaction::creates_child_topologies_after_reaction() const {
@@ -83,12 +77,27 @@ const bool TopologyReaction::creates_child_topologies_after_reaction() const {
 }
 
 void TopologyReaction::create_child_topologies_after_reaction() {
-    if(expects_connected_after_reaction()) {
-        mode_.flags.flip(mode::expect_connected_or_create_children_flag);
-    }
+    mode_.create_children();
 }
 
+TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const double &rate)
+        : TopologyReaction(reaction_function, [rate](const GraphTopology&) { return rate; }) {}
 
+void Mode::raise() {
+    flags[raise_or_rollback_flag] = true;
+}
+
+void Mode::rollback() {
+    flags[raise_or_rollback_flag] = false;
+}
+
+void Mode::expect_connected() {
+    flags[expect_connected_or_create_children_flag] = true;
+}
+
+void Mode::create_children() {
+    flags[expect_connected_or_create_children_flag] = false;
+}
 }
 }
 }

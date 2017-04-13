@@ -35,9 +35,7 @@
 #include <readdy/model/topologies/potentials/TorsionPotential.h>
 #include <readdy/plugin/KernelProvider.h>
 
-struct TestTopologyGraphs : KernelTest {
-
-};
+class TestTopologyGraphs : public KernelTest {};
 
 /**
  * << detailed description >>

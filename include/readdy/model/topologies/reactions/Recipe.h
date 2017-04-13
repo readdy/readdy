@@ -23,83 +23,52 @@
 /**
  * << detailed description >>
  *
- * @file TopologyReactionOperation.h
+ * @file TopologyReactionRecipeBuilder.h
  * @brief << brief description >>
  * @author clonker
- * @date 03.04.17
+ * @date 13.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <memory>
+#include <vector>
+
 #include <readdy/common/macros.h>
-#include <readdy/model/topologies/graph/Graph.h>
+
+#include "Operations.h"
+#include "TopologyReactionAction.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
+class Kernel;
 NAMESPACE_BEGIN(top)
-class GraphTopology;
 NAMESPACE_BEGIN(reactions)
-NAMESPACE_BEGIN(op)
 
-class Operation;
-
-class Operation {
+class Recipe {
 public:
-    using OperationRef = std::shared_ptr<Operation>;
-    using graph_t = graph::Graph;
 
+    using reaction_operations = std::vector<op::Operation::Ref>;
+    using graph_t = actions::TopologyReactionAction::graph_t;
     using label_edge = graph_t::label_edge;
     using label_vertex = graph_t::label;
 
-    Operation(GraphTopology *const topology);
+    Recipe() = default;
 
-    virtual ~Operation() = default;
+    Recipe(Recipe &&) = default;
 
-    virtual void execute() = 0;
+    Recipe &operator=(Recipe &&) = default;
 
-    virtual void undo() = 0;
+    Recipe(const Recipe &) = delete;
 
-protected:
-    GraphTopology *const topology;
-};
+    Recipe &operator=(const Recipe &) = delete;
 
-class ChangeParticleType : public Operation {
-public:
-
-    ChangeParticleType(GraphTopology *const topology, const label_vertex &v, const particle_type_type &type_to);
-
-protected:
-    label_vertex label_vertex_;
-    particle_type_type type_to, previous_type;
-};
-
-class AddEdge : public Operation {
-public:
-    AddEdge(GraphTopology *const topology, const label_edge &edge);
-
-    void execute() override;
-
-    void undo() override;
+    Recipe &changeParticleType(const label_vertex &of, const particle_type_type &to);
 
 private:
-    label_edge label_edge_;
+    reaction_operations steps;
 };
 
-class RemoveEdge : public Operation {
-public:
-    RemoveEdge(GraphTopology *const topology, const label_edge &edge);
-
-    void execute() override;
-
-    void undo() override;
-
-private:
-    label_edge label_edge_;
-};
-
-NAMESPACE_END(op)
 NAMESPACE_END(reactions)
 NAMESPACE_END(top)
 NAMESPACE_END(model)

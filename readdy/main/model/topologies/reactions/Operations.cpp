@@ -26,46 +26,23 @@
  * @file Operations.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 05.04.17
+ * @date 13.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/reactions/Operation.h>
-#include <readdy/model/topologies/GraphTopology.h>
-
+#include <readdy/model/topologies/reactions/Operations.h>
 namespace readdy {
 namespace model {
 namespace top {
 namespace reactions {
 namespace op {
 
-Operation::Operation(GraphTopology *const topology) : topology(topology){ }
-
-ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const label_vertex &v,
-                                       const particle_type_type &type_to)
-        : Operation(topology), label_vertex_(v), type_to(type_to), previous_type(type_to){}
-
-AddEdge::AddEdge(GraphTopology *const topology, const label_edge &edge)
-        : Operation(topology), label_edge_(edge) {}
-
-void AddEdge::execute() {
-    topology->graph().addEdge(label_edge_);
+Operation::action_ptr ChangeParticleType::create_action(topology_ref topology, factory_ref factory) const {
+    return factory->createChangeParticleType(topology, label_vertex_, type_to_);
 }
 
-void AddEdge::undo() {
-    topology->graph().removeEdge(label_edge_);
-}
-
-RemoveEdge::RemoveEdge(GraphTopology *const topology, const label_edge& edge)
-        : Operation(topology), label_edge_(edge) {}
-
-void RemoveEdge::execute() {
-    topology->graph().removeEdge(label_edge_);
-}
-
-void RemoveEdge::undo() {
-    topology->graph().addEdge(label_edge_);
-}
+ChangeParticleType::ChangeParticleType(const Operation::label_vertex &vertex, particle_type_type type_to)
+        : label_vertex_(vertex), type_to_(type_to) {}
 
 }
 }

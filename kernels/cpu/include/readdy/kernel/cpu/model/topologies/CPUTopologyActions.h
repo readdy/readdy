@@ -134,7 +134,7 @@ public:
 NAMESPACE_BEGIN(reactions)
 NAMESPACE_BEGIN(op)
 
-class CPUChangeParticleType : public readdy::model::top::reactions::op::ChangeParticleType {
+class CPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
     CPUParticleData *const data;
 public:
     CPUChangeParticleType(CPUParticleData *const data, top::GraphTopology *const topology, const label_vertex &v,

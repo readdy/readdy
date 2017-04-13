@@ -23,23 +23,17 @@
 /**
  * << detailed description >>
  *
- * @file TopologyActionFactory.h
+ * @file reactions.h
  * @brief << brief description >>
  * @author clonker
- * @date 30.01.17
+ * @date 13.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
-#include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
-#include <readdy/model/topologies/potentials/TopologyPotentialActionFactory.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-
-class TopologyActionFactory : public pot::TopologyPotentialActionFactory, public reactions::actions::TopologyReactionActionFactory{};
-
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+#include "Recipe.h"
+#include "Operations.h"
+#include "TopologyReactionAction.h"
+#include "TopologyReactionActionFactory.h"
+#include "TopologyReaction.h"

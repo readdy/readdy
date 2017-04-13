@@ -23,38 +23,27 @@
 /**
  * << detailed description >>
  *
- * @file TopologyReactionBuilder.h
+ * @file TopologyReactionRecipyBuilder.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 03.04.17
+ * @date 13.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
+#include <readdy/model/topologies/reactions/Recipe.h>
+#include <readdy/model/Kernel.h>
 
-#include <readdy/common/macros.h>
-#include "TopologyReaction.h"
+namespace readdy {
+namespace model {
+namespace top {
+namespace reactions {
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-class GraphTopology;
-NAMESPACE_BEGIN(reactions)
+Recipe &Recipe::changeParticleType(const Recipe::label_vertex &of, const particle_type_type &to) {
+    steps.push_back(std::make_shared<op::ChangeParticleType>(of, to));
+    return *this;
+}
 
-/**
- * Easier: fixed operations list, no dependence on the actual graph (except for the rate function)
- */
-class TopologyReactionBuilder {
-public:
-    TopologyReactionBuilder();
-
-    TopologyReaction build(const Mode &mode, const TopologyReaction::rate_function &rate);
-
-private:
-    TopologyReaction::reaction_operations operations;
-};
-
-NAMESPACE_END(reactions)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}
+}

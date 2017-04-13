@@ -23,84 +23,44 @@
 /**
  * << detailed description >>
  *
- * @file TopologyReaction.h
+ * @file OperationFactory.h
  * @brief << brief description >>
  * @author clonker
- * @date 03.04.17
+ * @date 05.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
-
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <functional>
-#include <bitset>
-
 #include <readdy/common/macros.h>
-
 #include "TopologyReactionAction.h"
-#include "Operations.h"
-#include "Recipe.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
-class GraphTopology;
 NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(actions)
 
-/**
- * Struct holding the mode of the reaction:
- * - whether it should raise or roll back after a failed reaction
- * - whether it is expected to be still connected or if it should be "fissionated"
- */
-struct Mode {
-    static constexpr std::size_t raise_or_rollback_flag = 0;
-    static constexpr std::size_t expect_connected_or_create_children_flag = 1;
-    std::bitset<2> flags;
-
-    void raise();
-    void rollback();
-    void expect_connected();
-    void create_children();
-};
-
-class TopologyReaction {
+class TopologyReactionActionFactory {
 public:
-    using mode = Mode;
-    using reaction_recipe = Recipe;
-    using reaction_function = std::function<reaction_recipe(const GraphTopology &)>;
-    using rate_function = std::function<double(const GraphTopology &)>;
+    using graph_t = TopologyReactionAction::graph_t;
+    using operation_ref = std::unique_ptr<TopologyReactionAction>;
+    using vertex_t = TopologyReactionAction::label_vertex;
+    using edge_t = TopologyReactionAction::label_edge;
 
-    TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
-    TopologyReaction(const reaction_function &reaction_function, const double &rate);
+    virtual operation_ref createChangeParticleType(GraphTopology *const topology, const vertex_t &v,
+                                                  const particle_type_type &type_to) const = 0;
 
-    double rate(const GraphTopology &topology) const;
+    operation_ref createAddEdge(GraphTopology *const topology, const edge_t &edge) const {
+        return std::make_unique<AddEdge>(topology, edge);
+    };
 
-    reaction_recipe operations(const GraphTopology &topology) const;
+    operation_ref createRemoveEdge(GraphTopology *const topology, const edge_t &edge) const {
+        return std::make_unique<RemoveEdge>(topology, edge);
+    };
 
-    const bool raises_if_invalid() const;
-
-    void raise_if_invalid();
-
-    const bool rolls_back_if_invalid() const;
-
-    void roll_back_if_invalid();
-
-    const bool expects_connected_after_reaction() const;
-
-    void expect_connected_after_reaction();
-
-    const bool creates_child_topologies_after_reaction() const;
-
-    void create_child_topologies_after_reaction();
-
-private:
-    rate_function rate_function_;
-    reaction_function reaction_function_;
-    mode mode_;
 };
 
+NAMESPACE_END(actions)
 NAMESPACE_END(reactions)
 NAMESPACE_END(top)
 NAMESPACE_END(model)

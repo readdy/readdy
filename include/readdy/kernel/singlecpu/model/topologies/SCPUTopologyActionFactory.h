@@ -34,7 +34,7 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
-#include <readdy/model/topologies/reactions/OperationFactory.h>
+#include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)

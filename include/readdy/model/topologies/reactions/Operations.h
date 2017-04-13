@@ -23,41 +23,48 @@
 /**
  * << detailed description >>
  *
- * @file OperationFactory.h
+ * @file Operations.h
  * @brief << brief description >>
  * @author clonker
- * @date 05.04.17
+ * @date 13.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
+#include <memory>
 #include <readdy/common/macros.h>
-#include "Operation.h"
+#include "TopologyReactionAction.h"
+#include "TopologyReactionActionFactory.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+class GraphTopology;
 NAMESPACE_BEGIN(reactions)
 NAMESPACE_BEGIN(op)
 
-class OperationFactory {
+class Operation {
 public:
-    using graph_t = Operation::graph_t;
-    using operation_ref = Operation::OperationRef;
-    using vertex_t = Operation::label_vertex;
-    using edge_t = Operation::label_edge;
+    using Ref = std::shared_ptr<Operation>;
+    using factory_ref = const actions::TopologyReactionActionFactory *const;
+    using topology_ref = GraphTopology* const;
+    using graph_t = actions::TopologyReactionAction::graph_t;
+    using action_ptr = std::unique_ptr<actions::TopologyReactionAction>;
 
-    virtual operation_ref createChangeParticleType(GraphTopology *const topology, const vertex_t &v,
-                                                  const particle_type_type &type_to) const = 0;
+    using label_edge = graph_t::label_edge;
+    using label_vertex = graph_t::label;
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const = 0;
+};
 
-    operation_ref createAddEdge(GraphTopology *const topology, const edge_t &edge) const {
-        return std::make_shared<op::AddEdge>(topology, edge);
-    };
+class ChangeParticleType : public Operation {
+public:
+    ChangeParticleType(const label_vertex &vertex, particle_type_type type_to);
 
-    operation_ref createRemoveEdge(GraphTopology *const topology, const edge_t &edge) const {
-        return std::make_shared<op::RemoveEdge>(topology, edge);
-    };
-
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
+private:
+    label_vertex label_vertex_;
+    particle_type_type type_to_;
 };
 
 NAMESPACE_END(op)

@@ -32,15 +32,48 @@
 
 #include <gtest/gtest.h>
 #include <readdy/model/topologies/GraphTopology.h>
+#include <readdy/testing/KernelTest.h>
+#include <readdy/testing/Utils.h>
 
 namespace {
 
+using particle_t = readdy::model::Particle;
+using topology_particle_t = readdy::model::TopologyParticle;
+
+class TestTopologyReactions : public KernelTest {
+public:
+    readdy::model::top::GraphTopology *topology;
+protected:
+    virtual void SetUp() override {
+        if (kernel->supportsTopologies()) {
+            auto &ctx = kernel->getKernelContext();
+            ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+            ctx.particle_types().add("Topology B", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+            ctx.setBoxSize(10, 10, 10);
+            topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+            topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+            topology_particle_t x_2{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+            topology = kernel->getKernelStateModel().addTopology({x_0, x_1, x_2});
+            {
+                auto it = topology->graph().vertices().begin();
+                auto it2 = ++topology->graph().vertices().begin();
+                topology->graph().addEdge(it, it2);
+                std::advance(it, 1);
+                std::advance(it2, 1);
+                topology->graph().addEdge(it, it2);
+            }
+        }
+    }
+
+};
+
 TEST(TestTopologyReactions, ModeFlags) {
+    using namespace readdy;
     using namespace readdy::model::top;
-    reactions::TopologyReaction topologyReaction {[](const GraphTopology&) {
+    reactions::TopologyReaction topologyReaction{[](const GraphTopology &) {
         reactions::TopologyReaction::reaction_recipe recipe;
         return recipe;
-    }, [](const GraphTopology&) {
+    }, [](const GraphTopology &) {
         return 0;
     }};
     topologyReaction.expect_connected_after_reaction();
@@ -59,5 +92,56 @@ TEST(TestTopologyReactions, ModeFlags) {
     EXPECT_FALSE(topologyReaction.raises_if_invalid());
     EXPECT_TRUE(topologyReaction.rolls_back_if_invalid());
 }
+
+TEST_P(TestTopologyReactions, ChangeParticleType) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+    topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
+    {
+        const auto &types = kernel->getKernelContext().particle_types();
+        auto reactionFunction = [&](const model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe;
+            recipe.changeParticleType("begin", types.id_of("Topology B"));
+            return recipe;
+        };
+        topology->addReaction({reactionFunction, 5});
+    }
+    {
+        const auto &types = kernel->getKernelContext().particle_types();
+        auto reactionFunction = [&](const model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe;
+            recipe.changeParticleType("begin", types.id_of("Topology B"));
+            return recipe;
+        };
+        auto rateFunction = [&](const model::top::GraphTopology &top) {
+            return 5;
+        };
+        topology->addReaction({reactionFunction, rateFunction});
+    }
+}
+
+TEST_P(TestTopologyReactions, AddEdge) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+    // todo rollback/no rollback/fail/graceful
+}
+
+TEST_P(TestTopologyReactions, RemoveEdge) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+    // todo topology (decomposes/doesnt decompose) into child topologies (expected / not expected) with (rollback/norollback)
+}
+
+INSTANTIATE_TEST_CASE_P(TestTopologyReactions, TestTopologyReactions,
+                        ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 
 }

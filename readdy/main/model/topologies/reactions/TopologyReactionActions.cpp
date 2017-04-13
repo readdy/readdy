@@ -23,23 +23,52 @@
 /**
  * << detailed description >>
  *
- * @file TopologyActionFactory.h
+ * @file Operations.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 30.01.17
+ * @date 05.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
-#include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
-#include <readdy/model/topologies/potentials/TopologyPotentialActionFactory.h>
+#include <readdy/model/topologies/reactions/TopologyReactionAction.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy {
+namespace model {
+namespace top {
+namespace reactions {
+namespace actions {
 
-class TopologyActionFactory : public pot::TopologyPotentialActionFactory, public reactions::actions::TopologyReactionActionFactory{};
+TopologyReactionAction::TopologyReactionAction(GraphTopology *const topology) : topology(topology){ }
 
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const label_vertex &v,
+                                       const particle_type_type &type_to)
+        : TopologyReactionAction(topology), label_vertex_(v), type_to(type_to), previous_type(type_to){}
+
+AddEdge::AddEdge(GraphTopology *const topology, const label_edge &edge)
+        : TopologyReactionAction(topology), label_edge_(edge) {}
+
+void AddEdge::execute() {
+    topology->graph().addEdge(label_edge_);
+}
+
+void AddEdge::undo() {
+    topology->graph().removeEdge(label_edge_);
+}
+
+RemoveEdge::RemoveEdge(GraphTopology *const topology, const label_edge& edge)
+        : TopologyReactionAction(topology), label_edge_(edge) {}
+
+void RemoveEdge::execute() {
+    topology->graph().removeEdge(label_edge_);
+}
+
+void RemoveEdge::undo() {
+    topology->graph().addEdge(label_edge_);
+}
+
+}
+}
+}
+}
+}
