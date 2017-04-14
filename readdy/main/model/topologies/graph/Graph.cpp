@@ -49,8 +49,8 @@ void Graph::addEdge(const std::string &v1, const std::string &v2) {
     if (findIt2 == namedVertices.end()) {
         throw std::invalid_argument("the provided vertex " + v2 + " is not contained in this graph.");
     }
-    findIt1->second->addNeighbor(findIt2->second);
-    findIt2->second->addNeighbor(findIt1->second);
+    findIt1->second->addNeighbor(findIt2->second.data());
+    findIt2->second->addNeighbor(findIt1->second.data());
 }
 
 const Graph::vertex_list &Graph::vertices() const {
@@ -59,18 +59,18 @@ const Graph::vertex_list &Graph::vertices() const {
 
 void Graph::removeVertex(vertex_ref vertex) {
     removeNeighborsEdges(vertex);
-    if (!vertex->label.empty()) {
-        namedVertices.erase(namedVertices.find(vertex->label));
+    if (!vertex->label().empty()) {
+        namedVertices.erase(namedVertices.find(vertex->label()));
     }
-    vertices_.erase(vertex);
+    vertices_.erase(vertex.data());
 }
 
 void Graph::removeParticle(std::size_t particleIndex) {
     auto v = vertexItForParticleIndex(particleIndex);
     if (v != vertices_.end()) {
         removeNeighborsEdges(v);
-        if (!v->label.empty()) {
-            namedVertices.erase(namedVertices.find(v->label));
+        if (!v->label().empty()) {
+            namedVertices.erase(namedVertices.find(v->label()));
         }
         vertices_.erase(v);
     } else {
@@ -90,14 +90,14 @@ void Graph::removeVertex(const std::string &name) {
 
 void Graph::removeNeighborsEdges(vertex_ref vertex) {
     for (auto neighbor : vertex->neighbors()) {
-        neighbor->removeNeighbor(vertex);
+        neighbor->removeNeighbor(vertex.data());
     }
 }
 
 void Graph::removeEdge(vertex_ref v1, vertex_ref v2) {
     assert(v1 != v2);
-    v1->removeNeighbor(v2);
-    v2->removeNeighbor(v1);
+    v1->removeNeighbor(v2.data());
+    v2->removeNeighbor(v1.data());
 }
 
 void Graph::removeEdge(const std::string &v1, const std::string &v2) {
@@ -129,8 +129,8 @@ void Graph::setVertexLabel(vertex_ref vertex, const std::string &label) {
     if(!label.empty()) {
         auto it = namedVertices.find(label);
         if (it == namedVertices.end()) {
-            namedVertices[label] = vertex;
-            vertex->label = label;
+            namedVertices.emplace(std::make_pair(label, vertex));
+            vertex->_label = label;
         } else {
             throw std::invalid_argument("the label " + label + " already existed in this topology!");
         }
@@ -180,8 +180,8 @@ void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t part
 }
 
 void Graph::addEdge(vertex_ref v1, vertex_ref v2) {
-    v1->addNeighbor(v2);
-    v2->addNeighbor(v1);
+    v1->addNeighbor(v2.data());
+    v2->addNeighbor(v1.data());
 }
 
 Graph::vertex_list &Graph::vertices() {
@@ -310,6 +310,14 @@ void Graph::removeEdge(const Graph::label_edge &edge) {
 
 Graph::edge Graph::namedEdge(const Graph::label_edge &edge) const {
     return std::make_tuple(namedVertexPtr(std::get<0>(edge)), namedVertexPtr(std::get<1>(edge)));
+}
+
+const std::unordered_map<std::string, Graph::vertex_ref> &Graph::vertexLabelMapping() const {
+    return namedVertices;
+}
+
+std::unordered_map<std::string, Graph::vertex_ref> &Graph::vertexLabelMapping() {
+    return namedVertices;
 }
 
 }

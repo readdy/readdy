@@ -90,11 +90,11 @@ void exportTopologies(py::module &m) {
                 }
             }, "vertex_index_1"_a, "vertex_index_2"_a);
 
-    py::class_<vertex::vertex_edge>(m, "VertexPointer")
-            .def("get", [](const vertex::vertex_edge &edge) -> const vertex & { return *edge; });
+    py::class_<vertex::vertex_ptr>(m, "VertexPointer")
+            .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; });
 
     py::class_<vertex>(m, "Vertex")
-            .def_readonly("label", &vertex::label)
+            .def_property_readonly("label", [](const vertex& self) { return self.label(); })
             .def_readonly("particle_index", &vertex::particleIndex)
             .def("particle_type", &vertex::particleType)
             .def("neighbors", [](const vertex &self) { return self.neighbors(); })

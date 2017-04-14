@@ -67,6 +67,10 @@ private:
     particle_type_type type_to_;
 };
 
+class SeparateVertex : public Operation {
+
+};
+
 NAMESPACE_END(op)
 NAMESPACE_END(reactions)
 NAMESPACE_END(top)

@@ -52,6 +52,7 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/reactions/ReactionRegistry.cpp"
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/Topology.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/GraphTopology.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/graph/Graph.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/graph/Vertex.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/potentials/TopologyPotential.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/potentials/BondedPotential.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/potentials/AnglePotential.cpp")

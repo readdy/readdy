@@ -48,9 +48,9 @@ class Graph {
 public:
 
     using vertex_list = std::list<Vertex>;
-    using vertex_ref = vertex_list::iterator;
+    using vertex_ref = VertexRef;
     using edge = std::tuple<vertex_ref, vertex_ref>;
-    using label = std::string;
+    using label = Vertex::label_t;
     using label_edge = std::tuple<label, label>;
     using path_len_2 = std::tuple<vertex_ref, vertex_ref, vertex_ref>;
     using path_len_3 = std::tuple<vertex_ref, vertex_ref, vertex_ref, vertex_ref>;
@@ -118,6 +118,10 @@ public:
     void removeParticle(std::size_t particleIndex);
 
     bool isConnected();
+
+    const std::unordered_map<std::string, vertex_ref>& vertexLabelMapping() const;
+
+    std::unordered_map<std::string, vertex_ref>& vertexLabelMapping();
 
     void findNTuples(const edge_callback &tuple_callback,
                      const path_len_2_callback &triple_callback,

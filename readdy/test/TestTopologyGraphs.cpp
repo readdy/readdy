@@ -94,15 +94,15 @@ TEST(TestTopologyGraphs, TestGraphWithNamedVertices) {
     graph.addVertex(1, 0, "myVertex2");
     graph.addEdge("myVertex", "myVertex2");
     EXPECT_EQ(graph.vertices().size(), 2);
-    EXPECT_EQ(graph.vertices().front().label, "myVertex");
-    EXPECT_EQ(graph.vertices().back().label, "myVertex2");
+    EXPECT_EQ(graph.vertices().front().label(), "myVertex");
+    EXPECT_EQ(graph.vertices().back().label(), "myVertex2");
     EXPECT_EQ(graph.namedVertex("myVertex").neighbors().size(), 1);
     EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 1);
-    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().front()->label, "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().back()->label, "myVertex");
+    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().front()->label(), "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().back()->label(), "myVertex");
     graph.removeVertex("myVertex");
     EXPECT_EQ(graph.vertices().size(), 1);
-    EXPECT_EQ(graph.vertices().front().label, "myVertex2");
+    EXPECT_EQ(graph.vertices().front().label(), "myVertex2");
     EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 0);
 }
 
