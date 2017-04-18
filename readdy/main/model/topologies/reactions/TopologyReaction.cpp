@@ -83,6 +83,18 @@ void TopologyReaction::create_child_topologies_after_reaction() {
 TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const double &rate)
         : TopologyReaction(reaction_function, [rate](const GraphTopology&) { return rate; }) {}
 
+void TopologyReaction::execute(GraphTopology &topology, const actions::TopologyReactionActionFactory *const factory) {
+    auto ops = operations(topology);
+    auto& steps = ops.steps();
+    std::vector<op::Operation::action_ptr> actions;
+    actions.reserve(steps.size());
+    for(auto& op : steps) {
+        actions.push_back(op->create_action(&topology, factory));
+    }
+
+    // todo: execute actions, if failure, rollback (or raise) and give a detailed error message
+}
+
 void Mode::raise() {
     flags[raise_or_rollback_flag] = true;
 }

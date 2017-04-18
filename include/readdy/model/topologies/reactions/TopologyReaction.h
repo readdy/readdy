@@ -95,6 +95,8 @@ public:
 
     void create_child_topologies_after_reaction();
 
+    void execute(GraphTopology& topology, const actions::TopologyReactionActionFactory* const factory);
+
 private:
     rate_function rate_function_;
     reaction_function reaction_function_;

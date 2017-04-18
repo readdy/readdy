@@ -31,6 +31,7 @@
  */
 
 #include <readdy/model/topologies/reactions/Operations.h>
+
 namespace readdy {
 namespace model {
 namespace top {
@@ -44,6 +45,17 @@ Operation::action_ptr ChangeParticleType::create_action(topology_ref topology, f
 ChangeParticleType::ChangeParticleType(const Operation::vertex_ref &vertex, particle_type_type type_to)
         : _vertex(vertex), _type_to(type_to) {}
 
+Operation::action_ptr AddEdge::create_action(topology_ref topology, Operation::factory_ref factory) const {
+    return factory->createAddEdge(topology, _edge);
+}
+
+AddEdge::AddEdge(const Operation::edge &edge) : _edge(edge) {}
+
+RemoveEdge::RemoveEdge(const Operation::edge &edge) : _edge(edge) {}
+
+Operation::action_ptr RemoveEdge::create_action(topology_ref topology, factory_ref factory) const {
+    return factory->createRemoveEdge(topology, _edge);
+}
 }
 }
 }

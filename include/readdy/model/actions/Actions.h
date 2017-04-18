@@ -137,8 +137,6 @@ NAMESPACE_BEGIN(top)
 class EvaluateTopologyReactions : public TimeStepDependentAction {
 public:
     EvaluateTopologyReactions(double timeStep);
-
-    virtual void perform() override;
 };
 
 NAMESPACE_END(top)

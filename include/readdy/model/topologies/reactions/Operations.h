@@ -48,12 +48,13 @@ class Operation {
 public:
     using Ref = std::shared_ptr<Operation>;
     using factory_ref = const actions::TopologyReactionActionFactory *const;
-    using topology_ref = GraphTopology* const;
+    using topology_ref = GraphTopology *const;
     using graph_t = actions::TopologyReactionAction::graph_t;
     using action_ptr = std::unique_ptr<actions::TopologyReactionAction>;
 
-    using label_edge = graph_t::label_edge;
     using vertex_ref = graph_t::vertex_ref;
+    using edge = graph_t::edge;
+
     virtual action_ptr create_action(topology_ref topology, factory_ref factory) const = 0;
 };
 
@@ -62,13 +63,30 @@ public:
     ChangeParticleType(const vertex_ref &vertex, particle_type_type type_to);
 
     virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
+
 private:
     vertex_ref _vertex;
     particle_type_type _type_to;
 };
 
-class SeparateVertex : public Operation {
+class AddEdge : public Operation {
+public:
+    AddEdge(const edge &edge);
 
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
+
+private:
+    edge _edge;
+};
+
+class RemoveEdge : public Operation {
+public:
+    RemoveEdge(const edge &edge);
+
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
+
+private:
+    edge _edge;
 };
 
 NAMESPACE_END(op)

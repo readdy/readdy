@@ -69,9 +69,6 @@ CalculateForces::CalculateForces() : Action() {}
 
 top::EvaluateTopologyReactions::EvaluateTopologyReactions(double timeStep) : TimeStepDependentAction(timeStep) {}
 
-void top::EvaluateTopologyReactions::perform() {
-    // todo
-}
 }
 }
 }
