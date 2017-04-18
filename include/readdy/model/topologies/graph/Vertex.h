@@ -55,6 +55,7 @@ public:
      * edge in the graph (i.e., pointer to neighboring vertex)
      */
     using vertex_ptr = std::list<Vertex>::iterator;
+    using vertex_cptr = std::list<Vertex>::const_iterator;
 
     using label_t = std::string;
 
@@ -154,9 +155,14 @@ private:
     label_t _label{""};
 };
 
+class VertexRef;
+class VertexCRef;
+
 class VertexRef {
 public:
     VertexRef();
+
+    virtual ~VertexRef() = default;
 
     VertexRef(Vertex::vertex_ptr it);
 
@@ -170,27 +176,68 @@ public:
 
     VertexRef &operator=(const VertexRef &) = default;
 
-    Vertex &operator*();
+    bool operator==(const VertexRef &rhs) const;
 
-    const Vertex& operator*() const;
+    bool operator!=(const VertexRef &rhs) const;
+
+    Vertex &operator*();
 
     Vertex *operator->();
 
     const Vertex *operator->() const;
 
+    const Vertex& operator*() const;
+
     Vertex::vertex_ptr& data();
 
     const Vertex::vertex_ptr& data() const;
 
-    bool operator==(const VertexRef &rhs) const;
-
-    bool operator!=(const VertexRef &rhs) const;
+    friend std::ostream &operator<<(std::ostream &os, const VertexRef &vertex);
 
 private:
     Vertex::vertex_ptr it;
-    Graph *graph;
     Vertex::label_t label;
+    Graph *graph;
 };
+
+class VertexCRef {
+public:
+    VertexCRef() = default;
+
+    virtual ~VertexCRef() = default;
+
+    VertexCRef(Vertex::vertex_ptr it);
+
+    VertexCRef(const Graph *const graph, const Vertex::label_t &label);
+
+    VertexCRef(const VertexRef& ref);
+
+    VertexCRef(VertexCRef &&) = default;
+
+    VertexCRef &operator=(VertexCRef &&) = default;
+
+    VertexCRef(const VertexCRef &) = default;
+
+    VertexCRef &operator=(const VertexCRef &) = default;
+
+    Vertex::vertex_cptr data() const;
+
+    bool operator==(const VertexCRef &rhs) const;
+
+    bool operator!=(const VertexCRef &rhs) const;
+
+    const Vertex *operator->() const;
+
+    const Vertex& operator*() const;
+
+    friend std::ostream &operator<<(std::ostream &os, const VertexCRef &c);
+
+private:
+    Vertex::vertex_cptr it;
+    Vertex::label_t label;
+    const Graph *graph;
+};
+
 
 NAMESPACE_END(graph)
 NAMESPACE_END(top)

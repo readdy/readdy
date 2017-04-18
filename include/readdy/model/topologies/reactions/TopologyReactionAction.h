@@ -47,8 +47,8 @@ class TopologyReactionAction {
 public:
     using graph_t = graph::Graph;
 
-    using label_edge = graph_t::label_edge;
-    using label_vertex = graph_t::label;
+    using edge = graph_t::edge;
+    using vertex = graph_t::vertex_ref;
 
     TopologyReactionAction(GraphTopology *const topology);
 
@@ -65,35 +65,35 @@ protected:
 class ChangeParticleType : public TopologyReactionAction {
 public:
 
-    ChangeParticleType(GraphTopology *const topology, const label_vertex &v, const particle_type_type &type_to);
+    ChangeParticleType(GraphTopology *const topology, const vertex &v, const particle_type_type &type_to);
 
 protected:
-    label_vertex label_vertex_;
+    vertex _vertex;
     particle_type_type type_to, previous_type;
 };
 
 class AddEdge : public TopologyReactionAction {
 public:
-    AddEdge(GraphTopology *const topology, const label_edge &edge);
+    AddEdge(GraphTopology *const topology, const edge &edge);
 
     void execute() override;
 
     void undo() override;
 
 private:
-    label_edge label_edge_;
+    edge label_edge_;
 };
 
 class RemoveEdge : public TopologyReactionAction {
 public:
-    RemoveEdge(GraphTopology *const topology, const label_edge &edge);
+    RemoveEdge(GraphTopology *const topology, const edge &edge);
 
     void execute() override;
 
     void undo() override;
 
 private:
-    label_edge label_edge_;
+    edge label_edge_;
 };
 
 NAMESPACE_END(actions)

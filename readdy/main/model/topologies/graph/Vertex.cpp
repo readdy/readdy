@@ -70,12 +70,25 @@ bool VertexRef::operator==(const VertexRef &rhs) const {
     return data() == rhs.data();
 }
 
+const Vertex::vertex_ptr &VertexRef::data() const {
+    if(!graph) {
+        return it;
+    } else {
+        return graph->vertexLabelMapping().at(label).data();
+    }
+}
+
 bool VertexRef::operator!=(const VertexRef &rhs) const {
     return !(rhs == *this);
 }
 
-const Vertex::vertex_ptr& VertexRef::data() const {
-    return graph ? graph->vertexLabelMapping().at(label).data() : it;
+const Vertex *VertexRef::operator->() const {
+    if(!graph) {
+        return it.operator->();
+    } else {
+        const auto& ref = graph->vertexLabelMapping().at(label);
+        return ref.operator->();
+    }
 }
 
 const Vertex &VertexRef::operator*() const {
@@ -86,12 +99,63 @@ const Vertex &VertexRef::operator*() const {
     }
 }
 
-const Vertex *VertexRef::operator->() const {
+std::ostream &operator<<(std::ostream &os, const VertexRef &vertex) {
+    if(vertex.graph) {
+         os << "Vertex(label=" << vertex.label <<")";
+    } else {
+        os << *vertex;
+    }
+    return os;
+}
+
+bool VertexCRef::operator==(const VertexCRef &rhs) const {
+    return data() == rhs.data();
+}
+
+bool VertexCRef::operator!=(const VertexCRef &rhs) const {
+    return !(rhs == *this);
+}
+
+Vertex::vertex_cptr VertexCRef::data() const {
+    if(graph) {
+        return graph->vertexLabelMapping().at(label).data();
+    } else {
+        return it;
+    }
+}
+
+const Vertex &VertexCRef::operator*() const {
+    if(!graph) {
+        return it.operator*();
+    } else {
+        return graph->namedVertex(label);
+    }
+}
+
+const Vertex *VertexCRef::operator->() const {
     if(!graph) {
         return it.operator->();
     } else {
-        return graph->vertexLabelMapping().at(label).operator->();
+        const auto& ref = graph->vertexLabelMapping().at(label);
+        return ref.operator->();
     }
+}
+
+VertexCRef::VertexCRef(Vertex::vertex_ptr it) : it(it), graph(nullptr) {}
+
+VertexCRef::VertexCRef(const Graph *const graph, const Vertex::label_t &label) : graph(graph), label(label) {
+
+}
+
+VertexCRef::VertexCRef(const VertexRef &ref) : VertexCRef(ref.data()) {}
+
+std::ostream &operator<<(std::ostream &os, const VertexCRef &vertex) {
+    if(vertex.graph) {
+        os << "Vertex(label=" << vertex.label <<")";
+    } else {
+        os << *vertex;
+    }
+    return os;
 }
 
 VertexRef::VertexRef() = default;

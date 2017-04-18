@@ -53,18 +53,18 @@ public:
     using action_ptr = std::unique_ptr<actions::TopologyReactionAction>;
 
     using label_edge = graph_t::label_edge;
-    using label_vertex = graph_t::label;
+    using vertex_ref = graph_t::vertex_ref;
     virtual action_ptr create_action(topology_ref topology, factory_ref factory) const = 0;
 };
 
 class ChangeParticleType : public Operation {
 public:
-    ChangeParticleType(const label_vertex &vertex, particle_type_type type_to);
+    ChangeParticleType(const vertex_ref &vertex, particle_type_type type_to);
 
     virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
 private:
-    label_vertex label_vertex_;
-    particle_type_type type_to_;
+    vertex_ref _vertex;
+    particle_type_type _type_to;
 };
 
 class SeparateVertex : public Operation {

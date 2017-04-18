@@ -50,10 +50,12 @@ public:
 
     using reaction_operations = std::vector<op::Operation::Ref>;
     using graph_t = actions::TopologyReactionAction::graph_t;
+    using vertex_ref = graph_t::vertex_ref;
+    using vertex_cref = graph_t::vertex_cref;
     using label_edge = graph_t::label_edge;
     using label_vertex = graph_t::label;
 
-    Recipe() = default;
+    Recipe(GraphTopology& topology);
 
     Recipe(Recipe &&) = default;
 
@@ -66,6 +68,7 @@ public:
     Recipe &changeParticleType(const label_vertex &of, const particle_type_type &to);
 
 private:
+    GraphTopology &topology;
     reaction_operations steps;
 };
 

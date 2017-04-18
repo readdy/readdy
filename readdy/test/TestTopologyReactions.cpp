@@ -70,8 +70,8 @@ protected:
 TEST(TestTopologyReactions, ModeFlags) {
     using namespace readdy;
     using namespace readdy::model::top;
-    reactions::TopologyReaction topologyReaction{[](const GraphTopology &) {
-        reactions::TopologyReaction::reaction_recipe recipe;
+    reactions::TopologyReaction topologyReaction{[](GraphTopology &t) {
+        reactions::TopologyReaction::reaction_recipe recipe {t};
         return recipe;
     }, [](const GraphTopology &) {
         return 0;
@@ -102,8 +102,8 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
     topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
     {
         const auto &types = kernel->getKernelContext().particle_types();
-        auto reactionFunction = [&](const model::top::GraphTopology &top) {
-            model::top::reactions::Recipe recipe;
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
             recipe.changeParticleType("begin", types.id_of("Topology B"));
             return recipe;
         };
@@ -111,8 +111,8 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
     }
     {
         const auto &types = kernel->getKernelContext().particle_types();
-        auto reactionFunction = [&](const model::top::GraphTopology &top) {
-            model::top::reactions::Recipe recipe;
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
             recipe.changeParticleType("begin", types.id_of("Topology B"));
             return recipe;
         };

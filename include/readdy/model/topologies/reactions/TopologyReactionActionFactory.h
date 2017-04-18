@@ -44,8 +44,8 @@ class TopologyReactionActionFactory {
 public:
     using graph_t = TopologyReactionAction::graph_t;
     using operation_ref = std::unique_ptr<TopologyReactionAction>;
-    using vertex_t = TopologyReactionAction::label_vertex;
-    using edge_t = TopologyReactionAction::label_edge;
+    using vertex_t = graph_t::vertex_ref;
+    using edge_t = TopologyReactionAction::edge;
 
     virtual operation_ref createChangeParticleType(GraphTopology *const topology, const vertex_t &v,
                                                   const particle_type_type &type_to) const = 0;

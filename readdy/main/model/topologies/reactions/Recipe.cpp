@@ -39,9 +39,11 @@ namespace top {
 namespace reactions {
 
 Recipe &Recipe::changeParticleType(const Recipe::label_vertex &of, const particle_type_type &to) {
-    steps.push_back(std::make_shared<op::ChangeParticleType>(of, to));
+    steps.push_back(std::make_shared<op::ChangeParticleType>(vertex_ref(&topology.graph(), of), to));
     return *this;
 }
+
+Recipe::Recipe(GraphTopology& topology) : topology(topology){}
 
 }
 }

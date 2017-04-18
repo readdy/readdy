@@ -44,7 +44,7 @@ double TopologyReaction::rate(const GraphTopology &topology) const {
     return rate_function_(topology);
 }
 
-TopologyReaction::reaction_recipe TopologyReaction::operations(const GraphTopology &topology) const {
+TopologyReaction::reaction_recipe TopologyReaction::operations(GraphTopology &topology) const {
     return reaction_function_(topology);
 }
 

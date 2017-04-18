@@ -49,15 +49,24 @@ public:
 
     using vertex_list = std::list<Vertex>;
     using vertex_ref = VertexRef;
-    using edge = std::tuple<vertex_ref, vertex_ref>;
+    using vertex_cref = VertexCRef;
     using label = Vertex::label_t;
     using label_edge = std::tuple<label, label>;
+
+    using edge = std::tuple<vertex_ref, vertex_ref>;
+    using cedge = std::tuple<vertex_cref, vertex_cref>;
+
     using path_len_2 = std::tuple<vertex_ref, vertex_ref, vertex_ref>;
+    using cpath_len_2 = std::tuple<vertex_cref, vertex_cref, vertex_cref>;
+
     using path_len_3 = std::tuple<vertex_ref, vertex_ref, vertex_ref, vertex_ref>;
+    using cpath_len_3 = std::tuple<vertex_cref, vertex_cref, vertex_cref, vertex_cref>;
 
     using edge_callback = std::function<void(const edge &)>;
     using path_len_2_callback = std::function<void(const path_len_2 &)>;
     using path_len_3_callback = std::function<void(const path_len_3 &)>;
+
+    using vertex_label_mapping = std::unordered_map<std::string, vertex_ref>;
 
     Graph() = default;
 
@@ -83,9 +92,13 @@ public:
 
     Vertex &namedVertex(const label &name);
 
-    edge namedEdge(const label_edge& edge) const;
+    cedge namedEdge(const label_edge& edge) const;
 
-    vertex_ref namedVertexPtr(const label& name) const;
+    edge namedEdge(const label_edge& edge);
+
+    vertex_ref namedVertexPtr(const label& name);
+
+    vertex_cref namedVertexPtr(const label& name) const;
 
     const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
 
@@ -119,9 +132,9 @@ public:
 
     bool isConnected();
 
-    const std::unordered_map<std::string, vertex_ref>& vertexLabelMapping() const;
+    const vertex_label_mapping& vertexLabelMapping() const;
 
-    std::unordered_map<std::string, vertex_ref>& vertexLabelMapping();
+    vertex_label_mapping& vertexLabelMapping();
 
     void findNTuples(const edge_callback &tuple_callback,
                      const path_len_2_callback &triple_callback,
@@ -132,7 +145,7 @@ public:
 
 private:
     vertex_list vertices_;
-    std::unordered_map<std::string, vertex_ref> namedVertices{};
+    vertex_label_mapping namedVertices{};
 
     void removeNeighborsEdges(vertex_ref vertex);
 

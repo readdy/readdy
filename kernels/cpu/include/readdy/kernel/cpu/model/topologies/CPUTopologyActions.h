@@ -137,11 +137,11 @@ NAMESPACE_BEGIN(op)
 class CPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
     CPUParticleData *const data;
 public:
-    CPUChangeParticleType(CPUParticleData *const data, top::GraphTopology *const topology, const label_vertex &v,
+    CPUChangeParticleType(CPUParticleData *const data, top::GraphTopology *const topology, const vertex &v,
                           const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
     virtual void execute() override {
-        const auto idx = topology->getParticles().at(topology->graph().namedVertexPtr(label_vertex_)->particleIndex);
+        const auto idx = topology->getParticles().at(_vertex->particleIndex);
         std::swap(data->entry_at(idx).type, previous_type);
     }
 

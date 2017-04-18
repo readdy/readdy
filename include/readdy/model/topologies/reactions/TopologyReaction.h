@@ -69,7 +69,7 @@ class TopologyReaction {
 public:
     using mode = Mode;
     using reaction_recipe = Recipe;
-    using reaction_function = std::function<reaction_recipe(const GraphTopology &)>;
+    using reaction_function = std::function<reaction_recipe(GraphTopology &)>;
     using rate_function = std::function<double(const GraphTopology &)>;
 
     TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
@@ -77,7 +77,7 @@ public:
 
     double rate(const GraphTopology &topology) const;
 
-    reaction_recipe operations(const GraphTopology &topology) const;
+    reaction_recipe operations(GraphTopology &topology) const;
 
     const bool raises_if_invalid() const;
 

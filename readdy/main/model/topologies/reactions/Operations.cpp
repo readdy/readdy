@@ -38,11 +38,11 @@ namespace reactions {
 namespace op {
 
 Operation::action_ptr ChangeParticleType::create_action(topology_ref topology, factory_ref factory) const {
-    return factory->createChangeParticleType(topology, label_vertex_, type_to_);
+    return factory->createChangeParticleType(topology, _vertex, _type_to);
 }
 
-ChangeParticleType::ChangeParticleType(const Operation::label_vertex &vertex, particle_type_type type_to)
-        : label_vertex_(vertex), type_to_(type_to) {}
+ChangeParticleType::ChangeParticleType(const Operation::vertex_ref &vertex, particle_type_type type_to)
+        : _vertex(vertex), _type_to(type_to) {}
 
 }
 }

@@ -288,7 +288,7 @@ Graph::findNTuples() {
     return tuple;
 }
 
-Graph::vertex_ref Graph::namedVertexPtr(const std::string &name) const {
+Graph::vertex_cref Graph::namedVertexPtr(const std::string &name) const {
     return namedVertices.at(name);
 }
 
@@ -308,16 +308,24 @@ void Graph::removeEdge(const Graph::label_edge &edge) {
     removeEdge(std::get<0>(edge), std::get<1>(edge));
 }
 
-Graph::edge Graph::namedEdge(const Graph::label_edge &edge) const {
+Graph::cedge Graph::namedEdge(const Graph::label_edge &edge) const {
     return std::make_tuple(namedVertexPtr(std::get<0>(edge)), namedVertexPtr(std::get<1>(edge)));
 }
 
-const std::unordered_map<std::string, Graph::vertex_ref> &Graph::vertexLabelMapping() const {
+const Graph::vertex_label_mapping &Graph::vertexLabelMapping() const {
     return namedVertices;
 }
 
-std::unordered_map<std::string, Graph::vertex_ref> &Graph::vertexLabelMapping() {
+Graph::vertex_label_mapping &Graph::vertexLabelMapping() {
     return namedVertices;
+}
+
+Graph::edge Graph::namedEdge(const Graph::label_edge &edge) {
+    return std::make_tuple(namedVertexPtr(std::get<0>(edge)), namedVertexPtr(std::get<1>(edge)));
+}
+
+Graph::vertex_ref Graph::namedVertexPtr(const Graph::label &name) {
+    return namedVertices.at(name);
 }
 
 }
