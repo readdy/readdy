@@ -32,6 +32,10 @@
 
 #include <readdy/model/topologies/reactions/TopologyReaction.h>
 
+#include <readdy/model/Kernel.h>
+#include <readdy/model/topologies/Utils.h>
+#include <readdy/model/topologies/reactions/TopologyReactionException.h>
+
 namespace readdy {
 namespace model {
 namespace top {
@@ -83,16 +87,73 @@ void TopologyReaction::create_child_topologies_after_reaction() {
 TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const double &rate)
         : TopologyReaction(reaction_function, [rate](const GraphTopology&) { return rate; }) {}
 
-void TopologyReaction::execute(GraphTopology &topology, const actions::TopologyReactionActionFactory *const factory) {
-    auto ops = operations(topology);
-    auto& steps = ops.steps();
+void TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) {
+    auto recipe = operations(topology);
+    auto topologyActionFactory = kernel->getTopologyActionFactory();
+    auto& steps = recipe.steps();
     std::vector<op::Operation::action_ptr> actions;
     actions.reserve(steps.size());
     for(auto& op : steps) {
-        actions.push_back(op->create_action(&topology, factory));
+        actions.push_back(op->create_action(&topology, topologyActionFactory));
     }
 
-    // todo: execute actions, if failure, rollback (or raise) and give a detailed error message
+    {
+        // perform reaction
+        auto it = actions.begin();
+        bool exceptionOccurred = false;
+        try {
+            for (; it != actions.end(); ++it) {
+                (*it)->execute();
+            }
+        } catch (const TopologyReactionException &exception) {
+            log::warn("exception occurred while executing topology reaction: {}", exception.what());
+            exceptionOccurred = true;
+            if (raises_if_invalid()) {
+                throw;
+            }
+        }
+        if (exceptionOccurred && rolls_back_if_invalid() && it != actions.begin()) {
+            log::warn("rolling back...");
+            for (; ; --it) {
+                (*it)->undo();
+                if(it == actions.begin()) break;
+            }
+        }
+    }
+    // post reaction
+    if(expects_connected_after_reaction()) {
+        bool valid = true;
+        if(!topology.graph().isConnected()) {
+            // we expected it to be connected after the reaction.. but it is not, raise or rollback.
+            log::warn("The topology was expected to still be connected after the reaction, but it was not.");
+            valid = false;
+        }
+        {
+            // check if all particle types are topology flavored
+            const auto& types = kernel->getKernelContext().particle_types();
+            for(const auto& v : topology.graph().vertices()) {
+                if(types.info_of(v.particleType()).flavor != Particle::FLAVOR_TOPOLOGY) {
+                    log::warn("The topology contained particles that were not topology flavored.");
+                    valid = false;
+                }
+            }
+        }
+        if(!valid) {
+            log::warn("GEXF representation: {}", util::to_gexf(topology.graph()));
+            if(rolls_back_if_invalid()) {
+                log::warn("rolling back...");
+                for(auto it = actions.rbegin(); it != actions.rend(); ++it) {
+                    (*it)->undo();
+                }
+            } else {
+                throw TopologyReactionException("The topology was invalid after the reaction, see previous warning messages.");
+            }
+        }
+    } else {
+        // todo grab components
+    }
+    // todo in the action: update rates
+    // todo in the action: update potentials for this topology
 }
 
 void Mode::raise() {

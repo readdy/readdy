@@ -176,6 +176,14 @@ void GraphTopology::addReaction(const reactions::TopologyReaction &reaction) {
     reactions_.push_back(std::make_tuple(reaction, 0));
 }
 
+const GraphTopology::topology_reactions &GraphTopology::registeredReactions() const {
+    return reactions_;
+}
+
+GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
+    return reactions_;
+}
+
 }
 }
 }

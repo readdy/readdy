@@ -62,6 +62,8 @@ public:
 
     virtual readdy::model::top::GraphTopology *const addTopology(const std::vector<TopologyParticle> &particles) = 0;
 
+    virtual std::vector<Particle> getParticlesForTopology(const top::GraphTopology &topology) const;
+
     virtual void removeParticle(const Particle &p) = 0;
 
     virtual void removeAllParticles() = 0;

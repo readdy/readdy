@@ -139,6 +139,10 @@ public:
         return particleType_;
     }
 
+    void setParticleType(particle_type_type type) {
+        particleType_ = type;
+    }
+
     /**
      * flag if this vertex has been visited (for BFS/DFS)
      */
@@ -146,6 +150,7 @@ public:
 
 private:
     friend class readdy::model::top::graph::Graph;
+
     /**
      * the edges (i.e., pointers to neighboring vertices)
      */
@@ -156,6 +161,7 @@ private:
 };
 
 class VertexRef;
+
 class VertexCRef;
 
 class VertexRef {
@@ -186,11 +192,11 @@ public:
 
     const Vertex *operator->() const;
 
-    const Vertex& operator*() const;
+    const Vertex &operator*() const;
 
-    Vertex::vertex_ptr& data();
+    Vertex::vertex_ptr &data();
 
-    const Vertex::vertex_ptr& data() const;
+    const Vertex::vertex_ptr &data() const;
 
     friend std::ostream &operator<<(std::ostream &os, const VertexRef &vertex);
 
@@ -210,7 +216,7 @@ public:
 
     VertexCRef(const Graph *const graph, const Vertex::label_t &label);
 
-    VertexCRef(const VertexRef& ref);
+    VertexCRef(const VertexRef &ref);
 
     VertexCRef(VertexCRef &&) = default;
 
@@ -228,7 +234,7 @@ public:
 
     const Vertex *operator->() const;
 
-    const Vertex& operator*() const;
+    const Vertex &operator*() const;
 
     friend std::ostream &operator<<(std::ostream &os, const VertexCRef &c);
 

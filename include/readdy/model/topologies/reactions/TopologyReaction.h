@@ -45,6 +45,7 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
+class Kernel;
 NAMESPACE_BEGIN(top)
 class GraphTopology;
 NAMESPACE_BEGIN(reactions)
@@ -95,7 +96,7 @@ public:
 
     void create_child_topologies_after_reaction();
 
-    void execute(GraphTopology& topology, const actions::TopologyReactionActionFactory* const factory);
+    void execute(GraphTopology& topology, const Kernel* const kernel);
 
 private:
     rate_function rate_function_;

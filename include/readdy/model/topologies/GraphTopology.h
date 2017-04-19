@@ -94,6 +94,9 @@ public:
 
     void addReaction(const reactions::TopologyReaction &reaction);
 
+    const topology_reactions &registeredReactions() const;
+    topology_reactions &registeredReactions();
+
 protected:
     graph_t graph_;
     const api::PotentialConfiguration &config;

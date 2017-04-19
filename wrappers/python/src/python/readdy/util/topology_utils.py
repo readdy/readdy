@@ -26,3 +26,23 @@ def plot_networkx_topology_graph(topology):
     nx.draw_networkx_edges(G, pos, width=3)
     nx.draw_networkx_labels(G, pos, font_size=20, labels=labels, font_family='sans-serif')
     plt.show()
+
+
+def plot_networkx_graph(G):
+    pos = nx.spring_layout(G)  # positions for all nodes
+    labels = {}
+    for node in G.nodes():
+        labels[node] = G.node[node]["label"]
+        if not labels[node]:
+            labels[node] = node
+    nx.draw_networkx_nodes(G, pos, node_size=700, cmap=plt.cm.summer)
+    nx.draw_networkx_edges(G, pos, width=3)
+    nx.draw_networkx_labels(G, pos, font_size=20, labels=labels, font_family='sans-serif')
+    plt.show()
+
+
+def plot_gexf_string(string):
+    from io import StringIO
+    strio = StringIO(u"%s" % string)
+    graph = nx.read_gexf(strio, relabel=False)
+    plot_networkx_graph(graph)

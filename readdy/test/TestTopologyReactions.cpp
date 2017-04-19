@@ -34,6 +34,7 @@
 #include <readdy/model/topologies/GraphTopology.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
+#include <readdy/model/topologies/Utils.h>
 
 namespace {
 
@@ -49,6 +50,7 @@ protected:
             auto &ctx = kernel->getKernelContext();
             ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
             ctx.particle_types().add("Topology B", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+            ctx.particle_types().add("A", 1.0, 1.0, particle_t::FLAVOR_NORMAL);
             ctx.setBoxSize(10, 10, 10);
             topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
             topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};
@@ -99,28 +101,68 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
+    const auto &types = kernel->getKernelContext().particle_types();
     topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
     {
-        const auto &types = kernel->getKernelContext().particle_types();
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
-            recipe.changeParticleType("begin", types.id_of("Topology B"));
+            recipe.changeParticleType(top.graph().vertices().begin(), types.id_of("Topology B"));
             return recipe;
         };
-        topology->addReaction({reactionFunction, 5});
+        model::top::reactions::TopologyReaction reaction {reactionFunction, 5};
+        reaction.expect_connected_after_reaction();
+        reaction.raise_if_invalid();
+        topology->addReaction(reaction);
     }
     {
-        const auto &types = kernel->getKernelContext().particle_types();
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
-            recipe.changeParticleType("begin", types.id_of("Topology B"));
+            recipe.changeParticleType("begin", types.id_of("Topology A"));
             return recipe;
         };
         auto rateFunction = [&](const model::top::GraphTopology &top) {
-            return 5;
+            return 15;
         };
-        topology->addReaction({reactionFunction, rateFunction});
+        model::top::reactions::TopologyReaction reaction {reactionFunction, rateFunction};
+        reaction.expect_connected_after_reaction();
+        reaction.raise_if_invalid();
+        topology->addReaction(reaction);
     }
+    topology->updateReactionRates();
+    auto& r1 = *topology->registeredReactions().begin();
+    auto& r2 = *(topology->registeredReactions().begin() + 1);
+    EXPECT_EQ(std::get<1>(r1), 5) << "Expected (constant) rate: 5";
+    EXPECT_EQ(std::get<1>(r2), 15) << "Expected (function) rate: 15";
+
+    {
+        std::get<0>(r1).execute(*topology, kernel.get());
+        auto particles = kernel->getKernelStateModel().getParticlesForTopology(*topology);
+        auto v = topology->graph().namedVertexPtr("begin");
+        ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology B"));
+        ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
+                            "the graph representation and the particle data coincide";
+    }
+    {
+        std::get<0>(r2).execute(*topology, kernel.get());
+        auto particles = kernel->getKernelStateModel().getParticlesForTopology(*topology);
+        auto v = topology->graph().namedVertexPtr("begin");
+        ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology A"));
+        ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
+                            "the graph representation and the particle data coincide";
+    }
+}
+
+TEST_P(TestTopologyReactions, GEXF) {
+    using namespace readdy;
+    if(!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+    auto middle = ++topology->graph().vertices().begin();
+    topology->graph().setVertexLabel(middle, "middle");
+    auto gexf = model::top::util::to_gexf(topology->graph());
+    EXPECT_TRUE(gexf.find("<node id=\"1\" label=\"middle\"") != std::string::npos) << "middle node should be labelled";
+    EXPECT_TRUE(gexf.find("source=\"0\" target=\"1\"") != std::string::npos) << "first two vertices are connected";
 }
 
 TEST_P(TestTopologyReactions, AddEdge) {
@@ -141,7 +183,7 @@ TEST_P(TestTopologyReactions, RemoveEdge) {
     // todo topology (decomposes/doesnt decompose) into child topologies (expected / not expected) with (rollback/norollback)
 }
 
-INSTANTIATE_TEST_CASE_P(TestTopologyReactions, TestTopologyReactions,
+INSTANTIATE_TEST_CASE_P(TestTopologyReactionsKernelTests, TestTopologyReactions,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 
 }
