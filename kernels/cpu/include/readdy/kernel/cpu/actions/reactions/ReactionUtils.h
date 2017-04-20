@@ -99,21 +99,25 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
             for (const auto idx_neighbor : nl->find_neighbors(index)) {
                 if (index > idx_neighbor) continue;
                 const auto& neighbor = data.entry_at(idx_neighbor);
-                const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
-                                                                                                     neighbor.type);
-                if (!reactions.empty()) {
-                    const auto distSquared = d2(neighbor.position(), entry.position());
-                    for (auto it = reactions.begin(); it < reactions.end(); ++it) {
-                        const auto &react = *it;
-                        const auto rate = react->getRate();
-                        if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
-                            alpha += rate;
-                            events.push_back({2, react->getNProducts(), index, idx_neighbor,
-                                              rate, alpha,
-                                              static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                              entry.type, neighbor.type});
+                if(!neighbor.is_deactivated()) {
+                    const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
+                                                                                                  neighbor.type);
+                    if (!reactions.empty()) {
+                        const auto distSquared = d2(neighbor.position(), entry.position());
+                        for (auto it = reactions.begin(); it < reactions.end(); ++it) {
+                            const auto &react = *it;
+                            const auto rate = react->getRate();
+                            if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
+                                alpha += rate;
+                                events.push_back({2, react->getNProducts(), index, idx_neighbor,
+                                                  rate, alpha,
+                                                  static_cast<event_t::reaction_index_type>(it - reactions.begin()),
+                                                  entry.type, neighbor.type});
+                            }
                         }
                     }
+                } else {
+                    log::critical("deactivated entry in neighbor list!");
                 }
             }
         }
@@ -122,8 +126,10 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
 }
 
 template<typename Reaction>
-void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, data_t::entries_update_t& newEntries,
-                     std::vector<data_t::index_t>& decayedEntries, Reaction* reaction, record_t* record) {
+void performReaction(data_t& data, const readdy::model::KernelContext& context, data_t::index_t idx1, data_t::index_t idx2,
+                     data_t::entries_update_t& newEntries, std::vector<data_t::index_t>& decayedEntries,
+                     Reaction* reaction, record_t* record) {
+    const auto& pbc = context.getPBCFun();
     auto& entry1 = data.entry_at(idx1);
     auto& entry2 = data.entry_at(idx2);
     if(record) {
@@ -181,14 +187,15 @@ void performReaction(data_t& data, data_t::index_t idx1, data_t::index_t idx2, d
             const auto& e1Pos = entry1.position();
             const auto& e2Pos = entry2.position();
             if (reaction->getEducts()[0] == entry1.type) {
-                data.displace(entry1, reaction->getWeight1() * (e2Pos - e1Pos));
+                newEntries.emplace_back(pbc(entry1.position() + reaction->getWeight1() * (e2Pos - e1Pos)),
+                                        reaction->getProducts()[0], readdy::model::Particle::nextId());
             } else {
-                data.displace(entry1, reaction->getWeight2() * (e2Pos - e1Pos));
+                newEntries.emplace_back(pbc(entry1.position() + reaction->getWeight2() * (e2Pos - e1Pos)),
+                                        reaction->getProducts()[0], readdy::model::Particle::nextId());
             }
-            entry1.type = reaction->getProducts()[0];
-            entry1.id = readdy::model::Particle::nextId();
+            decayedEntries.push_back(idx1);
             decayedEntries.push_back(idx2);
-            if(record) record->products[0] = entry1.id;
+            if(record) record->products[0] = newEntries.back().id;
             break;
         }
     }

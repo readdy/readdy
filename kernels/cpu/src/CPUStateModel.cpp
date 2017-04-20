@@ -133,13 +133,19 @@ struct CPUStateModel::Impl {
 
     template<bool fixpos = true>
     const model::CPUParticleData &cdata() const {
-        if (fixpos) particleData->setFixPosFun(context->getFixPositionFun());
+        if (fixpos)  {
+            particleData->setFixPosFun(context->getFixPositionFun());
+            particleData->setPBCFun(context->getPBCFun());
+        }
         return *particleData;
     }
 
     template<bool fixpos = true>
     model::CPUParticleData &data() {
-        if (fixpos) particleData->setFixPosFun(context->getFixPositionFun());
+        if (fixpos) {
+            particleData->setFixPosFun(context->getFixPositionFun());
+            particleData->setPBCFun(context->getPBCFun());
+        }
         return *particleData;
     }
 

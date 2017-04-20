@@ -194,11 +194,11 @@ void CPUUncontrolledApproximation::perform() {
                     if(ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
-                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, &record);
+                        performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
                     } else {
-                        performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
+                        performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if(ctx.recordReactionCounts()) {
                         auto& countsOrder1 = std::get<0>(stateModel.reactionCounts());
@@ -214,11 +214,11 @@ void CPUUncontrolledApproximation::perform() {
                     if(ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
-                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
+                        performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
                     } else {
-                        performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
+                        performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if(ctx.recordReactionCounts()) {
                         auto& countsOrder2 = std::get<1>(stateModel.reactionCounts());

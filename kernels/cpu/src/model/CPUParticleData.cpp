@@ -160,6 +160,8 @@ void CPUParticleData::removeEntry(index_t idx) {
     if(!entry.is_deactivated()) {
         entry.deactivated = true;
         blanks.push_back(idx);
+    } else {
+        log::critical("mist");
     }
 }
 
@@ -298,6 +300,18 @@ CPUParticleData::addTopologyParticles(const std::vector<CPUParticleData::top_par
 void CPUParticleData::reserve(std::size_t n) {
     entries.reserve(n);
     neighbors.reserve(n);
+}
+
+const CPUParticleData::ctx_t::fix_pos_fun &CPUParticleData::fixPosFun() const {
+    return fixPos;
+}
+
+void CPUParticleData::setPBCFun(const CPUParticleData::ctx_t::pbc_fun &f) {
+    pbc = f;
+}
+
+const CPUParticleData::ctx_t::pbc_fun &CPUParticleData::pbcFun() const {
+    return pbc;
 }
 
 }

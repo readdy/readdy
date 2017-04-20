@@ -72,6 +72,9 @@ public:
         Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
                                                deactivated(false), displacement(0), id(particle.getId()) {
         }
+        Entry(particle_type::pos_type pos, particle_type_type type, particle_type::id_type id)
+                : pos(std::move(pos)), type(std::move(type)), id(std::move(id)), deactivated(false),
+                  force(), displacement(0) {}
 
         Entry(const Entry&) = delete;
         Entry& operator=(const Entry&) = delete;
@@ -94,7 +97,7 @@ public:
         particle_type::type_type type; // 56 + 4 = 60 bytes
     private:
         bool deactivated; // 60 + 1 = 61 bytes
-        char padding[3]; // 61 + 3 = 64 bytes
+        char padding[3] {0,0,0}; // 61 + 3 = 64 bytes
     };
     // ctor / dtor
     CPUParticleData(readdy::model::KernelContext *const context);
@@ -157,6 +160,12 @@ public:
 
     void setFixPosFun(const ctx_t::fix_pos_fun&);
 
+    void setPBCFun(const ctx_t::pbc_fun& f);
+
+    const ctx_t::fix_pos_fun &fixPosFun() const;
+
+    const ctx_t::pbc_fun &pbcFun() const;
+
     index_t getNDeactivated() const;
 
     /**
@@ -174,6 +183,7 @@ protected:
     neighbor_list_t neighbors;
     entries_t entries;
     ctx_t::fix_pos_fun fixPos;
+    ctx_t::pbc_fun pbc;
 };
 
 }

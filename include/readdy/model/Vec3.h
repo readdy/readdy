@@ -126,6 +126,51 @@ inline void fixPosition(Vec3 &vec, const Vec3::value_t dx, const Vec3::value_t d
 };
 
 template<bool PX, bool PY, bool PZ>
+inline Vec3 applyPBC(Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz);
+
+template<>
+inline Vec3 applyPBC<true, false, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1], in[2]};
+};
+
+template<>
+inline Vec3 applyPBC<false, true, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0], in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2]};
+};
+
+template<>
+inline Vec3 applyPBC<false, false, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0], in[1], in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<true, true, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2]};
+};
+
+template<>
+inline Vec3 applyPBC<true, false, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1], in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<false, true, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0], in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<true, true, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx,
+            in[1] - floor((in[1] + .5 * dy) / dy) * dy,
+            in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<false, false, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return in;
+};
+
+template<bool PX, bool PY, bool PZ>
 inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Vec3::value_t dx, const Vec3::value_t dy,
                                const Vec3::value_t dz) {
     auto dv = rhs - lhs;

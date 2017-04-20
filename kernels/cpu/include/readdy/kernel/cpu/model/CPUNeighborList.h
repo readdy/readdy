@@ -52,6 +52,7 @@ public:
     using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
 
     struct Cell;
+    struct CoarseCell;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
     using particle_index = CPUParticleData::index_t;
@@ -69,6 +70,7 @@ public:
 
 private:
     std::vector<Cell> cells;
+    std::vector<CoarseCell> coarseCells;
     skin_size_t skin_size;
     bool initialSetup = true;
 public:
@@ -139,6 +141,8 @@ public:
     hilbert_index_t getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const;
 
     std::unordered_set<Cell *> findDirtyCells();
+
+    void handleDirtyCells(std::unordered_set<Cell*> dirties);
 
     std::size_t hash_pos(const data_t::particle_type::pos_type &pos) const;
 

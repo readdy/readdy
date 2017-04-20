@@ -52,13 +52,12 @@ namespace model {
 
 namespace thd = readdy::util::thread;
 
-
-template<class OutputIterator, class Size, class Assignable>
-void iota_n(OutputIterator first, Size n, Assignable value) {
-    std::generate_n(first, n, [&value]() {
-        return value++;
-    });
-}
+struct CoarseCell {
+    CoarseCell() {
+        cells.reserve(8);
+    }
+    std::vector<CPUNeighborList::Cell*> cells;
+};
 
 struct CPUNeighborList::Cell {
     std::vector<Cell *> neighbors{};
@@ -111,7 +110,8 @@ const static std::vector<CPUNeighborList::neighbor_t> no_neighbors{};
 CPUNeighborList::CPUNeighborList(const ctx_t *const context, data_t &data, readdy::util::thread::Config const *const config,
                            skin_size_t skin)
         : ctx(context), config(config), cells(std::vector<Cell>()), reorderSignal(std::make_unique<reorder_signal_t>()),
-          simBoxSize(ctx->getBoxSize()), skin_size(skin), data(data), groupParticlesOnCreation(true) {}
+          simBoxSize(ctx->getBoxSize()), skin_size(skin), data(data), groupParticlesOnCreation(false) {}
+// fixme also try with groupparticlesoncreation(true)
 
 void CPUNeighborList::setupCells() {
     if (cells.empty()) {
@@ -127,14 +127,13 @@ void CPUNeighborList::setupCells() {
         CPUNeighborList::maxCutoff = maxCutoff;
         CPUNeighborList::maxCutoffPlusSkin = maxCutoff + skin_size;
 
-        log::debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size,
-                              maxCutoff + skin_size);
+        log::debug("got maxCutoff={}, skin={} => r_c + r_s = {}", maxCutoff, skin_size, maxCutoff + skin_size);
 
         if (maxCutoff > 0) {
-            const auto desiredCellWidth = .5 * maxCutoffPlusSkin;
+            const auto desiredCoarseCellWidth = maxCutoffPlusSkin;
 
             for (unsigned short i = 0; i < 3; ++i) {
-                nCells[i] = static_cast<cell_index>(floor(simBoxSize[i] / desiredCellWidth));
+                nCells[i] = std::max(1u, 2 * static_cast<cell_index>(floor(simBoxSize[i] / desiredCoarseCellWidth)));
                 if (nCells[i] == 0) nCells[i] = 1;
                 cellSize[i] = simBoxSize[i] / static_cast<double>(nCells[i]);
             }
@@ -144,6 +143,9 @@ void CPUNeighborList::setupCells() {
                 for (cell_index j = 0; j < nCells[1]; ++j) {
                     for (cell_index k = 0; k < nCells[2]; ++k) {
                         cells.push_back({i, j, k, nCells});
+                        if(i % 2 == 0 && j % 2 == 0 && k % 2 == 0) {
+                            coarseCells.emplace_back({});
+                        }
                     }
                 }
             }
@@ -196,9 +198,10 @@ void CPUNeighborList::clear() {
  * @param cell the cell
  * @param data the underlying data
  * @param skin the skin width
- * @return true if everything is ok, false if a particle travelled too far
+ * @return false if everything is ok, true if a particle travelled too far
  */
 bool markCell(CPUNeighborList::Cell &cell, const CPUNeighborList::data_t &data, const double r_c, const double r_s) {
+    // fixme hier ist alles in ordnung, keine deactivated [zumindest ohne hilbert sorting]
     bool travelledTooFar = false;
     cell.maximal_displacements[0] = 0;
     cell.maximal_displacements[1] = 0;
@@ -207,6 +210,7 @@ bool markCell(CPUNeighborList::Cell &cell, const CPUNeighborList::data_t &data, 
         const auto &entry = data.entry_at(idx);
         if (!entry.is_deactivated()) {
             const double disp = entry.displacement;
+            // fixme is this correct? probably not
             travelledTooFar = disp > r_c + r_s;
             if (travelledTooFar) break;
             if (disp > cell.maximal_displacements[0]) {
@@ -214,6 +218,8 @@ bool markCell(CPUNeighborList::Cell &cell, const CPUNeighborList::data_t &data, 
             } else if (disp > cell.maximal_displacements[1]) {
                 cell.maximal_displacements[1] = disp;
             }
+        } else {
+            log::critical("found deactivated particle in my cell, uh oh.");
         }
     }
     cell.checkDirty(r_s);
@@ -252,8 +258,6 @@ void CPUNeighborList::fillCells() {
 
                         auto worker = [&indices, &hilbert_indices, this, grainSize](data_iter_t begin, data_iter_t end,
                                                                                     std::vector<unsigned int>::iterator hilberts_begin) {
-                            //auto worker_offset = std::distance(hilbert_indices.begin(), hilberts_begin);
-                            //auto worker_size = std::distance(begin, end);
                             {
                                 auto it = begin;
                                 auto hilbert_it = hilberts_begin;
@@ -270,34 +274,6 @@ void CPUNeighborList::fillCells() {
                                     }
                                 }
                             }
-
-                            /*barrier.wait();
-                            // sort in subsets
-                            auto indices_begin = indices.begin() + worker_offset;
-                            std::sort(indices_begin, indices_begin + worker_size,
-                                      [&hilbert_indices](std::size_t i, std::size_t j) {
-                                          return hilbert_indices[i] < hilbert_indices[j];
-                                      });
-                            barrier.wait();
-                            // merge
-                            int k = 2;
-                            while (k <= config->nThreads()) {
-                                if (thread_id % k == 0) {
-                                    auto merge_begin = indices_begin;
-                                    auto merge_mid = std::min(indices_begin + (k/2) * grainSize, indices.end());
-                                    auto merge_end = std::min(indices_begin + k * grainSize, indices.end());
-                                    readdy::log::debug("k={}, thread {} merging range {} - {} - {}",k, thread_id, std::distance(indices.begin(), merge_begin), std::distance(indices.begin(), merge_mid), std::distance(indices.begin(), merge_end));
-                                    if(merge_mid != merge_end) {
-                                        std::inplace_merge(merge_begin, merge_mid, merge_end,
-                                                           [&hilbert_indices](std::size_t i, std::size_t j) {
-                                                               return hilbert_indices[i] < hilbert_indices[j];
-                                                           });
-                                    }
-
-                                }
-                                k *= 2;
-                                barrier.wait();
-                            }*/
                         };
 
                         {
@@ -314,24 +290,10 @@ void CPUNeighborList::fillCells() {
                         }
                         {
                             std::sort(indices.begin(), indices.end(),
-                                      [&hilbert_indices](std::size_t i, std::size_t j) {
+                                      [&hilbert_indices](std::size_t i, std::size_t j) -> bool {
                                           return hilbert_indices[i] < hilbert_indices[j];
                                       });
                         }
-                        /*{
-                            // sanity 1
-                            unsigned int lastHilbert = 0;
-                            for (std::size_t i = 0;i < data.size();++i) {
-                                const auto &pos = data.entry_at(indices[i]).position();
-                                const auto ijk = mapPositionToCell(pos);
-                                bitmask_t coords[3]{std::get<0>(ijk), std::get<1>(ijk), std::get<2>(ijk)};
-                                auto newHilbert = static_cast<unsigned int>(hilbert_c2i(3, CHAR_BIT, coords));
-                                if(newHilbert < lastHilbert) {
-                                    log::critical("mist1: {} < {}", newHilbert, lastHilbert);
-                                }
-                                lastHilbert = newHilbert;
-                            }
-                        }*/
                     }
 
                     data.blanks_moved_to_front();
@@ -342,24 +304,8 @@ void CPUNeighborList::fillCells() {
                     reorderSignal->fire_signal(inverseIndices);
                     readdy::util::collections::reorder_destructive(inverseIndices.begin(), inverseIndices.end(), data.begin());
                 }
-                /*{
-                    // sanity 2
-                    unsigned int lastHilbert = 0;
-                    for (const auto& entry : data) {
-                        const auto &pos = entry.position();
-                        const auto ijk = mapPositionToCell(pos);
-                        bitmask_t coords[3]{std::get<0>(ijk), std::get<1>(ijk), std::get<2>(ijk)};
-                        auto newHilbert = entry.is_deactivated() ? 0 : static_cast<unsigned int>(hilbert_c2i(3, CHAR_BIT, coords));
-                        if(newHilbert >= lastHilbert) {
-                            // ok!
-                        } else {
-                            log::critical("mist2: {} < {}", newHilbert, lastHilbert);
-                        }
-                        lastHilbert = newHilbert;
-                    }
-                }*/
                 {
-                    data_t::index_t idx = 0;
+                    data_t::index_t idx = data.getNDeactivated();
                     for (auto it = data.begin() + data.getNDeactivated(); it != data.end(); ++it) {
                         auto cell = getCell(it->position());
                         if (cell) {
@@ -404,91 +350,7 @@ void CPUNeighborList::fillCells() {
         } else {
             auto dirtyCells = findDirtyCells();
 
-            const double fraction = 8.;
-            if (dirtyCells.size() > cells.size() * fraction) {
-                initialSetup = true;
-                log::debug("had more than {}% dirty cells, recreate neighbor list", fraction * 100);
-                setupCells();
-                fillCells();
-                initialSetup = false;
-                return;
-            } else {
-
-                const std::size_t grainSize = dirtyCells.size() / config->nThreads();
-
-                using cell_it_t = decltype(dirtyCells.begin());
-
-                auto worker = [this, c2, d2, grainSize](cell_it_t begin, cell_it_t end, const thd::barrier &barrier) {
-                    // first gather updates
-                    std::vector<std::vector<CPUNeighborList::particle_index>> cellUpdates;
-                    cellUpdates.reserve(grainSize);
-                    {
-                        for (cell_it_t _b = begin; _b != end; ++_b) {
-                            auto cell = *_b;
-                            cellUpdates.push_back({});
-                            auto &updatedIndices = cellUpdates.back();
-                            updatedIndices.reserve(cell->particles().size());
-                            for (const auto idx : cell->particles()) {
-                                const auto &entry = data.entry_at(idx);
-                                if (!entry.is_deactivated() &&
-                                    cell->contiguous_index == getCellIndex(entry.position())) {
-                                    updatedIndices.push_back(idx);
-                                }
-                            }
-                            for (const auto neigh : cell->neighbors) {
-                                if (cell->dirty || neigh->dirty) {
-                                    for (const auto idx : neigh->particles()) {
-                                        const auto &entry = data.entry_at(idx);
-                                        if (!entry.is_deactivated()
-                                            && cell->contiguous_index == getCellIndex(entry.position())) {
-                                            updatedIndices.push_back(idx);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // wait until all threads have their updates gathered
-                    barrier.wait();
-                    // apply updates
-                    {
-                        auto it = begin;
-                        for (auto &&update : cellUpdates) {
-                            auto cell = *it;
-                            cell->particles() = std::move(update);
-                            ++it;
-                        }
-                    }
-                    // wait until all threads have applied their updates
-                    barrier.wait();
-                    // update neighbor list in respective cells
-                    {
-                        for (cell_it_t _b = begin; _b != end; ++_b) {
-                            auto cell = *_b;
-                            setUpCell(*cell, c2, d2);
-                        }
-                    }
-                };
-
-                // readdy::util::Timer t("        update dirty cells");
-                thd::barrier b(config->nThreads());
-
-                std::vector<threading_model> threads;
-                threads.reserve(config->nThreads());
-
-                // log::warn("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
-
-                {
-                    auto it_cells = dirtyCells.begin();
-                    for (int i = 0; i < config->nThreads() - 1; ++i) {
-                        auto advanced = std::next(it_cells, grainSize);
-                        threads.emplace_back(worker, it_cells, advanced, std::cref(b));
-                        it_cells = advanced;
-                    }
-                    threads.emplace_back(worker, it_cells, dirtyCells.end(), std::cref(b));
-                }
-            }
+            handleDirtyCells(dirtyCells);
             {
                 // auto dirtyCells2 = findDirtyCells();
                 // log::warn("dirty cells after: {}", dirtyCells2.size());
@@ -539,25 +401,49 @@ CPUNeighborList::Cell *CPUNeighborList::getCell(signed_cell_index i, signed_cell
 void CPUNeighborList::remove(const particle_index idx) {
     auto cell = getCell(data.pos(idx));
     if (cell != nullptr) {
-        auto remove_predicate = [idx](const CPUParticleData::Neighbor n) {
-            return n == idx;
-        };
-        try {
-            for (auto &neighbor : neighbors(idx)) {
-                auto &neighbors_2nd = data.neighbors.at(neighbor);
-                auto it = std::find_if(neighbors_2nd.begin(), neighbors_2nd.end(), remove_predicate);
-                if (it != neighbors_2nd.end()) {
-                    neighbors_2nd.erase(it);
-                }
+        {
+            if(data.entry_at(idx).is_deactivated()) {
+                log::critical("well, shit");
             }
+            // remove from own cell
+            bool erased = false;
             auto &particles = cell->particles();
             auto find_it = std::find(particles.begin(), particles.end(), idx);
             if (find_it != particles.end()) {
                 particles.erase(find_it);
+                erased = true;
+            } else {
+                for (auto neighbor_cell : cell->neighbors) {
+                    auto &p2 = neighbor_cell->particles();
+                    auto find_it2 = std::find(p2.begin(), p2.end(), idx);
+                    if (find_it2 != p2.end()) {
+                        p2.erase(find_it2);
+                        erased = true;
+                        break;
+                    }
+                }
             }
-        } catch (const std::out_of_range &) {
-            log::error("tried to remove particle with id {} but it was not in the neighbor list", idx);
+            if (!erased) {
+                log::critical("hier sollte man aber nicht hinkommen");
+            }
         }
+        {
+            // check up on my neighbors and remove myself from them
+            for (auto &neighbor : neighbors(idx)) {
+                if (data.entry_at(neighbor).deactivated) {
+                    log::critical("!!!!!");
+                }
+                auto &neighbors_2nd = data.neighbors.at(neighbor);
+                auto it = std::find(neighbors_2nd.begin(), neighbors_2nd.end(), idx);
+                if (it != neighbors_2nd.end()) {
+                    neighbors_2nd.erase(it);
+                } else {
+                    // todo log::debug("abcabc");
+                }
+            }
+        }
+    } else {
+        log::critical("couldnt find cell");
     }
 }
 
@@ -600,12 +486,57 @@ CPUNeighborList::Cell *CPUNeighborList::getCell(const readdy::model::Particle::p
 }
 
 void CPUNeighborList::updateData(CPUParticleData::update_t &&update) {
+    std::unordered_set<CPUNeighborList::Cell *> dirties;
     if (maxCutoff > 0) {
-        for (const auto &p : std::get<1>(update)) {
-            remove(p);
+        for (const auto &decayIndex : std::get<1>(update)) {
+            // remove(p);
+            if(!data.entry_at(decayIndex).is_deactivated()) {
+                auto cell = getCell(data.pos(decayIndex));
+                if(cell) {
+                    {
+                        bool found = false;
+                        auto &particles = cell->particles();
+                        auto find_it = std::find(particles.begin(), particles.end(), decayIndex);
+                        if (find_it != particles.end()) {
+                            found = true;
+                        } else {
+                            for (auto neighbor_cell : cell->neighbors) {
+                                auto &p2 = neighbor_cell->particles();
+                                auto find_it2 = std::find(p2.begin(), p2.end(), decayIndex);
+                                if (find_it2 != p2.end()) {
+                                    found = true;
+                                    cell = neighbor_cell;
+                                    break;
+                                }
+                            }
+                        }
+                        if(!found) {
+                            log::error("did not find particle in any of the surrounding cells");
+                        }
+                    }
+
+                    cell->dirty = true;
+                    for(auto neigh : cell->neighbors) {
+                        neigh->dirty = true;
+                    }
+                } else {
+                    log::critical("did not find cell for particle");
+                }
+            } else {
+                log::critical("tried removing deactivated particle");
+            }
+        }
+        for(auto& cell : cells) {
+            if(cellOrNeighborDirty(cell)) {
+                dirties.insert(&cell);
+            }
         }
     }
     auto newEntries = data.update(std::move(update));
+    if(!dirties.empty()) {
+        log::error("dirties not empty: {} / {}", dirties.size(), cells.size());
+        handleDirtyCells(std::move(dirties));
+    }
     if (maxCutoff > 0) {
         for (const auto p : newEntries) {
             insert(p);
@@ -679,7 +610,7 @@ bool operator!=(const CPUNeighborList::Cell &lhs, const CPUNeighborList::Cell &r
 }
 
 void CPUNeighborList::Cell::checkDirty(skin_size_t skin) {
-    dirty = maximal_displacements[0] + maximal_displacements[1] > skin;
+    dirty = maximal_displacements[0] + maximal_displacements[1] > .5*skin;
 }
 
 CPUNeighborList::hilbert_index_t CPUNeighborList::getHilbertIndex(std::size_t i, std::size_t j, std::size_t k) const {
@@ -707,6 +638,7 @@ void CPUNeighborList::setPosition(data_t::index_t idx, data_t::particle_type::po
     displace(entry, delta);
 }
 
+// todo: replace uset w/ vector, check cell bounds with ineq operators
 std::unordered_set<CPUNeighborList::Cell *> CPUNeighborList::findDirtyCells() {
     using it_type = decltype(cells.begin());
 
@@ -722,9 +654,10 @@ std::unordered_set<CPUNeighborList::Cell *> CPUNeighborList::findDirtyCells() {
         bool shouldInterrupt = false;
         for (it_type it = begin; it != end; ++it) {
             shouldInterrupt |= markCell(*it, data, maxCutoff, skin_size);
-            if (shouldInterrupt) break;
         }
-        if (shouldInterrupt) interrupt = shouldInterrupt;
+        if (shouldInterrupt) {
+            interrupt = shouldInterrupt;
+        }
         barrier.wait();
         std::vector<Cell *> foundDirtyCells;
         if (!interrupt.load()) {
@@ -842,6 +775,95 @@ std::tuple<CPUNeighborList::cell_index, CPUNeighborList::cell_index, CPUNeighbor
 
 readdy::signals::scoped_connection CPUNeighborList::registerReorderEventListener(const reorder_signal_t::slot_type &slot) {
     return reorderSignal->connect_scoped(slot);
+}
+
+void CPUNeighborList::handleDirtyCells(std::unordered_set<Cell *> dirtyCells) {
+    const auto c2 = maxCutoffPlusSkin * maxCutoffPlusSkin;
+    auto d2 = ctx->getDistSquaredFun();
+    const double fraction = .9;
+    if (dirtyCells.size() > cells.size() * fraction) {
+        initialSetup = true;
+        // log::debug("had more than {}% ({} / {}) dirty cells, recreate neighbor list", fraction * 100, dirtyCells.size(), cells.size());
+        setupCells();
+        fillCells();
+        initialSetup = false;
+    } else {
+
+        const std::size_t grainSize = dirtyCells.size() / config->nThreads();
+
+        using cell_it_t = decltype(dirtyCells.begin());
+
+        auto worker = [this, c2, d2, grainSize](cell_it_t begin, cell_it_t end, const thd::barrier &barrier) {
+            // first gather updates
+            std::vector<std::vector<CPUNeighborList::particle_index>> cellUpdates;
+            cellUpdates.reserve(grainSize);
+            {
+                for (cell_it_t _b = begin; _b != end; ++_b) {
+                    auto cell = *_b;
+                    cellUpdates.push_back({});
+                    auto &updatedIndices = cellUpdates.back();
+                    updatedIndices.reserve(cell->particles().size());
+                    for (const auto idx : cell->particles()) {
+                        const auto &entry = data.entry_at(idx);
+                        if (!entry.is_deactivated() &&
+                            cell->contiguous_index == getCellIndex(entry.position())) {
+                            updatedIndices.push_back(idx);
+                        }
+                    }
+                    for (const auto neigh : cell->neighbors) {
+                        if (cell->dirty || neigh->dirty) {
+                            for (const auto idx : neigh->particles()) {
+                                const auto &entry = data.entry_at(idx);
+                                if (!entry.is_deactivated()
+                                    && cell->contiguous_index == getCellIndex(entry.position())) {
+                                    updatedIndices.push_back(idx);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // wait until all threads have their updates gathered
+            barrier.wait();
+            // apply updates
+            {
+                auto it = begin;
+                for (auto &&update : cellUpdates) {
+                    auto cell = *it;
+                    cell->particles() = std::move(update);
+                    ++it;
+                }
+            }
+            // wait until all threads have applied their updates
+            barrier.wait();
+            // update neighbor list in respective cells
+            {
+                for (cell_it_t _b = begin; _b != end; ++_b) {
+                    auto cell = *_b;
+                    setUpCell(*cell, c2, d2);
+                }
+            }
+        };
+
+        // readdy::util::Timer t("        update dirty cells");
+        thd::barrier b(config->nThreads());
+
+        std::vector<threading_model> threads;
+        threads.reserve(config->nThreads());
+
+        log::warn("got dirty cells {} vs total cells {}", dirtyCells.size(), cells.size());
+
+        {
+            auto it_cells = dirtyCells.begin();
+            for (int i = 0; i < config->nThreads() - 1; ++i) {
+                auto advanced = std::next(it_cells, grainSize);
+                threads.emplace_back(worker, it_cells, advanced, std::cref(b));
+                it_cells = advanced;
+            }
+            threads.emplace_back(worker, it_cells, dirtyCells.end(), std::cref(b));
+        }
+    }
 }
 
 
