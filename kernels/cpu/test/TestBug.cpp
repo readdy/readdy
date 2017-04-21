@@ -154,7 +154,7 @@ TEST(TestBug, MarkDirty) {
 
     {
         auto& stateModel = kernel->getCPUKernelStateModel();
-        auto& neighborList = stateModel.getNeighborList();
+        auto neighborList = stateModel.getNeighborList();
         neighborList->setSkinSize(1.0);
         neighborList->create();
         auto& data = *stateModel.getParticleData();

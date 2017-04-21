@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2016 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,21 +21,48 @@
 
 
 /**
- * << detailed description >>
  *
- * @file common.h
- * @brief << brief description >>
+ *
+ * @file SubCell.h
+ * @brief 
  * @author clonker
- * @date 07.03.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 4/21/17
  */
-
 #pragma once
 
-#include "logging.h"
+#include "CellContainer.h"
 
-NAMESPACE_BEGIN(readdy)
-using scalar = double;
-using time_step_type = unsigned long;
-using particle_type_type = unsigned short;
-NAMESPACE_END(readdy)
+namespace readdy {
+namespace kernel {
+namespace cpu {
+namespace nl {
+
+class SubCell : public CellContainer {
+    using super = CellContainer;
+public:
+    using particle_ref = int;
+
+    SubCell(const CellContainer &super_cell, const vec3 &offset);
+
+    const bool is_leaf() const;
+
+    virtual void update_displacements() override;
+
+    virtual void subdivide(const scalar desired_cell_width) override;
+
+    void refine_uniformly();
+
+private:
+    const CellContainer &super_cell;
+
+    bool _is_leaf {true};
+
+    // change visibility to private, this should not be used with sub cells
+    void update_sub_cell_displacements() override;
+
+};
+
+}
+}
+}
+}

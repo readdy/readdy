@@ -32,6 +32,10 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservableFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/topologies/CPUTopologyActionFactory.cpp")
 
+# --- neighbor list ---
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellContainer.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/SubCell.cpp")
+
 # --- actions ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUEulerBDIntegrator.cpp")

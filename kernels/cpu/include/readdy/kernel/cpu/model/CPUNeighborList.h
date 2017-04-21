@@ -52,7 +52,6 @@ public:
     using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
 
     struct Cell;
-    struct CoarseCell;
     using cell_index = unsigned int;
     using signed_cell_index = typename std::make_signed<cell_index>::type;
     using particle_index = CPUParticleData::index_t;
@@ -70,7 +69,6 @@ public:
 
 private:
     std::vector<Cell> cells;
-    std::vector<CoarseCell> coarseCells;
     skin_size_t skin_size;
     bool initialSetup = true;
 public:

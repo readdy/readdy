@@ -52,13 +52,6 @@ namespace model {
 
 namespace thd = readdy::util::thread;
 
-struct CoarseCell {
-    CoarseCell() {
-        cells.reserve(8);
-    }
-    std::vector<CPUNeighborList::Cell*> cells;
-};
-
 struct CPUNeighborList::Cell {
     std::vector<Cell *> neighbors{};
     double maximal_displacements[2];
@@ -144,7 +137,7 @@ void CPUNeighborList::setupCells() {
                     for (cell_index k = 0; k < nCells[2]; ++k) {
                         cells.push_back({i, j, k, nCells});
                         if(i % 2 == 0 && j % 2 == 0 && k % 2 == 0) {
-                            coarseCells.emplace_back({});
+                            // coarseCells.emplace_back();
                         }
                     }
                 }

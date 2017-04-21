@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2016 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,21 +21,32 @@
 
 
 /**
- * << detailed description >>
  *
- * @file common.h
- * @brief << brief description >>
+ *
+ * @file NeighborList.h
+ * @brief 
  * @author clonker
- * @date 07.03.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 4/21/17
  */
-
 #pragma once
 
-#include "logging.h"
+#include <readdy/common/macros.h>
 
-NAMESPACE_BEGIN(readdy)
-using scalar = double;
-using time_step_type = unsigned long;
-using particle_type_type = unsigned short;
-NAMESPACE_END(readdy)
+#include "CellContainer.h"
+
+namespace readdy {
+namespace kernel {
+namespace cpu {
+namespace nl {
+
+class NeighborList {
+public:
+
+private:
+    CellContainer cellContainer;
+};
+
+}
+}
+}
+}

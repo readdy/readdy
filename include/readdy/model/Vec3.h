@@ -32,7 +32,7 @@
 #pragma once
 #include <array>
 #include <math.h>
-#include <readdy/common/macros.h>
+#include <readdy/common/common.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(model)
 struct READDY_API Vec3 {
 public:
 
-    using value_t = double;
+    using value_t = scalar;
     using data_t = std::array<value_t, 3>;
 
     union {
