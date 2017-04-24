@@ -254,6 +254,36 @@ const CellContainer *const CellContainer::super_cell() const {
     return _super_cell;
 }
 
+void CellContainer::insert_particle(const CellContainer::particle_index index) const {
+    const auto& entry = data().entry_at(index);
+    if(!entry.is_deactivated()) {
+        auto cell = leaf_cell_for_position(entry.position());
+        if(cell != nullptr) {
+            cell->insert_particle(index);
+        }
+    } else {
+        log::critical("Tried inserting a deactivated particle ({}) into the neighbor list!", index);
+    }
+}
+
+void CellContainer::insert_particle(const CellContainer::particle_index index) {
+    const auto& entry = data().entry_at(index);
+    if(!entry.is_deactivated()) {
+        auto cell = leaf_cell_for_position(entry.position());
+        if(cell != nullptr) {
+            cell->insert_particle(index);
+        }
+    } else {
+        log::critical("Tried inserting a deactivated particle ({}) into the neighbor list!", index);
+    }
+}
+
+void CellContainer::clear() {
+    execute_for_each_sub_cell([](sub_cell& cell) {
+        cell.clear();
+    }, *this);
+}
+
 CellContainer::~CellContainer() = default;
 
 }

@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,57 +21,67 @@
 
 
 /**
+ * << detailed description >>
  *
- *
- * @file SubCell.h
- * @brief 
+ * @file ParticlesList.h
+ * @brief << brief description >>
  * @author clonker
- * @date 4/21/17
+ * @date 24.04.17
+ * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include "CellContainer.h"
+#include <vector>
+#include <readdy/kernel/cpu/model/CPUParticleData.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace nl {
 
-class SubCell : public CellContainer {
-    using super = CellContainer;
+class ParticlesList {
 public:
-    using particle_ref = int;
+    using particle_index = model::CPUParticleData::index_t;
+    using particle_indices = std::vector<particle_index>;
+    using mutex_type = std::mutex;
+    using particles_lock = std::unique_lock<mutex_type>;
 
-    SubCell(CellContainer *const super_cell, const vec3 &offset);
+    ParticlesList() = default;
 
-    SubCell(SubCell&& rhs) = default;
+    ParticlesList(ParticlesList &&rhs) : _particles_mutex() {
+        particles_lock rhs_lock(rhs._particles_mutex);
+        _particles = std::move(rhs._particles);
+    }
 
-    const bool is_leaf() const;
+    ParticlesList &operator=(ParticlesList &&) = delete;
 
-    virtual void update_displacements() override;
+    ParticlesList(const ParticlesList &) = delete;
 
-    virtual void subdivide(const scalar desired_cell_width) override;
+    ParticlesList &operator=(const ParticlesList &) = delete;
 
-    virtual void refine_uniformly() override;
+    virtual ~ParticlesList() = default;
 
-    void setup_uniform_neighbors(const std::uint8_t radius);
+    void add(const particle_index index) const {
+        particles_lock lock(_particles_mutex);
+        _particles.push_back(index);
+    }
 
-    void insert_particle(const particle_index index) const override;
+    void add(const particle_index index) {
+        _particles.push_back(index);
+    }
 
-    void insert_particle(const particle_index index);
+    void clear() {
+        _particles.clear();
+    }
 
-    virtual void clear() override;
-
-    const ParticlesList& particles() const;
+    const particle_indices &get() const {
+        return _particles;
+    }
 
 private:
-    bool _is_leaf{true};
-
-    ParticlesList _particles_list {};
-
-    // change visibility to private, this should not be used with sub cells
-    void update_sub_cell_displacements() override;
-
+    mutable std::mutex _particles_mutex{};
+    mutable particle_indices _particles{};
 };
 
 }

@@ -73,6 +73,8 @@ public:
 
     const std::size_t &n_order2() const;
 
+    const reaction_o2_registry &order2() const;
+
     const std::vector<const reactions::Reaction<2> *> order2_flat() const;
 
     const reactions::Reaction<2> *const order2_by_name(const std::string &name) const;

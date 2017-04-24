@@ -42,9 +42,32 @@ namespace nl {
 
 class NeighborList {
 public:
+    using skin_size_t = scalar;
+    NeighborList(const model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                 const readdy::util::thread::Config &config, skin_size_t skin = 0);
 
+    void set_up();
+
+    void update();
+
+    const model::CPUParticleData& data() const;
+
+    const readdy::util::thread::Config& config() const;
+
+    const CellContainer& cell_container() const;
 private:
-    CellContainer cellContainer;
+
+    scalar calculate_max_cutoff();
+
+    void fill_container();
+
+    CellContainer _cell_container;
+
+    skin_size_t _skin;
+    scalar _max_cutoff;
+    const model::CPUParticleData &_data;
+    const readdy::model::KernelContext &_context;
+    const readdy::util::thread::Config _config;
 };
 
 }

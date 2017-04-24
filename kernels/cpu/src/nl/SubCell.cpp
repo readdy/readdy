@@ -132,6 +132,28 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
     }
 }
 
+void SubCell::insert_particle(const CellContainer::particle_index index) const {
+    _particles_list.add(index);
+}
+
+void SubCell::insert_particle(const CellContainer::particle_index index) {
+    _particles_list.add(index);
+}
+
+void SubCell::clear() {
+    if(!_is_leaf) {
+        std::for_each(_sub_cells.begin(), _sub_cells.end(), [](sub_cell& cell) {
+            cell.clear();
+        });
+    } else {
+        _particles_list.clear();
+    }
+}
+
+const ParticlesList &SubCell::particles() const {
+    return _particles_list;
+}
+
 }
 }
 }

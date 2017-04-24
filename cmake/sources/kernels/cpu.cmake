@@ -35,6 +35,7 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/topologies/CPUTopologyActionFactor
 # --- neighbor list ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellContainer.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/SubCell.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/NeighborList.cpp")
 
 # --- actions ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")

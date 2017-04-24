@@ -258,4 +258,40 @@ TEST(TestNeighborList2, PositionToCell) {
     }
 }
 
+TEST(TestNeighborList2, SetUpNeighborList) {
+    using namespace readdy;
+    log::console()->set_level(spdlog::level::debug);
+
+    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto &context = kernel->getKernelContext();
+    const auto& pbc = context.getPBCFun();
+
+    context.setPeriodicBoundary(true, true, true);
+    context.setBoxSize(10, 10, 10);
+    context.particle_types().add("A", 1.0, 1.0);
+    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .5);
+
+    context.configure();
+
+    auto n3 = readdy::model::rnd::normal3<>;
+    for (std::size_t i = 0; i < 500; ++i) {
+        kernel->addParticle("A", pbc(n3(0, 10)));
+    }
+
+    kernel::cpu::nl::NeighborList neighbor_list {
+            data,
+            kernel->getKernelContext(),
+            kernel->threadConfig()
+    };
+    neighbor_list.set_up();
+
+    for(std::size_t i = 0; i < data.size(); ++i) {
+        auto cell = neighbor_list.cell_container().leaf_cell_for_position(pbc(data.pos(i)));
+        ASSERT_TRUE(cell != nullptr) << "expected cell for position " << data.pos(i);
+        const auto& cells_particles = cell->particles().get();
+        ASSERT_TRUE(std::find(cells_particles.begin(), cells_particles.end(), i) != cells_particles.end());
+    }
+}
+
 }

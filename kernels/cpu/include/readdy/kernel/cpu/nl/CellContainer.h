@@ -33,19 +33,17 @@
 #include <vector>
 #include <array>
 
+#include <readdy/common/thread/Config.h>
+#include <readdy/common/common.h>
 #include <readdy/model/Vec3.h>
 #include <readdy/model/KernelContext.h>
-#include <readdy/common/thread/Config.h>
+
+#include "ParticlesList.h"
+#include <readdy/kernel/cpu/model/CPUParticleData.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
-
-namespace model {
-class CPUParticleData;
-}
-
-
 namespace nl {
 
 class SubCell;
@@ -63,6 +61,8 @@ public:
     using grid_index = std::tuple<int, int, int>;
     using vec3 = readdy::model::Vec3;
     using level_t = std::uint8_t;
+    using particle_index = ParticlesList::particle_index;
+
 
     CellContainer(const model::CPUParticleData &data, const readdy::model::KernelContext &context,
                   const readdy::util::thread::Config &config);
@@ -100,6 +100,12 @@ public:
     cell_index &contiguous_index();
 
     const cell_index &contiguous_index() const;
+
+    virtual void insert_particle(const particle_index index) const;
+
+    virtual void insert_particle(const particle_index index);
+
+    virtual void clear();
 
     /**
      * return the sub cell that corresponds to the position if it is within bounds (in case of no pbc), otherwise null
