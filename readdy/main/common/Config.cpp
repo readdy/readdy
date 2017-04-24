@@ -57,7 +57,6 @@ Config::Config() {
         m_nThreads = static_cast<n_threads_t>(std::stol(env));
         log::debug("Using {} threads (by environment variable READDY_N_CORES", m_nThreads);
     }
-    m_nThreads = 1;
 }
 
 Config::n_threads_t Config::nThreads() const {

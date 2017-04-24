@@ -53,20 +53,21 @@ class SubCell;
 class CellContainer {
 public:
     using sub_cell = SubCell;
-    using sub_cells = std::vector<sub_cell>;
-    using cell_index = sub_cells::size_type;
+    using sub_cells_t = std::vector<sub_cell>;
+    using cell_index = sub_cells_t::size_type;
     using dimension = std::array<cell_index, 3>;
     using displacement = scalar;
     using displacement_arr = std::array<displacement, 2>;
-    using cell_ref = CellContainer*;
+    using cell_ref = CellContainer *;
     using cell_ref_list = std::vector<cell_ref>;
     using grid_index = std::tuple<int, int, int>;
     using vec3 = readdy::model::Vec3;
+    using level_t = std::uint8_t;
 
-    CellContainer(const model::CPUParticleData& data, const readdy::model::KernelContext& context,
-                  const readdy::util::thread::Config& config);
+    CellContainer(const model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                  const readdy::util::thread::Config &config);
 
-    virtual ~CellContainer() = default;
+    virtual ~CellContainer();
 
     CellContainer(CellContainer &&) = default;
 
@@ -76,19 +77,19 @@ public:
 
     CellContainer &operator=(const CellContainer &) = delete;
 
-    sub_cells& cells();
+    sub_cells_t &sub_cells();
 
-    const sub_cells &cells() const;
+    const sub_cells_t &sub_cells() const;
 
-    dimension &n_cells();
+    dimension &n_sub_cells();
 
-    const dimension &n_cells() const;
+    const dimension &n_sub_cells() const;
 
-    vec3& size();
+    vec3 &size();
 
-    const vec3& size() const;
+    const vec3 &size() const;
 
-    cell_ref_list& neighbors();
+    cell_ref_list &neighbors();
 
     const cell_ref_list &neighbors() const;
 
@@ -106,23 +107,27 @@ public:
      * @param pos the position
      * @return the corresponding sub cell, otherwise null
      */
-    sub_cell* const cell_for_position(const vec3& pos);
+    sub_cell *const sub_cell_for_position(const vec3 &pos);
 
     /**
      * return the sub cell that corresponds to the position if it is within bounds (in case of no pbc), otherwise null
      * @param pos the position
      * @return the corresponding sub cell, otherwise null
      */
-    const sub_cell* const cell_for_position(const vec3& pos) const;
+    const sub_cell *const sub_cell_for_position(const vec3 &pos) const;
 
     /**
      * Returns the cell based on the contiguous index, see cell_for_position().
      * @param index the index (triple)
      * @return the cell if found, otherwise null
      */
-    sub_cell* const cell_for_grid_index(const grid_index& index);
+    sub_cell *const sub_cell_for_grid_index(const grid_index &index);
 
-    const sub_cell* const cell_for_grid_index(const grid_index& index) const;
+    const sub_cell *const sub_cell_for_grid_index(const grid_index &index) const;
+
+    sub_cell *const leaf_cell_for_position(const vec3 &pos);
+
+    const sub_cell *const leaf_cell_for_position(const vec3 &pos) const;
 
     /**
      * Recursively update displacements by calling update_displacements on the sub cells which in turn do this to their
@@ -142,33 +147,52 @@ public:
      */
     virtual void subdivide(const scalar desired_cell_width);
 
-    const model::CPUParticleData& data() const;
+    virtual void refine_uniformly();
 
-    const readdy::model::KernelContext& context() const;
+    const model::CPUParticleData &data() const;
+
+    const readdy::model::KernelContext &context() const;
 
     const readdy::util::thread::Config &config() const;
 
+    const level_t level() const;
+
+    void setup_uniform_neighbors();
+
+    const CellContainer *const root() const;
+
+    CellContainer *const root();
+
+    const vec3& offset() const;
+
+    const CellContainer* const super_cell() const;
+
 protected:
+
+    CellContainer *_super_cell{nullptr};
 
     template<typename T, typename Dims>
     static T get_contiguous_index(T i, T j, T k, Dims I, Dims J) {
         return k + j * J + i * I * J;
     };
 
-    sub_cells _cells;
-    dimension _n_cells{{0, 0, 0}};
-    vec3 _cell_size {0, 0, 0};
+    sub_cells_t _sub_cells{};
+    dimension _n_sub_cells{{0, 0, 0}};
+    vec3 _sub_cell_size{0, 0, 0};
     vec3 _size{0, 0, 0};
+    vec3 _root_size {0, 0, 0};
 
     cell_ref_list _neighbors{};
-    displacement_arr _maximal_displacements {{0, 0}};
-    cell_index _contiguous_index;
+    displacement_arr _maximal_displacements{{0, 0}};
+    cell_index _contiguous_index{0};
 
     // the offset of this cell (lower left corner) w.r.t. the simulation box
-    vec3 _offset {0, 0, 0};
+    vec3 _offset{0, 0, 0};
 
-    const model::CPUParticleData& _data;
-    const readdy::model::KernelContext& _context;
+    level_t _level{0};
+
+    const model::CPUParticleData &_data;
+    const readdy::model::KernelContext &_context;
     const readdy::util::thread::Config _config;
 };
 

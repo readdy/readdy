@@ -33,6 +33,7 @@
 #include <readdy/common/macros.h>
 
 #include "CellContainer.h"
+#include "SubCell.h"
 
 namespace readdy {
 namespace kernel {

@@ -42,7 +42,7 @@ class SubCell : public CellContainer {
 public:
     using particle_ref = int;
 
-    SubCell(const CellContainer &super_cell, const vec3 &offset);
+    SubCell(CellContainer *const super_cell, const vec3 &offset);
 
     const bool is_leaf() const;
 
@@ -50,12 +50,12 @@ public:
 
     virtual void subdivide(const scalar desired_cell_width) override;
 
-    void refine_uniformly();
+    virtual void refine_uniformly() override;
+
+    void setup_uniform_neighbors(const std::uint8_t radius);
 
 private:
-    const CellContainer &super_cell;
-
-    bool _is_leaf {true};
+    bool _is_leaf{true};
 
     // change visibility to private, this should not be used with sub cells
     void update_sub_cell_displacements() override;
