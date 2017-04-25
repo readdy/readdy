@@ -63,7 +63,15 @@ void SubCell::update_displacements() {
             }
         }
     } else {
-        // todo update displacements wrt. contained particles
+        for(const auto particle_index : _particles_list.get()) {
+            const auto& entry = data().entry_at(particle_index);
+            assert(!entry.is_deactivated());
+            if(entry.displacement > _maximal_displacements[0]) {
+                _maximal_displacements[0] = entry.displacement;
+            } else if(entry.displacement > _maximal_displacements[1]) {
+                _maximal_displacements[1] = entry.displacement;
+            }
+        }
     }
 }
 
@@ -105,7 +113,8 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
         std::for_each(_sub_cells.begin(), _sub_cells.end(), [=](sub_cell &sub_cell) {
             sub_cell.setup_uniform_neighbors(static_cast<std::uint8_t>(2 * _level));
         });
-    } else {
+    }
+    {
         const auto &pbc = _context.getPBCFun();
         // center w.r.t. simulation coordinates
         auto my_global_center = _offset + .5 * _size - .5 * _root_size;
@@ -116,12 +125,10 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
                 auto shifted_pos_j = pbc(shifted_pos_i + vec3{0, j * _size.y, 0});
                 for (int k = -radius; k <= radius; ++k) {
                     if (!(i == 0 && j == 0 && k == 0)) {
-                        //const auto shifted_pos = pbc(shifted_pos_j + vec3{0, 0, k*_size.z});
-                        //if(shifted_pos == shifted_pos_j) break;
                         const auto shifted_pos = pbc({my_global_center.x + i * _size.x,
                                                       my_global_center.y + j * _size.y,
                                                       my_global_center.z + k * _size.z});
-                        auto cell = my_root->leaf_cell_for_position(shifted_pos);
+                        auto cell = my_root->sub_cell_for_position(shifted_pos, _level);
                         if (cell && cell != this) {
                             _neighbors.push_back(cell);
                         }
@@ -152,6 +159,14 @@ void SubCell::clear() {
 
 const ParticlesList &SubCell::particles() const {
     return _particles_list;
+}
+
+bool &SubCell::dirty() {
+    return _is_dirty;
+}
+
+const bool &SubCell::dirty() const {
+    return _is_dirty;
 }
 
 }

@@ -64,8 +64,13 @@ public:
 
     const ParticlesList& particles() const;
 
+    bool& dirty();
+
+    const bool& dirty() const;
+
 private:
     bool _is_leaf{true};
+    bool _is_dirty{false};
 
     ParticlesList _particles_list {};
 

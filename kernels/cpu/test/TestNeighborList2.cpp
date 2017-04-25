@@ -263,7 +263,7 @@ TEST(TestNeighborList2, SetUpNeighborList) {
     log::console()->set_level(spdlog::level::debug);
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto& data = *kernel->getCPUKernelStateModel().getParticleData();
     auto &context = kernel->getKernelContext();
     const auto& pbc = context.getPBCFun();
 

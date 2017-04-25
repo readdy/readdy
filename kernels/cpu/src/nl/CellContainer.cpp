@@ -30,11 +30,11 @@
  */
 
 #include <cmath>
+#include <atomic>
 
 #include <readdy/common/numeric.h>
 #include <readdy/kernel/cpu/nl/CellContainer.h>
 #include <readdy/kernel/cpu/nl/SubCell.h>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
@@ -246,6 +246,21 @@ const CellContainer::sub_cell *const CellContainer::leaf_cell_for_position(const
     return cell;
 }
 
+CellContainer::sub_cell *const
+CellContainer::sub_cell_for_position(const vec3 &pos, const level_t level) {
+    return const_cast<CellContainer::sub_cell *const>(static_cast<const CellContainer*>(this)->sub_cell_for_position(pos, level));
+}
+
+const CellContainer::sub_cell *const
+CellContainer::sub_cell_for_position(const vec3 &pos, const level_t level) const {
+    if(level == 0) throw std::invalid_argument("level needs to be larger 0");
+    auto cell = sub_cell_for_position(pos);
+    if(cell) {
+        while(cell->level() != level) cell = cell->sub_cell_for_position(pos);
+    }
+    return cell;
+}
+
 const CellContainer::vec3 &CellContainer::offset() const {
     return _offset;
 }
@@ -282,6 +297,35 @@ void CellContainer::clear() {
     execute_for_each_sub_cell([](sub_cell& cell) {
         cell.clear();
     }, *this);
+}
+
+bool CellContainer::update_sub_cell_displacements_and_mark_dirty(const scalar cutoff, const scalar skin) {
+    std::atomic<bool> status {true};
+    std::atomic<std::size_t> n_dirty {0};
+    execute_for_each_sub_cell([&](sub_cell &cell) {
+        cell.update_displacements();
+        cell.dirty() = (cell.maximal_displacements()[0] + cell.maximal_displacements()[1]) > skin;
+        if(cell.maximal_displacements()[0] > skin + cutoff) {
+            status = false;
+        }
+        if(cell.dirty()) {
+            std::atomic_fetch_add<std::size_t>(&n_dirty, 1);
+        }
+    }, *this);
+    _n_dirty_macro_cells = n_dirty.load();
+    return status.load();
+}
+
+void CellContainer::update_dirty_cells() {
+    // todo go through macro cells, see if dirty => the current particles might be in the neighboring cells
+}
+
+const std::size_t CellContainer::n_dirty_macro_cells() const {
+    return _n_dirty_macro_cells;
+}
+
+const std::size_t CellContainer::n_sub_cells_total() const {
+    return _n_sub_cells[0] * _n_sub_cells[1] * _n_sub_cells[2];
 }
 
 CellContainer::~CellContainer() = default;

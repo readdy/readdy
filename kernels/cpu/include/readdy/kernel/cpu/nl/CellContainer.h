@@ -85,6 +85,8 @@ public:
 
     const dimension &n_sub_cells() const;
 
+    const std::size_t n_sub_cells_total() const;
+
     vec3 &size();
 
     const vec3 &size() const;
@@ -135,6 +137,9 @@ public:
 
     const sub_cell *const leaf_cell_for_position(const vec3 &pos) const;
 
+    sub_cell *const sub_cell_for_position(const vec3 &pos, const level_t level);
+    const sub_cell *const sub_cell_for_position(const vec3 &pos, const level_t level) const;
+
     /**
      * Recursively update displacements by calling update_displacements on the sub cells which in turn do this to their
      * sub cells until we reached a LEAF which does the actual computation, anything else is aggregation.
@@ -146,6 +151,15 @@ public:
      * Update the maximal displacements of all cells in the container in parallel
      */
     virtual void update_sub_cell_displacements();
+
+    /**
+     *
+     * @param max_displacement
+     * @return true if everything is alright, false if the displacement of a particle was larger than cutoff + skin
+     */
+    bool update_sub_cell_displacements_and_mark_dirty(const scalar max_cutoff, const scalar skin);
+
+    void update_dirty_cells();
 
     /**
      * sets up subcells with an edge size of >= desired_cell_width
@@ -173,6 +187,13 @@ public:
 
     const CellContainer* const super_cell() const;
 
+    /**
+     * gives the current number of dirty macro cells, only meaningful after a call to
+     * update_sub_cell_displacements_and_mark_dirty().
+     * @return the number of dirty macro cells
+     */
+    const std::size_t n_dirty_macro_cells() const;
+
 protected:
 
     CellContainer *_super_cell{nullptr};
@@ -196,6 +217,8 @@ protected:
     vec3 _offset{0, 0, 0};
 
     level_t _level{0};
+
+    std::size_t _n_dirty_macro_cells {0};
 
     const model::CPUParticleData &_data;
     const readdy::model::KernelContext &_context;
