@@ -151,7 +151,7 @@ struct CPUStateModel::Impl {
 
     Impl(readdy::model::KernelContext *context, top_action_factory const *const taf,
          readdy::util::thread::Config const *const config)
-            : particleData(std::make_unique<CPUStateModel::data_t>(context)), topologyActionFactory(taf) {
+            : particleData(std::make_unique<CPUStateModel::data_t>(context, *config)), topologyActionFactory(taf) {
         Impl::context = context;
     }
 

@@ -98,7 +98,7 @@ TEST_F(TestNeighborList, TestCellsDirty) {
     ctx.configure();
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
     cpum::CPUNeighborList list(&ctx, data, &conf);
     list.setSkinSize(1.0);
 
@@ -127,7 +127,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     ctx.setPeriodicBoundary(false, false, false);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
     cpum::CPUNeighborList list(&ctx, data, &conf);
 
     list.setupCells();
@@ -151,7 +151,7 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.setPeriodicBoundary(false, false, true);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
@@ -179,7 +179,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx};
+    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
     cpum::CPUNeighborList list(&ctx, data, &conf);
     list.setupCells();
     // Create a few particles. In this box setup, all particles are neighbors.

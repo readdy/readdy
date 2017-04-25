@@ -294,4 +294,75 @@ TEST(TestNeighborList2, SetUpNeighborList) {
     }
 }
 
+TEST(TestNeighborList2, HilbertSort) {
+    using namespace readdy;
+    log::console()->set_level(spdlog::level::debug);
+
+    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    auto &context = kernel->getKernelContext();
+    context.setBoxSize(1, 1, 1);
+    context.particle_types().add("A", 1.0, 1.0);
+
+    for(scalar x = -.5; x < .5; x += .1) {
+        for(scalar y = -.5; y < .5; y += .1) {
+            for(scalar z = -.5; z < .5; z += .1) {
+                kernel->addParticle("A", {x,y,z});
+            }
+        }
+    }
+    auto& data = *kernel->getCPUKernelStateModel().getParticleData();
+    data.hilbert_sort(.01);
+    ASSERT_EQ(data.getNDeactivated(), 0);
+    ASSERT_EQ(data.size(), 10*10*10);
+
+    /**
+     * Can be plotted by
+     *  import matplotlib as mpl
+     *  from mpl_toolkits.mplot3d import Axes3D
+     *  import numpy as np
+     *  import matplotlib.pyplot as plt
+     *  %matplotlib qt
+     *
+     *  hilbert = np.loadtxt("hilbert.txt", delimiter=",")
+     *  X,Y,Z = hilbert[:,0], hilbert[:, 1], hilbert[:, 2]
+     *
+     *  fig = plt.figure()
+     *  ax = fig.gca(projection='3d')
+     *  ax.plot(X,Y,Z)
+     *  ax.scatter(X,Y,Z)
+     *  plt.show()
+     *
+     *  log::console()->set_pattern("%v");
+     *  for(const auto& e : data) {
+     *      log::debug("{}, {}, {}", e.position().x, e.position().y, e.position().z);
+     *  }
+     *
+     */
+
+    auto e0 = data.entry_at(0).id;
+    auto e3= data.entry_at(3).id;
+    auto e15 = data.entry_at(15).id;
+
+    data.removeEntry(0);
+    data.removeEntry(3);
+    data.removeEntry(15);
+
+    ASSERT_EQ(data.getNDeactivated(), 3);
+    data.hilbert_sort(.01);
+    data.blanks_moved_to_front();
+    ASSERT_EQ(data.getNDeactivated(), 3);
+
+    ASSERT_TRUE(data.entry_at(0).is_deactivated());
+    ASSERT_TRUE(data.entry_at(1).is_deactivated());
+    ASSERT_TRUE(data.entry_at(2).is_deactivated());
+
+    ASSERT_TRUE(data.entry_at(0).id == e0 || data.entry_at(0).id == e3 || data.entry_at(0).id == e15);
+    ASSERT_TRUE(data.entry_at(1).id == e0 || data.entry_at(1).id == e3 || data.entry_at(1).id == e15);
+    ASSERT_TRUE(data.entry_at(2).id == e0 || data.entry_at(2).id == e3 || data.entry_at(2).id == e15);
+
+    for(auto it = data.begin()+3; it != data.end(); ++it) {
+        ASSERT_FALSE(it->is_deactivated());
+    }
+}
+
 }

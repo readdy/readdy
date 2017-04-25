@@ -36,6 +36,8 @@
 #include <memory>
 #include <stack>
 
+#include <readdy/common/signals.h>
+#include <readdy/common/thread/Config.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/KernelContext.h>
 
@@ -59,8 +61,10 @@ public:
     using neighbor_list_t = std::vector<neighbors_t>;
     using index_t = entries_t::size_type;
     using update_t = std::pair<entries_update_t, std::vector<index_t>>;
-    using force_t = readdy::model::Vec3;
+    using vec3 = readdy::model::Vec3;
+    using force_t = vec3;
     using displacement_t = double;
+    using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
 
     using iterator = decltype(std::declval<entries_t>().begin());
     using const_iterator = decltype(std::declval<entries_t>().cbegin());
@@ -100,7 +104,7 @@ public:
         char padding[3] {0,0,0}; // 61 + 3 = 64 bytes
     };
     // ctor / dtor
-    CPUParticleData(readdy::model::KernelContext *const context);
+    CPUParticleData(readdy::model::KernelContext *const context, const readdy::util::thread::Config &_config);
 
     ~CPUParticleData();
 
@@ -122,6 +126,16 @@ public:
     void clear();
 
     void addParticle(const particle_type &particle);
+
+    /**
+     * project into an unsigned long long int assuming that value is within the sim box
+     * @param value the value
+     * @param grid_width precision
+     * @return bitmask
+     */
+    std::array<unsigned long long, 3> project(vec3 value, scalar grid_width) const;
+
+    void hilbert_sort(const scalar grid_width);
 
     index_t addEntry(Entry &&entry);
 
@@ -168,6 +182,8 @@ public:
 
     index_t getNDeactivated() const;
 
+    readdy::signals::scoped_connection registerReorderEventListener(const reorder_signal_t::slot_type &slot);
+
     /**
      *
      * @return vector of new entries
@@ -184,6 +200,11 @@ protected:
     entries_t entries;
     ctx_t::fix_pos_fun fixPos;
     ctx_t::pbc_fun pbc;
+
+    std::unique_ptr<reorder_signal_t> reorderSignal;
+
+    const readdy::model::KernelContext* const context;
+    const readdy::util::thread::Config& _config;
 };
 
 }

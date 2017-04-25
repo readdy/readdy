@@ -38,9 +38,10 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-NeighborList::NeighborList(const model::CPUParticleData &data, const readdy::model::KernelContext &context,
-                           const readdy::util::thread::Config &config, NeighborList::skin_size_t skin)
-        : _data(data), _context(context), _config(config), _skin(skin), _cell_container(data, context, config) {
+NeighborList::NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                           const readdy::util::thread::Config &config, NeighborList::skin_size_t skin, bool hilbert_sort)
+        : _data(data), _context(context), _config(config), _skin(skin), _cell_container(data, context, config),
+          _hilbert_sort(hilbert_sort) {
 }
 
 const CellContainer &NeighborList::cell_container() const {
@@ -87,6 +88,11 @@ const readdy::util::thread::Config &NeighborList::config() const {
 }
 
 void NeighborList::fill_container() {
+
+    if(_hilbert_sort) {
+        _data.hilbert_sort(_max_cutoff + _skin);
+    }
+
     const auto grainSize = _data.size() / _config.nThreads();
     const auto data_begin = _data.cbegin();
     auto worker = [=](model::CPUParticleData::const_iterator begin, model::CPUParticleData::const_iterator end, const CellContainer& container) {
@@ -112,6 +118,9 @@ void NeighborList::fill_container() {
     }*/
 }
 
+void NeighborList::clear_cells() {
+    _cell_container.clear();
+}
 
 }
 }

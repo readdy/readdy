@@ -62,7 +62,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(100, 100, 100);
     const auto diff = kernel->getKernelContext().getShortestDifferenceFun();
@@ -75,7 +75,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         auto conversion = kernel->getReactionFactory().createReaction<conversion_t>("A->B", 0, 1, 1);
         particle_t p_A{0, 0, 0, 0};
 
-        data_t data {&kernel->getKernelContext()};
+        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
         data.addParticles({p_A});
 
         data_t::entries_update_t newParticles{};
@@ -89,7 +89,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // test fusion
     {
-        data_t data {&kernel->getKernelContext()};
+        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries {};
@@ -112,7 +112,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // fission
     {
-        data_t data {&kernel->getKernelContext()};
+        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries {};
@@ -138,7 +138,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // enzymatic 1
     {
-        data_t data{&kernel->getKernelContext()};
+        data_t data{&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries{};
@@ -167,7 +167,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     }
     // enzymatic 2
     {
-        data_t data{&kernel->getKernelContext()};
+        data_t data{&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries{};
