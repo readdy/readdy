@@ -44,10 +44,14 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
+namespace nl {
+class NeighborList;
+}
 namespace model {
 
 class CPUParticleData {
     friend class CPUNeighborList;
+    friend class readdy::kernel::cpu::nl::NeighborList;
 public:
 
     struct Entry;

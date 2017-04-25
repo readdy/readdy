@@ -56,7 +56,7 @@ public:
     using dimension = std::array<cell_index, 3>;
     using displacement = scalar;
     using displacement_arr = std::array<displacement, 2>;
-    using cell_ref = CellContainer *;
+    using cell_ref = SubCell *;
     using cell_ref_list = std::vector<cell_ref>;
     using grid_index = std::tuple<int, int, int>;
     using vec3 = readdy::model::Vec3;
@@ -193,6 +193,13 @@ public:
      * @return the number of dirty macro cells
      */
     const std::size_t n_dirty_macro_cells() const;
+
+    /**
+     *
+     * @param function
+     * @todo this currently only works for leafs at level==2
+     */
+    void execute_for_each_leaf(const std::function<void(const sub_cell&)> function);
 
 protected:
 

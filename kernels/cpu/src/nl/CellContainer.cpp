@@ -318,6 +318,10 @@ bool CellContainer::update_sub_cell_displacements_and_mark_dirty(const scalar cu
 
 void CellContainer::update_dirty_cells() {
     // todo go through macro cells, see if dirty => the current particles might be in the neighboring cells
+
+    // 1. reset displacement of DIRTY cells
+    // 2. collect particles of DIRTY cells and their NEIGHBORS
+    // 3. reassign these particles to cells, rebuild verlet list (in NL?) for particles in DIRTY and NEIGHBORS
 }
 
 const std::size_t CellContainer::n_dirty_macro_cells() const {
@@ -326,6 +330,14 @@ const std::size_t CellContainer::n_dirty_macro_cells() const {
 
 const std::size_t CellContainer::n_sub_cells_total() const {
     return _n_sub_cells[0] * _n_sub_cells[1] * _n_sub_cells[2];
+}
+
+void CellContainer::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> function) {
+    execute_for_each_sub_cell([&](sub_cell &cell) {
+        for(const auto& sub_cell : cell.sub_cells()) {
+            function(sub_cell);
+        }
+    }, *this);
 }
 
 CellContainer::~CellContainer() = default;

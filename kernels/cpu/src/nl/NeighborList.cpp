@@ -56,6 +56,7 @@ void NeighborList::set_up() {
         _cell_container.refine_uniformly();
         _cell_container.setup_uniform_neighbors();
         fill_container();
+        fill_verlet_list();
     }
 }
 
@@ -94,6 +95,7 @@ void NeighborList::update() {
             }
             clear_cells();
             fill_container();
+            fill_verlet_list();
         }
     }
 }
@@ -142,6 +144,45 @@ void NeighborList::fill_container() {
 
 void NeighborList::clear_cells() {
     _cell_container.clear();
+}
+
+void NeighborList::clear() {
+    if(_max_cutoff > 0) {
+        clear_cells();
+        for(auto& neighbors : _data.neighbors) {
+            neighbors.clear();
+        }
+    }
+}
+
+void NeighborList::fill_verlet_list() {
+    const auto& d2 = _context.getDistSquaredFun();
+    if(_max_cutoff > 0) {
+        const auto verlet_cutoff_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
+        _cell_container.execute_for_each_leaf([&](const CellContainer::sub_cell& cell) {
+            for(const auto particle_index : cell.particles().get()) {
+                auto& neighbors = _data.neighbors_at(particle_index);
+                auto& entry = _data.entry_at(particle_index);
+                neighbors.clear();
+                for(const auto p_i : cell.particles().get()) {
+                    if(p_i != particle_index) {
+                        const auto distSquared = d2(entry.position(), _data.pos(p_i));
+                        if(distSquared < verlet_cutoff_squared) {
+                            neighbors.push_back(p_i);
+                        }
+                    }
+                }
+                for(const auto& neighbor_cell : cell.neighbors()) {
+                    for(const auto p_j : neighbor_cell->particles().get()) {
+                        const auto distSquared = d2(entry.position(), _data.pos(p_j));
+                        if(distSquared < verlet_cutoff_squared) {
+                            neighbors.push_back(p_j);
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 }

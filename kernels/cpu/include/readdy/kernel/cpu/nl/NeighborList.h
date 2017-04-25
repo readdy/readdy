@@ -50,6 +50,8 @@ public:
 
     void update();
 
+    void clear();
+
     void clear_cells();
 
     const model::CPUParticleData& data() const;
@@ -62,6 +64,11 @@ private:
     scalar calculate_max_cutoff();
 
     void fill_container();
+
+    /**
+     * should be called once containers are all valid / filled
+     */
+    void fill_verlet_list();
 
     CellContainer _cell_container;
 
