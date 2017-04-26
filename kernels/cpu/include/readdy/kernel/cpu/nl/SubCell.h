@@ -30,12 +30,34 @@
  */
 #pragma once
 
+#include <atomic>
+
 #include "CellContainer.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace nl {
+
+namespace detail {
+class DirtyFlag {
+public:
+    DirtyFlag() = default;
+    DirtyFlag(DirtyFlag&&);
+    DirtyFlag& operator=(DirtyFlag&&);
+    DirtyFlag(const DirtyFlag&) = delete;
+    DirtyFlag& operator=(const DirtyFlag&) = delete;
+
+    void set() const;
+
+    void unset() const;
+
+    bool get() const;
+
+private:
+    mutable std::atomic<bool> _is_dirty{false};
+};
+}
 
 class SubCell : public CellContainer {
     using super = CellContainer;
@@ -52,6 +74,8 @@ public:
 
     virtual void subdivide(const scalar desired_cell_width) override;
 
+    virtual void reset_max_displacements() override;
+
     virtual void refine_uniformly() override;
 
     void setup_uniform_neighbors(const std::uint8_t radius);
@@ -64,14 +88,22 @@ public:
 
     const ParticlesList& particles() const;
 
-    bool& dirty();
+    const bool is_dirty() const;
 
-    const bool& dirty() const;
+    void set_dirty() const;
+
+    void unset_dirty() const;
+
+    const bool neighbor_dirty() const;
+
+    void reset_particles_displacements();
+
+    ParticlesList::particle_indices collect_contained_particles() const;
 
 private:
     bool _is_leaf{true};
-    bool _is_dirty{false};
 
+    detail::DirtyFlag _dirty_flag {};
     ParticlesList _particles_list {};
 
     // change visibility to private, this should not be used with sub cells

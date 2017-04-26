@@ -70,10 +70,13 @@ private:
      */
     void fill_verlet_list();
 
+    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell, const bool reset_displacement);
+
     CellContainer _cell_container;
 
     skin_size_t _skin;
     scalar _max_cutoff;
+    scalar _max_cutoff_skin_squared {0};
     bool _hilbert_sort {true};
     model::CPUParticleData &_data;
     const readdy::model::KernelContext &_context;

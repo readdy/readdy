@@ -64,7 +64,7 @@ public:
     using particle_index = ParticlesList::particle_index;
 
 
-    CellContainer(const model::CPUParticleData &data, const readdy::model::KernelContext &context,
+    CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                   const readdy::util::thread::Config &config);
 
     virtual ~CellContainer();
@@ -171,6 +171,8 @@ public:
 
     const model::CPUParticleData &data() const;
 
+    model::CPUParticleData& data();
+
     const readdy::model::KernelContext &context() const;
 
     const readdy::util::thread::Config &config() const;
@@ -187,6 +189,10 @@ public:
 
     const CellContainer* const super_cell() const;
 
+    void unset_dirty();
+
+    virtual void reset_max_displacements();
+
     /**
      * gives the current number of dirty macro cells, only meaningful after a call to
      * update_sub_cell_displacements_and_mark_dirty().
@@ -199,7 +205,9 @@ public:
      * @param function
      * @todo this currently only works for leafs at level==2
      */
-    void execute_for_each_leaf(const std::function<void(const sub_cell&)> function);
+    void execute_for_each_leaf(const std::function<void(const sub_cell&)> &function);
+
+    void execute_for_each_sub_cell(const std::function<void(sub_cell &)> &function);
 
 protected:
 
@@ -227,7 +235,7 @@ protected:
 
     std::size_t _n_dirty_macro_cells {0};
 
-    const model::CPUParticleData &_data;
+    model::CPUParticleData &_data;
     const readdy::model::KernelContext &_context;
     const readdy::util::thread::Config _config;
 };

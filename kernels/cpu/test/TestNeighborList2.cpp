@@ -30,6 +30,8 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <cmath>
+
 #include <gtest/gtest.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/nl/NeighborList.h>
@@ -263,9 +265,9 @@ TEST(TestNeighborList2, SetUpNeighborList) {
     log::console()->set_level(spdlog::level::debug);
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    auto& data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     auto &context = kernel->getKernelContext();
-    const auto& pbc = context.getPBCFun();
+    const auto &pbc = context.getPBCFun();
 
     context.setPeriodicBoundary(true, true, true);
     context.setBoxSize(10, 10, 10);
@@ -279,17 +281,17 @@ TEST(TestNeighborList2, SetUpNeighborList) {
         kernel->addParticle("A", pbc(n3(0, 10)));
     }
 
-    kernel::cpu::nl::NeighborList neighbor_list {
+    kernel::cpu::nl::NeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
             kernel->threadConfig()
     };
     neighbor_list.set_up();
 
-    for(std::size_t i = 0; i < data.size(); ++i) {
+    for (std::size_t i = 0; i < data.size(); ++i) {
         auto cell = neighbor_list.cell_container().leaf_cell_for_position(pbc(data.pos(i)));
         ASSERT_TRUE(cell != nullptr) << "expected cell for position " << data.pos(i);
-        const auto& cells_particles = cell->particles().get();
+        const auto &cells_particles = cell->particles().get();
         ASSERT_TRUE(std::find(cells_particles.begin(), cells_particles.end(), i) != cells_particles.end());
     }
 }
@@ -303,17 +305,17 @@ TEST(TestNeighborList2, HilbertSort) {
     context.setBoxSize(1, 1, 1);
     context.particle_types().add("A", 1.0, 1.0);
 
-    for(scalar x = -.5; x < .5; x += .1) {
-        for(scalar y = -.5; y < .5; y += .1) {
-            for(scalar z = -.5; z < .5; z += .1) {
-                kernel->addParticle("A", {x,y,z});
+    for (scalar x = -.5; x < .5; x += .1) {
+        for (scalar y = -.5; y < .5; y += .1) {
+            for (scalar z = -.5; z < .5; z += .1) {
+                kernel->addParticle("A", {x, y, z});
             }
         }
     }
-    auto& data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     data.hilbert_sort(.01);
     ASSERT_EQ(data.getNDeactivated(), 0);
-    ASSERT_EQ(data.size(), 10*10*10);
+    ASSERT_EQ(data.size(), 10 * 10 * 10);
 
     /**
      * Can be plotted by
@@ -340,7 +342,7 @@ TEST(TestNeighborList2, HilbertSort) {
      */
 
     auto e0 = data.entry_at(0).id;
-    auto e3= data.entry_at(3).id;
+    auto e3 = data.entry_at(3).id;
     auto e15 = data.entry_at(15).id;
 
     data.removeEntry(0);
@@ -360,9 +362,135 @@ TEST(TestNeighborList2, HilbertSort) {
     ASSERT_TRUE(data.entry_at(1).id == e0 || data.entry_at(1).id == e3 || data.entry_at(1).id == e15);
     ASSERT_TRUE(data.entry_at(2).id == e0 || data.entry_at(2).id == e3 || data.entry_at(2).id == e15);
 
-    for(auto it = data.begin()+3; it != data.end(); ++it) {
+    for (auto it = data.begin() + 3; it != data.end(); ++it) {
         ASSERT_FALSE(it->is_deactivated());
     }
+}
+
+TEST(TestNeighborList2, VerletList) {
+    using namespace readdy;
+    log::console()->set_level(spdlog::level::debug);
+
+    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    auto &context = kernel->getKernelContext();
+    context.setBoxSize(1, 1, 1);
+    context.particle_types().add("A", 1.0, 1.0);
+
+    for (int i = 0; i < 50; ++i) {
+        kernel->addParticle("A", {model::rnd::uniform_real(-.5, .5),
+                                  model::rnd::uniform_real(-.5, .5),
+                                  model::rnd::uniform_real(-.5, .5)});
+    }
+    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .1);
+    context.configure(false);
+    const auto &d2 = context.getDistSquaredFun();
+    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    kernel::cpu::nl::NeighborList neighbor_list{
+            data,
+            kernel->getKernelContext(),
+            kernel->threadConfig()
+    };
+    neighbor_list.set_up();
+
+    std::size_t i = 0;
+    for (const auto &entry_i : data) {
+        std::size_t j = 0;
+        for (const auto &entry_j : data) {
+            if (!entry_i.is_deactivated() && !entry_j.is_deactivated() && i != j) {
+                if (std::sqrt(d2(entry_i.position(), entry_j.position())) < .1) {
+                    const auto &neighbors = data.neighbors_at(i);
+                    ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
+                                                << i << " and " << j << " should be neighbors";
+                }
+            }
+            ++j;
+        }
+        ++i;
+    }
+}
+
+TEST(TestNeighborList2, AdaptiveUpdating) {
+    using namespace readdy;
+    log::console()->set_level(spdlog::level::debug);
+
+    std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
+    auto &context = kernel->getKernelContext();
+    context.setBoxSize(28, 28, 28);
+    context.particle_types().add("A", .1, .1);
+    context.particle_types().add("V", .1, .1);
+    context.setPeriodicBoundary(true, true, true);
+    context.setKBT(1.0);
+
+    auto cutoff = 1.5;
+    for (int i = 0; i < 700; ++i) {
+        kernel->addParticle("A", {model::rnd::uniform_real(-14., 14.),
+                                  model::rnd::uniform_real(-14., 14.),
+                                  model::rnd::uniform_real(-14., 14.)});
+    }
+    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", cutoff, cutoff);
+    context.configure(false);
+    const auto &d2 = context.getDistSquaredFun();
+    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    data.setFixPosFun(context.getFixPositionFun());
+    data.setPBCFun(context.getPBCFun());
+    kernel::cpu::nl::NeighborList neighbor_list{
+            data,
+            kernel->getKernelContext(),
+            kernel->threadConfig(),
+            2.5, false
+    };
+    neighbor_list.set_up();
+
+    {
+        std::size_t i = 0;
+        for (const auto &entry_i : data) {
+            std::size_t j = 0;
+            for (const auto &entry_j : data) {
+                if (!entry_i.is_deactivated() && !entry_j.is_deactivated() && i != j) {
+                    if (d2(entry_i.position(), entry_j.position()) < cutoff * cutoff) {
+                        const auto &neighbors = data.neighbors_at(i);
+                        if (std::find(neighbors.begin(), neighbors.end(), j) == neighbors.end()) {
+                            log::warn("particles {} and {} should be neighbors t={}", i, j, 0);
+                        }
+                        //ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
+                        //                            << i << " and " << j << " should be neighbors";
+                    }
+                }
+                ++j;
+            }
+            ++i;
+        }
+    }
+
+    auto integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(.01);
+
+    for (int t = 0; t < 10000; ++t) {
+        if(t % 100 == 0) {
+            log::debug("{} / {}", t+1, 10000);
+        }
+        integrator->perform();
+        neighbor_list.update();
+        {
+            std::size_t i = 0;
+            for (const auto &entry_i : data) {
+                std::size_t j = 0;
+                for (const auto &entry_j : data) {
+                    if ((!entry_i.is_deactivated()) && (!entry_j.is_deactivated()) && i != j) {
+                        if (d2(entry_i.position(), entry_j.position()) < cutoff * cutoff) {
+                            const auto &neighbors = data.neighbors_at(i);
+                            if (std::find(neighbors.begin(), neighbors.end(), j) == neighbors.end()) {
+                                log::critical("particles {} and {} should be neighbors t={}", i, j, t + 1);
+                            }
+                        }
+                    }
+                    ++j;
+                }
+                ++i;
+            }
+        }
+    }
+
+
 }
 
 }

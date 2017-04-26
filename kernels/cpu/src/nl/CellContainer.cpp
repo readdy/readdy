@@ -36,29 +36,12 @@
 #include <readdy/kernel/cpu/nl/CellContainer.h>
 #include <readdy/kernel/cpu/nl/SubCell.h>
 #include <readdy/kernel/cpu/util/config.h>
+#include <readdy/common/thread/barrier.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace nl {
-
-void execute_for_each_sub_cell(const std::function<void(CellContainer::sub_cell &)> &fun,
-                               CellContainer &container) {
-    const auto grainSize = container.sub_cells().size() / container.config().nThreads();
-    auto worker = [&](CellContainer::sub_cells_t::iterator begin, CellContainer::sub_cells_t::iterator end) {
-        for (auto it = begin; it != end; ++it) {
-            fun(*it);
-        }
-    };
-    std::vector<threading_model> threads;
-    threads.reserve(container.config().nThreads());
-    auto it = container.sub_cells().begin();
-    for (auto i = 0; i < container.config().nThreads() - 1; ++i) {
-        threads.emplace_back(worker, it, it + grainSize);
-        it += grainSize;
-    }
-    threads.emplace_back(worker, it, container.sub_cells().end());
-}
 
 CellContainer::sub_cells_t &CellContainer::sub_cells() {
     return _sub_cells;
@@ -108,7 +91,7 @@ const CellContainer::cell_index &CellContainer::contiguous_index() const {
     return _contiguous_index;
 }
 
-CellContainer::CellContainer(const model::CPUParticleData &data, const readdy::model::KernelContext &context,
+CellContainer::CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                              const readdy::util::thread::Config &config)
         : _data(data), _context(context), _config(config), _size(context.getBoxSize()),
           _root_size(context.getBoxSize()) {}
@@ -197,7 +180,7 @@ const readdy::model::KernelContext &CellContainer::context() const {
 void CellContainer::update_sub_cell_displacements() {
     execute_for_each_sub_cell([](sub_cell &cell) {
         cell.update_displacements();
-    }, *this);
+    });
 }
 
 const readdy::util::thread::Config &CellContainer::config() const {
@@ -223,13 +206,13 @@ CellContainer *const CellContainer::root() {
 void CellContainer::setup_uniform_neighbors() {
     execute_for_each_sub_cell([](sub_cell &cell) {
         cell.setup_uniform_neighbors(1);
-    }, *this);
+    });
 }
 
 void CellContainer::refine_uniformly() {
     execute_for_each_sub_cell([](sub_cell &cell) {
         cell.refine_uniformly();
-    }, *this);
+    });
 }
 
 CellContainer::sub_cell *const CellContainer::leaf_cell_for_position(const CellContainer::vec3 &pos) {
@@ -248,15 +231,16 @@ const CellContainer::sub_cell *const CellContainer::leaf_cell_for_position(const
 
 CellContainer::sub_cell *const
 CellContainer::sub_cell_for_position(const vec3 &pos, const level_t level) {
-    return const_cast<CellContainer::sub_cell *const>(static_cast<const CellContainer*>(this)->sub_cell_for_position(pos, level));
+    return const_cast<CellContainer::sub_cell *const>(static_cast<const CellContainer *>(this)->sub_cell_for_position(
+            pos, level));
 }
 
 const CellContainer::sub_cell *const
 CellContainer::sub_cell_for_position(const vec3 &pos, const level_t level) const {
-    if(level == 0) throw std::invalid_argument("level needs to be larger 0");
+    if (level == 0) throw std::invalid_argument("level needs to be larger 0");
     auto cell = sub_cell_for_position(pos);
-    if(cell) {
-        while(cell->level() != level) cell = cell->sub_cell_for_position(pos);
+    if (cell) {
+        while (cell->level() != level) cell = cell->sub_cell_for_position(pos);
     }
     return cell;
 }
@@ -270,10 +254,10 @@ const CellContainer *const CellContainer::super_cell() const {
 }
 
 void CellContainer::insert_particle(const CellContainer::particle_index index) const {
-    const auto& entry = data().entry_at(index);
-    if(!entry.is_deactivated()) {
+    const auto &entry = data().entry_at(index);
+    if (!entry.is_deactivated()) {
         auto cell = leaf_cell_for_position(entry.position());
-        if(cell != nullptr) {
+        if (cell != nullptr) {
             cell->insert_particle(index);
         }
     } else {
@@ -282,10 +266,10 @@ void CellContainer::insert_particle(const CellContainer::particle_index index) c
 }
 
 void CellContainer::insert_particle(const CellContainer::particle_index index) {
-    const auto& entry = data().entry_at(index);
-    if(!entry.is_deactivated()) {
+    const auto &entry = data().entry_at(index);
+    if (!entry.is_deactivated()) {
         auto cell = leaf_cell_for_position(entry.position());
-        if(cell != nullptr) {
+        if (cell != nullptr) {
             cell->insert_particle(index);
         }
     } else {
@@ -294,34 +278,93 @@ void CellContainer::insert_particle(const CellContainer::particle_index index) {
 }
 
 void CellContainer::clear() {
-    execute_for_each_sub_cell([](sub_cell& cell) {
+    reset_max_displacements();
+    execute_for_each_sub_cell([](sub_cell &cell) {
         cell.clear();
-    }, *this);
+    });
 }
 
 bool CellContainer::update_sub_cell_displacements_and_mark_dirty(const scalar cutoff, const scalar skin) {
-    std::atomic<bool> status {true};
-    std::atomic<std::size_t> n_dirty {0};
+    update_sub_cell_displacements();
+    std::atomic<bool> status{true};
+    std::atomic<std::size_t> n_dirty{0};
     execute_for_each_sub_cell([&](sub_cell &cell) {
-        cell.update_displacements();
-        cell.dirty() = (cell.maximal_displacements()[0] + cell.maximal_displacements()[1]) > skin;
-        if(cell.maximal_displacements()[0] > skin + cutoff) {
-            status = false;
+        displacement_arr max_max_displacements (cell.maximal_displacements());
+        for(const auto& neighbor_cell : cell.neighbors()) {
+            if(max_max_displacements[0] < neighbor_cell->maximal_displacements()[0]) {
+                max_max_displacements[0] = neighbor_cell->maximal_displacements()[0];
+                if(max_max_displacements[1] < neighbor_cell->maximal_displacements()[1]) {
+                    max_max_displacements[1] = neighbor_cell->maximal_displacements()[1];
+                }
+            } else if(max_max_displacements[1] < neighbor_cell->maximal_displacements()[0]) {
+                max_max_displacements[1] = neighbor_cell->maximal_displacements()[0];
+            }
         }
-        if(cell.dirty()) {
+        if ((max_max_displacements[0] + max_max_displacements[1]) >= skin) {
+            if (max_max_displacements[0] > skin + cutoff) {
+                status = false;
+            }
+            cell.set_dirty();
+            //cell.reset_particles_displacements();
+            /*for (const auto &neighbor_cell : cell.neighbors()) {
+                neighbor_cell->set_dirty();
+            }*/
+        }
+    });
+    execute_for_each_sub_cell([&](sub_cell &cell) {
+        if (cell.is_dirty()) {
             std::atomic_fetch_add<std::size_t>(&n_dirty, 1);
+            cell.reset_max_displacements();
         }
-    }, *this);
+    });
     _n_dirty_macro_cells = n_dirty.load();
     return status.load();
 }
 
 void CellContainer::update_dirty_cells() {
+    using barrier_t = util::thread::barrier;
     // todo go through macro cells, see if dirty => the current particles might be in the neighboring cells
 
     // 1. reset displacement of DIRTY cells
-    // 2. collect particles of DIRTY cells and their NEIGHBORS
     // 3. reassign these particles to cells, rebuild verlet list (in NL?) for particles in DIRTY and NEIGHBORS
+
+    auto worker = [this](const CellContainer &container, const barrier_t &barrier, sub_cells_t::iterator begin,
+                         sub_cells_t::iterator end) {
+        std::vector<std::vector<particle_index>> dirty_cell_particles;
+        {
+            for (auto it = begin; it != end; ++it) {
+                if (it->is_dirty()) {
+                    it->reset_particles_displacements();
+                    dirty_cell_particles.emplace_back(it->collect_contained_particles());
+                    it->clear();
+                }
+            }
+        }
+        barrier.wait();
+        {
+            for (const auto &dirty_cell : dirty_cell_particles) {
+                for (const auto p_idx : dirty_cell) {
+                    auto &entry = _data.entry_at(p_idx);
+                    // entry.displacement = 0;
+                    auto cell = container.leaf_cell_for_position(entry.position());
+                    if (cell != nullptr) {
+                        cell->insert_particle(p_idx);
+                    }
+                }
+            }
+        }
+    };
+
+    barrier_t barrier{_config.nThreads()};
+    const auto grainSize = sub_cells().size() / config().nThreads();
+    std::vector<threading_model> threads;
+    threads.reserve(config().nThreads());
+    auto it = sub_cells().begin();
+    for (auto i = 0; i < config().nThreads() - 1; ++i) {
+        threads.emplace_back(worker, std::cref(*this), std::cref(barrier), it, it + grainSize);
+        it += grainSize;
+    }
+    threads.emplace_back(worker, std::cref(*this), std::cref(barrier), it, sub_cells().end());
 }
 
 const std::size_t CellContainer::n_dirty_macro_cells() const {
@@ -332,12 +375,47 @@ const std::size_t CellContainer::n_sub_cells_total() const {
     return _n_sub_cells[0] * _n_sub_cells[1] * _n_sub_cells[2];
 }
 
-void CellContainer::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> function) {
+void CellContainer::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> &function) {
     execute_for_each_sub_cell([&](sub_cell &cell) {
-        for(const auto& sub_cell : cell.sub_cells()) {
+        for (const auto &sub_cell : cell.sub_cells()) {
             function(sub_cell);
         }
-    }, *this);
+    });
+}
+
+void CellContainer::execute_for_each_sub_cell(const std::function<void(CellContainer::sub_cell &)> &function) {
+    const auto grainSize = sub_cells().size() / config().nThreads();
+    auto worker = [&](CellContainer::sub_cells_t::iterator begin, CellContainer::sub_cells_t::iterator end) {
+        for (auto it = begin; it != end; ++it) {
+            function(*it);
+        }
+    };
+    std::vector<threading_model> threads;
+    threads.reserve(config().nThreads());
+    auto it = sub_cells().begin();
+    for (auto i = 0; i < config().nThreads() - 1; ++i) {
+        threads.emplace_back(worker, it, it + grainSize);
+        it += grainSize;
+    }
+    threads.emplace_back(worker, it, sub_cells().end());
+}
+
+model::CPUParticleData &CellContainer::data() {
+    return _data;
+}
+
+void CellContainer::unset_dirty() {
+    execute_for_each_sub_cell([](sub_cell &cell) {
+        cell.unset_dirty();
+    });
+}
+
+void CellContainer::reset_max_displacements() {
+    maximal_displacements()[0] = 0;
+    maximal_displacements()[1] = 0;
+    execute_for_each_sub_cell([](sub_cell &cell) {
+        cell.reset_max_displacements();
+    });
 }
 
 CellContainer::~CellContainer() = default;

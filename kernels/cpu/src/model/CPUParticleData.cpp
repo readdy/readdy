@@ -208,7 +208,11 @@ const CPUParticleData::particle_type::pos_type &CPUParticleData::pos(CPUParticle
 void CPUParticleData::displace(CPUParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
     entry.pos += delta;
     fixPos(entry.pos);
-    entry.displacement += std::sqrt(delta * delta);
+    auto increment = std::sqrt(delta * delta);
+    if(entry.displacement + increment > 4.0) {
+        log::critical("increasing particle displacement from {} to {}", entry.displacement, entry.displacement + increment);
+    }
+    entry.displacement += increment;
 }
 
 void CPUParticleData::blanks_moved_to_end() {

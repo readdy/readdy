@@ -49,26 +49,28 @@ SubCell::SubCell(CellContainer *const super_cell, const vec3 &offset)
 }
 
 void SubCell::update_displacements() {
+    _maximal_displacements[0] = 0;
+    _maximal_displacements[1] = 0;
     if (!_is_leaf) {
-        _maximal_displacements[0] = 0;
-        _maximal_displacements[1] = 0;
         for (auto &cell : _sub_cells) {
             cell.update_displacements();
             const auto &updated_displacements = cell.maximal_displacements();
             if (updated_displacements[0] > _maximal_displacements[0]) {
                 _maximal_displacements[0] = updated_displacements[0];
-                _maximal_displacements[1] = std::max(_maximal_displacements[1], updated_displacements[1]);
+                if(updated_displacements[1] > _maximal_displacements[1]) {
+                    _maximal_displacements[1] = updated_displacements[1];
+                }
             } else if (updated_displacements[0] > _maximal_displacements[1]) {
                 _maximal_displacements[1] = updated_displacements[0];
             }
         }
     } else {
-        for(const auto particle_index : _particles_list.get()) {
-            const auto& entry = data().entry_at(particle_index);
+        for (const auto particle_index : _particles_list.get()) {
+            const auto &entry = data().entry_at(particle_index);
             assert(!entry.is_deactivated());
-            if(entry.displacement > _maximal_displacements[0]) {
+            if (entry.displacement > _maximal_displacements[0]) {
                 _maximal_displacements[0] = entry.displacement;
-            } else if(entry.displacement > _maximal_displacements[1]) {
+            } else if (entry.displacement > _maximal_displacements[1]) {
                 _maximal_displacements[1] = entry.displacement;
             }
         }
@@ -148,8 +150,8 @@ void SubCell::insert_particle(const CellContainer::particle_index index) {
 }
 
 void SubCell::clear() {
-    if(!_is_leaf) {
-        std::for_each(_sub_cells.begin(), _sub_cells.end(), [](sub_cell& cell) {
+    if (!_is_leaf) {
+        std::for_each(_sub_cells.begin(), _sub_cells.end(), [](sub_cell &cell) {
             cell.clear();
         });
     } else {
@@ -161,14 +163,85 @@ const ParticlesList &SubCell::particles() const {
     return _particles_list;
 }
 
-bool &SubCell::dirty() {
-    return _is_dirty;
+ParticlesList::particle_indices SubCell::collect_contained_particles() const {
+    if (!is_leaf()) {
+        ParticlesList::particle_indices result;
+        std::vector<ParticlesList::particle_indices> sub_indices;
+        sub_indices.reserve(n_sub_cells_total());
+        std::size_t total_size = 0;
+        for (const auto &sub_cell : _sub_cells) {
+            sub_indices.push_back(sub_cell.collect_contained_particles());
+            total_size += sub_indices.back().size();
+        }
+        result.reserve(total_size);
+        for (auto &&sub_particles : sub_indices) {
+            result.insert(result.end(), std::make_move_iterator(sub_particles.begin()),
+                          std::make_move_iterator(sub_particles.end()));
+        }
+        return result;
+    } else {
+        return _particles_list.get();
+    }
 }
 
-const bool &SubCell::dirty() const {
-    return _is_dirty;
+const bool SubCell::neighbor_dirty() const {
+    bool neighbor_dirty = false;
+    std::for_each(_neighbors.begin(), _neighbors.end(), [&neighbor_dirty](const SubCell *const cell) {
+        neighbor_dirty |= cell->is_dirty();
+    });
+    return neighbor_dirty;
 }
 
+void SubCell::set_dirty() const {
+    _dirty_flag.set();
+}
+
+const bool SubCell::is_dirty() const {
+    return _dirty_flag.get();
+}
+
+void SubCell::unset_dirty() const {
+    _dirty_flag.unset();
+}
+
+void SubCell::reset_max_displacements() {
+    maximal_displacements()[0] = 0;
+    maximal_displacements()[1] = 0;
+    for (auto &cell : _sub_cells) {
+        cell.reset_max_displacements();
+    }
+}
+
+void SubCell::reset_particles_displacements() {
+    if(!is_leaf()) {
+        for(auto& sub_cell : _sub_cells) {
+            sub_cell.reset_particles_displacements();
+        }
+    } else {
+        for (const auto p_idx : _particles_list.get()) {
+            _data.entry_at(p_idx).displacement = 0;
+        }
+    }
+}
+
+detail::DirtyFlag::DirtyFlag(detail::DirtyFlag &&rhs) : _is_dirty(rhs._is_dirty.load()) {}
+
+detail::DirtyFlag &detail::DirtyFlag::operator=(detail::DirtyFlag &&rhs) {
+    _is_dirty = rhs.get();
+    return *this;
+}
+
+bool detail::DirtyFlag::get() const {
+    return _is_dirty.load();
+}
+
+void detail::DirtyFlag::set() const {
+    std::atomic_exchange(&_is_dirty, true);
+}
+
+void detail::DirtyFlag::unset() const {
+    std::atomic_exchange(&_is_dirty, false);
+}
 }
 }
 }
