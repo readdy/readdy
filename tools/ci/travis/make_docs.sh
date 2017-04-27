@@ -26,75 +26,30 @@ function set_this_up {
     fi
     if [ -z ${GH_TOKEN+x} ]
     then
-      echo "GH_TOKEN was not set, so this is probably a fork. Exit."
-      exit 0
+        echo "GH_TOKEN was not set, so this is probably a fork. Exit."
+        exit 0
     fi
-
-    # install ruby packages
-    gem install jekyll bundler
-    # install doxypypy
-    yes | pip install doxypypy
 }
 
-function make_reference_doc {
-    mkdir -p $HOME/_readdy_docs/reference || true
-    cd $HOME/_readdy_docs/reference
-    # cant reliably determine cpu count in a docker container,
-    # therefore fix this value.
-    if [ "$TRAVIS" == "true" ]; then CPU_COUNT=2; fi
-    cmake ${TRAVIS_BUILD_DIR} -DREADDY_GENERATE_DOCUMENTATION_TARGET_ONLY:BOOL=ON
-    make doc
-    cd -
-}
+function trigger_doc_job {
+    # obtain a travis token in exchange for our github token
+    travis login --org --github-token $GH_TOKEN
+    TRAVIS_TOKEN=$(travis token --org)
 
-function make_website_doc {
-    cd $HOME
-    # get the jekyll source code and setup jekyll via bundler
-    git clone "https://github.com/readdy/readdy_documentation.git"
-    cd readdy_documentation/readdy_documentation
-    bundle install
-    # insert the reference documentation
-    cp -r $HOME/_readdy_docs/reference/docs/html/* reference_manual/
-    # insert the content/pages and move the index.md to the jekyll root
-    mkdir _docpages || true
-    mkdir _docentries || true
-    cp -r ${TRAVIS_BUILD_DIR}/docs/documentation/_docpages/* _docpages/
-    cp -r ${TRAVIS_BUILD_DIR}/docs/documentation/_docentries/* _docentries/
-    cp ${TRAVIS_BUILD_DIR}/docs/documentation/index.md ./index.md
-    # build
-    bundle exec jekyll build
-    cd _site
-    rm Gemfile Gemfile.lock
-    cd -
-}
+    # send the trigger request via curl using the Travis API
+    body='{
+    "request": {
+    "branch":"master"
+    }}'
 
-function setup_docs_repo {
-    cd $HOME/readdy_documentation/readdy_documentation/_site
-    # this is already pure html, no further jekyll action needed by github
-    touch .nojekyll
-    git init
-    git config user.name "Christoph Froehner"
-    git config user.email "chrisfroe@users.noreply.github.com"
-    git remote add upstream "https://$GH_TOKEN@github.com/readdy/readdy_documentation.git"
-    git fetch upstream
-    git checkout --orphan workbranch
-    git reset --hard
-    cd -
-}
-
-function deploy {
-    # revision tag
-    cd $HOME/readdy_documentation/readdy_documentation/_site/
-    touch .
-    git add -A .
-    git commit -m "github pages"
-    git push -q -f upstream workbranch:gh-pages
+    curl -s -X POST \
+       -H "Content-Type: application/json" \
+       -H "Accept: application/json" \
+       -H "Travis-API-Version: 3" \
+       -H "Authorization: token $TRAVIS_TOKEN" \
+       -d "$body" \
+       https://api.travis-ci.org/repo/readdy%2Freaddy_documentation/requests
 }
 
 set_this_up
-
-make_reference_doc
-make_website_doc
-setup_docs_repo
-
-deploy
+trigger_doc_job
