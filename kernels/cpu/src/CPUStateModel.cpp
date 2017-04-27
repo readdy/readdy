@@ -131,21 +131,11 @@ struct CPUStateModel::Impl {
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
 
-    template<bool fixpos = true>
     const model::CPUParticleData &cdata() const {
-        if (fixpos)  {
-            particleData->setFixPosFun(context->getFixPositionFun());
-            particleData->setPBCFun(context->getPBCFun());
-        }
         return *particleData;
     }
 
-    template<bool fixpos = true>
     model::CPUParticleData &data() {
-        if (fixpos) {
-            particleData->setFixPosFun(context->getFixPositionFun());
-            particleData->setPBCFun(context->getPBCFun());
-        }
         return *particleData;
     }
 
@@ -161,7 +151,7 @@ private:
 
 void CPUStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
-    const auto &particleData = pimpl->cdata<true>();
+    const auto &particleData = pimpl->cdata();
     const auto potOrder1 = pimpl->context->potentials().potentials_order1();
     const auto potOrder2 = pimpl->context->potentials().potentials_order2();
     auto d = pimpl->context->getShortestDifferenceFun();
@@ -173,8 +163,8 @@ void CPUStateModel::calculateForces() {
             threads.reserve(config->nThreads());
             const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
             const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
-            auto it_data_end = pimpl->data<false>().end();
-            auto it_data = pimpl->data<false>().begin();
+            auto it_data_end = pimpl->data().end();
+            auto it_data = pimpl->data().begin();
             auto it_nl = pimpl->neighborList->begin();
             auto it_tops = pimpl->topologies.cbegin();
             const thd::barrier barrier{config->nThreads()};
@@ -249,15 +239,15 @@ void CPUStateModel::updateNeighborList() {
 }
 
 void CPUStateModel::addParticle(const readdy::model::Particle &p) {
-    pimpl->data<false>().addParticle(p);
+    pimpl->data().addParticle(p);
 }
 
 void CPUStateModel::addParticles(const std::vector<readdy::model::Particle> &p) {
-    pimpl->data<false>().addParticles(p);
+    pimpl->data().addParticles(p);
 }
 
 void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
-    pimpl->data<false>().removeParticle(p);
+    pimpl->data().removeParticle(p);
 }
 
 double CPUStateModel::getEnergy() const {
@@ -279,11 +269,11 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
 }
 
 CPUStateModel::data_t const *const CPUStateModel::getParticleData() const {
-    return &pimpl->data<false>();
+    return &pimpl->data();
 }
 
 CPUStateModel::data_t *const CPUStateModel::getParticleData() {
-    return &pimpl->data<false>();
+    return &pimpl->data();
 }
 
 model::CPUNeighborList const *const CPUStateModel::getNeighborList() const {
@@ -295,7 +285,7 @@ void CPUStateModel::clearNeighborList() {
 }
 
 void CPUStateModel::removeAllParticles() {
-    pimpl->data<false>().clear();
+    pimpl->data().clear();
 }
 
 model::CPUNeighborList *const CPUStateModel::getNeighborList() {
@@ -304,7 +294,7 @@ model::CPUNeighborList *const CPUStateModel::getNeighborList() {
 
 readdy::model::top::GraphTopology *const
 CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
-    std::vector<std::size_t> ids = pimpl->data<false>().addTopologyParticles(particles);
+    std::vector<std::size_t> ids = pimpl->data().addTopologyParticles(particles);
     std::vector<particle_type_type> types;
     types.reserve(ids.size());
     for (const auto &p : particles) {
@@ -324,11 +314,11 @@ const std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reac
 }
 
 readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {
-    return pimpl->cdata<false>().getParticle(index);
+    return pimpl->cdata().getParticle(index);
 }
 
 void CPUStateModel::expected_n_particles(const std::size_t n) {
-    auto& data = pimpl->data<false>();
+    auto& data = pimpl->data();
     if(data.size() < n) {
         data.reserve(n);
     }

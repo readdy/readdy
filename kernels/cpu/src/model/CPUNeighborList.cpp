@@ -354,7 +354,6 @@ void CPUNeighborList::fillCells() {
 
 void CPUNeighborList::create() {
     simBoxSize = ctx->getBoxSize();
-    data.setFixPosFun(ctx->getFixPositionFun());
     {
         setupCells();
     }

@@ -47,6 +47,9 @@ public:
     using mutex_type = std::mutex;
     using particles_lock = std::unique_lock<mutex_type>;
 
+    using iterator = particle_indices::iterator;
+    using const_iterator = particle_indices::const_iterator;
+
     ParticlesList() = default;
 
     ParticlesList(ParticlesList &&rhs) : _particles_mutex() {
@@ -75,8 +78,64 @@ public:
         _particles.clear();
     }
 
-    const particle_indices &get() const {
+    iterator erase(iterator it) {
+        return _particles.erase(it);
+    }
+
+    bool erase_if_found(particle_index index) {
+        auto it = std::find(begin(), end(), index);
+        if(it != end()) {
+            _particles.erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    bool erase_if_found(particle_index index) const {
+        particles_lock lock(_particles_mutex);
+        auto it = std::find(begin(), end(), index);
+        if(it != end()) {
+            _particles.erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    const_iterator erase(const_iterator it) const {
+        particles_lock lock(_particles_mutex);
+        return _particles.erase(it);
+    }
+
+    particle_indices  &data() {
         return _particles;
+    }
+
+    const particle_indices &data() const {
+        return _particles;
+    }
+
+    iterator begin() {
+        return _particles.begin();
+    }
+
+    const_iterator begin() const {
+        return _particles.begin();
+    }
+
+    const_iterator cbegin() const {
+        return _particles.begin();
+    }
+
+    iterator end() {
+        return _particles.end();
+    }
+
+    const_iterator end() const {
+        return _particles.end();
+    }
+
+    const_iterator cend() const {
+        return _particles.cend();
     }
 
 private:

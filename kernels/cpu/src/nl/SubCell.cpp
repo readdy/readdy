@@ -192,16 +192,8 @@ const bool SubCell::neighbor_dirty() const {
     return neighbor_dirty;
 }
 
-void SubCell::set_dirty() const {
-    _dirty_flag.set();
-}
-
 const bool SubCell::is_dirty() const {
     return _dirty_flag.get();
-}
-
-void SubCell::unset_dirty() const {
-    _dirty_flag.unset();
 }
 
 void SubCell::reset_max_displacements() {
@@ -222,6 +214,14 @@ void SubCell::reset_particles_displacements() {
             _data.entry_at(p_idx).displacement = 0;
         }
     }
+}
+
+void SubCell::set_dirty() const {
+    _dirty_flag.set();
+}
+
+void SubCell::unset_dirty() const {
+    _dirty_flag.unset();
 }
 
 detail::DirtyFlag::DirtyFlag(detail::DirtyFlag &&rhs) : _is_dirty(rhs._is_dirty.load()) {}

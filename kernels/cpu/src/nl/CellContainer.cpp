@@ -253,24 +253,30 @@ const CellContainer *const CellContainer::super_cell() const {
     return _super_cell;
 }
 
-void CellContainer::insert_particle(const CellContainer::particle_index index) const {
+void CellContainer::insert_particle(const CellContainer::particle_index index, bool mark_dirty) const {
     const auto &entry = data().entry_at(index);
     if (!entry.is_deactivated()) {
         auto cell = leaf_cell_for_position(entry.position());
         if (cell != nullptr) {
             cell->insert_particle(index);
+            if(mark_dirty) {
+                cell->super_cell()->set_dirty();
+            }
         }
     } else {
         log::critical("Tried inserting a deactivated particle ({}) into the neighbor list!", index);
     }
 }
 
-void CellContainer::insert_particle(const CellContainer::particle_index index) {
+void CellContainer::insert_particle(const CellContainer::particle_index index, bool mark_dirty) {
     const auto &entry = data().entry_at(index);
     if (!entry.is_deactivated()) {
         auto cell = leaf_cell_for_position(entry.position());
         if (cell != nullptr) {
             cell->insert_particle(index);
+            if(mark_dirty) {
+                cell->super_cell()->set_dirty();
+            }
         }
     } else {
         log::critical("Tried inserting a deactivated particle ({}) into the neighbor list!", index);
@@ -404,8 +410,8 @@ model::CPUParticleData &CellContainer::data() {
     return _data;
 }
 
-void CellContainer::unset_dirty() {
-    execute_for_each_sub_cell([](sub_cell &cell) {
+void CellContainer::unset_dirty() const {
+    execute_for_each_sub_cell([](const sub_cell &cell) {
         cell.unset_dirty();
     });
 }
@@ -416,6 +422,30 @@ void CellContainer::reset_max_displacements() {
     execute_for_each_sub_cell([](sub_cell &cell) {
         cell.reset_max_displacements();
     });
+}
+
+void CellContainer::set_dirty() const {
+    execute_for_each_sub_cell([](const sub_cell &cell) {
+        cell.set_dirty();
+    });
+}
+
+void
+CellContainer::execute_for_each_sub_cell(const std::function<void(const CellContainer::sub_cell &)> &function) const {
+    const auto grainSize = sub_cells().size() / config().nThreads();
+    auto worker = [&](CellContainer::sub_cells_t::const_iterator begin, CellContainer::sub_cells_t::const_iterator end) {
+        for (auto it = begin; it != end; ++it) {
+            function(*it);
+        }
+    };
+    std::vector<threading_model> threads;
+    threads.reserve(config().nThreads());
+    auto it = sub_cells().begin();
+    for (auto i = 0; i < config().nThreads() - 1; ++i) {
+        threads.emplace_back(worker, it, it + grainSize);
+        it += grainSize;
+    }
+    threads.emplace_back(worker, it, sub_cells().end());
 }
 
 CellContainer::~CellContainer() = default;

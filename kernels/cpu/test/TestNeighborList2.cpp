@@ -431,13 +431,11 @@ TEST(TestNeighborList2, AdaptiveUpdating) {
     context.configure(false);
     const auto &d2 = context.getDistSquaredFun();
     auto &data = *kernel->getCPUKernelStateModel().getParticleData();
-    data.setFixPosFun(context.getFixPositionFun());
-    data.setPBCFun(context.getPBCFun());
     kernel::cpu::nl::NeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
             kernel->threadConfig(),
-            2.5, false
+            true, 2.5, false
     };
     neighbor_list.set_up();
 
@@ -449,11 +447,8 @@ TEST(TestNeighborList2, AdaptiveUpdating) {
                 if (!entry_i.is_deactivated() && !entry_j.is_deactivated() && i != j) {
                     if (d2(entry_i.position(), entry_j.position()) < cutoff * cutoff) {
                         const auto &neighbors = data.neighbors_at(i);
-                        if (std::find(neighbors.begin(), neighbors.end(), j) == neighbors.end()) {
-                            log::warn("particles {} and {} should be neighbors t={}", i, j, 0);
-                        }
-                        //ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
-                        //                            << i << " and " << j << " should be neighbors";
+                        ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
+                                                    << i << " and " << j << " should be neighbors";
                     }
                 }
                 ++j;
@@ -465,8 +460,8 @@ TEST(TestNeighborList2, AdaptiveUpdating) {
     auto integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(.01);
 
     for (int t = 0; t < 10000; ++t) {
-        if(t % 100 == 0) {
-            log::debug("{} / {}", t+1, 10000);
+        if (t % 100 == 0) {
+            log::debug("{} / {}", t + 1, 10000);
         }
         integrator->perform();
         neighbor_list.update();

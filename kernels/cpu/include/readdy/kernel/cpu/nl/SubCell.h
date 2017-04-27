@@ -90,9 +90,9 @@ public:
 
     const bool is_dirty() const;
 
-    void set_dirty() const;
+    virtual void set_dirty() const override;
 
-    void unset_dirty() const;
+    virtual void unset_dirty() const override;
 
     const bool neighbor_dirty() const;
 

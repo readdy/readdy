@@ -74,7 +74,7 @@ bool CPUParticleData::Entry::is_deactivated() const {
 
 CPUParticleData::CPUParticleData(readdy::model::KernelContext*const context, const readdy::util::thread::Config &_config)
         : blanks(std::vector<index_t>()), entries(), neighbors(), reorderSignal(std::make_unique<reorder_signal_t>()),
-          fixPos(context->getFixPositionFun()), _config(_config), context(context) {}
+          _config(_config), context(context) {}
 
 std::size_t CPUParticleData::size() const {
     return entries.size();
@@ -197,22 +197,16 @@ std::vector<CPUParticleData::index_t> CPUParticleData::update(update_t &&update_
     return result;
 }
 
-void CPUParticleData::setFixPosFun(const ctx_t::fix_pos_fun &f) {
-    fixPos = f;
-}
-
 const CPUParticleData::particle_type::pos_type &CPUParticleData::pos(CPUParticleData::index_t idx) const {
     return entries.at(idx).pos;
 }
 
 void CPUParticleData::displace(CPUParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
     entry.pos += delta;
-    fixPos(entry.pos);
-    auto increment = std::sqrt(delta * delta);
-    if(entry.displacement + increment > 4.0) {
-        log::critical("increasing particle displacement from {} to {}", entry.displacement, entry.displacement + increment);
+    context->getFixPositionFun()(entry.pos);
+    if(_trackDisplacement) {
+        entry.displacement += std::sqrt(delta * delta);
     }
-    entry.displacement += increment;
 }
 
 void CPUParticleData::blanks_moved_to_end() {
@@ -312,18 +306,6 @@ void CPUParticleData::reserve(std::size_t n) {
     neighbors.reserve(n);
 }
 
-const CPUParticleData::ctx_t::fix_pos_fun &CPUParticleData::fixPosFun() const {
-    return fixPos;
-}
-
-void CPUParticleData::setPBCFun(const CPUParticleData::ctx_t::pbc_fun &f) {
-    pbc = f;
-}
-
-const CPUParticleData::ctx_t::pbc_fun &CPUParticleData::pbcFun() const {
-    return pbc;
-}
-
 void CPUParticleData::hilbert_sort(const scalar grid_width) {
     if(!empty()) {
         using indices_it = std::vector<std::size_t>::iterator;
@@ -388,6 +370,14 @@ std::array<unsigned long long, 3> CPUParticleData::project(vec3 value, scalar gr
 readdy::signals::scoped_connection
 CPUParticleData::registerReorderEventListener(const reorder_signal_t::slot_type &slot) {
     return reorderSignal->connect_scoped(slot);
+}
+
+bool &CPUParticleData::trackDisplacement() {
+    return _trackDisplacement;
+}
+
+const bool &CPUParticleData::trackDisplacement() const {
+    return _trackDisplacement;
 }
 
 }

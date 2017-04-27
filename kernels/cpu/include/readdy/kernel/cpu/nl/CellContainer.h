@@ -103,9 +103,9 @@ public:
 
     const cell_index &contiguous_index() const;
 
-    virtual void insert_particle(const particle_index index) const;
+    virtual void insert_particle(const particle_index index, bool mark_dirty=false) const;
 
-    virtual void insert_particle(const particle_index index);
+    virtual void insert_particle(const particle_index index, bool mark_dirty=false);
 
     virtual void clear();
 
@@ -189,7 +189,9 @@ public:
 
     const CellContainer* const super_cell() const;
 
-    void unset_dirty();
+    virtual void set_dirty() const;
+
+    virtual void unset_dirty() const;
 
     virtual void reset_max_displacements();
 
@@ -208,6 +210,8 @@ public:
     void execute_for_each_leaf(const std::function<void(const sub_cell&)> &function);
 
     void execute_for_each_sub_cell(const std::function<void(sub_cell &)> &function);
+
+    void execute_for_each_sub_cell(const std::function<void(const sub_cell &)> &function) const;
 
 protected:
 

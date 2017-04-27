@@ -176,14 +176,6 @@ public:
 
     const particle_type::pos_type& pos(index_t) const;
 
-    void setFixPosFun(const ctx_t::fix_pos_fun&);
-
-    void setPBCFun(const ctx_t::pbc_fun& f);
-
-    const ctx_t::fix_pos_fun &fixPosFun() const;
-
-    const ctx_t::pbc_fun &pbcFun() const;
-
     index_t getNDeactivated() const;
 
     readdy::signals::scoped_connection registerReorderEventListener(const reorder_signal_t::slot_type &slot);
@@ -197,13 +189,17 @@ public:
     void blanks_moved_to_end();
     void blanks_moved_to_front();
 
+    bool& trackDisplacement();
+
+    const bool& trackDisplacement() const;
+
 protected:
 
     std::vector<index_t> blanks;
     neighbor_list_t neighbors;
     entries_t entries;
-    ctx_t::fix_pos_fun fixPos;
-    ctx_t::pbc_fun pbc;
+
+    bool _trackDisplacement {true};
 
     std::unique_ptr<reorder_signal_t> reorderSignal;
 

@@ -39,10 +39,10 @@ namespace cpu {
 namespace nl {
 
 NeighborList::NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
-                           const readdy::util::thread::Config &config, NeighborList::skin_size_t skin,
-                           bool hilbert_sort)
+                           const readdy::util::thread::Config &config, bool adaptive,
+                           skin_size_t skin, bool hilbert_sort)
         : _data(data), _context(context), _config(config), _skin(skin), _cell_container(data, context, config),
-          _hilbert_sort(hilbert_sort) {
+          _hilbert_sort(hilbert_sort), _adaptive(adaptive) {
 }
 
 const CellContainer &NeighborList::cell_container() const {
@@ -56,6 +56,9 @@ void NeighborList::set_up() {
         _cell_container.subdivide(_max_cutoff + _skin);
         _cell_container.refine_uniformly();
         _cell_container.setup_uniform_neighbors();
+        if (_hilbert_sort) {
+            _data.hilbert_sort(_max_cutoff + _skin);
+        }
         fill_container();
         fill_verlet_list();
     }
@@ -78,22 +81,14 @@ scalar NeighborList::calculate_max_cutoff() {
 
 void NeighborList::update() {
     if (_max_cutoff > 0) {
-        bool too_far = !_cell_container.update_sub_cell_displacements_and_mark_dirty(_max_cutoff, _skin);
-        bool too_many = _cell_container.n_dirty_macro_cells() >= .9 * _cell_container.n_sub_cells_total();
+        bool too_far = _adaptive ? !_cell_container.update_sub_cell_displacements_and_mark_dirty(_max_cutoff, _skin) : false;
+        bool too_many = _adaptive ? _cell_container.n_dirty_macro_cells() >= .9 * _cell_container.n_sub_cells_total() : false;
         log::trace("updating {}% ({} of {})",
                    100. * _cell_container.n_dirty_macro_cells() / _cell_container.n_sub_cells_total(),
                    _cell_container.n_dirty_macro_cells(), _cell_container.n_sub_cells_total());
-        if (!too_far && !too_many) {
+        if (_adaptive && !too_far && !too_many) {
             _cell_container.update_dirty_cells();
-            _cell_container.execute_for_each_sub_cell([this](const CellContainer::sub_cell &cell) {
-                if (cell.is_dirty() || cell.neighbor_dirty() ) { // or neighbor? ||
-                    for (const auto &sub_cell : cell.sub_cells()) {
-                        // no need to reset displacement as this is already happening in the dirty marking process
-                        fill_cell_verlet_list(sub_cell, false);
-                    }
-                }
-            });
-            _cell_container.unset_dirty();
+            handle_dirty_cells();
         } else {
             if (too_far) {
                 // a particle travelled too far, we need to re-setup the whole thing
@@ -123,9 +118,6 @@ const readdy::util::thread::Config &NeighborList::config() const {
 
 void NeighborList::fill_container() {
     if (_max_cutoff > 0) {
-        if (_hilbert_sort) {
-            _data.hilbert_sort(_max_cutoff + _skin);
-        }
 
         const auto grainSize = _data.size() / _config.nThreads();
         const auto data_begin = _data.cbegin();
@@ -179,12 +171,12 @@ void NeighborList::fill_verlet_list() {
 
 void NeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, const bool reset_displacement) {
     const auto &d2 = _context.getDistSquaredFun();
-    for (const auto particle_index : cell.particles().get()) {
+    for (const auto particle_index : cell.particles().data()) {
         auto &neighbors = _data.neighbors_at(particle_index);
         auto &entry = _data.entry_at(particle_index);
         if (reset_displacement) entry.displacement = 0;
         neighbors.clear();
-        for (const auto p_i : cell.particles().get()) {
+        for (const auto p_i : cell.particles().data()) {
             if (p_i != particle_index) {
                 const auto distSquared = d2(entry.position(), _data.pos(p_i));
                 if (distSquared < _max_cutoff_skin_squared) {
@@ -193,7 +185,7 @@ void NeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, co
             }
         }
         for (const auto &neighbor_cell : cell.neighbors()) {
-            for (const auto p_j : neighbor_cell->particles().get()) {
+            for (const auto p_j : neighbor_cell->particles().data()) {
                 const auto distSquared = d2(entry.position(), _data.pos(p_j));
                 if (distSquared < _max_cutoff_skin_squared) {
                     neighbors.push_back(p_j);
@@ -201,6 +193,110 @@ void NeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, co
             }
         }
     }
+}
+
+bool &NeighborList::adaptive() {
+    return _adaptive;
+}
+
+const bool &NeighborList::adaptive() const {
+    return _adaptive;
+}
+
+bool &NeighborList::performs_hilbert_sort() {
+    return _hilbert_sort;
+}
+
+const bool &NeighborList::performs_hilbert_sort() const {
+    return _hilbert_sort;
+}
+
+void NeighborList::sort_by_hilbert_curve() {
+    clear();
+    if (_hilbert_sort) {
+        _data.hilbert_sort(_max_cutoff + _skin);
+    } else {
+        log::error("requested hilbert sort but it is turned off!");
+    }
+    fill_container();
+    fill_verlet_list();
+}
+
+void NeighborList::displace(data_t::iterator iter, const readdy::model::Vec3 &vec) {
+    _data.displace(*iter, vec);
+}
+
+void NeighborList::displace(model::CPUParticleData::Entry &entry, const readdy::model::Vec3 &delta) {
+    _data.displace(entry, delta);
+}
+
+void NeighborList::displace(model::CPUParticleData::index_t entry, const readdy::model::Vec3 &delta) {
+    _data.displace(_data.entry_at(entry), delta);
+}
+
+NeighborList::iterator NeighborList::begin() {
+    return _data.neighbors.begin();
+}
+
+NeighborList::iterator NeighborList::end() {
+    return _data.neighbors.end();
+}
+
+NeighborList::const_iterator NeighborList::cbegin() const {
+    return _data.neighbors.cbegin();
+}
+
+NeighborList::const_iterator NeighborList::cend() const {
+    return _data.neighbors.cend();
+}
+
+void NeighborList::updateData(data_t::update_t &&update) {
+    const auto& decayed_particles = std::get<1>(update);
+    for(const auto p_idx : decayed_particles) {
+        const auto sub_cell = _cell_container.leaf_cell_for_position(_data.pos(p_idx));
+        if (sub_cell) {
+            const auto& particles = sub_cell->particles();
+            if(particles.erase_if_found(p_idx)) {
+                sub_cell->super_cell()->set_dirty();
+            } else {
+                bool found = false;
+                for(const auto neighbor : sub_cell->neighbors()) {
+                    if(!found) {
+                        const auto& neighbor_particles = neighbor->particles();
+                        if(neighbor_particles.erase_if_found(p_idx)) {
+                            neighbor->super_cell()->set_dirty();
+                            found = true;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                if(!found) {
+                    log::critical("something went very very wrong");
+                }
+            }
+        }
+    }
+
+    auto new_entries = _data.update(std::move(update));
+
+    for(const auto p_idx : new_entries) {
+        _cell_container.insert_particle(p_idx, true);
+    }
+
+    handle_dirty_cells();
+}
+
+void NeighborList::handle_dirty_cells() {
+    _cell_container.execute_for_each_sub_cell([this](const CellContainer::sub_cell &cell) {
+        if (cell.is_dirty() || cell.neighbor_dirty() ) { // or neighbor? ||
+            for (const auto &sub_cell : cell.sub_cells()) {
+                // no need to reset displacement as this is already happening in the dirty marking process
+                fill_cell_verlet_list(sub_cell, false);
+            }
+        }
+    });
+    _cell_container.unset_dirty();
 }
 
 }

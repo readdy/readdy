@@ -43,8 +43,12 @@ namespace nl {
 class NeighborList {
 public:
     using skin_size_t = scalar;
+    using data_t = readdy::kernel::cpu::model::CPUParticleData;
+    using iterator = decltype(std::declval<data_t>().neighbors.begin());
+    using const_iterator = decltype(std::declval<data_t>().neighbors.cbegin());
     NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
-                 const readdy::util::thread::Config &config, skin_size_t skin = 0, bool hilbert_sort = true);
+                 const readdy::util::thread::Config &config, bool adaptive=true, skin_size_t skin = 0,
+                 bool hilbert_sort = true);
 
     void set_up();
 
@@ -59,6 +63,33 @@ public:
     const readdy::util::thread::Config& config() const;
 
     const CellContainer& cell_container() const;
+
+    bool& adaptive();
+
+    const bool& adaptive() const;
+
+    bool& performs_hilbert_sort();
+
+    const bool& performs_hilbert_sort() const;
+
+    void sort_by_hilbert_curve();
+
+    void updateData(data_t::update_t &&update);
+
+    void displace(data_t::iterator iter, const readdy::model::Vec3 &vec);
+
+    void displace(data_t::Entry &entry, const readdy::model::Vec3 &delta);
+
+    void displace(data_t::index_t entry, const readdy::model::Vec3 &delta);
+
+    iterator begin();
+
+    iterator end();
+
+    const_iterator cbegin() const;
+
+    const_iterator cend() const;
+
 private:
 
     scalar calculate_max_cutoff();
@@ -72,12 +103,15 @@ private:
 
     void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell, const bool reset_displacement);
 
+    void handle_dirty_cells();
+
     CellContainer _cell_container;
 
     skin_size_t _skin;
     scalar _max_cutoff;
     scalar _max_cutoff_skin_squared {0};
     bool _hilbert_sort {true};
+    bool _adaptive {true};
     model::CPUParticleData &_data;
     const readdy::model::KernelContext &_context;
     const readdy::util::thread::Config &_config;
