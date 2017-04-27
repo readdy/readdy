@@ -80,11 +80,11 @@ data_t::update_t handleEventsGillespie(
                             if(maybeRecords) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
-                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, &record);
+                                performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                                 fixPos(record.where);
                                 maybeRecords->push_back(std::move(record));
                             } else {
-                                performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
+                                performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                             }
                             if(maybeCounts) {
                                 auto &countsOrder1 = std::get<0>(*maybeCounts);
@@ -95,12 +95,12 @@ data_t::update_t handleEventsGillespie(
                             if(maybeRecords) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
-                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction,
+                                performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 &record);
                                 fixPos(record.where);
                                 maybeRecords->push_back(std::move(record));
                             } else {
-                                performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction,
+                                performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 nullptr);
                             }
                             if(maybeCounts) {

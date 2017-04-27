@@ -59,6 +59,9 @@ public:
     const CPUStateModel &getCPUKernelStateModel() const;
     CPUStateModel &getCPUKernelStateModel();
 
+    const readdy::util::thread::Config& threadConfig() const;
+    readdy::util::thread::Config& threadConfig();
+
 protected:
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;

@@ -29,6 +29,10 @@
 
 #pragma once
 
+#include <thread>
+
+#include <readdy/common/common.h>
+
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 NAMESPACE_BEGIN(thread)

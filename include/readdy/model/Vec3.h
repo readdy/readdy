@@ -32,7 +32,7 @@
 #pragma once
 #include <array>
 #include <math.h>
-#include <readdy/common/macros.h>
+#include <readdy/common/common.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(model)
 struct READDY_API Vec3 {
 public:
 
-    using value_t = double;
+    using value_t = scalar;
     using data_t = std::array<value_t, 3>;
 
     union {
@@ -123,6 +123,51 @@ inline void fixPosition(Vec3 &vec, const Vec3::value_t dx, const Vec3::value_t d
     if (PZ) {
         vec[2] -= floor((vec[2] + .5 * dz) / dz) * dz;
     }
+};
+
+template<bool PX, bool PY, bool PZ>
+inline Vec3 applyPBC(Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz);
+
+template<>
+inline Vec3 applyPBC<true, false, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1], in[2]};
+};
+
+template<>
+inline Vec3 applyPBC<false, true, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0], in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2]};
+};
+
+template<>
+inline Vec3 applyPBC<false, false, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0], in[1], in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<true, true, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2]};
+};
+
+template<>
+inline Vec3 applyPBC<true, false, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1], in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<false, true, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0], in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<true, true, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx,
+            in[1] - floor((in[1] + .5 * dy) / dy) * dy,
+            in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+};
+
+template<>
+inline Vec3 applyPBC<false, false, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+    return in;
 };
 
 template<bool PX, bool PY, bool PZ>

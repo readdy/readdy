@@ -26,11 +26,15 @@ SET(CPU_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/cpu/include")
 # --- main sources ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUKernel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUStateModel.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/CPUNeighborList.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/CPUParticleData.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservableFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/topologies/CPUTopologyActionFactory.cpp")
+
+# --- neighbor list ---
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellContainer.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/SubCell.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/NeighborList.cpp")
 
 # --- actions ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")

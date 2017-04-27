@@ -183,6 +183,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto &ctx = kernel->getKernelContext();
+    ctx.setPeriodicBoundary(false, false, false);
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.setBoxSize(10, 10, 10);
     // distance of particles is 2.56515106768

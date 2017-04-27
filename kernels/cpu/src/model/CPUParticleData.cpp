@@ -29,6 +29,11 @@
  * @date 27.10.16
  */
 
+#include <readdy/common/thread/Config.h>
+#include <readdy/kernel/cpu/util/hilbert.h>
+#include <readdy/kernel/cpu/util/config.h>
+#include <readdy/common/Utils.h>
+#include <readdy/common/signals.h>
 #include "readdy/kernel/cpu/model/CPUParticleData.h"
 
 namespace readdy {
@@ -67,8 +72,9 @@ bool CPUParticleData::Entry::is_deactivated() const {
 //
 
 
-CPUParticleData::CPUParticleData(readdy::model::KernelContext*const context)
-        : blanks(std::vector<index_t>()), entries(), neighbors(), fixPos(context->getFixPositionFun())  { }
+CPUParticleData::CPUParticleData(readdy::model::KernelContext*const context, const readdy::util::thread::Config &_config)
+        : blanks(std::vector<index_t>()), entries(), neighbors(), reorderSignal(std::make_unique<reorder_signal_t>()),
+          _config(_config), context(context) {}
 
 std::size_t CPUParticleData::size() const {
     return entries.size();
@@ -160,6 +166,8 @@ void CPUParticleData::removeEntry(index_t idx) {
     if(!entry.is_deactivated()) {
         entry.deactivated = true;
         blanks.push_back(idx);
+    } else {
+        log::critical("Tried removing particle {} which was already deactivated!", idx);
     }
 }
 
@@ -189,18 +197,16 @@ std::vector<CPUParticleData::index_t> CPUParticleData::update(update_t &&update_
     return result;
 }
 
-void CPUParticleData::setFixPosFun(const ctx_t::fix_pos_fun &f) {
-    fixPos = f;
-}
-
 const CPUParticleData::particle_type::pos_type &CPUParticleData::pos(CPUParticleData::index_t idx) const {
     return entries.at(idx).pos;
 }
 
 void CPUParticleData::displace(CPUParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
     entry.pos += delta;
-    fixPos(entry.pos);
-    entry.displacement += std::sqrt(delta * delta);
+    context->getFixPositionFun()(entry.pos);
+    if(_trackDisplacement) {
+        entry.displacement += std::sqrt(delta * delta);
+    }
 }
 
 void CPUParticleData::blanks_moved_to_end() {
@@ -298,6 +304,80 @@ CPUParticleData::addTopologyParticles(const std::vector<CPUParticleData::top_par
 void CPUParticleData::reserve(std::size_t n) {
     entries.reserve(n);
     neighbors.reserve(n);
+}
+
+void CPUParticleData::hilbert_sort(const scalar grid_width) {
+    if(!empty()) {
+        using indices_it = std::vector<std::size_t>::iterator;
+        std::vector<std::size_t> hilbert_indices;
+        std::vector<std::size_t> indices(size());
+
+        const auto grainSize = size() / _config.nThreads();
+        std::iota(indices.begin(), indices.end(), 0);
+        hilbert_indices.resize(size());
+
+        auto worker = [&](const_iterator begin, const_iterator end, indices_it hilbert_begin) {
+            {
+                auto it = begin;
+                auto hilbert_it = hilbert_begin;
+                for (; it != end; ++it, ++hilbert_it) {
+                    if (!it->is_deactivated()) {
+                        const auto integer_coordinates = project(it->position(), grid_width);
+                        *hilbert_it = 1 + static_cast<std::size_t>(hilbert_c2i(3, CHAR_BIT, integer_coordinates.data()));
+                    } else {
+                        *hilbert_it = 0;
+                    }
+                }
+            }
+        };
+        {
+            std::vector<threading_model> threads;
+            threads.reserve(_config.nThreads());
+            auto data_it = begin();
+            auto hilberts_it = hilbert_indices.begin();
+            for (std::size_t i = 0; i < _config.nThreads() - 1; ++i) {
+                threads.emplace_back(worker, data_it, data_it + grainSize, hilberts_it);
+                data_it += grainSize;
+                hilberts_it += grainSize;
+            }
+            threads.emplace_back(worker, data_it, end(), hilberts_it);
+        }
+        {
+            std::sort(indices.begin(), indices.end(),
+                      [&hilbert_indices](std::size_t i, std::size_t j) -> bool {
+                          return hilbert_indices[i] < hilbert_indices[j];
+                      });
+        }
+
+        blanks_moved_to_front();
+        std::vector<std::size_t> inverseIndices(indices.size());
+        for(std::size_t i = 0; i < indices.size(); ++i) {
+            inverseIndices[indices[i]] = i;
+        }
+        reorderSignal->fire_signal(inverseIndices);
+        readdy::util::collections::reorder_destructive(inverseIndices.begin(), inverseIndices.end(), begin());
+    }
+}
+
+std::array<unsigned long long, 3> CPUParticleData::project(vec3 value, scalar grid_width) const{
+    const auto& box_size = context->getBoxSize();
+    const auto i = static_cast<const unsigned long long>((value.x + .5 * box_size[0]) / grid_width);
+    const auto j = static_cast<const unsigned long long>((value.y + .5 * box_size[1]) / grid_width);
+    const auto k = static_cast<const unsigned long long>((value.z + .5 * box_size[2]) / grid_width);
+    return {{i, j, k}};
+}
+
+readdy::signals::scoped_connection
+CPUParticleData::registerReorderEventListener(const reorder_signal_t::slot_type &slot) {
+    return reorderSignal->connect_scoped(slot);
+}
+
+bool &CPUParticleData::trackDisplacement() {
+    return _trackDisplacement;
+}
+
+const bool &CPUParticleData::trackDisplacement() const {
+    return _trackDisplacement;
 }
 
 }

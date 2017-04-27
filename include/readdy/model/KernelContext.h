@@ -75,6 +75,7 @@ public:
     using compartment_registry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
+    using pbc_fun = std::function<Vec3(Vec3)>;
     using dist_squared_fun = std::function<double(const Vec3 &, const Vec3 &)>;
     using shortest_dist_fun = std::function<Vec3(const Vec3 &, const Vec3 &)>;
 
@@ -97,6 +98,8 @@ public:
     const dist_squared_fun &getDistSquaredFun() const;
 
     const shortest_dist_fun &getShortestDifferenceFun() const;
+
+    const pbc_fun &getPBCFun() const;
 
     template<typename T>
     const short registerCompartment(std::unique_ptr<T> compartment) {

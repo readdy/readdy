@@ -158,6 +158,10 @@ ReactionRegistry::order2_by_type(const std::string &type1, const std::string &ty
     return order2_by_type(typeRegistry.id_of(type1), typeRegistry.id_of(type2));
 }
 
+const ReactionRegistry::reaction_o2_registry &ReactionRegistry::order2() const {
+    return two_educts_registry;
+}
+
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {
     two_educts_registry_external[std::tie(r->getEducts()[0], r->getEducts()[1])].push_back(r);
     n_order2_ += 1;

@@ -35,6 +35,7 @@
 #include "logging.h"
 
 NAMESPACE_BEGIN(readdy)
+using scalar = double;
 using time_step_type = unsigned long;
 using particle_type_type = unsigned short;
 NAMESPACE_END(readdy)

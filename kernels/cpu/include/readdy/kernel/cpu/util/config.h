@@ -38,8 +38,12 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
+namespace nl {
+class NeighborList;
+}
 //using threading_model = readdy::util::thread::scoped_thread;
 using threading_model = readdy::util::thread::scoped_async;
+using neighbor_list = readdy::kernel::cpu::nl::NeighborList;
 }
 }
 }

@@ -115,6 +115,14 @@ CPUStateModel &CPUKernel::getCPUKernelStateModel() {
     return getKernelStateModelInternal();
 }
 
+const readdy::util::thread::Config &CPUKernel::threadConfig() const {
+    return *pimpl->config;
+}
+
+readdy::util::thread::Config &CPUKernel::threadConfig() {
+    return *pimpl->config;
+}
+
 CPUKernel::~CPUKernel() = default;
 
 }

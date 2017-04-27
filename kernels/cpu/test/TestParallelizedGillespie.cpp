@@ -31,6 +31,7 @@
 
 #include <gtest/gtest.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/nl/NeighborList.h>
 
 namespace {
 
@@ -43,7 +44,7 @@ TEST(TestParallelGillespie, Sanity) {
     kernel.addParticle("A", {-5, .2, 5.5});
     kernel.addParticle("A", {-5, .2, 0});
     kernel.getKernelContext().configure();
-    kernel.getCPUKernelStateModel().getNeighborList()->create();
+    kernel.getCPUKernelStateModel().getNeighborList()->set_up();
     auto prog = kernel.createAction<readdy::model::actions::reactions::GillespieParallel>(1);
     prog->perform();
 }

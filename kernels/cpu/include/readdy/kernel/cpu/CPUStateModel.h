@@ -34,12 +34,12 @@
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/ParticleIndexPair.h>
-#include <readdy/kernel/cpu/model/CPUNeighborList.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/common/thread/scoped_async.h>
 #include <readdy/model/observables/ReactionCounts.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -80,9 +80,9 @@ public:
 
     data_t *const getParticleData();
 
-    model::CPUNeighborList const *const getNeighborList() const;
+    neighbor_list const *const getNeighborList() const;
 
-    model::CPUNeighborList *const getNeighborList();
+    neighbor_list *const getNeighborList();
 
     virtual void expected_n_particles(const std::size_t n) override;
 

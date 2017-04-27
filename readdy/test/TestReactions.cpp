@@ -113,7 +113,7 @@ struct Vec3ProjectedLess {
 TEST_P(TestReactions, FusionFissionWeights) {
     /* A diffuses, F is fixed
      * Also during reactions, weights are chosen such that F does not move.
-     * Idea: position F particles and remember their positions (ordered set), do a time-step and check if current positions are still the same.
+     * Idea: position F particles and remember their positions (ordered set), do ONE time-step and check if current positions are still the same.
      */
     kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
     kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
@@ -162,6 +162,44 @@ TEST_P(TestReactions, FusionFissionWeights) {
         conf.configureAndRun(0.5, 1);
     }
 }
+
+/*
+ * @todo this is rather an integration test that should be separated from the rest
+ * TEST_P(TestReactions, ConstantNumberOfParticles) {
+ *
+    using namespace readdy;
+    // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
+    kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
+    kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
+    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
+    kernel->getKernelContext().setBoxSize(10, 10, 10);
+
+    const double weightF = 0.;
+    const double weightA = 1.;
+    kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", .1, 2.0, weightF, weightA);
+
+    auto n3 = readdy::model::rnd::normal3<>;
+    for (std::size_t i = 0; i < 200; ++i) {
+        kernel->addParticle("F", n3(0., 1.));
+        kernel->addParticle("A", n3(0., 1.));
+    }
+
+    auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1, std::vector<std::string>({"F"}));
+    obs->setCallback(
+            [](const readdy::model::observables::NParticles::result_t &result) {
+                EXPECT_EQ(result[0], 200);
+                log::error("::: {}", result[0]);
+            }
+    );
+    auto connection = kernel->connectObservable(obs.get());
+
+    {
+        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
+        conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>();
+        conf.withSkinSize(5.);
+        conf.configureAndRun(.01, 400);
+    }
+}*/
 
 INSTANTIATE_TEST_CASE_P(TestReactionsCore, TestReactions,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));

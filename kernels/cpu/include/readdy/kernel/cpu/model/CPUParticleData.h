@@ -36,16 +36,22 @@
 #include <memory>
 #include <stack>
 
+#include <readdy/common/signals.h>
+#include <readdy/common/thread/Config.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/KernelContext.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
+namespace nl {
+class NeighborList;
+}
 namespace model {
 
 class CPUParticleData {
     friend class CPUNeighborList;
+    friend class readdy::kernel::cpu::nl::NeighborList;
 public:
 
     struct Entry;
@@ -59,11 +65,16 @@ public:
     using neighbor_list_t = std::vector<neighbors_t>;
     using index_t = entries_t::size_type;
     using update_t = std::pair<entries_update_t, std::vector<index_t>>;
-    using force_t = readdy::model::Vec3;
+    using vec3 = readdy::model::Vec3;
+    using force_t = vec3;
     using displacement_t = double;
+    using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
 
     using iterator = decltype(std::declval<entries_t>().begin());
     using const_iterator = decltype(std::declval<entries_t>().cbegin());
+
+    using neighbors_list_iterator = neighbor_list_t::iterator;
+    using neighbors_list_const_iterator = neighbor_list_t::const_iterator;
 
     /**
      * Particle data entry with padding such that it fits exactly into 64 bytes.
@@ -72,6 +83,9 @@ public:
         Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
                                                deactivated(false), displacement(0), id(particle.getId()) {
         }
+        Entry(particle_type::pos_type pos, particle_type_type type, particle_type::id_type id)
+                : pos(std::move(pos)), type(std::move(type)), id(std::move(id)), deactivated(false),
+                  force(), displacement(0) {}
 
         Entry(const Entry&) = delete;
         Entry& operator=(const Entry&) = delete;
@@ -94,10 +108,10 @@ public:
         particle_type::type_type type; // 56 + 4 = 60 bytes
     private:
         bool deactivated; // 60 + 1 = 61 bytes
-        char padding[3]; // 61 + 3 = 64 bytes
+        char padding[3] {0,0,0}; // 61 + 3 = 64 bytes
     };
     // ctor / dtor
-    CPUParticleData(readdy::model::KernelContext *const context);
+    CPUParticleData(readdy::model::KernelContext *const context, const readdy::util::thread::Config &_config);
 
     ~CPUParticleData();
 
@@ -119,6 +133,16 @@ public:
     void clear();
 
     void addParticle(const particle_type &particle);
+
+    /**
+     * project into an unsigned long long int assuming that value is within the sim box
+     * @param value the value
+     * @param grid_width precision
+     * @return bitmask
+     */
+    std::array<unsigned long long, 3> project(vec3 value, scalar grid_width) const;
+
+    void hilbert_sort(const scalar grid_width);
 
     index_t addEntry(Entry &&entry);
 
@@ -155,9 +179,9 @@ public:
 
     const particle_type::pos_type& pos(index_t) const;
 
-    void setFixPosFun(const ctx_t::fix_pos_fun&);
-
     index_t getNDeactivated() const;
+
+    readdy::signals::scoped_connection registerReorderEventListener(const reorder_signal_t::slot_type &slot);
 
     /**
      *
@@ -168,12 +192,22 @@ public:
     void blanks_moved_to_end();
     void blanks_moved_to_front();
 
+    bool& trackDisplacement();
+
+    const bool& trackDisplacement() const;
+
 protected:
 
     std::vector<index_t> blanks;
     neighbor_list_t neighbors;
     entries_t entries;
-    ctx_t::fix_pos_fun fixPos;
+
+    bool _trackDisplacement {true};
+
+    std::unique_ptr<reorder_signal_t> reorderSignal;
+
+    const readdy::model::KernelContext* const context;
+    const readdy::util::thread::Config& _config;
 };
 
 }

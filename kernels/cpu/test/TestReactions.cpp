@@ -62,7 +62,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
+    auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->getKernelContext().setPeriodicBoundary(false, false, false);
     kernel->getKernelContext().setBoxSize(100, 100, 100);
     const auto diff = kernel->getKernelContext().getShortestDifferenceFun();
@@ -75,13 +75,13 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         auto conversion = kernel->getReactionFactory().createReaction<conversion_t>("A->B", 0, 1, 1);
         particle_t p_A{0, 0, 0, 0};
 
-        data_t data {&kernel->getKernelContext()};
+        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
         data.addParticles({p_A});
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries {};
 
-        reac::performReaction(data, 0, 0, newParticles, decayedEntries, conversion.get(), nullptr);
+        reac::performReaction(data, kernel->getKernelContext(), 0, 0, newParticles, decayedEntries, conversion.get(), nullptr);
 
         EXPECT_EQ(data.entry_at(0).type, conversion->getTypeTo());
         EXPECT_EQ(data.pos(0), readdy::model::Vec3(0,0,0));
@@ -89,7 +89,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // test fusion
     {
-        data_t data {&kernel->getKernelContext()};
+        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries {};
@@ -102,18 +102,17 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_B{-1, 0, 0, 1};
         data.addParticles({p_A, p_B});
 
-        reac::performReaction(data, 0, 1, newParticles, decayedEntries, fusion.get(), nullptr);
-
+        reac::performReaction(data, kernel->getKernelContext(), 0, 1, newParticles, decayedEntries, fusion.get(), nullptr);
+        EXPECT_EQ(decayedEntries.size(), 2);
+        EXPECT_TRUE(decayedEntries.size() == 2 && (decayedEntries.at(0) == 1 || decayedEntries.at(1) == 1));
+        data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         EXPECT_EQ(data.entry_at(0).type, fusion->getTo());
-        EXPECT_EQ(decayedEntries.size(), 1);
-        EXPECT_EQ(decayedEntries.at(0), 1);
-
         EXPECT_EQ(readdy::model::Vec3(.4, 0, 0), data.pos(0));
     }
 
     // fission
     {
-        data_t data {&kernel->getKernelContext()};
+        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries {};
@@ -125,7 +124,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_C{0, 0, 0, 2};
         data.addParticle(p_C);
 
-        reac::performReaction(data, 0, 0, newParticles, decayedEntries, fission.get(), nullptr);
+        reac::performReaction(data, kernel->getKernelContext(), 0, 0, newParticles, decayedEntries, fission.get(), nullptr);
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
 
         EXPECT_EQ(data.entry_at(0).type, fission->getTo1());
@@ -139,7 +138,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // enzymatic 1
     {
-        data_t data{&kernel->getKernelContext()};
+        data_t data{&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries{};
@@ -148,7 +147,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_A{0, 0, 0, 0};
         particle_t p_C{5, 5, 5, 2};
         data.addParticles({p_A, p_C});
-        reac::performReaction(data, 0, 1, newParticles, decayedEntries, enzymatic.get(), nullptr);
+        reac::performReaction(data, kernel->getKernelContext(), 0, 1, newParticles, decayedEntries, enzymatic.get(), nullptr);
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         {
             const auto &e1 = data.entry_at(0);
@@ -168,7 +167,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     }
     // enzymatic 2
     {
-        data_t data{&kernel->getKernelContext()};
+        data_t data{&kernel->getKernelContext(), kernel->threadConfig()};
 
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries{};
@@ -177,7 +176,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_A{0, 0, 0, 0};
         particle_t p_C{5, 5, 5, 2};
         data.addParticles({p_C, p_A});
-        reac::performReaction(data, 0, 1, newParticles, decayedEntries, enzymatic.get(), nullptr);
+        reac::performReaction(data, kernel->getKernelContext(), 0, 1, newParticles, decayedEntries, enzymatic.get(), nullptr);
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         {
             const auto &e1 = data.entry_at(0);
