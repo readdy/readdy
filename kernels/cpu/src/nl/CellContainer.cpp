@@ -448,6 +448,11 @@ CellContainer::execute_for_each_sub_cell(const std::function<void(const CellCont
     threads.emplace_back(worker, it, sub_cells().end());
 }
 
+void CellContainer::update_root_size() {
+    _root_size = _context.getBoxSize();
+    _size = _context.getBoxSize();
+}
+
 CellContainer::~CellContainer() = default;
 
 }

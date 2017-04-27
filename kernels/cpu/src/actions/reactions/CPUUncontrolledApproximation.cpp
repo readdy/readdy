@@ -47,10 +47,9 @@ namespace reactions {
 namespace thd = readdy::util::thread;
 
 using event_t = Event;
-using neighbor_list_t = model::CPUNeighborList;
-using data_t = neighbor_list_t::data_t;
+using data_t = neighbor_list::data_t;
 using data_iter_t = data_t::const_iterator;
-using neighbor_list_iter_t = neighbor_list_t::const_iterator;
+using neighbor_list_iter_t = neighbor_list::const_iterator;
 using entry_type = data_t::Entry;
 
 using event_future_t = std::future<std::vector<event_t>>;

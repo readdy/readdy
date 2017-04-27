@@ -103,10 +103,10 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         data.addParticles({p_A, p_B});
 
         reac::performReaction(data, kernel->getKernelContext(), 0, 1, newParticles, decayedEntries, fusion.get(), nullptr);
-        // todo scheißtest, erst mal auf data anwenden und dann gucken obs passt!
+        EXPECT_EQ(decayedEntries.size(), 2);
+        EXPECT_TRUE(decayedEntries.size() == 2 && (decayedEntries.at(0) == 1 || decayedEntries.at(1) == 1));
+        data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         EXPECT_EQ(data.entry_at(0).type, fusion->getTo());
-        EXPECT_EQ(decayedEntries.size(), 1);
-        EXPECT_EQ(decayedEntries.at(0), 1);
         EXPECT_EQ(readdy::model::Vec3(.4, 0, 0), data.pos(0));
     }
 

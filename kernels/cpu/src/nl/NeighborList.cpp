@@ -53,6 +53,7 @@ void NeighborList::set_up() {
     _max_cutoff = calculate_max_cutoff();
     _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
     if (_max_cutoff > 0) {
+        _cell_container.update_root_size();
         _cell_container.subdivide(_max_cutoff + _skin);
         _cell_container.refine_uniformly();
         _cell_container.setup_uniform_neighbors();
@@ -62,6 +63,7 @@ void NeighborList::set_up() {
         fill_container();
         fill_verlet_list();
     }
+    _is_set_up = true;
 }
 
 scalar NeighborList::calculate_max_cutoff() {
@@ -80,30 +82,37 @@ scalar NeighborList::calculate_max_cutoff() {
 }
 
 void NeighborList::update() {
-    if (_max_cutoff > 0) {
-        bool too_far = _adaptive ? !_cell_container.update_sub_cell_displacements_and_mark_dirty(_max_cutoff, _skin) : false;
-        bool too_many = _adaptive ? _cell_container.n_dirty_macro_cells() >= .9 * _cell_container.n_sub_cells_total() : false;
-        log::trace("updating {}% ({} of {})",
-                   100. * _cell_container.n_dirty_macro_cells() / _cell_container.n_sub_cells_total(),
-                   _cell_container.n_dirty_macro_cells(), _cell_container.n_sub_cells_total());
-        if (_adaptive && !too_far && !too_many) {
-            _cell_container.update_dirty_cells();
-            handle_dirty_cells();
-        } else {
-            if (too_far) {
-                // a particle travelled too far, we need to re-setup the whole thing
-                log::warn("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
-                                  "it might have left its cell linked-list cell. This should, if at all, only happen "
-                                  "very rarely and triggers a complete rebuild of the neighbor list.",
-                          _max_cutoff, _skin, _max_cutoff + _skin);
+    if(!_is_set_up) {
+        set_up();
+    } else {
+        if (_max_cutoff > 0) {
+            bool too_far = _adaptive ? !_cell_container.update_sub_cell_displacements_and_mark_dirty(_max_cutoff, _skin)
+                                     : false;
+            bool too_many = _adaptive ? _cell_container.n_dirty_macro_cells() >=
+                                        .9 * _cell_container.n_sub_cells_total() : false;
+            log::trace("updating {}% ({} of {})",
+                       100. * _cell_container.n_dirty_macro_cells() / _cell_container.n_sub_cells_total(),
+                       _cell_container.n_dirty_macro_cells(), _cell_container.n_sub_cells_total());
+            if (_adaptive && !too_far && !too_many) {
+                _cell_container.update_dirty_cells();
+                handle_dirty_cells();
+            } else {
+                if (too_far) {
+                    // a particle travelled too far, we need to re-setup the whole thing
+                    log::warn("A particle's displacement has been more than r_c + r_s = {} + {} = {}, which means that "
+                                      "it might have left its cell linked-list cell. This should, if at all, only happen "
+                                      "very rarely and triggers a complete rebuild of the neighbor list.",
+                              _max_cutoff, _skin, _max_cutoff + _skin);
+                }
+                if (too_many) {
+                    log::debug(
+                            "More than 90% of the cells were marked dirty, thus re-create the whole neighbor list rather"
+                                    " than update it adaptively");
+                }
+                clear_cells();
+                fill_container();
+                fill_verlet_list();
             }
-            if (too_many) {
-                log::debug("More than 90% of the cells were marked dirty, thus re-create the whole neighbor list rather"
-                                   " than update it adaptively");
-            }
-            clear_cells();
-            fill_container();
-            fill_verlet_list();
         }
     }
 }
@@ -297,6 +306,23 @@ void NeighborList::handle_dirty_cells() {
         }
     });
     _cell_container.unset_dirty();
+}
+
+const static NeighborList::neighbors_t no_neighbors{};
+
+const NeighborList::neighbors_t &NeighborList::neighbors_of(const data_t::index_t entry) const {
+    if (_max_cutoff > 0) {
+        return _data.neighbors_at(entry);
+    }
+    return no_neighbors;
+}
+
+NeighborList::skin_size_t &NeighborList::skin() {
+    return _skin;
+}
+
+const NeighborList::skin_size_t &NeighborList::skin() const {
+    return _skin;
 }
 
 }

@@ -44,8 +44,10 @@ class NeighborList {
 public:
     using skin_size_t = scalar;
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
-    using iterator = decltype(std::declval<data_t>().neighbors.begin());
-    using const_iterator = decltype(std::declval<data_t>().neighbors.cbegin());
+    using neighbors_t = data_t::neighbors_t;
+    using iterator = data_t::neighbors_list_iterator;
+    using const_iterator = data_t::neighbors_list_const_iterator;
+
     NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                  const readdy::util::thread::Config &config, bool adaptive=true, skin_size_t skin = 0,
                  bool hilbert_sort = true);
@@ -90,6 +92,12 @@ public:
 
     const_iterator cend() const;
 
+    const neighbors_t &neighbors_of(const data_t::index_t entry) const;
+
+    skin_size_t &skin();
+
+    const skin_size_t &skin() const;
+
 private:
 
     scalar calculate_max_cutoff();
@@ -112,6 +120,7 @@ private:
     scalar _max_cutoff_skin_squared {0};
     bool _hilbert_sort {true};
     bool _adaptive {true};
+    bool _is_set_up {false};
     model::CPUParticleData &_data;
     const readdy::model::KernelContext &_context;
     const readdy::util::thread::Config &_config;

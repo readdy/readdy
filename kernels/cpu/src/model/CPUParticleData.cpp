@@ -167,7 +167,7 @@ void CPUParticleData::removeEntry(index_t idx) {
         entry.deactivated = true;
         blanks.push_back(idx);
     } else {
-        log::critical("mist");
+        log::critical("Tried removing particle {} which was already deactivated!", idx);
     }
 }
 

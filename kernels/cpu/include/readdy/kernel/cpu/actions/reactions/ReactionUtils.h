@@ -33,6 +33,7 @@
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/nl/NeighborList.h>
 #include <readdy/common/logging.h>
 #include "Event.h"
 
@@ -46,7 +47,6 @@ using kernel_t = readdy::kernel::cpu::CPUKernel;
 using vec_t = readdy::model::Vec3;
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
 using reaction_type = readdy::model::reactions::ReactionType;
-using nl_t = readdy::kernel::cpu::model::CPUNeighborList;
 using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
@@ -74,7 +74,7 @@ data_t::update_t handleEventsGillespie(
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts);
 
 template<typename ParticleIndexCollection>
-void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const nl_t* nl,
+void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
                   const data_t &data, double &alpha, std::vector<event_t> &events,
                   const readdy::model::KernelContext::dist_squared_fun& d2) {
     for (const auto index : particles) {
@@ -96,7 +96,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                 }
             }
             // order 2
-            for (const auto idx_neighbor : nl->find_neighbors(index)) {
+            for (const auto idx_neighbor : nl->neighbors_of(index)) {
                 if (index > idx_neighbor) continue;
                 const auto& neighbor = data.entry_at(idx_neighbor);
                 if(!neighbor.is_deactivated()) {

@@ -163,7 +163,10 @@ TEST_P(TestReactions, FusionFissionWeights) {
     }
 }
 
-TEST_P(TestReactions, ConstantNumberOfParticles) {
+/*
+ * @todo this is rather an integration test that should be separated from the rest
+ * TEST_P(TestReactions, ConstantNumberOfParticles) {
+ *
     using namespace readdy;
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
     kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
@@ -173,33 +176,30 @@ TEST_P(TestReactions, ConstantNumberOfParticles) {
 
     const double weightF = 0.;
     const double weightA = 1.;
-    // kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", .1, 2.0, weightF, weightA);
+    kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", .1, 2.0, weightF, weightA);
 
     auto n3 = readdy::model::rnd::normal3<>;
-    // 120 F particles
-    if(true) {
-        for (std::size_t i = 0; i < 200; ++i) {
-            kernel->addParticle("F", n3(0., 1.));
-            kernel->addParticle("A", n3(0., 1.));
-        }
-    } else {
+    for (std::size_t i = 0; i < 200; ++i) {
+        kernel->addParticle("F", n3(0., 1.));
+        kernel->addParticle("A", n3(0., 1.));
     }
 
     auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1, std::vector<std::string>({"F"}));
     obs->setCallback(
             [](const readdy::model::observables::NParticles::result_t &result) {
-                log::warn("N={}", result[0]);
+                EXPECT_EQ(result[0], 200);
+                log::error("::: {}", result[0]);
             }
     );
     auto connection = kernel->connectObservable(obs.get());
 
     {
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
-        conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
+        conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>();
         conf.withSkinSize(5.);
         conf.configureAndRun(.01, 400);
     }
-}
+}*/
 
 INSTANTIATE_TEST_CASE_P(TestReactionsCore, TestReactions,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));

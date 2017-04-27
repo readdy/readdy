@@ -54,11 +54,6 @@ void CPUGillespie::perform() {
     double alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, *data, alpha, events, dist);
-    for(const auto& evt : events) {
-        if(data->entry_at(evt.idx1).is_deactivated() || data->entry_at(evt.idx2).is_deactivated()) {
-            log::critical("well this should definitely not happen...");
-        }
-    }
     if(ctx.recordReactionsWithPositions()) {
         stateModel.reactionRecords().clear();
         if(ctx.recordReactionCounts()) {

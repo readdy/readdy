@@ -195,6 +195,8 @@ public:
 
     virtual void reset_max_displacements();
 
+    void update_root_size();
+
     /**
      * gives the current number of dirty macro cells, only meaningful after a call to
      * update_sub_cell_displacements_and_mark_dirty().

@@ -65,7 +65,7 @@ void SubCell::update_displacements() {
             }
         }
     } else {
-        for (const auto particle_index : _particles_list.get()) {
+        for (const auto particle_index : _particles_list) {
             const auto &entry = data().entry_at(particle_index);
             assert(!entry.is_deactivated());
             if (entry.displacement > _maximal_displacements[0]) {
@@ -141,12 +141,14 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
     }
 }
 
-void SubCell::insert_particle(const CellContainer::particle_index index) const {
+void SubCell::insert_particle(const CellContainer::particle_index index, bool mark_dirty) const {
     _particles_list.add(index);
+    if(mark_dirty) set_dirty();
 }
 
-void SubCell::insert_particle(const CellContainer::particle_index index) {
+void SubCell::insert_particle(const CellContainer::particle_index index, bool mark_dirty) {
     _particles_list.add(index);
+    if(mark_dirty) set_dirty();
 }
 
 void SubCell::clear() {
@@ -180,7 +182,7 @@ ParticlesList::particle_indices SubCell::collect_contained_particles() const {
         }
         return result;
     } else {
-        return _particles_list.get();
+        return _particles_list.data();
     }
 }
 
@@ -210,7 +212,7 @@ void SubCell::reset_particles_displacements() {
             sub_cell.reset_particles_displacements();
         }
     } else {
-        for (const auto p_idx : _particles_list.get()) {
+        for (const auto p_idx : _particles_list) {
             _data.entry_at(p_idx).displacement = 0;
         }
     }

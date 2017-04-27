@@ -33,6 +33,7 @@
 #pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
+#include <readdy/kernel/cpu/nl/NeighborList.h>
 
 namespace readdy {
 namespace kernel {
@@ -47,7 +48,7 @@ public:
 
     virtual void perform() override {
         if(firstRun) {
-            if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->setSkinSize(skinSize);
+            if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->skin() = skinSize;
             firstRun = false;
         }
         switch (operation) {

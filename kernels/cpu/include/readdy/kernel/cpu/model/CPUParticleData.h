@@ -73,6 +73,9 @@ public:
     using iterator = decltype(std::declval<entries_t>().begin());
     using const_iterator = decltype(std::declval<entries_t>().cbegin());
 
+    using neighbors_list_iterator = neighbor_list_t::iterator;
+    using neighbors_list_const_iterator = neighbor_list_t::const_iterator;
+
     /**
      * Particle data entry with padding such that it fits exactly into 64 bytes.
      */

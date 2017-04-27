@@ -34,7 +34,7 @@
 
 #include <readdy/common/thread/scoped_async.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
-#include <readdy/kernel/cpu/util/config.h>
+#include <readdy/kernel/cpu/nl/NeighborList.h>
 
 
 namespace readdy {
@@ -189,7 +189,7 @@ void CPUGillespieParallel::handleBoxReactions() {
     using promise_records = std::promise<std::vector<record_t>>;
     using promise_counts = std::promise<reaction_counts_t>;
 
-    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t *data, nl_t *nl, promise_t update,
+    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t *data, neighbor_list *nl, promise_t update,
                          promise_new_particles_t newParticles, promise_records promiseRecords, promise_counts counts) {
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
@@ -339,7 +339,7 @@ void CPUGillespieParallel::handleBoxReactions() {
 
 void CPUGillespieParallel::findProblematicParticles(
         data_t::index_t index, const SlicedBox &box, ctx_t ctx,
-        const data_t &data, nl_t *nl, std::set<data_t::index_t> &problematic,
+        const data_t &data, neighbor_list *nl, std::set<data_t::index_t> &problematic,
         const readdy::model::KernelContext::dist_squared_fun &d2
 ) const {
     if (problematic.find(index) != problematic.end()) {
@@ -357,7 +357,7 @@ void CPUGillespieParallel::findProblematicParticles(
 
     std::queue<decltype(index)> bfs{};
 
-    for (const auto neighbor : nl->find_neighbors(index)) {
+    for (const auto neighbor : nl->neighbors_of(index)) {
         const auto &neighborEntry = data.entry_at(neighbor);
         const auto &reactions = ctx.reactions().order2_by_type(me.type, neighborEntry.type);
         if (!reactions.empty()) {
@@ -382,7 +382,7 @@ void CPUGillespieParallel::findProblematicParticles(
         bfs.pop();
         const auto x_shell_idx = box.getShellIndex(x_entry.position());
         //BOOST_LOG_TRIVIAL(debug) << " ----> looking at neighbors of " << x;
-        for (const auto x_neighbor : nl->find_neighbors(x)) {
+        for (const auto x_neighbor : nl->neighbors_of(x)) {
             const auto &x_neighbor_entry = data.entry_at(x_neighbor);
             //BOOST_LOG_TRIVIAL(debug) << "\t ----> neighbor " << x_neighbor;
             /*if(neighbor_shell_idx == 0) {
