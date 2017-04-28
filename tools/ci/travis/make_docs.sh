@@ -29,11 +29,13 @@ function set_this_up {
         echo "GH_TOKEN was not set, so this is probably a fork. Exit."
         exit 0
     fi
+
+    gem install travis
 }
 
 function trigger_doc_job {
     # obtain a travis token in exchange for our github token
-    travis login --org --github-token $GH_TOKEN
+    yes | travis login --org --github-token $GH_TOKEN
     TRAVIS_TOKEN=$(travis token --org)
 
     # send the trigger request via curl using the Travis API
