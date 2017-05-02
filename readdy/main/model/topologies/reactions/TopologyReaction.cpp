@@ -155,7 +155,16 @@ void TopologyReaction::execute(GraphTopology &topology, const Kernel* const kern
             topology.updateReactionRates();
         }
     } else {
-        // todo grab components
+        if(!topology.graph().isConnected()) {
+            auto subTopologies = topology.connectedComponents();
+            assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
+            // todo remove this topology (we probably need a topology id for that) and add the sub topologies
+        } else {
+            // if valid, update force field
+            topology.configure();
+            // and update reaction rates
+            topology.updateReactionRates();
+        }
     }
 
 }

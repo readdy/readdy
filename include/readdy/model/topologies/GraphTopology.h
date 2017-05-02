@@ -69,14 +69,14 @@ public:
      * @param graph the already existing graph
      * @param config the configuration table
      */
-    GraphTopology(const particles_t &particles, graph_t &&graph,
+    GraphTopology(particles_t &&particles, graph_t &&graph,
                   const api::PotentialConfiguration &config);
 
     virtual ~GraphTopology() = default;
 
-    GraphTopology(GraphTopology &&) = delete;
+    GraphTopology(GraphTopology &&) = default;
 
-    GraphTopology &operator=(GraphTopology &&) = delete;
+    GraphTopology &operator=(GraphTopology &&) = default;
 
     GraphTopology(const GraphTopology &) = delete;
 

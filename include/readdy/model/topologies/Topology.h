@@ -64,16 +64,15 @@ public:
     using cos_dihedral = TopologyActionFactory::cos_dihedral;
 
     Topology(particles_t &&particles);
-
     Topology(const particles_t &particles);
 
     Topology(const Topology &) = delete;
 
     Topology &operator=(const Topology &) = delete;
 
-    Topology(Topology &&) = delete;
+    Topology(Topology &&) = default;
 
-    Topology &operator=(Topology &&) = delete;
+    Topology &operator=(Topology &&) = default;
 
     virtual ~Topology();
 

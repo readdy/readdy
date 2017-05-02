@@ -48,9 +48,9 @@ GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::
     }
 }
 
-GraphTopology::GraphTopology(const Topology::particles_t &particles, graph::Graph &&graph,
+GraphTopology::GraphTopology(Topology::particles_t &&particles, graph::Graph &&graph,
                              const api::PotentialConfiguration& config)
-        : Topology(particles), config(config), graph_(std::move(graph)) {
+        : Topology(std::move(particles)), config(config), graph_(std::move(graph)) {
     assert(GraphTopology::graph().vertices().size() == particles.size());
     if (GraphTopology::graph().vertices().size() != particles.size()) {
         throw std::invalid_argument("the number of particles and the number of vertices should match when creating"
@@ -186,7 +186,30 @@ GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
 
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
     std::vector<GraphTopology> components;
-    // todo
+    {
+        auto subGraphs = graph_.connectedComponentsDestructive();
+        std::vector<particles_t> subGraphsParticles;
+        subGraphsParticles.reserve(subGraphs.size());
+        for(auto it = subGraphs.begin(); it != subGraphs.end(); ++it) {
+            subGraphsParticles.emplace_back();
+            auto& subParticles = subGraphsParticles.back();
+            subParticles.reserve(it->vertices().size());
+            for(auto& vertex : it->vertices()) {
+                subParticles.emplace_back(particles.at(vertex.particleIndex));
+                vertex.particleIndex = subParticles.size() - 1;
+            }
+        }
+        // todo generate particles list for each subgraph, update subgraph's vertices to obey this new list
+
+        components.reserve(subGraphs.size());
+        {
+            auto it_graphs = subGraphs.begin();
+            auto it_particles = subGraphsParticles.begin();
+            for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
+                components.emplace_back(std::move(*it_particles), std::move(*it_graphs), config);
+            }
+        }
+    }
     return std::move(components);
 }
 

@@ -38,8 +38,7 @@ namespace top {
 readdy::model::top::Topology::~Topology() = default;
 
 Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) { }
-
-Topology::Topology(const Topology::particles_t &particles) : particles(particles){}
+Topology::Topology(const Topology::particles_t &p) : particles(p) { }
 
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
