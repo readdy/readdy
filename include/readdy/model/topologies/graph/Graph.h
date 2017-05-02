@@ -70,6 +70,8 @@ public:
 
     Graph() = default;
 
+    Graph(vertex_list vertexList, vertex_label_mapping vertexLabelMapping);
+
     virtual ~Graph() = default;
 
     Graph(const Graph &) = delete;
@@ -143,13 +145,19 @@ public:
     std::tuple<std::vector<edge>, std::vector<path_len_2>, std::vector<path_len_3>>
     findNTuples();
 
+    /**
+     * Returns the connected components, invalidates this graph
+     * @return connected components
+     */
+    std::vector<Graph> connectedComponentsDestructive();
+
 private:
-    vertex_list vertices_;
-    vertex_label_mapping namedVertices{};
+    vertex_list _vertices;
+    vertex_label_mapping _vertex_label_mapping{};
 
     void removeNeighborsEdges(vertex_ref vertex);
 
-    auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin());
+    auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(_vertices.begin());
 };
 
 NAMESPACE_END(graph)

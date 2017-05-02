@@ -97,6 +97,8 @@ public:
     const topology_reactions &registeredReactions() const;
     topology_reactions &registeredReactions();
 
+    std::vector<GraphTopology> connectedComponents();
+
 protected:
     graph_t graph_;
     const api::PotentialConfiguration &config;

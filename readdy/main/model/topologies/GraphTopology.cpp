@@ -184,6 +184,12 @@ GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
     return reactions_;
 }
 
+std::vector<GraphTopology> GraphTopology::connectedComponents() {
+    std::vector<GraphTopology> components;
+    // todo
+    return std::move(components);
+}
+
 }
 }
 }

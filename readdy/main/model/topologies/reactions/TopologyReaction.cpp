@@ -148,12 +148,16 @@ void TopologyReaction::execute(GraphTopology &topology, const Kernel* const kern
             } else {
                 throw TopologyReactionException("The topology was invalid after the reaction, see previous warning messages.");
             }
+        } else {
+            // if valid, update force field
+            topology.configure();
+            // and update reaction rates
+            topology.updateReactionRates();
         }
     } else {
         // todo grab components
     }
-    // todo in the action: update rates
-    // todo in the action: update potentials for this topology
+
 }
 
 void Mode::raise() {

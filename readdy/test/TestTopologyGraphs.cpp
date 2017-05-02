@@ -124,6 +124,60 @@ TEST(TestTopologyGraphs, TestGraphWithIndices) {
     EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors().size(), 0);
 }
 
+TEST(TestTopologyGraphs, ConnectedSubComponents) {
+    readdy::model::top::graph::Graph graph;
+    graph.addVertex(0, 0);
+    graph.addVertex(1, 0);
+    graph.addVertex(2, 0);
+
+    auto vertex_ref_0 = graph.vertices().begin();
+    auto vertex_ref_1 = ++graph.vertices().begin();
+    auto vertex_ref_2 = ++(++graph.vertices().begin());
+
+    auto it = graph.vertices().begin();
+    auto it_adv = ++graph.vertices().begin();
+    graph.addEdge(it, it_adv);
+
+    auto subGraphs = graph.connectedComponentsDestructive();
+    ASSERT_EQ(subGraphs.size(), 2);
+    {
+        ASSERT_EQ(subGraphs[0].vertices().size(), 2);
+        ASSERT_EQ(subGraphs[0].vertices().begin(), vertex_ref_0);
+        ASSERT_EQ(++subGraphs[0].vertices().begin(), vertex_ref_1);
+    }
+    {
+        ASSERT_EQ(subGraphs[1].vertices().size(), 1);
+        ASSERT_EQ(subGraphs[1].vertices().begin(), vertex_ref_2);
+    }
+}
+
+TEST(TestTopologyGraphs, ConnectedSubComponentsWithLabels) {
+    readdy::model::top::graph::Graph graph;
+    graph.addVertex(0, 0, "0");
+    graph.addVertex(1, 0, "1");
+    graph.addVertex(2, 0, "2");
+
+    auto vertex_ref_0 = graph.vertices().begin();
+    auto vertex_ref_1 = ++graph.vertices().begin();
+    auto vertex_ref_2 = ++(++graph.vertices().begin());
+
+    auto it = graph.vertices().begin();
+    auto it_adv = ++graph.vertices().begin();
+    graph.addEdge(it, it_adv);
+
+    auto subGraphs = graph.connectedComponentsDestructive();
+    ASSERT_EQ(subGraphs.size(), 2);
+    {
+        ASSERT_EQ(subGraphs[0].vertexLabelMapping().size(), 2);
+        ASSERT_EQ(subGraphs[0].namedVertexPtr("0").data(), vertex_ref_0);
+        ASSERT_EQ(subGraphs[0].namedVertexPtr("1").data(), vertex_ref_1);
+    }
+    {
+        ASSERT_EQ(subGraphs[1].vertexLabelMapping().size(), 1);
+        ASSERT_EQ(subGraphs[1].namedVertexPtr("2").data(), vertex_ref_2);
+    }
+}
+
 TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     auto &ctx = kernel->getKernelContext();

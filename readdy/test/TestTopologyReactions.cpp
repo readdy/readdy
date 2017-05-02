@@ -50,7 +50,13 @@ protected:
             auto &ctx = kernel->getKernelContext();
             ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
             ctx.particle_types().add("Topology B", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
+            ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
             ctx.particle_types().add("A", 1.0, 1.0, particle_t::FLAVOR_NORMAL);
+
+            ctx.configureTopologyBondPotential("Topology A", "Topology A", {10, 10});
+            ctx.configureTopologyBondPotential("Topology A", "Topology B", {10, 10});
+            ctx.configureTopologyBondPotential("Topology B", "Topology B", {10, 10});
+
             ctx.setBoxSize(10, 10, 10);
             topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
             topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};

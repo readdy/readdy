@@ -61,8 +61,11 @@ struct Mode {
     std::bitset<2> flags;
 
     void raise();
+
     void rollback();
+
     void expect_connected();
+
     void create_children();
 };
 
@@ -74,6 +77,7 @@ public:
     using rate_function = std::function<double(const GraphTopology &)>;
 
     TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
+
     TopologyReaction(const reaction_function &reaction_function, const double &rate);
 
     double rate(const GraphTopology &topology) const;
@@ -96,7 +100,7 @@ public:
 
     void create_child_topologies_after_reaction();
 
-    void execute(GraphTopology& topology, const Kernel* const kernel);
+    void execute(GraphTopology &topology, const Kernel *const kernel);
 
 private:
     rate_function rate_function_;

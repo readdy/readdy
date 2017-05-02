@@ -41,12 +41,12 @@ namespace top {
 namespace graph {
 
 void Graph::addEdge(const std::string &v1, const std::string &v2) {
-    auto findIt1 = namedVertices.find(v1);
-    auto findIt2 = namedVertices.find(v2);
-    if (findIt1 == namedVertices.end()) {
+    auto findIt1 = _vertex_label_mapping.find(v1);
+    auto findIt2 = _vertex_label_mapping.find(v2);
+    if (findIt1 == _vertex_label_mapping.end()) {
         throw std::invalid_argument("the provided vertex " + v1 + " is not contained in this graph.");
     }
-    if (findIt2 == namedVertices.end()) {
+    if (findIt2 == _vertex_label_mapping.end()) {
         throw std::invalid_argument("the provided vertex " + v2 + " is not contained in this graph.");
     }
     findIt1->second->addNeighbor(findIt2->second.data());
@@ -54,25 +54,25 @@ void Graph::addEdge(const std::string &v1, const std::string &v2) {
 }
 
 const Graph::vertex_list &Graph::vertices() const {
-    return vertices_;
+    return _vertices;
 }
 
 void Graph::removeVertex(vertex_ref vertex) {
     removeNeighborsEdges(vertex);
     if (!vertex->label().empty()) {
-        namedVertices.erase(namedVertices.find(vertex->label()));
+        _vertex_label_mapping.erase(_vertex_label_mapping.find(vertex->label()));
     }
-    vertices_.erase(vertex.data());
+    _vertices.erase(vertex.data());
 }
 
 void Graph::removeParticle(std::size_t particleIndex) {
     auto v = vertexItForParticleIndex(particleIndex);
-    if (v != vertices_.end()) {
+    if (v != _vertices.end()) {
         removeNeighborsEdges(v);
         if (!v->label().empty()) {
-            namedVertices.erase(namedVertices.find(v->label()));
+            _vertex_label_mapping.erase(_vertex_label_mapping.find(v->label()));
         }
-        vertices_.erase(v);
+        _vertices.erase(v);
     } else {
         throw std::invalid_argument(
                 "the vertex corresponding to the particle with topology index " + std::to_string(particleIndex) +
@@ -81,8 +81,8 @@ void Graph::removeParticle(std::size_t particleIndex) {
 }
 
 void Graph::removeVertex(const std::string &name) {
-    decltype(namedVertices.begin()) it;
-    if ((it = namedVertices.find(name)) == namedVertices.end()) {
+    decltype(_vertex_label_mapping.begin()) it;
+    if ((it = _vertex_label_mapping.find(name)) == _vertex_label_mapping.end()) {
         throw std::invalid_argument("the vertex \"" + name + "\" did not exist!");
     }
     removeVertex(it->second);
@@ -101,24 +101,24 @@ void Graph::removeEdge(vertex_ref v1, vertex_ref v2) {
 }
 
 void Graph::removeEdge(const std::string &v1, const std::string &v2) {
-    assert(namedVertices.find(v1) != namedVertices.end());
-    assert(namedVertices.find(v2) != namedVertices.end());
-    removeEdge(namedVertices.at(v1), namedVertices.at(v2));
+    assert(_vertex_label_mapping.find(v1) != _vertex_label_mapping.end());
+    assert(_vertex_label_mapping.find(v2) != _vertex_label_mapping.end());
+    removeEdge(_vertex_label_mapping.at(v1), _vertex_label_mapping.at(v2));
 }
 
 const Vertex &Graph::namedVertex(const std::string &name) const {
-    decltype(namedVertices.begin()) it;
-    if ((it = namedVertices.find(name)) == namedVertices.end()) {
+    decltype(_vertex_label_mapping.begin()) it;
+    if ((it = _vertex_label_mapping.find(name)) == _vertex_label_mapping.end()) {
         throw std::invalid_argument("the requested vertex " + name + " did not exist.");
     }
     return *it->second;
 }
 
 const Vertex &Graph::vertexForParticleIndex(std::size_t particleIndex) const {
-    auto it = std::find_if(vertices_.begin(), vertices_.end(), [particleIndex](const Vertex &vertex) {
+    auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
         return vertex.particleIndex == particleIndex;
     });
-    if (it != vertices_.end()) {
+    if (it != _vertices.end()) {
         return *it;
     } else {
         throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
@@ -127,18 +127,18 @@ const Vertex &Graph::vertexForParticleIndex(std::size_t particleIndex) const {
 
 void Graph::setVertexLabel(vertex_ref vertex, const std::string &label) {
     if(!label.empty()) {
-        auto it = namedVertices.find(label);
-        if (it == namedVertices.end()) {
-            namedVertices.emplace(std::make_pair(label, vertex));
+        auto it = _vertex_label_mapping.find(label);
+        if (it == _vertex_label_mapping.end()) {
+            _vertex_label_mapping.emplace(std::make_pair(label, vertex));
             vertex->_label = label;
         } else {
             throw std::invalid_argument("the label " + label + " already existed in this topology!");
         }
     } else {
-        auto it = namedVertices.begin();
-        for(; it != namedVertices.end();) {
+        auto it = _vertex_label_mapping.begin();
+        for(; it != _vertex_label_mapping.end();) {
             if(it->second == vertex) {
-                it = namedVertices.erase(it);
+                it = _vertex_label_mapping.erase(it);
             } else {
                 ++it;
             }
@@ -148,30 +148,30 @@ void Graph::setVertexLabel(vertex_ref vertex, const std::string &label) {
 
 void Graph::addVertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label) {
     if (!label.empty()) {
-        if (namedVertices.find(label) != namedVertices.end()) {
+        if (_vertex_label_mapping.find(label) != _vertex_label_mapping.end()) {
             throw std::invalid_argument("the named vertex \"" + label + "\" already existed!");
         }
-        vertices_.emplace_back(particleIndex, particleType, label);
-        namedVertices[label] = --vertices().end();
+        _vertices.emplace_back(particleIndex, particleType, label);
+        _vertex_label_mapping[label] = --vertices().end();
     } else {
-        vertices_.emplace_back(particleIndex, particleType);
+        _vertices.emplace_back(particleIndex, particleType);
     }
 }
 
-auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(vertices_.begin()) {
-    auto it = std::find_if(vertices_.begin(), vertices_.end(), [particleIndex](const Vertex &vertex) {
+auto Graph::vertexItForParticleIndex(std::size_t particleIndex) -> decltype(_vertices.begin()) {
+    auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
         return vertex.particleIndex == particleIndex;
     });
-    if (it != vertices_.end()) {
+    if (it != _vertices.end()) {
         return it;
     }
-    return vertices_.end();
+    return _vertices.end();
 }
 
 void Graph::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
     auto it1 = vertexItForParticleIndex(particleIndex1);
     auto it2 = vertexItForParticleIndex(particleIndex2);
-    if (it1 != vertices_.end() && it2 != vertices_.end()) {
+    if (it1 != _vertices.end() && it2 != _vertices.end()) {
         it1->addNeighbor(it2);
         it2->addNeighbor(it1);
     } else {
@@ -185,11 +185,11 @@ void Graph::addEdge(vertex_ref v1, vertex_ref v2) {
 }
 
 Graph::vertex_list &Graph::vertices() {
-    return vertices_;
+    return _vertices;
 }
 
 Vertex &Graph::namedVertex(const std::string &name) {
-    return *namedVertices.at(name);
+    return *_vertex_label_mapping.at(name);
 }
 
 Graph::vertex_ref Graph::firstVertex() {
@@ -201,9 +201,9 @@ Graph::vertex_ref Graph::lastVertex() {
 }
 
 bool Graph::isConnected() {
-    std::for_each(vertices_.begin(), vertices_.end(), [](Vertex &v) { v.visited = false; });
+    std::for_each(_vertices.begin(), _vertices.end(), [](Vertex &v) { v.visited = false; });
     std::vector<vertex_ref> unvisited;
-    unvisited.push_back(vertices_.begin());
+    unvisited.push_back(_vertices.begin());
     std::size_t n_visited = 0;
     while(!unvisited.empty()) {
         auto vertex = unvisited.back();
@@ -218,17 +218,17 @@ bool Graph::isConnected() {
             }
         }
     }
-    return n_visited == vertices_.size();
+    return n_visited == _vertices.size();
 }
 
 void Graph::findNTuples(const edge_callback &tuple_callback,
                         const path_len_2_callback &triple_callback,
                         const path_len_3_callback &quadruple_callback) {
-    for (auto &v : vertices_) {
+    for (auto &v : _vertices) {
         v.visited = false;
     }
 
-    for (auto it = vertices_.begin(); it != vertices_.end(); ++it) {
+    for (auto it = _vertices.begin(); it != _vertices.end(); ++it) {
         it->visited = true;
         auto v_type = it->particleType();
         auto v_idx = it->particleIndex;
@@ -289,7 +289,7 @@ Graph::findNTuples() {
 }
 
 Graph::vertex_cref Graph::namedVertexPtr(const std::string &name) const {
-    return namedVertices.at(name);
+    return _vertex_label_mapping.at(name);
 }
 
 void Graph::addEdge(const edge &edge) {
@@ -313,11 +313,11 @@ Graph::cedge Graph::namedEdge(const Graph::label_edge &edge) const {
 }
 
 const Graph::vertex_label_mapping &Graph::vertexLabelMapping() const {
-    return namedVertices;
+    return _vertex_label_mapping;
 }
 
 Graph::vertex_label_mapping &Graph::vertexLabelMapping() {
-    return namedVertices;
+    return _vertex_label_mapping;
 }
 
 Graph::edge Graph::namedEdge(const Graph::label_edge &edge) {
@@ -325,8 +325,79 @@ Graph::edge Graph::namedEdge(const Graph::label_edge &edge) {
 }
 
 Graph::vertex_ref Graph::namedVertexPtr(const Graph::label &name) {
-    return namedVertices.at(name);
+    return _vertex_label_mapping.at(name);
 }
+
+std::vector<Graph> Graph::connectedComponentsDestructive() {
+    std::vector<Graph> subGraphs;
+    std::vector<vertex_list> subVertexLists;
+    std::vector<vertex_label_mapping> subVertexLabelMappings;
+
+    {
+        std::vector<std::vector<vertex_cref>> components;
+
+        std::for_each(_vertices.begin(), _vertices.end(), [](Vertex &v) { v.visited = false; });
+
+        for(auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+            if(!it->visited) {
+                // got a new component
+                components.emplace_back();
+                subVertexLists.emplace_back();
+                subVertexLabelMappings.emplace_back();
+
+                auto& component = components.back();
+                auto& mapping = subVertexLabelMappings.back();
+
+                {
+                    component.emplace_back(it);
+                    if (!it->_label.empty()) mapping[it->_label] = it;
+                }
+
+                std::vector<vertex_ref> unvisitedInComponent;
+                unvisitedInComponent.emplace_back(it);
+                while (!unvisitedInComponent.empty()) {
+                    auto& vertex = unvisitedInComponent.back();
+                    unvisitedInComponent.pop_back();
+                    if (!vertex->visited) {
+                        vertex->visited = true;
+                        {
+                            component.emplace_back(vertex);
+                            if (!vertex->_label.empty()) mapping[vertex->_label] = vertex;
+                        }
+                        for (auto neighbor : vertex->neighbors()) {
+                            if (!neighbor->visited) {
+                                unvisitedInComponent.push_back(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        {
+            // transfer vertices
+            auto it_components = components.begin();
+            auto it_subLists = subVertexLists.begin();
+            for(; it_components != components.end(); ++it_components, ++it_subLists) {
+                for(const auto& vertex_ref : *it_components) {
+                    it_subLists->splice(it_subLists->end(), _vertices, vertex_ref.data());
+                }
+            }
+        }
+    }
+    subGraphs.reserve(subVertexLists.size());
+    {
+        auto it_mappings = subVertexLabelMappings.begin();
+        auto it_subLists = subVertexLists.begin();
+        for(; it_mappings != subVertexLabelMappings.end(); ++it_mappings, ++it_subLists) {
+            subGraphs.emplace_back(std::move(*it_subLists), std::move(*it_mappings));
+        }
+    }
+    return subGraphs;
+}
+
+Graph::Graph(vertex_list vertexList, vertex_label_mapping vertexLabelMapping)
+        : _vertices(std::move(vertexList)), _vertex_label_mapping(std::move(vertexLabelMapping)){}
 
 }
 }
