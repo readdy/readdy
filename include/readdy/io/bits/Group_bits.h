@@ -50,7 +50,9 @@ inline void Group::write(const std::string &dataSetName, const std::string &stri
     auto nativestr = NativeDataSetType<std::string>();
     H5Tset_cset(stdstr.tid->tid, H5T_CSET_UTF8);
     H5Tset_cset(nativestr.tid->tid, H5T_CSET_UTF8);
-    H5LTmake_dataset_string(handle, dataSetName.c_str(), string.c_str());
+    if(H5LTmake_dataset_string(handle, dataSetName.c_str(), string.c_str()) < 0) {
+        log::warn("there was a problem with writing {} into a hdf5 file.", string);
+    }
 }
 
 inline Group Group::createGroup(const std::string &path) {

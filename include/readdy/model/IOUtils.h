@@ -39,6 +39,7 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
 void writeReactionInformation(io::Group& group, const KernelContext &context);
+void writeParticleTypeInformation(io::Group& group, const KernelContext &context);
 
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

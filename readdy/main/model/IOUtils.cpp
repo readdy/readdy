@@ -34,6 +34,7 @@
 
 namespace readdy {
 namespace model {
+
 void writeReactionInformation(io::Group &group, const KernelContext &context) {
     auto subgroup = group.createGroup("./registered_reactions");
     auto groupO1 = subgroup.createGroup("./order1");
@@ -60,6 +61,16 @@ void writeReactionInformation(io::Group &group, const KernelContext &context) {
                         context.particle_types().name_of(t2) + "[id=" + std::to_string(t2) + "]", labelsOrder2);
             }
         }
+    }
+}
+
+void writeParticleTypeInformation(io::Group &group, const KernelContext &context) {
+    auto subgroup = group.createGroup("./particle_types");
+    const auto& types = context.particle_types().type_mapping();
+    for(auto it = types.begin(); it != types.end(); ++it) {
+        std::vector<std::string> strvec(1);
+        strvec.at(0) = it->first;
+        subgroup.write(std::to_string(it->second), it->first);
     }
 }
 
