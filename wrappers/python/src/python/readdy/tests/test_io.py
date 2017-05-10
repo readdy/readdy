@@ -70,7 +70,7 @@ class TestSchemeApi(unittest.TestCase):
                 np.testing.assert_equal(item.t, idx)
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
         with h5py.File(traj_fname) as f:
-            np.testing.assert_equal("A", f["readdy/config/particle_types/0"].value)
+            np.testing.assert_equal(b"A", f["readdy/config/particle_types/0"].value)
 
         common.set_logging_level("debug")
 
