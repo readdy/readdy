@@ -60,7 +60,7 @@ class TestSchemeApi(unittest.TestCase):
         traj_handle = simulation.register_observable_trajectory(0)
         with closing(io.File(traj_fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", 3)
-            simulation.run_scheme_readdy(True).configure(1).run(20)
+            simulation.run_scheme_readdy(True).write_config_to_file(f).configure(1).run(20)
 
         r = TrajectoryReader(traj_fname)
         trajectory_items = r[:]
@@ -69,6 +69,8 @@ class TestSchemeApi(unittest.TestCase):
             for item in items:
                 np.testing.assert_equal(item.t, idx)
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
+        with h5py.File(traj_fname) as f:
+            np.testing.assert_equal("A", f["readdy/config/particle_types/0"].value)
 
         common.set_logging_level("debug")
 

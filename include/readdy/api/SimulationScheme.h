@@ -53,6 +53,8 @@
 #include <type_traits>
 #include <readdy/common/common.h>
 #include <readdy/model/Kernel.h>
+#include <readdy/io/Group.h>
+#include <readdy/model/IOUtils.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(api)
@@ -89,6 +91,7 @@ protected:
     std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler = nullptr;
     std::unique_ptr<model::actions::UpdateNeighborList> neighborList = nullptr;
     std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList = nullptr;
+    std::unique_ptr<io::Group> configGroup = nullptr;
     bool evaluateObservables = true;
     time_step_type start = 0;
 };
@@ -101,6 +104,10 @@ public:
 
     virtual void run(const continue_fun_t &continueFun) override {
         kernel->getKernelContext().configure(true);
+        if(configGroup) {
+            model::writeParticleTypeInformation(*configGroup, kernel->getKernelContext());
+            model::writeReactionInformation(*configGroup, kernel->getKernelContext());
+        }
 
         if (neighborList) neighborList->perform();
         if (forces) forces->perform();
@@ -176,6 +183,11 @@ public:
             scheme->forces = nullptr;
         }
         includeForcesSet = true;
+        return *this;
+    }
+
+    SchemeConfigurator &writeConfigToFile(io::File& file) {
+        scheme->configGroup = std::make_unique<io::Group>(file.createGroup("readdy/config"));
         return *this;
     }
 
