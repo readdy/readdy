@@ -233,7 +233,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         # include directories from least dependent to most dependent
         # i.e.: A depends on B -> add subdirectory of B first
         ADD_SUBDIRECTORY(readdy/main/common)
-        INCLUDE(cmake/sources/sources_io.cmake)
+        ADD_SUBDIRECTORY(readdy/main/io)
         ADD_SUBDIRECTORY(readdy/main/model)
         ADD_SUBDIRECTORY(readdy/main/plugin)
         ADD_SUBDIRECTORY(kernels/singlecpu)

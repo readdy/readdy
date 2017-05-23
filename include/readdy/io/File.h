@@ -39,7 +39,7 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
 class READDY_API File {
-    template<typename T, bool VLEN>
+    template<typename T, bool VLEN, int compression>
     friend
     class DataSet;
 

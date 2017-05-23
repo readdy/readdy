@@ -36,7 +36,13 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-template<typename T, bool VLEN=false>
+enum DataSetCompression {
+    none = 0x0000, blosc = 0x0001
+};
+
+void initialize_blosc();
+
+template<typename T, bool VLEN=false, int compression=DataSetCompression::blosc>
 class READDY_API DataSet {
 public:
 
