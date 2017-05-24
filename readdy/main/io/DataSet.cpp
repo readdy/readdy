@@ -48,11 +48,13 @@ void initialize() {
 
 }
 
-void activate(hid_t plist) {
-    unsigned int cd_values[7];
-    cd_values[4] = 4;       /* compression level */
-    cd_values[5] = 1;       /* 0: shuffle not active, 1: shuffle active */
-    cd_values[6] = BLOSC_ZSTD; /* the actual compressor to use */
+void activate(hid_t plist, unsigned int *cd_values) {
+    // compression level 0-9 (0 no compression, 9 highest compression)
+    cd_values[4] = 9;
+    // 0: shuffle not active, 1: shuffle active
+    cd_values[5] = 1;
+    // the compressor to use
+    cd_values[6] = BLOSC_BLOSCLZ;
     if (H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 7, cd_values) < 0) {
         log::warn("could not set blosc filter!");
         H5Eprint(H5Eget_current_stack(), stderr);

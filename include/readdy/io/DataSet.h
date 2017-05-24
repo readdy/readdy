@@ -42,7 +42,7 @@ enum DataSetCompression {
 
 namespace blosc_compression {
 void initialize();
-void activate(hid_t plist);
+void activate(hid_t plist, unsigned int* cd_values);
 }
 
 template<typename T, bool VLEN=false, int compression=DataSetCompression::blosc>

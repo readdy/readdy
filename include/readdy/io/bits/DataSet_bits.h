@@ -108,8 +108,9 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
         H5Pset_layout(plist, H5D_CHUNKED);
         H5Pset_chunk(plist, static_cast<int>(chunkSize.size()), chunkSize.data());
+        unsigned int cd_values[7];
         if (compression == DataSetCompression::blosc) {
-            blosc_compression::activate(plist);
+            blosc_compression::activate(plist, cd_values);
         }
         dataSetHandle = H5Dcreate(group.handle, name.c_str(), this->fileType.tid->tid, fileSpace, H5P_DEFAULT, plist,
                                   H5P_DEFAULT);
