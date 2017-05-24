@@ -171,6 +171,10 @@ inline obs_handle_t registerObservable_Trajectory(sim& self, unsigned int stride
     return self.registerObservable<readdy::model::observables::Trajectory>(stride);
 }
 
+inline obs_handle_t registerObservable_FlatTrajectory(sim& self, unsigned int stride) {
+    return self.registerObservable<readdy::model::observables::FlatTrajectory>(stride);
+}
+
 template <typename type_, typename... options>
 void exportObservables(py::module &apiModule, py::class_<type_, options...> &simulation) {
     using namespace pybind11::literals;
@@ -214,6 +218,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
             .def("register_observable_reaction_counts", &registerObservable_ReactionCounts,
                  "stride"_a, "callback"_a = py::none())
             .def("register_observable_trajectory", &registerObservable_Trajectory, "stride"_a)
+            .def("register_observable_flat_trajectory", &registerObservable_FlatTrajectory, "stride"_a)
             .def("deregister_observable", [](sim &self, const obs_handle_t &handle) {
                 self.deregisterObservable(handle.getId());
             }, "handle"_a);

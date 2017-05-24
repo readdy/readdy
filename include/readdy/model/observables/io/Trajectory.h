@@ -68,7 +68,29 @@ protected:
 
     void append() override;
 
+    struct Impl;
+    std::unique_ptr<Impl> pimpl;
+};
+
+class FlatTrajectory : public Observable<std::vector<TrajectoryEntry>> {
+    using super = Observable<std::vector<TrajectoryEntry>>;
+public:
+
+    FlatTrajectory(Kernel *const kernel, unsigned int stride);
+
+    ~FlatTrajectory();
+
+    FlatTrajectory(FlatTrajectory&&);
+
+    virtual void evaluate() override;
+
+    virtual void flush() override;
+
 protected:
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+
+    void append() override;
+
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 };

@@ -33,6 +33,7 @@ try:
 except ImportError:
     izip = zip
 
+
 def is_readdy_trajectory_file(h5file):
     """
     Method determining if a file is a readdy trajectory file (i.e., contains /readdy/trajectory).
@@ -80,6 +81,17 @@ def to_trajectory_entries(data, time):
         return TrajectoryEntry(data["typeId"], time, data["id"], data["pos"], data["flavor"])
 
 
+def to_trajectory_entries_flat(data, time, limits, slice):
+    times = time[slice]
+    entries = []
+    for limit, t in izip(limits[slice], times):
+        frame = []
+        for i in range(limit[0], limit[1]):
+            entry = data[i]
+            frame.append(TrajectoryEntry(entry["typeId"], t, entry["id"], entry["pos"], entry["flavor"]))
+        entries.append(frame)
+    return entries
+
 class TrajectoryReader(object):
     @classmethod
     def data_set_path(cls, name):
@@ -95,15 +107,37 @@ class TrajectoryReader(object):
         else:
             return "/readdy/trajectory/time"
 
+    @classmethod
+    def group_path(cls, name):
+        if len(name) > 0:
+            return "/readdy/trajectory/" + name + "/"
+        else:
+            return "/readdy/trajectory/"
+
+    @classmethod
+    def limits_path(cls, name):
+        if len(name) > 0:
+            return "/readdy/trajectory/" + name + "/limits"
+        else:
+            return "/readdy/trajectory/limits"
+
     def __init__(self, h5file, name=""):
         assert is_readdy_trajectory_file(h5file), "the provided file was no readdy trajectory file!"
         self._name = name
         with h5.File(h5file) as f:
             ds = f[self.data_set_path(name)]
             self.n_frames = len(ds)
+            self._flat = "limits" in f[self.group_path(name)].keys()
         self._h5file = h5file
 
     def __getitem__(self, item):
-        with h5.File(self._h5file) as f:
-            return to_trajectory_entries(f[self.data_set_path(self._name)][item],
-                                         f[self.time_information_path(self._name)][item])
+        if not self._flat:
+            with h5.File(self._h5file) as f:
+                return to_trajectory_entries(f[self.data_set_path(self._name)][item],
+                                             f[self.time_information_path(self._name)][item])
+        else:
+            with h5.File(self._h5file) as f:
+                return to_trajectory_entries_flat(f[self.data_set_path(self._name)],
+                                                  f[self.time_information_path(self._name)],
+                                                  f[self.limits_path(self._name)],
+                                                  item)
