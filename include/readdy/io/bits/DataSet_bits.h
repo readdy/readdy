@@ -39,8 +39,6 @@
 #include <H5Ppublic.h>
 #include <readdy/common/logging.h>
 #include <readdy/io/DataSetType.h>
-#include <blosc.h> // todo get rid of this include
-#include <readdy/io/lib/blosc_filter.h> // todo get rid of this include as well
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
@@ -64,21 +62,24 @@ inline DataSet<T, VLEN, compression>::~DataSet() {
 }
 
 template<typename T, bool VLEN, int compression>
-inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
-                                 const std::vector<h5::dims_t> &maxDims)
+inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Group &group,
+                                              const std::vector<h5::dims_t> &chunkSize,
+                                              const std::vector<h5::dims_t> &maxDims)
         : DataSet(name, group, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>()) {};
 
 template<typename T, bool VLEN, int compression>
-inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
-                                 const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType)
+inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Group &group,
+                                              const std::vector<h5::dims_t> &chunkSize,
+                                              const std::vector<h5::dims_t> &maxDims, DataSetType memoryType,
+                                              DataSetType fileType)
         : maxDims(maxDims), group(group), memoryType(memoryType), fileType(fileType) {
     {
         std::stringstream result;
         std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
         log::trace("creating data set (vlen={}) with maxDims={}", VLEN, result.str());
     }
-    if(compression == DataSetCompression::blosc) {
-        initialize_blosc();
+    if (compression == DataSetCompression::blosc) {
+        blosc_compression::initialize();
     }
     if (VLEN) {
         log::trace("making the types {} and {} vlen", memoryType.tid, fileType.tid);
@@ -107,32 +108,25 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
         H5Pset_layout(plist, H5D_CHUNKED);
         H5Pset_chunk(plist, static_cast<int>(chunkSize.size()), chunkSize.data());
-        unsigned int cd_values[7];
-        if(compression == blosc) {
-            cd_values[4] = 4;       /* compression level */
-            cd_values[5] = 1;       /* 0: shuffle not active, 1: shuffle active */
-            cd_values[6] = BLOSC_BLOSCLZ; /* the actual compressor to use */
-            if(H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 7, cd_values) < 0) {
-                log::warn("could not set blosc filter!");
-                H5Eprint (H5Eget_current_stack(), stderr);
-            }
+        if (compression == DataSetCompression::blosc) {
+            blosc_compression::activate(plist);
         }
         dataSetHandle = H5Dcreate(group.handle, name.c_str(), this->fileType.tid->tid, fileSpace, H5P_DEFAULT, plist,
                                   H5P_DEFAULT);
-        if(dataSetHandle < 0) {
+        if (dataSetHandle < 0) {
             log::error("Error on creating data set {}", dataSetHandle);
-            H5Eprint (H5Eget_current_stack(), stderr);
+            H5Eprint(H5Eget_current_stack(), stderr);
             throw std::runtime_error("Error on creating data set " + std::to_string(dataSetHandle));
         }
         memorySpace = -1;
-        if(plist >= 0 && H5Pclose(plist) < 0) {
+        if (plist >= 0 && H5Pclose(plist) < 0) {
             log::error("Error on closing plist {}", plist);
-            H5Eprint (H5Eget_current_stack(), stderr);
+            H5Eprint(H5Eget_current_stack(), stderr);
             throw std::runtime_error("Error on closing plist " + std::to_string(plist));
         }
-        if(fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
+        if (fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
             log::error("Error on closing file space {}", fileSpace);
-            H5Eprint (H5Eget_current_stack(), stderr);
+            H5Eprint(H5Eget_current_stack(), stderr);
             throw std::runtime_error("(constructor) Error on closing file space " + std::to_string(fileSpace));
         }
     }
@@ -140,20 +134,22 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
 
 template<typename T, bool VLEN, int compression>
 template<bool no_vlen>
-inline void DataSet<T, VLEN, compression>::append(std::vector<T> &data, typename std::enable_if<no_vlen, bool>::type *) {
+inline void
+DataSet<T, VLEN, compression>::append(std::vector<T> &data, typename std::enable_if<no_vlen, bool>::type *) {
     if (!data.empty()) append({1, data.size()}, data.data());
 }
 
 template<typename T, bool VLEN, int compression>
 template<bool vlen>
-inline void DataSet<T, VLEN, compression>::append(std::vector<std::vector<T>> &data, typename std::enable_if<vlen, bool>::type *) {
+inline void
+DataSet<T, VLEN, compression>::append(std::vector<std::vector<T>> &data, typename std::enable_if<vlen, bool>::type *) {
     if (!data.empty()) append({data.size()}, data.data());
 }
 
 template<typename T, bool VLEN, int compression>
 template<bool enabled>
 inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data,
-                                     typename std::enable_if<enabled, bool>::type *) {
+                                                  typename std::enable_if<enabled, bool>::type *) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
@@ -173,9 +169,9 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
         currentExtent.resize(dims.size());
         auto fileSpace = H5Dget_space(dataSetHandle);
         H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
-        if(fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
+        if (fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
             log::error("error on closing file space! {}", fileSpace);
-            H5Eprint (H5Eget_current_stack(), stderr);
+            H5Eprint(H5Eget_current_stack(), stderr);
             throw std::runtime_error("error on closing file space!");
         }
     }
@@ -230,7 +226,7 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
 template<typename T, bool VLEN, int compression>
 template<bool enabled>
 inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> &dims, const T *const data,
-                                     typename std::enable_if<enabled, bool>::type *) {
+                                                  typename std::enable_if<enabled, bool>::type *) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
@@ -253,9 +249,9 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
         {
             auto fileSpace = H5Dget_space(dataSetHandle);
             H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
-            if(fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
+            if (fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
                 log::error("error on closing file space! {}", fileSpace);
-                H5Eprint (H5Eget_current_stack(), stderr);
+                H5Eprint(H5Eget_current_stack(), stderr);
                 throw std::runtime_error("error on closing file space!");
             }
         }
@@ -279,9 +275,9 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
     }
     auto fileSpace = H5Dget_space(dataSetHandle);
     H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    if(H5Dwrite(dataSetHandle, memoryType.tid->tid, memorySpace, fileSpace, H5P_DEFAULT, data) < 0) {
+    if (H5Dwrite(dataSetHandle, memoryType.tid->tid, memorySpace, fileSpace, H5P_DEFAULT, data) < 0) {
         log::error("Error with data set {}", dataSetHandle);
-        H5Eprint (H5Eget_current_stack(), stderr);
+        H5Eprint(H5Eget_current_stack(), stderr);
     }
     H5Sclose(fileSpace);
 }

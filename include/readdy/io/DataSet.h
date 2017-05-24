@@ -40,7 +40,10 @@ enum DataSetCompression {
     none = 0x0000, blosc = 0x0001
 };
 
-void initialize_blosc();
+namespace blosc_compression {
+void initialize();
+void activate(hid_t plist);
+}
 
 template<typename T, bool VLEN=false, int compression=DataSetCompression::blosc>
 class READDY_API DataSet {

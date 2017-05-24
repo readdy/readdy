@@ -31,17 +31,33 @@
  */
 
 #include <readdy/io/DataSet.h>
-#include <readdy/io/lib/blosc_filter.h>
+#include "blosc_filter.h"
+
 namespace readdy {
 namespace io {
-void initialize_blosc() {
-    static std::atomic_bool initialized {false};
-    if(!initialized.load()) {
+namespace blosc_compression {
+
+void initialize() {
+    static std::atomic_bool initialized{false};
+    if (!initialized.load()) {
         initialized = true;
         char *version, *date;
         register_blosc(&version, &date);
         log::debug("registered blosc with version {} ({})", version, date);
     }
+
+}
+
+void activate(hid_t plist) {
+    unsigned int cd_values[7];
+    cd_values[4] = 4;       /* compression level */
+    cd_values[5] = 1;       /* 0: shuffle not active, 1: shuffle active */
+    cd_values[6] = BLOSC_ZSTD; /* the actual compressor to use */
+    if (H5Pset_filter(plist, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 7, cd_values) < 0) {
+        log::warn("could not set blosc filter!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+}
 
 }
 }

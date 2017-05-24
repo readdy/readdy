@@ -39,8 +39,8 @@
 
 #define H5Z_class_t_vers 2
 
-#include "readdy/io/lib/blosc_plugin.h"
-#include "readdy/io/lib/blosc_filter.h"
+#include "blosc_plugin.h"
+#include "blosc_filter.h"
 
 
 /* Prototypes for filter function in blosc_filter.c. */
