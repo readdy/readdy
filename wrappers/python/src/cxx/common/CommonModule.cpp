@@ -30,7 +30,7 @@
 
 #include <readdy/model/Vec3.h>
 
-#include <readdy/common/logging.h>
+#include <readdy/io/io.h>
 
 namespace py = pybind11;
 
@@ -64,7 +64,9 @@ void exportCommon(py::module& common) {
         }());
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
                        "\"err\", \"error\", \"critical\", \"off\".");
-
+    common.def("register_blosc_hdf5_plugin", []() -> void {
+        readdy::io::blosc_compression::initialize();
+    });
     {
         py::module io = common.def_submodule("io", "ReaDDy IO module");
         exportIO(io);

@@ -23,56 +23,17 @@
 /**
  * << detailed description >>
  *
- * @file Group.h
+ * @file io.h
  * @brief << brief description >>
  * @author clonker
- * @date 04/01/2017
+ * @date 23.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <string>
-#include <vector>
-#include <readdy/common/macros.h>
-#include "H5Types.h"
+#include "DataSet.h"
 #include "DataSetType.h"
-
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(io)
-
-class READDY_API Group {
-    friend class File;
-
-    template<typename T, bool VLEN, int compression>
-    friend class DataSet;
-
-public:
-
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<T> &data) {
-        write(dataSetName, {data.size()}, data.data());
-    }
-
-    void write(const std::string &dataSetName, const std::string &string);
-
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data);
-
-    Group createGroup(const std::string &path);
-
-    h5::handle_t getHandle() const;
-
-protected:
-
-    Group();
-
-    Group(h5::handle_t handle, const std::string &);
-
-    h5::handle_t handle;
-    std::string path;
-};
-
-NAMESPACE_END(io)
-NAMESPACE_END(readdy)
-
-#include "bits/Group_bits.h"
+#include "File.h"
+#include "Group.h"
+#include "H5Types.h"

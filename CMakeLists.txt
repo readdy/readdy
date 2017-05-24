@@ -215,6 +215,17 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     #                                   #
     #####################################
 
+    # include blosc
+    SET(DEACTIVATE_SNAPPY ON CACHE BOOL "")
+    SET(DEACTIVATE_ZSTD OFF CACHE BOOL "")
+    SET(DEACTIVATE_ZLIB ON CACHE BOOL "")
+    SET(BLOSC_INSTALL ON CACHE BOOL "")
+    SET(BUILD_SHARED ON CACHE BOOL "")
+    SET(BUILD_STATIC OFF CACHE BOOL "")
+    SET(BUILD_TESTS OFF CACHE BOOL "")
+    SET(BUILD_BENCHMARKS OFF CACHE BOOL "")
+    ADD_SUBDIRECTORY(libraries/c-blosc)
+
     IF(READDY_BUILD_SHARED_COMBINED)
         INCLUDE(cmake/sources/sources_common.cmake)
         INCLUDE(cmake/sources/sources_io.cmake)
@@ -233,7 +244,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         # include directories from least dependent to most dependent
         # i.e.: A depends on B -> add subdirectory of B first
         ADD_SUBDIRECTORY(readdy/main/common)
-        INCLUDE(cmake/sources/sources_io.cmake)
+        ADD_SUBDIRECTORY(readdy/main/io)
         ADD_SUBDIRECTORY(readdy/main/model)
         ADD_SUBDIRECTORY(readdy/main/plugin)
         ADD_SUBDIRECTORY(kernels/singlecpu)

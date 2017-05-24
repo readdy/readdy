@@ -89,6 +89,63 @@ void Trajectory::append() {
     pimpl->time->append(t_current);
 }
 
+struct FlatTrajectory::Impl {
+    std::unique_ptr<readdy::io::DataSet<TrajectoryEntry, false>> dataSet;
+    std::unique_ptr<readdy::io::DataSet<std::size_t, false>> limits;
+    std::unique_ptr<util::TimeSeriesWriter> time;
+    std::size_t current_limits [2] {0, 0};
+};
+
+FlatTrajectory::FlatTrajectory(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride),
+                                                                            pimpl(std::make_unique<Impl>()) {}
+
+void FlatTrajectory::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    if(!pimpl->dataSet) {
+        auto group = file.createGroup(std::string(Trajectory::TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
+        {
+            std::vector<readdy::io::h5::dims_t> fs = {flushStride};
+            std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+            auto dataSet = std::make_unique<readdy::io::DataSet<TrajectoryEntry, false>>(
+                    "records", group, fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()
+            );
+            pimpl->dataSet = std::move(dataSet);
+        }
+        {
+            std::vector<readdy::io::h5::dims_t> fs = {flushStride, 2};
+            std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, 2};
+            auto limits = std::make_unique<readdy::io::DataSet<std::size_t, false>>("limits", group, fs, dims);
+            pimpl->limits = std::move(limits);
+        }
+        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
+
+    }
+}
+
+void FlatTrajectory::evaluate() {
+    result.clear();
+    const auto &currentInput = kernel->getKernelStateModel().getParticles();
+    std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle& p) {
+        result.push_back(TrajectoryEntry{p});
+    });
+}
+
+void FlatTrajectory::flush() {
+    if(pimpl->dataSet) pimpl->dataSet->flush();
+    if(pimpl->time) pimpl->time->flush();
+    if(pimpl->limits) pimpl->limits->flush();
+}
+
+void FlatTrajectory::append() {
+    pimpl->current_limits[0] = pimpl->current_limits[1];
+    pimpl->current_limits[1] += result.size();
+    pimpl->dataSet->append({result.size()}, result.data());
+    pimpl->time->append(t_current);
+    pimpl->limits->append({1, 2}, pimpl->current_limits);
+}
+
+FlatTrajectory::FlatTrajectory(FlatTrajectory &&) = default;
+
+FlatTrajectory::~FlatTrajectory() = default;
 }
 }
 }

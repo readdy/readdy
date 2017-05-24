@@ -37,7 +37,7 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
     COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}")
 # link
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${READDY_SINGLECPU_DEPENDENT_LIBRARIES})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} readdy_kernel_singlecpu readdy_common readdy_model readdy_plugin)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} readdy_kernel_singlecpu readdy_common readdy_io readdy_model readdy_plugin)
 
 INSTALL(TARGETS ${READDY_PROJECT_NAME}
         RUNTIME DESTINATION bin
