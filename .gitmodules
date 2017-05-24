@@ -4,3 +4,6 @@
 [submodule "libraries/spdlog"]
 	path = libraries/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "libraries/c-blosc"]
+	path = libraries/c-blosc
+	url = https://github.com/Blosc/c-blosc.git

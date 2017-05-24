@@ -28,7 +28,7 @@ requirements:
     - numpy
     - matplotlib
     - networkx
-    - c-blosc
+    - zlib 1.2.*
     - vs2015_runtime  # [win]
 
   run:
@@ -36,7 +36,7 @@ requirements:
     - numpy
     - h5py
     - hdf5
-    - c-blosc
+    - zlib 1.2.*
     - vs2015_runtime  # [win]
 
 test:
@@ -48,4 +48,4 @@ test:
     - hdf5
     - matplotlib
     - networkx
-    - c-blosc
+    - zlib 1.2.*
