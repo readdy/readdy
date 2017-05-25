@@ -127,6 +127,24 @@ class TestSchemeApi(unittest.TestCase):
                 np.testing.assert_equal(item.t, idx)
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
 
+    def test_open_and_discover_file(self):
+        fname = os.path.join(self.dir, "test_open_and_discover_file.h5")
+        data = np.array([[2.222, 3, 4, 5], [3.3, 3, 3, 3]], dtype=np.float64)
+        with closing(io.File(fname, io.FileAction.CREATE)) as f:
+            g = f.create_group("/my_super_group")
+            subg = g.create_group("my_super_subgroup")
+            g.write_double("doubleds", data)
+            subg.write_string("stringds", u"jap")
+
+        with closing(io.File(fname, io.FileAction.OPEN, flag=io.FileFlag.READ_WRITE)) as f:
+            root_group = f.get_root_group()
+            sg = root_group.subgroups()
+            np.testing.assert_equal(len(sg), 1)
+            np.testing.assert_equal(sg[0], u"my_super_group")
+            sub_group = root_group.get_subgroup(sg[0])
+            subsub_groups = sub_group.subgroups()
+            np.testing.assert_equal("my_super_subgroup" in subsub_groups, True)
+            super_subgroup = sub_group.get_subgroup("my_super_subgroup")
 
     def test_readwrite_double_and_string(self):
         fname = os.path.join(self.dir, "test_readwrite_double_and_string.h5")

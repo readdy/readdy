@@ -112,7 +112,7 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
         if (compression == DataSetCompression::blosc) {
             blosc_compression::activate(plist, cd_values);
         }
-        dataSetHandle = H5Dcreate(group.handle, name.c_str(), this->fileType.tid->tid, fileSpace, H5P_DEFAULT, plist,
+        dataSetHandle = H5Dcreate(group.getHandle(), name.c_str(), this->fileType.tid->tid, fileSpace, H5P_DEFAULT, plist,
                                   H5P_DEFAULT);
         if (dataSetHandle < 0) {
             log::error("Error on creating data set {}", dataSetHandle);

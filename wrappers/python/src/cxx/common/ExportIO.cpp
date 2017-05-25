@@ -118,7 +118,9 @@ void exportIO(py::module &io) {
             .def("write_string", [](group_t &self, const std::string &name, const std::string &data) {
                 self.write(name, data);
             })
-            .def("create_group", &group_t::createGroup, rvp::move);
+            .def("create_group", &group_t::createGroup, rvp::move)
+            .def("subgroups", &group_t::subgroups)
+            .def("get_subgroup", &group_t::subgroup);
 
     exportDataSet<short>(io, "short"); /* DataSet_short */
     exportDataSet<int>(io, "int"); /* DataSet_int */

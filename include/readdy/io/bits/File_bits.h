@@ -56,19 +56,12 @@ inline unsigned getFlagValue(const File::Flag &flag) {
 
 inline void File::close() {
     flush();
-    if (root.handle >= 0 && H5Fclose(root.handle) < 0) {
-        throw std::runtime_error("error when closing HDF5 file \"" + path_ + "\" with handle "
-                                 + std::to_string(root.handle));
-    } else {
-        // we are now in closed state, set the handle to -1
-        root.handle = -1;
-    }
 }
 
 inline void File::flush() {
-    if (root.handle >= 0 && H5Fflush(root.handle, H5F_SCOPE_LOCAL) < 0) {
+    if (root.handle >= 0 && H5Fflush(**root.handle, H5F_SCOPE_LOCAL) < 0) {
         throw std::runtime_error("error when flushing HDF5 file \"" + path_ + "\" with handle "
-                                 + std::to_string(root.handle));
+                                 + std::to_string(**root.handle));
     }
 }
 
@@ -78,7 +71,11 @@ inline Group File::createGroup(const std::string &path) {
     } else {
         auto plist = H5Pcreate(H5P_LINK_CREATE);
         H5Pset_create_intermediate_group(plist, 1);
-        auto handle = H5Gcreate(root.handle, path.c_str(), plist, H5P_DEFAULT, H5P_DEFAULT);
+        auto handle = H5Gcreate(**root.handle, path.c_str(), plist, H5P_DEFAULT, H5P_DEFAULT);
+        if(handle < 0) {
+            log::error("Failed creating group {}!", path);
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
         return Group(handle, path);
     }
 }
@@ -91,20 +88,33 @@ inline File::File(const std::string &path, const Action &action, const Flag &fla
                                                                                           std::vector<Flag>{flag}) {}
 
 inline File::File(const std::string &path, const File::Action &action, const std::vector<File::Flag> &flags)
-        : path_(path), root() {
+        : path_(path), root(), handle(std::make_shared<FileHandle>(-1)) {
     unsigned flag = 0x0000u;
     for (const auto &f : flags) {
         flag = flag | getFlagValue(f);
     }
+    h5::handle_t val = 0;
     switch (action) {
         case Action::CREATE: {
-            root.handle = H5Fcreate(path.c_str(), flag, H5P_DEFAULT, H5P_DEFAULT);
+            val = H5Fcreate(path.c_str(), flag, H5P_DEFAULT, H5P_DEFAULT);
             break;
         }
         case Action::OPEN: {
-            root.handle = H5Fopen(path.c_str(), flag, H5P_DEFAULT);
+            val = H5Fopen(path.c_str(), flag, H5P_DEFAULT);
             break;
         }
+    }
+    if(val >= 0) {
+        handle->set(val);
+        auto root_group = H5Gopen(**handle, "/", H5P_DEFAULT);
+        if(root_group < 0) {
+            log::error("failed to open root group!");
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
+        root.handle->set(root_group);
+    } else {
+        log::error("Failed on opening/creating file {}", path);
+        H5Eprint(H5Eget_current_stack(), stderr);
     }
 }
 

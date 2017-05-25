@@ -40,13 +40,40 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
+class READDY_API GroupHandle {
+public:
+    GroupHandle(h5::handle_t handle = -1) : handle(handle) {}
+
+    ~GroupHandle() {
+        if (handle >= 0) {
+            if (H5Gclose(handle) < 0) {
+                log::error("error when closing group {}", handle);
+                H5Eprint(H5Eget_current_stack(), stderr);
+            }
+        }
+    }
+
+    void set(h5::handle_t handle) {
+        GroupHandle::handle = handle;
+    }
+
+    h5::handle_t operator*() {
+        return handle;
+    }
+
+private:
+    h5::handle_t handle{-1};
+};
+
 class READDY_API Group {
     friend class File;
 
     template<typename T, bool VLEN, int compression>
-    friend class DataSet;
+    friend
+    class DataSet;
 
 public:
+    using handle_ref = std::shared_ptr<GroupHandle>;
 
     template<typename T>
     void write(const std::string &dataSetName, const std::vector<T> &data) {
@@ -62,13 +89,19 @@ public:
 
     h5::handle_t getHandle() const;
 
+    std::vector<std::string> subgroups() const;
+
+    Group subgroup(const std::string &name);
+
+    h5::group_info_t info() const;
+
 protected:
 
     Group();
 
     Group(h5::handle_t handle, const std::string &);
 
-    h5::handle_t handle;
+    handle_ref handle;
     std::string path;
 };
 

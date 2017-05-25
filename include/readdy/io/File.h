@@ -38,12 +38,38 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
+class READDY_API FileHandle {
+public:
+    FileHandle(h5::handle_t handle = -1) : handle(handle) {
+
+    };
+    ~FileHandle() {
+        if(handle >= 0) {
+            if(H5Fclose(handle) < 0) {
+                log::error("error in closing file {}", handle);
+                H5Eprint(H5Eget_current_stack(), stderr);
+            }
+        }
+    }
+
+    void set(h5::handle_t handle) {
+        FileHandle::handle = handle;
+    }
+
+    h5::handle_t operator*() {
+        return handle;
+    }
+private:
+    h5::handle_t handle;
+};
+
 class READDY_API File {
     template<typename T, bool VLEN, int compression>
     friend
     class DataSet;
 
 public:
+    using handle_ref = std::shared_ptr<FileHandle>;
 
     enum class Action {
         CREATE, OPEN
@@ -84,6 +110,7 @@ public:
     }
 
 private:
+    handle_ref handle;
     std::string path_;
     Group root;
 };

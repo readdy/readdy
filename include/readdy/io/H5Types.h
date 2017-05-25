@@ -41,6 +41,7 @@ NAMESPACE_BEGIN(h5)
 using handle_t = hid_t;
 using dims_t = hsize_t;
 using data_set_type_t = hid_t;
+using group_info_t = H5G_info_t;
 const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
 
 NAMESPACE_END(h5)
