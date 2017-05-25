@@ -32,6 +32,7 @@
 #pragma once
 #include "H5Types.h"
 #include "Group.h"
+#include "DataSpace.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
@@ -97,12 +98,14 @@ public:
 
     void flush();
 
+    DataSpace getFileSpace() const;
+
 private:
     const std::vector<h5::dims_t> maxDims;
     const Group group;
     std::shared_ptr<DataSetHandle> handle_ref;
     h5::dims_t extensionDim;
-    h5::handle_t memorySpace;
+    std::unique_ptr<DataSpace> memorySpaceRef;
     DataSetType memoryType {};
     DataSetType fileType {};
 };

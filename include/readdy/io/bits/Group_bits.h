@@ -119,6 +119,11 @@ inline Group Group::subgroup(const std::string& name) {
     return Group(gid, name);
 }
 
+template<typename T>
+inline const T* Group::read(const std::string& ds_name) {
+    return nullptr;
+}
+
 template<>
 inline void Group::write<std::string>(const std::string &dataSetName, const std::vector<std::string> &data) {
     writeVector(getHandle(), dataSetName, data);

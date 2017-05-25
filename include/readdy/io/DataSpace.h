@@ -23,18 +23,59 @@
 /**
  * << detailed description >>
  *
- * @file io.h
+ * @file DataSpace.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.05.17
+ * @date 25.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include "DataSpace.h"
-#include "DataSet.h"
-#include "DataSetType.h"
-#include "File.h"
-#include "Group.h"
+#include <readdy/common/common.h>
 #include "H5Types.h"
+
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
+
+class DataSpaceHandle {
+public:
+    DataSpaceHandle(h5::handle_t hid) : hid(hid) {}
+
+    ~DataSpaceHandle() {
+        if (hid >= 0) {
+            if (H5Sclose(hid) < 0) {
+                log::error("failed to close data space {}!", hid);
+                H5Eprint(H5Eget_current_stack(), stderr);
+            }
+        }
+    }
+
+    h5::handle_t operator*() const {
+        return hid;
+    }
+
+private:
+    h5::handle_t hid;
+};
+
+class DataSpace {
+public:
+    explicit DataSpace(h5::handle_t handle);
+
+    explicit DataSpace(const std::vector<h5::dims_t> &dims, const std::vector<h5::dims_t> &maxDims = {});
+
+    std::size_t ndim() const;
+
+    std::vector<h5::dims_t> dims() const;
+
+    h5::handle_t handle() const;
+
+private:
+    std::shared_ptr<DataSpaceHandle> _handle;
+};
+
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)
+
+#include "bits/DataSpace_bits.h"

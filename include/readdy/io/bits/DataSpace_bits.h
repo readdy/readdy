@@ -23,18 +23,61 @@
 /**
  * << detailed description >>
  *
- * @file io.h
+ * @file DataSpace_bits.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.05.17
+ * @date 25.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include "DataSpace.h"
-#include "DataSet.h"
-#include "DataSetType.h"
-#include "File.h"
-#include "Group.h"
-#include "H5Types.h"
+#include "../DataSpace.h"
+
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
+
+inline DataSpace::DataSpace(h5::handle_t handle) {
+    _handle = std::make_shared<DataSpaceHandle>(handle);
+}
+
+inline DataSpace::DataSpace(const std::vector<h5::dims_t> &dims, const std::vector<h5::dims_t> &maxDims) {
+    h5::handle_t hid;
+    if (maxDims.empty()) {
+        hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
+    } else {
+        hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), maxDims.data());
+    }
+    if (hid < 0) {
+        log::error("error on creating data space!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    } else {
+        _handle = std::make_shared<DataSpaceHandle>(hid);
+    }
+}
+
+inline std::size_t DataSpace::ndim() const {
+    const auto n = H5Sget_simple_extent_ndims(**_handle);
+    if (n < 0) {
+        log::error("failed to retrieve ndims");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+    return static_cast<std::size_t>(n);
+}
+
+inline h5::handle_t DataSpace::handle() const {
+    return **_handle;
+}
+
+inline std::vector<h5::dims_t> DataSpace::dims() const {
+    std::vector<hsize_t> result;
+    result.resize(ndim());
+    if (H5Sget_simple_extent_dims(**_handle, result.data(), NULL) < 0) {
+        log::error("failed to get dims!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+    return result;
+}
+
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

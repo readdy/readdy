@@ -44,12 +44,18 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 template<typename T, bool VLEN, int compression>
 inline void DataSet<T, VLEN, compression>::close() {
-    if (memorySpace >= 0 && H5Sclose(memorySpace) < 0) {
-        throw std::runtime_error("error on closing memory space!");
-    } else {
-        memorySpace = -1;
-    }
+    memorySpaceRef.reset();
     handle_ref.reset();
+}
+
+template<typename T, bool vlen, int compression>
+inline DataSpace DataSet<T, vlen, compression>::getFileSpace() const {
+    auto hid = H5Dget_space(**handle_ref);
+    if(hid < 0) {
+        log::error("Failed to get data set space!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+    return DataSpace(hid);
 }
 
 template<typename T, bool VLEN, int compression>
@@ -100,7 +106,7 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
         // set up empty data set
         std::vector<h5::dims_t> dims(maxDims.begin(), maxDims.end());
         dims[extensionDim] = 0;
-        auto fileSpace = H5Screate_simple(static_cast<int>(maxDims.size()), dims.data(), maxDims.data());
+        DataSpace fileSpace (dims, maxDims);
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
         H5Pset_layout(plist, H5D_CHUNKED);
         H5Pset_chunk(plist, static_cast<int>(chunkSize.size()), chunkSize.data());
@@ -108,8 +114,8 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
         if (compression == DataSetCompression::blosc) {
             blosc_compression::activate(plist, cd_values);
         }
-        auto hid = H5Dcreate(group.getHandle(), name.c_str(), this->fileType.tid->tid, fileSpace, H5P_DEFAULT, plist,
-                                  H5P_DEFAULT);
+        auto hid = H5Dcreate(group.getHandle(), name.c_str(), this->fileType.tid->tid,
+                             fileSpace.handle(), H5P_DEFAULT, plist, H5P_DEFAULT);
         if (hid < 0) {
             log::error("Error on creating data set {}", hid);
             H5Eprint(H5Eget_current_stack(), stderr);
@@ -117,16 +123,10 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
         } else {
             handle_ref = std::make_shared<DataSetHandle>(hid);
         }
-        memorySpace = -1;
         if (plist >= 0 && H5Pclose(plist) < 0) {
             log::error("Error on closing plist {}", plist);
             H5Eprint(H5Eget_current_stack(), stderr);
             throw std::runtime_error("Error on closing plist " + std::to_string(plist));
-        }
-        if (fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
-            log::error("Error on closing file space {}", fileSpace);
-            H5Eprint(H5Eget_current_stack(), stderr);
-            throw std::runtime_error("(constructor) Error on closing file space " + std::to_string(fileSpace));
         }
     }
 }
@@ -158,28 +158,21 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
         log::error("Tried to append data with ndims={} to set with ndims={}", dims.size(), maxDims.size());
         throw std::runtime_error("tried to append data with wrong dimensionality!");
     }
-    if (memorySpace == -1) {
-        memorySpace = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
+    if (!memorySpaceRef) {
+        memorySpaceRef = std::make_unique<DataSpace>(dims);
     } else {
-        H5Sset_extent_simple(memorySpace, static_cast<int>(dims.size()), dims.data(), nullptr);
+        H5Sset_extent_simple(memorySpaceRef->handle(), static_cast<int>(dims.size()), dims.data(), nullptr);
     }
     std::vector<h5::dims_t> currentExtent;
     {
-        currentExtent.resize(dims.size());
-        auto fileSpace = H5Dget_space(**handle_ref);
-        H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
-        if (fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
-            log::error("error on closing file space! {}", fileSpace);
-            H5Eprint(H5Eget_current_stack(), stderr);
-            throw std::runtime_error("error on closing file space!");
-        }
+        currentExtent = getFileSpace().dims();
     }
     std::vector<h5::dims_t> offset;
     {
         offset.resize(dims.size());
         offset[extensionDim] = currentExtent[extensionDim];
     }
-    std::vector<h5::dims_t> newExtent(currentExtent);
+    std::vector<h5::dims_t> newExtent(currentExtent.begin(), currentExtent.end());
     {
         newExtent[extensionDim] += dims[extensionDim];
         H5Dset_extent(**handle_ref, newExtent.data());
@@ -215,10 +208,9 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
         }
     }
     {
-        auto fileSpace = H5Dget_space(**handle_ref);
-        H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-        H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpace, fileSpace, H5P_DEFAULT, traj.data());
-        H5Sclose(fileSpace);
+        auto fileSpace = getFileSpace();
+        H5Sselect_hyperslab(fileSpace.handle(), H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
+        H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpaceRef->handle(), fileSpace.handle(), H5P_DEFAULT, traj.data());
     }
 };
 
@@ -235,25 +227,16 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
         log::error("Tried to append data with ndims={} to set with ndims={}", dims.size(), maxDims.size());
         throw std::runtime_error("tried to append data with wrong dimensionality!");
     }
-    if (memorySpace == -1) {
-        memorySpace = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
+    if (!memorySpaceRef) {
+        memorySpaceRef = std::make_unique<DataSpace>(dims);
     } else {
-        H5Sset_extent_simple(memorySpace, static_cast<int>(dims.size()), dims.data(), nullptr);
+        H5Sset_extent_simple(memorySpaceRef->handle(), static_cast<int>(dims.size()), dims.data(), nullptr);
     }
     std::vector<h5::dims_t> currentExtent;
     std::vector<h5::dims_t> offset;
     offset.resize(dims.size());
     {
-        currentExtent.resize(dims.size());
-        {
-            auto fileSpace = H5Dget_space(**handle_ref);
-            H5Sget_simple_extent_dims(fileSpace, currentExtent.data(), nullptr);
-            if (fileSpace >= 0 && H5Sclose(fileSpace) < 0) {
-                log::error("error on closing file space! {}", fileSpace);
-                H5Eprint(H5Eget_current_stack(), stderr);
-                throw std::runtime_error("error on closing file space!");
-            }
-        }
+        currentExtent = getFileSpace().dims();
     }
     offset[extensionDim] = currentExtent[extensionDim];
     {
@@ -274,7 +257,7 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
     }
     auto fileSpace = H5Dget_space(**handle_ref);
     H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    if (H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpace, fileSpace, H5P_DEFAULT, data) < 0) {
+    if (H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpaceRef->handle(), fileSpace, H5P_DEFAULT, data) < 0) {
         log::error("Error with data set {}", **handle_ref);
         H5Eprint(H5Eget_current_stack(), stderr);
     }
