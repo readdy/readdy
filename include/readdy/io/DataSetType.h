@@ -34,6 +34,7 @@
 #include <vector>
 #include <readdy/common/logging.h>
 #include <readdy/common/traits.h>
+#include "H5Types.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)

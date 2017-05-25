@@ -65,15 +65,18 @@ private:
     h5::handle_t handle;
 };
 
-template<typename T, bool VLEN=false, int compression=DataSetCompression::blosc>
+template<typename T, bool VLEN=false>
 class READDY_API DataSet {
 public:
 
     DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
-            const std::vector<h5::dims_t> &maxDims);
+            const std::vector<h5::dims_t> &maxDims, DataSetCompression compression = DataSetCompression::blosc);
 
     DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
-            const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType);
+            const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType,
+            DataSetCompression compression = DataSetCompression::blosc);
+
+    DataSet(h5::handle_t handle, DataSetType memoryType, DataSetType fileType);
 
     virtual ~DataSet();
 
@@ -101,8 +104,6 @@ public:
     DataSpace getFileSpace() const;
 
 private:
-    const std::vector<h5::dims_t> maxDims;
-    const Group group;
     std::shared_ptr<DataSetHandle> handle_ref;
     h5::dims_t extensionDim;
     std::unique_ptr<DataSpace> memorySpaceRef;

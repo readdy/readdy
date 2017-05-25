@@ -37,6 +37,19 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 NAMESPACE_BEGIN(util)
+
+template<typename T>
+struct n_dims { static constexpr std::size_t value = 0; };
+
+template<typename T>
+struct n_dims<std::vector<T>> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+
+template<typename T>
+struct n_dims<T*> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+
+template<typename T, std::size_t N>
+struct n_dims<T[N]> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+
 inline bool groupExists(const Group &cwd, const std::string &name) {
     hid_t hid = cwd.getHandle();
     H5E_BEGIN_TRY

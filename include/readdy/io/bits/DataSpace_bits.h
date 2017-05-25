@@ -72,7 +72,17 @@ inline h5::handle_t DataSpace::handle() const {
 inline std::vector<h5::dims_t> DataSpace::dims() const {
     std::vector<hsize_t> result;
     result.resize(ndim());
-    if (H5Sget_simple_extent_dims(**_handle, result.data(), NULL) < 0) {
+    if (H5Sget_simple_extent_dims(**_handle, result.data(), nullptr) < 0) {
+        log::error("failed to get dims!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+    return result;
+}
+
+inline std::vector<h5::dims_t> DataSpace::max_dims() const {
+    std::vector<h5::dims_t> result;
+    result.resize(ndim());
+    if (H5Sget_simple_extent_dims(**_handle, nullptr, result.data()) < 0) {
         log::error("failed to get dims!");
         H5Eprint(H5Eget_current_stack(), stderr);
     }

@@ -69,6 +69,8 @@ public:
 
     std::vector<h5::dims_t> dims() const;
 
+    std::vector<h5::dims_t> max_dims() const;
+
     h5::handle_t handle() const;
 
 private:

@@ -34,9 +34,11 @@
 #include "Util_bits.h"
 #include "String_utils.h"
 #include <hdf5_hl.h>
-#include <readdy/io/DataSetType.h>
-#include <readdy/io/File.h>
+#include "../DataSetType.h"
+#include "../File.h"
 #include <H5Lpublic.h>
+#include <readdy/io/DataSetType.h>
+#include "../DataSpace.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
@@ -120,8 +122,48 @@ inline Group Group::subgroup(const std::string& name) {
 }
 
 template<typename T>
-inline const T* Group::read(const std::string& ds_name) {
-    return nullptr;
+inline void Group::read(const std::string& name, std::vector<T> &array) {
+    read(name, array, STDDataSetType<T>(), NativeDataSetType<T>());
+}
+
+template<typename T>
+inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataSetType memoryType, DataSetType fileType) {
+
+    const auto n_array_dims = 1 + util::n_dims<T>::value;
+    // todo make this more flexible
+    if(n_array_dims != 1) {
+        throw std::invalid_argument("currently only 1-dimensional vectors supported");
+    }
+    // todo clean this up into a different class so that the actual data set class can be used here
+    auto hid = H5Dopen2(**handle, ds_name.data(), H5P_DEFAULT);
+
+    DataSpace memorySpace (H5Dget_space(hid));
+
+    const auto ndim = memorySpace.ndim();
+
+    if(ndim != n_array_dims) {
+        log::error("wrong dimensionality: {} != {}", ndim, n_array_dims);
+        throw std::invalid_argument("wrong dimensionality when attempting to read a data set");
+    }
+
+    const auto dims = memorySpace.dims();
+    std::size_t required_length = 1;
+    for(const auto dim : dims) {
+        log::error("dim len = {}", dim);
+        required_length *= dim;
+    }
+    log::error("required length = {}", required_length);
+    array.resize(required_length);
+
+    auto result = H5Dread(hid, memoryType.tid->tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
+
+    if(result < 0) {
+        log::error("Failed reading result!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+
+    H5Dclose(hid);
+    // todo reshape array to dims
 }
 
 template<>

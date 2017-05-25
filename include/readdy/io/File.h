@@ -64,7 +64,7 @@ private:
 };
 
 class READDY_API File {
-    template<typename T, bool VLEN, int compression>
+    template<typename T, bool VLEN>
     friend
     class DataSet;
 
@@ -96,6 +96,8 @@ public:
     Group createGroup(const std::string &path);
 
     const Group &getRootGroup() const;
+
+    Group &getRootGroup();
 
     void write(const std::string &dataSetName, const std::string &data);
 

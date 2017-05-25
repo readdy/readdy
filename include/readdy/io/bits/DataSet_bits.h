@@ -42,39 +42,43 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
-template<typename T, bool VLEN, int compression>
-inline void DataSet<T, VLEN, compression>::close() {
+template<typename T, bool VLEN>
+inline void DataSet<T, VLEN>::close() {
     memorySpaceRef.reset();
     handle_ref.reset();
 }
 
-template<typename T, bool vlen, int compression>
-inline DataSpace DataSet<T, vlen, compression>::getFileSpace() const {
+template<typename T, bool vlen>
+inline DataSpace DataSet<T, vlen>::getFileSpace() const {
     auto hid = H5Dget_space(**handle_ref);
-    if(hid < 0) {
+    if (hid < 0) {
         log::error("Failed to get data set space!");
         H5Eprint(H5Eget_current_stack(), stderr);
     }
     return DataSpace(hid);
 }
 
-template<typename T, bool VLEN, int compression>
-inline DataSet<T, VLEN, compression>::~DataSet() {
+template<typename T, bool VLEN>
+inline DataSet<T, VLEN>::~DataSet() {
     close();
 }
 
-template<typename T, bool VLEN, int compression>
-inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Group &group,
-                                              const std::vector<h5::dims_t> &chunkSize,
-                                              const std::vector<h5::dims_t> &maxDims)
-        : DataSet(name, group, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>()) {};
+template<typename T, bool VLEN>
+inline DataSet<T, VLEN>::DataSet(h5::handle_t handle, DataSetType memoryType, DataSetType fileType)
+        : handle_ref(std::make_shared<DataSetHandle>(handle)), memoryType(memoryType), fileType(fileType) {}
 
-template<typename T, bool VLEN, int compression>
-inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Group &group,
+template<typename T, bool VLEN>
+inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group,
+                                              const std::vector<h5::dims_t> &chunkSize,
+                                              const std::vector<h5::dims_t> &maxDims, DataSetCompression compression)
+        : DataSet(name, group, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>(), compression) {};
+
+template<typename T, bool VLEN>
+inline DataSet<T, VLEN>::DataSet(const std::string &name, const Group &group,
                                               const std::vector<h5::dims_t> &chunkSize,
                                               const std::vector<h5::dims_t> &maxDims, DataSetType memoryType,
-                                              DataSetType fileType)
-        : maxDims(maxDims), group(group), memoryType(memoryType), fileType(fileType) {
+                                              DataSetType fileType, DataSetCompression compression)
+        : memoryType(memoryType), fileType(fileType) {
     {
         std::stringstream result;
         std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
@@ -106,7 +110,7 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
         // set up empty data set
         std::vector<h5::dims_t> dims(maxDims.begin(), maxDims.end());
         dims[extensionDim] = 0;
-        DataSpace fileSpace (dims, maxDims);
+        DataSpace fileSpace(dims, maxDims);
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
         H5Pset_layout(plist, H5D_CHUNKED);
         H5Pset_chunk(plist, static_cast<int>(chunkSize.size()), chunkSize.data());
@@ -131,31 +135,31 @@ inline DataSet<T, VLEN, compression>::DataSet(const std::string &name, const Gro
     }
 }
 
-template<typename T, bool VLEN, int compression>
+template<typename T, bool VLEN>
 template<bool no_vlen>
 inline void
-DataSet<T, VLEN, compression>::append(std::vector<T> &data, typename std::enable_if<no_vlen, bool>::type *) {
+DataSet<T, VLEN>::append(std::vector<T> &data, typename std::enable_if<no_vlen, bool>::type *) {
     if (!data.empty()) append({1, data.size()}, data.data());
 }
 
-template<typename T, bool VLEN, int compression>
+template<typename T, bool VLEN>
 template<bool vlen>
 inline void
-DataSet<T, VLEN, compression>::append(std::vector<std::vector<T>> &data, typename std::enable_if<vlen, bool>::type *) {
+DataSet<T, VLEN>::append(std::vector<std::vector<T>> &data, typename std::enable_if<vlen, bool>::type *) {
     if (!data.empty()) append({data.size()}, data.data());
 }
 
-template<typename T, bool VLEN, int compression>
+template<typename T, bool VLEN>
 template<bool enabled>
-inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data,
+inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data,
                                                   typename std::enable_if<enabled, bool>::type *) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
         log::trace("appending to vlen data set with data size = ({})", result.str());
     }
-    if (dims.size() != maxDims.size()) {
-        log::error("Tried to append data with ndims={} to set with ndims={}", dims.size(), maxDims.size());
+    if (dims.size() != getFileSpace().ndim()) {
+        log::error("Tried to append data with ndims={} to set with ndims={}", dims.size(), getFileSpace().ndim());
         throw std::runtime_error("tried to append data with wrong dimensionality!");
     }
     if (!memorySpaceRef) {
@@ -210,21 +214,22 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
     {
         auto fileSpace = getFileSpace();
         H5Sselect_hyperslab(fileSpace.handle(), H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-        H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpaceRef->handle(), fileSpace.handle(), H5P_DEFAULT, traj.data());
+        H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpaceRef->handle(), fileSpace.handle(), H5P_DEFAULT,
+                 traj.data());
     }
 };
 
-template<typename T, bool VLEN, int compression>
+template<typename T, bool VLEN>
 template<bool enabled>
-inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> &dims, const T *const data,
+inline void DataSet<T, VLEN>::append(const std::vector<h5::dims_t> &dims, const T *const data,
                                                   typename std::enable_if<enabled, bool>::type *) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
         log::trace("appending to regular data set with data size = ({})", result.str());
     }
-    if (dims.size() != maxDims.size()) {
-        log::error("Tried to append data with ndims={} to set with ndims={}", dims.size(), maxDims.size());
+    if (dims.size() != getFileSpace().ndim()) {
+        log::error("Tried to append data with ndims={} to set with ndims={}", dims.size(), getFileSpace().ndim());
         throw std::runtime_error("tried to append data with wrong dimensionality!");
     }
     if (!memorySpaceRef) {
@@ -255,17 +260,17 @@ inline void DataSet<T, VLEN, compression>::append(const std::vector<h5::dims_t> 
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
         log::trace("    size = {}", result.str());
     }
-    auto fileSpace = H5Dget_space(**handle_ref);
-    H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    if (H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpaceRef->handle(), fileSpace, H5P_DEFAULT, data) < 0) {
+    auto fileSpace = getFileSpace();
+    H5Sselect_hyperslab(fileSpace.handle(), H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
+    if (H5Dwrite(**handle_ref, memoryType.tid->tid, memorySpaceRef->handle(), fileSpace.handle(), H5P_DEFAULT, data) <
+        0) {
         log::error("Error with data set {}", **handle_ref);
         H5Eprint(H5Eget_current_stack(), stderr);
     }
-    H5Sclose(fileSpace);
 }
 
-template<typename T, bool VLEN, int compression>
-inline void DataSet<T, VLEN, compression>::flush() {
+template<typename T, bool VLEN>
+inline void DataSet<T, VLEN>::flush() {
     if (**handle_ref >= 0 && H5Fflush(**handle_ref, H5F_SCOPE_LOCAL) < 0) {
         throw std::runtime_error("error when flushing HDF5 data set with handle " + std::to_string(**handle_ref));
     }

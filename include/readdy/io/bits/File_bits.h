@@ -126,5 +126,9 @@ inline const Group &File::getRootGroup() const {
     return root;
 }
 
+inline Group &File::getRootGroup() {
+    return root;
+}
+
 NAMESPACE_END(io)
 NAMESPACE_END(readdy)

@@ -68,7 +68,7 @@ private:
 class READDY_API Group {
     friend class File;
 
-    template<typename T, bool VLEN, int compression>
+    template<typename T, bool VLEN>
     friend
     class DataSet;
 
@@ -94,7 +94,10 @@ public:
     std::vector<std::string> contained_data_sets() const;
 
     template<typename T>
-    const T* read(const std::string& dataSetName);
+    void read(const std::string& dataSetName, std::vector<T> &array);
+
+    template<typename T>
+    void read(const std::string& dataSetName, std::vector<T> &array, DataSetType memoryType, DataSetType fileType);
 
     Group subgroup(const std::string &name);
 

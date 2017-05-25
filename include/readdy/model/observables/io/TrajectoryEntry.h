@@ -43,6 +43,8 @@ NAMESPACE_BEGIN(observables)
 
 struct TrajectoryEntry {
 
+    TrajectoryEntry() {}
+
     TrajectoryEntry(const readdy::model::Particle &p)
             : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(p.getFlavor()) {}
 
