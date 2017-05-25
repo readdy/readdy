@@ -56,7 +56,7 @@ public:
         FileHandle::handle = handle;
     }
 
-    h5::handle_t operator*() {
+    h5::handle_t operator*() const {
         return handle;
     }
 private:

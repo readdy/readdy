@@ -57,7 +57,7 @@ public:
         GroupHandle::handle = handle;
     }
 
-    h5::handle_t operator*() {
+    h5::handle_t operator*() const {
         return handle;
     }
 
@@ -91,6 +91,11 @@ public:
 
     std::vector<std::string> subgroups() const;
 
+    std::vector<std::string> contained_data_sets() const;
+
+    template<typename T>
+    const T* read(const std::string& dataSetName);
+
     Group subgroup(const std::string &name);
 
     h5::group_info_t info() const;
@@ -100,6 +105,8 @@ protected:
     Group();
 
     Group(h5::handle_t handle, const std::string &);
+
+    std::vector<std::string> sub_elements(H5O_type_t type) const;
 
     handle_ref handle;
     std::string path;

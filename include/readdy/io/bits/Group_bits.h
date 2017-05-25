@@ -80,24 +80,34 @@ inline h5::group_info_t Group::info() const {
     return info;
 }
 
-inline std::vector<std::string> Group::subgroups() const {
+inline std::vector<std::string> Group::sub_elements(H5O_type_t type) const {
     std::vector<std::string> result;
     auto group_info = info();
     result.reserve(group_info.nlinks);
     for(std::size_t i=0; i < group_info.nlinks; ++i) {
-        auto size = 1+ H5Lget_name_by_idx (getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
-        if(size < 0) {
-            H5Eprint(H5Eget_current_stack(), stderr);
-        }
-        char c_string [size];
-        H5Lget_name_by_idx (getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string, (std::size_t) size, H5P_DEFAULT);
-        std::string label (c_string);
+        H5O_info_t oinfo;
+        H5Oget_info_by_idx(getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
+        if(oinfo.type == type) {
+            auto size = 1+ H5Lget_name_by_idx (getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
+            if(size < 0) {
+                H5Eprint(H5Eget_current_stack(), stderr);
+            }
+            char c_string [size];
+            H5Lget_name_by_idx (getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string, (std::size_t) size, H5P_DEFAULT);
+            std::string label (c_string);
 
-        H5L_info_t info;
-        H5Lget_info_by_idx(getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, &info, H5P_DEFAULT);
-        result.push_back(std::move(label));
+            result.push_back(std::move(label));
+        }
     }
     return result;
+}
+
+inline std::vector<std::string> Group::subgroups() const {
+    return sub_elements(H5O_TYPE_GROUP);
+}
+
+inline std::vector<std::string> Group::contained_data_sets() const {
+    return sub_elements(H5O_TYPE_DATASET);
 }
 
 inline Group Group::subgroup(const std::string& name) {

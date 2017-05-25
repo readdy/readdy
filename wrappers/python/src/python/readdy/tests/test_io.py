@@ -142,9 +142,14 @@ class TestSchemeApi(unittest.TestCase):
             np.testing.assert_equal(len(sg), 1)
             np.testing.assert_equal(sg[0], u"my_super_group")
             sub_group = root_group.get_subgroup(sg[0])
+            np.testing.assert_equal(len(sub_group.data_sets()), 1)
+            np.testing.assert_equal(sub_group.data_sets()[0], "doubleds")
             subsub_groups = sub_group.subgroups()
-            np.testing.assert_equal("my_super_subgroup" in subsub_groups, True)
+            np.testing.assert_equal(len(subsub_groups), 1)
+            np.testing.assert_equal(subsub_groups[0], "my_super_subgroup")
             super_subgroup = sub_group.get_subgroup("my_super_subgroup")
+            np.testing.assert_equal(len(super_subgroup.data_sets()), 1)
+            np.testing.assert_equal(super_subgroup.data_sets()[0], "stringds")
 
     def test_readwrite_double_and_string(self):
         fname = os.path.join(self.dir, "test_readwrite_double_and_string.h5")

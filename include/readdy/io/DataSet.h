@@ -45,6 +45,25 @@ void initialize();
 void activate(hid_t plist, unsigned int* cd_values);
 }
 
+class DataSetHandle {
+public:
+    DataSetHandle(h5::handle_t handle = -1) : handle(handle) {}
+    ~DataSetHandle() {
+        if(handle >= 0) {
+            if(H5Dclose(handle) < 0) {
+                log::error("error on closing data set {}!", handle);
+                H5Eprint(H5Eget_current_stack(), stderr);
+            }
+        }
+    }
+
+    h5::handle_t operator*() const {
+        return handle;
+    }
+private:
+    h5::handle_t handle;
+};
+
 template<typename T, bool VLEN=false, int compression=DataSetCompression::blosc>
 class READDY_API DataSet {
 public:
@@ -81,8 +100,8 @@ public:
 private:
     const std::vector<h5::dims_t> maxDims;
     const Group group;
+    std::shared_ptr<DataSetHandle> handle_ref;
     h5::dims_t extensionDim;
-    h5::handle_t dataSetHandle;
     h5::handle_t memorySpace;
     DataSetType memoryType {};
     DataSetType fileType {};

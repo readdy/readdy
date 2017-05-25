@@ -120,6 +120,7 @@ void exportIO(py::module &io) {
             })
             .def("create_group", &group_t::createGroup, rvp::move)
             .def("subgroups", &group_t::subgroups)
+            .def("data_sets", &group_t::contained_data_sets)
             .def("get_subgroup", &group_t::subgroup);
 
     exportDataSet<short>(io, "short"); /* DataSet_short */
