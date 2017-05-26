@@ -43,11 +43,9 @@ namespace io = readdy::io;
 template<typename T>
 void exportDataSet(py::module &io, const std::string &name) {
     using group_t = io::Group;
-    using dataset_t = io::DataSet<T, false>;
+    using dataset_t = io::DataSet  ;
     std::string base_name = "DataSet_";
     py::class_<dataset_t>(io, (base_name + name).c_str())
-            .def(py::init<const std::string &, const group_t &, const std::vector<io::h5::dims_t> &,
-                    const std::vector<io::h5::dims_t> &>())
             .def("append", [](dataset_t &self, const py::array_t <T> &arr) {
                 self.append(std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             });
@@ -72,7 +70,9 @@ void exportIO(py::module &io) {
             .value("CREATE_NON_EXISTING", file_t::Flag::CREATE_NON_EXISTING)
             .export_values();
 
-    py::class_<file_t>(io, "File")
+    py::class_<io::Object>(io, "Object").def("hid", &io::Object::hid);
+
+    py::class_<file_t, io::Object>(io, "File")
             .def(py::init<const std::string &, file_t::Action, file_t::Flag>(), py::arg("path"), py::arg("action"),
                  py::arg("flag") = file_t::Flag::OVERWRITE)
             .def(py::init<const std::string &, file_t::Action, const std::vector<file_t::Flag> &>())
@@ -96,10 +96,10 @@ void exportIO(py::module &io) {
             })
             .def("flush", &file_t::flush)
             .def("close", &file_t::close)
-            .def("create_group", &file_t::createGroup, rvp::move)
-            .def("get_root_group", &file_t::getRootGroup, rvp::reference_internal);
+            .def("create_group", &file_t::createGroup)
+            .def("get_root_group", [](file_t& self) { return self.getRootGroup(); });
 
-    py::class_<group_t>(io, "Group")
+    py::class_<group_t, io::Object>(io, "Group")
             .def("write_short", [](group_t &self, const std::string &name, const py::array_t<short> &arr) {
                 self.write(name, std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
@@ -118,12 +118,15 @@ void exportIO(py::module &io) {
             .def("write_string", [](group_t &self, const std::string &name, const std::string &data) {
                 self.write(name, data);
             })
-            .def("create_group", &group_t::createGroup, rvp::move);
+            .def("create_group", &group_t::createGroup, rvp::move)
+            .def("subgroups", &group_t::subgroups)
+            .def("data_sets", &group_t::contained_data_sets)
+            .def("get_subgroup", &group_t::subgroup);
 
-    exportDataSet<short>(io, "short"); /* DataSet_short */
-    exportDataSet<int>(io, "int"); /* DataSet_int */
-    exportDataSet<long>(io, "long"); /* DataSet_long */
-    exportDataSet<float>(io, "float"); /* DataSet_float */
-    exportDataSet<double>(io, "double"); /* DataSet_double */
+    //exportDataSet<short>(io, "short"); /* DataSet_short */
+    //exportDataSet<int>(io, "int"); /* DataSet_int */
+    //exportDataSet<long>(io, "long"); /* DataSet_long */
+    //exportDataSet<float>(io, "float"); /* DataSet_float */
+    //exportDataSet<double>(io, "double"); /* DataSet_double */
 
 }

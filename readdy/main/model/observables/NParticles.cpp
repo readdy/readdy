@@ -55,8 +55,7 @@ NParticles::NParticles(Kernel *const kernel, unsigned int stride,
 NParticles::~NParticles() = default;
 
 struct NParticles::Impl {
-    using data_set_t = io::DataSet<unsigned long, false>;
-    std::unique_ptr<data_set_t> ds;
+    std::unique_ptr<io::DataSet> ds;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
@@ -69,10 +68,7 @@ void NParticles::initializeDataSet(io::File &file, const std::string &dataSetNam
         std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        auto dataSet = std::make_unique<Impl::data_set_t>(
-                "data", group, fs, dims
-        );
-        pimpl->ds = std::move(dataSet);
+        pimpl->ds = std::make_unique<io::DataSet>(group.createDataSet<std::size_t>("data", fs, dims));
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }

@@ -34,7 +34,6 @@
 #include <readdy/model/IOUtils.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/model/observables/io/Types.h>
-#include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
 namespace readdy {
@@ -43,7 +42,7 @@ namespace observables {
 
 struct Reactions::Impl {
     using reactions_record_t = readdy::model::reactions::ReactionRecord;
-    using reactions_writer_t = io::DataSet<reactions_record_t, true>;
+    using reactions_writer_t = io::VLENDataSet;
     std::unique_ptr<reactions_writer_t> writer;
     std::unique_ptr<util::TimeSeriesWriter> time;
     std::unique_ptr<readdy::io::Group> group;
@@ -56,7 +55,7 @@ Reactions::Reactions(Kernel *const kernel, unsigned int stride)
 
 void Reactions::flush() {
     if (pimpl->writer) pimpl->writer->flush();
-    if(pimpl->time) pimpl->time->flush();
+    if (pimpl->time) pimpl->time->flush();
 }
 
 void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
@@ -67,9 +66,8 @@ void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName
                 file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
         {
             auto dataSet = std::make_unique<Impl::reactions_writer_t>(
-                    "records", *pimpl->group, fs, dims, util::ReactionRecordPODMemoryType(),
-                    util::ReactionRecordPODFileType()
-            );
+                    pimpl->group->createVLENDataSet("records", fs, dims, util::ReactionRecordPODMemoryType(),
+                                                    util::ReactionRecordPODFileType()));
             pimpl->writer = std::move(dataSet);
         }
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);

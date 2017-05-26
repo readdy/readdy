@@ -23,18 +23,58 @@
 /**
  * << detailed description >>
  *
- * @file io.h
+ * @file Object.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.05.17
+ * @date 26.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include "DataSpace.h"
-#include "DataSet.h"
-#include "DataSetType.h"
-#include "File.h"
-#include "Group.h"
+#include <readdy/common/common.h>
 #include "H5Types.h"
+
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
+
+class ObjectHandle {
+public:
+    ObjectHandle(h5::handle_t handle) : _handle(handle) {};
+
+    virtual ~ObjectHandle() = default;
+
+    virtual void close() = 0;
+
+    h5::handle_t operator*() const {
+        return _handle;
+    }
+
+    void set(h5::handle_t handle) {
+        _handle = handle;
+    }
+
+protected:
+    h5::handle_t _handle;
+};
+
+class Object {
+public:
+    Object(std::shared_ptr<ObjectHandle> &&handle) : handle(std::move(handle)) {}
+
+    virtual ~Object() {
+    }
+
+    virtual h5::handle_t hid() const {
+        if(!handle) {
+            log::critical("this should not happen");
+        }
+        return **handle;
+    }
+
+protected:
+    std::shared_ptr<ObjectHandle> handle;
+};
+
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

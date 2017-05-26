@@ -43,6 +43,8 @@ NAMESPACE_BEGIN(observables)
 
 struct TrajectoryEntry {
 
+    TrajectoryEntry() {}
+
     TrajectoryEntry(const readdy::model::Particle &p)
             : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(p.getFlavor()) {}
 
@@ -55,7 +57,7 @@ struct TrajectoryEntry {
 };
 
 inline std::ostream &operator<<(std::ostream &os, const TrajectoryEntry &p) {
-    os << "TrajectoryEntry(id=" << p.id << ", type=" << p.typeId << ", position=" << p.pos << ", flavor=" << p.flavor
+    os << "TrajectoryEntry(id=" << p.id << ", type=" << p.typeId << ", position=" << p.pos << ", flavor=" << (int) p.flavor
        << ")";
     return os;
 }

@@ -34,14 +34,30 @@
 #include <string>
 #include <vector>
 #include "Group.h"
+#include "Object.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-class READDY_API File {
-    template<typename T, bool VLEN, int compression>
-    friend
-    class DataSet;
+class READDY_API FileHandle : public ObjectHandle {
+public:
+    FileHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+
+    ~FileHandle() {
+        if(_handle >= 0) close();
+    }
+
+    virtual void close() override {
+        if (H5Fclose(_handle) < 0) {
+            log::error("error on closing file!");
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
+    }
+
+};
+
+class READDY_API File : public Object {
+    friend class DataSet;
 
 public:
 
@@ -57,21 +73,29 @@ public:
 
     File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
 
-    File(const File &) = delete;
+    File(const File &) = default;
 
-    File &operator=(const File &) = delete;
+    File &operator=(const File &) = default;
+
+    File(File&&) = default;
+
+    File &operator=(File&&) = default;
 
     virtual ~File();
 
     void flush();
 
-    void close();
-
     Group createGroup(const std::string &path);
 
     const Group &getRootGroup() const;
 
+    Group &getRootGroup();
+
     void write(const std::string &dataSetName, const std::string &data);
+
+    void close() {
+        handle.reset();
+    }
 
     template<typename T>
     void write(const std::string &dataSetName, const std::vector<T> &data) {

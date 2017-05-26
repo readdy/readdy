@@ -42,7 +42,7 @@ namespace model {
 namespace observables {
 
 struct RadialDistribution::Impl {
-    using writer_t = readdy::io::DataSet<double, false>;
+    using writer_t = readdy::io::DataSet;
     std::unique_ptr<writer_t> writerRadialDistribution;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
@@ -148,9 +148,7 @@ void RadialDistribution::initializeDataSet(io::File &file, const std::string &da
         auto group = file.createGroup(path);
         log::debug("created group with path {}", path);
         group.write("bin_centers", centers);
-        auto dataSet = std::make_unique<Impl::writer_t>(
-                "distribution", group, fs, dims
-        );
+        auto dataSet = std::make_unique<Impl::writer_t>(group.createDataSet<double>("distribution", fs, dims));
         pimpl->writerRadialDistribution = std::move(dataSet);
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }

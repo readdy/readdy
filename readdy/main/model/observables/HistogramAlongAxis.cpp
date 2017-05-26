@@ -44,8 +44,7 @@ namespace observables {
 
 
 struct HistogramAlongAxis::Impl {
-    using data_set_t = io::DataSet<double, false>;
-    std::unique_ptr<data_set_t> dataSet;
+    std::unique_ptr<io::DataSet> dataSet;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
@@ -76,7 +75,7 @@ void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &da
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
         auto group = file.createGroup(path);
-        auto dataSet = std::make_unique<Impl::data_set_t>("data", group, fs, dims);
+        auto dataSet = std::make_unique<io::DataSet>(group.createDataSet<double>("data", fs, dims));
         pimpl->dataSet = std::move(dataSet);
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }

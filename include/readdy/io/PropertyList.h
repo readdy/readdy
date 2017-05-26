@@ -23,18 +23,78 @@
 /**
  * << detailed description >>
  *
- * @file io.h
+ * @file PropertyList.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.05.17
+ * @date 26.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include "DataSpace.h"
-#include "DataSet.h"
-#include "DataSetType.h"
-#include "File.h"
-#include "Group.h"
-#include "H5Types.h"
+#include <readdy/common/macros.h>
+#include "Object.h"
+
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(io)
+
+
+namespace blosc_compression {
+void initialize();
+void activate(hid_t plist, unsigned int* cd_values);
+}
+
+
+class PropertyListHandle : public ObjectHandle {
+public:
+    PropertyListHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+
+    virtual ~PropertyListHandle() override {
+        if(_handle >= 0) close();
+    }
+
+    virtual void close() override {
+        if(H5Pclose(_handle) < 0) {
+            log::error("error on closing property list");
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
+    }
+};
+
+class PropertyList : public Object {
+
+protected:
+    PropertyList(h5::handle_t cls_id) : Object(std::make_shared<PropertyListHandle>(cls_id)) {}
+
+};
+
+class DataSetCreatePropertyList : public PropertyList {
+public:
+    DataSetCreatePropertyList() : PropertyList(H5Pcreate(H5P_DATASET_CREATE)) {}
+
+    void set_layout_compact() {
+        H5Pset_layout(hid(), H5D_COMPACT);
+    }
+
+    void set_layout_contiguous() {
+        H5Pset_layout(hid(), H5D_CONTIGUOUS);
+    }
+
+    void set_layout_chunked() {
+        H5Pset_layout(hid(), H5D_CHUNKED);
+    }
+
+    void set_chunk(const std::vector<h5::dims_t> chunk_dims) {
+        H5Pset_chunk(hid(), static_cast<int>(chunk_dims.size()), chunk_dims.data());
+    }
+
+    void activate_blosc() {
+        unsigned int cd_values[7];
+        blosc_compression::activate(hid(), cd_values);
+    }
+
+
+};
+
+NAMESPACE_END(io)
+NAMESPACE_END(readdy)

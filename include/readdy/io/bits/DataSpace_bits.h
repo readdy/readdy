@@ -23,27 +23,66 @@
 /**
  * << detailed description >>
  *
- * @file Types.h
+ * @file DataSpace_bits.h
  * @brief << brief description >>
  * @author clonker
- * @date 04/01/2017
+ * @date 25.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <hdf5.h>
-#include <readdy/common/macros.h>
+#include "../DataSpace.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
-NAMESPACE_BEGIN(h5)
 
-using handle_t = hid_t;
-using dims_t = hsize_t;
-using data_set_type_t = hid_t;
-using group_info_t = H5G_info_t;
-const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
+inline DataSpace::DataSpace(h5::handle_t handle) : Object(std::make_shared<DataSpaceHandle>(handle)) {}
 
-NAMESPACE_END(h5)
+inline DataSpace::DataSpace(const std::vector<h5::dims_t> &dims, const std::vector<h5::dims_t> &maxDims)
+        : Object(std::make_shared<DataSpaceHandle>(-1)) {
+    h5::handle_t hid;
+    if (maxDims.empty()) {
+        hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
+    } else {
+        hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), maxDims.data());
+    }
+    if (hid < 0) {
+        log::error("error on creating data space!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    } else {
+        handle->set(hid);
+    }
+}
+
+inline std::size_t DataSpace::ndim() const {
+    const auto n = H5Sget_simple_extent_ndims(hid());
+    if (n < 0) {
+        log::error("failed to retrieve ndims");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+    return static_cast<std::size_t>(n);
+}
+
+inline std::vector<h5::dims_t> DataSpace::dims() const {
+    std::vector<hsize_t> result;
+    result.resize(ndim());
+    if (H5Sget_simple_extent_dims(hid(), result.data(), nullptr) < 0) {
+        log::error("failed to get dims!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+    return result;
+}
+
+inline std::vector<h5::dims_t> DataSpace::max_dims() const {
+    std::vector<h5::dims_t> result;
+    result.resize(ndim());
+    if (H5Sget_simple_extent_dims(hid(), nullptr, result.data()) < 0) {
+        log::error("failed to get dims!");
+        H5Eprint(H5Eget_current_stack(), stderr);
+    }
+    return result;
+}
+
 NAMESPACE_END(io)
 NAMESPACE_END(readdy)

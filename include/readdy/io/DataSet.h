@@ -30,8 +30,10 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 #pragma once
+
 #include "H5Types.h"
-#include "Group.h"
+#include "DataSpace.h"
+#include "DataSetType.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
@@ -40,52 +42,114 @@ enum DataSetCompression {
     none = 0x0000, blosc = 0x0001
 };
 
-namespace blosc_compression {
-void initialize();
-void activate(hid_t plist, unsigned int* cd_values);
-}
+class DataSetHandle : public ObjectHandle {
+public:
+    DataSetHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
 
-template<typename T, bool VLEN=false, int compression=DataSetCompression::blosc>
-class READDY_API DataSet {
+    ~DataSetHandle() {
+        if (_handle >= 0) {
+            close();
+        }
+    }
+
+    virtual void close() override {
+        if (H5Dclose(_handle) < 0) {
+            log::error("error on closing data set {}!", _handle);
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
+    }
+
+};
+
+class READDY_API DataSet : public Object {
 public:
 
-    DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
-            const std::vector<h5::dims_t> &maxDims);
-
-    DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
-            const std::vector<h5::dims_t> &maxDims, DataSetType memoryType, DataSetType fileType);
+    DataSet(h5::handle_t handle, const DataSetType &memoryType, const DataSetType &fileType);
 
     virtual ~DataSet();
 
-    DataSet(DataSet&& rhs) = default;
-    DataSet& operator=(DataSet&&) = delete;
-    DataSet(const DataSet&) = delete;
-    DataSet& operator=(const DataSet&) = delete;
+    DataSet(DataSet &&rhs) = default;
 
-    void close();
+    DataSet &operator=(DataSet &&) = default;
 
-    template<bool no_vlen = !VLEN>
-    void append(std::vector<T> &data, typename std::enable_if<no_vlen, bool>::type* = 0);
+    DataSet(const DataSet &) = default;
 
-    template<bool no_vlen = !VLEN>
-    void append(const std::vector<h5::dims_t> &dims, const T *const data, typename std::enable_if<no_vlen, bool>::type* = 0);
+    DataSet &operator=(const DataSet &) = default;
 
-    template<bool vlen = VLEN>
-    void append(std::vector<std::vector<T>> &data, typename std::enable_if<vlen, bool>::type* = 0);
+    template<typename T>
+    void append(std::vector<T> &data);
 
-    template<bool vlen = VLEN>
-    void append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data, typename std::enable_if<vlen, bool>::type* = 0);
+    template<typename T>
+    void append(const std::vector<h5::dims_t> &dims, const T *const data);
 
     void flush();
 
+    DataSpace getFileSpace() const;
+
+    h5::dims_t &extensionDim() {
+        return _extensionDim;
+    }
+
+    const h5::dims_t &extensionDim() const {
+        return _extensionDim;
+    }
+
 private:
-    const std::vector<h5::dims_t> maxDims;
-    const Group group;
-    h5::dims_t extensionDim;
-    h5::handle_t dataSetHandle;
-    h5::handle_t memorySpace;
-    DataSetType memoryType {};
-    DataSetType fileType {};
+    h5::dims_t _extensionDim;
+    DataSpace memorySpace;
+    DataSetType memoryType{-1};
+    DataSetType fileType{-1};
+};
+
+class VLENDataSet : public Object {
+public:
+    VLENDataSet(h5::handle_t handle, const DataSetType &memoryType, const DataSetType &fileType);
+
+    virtual ~VLENDataSet() = default;
+
+    VLENDataSet(VLENDataSet &&rhs) = default;
+
+    VLENDataSet &operator=(VLENDataSet &&) = default;
+
+    VLENDataSet(const VLENDataSet &) = default;
+
+    VLENDataSet &operator=(const VLENDataSet &) = default;
+
+    template<typename T>
+    void append(std::vector<std::vector<T>> &data);
+
+    template<typename T>
+    void append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data);
+
+    void flush() {
+        if (hid() >= 0 && H5Fflush(hid(), H5F_SCOPE_LOCAL) < 0) {
+            throw std::runtime_error("error when flushing HDF5 data set with handle " + std::to_string(hid()));
+        }
+    };
+
+    DataSpace getFileSpace() const {
+        log::debug("getting file space for hid={}", hid());
+        auto _hid = H5Dget_space(hid());
+        if (_hid < 0) {
+            log::error("Failed to get data set space!");
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
+        return DataSpace(_hid);
+    };
+
+    h5::dims_t &extensionDim() {
+        return _extensionDim;
+    }
+
+    const h5::dims_t &extensionDim() const {
+        return _extensionDim;
+    }
+
+private:
+    h5::dims_t _extensionDim;
+    DataSpace memorySpace;
+    DataSetType memoryType{-1};
+    DataSetType fileType{-1};
 };
 
 NAMESPACE_END(io)

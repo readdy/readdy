@@ -41,13 +41,9 @@ namespace observables {
 
 
 struct Particles::Impl {
-    using particle_t = readdy::model::Particle;
-    using types_writer_t = io::DataSet<particle_t::type_type, true>;
-    using ids_writer_t = io::DataSet<particle_t::id_type, true>;
-    using pos_writer_t = io::DataSet<Vec3, true>;
-    std::unique_ptr<types_writer_t> dataSetTypes;
-    std::unique_ptr<ids_writer_t> dataSetIds;
-    std::unique_ptr<pos_writer_t> dataSetPositions;
+    std::unique_ptr<io::VLENDataSet> dataSetTypes;
+    std::unique_ptr<io::VLENDataSet> dataSetIds;
+    std::unique_ptr<io::VLENDataSet> dataSetPositions;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
@@ -55,23 +51,23 @@ Particles::Particles(Kernel *const kernel, unsigned int stride) : Observable(ker
                                                                   pimpl(std::make_unique<Impl>()) {}
 
 void Particles::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    using particle_t = readdy::model::Particle;
     if (!pimpl->dataSetTypes) {
+
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         {
-            auto dataSetTypes = std::make_unique<Impl::types_writer_t>("types", group, fs, dims);
-            pimpl->dataSetTypes = std::move(dataSetTypes);
+            pimpl->dataSetTypes = std::make_unique<io::VLENDataSet>(
+                    group.createVLENDataSet<particle_type_type>("types", fs, dims));
         }
         {
-            auto dataSetIds = std::make_unique<Impl::ids_writer_t>("ids", group, fs, dims);
-            pimpl->dataSetIds = std::move(dataSetIds);
+            pimpl->dataSetIds = std::make_unique<io::VLENDataSet>(
+                    group.createVLENDataSet<particle_t::id_type>("ids", fs, dims));
         }
         {
-            auto dataSetPositions = std::make_unique<Impl::pos_writer_t>(
-                    "positions", group, fs, dims, util::Vec3MemoryType(), util::Vec3FileType()
-            );
-            pimpl->dataSetPositions = std::move(dataSetPositions);
+            pimpl->dataSetPositions = std::make_unique<io::VLENDataSet>(
+                    group.createVLENDataSet("positions", fs, dims, io::NativeArrayDataSetType<Vec3::value_t, 3>(), io::STDArrayDataSetType<Vec3::value_t, 3>()));
         }
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
@@ -80,6 +76,10 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
 void Particles::append() {
     {
         auto &types = std::get<0>(result);
+        log::debug("appending {} types ", types.size());
+        for(auto t : types) {
+            log::debug("    -> {}", t);
+        }
         pimpl->dataSetTypes->append({1}, &types);
     }
     {

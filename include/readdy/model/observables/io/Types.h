@@ -46,59 +46,75 @@ NAMESPACE_BEGIN(util)
 constexpr auto OBSERVABLES_GROUP_PATH = "/readdy/observables";
 
 class Vec3MemoryType : public readdy::io::DataSetType {
-public:
-    Vec3MemoryType() {
+    static io::NativeCompoundType get() {
         using entry_t = Vec3;
-        tid = std::make_shared<readdy::io::DataTypeHandle>([]() -> hid_t {
-            hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
-            // init vec pod
-            readdy::io::NativeDataSetType<entry_t::value_t> posType{};
-            H5Tinsert(entryTypeMemory, "x", HOFFSET(entry_t, x), posType.tid->tid);
-            H5Tinsert(entryTypeMemory, "y", HOFFSET(entry_t, y), posType.tid->tid);
-            H5Tinsert(entryTypeMemory, "z", HOFFSET(entry_t, z), posType.tid->tid);
-            return entryTypeMemory;
-        }());
+
+        static readdy::io::NativeCompoundType type = readdy::io::NativeCompoundTypeBuilder(sizeof(entry_t))
+                .insert<decltype(std::declval<entry_t>().x)>("x", offsetof(entry_t, x))
+                .insert<decltype(std::declval<entry_t>().y)>("y", offsetof(entry_t, y))
+                .insert<decltype(std::declval<entry_t>().z)>("z", offsetof(entry_t, z))
+                .build();
+        return type;
+    }
+
+public:
+    Vec3MemoryType() : DataSetType(-1) {
+        using entry_t = Vec3;
+        hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
+        // init vec pod
+        readdy::io::NativeDataSetType<entry_t::value_t> posType{};
+        H5Tinsert(entryTypeMemory, "x", HOFFSET(entry_t, x), posType.hid());
+        H5Tinsert(entryTypeMemory, "y", HOFFSET(entry_t, y), posType.hid());
+        H5Tinsert(entryTypeMemory, "z", HOFFSET(entry_t, z), posType.hid());
+
+        handle->set(entryTypeMemory);
     }
 };
 
 class Vec3FileType : public readdy::io::DataSetType {
 public:
-    Vec3FileType() {
+    Vec3FileType() : DataSetType(-1) {
         using entry_t = Vec3;
-        tid = std::make_shared<readdy::io::DataTypeHandle>([]() -> hid_t {
+        auto tid = []() -> hid_t {
             Vec3MemoryType memType{};
-            auto file_type = H5Tcopy(memType.tid->tid);
+            auto file_type = H5Tcopy(memType.hid());
             H5Tpack(file_type);
             return file_type;
-        }());
+        }();
+        handle->set(tid);
     }
 };
 
 class ReactionRecordPODMemoryType : public readdy::io::DataSetType {
+    using entry_t = readdy::model::reactions::ReactionRecord;
+
+    io::NativeCompoundType compoundType;
 public:
-    ReactionRecordPODMemoryType() {
-        using entry_t = readdy::model::reactions::ReactionRecord;
-        tid = readdy::io::NativeCompoundTypeBuilder(sizeof(entry_t))
-                .insert<decltype(std::declval<entry_t>().type)>("reaction_type", offsetof(entry_t, type))
-                .insertStdArray<decltype(std::declval<entry_t>().educts)>("educts", offsetof(entry_t, educts))
-                .insertStdArray<decltype(std::declval<entry_t>().products)>("products", offsetof(entry_t, products))
-                .insertArray<Vec3::value_t, 3>("position", offsetof(entry_t, where))
-                .insertStdArray<decltype(std::declval<entry_t>().types_from)>("types_from", offsetof(entry_t, types_from))
-                .insert<decltype(std::declval<entry_t>().reactionIndex)>("reaction_index", offsetof(entry_t, reactionIndex))
-                .build().tid;
+    ReactionRecordPODMemoryType() :
+            DataSetType(-1),
+            compoundType(io::NativeCompoundTypeBuilder(sizeof(entry_t))
+                                   .insert<decltype(std::declval<entry_t>().type)>("reaction_type", offsetof(entry_t, type))
+                                   .insertStdArray<decltype(std::declval<entry_t>().educts)>("educts", offsetof(entry_t, educts))
+                                   .insertStdArray<decltype(std::declval<entry_t>().products)>("products", offsetof(entry_t, products))
+                                   .insertArray<Vec3::value_t, 3>("position", offsetof(entry_t, where))
+                                   .insertStdArray<decltype(std::declval<entry_t>().types_from)>("types_from", offsetof(entry_t, types_from))
+                                   .insert<decltype(std::declval<entry_t>().reactionIndex)>("reaction_index", offsetof(entry_t, reactionIndex))
+                                   .build()) {
+    }
+
+    virtual io::h5::handle_t hid() const override {
+        return compoundType.hid();
     }
 };
 
 class ReactionRecordPODFileType : public readdy::io::DataSetType {
 public:
-    ReactionRecordPODFileType() {
+    ReactionRecordPODFileType(): DataSetType(-1) {
         using entry_t = readdy::model::reactions::ReactionRecord;
-        tid = std::make_shared<readdy::io::DataTypeHandle>([]() -> hid_t {
-            ReactionRecordPODMemoryType memType{};
-            auto file_type = H5Tcopy(memType.tid->tid);
-            H5Tpack(file_type);
-            return file_type;
-        }());
+        ReactionRecordPODMemoryType memType{};
+        auto file_type = H5Tcopy(memType.hid());
+        H5Tpack(file_type);
+        handle->set(file_type);
     }
 };
 
@@ -114,9 +130,10 @@ class TrajectoryEntryMemoryType : public readdy::io::NativeCompoundType {
                 .build();
         return type;
     }
+
 public:
 
-    TrajectoryEntryMemoryType() : NativeCompoundType(get()){ }
+    TrajectoryEntryMemoryType() : NativeCompoundType(get()) {}
 };
 
 class TrajectoryEntryFileType : public readdy::io::STDCompoundType {
