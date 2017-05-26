@@ -23,58 +23,55 @@
 /**
  * << detailed description >>
  *
- * @file Util_bits.h
+ * @file Object.h
  * @brief << brief description >>
  * @author clonker
- * @date 06.01.17
+ * @date 26.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <readdy/io/Group.h>
+#include <readdy/common/common.h>
+#include "H5Types.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
-NAMESPACE_BEGIN(util)
 
-template<typename T>
-struct n_dims { static constexpr std::size_t value = 0; };
+class ObjectHandle {
+public:
+    ObjectHandle(h5::handle_t handle) : _handle(handle) {};
 
-template<typename T>
-struct n_dims<std::vector<T>> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+    virtual ~ObjectHandle() = default;
 
-template<typename T>
-struct n_dims<T*> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+    virtual void close() = 0;
 
-template<typename T, std::size_t N>
-struct n_dims<T[N]> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+    h5::handle_t operator*() const {
+        return _handle;
+    }
 
-template<typename T>
-struct inner_type { using type = T; };
+    void set(h5::handle_t handle) {
+        _handle = handle;
+    }
 
-template<typename T>
-struct inner_type<std::vector<T>> { using type = typename inner_type<T>::type; };
+protected:
+    h5::handle_t _handle;
+};
 
-template<typename T>
-struct inner_type<T*> { using type = typename inner_type<T>::type; };
+class Object {
+public:
+    Object(std::shared_ptr<ObjectHandle> handle) : handle(std::move(handle)) {}
 
-template<typename T, std::size_t N>
-struct inner_type<T[N]> { using type = typename inner_type<T>::type; };
+    virtual ~Object() {
+    }
 
-inline bool groupExists(const Group &cwd, const std::string &name) {
-    hid_t hid = cwd.hid();
-    H5E_BEGIN_TRY
-        {
-            hid = H5Gopen(hid, name.c_str(), H5P_DEFAULT);
-            if (hid > 0) {
-                H5Gclose(hid);
-            }
-        }
-    H5E_END_TRY
-    return (hid > 0);
-}
+    h5::handle_t hid() const {
+        return **handle;
+    }
 
-NAMESPACE_END(util)
+protected:
+    std::shared_ptr<ObjectHandle> handle;
+};
+
 NAMESPACE_END(io)
 NAMESPACE_END(readdy)

@@ -36,36 +36,31 @@
 #include <readdy/common/macros.h>
 #include "H5Types.h"
 #include "DataSetType.h"
+#include "Object.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-class READDY_API GroupHandle {
+class READDY_API GroupHandle : public ObjectHandle {
 public:
-    GroupHandle(h5::handle_t handle = -1) : handle(handle) {}
+    GroupHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
 
     ~GroupHandle() {
-        if (handle >= 0) {
-            if (H5Gclose(handle) < 0) {
-                log::error("error when closing group {}", handle);
-                H5Eprint(H5Eget_current_stack(), stderr);
-            }
+        if (_handle >= 0) {
+            close();
         }
     }
 
-    void set(h5::handle_t handle) {
-        GroupHandle::handle = handle;
+    virtual void close() override {
+        if(H5Gclose(_handle) < 0) {
+            log::error("error on closing group!");
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
     }
 
-    h5::handle_t operator*() const {
-        return handle;
-    }
-
-private:
-    h5::handle_t handle{-1};
 };
 
-class READDY_API Group {
+class READDY_API Group : public Object {
     friend class File;
 
     template<typename T, bool VLEN>
@@ -73,7 +68,6 @@ class READDY_API Group {
     class DataSet;
 
 public:
-    using handle_ref = std::shared_ptr<GroupHandle>;
 
     template<typename T>
     void write(const std::string &dataSetName, const std::vector<T> &data) {
@@ -86,8 +80,6 @@ public:
     void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data);
 
     Group createGroup(const std::string &path);
-
-    h5::handle_t getHandle() const;
 
     std::vector<std::string> subgroups() const;
 
@@ -111,7 +103,6 @@ protected:
 
     std::vector<std::string> sub_elements(H5O_type_t type) const;
 
-    handle_ref handle;
     std::string path;
 };
 

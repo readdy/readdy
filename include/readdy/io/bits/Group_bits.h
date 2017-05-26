@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
 inline Group::Group(h5::handle_t handle, const std::string &path)
-        : handle(std::make_shared<GroupHandle>(handle)), path(path) {}
+        : Object(std::make_shared<GroupHandle>(handle)), path(path) {}
 
 inline Group::Group() : Group(-1, "/") {}
 
@@ -69,13 +69,9 @@ inline Group Group::createGroup(const std::string &path) {
     }
 }
 
-inline h5::handle_t Group::getHandle() const {
-    return **handle;
-}
-
 inline h5::group_info_t Group::info() const {
     h5::group_info_t info;
-    if(H5Gget_info(getHandle(), &info) < 0) {
+    if(H5Gget_info(hid(), &info) < 0) {
         log::critical("Failure to get group info!");
         H5Eprint(H5Eget_current_stack(), stderr);
     }
@@ -88,14 +84,14 @@ inline std::vector<std::string> Group::sub_elements(H5O_type_t type) const {
     result.reserve(group_info.nlinks);
     for(std::size_t i=0; i < group_info.nlinks; ++i) {
         H5O_info_t oinfo;
-        H5Oget_info_by_idx(getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
+        H5Oget_info_by_idx(hid(), ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
         if(oinfo.type == type) {
-            auto size = 1+ H5Lget_name_by_idx (getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
+            auto size = 1+ H5Lget_name_by_idx (hid(), ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
             if(size < 0) {
                 H5Eprint(H5Eget_current_stack(), stderr);
             }
             char c_string [size];
-            H5Lget_name_by_idx (getHandle(), ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string, (std::size_t) size, H5P_DEFAULT);
+            H5Lget_name_by_idx (hid(), ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string, (std::size_t) size, H5P_DEFAULT);
             std::string label (c_string);
 
             result.push_back(std::move(label));
@@ -113,7 +109,7 @@ inline std::vector<std::string> Group::contained_data_sets() const {
 }
 
 inline Group Group::subgroup(const std::string& name) {
-    auto gid = H5Gopen(getHandle(), name.data(), H5P_DEFAULT);
+    auto gid = H5Gopen(hid(), name.data(), H5P_DEFAULT);
     if(gid < 0) {
         log::critical("could not open subgroup {}", name);
         H5Eprint(H5Eget_current_stack(), stderr);
@@ -130,10 +126,6 @@ template<typename T>
 inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataSetType memoryType, DataSetType fileType) {
 
     const auto n_array_dims = 1 + util::n_dims<T>::value;
-    // todo make this more flexible
-    if(n_array_dims != 1) {
-        throw std::invalid_argument("currently only 1-dimensional vectors supported");
-    }
     // todo clean this up into a different class so that the actual data set class can be used here
     auto hid = H5Dopen2(**handle, ds_name.data(), H5P_DEFAULT);
 
@@ -153,9 +145,9 @@ inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataS
         required_length *= dim;
     }
     log::error("required length = {}", required_length);
-    array.resize(required_length);
+    std::unique_ptr<T[]> data_ptr (new T[required_length]);
 
-    auto result = H5Dread(hid, memoryType.tid->tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
+    auto result = H5Dread(hid, memoryType.tid->tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, data_ptr.get());
 
     if(result < 0) {
         log::error("Failed reading result!");
@@ -163,37 +155,45 @@ inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataS
     }
 
     H5Dclose(hid);
+
+    array.resize(dims[0]);
+    //for(std::size_t d = 0; d < ndim-1; ++d) {
+    //    for(auto& sub_arr : array) {
+    //        sub_arr.resize(dims[1]);
+    //    }
+    //}
+
     // todo reshape array to dims
 }
 
 template<>
 inline void Group::write<std::string>(const std::string &dataSetName, const std::vector<std::string> &data) {
-    writeVector(getHandle(), dataSetName, data);
+    writeVector(hid(), dataSetName, data);
 }
 
 template<>
 inline void Group::write<short>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const short *data) {
-    H5LTmake_dataset_short(getHandle(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
+    H5LTmake_dataset_short(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
 inline void Group::write<int>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const int *data) {
-    H5LTmake_dataset_int(getHandle(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
+    H5LTmake_dataset_int(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
 inline void Group::write<long>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const long *data) {
-    H5LTmake_dataset_long(getHandle(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
+    H5LTmake_dataset_long(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
 inline void Group::write<float>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const float *data) {
-    H5LTmake_dataset_float(getHandle(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
+    H5LTmake_dataset_float(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
 inline void Group::write<double>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const double *data) {
-    H5LTmake_dataset_double(getHandle(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
+    H5LTmake_dataset_double(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 NAMESPACE_END(io)

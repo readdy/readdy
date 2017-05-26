@@ -72,7 +72,9 @@ void exportIO(py::module &io) {
             .value("CREATE_NON_EXISTING", file_t::Flag::CREATE_NON_EXISTING)
             .export_values();
 
-    py::class_<file_t>(io, "File")
+    py::class_<io::Object>(io, "Object").def("hid", &io::Object::hid);
+
+    py::class_<file_t, io::Object>(io, "File")
             .def(py::init<const std::string &, file_t::Action, file_t::Flag>(), py::arg("path"), py::arg("action"),
                  py::arg("flag") = file_t::Flag::OVERWRITE)
             .def(py::init<const std::string &, file_t::Action, const std::vector<file_t::Flag> &>())
@@ -96,10 +98,10 @@ void exportIO(py::module &io) {
             })
             .def("flush", &file_t::flush)
             .def("close", &file_t::close)
-            .def("create_group", &file_t::createGroup, rvp::move)
-            .def("get_root_group", &file_t::getRootGroup, rvp::reference_internal);
+            .def("create_group", &file_t::createGroup)
+            .def("get_root_group", [](file_t& self) { return self.getRootGroup(); });
 
-    py::class_<group_t>(io, "Group")
+    py::class_<group_t, io::Object>(io, "Group")
             .def("write_short", [](group_t &self, const std::string &name, const py::array_t<short> &arr) {
                 self.write(name, std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })

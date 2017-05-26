@@ -54,12 +54,8 @@ inline unsigned getFlagValue(const File::Flag &flag) {
     }
 }
 
-inline void File::close() {
-    flush();
-}
-
 inline void File::flush() {
-    if (root.handle >= 0 && H5Fflush(**root.handle, H5F_SCOPE_LOCAL) < 0) {
+    if (root.handle && **root.handle >= 0 && H5Fflush(**root.handle, H5F_SCOPE_LOCAL) < 0) {
         throw std::runtime_error("error when flushing HDF5 file \"" + path_ + "\" with handle "
                                  + std::to_string(**root.handle));
     }
@@ -67,7 +63,7 @@ inline void File::flush() {
 
 inline Group File::createGroup(const std::string &path) {
     if(util::groupExists(root, path)) {
-        return Group(H5Gopen(root.getHandle(), path.c_str(), H5P_DEFAULT), path);
+        return Group(H5Gopen(root.hid(), path.c_str(), H5P_DEFAULT), path);
     } else {
         auto plist = H5Pcreate(H5P_LINK_CREATE);
         H5Pset_create_intermediate_group(plist, 1);
@@ -81,14 +77,14 @@ inline Group File::createGroup(const std::string &path) {
 }
 
 inline File::~File() {
-    close();
+    flush();
 }
 
 inline File::File(const std::string &path, const Action &action, const Flag &flag) : File(path, action,
                                                                                           std::vector<Flag>{flag}) {}
 
 inline File::File(const std::string &path, const File::Action &action, const std::vector<File::Flag> &flags)
-        : path_(path), root(), handle(std::make_shared<FileHandle>(-1)) {
+        : Object(std::make_shared<FileHandle>(-1)), path_(path), root() {
     unsigned flag = 0x0000u;
     for (const auto &f : flags) {
         flag = flag | getFlagValue(f);
@@ -106,7 +102,7 @@ inline File::File(const std::string &path, const File::Action &action, const std
     }
     if(val >= 0) {
         handle->set(val);
-        auto root_group = H5Gopen(**handle, "/", H5P_DEFAULT);
+        auto root_group = H5Gopen(hid(), "/", H5P_DEFAULT);
         if(root_group < 0) {
             log::error("failed to open root group!");
             H5Eprint(H5Eget_current_stack(), stderr);

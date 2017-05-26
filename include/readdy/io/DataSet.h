@@ -46,27 +46,27 @@ void initialize();
 void activate(hid_t plist, unsigned int* cd_values);
 }
 
-class DataSetHandle {
+class DataSetHandle : public ObjectHandle {
 public:
-    DataSetHandle(h5::handle_t handle = -1) : handle(handle) {}
+    DataSetHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
     ~DataSetHandle() {
-        if(handle >= 0) {
-            if(H5Dclose(handle) < 0) {
-                log::error("error on closing data set {}!", handle);
-                H5Eprint(H5Eget_current_stack(), stderr);
-            }
+        if(_handle >= 0) {
+            close();
         }
     }
 
-    h5::handle_t operator*() const {
-        return handle;
+    virtual void close() override {
+        if(H5Dclose(_handle) < 0) {
+            log::error("error on closing data set {}!", _handle);
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
+
     }
-private:
-    h5::handle_t handle;
+
 };
 
 template<typename T, bool VLEN=false>
-class READDY_API DataSet {
+class READDY_API DataSet : public Object {
 public:
 
     DataSet(const std::string &name, const Group &group, const std::vector<h5::dims_t> &chunkSize,
@@ -104,7 +104,6 @@ public:
     DataSpace getFileSpace() const;
 
 private:
-    std::shared_ptr<DataSetHandle> handle_ref;
     h5::dims_t extensionDim;
     std::unique_ptr<DataSpace> memorySpaceRef;
     DataSetType memoryType {};

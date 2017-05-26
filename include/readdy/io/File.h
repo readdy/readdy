@@ -34,42 +34,34 @@
 #include <string>
 #include <vector>
 #include "Group.h"
+#include "Object.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-class READDY_API FileHandle {
+class READDY_API FileHandle : public ObjectHandle {
 public:
-    FileHandle(h5::handle_t handle = -1) : handle(handle) {
+    FileHandle(h5::handle_t handle) : ObjectHandle(handle) {}
 
-    };
     ~FileHandle() {
-        if(handle >= 0) {
-            if(H5Fclose(handle) < 0) {
-                log::error("error in closing file {}", handle);
-                H5Eprint(H5Eget_current_stack(), stderr);
-            }
+        if(_handle >= 0) close();
+    }
+
+    virtual void close() override {
+        if (H5Fclose(_handle) < 0) {
+            log::error("error on closing file!");
+            H5Eprint(H5Eget_current_stack(), stderr);
         }
     }
 
-    void set(h5::handle_t handle) {
-        FileHandle::handle = handle;
-    }
-
-    h5::handle_t operator*() const {
-        return handle;
-    }
-private:
-    h5::handle_t handle;
 };
 
-class READDY_API File {
+class READDY_API File : public Object {
     template<typename T, bool VLEN>
     friend
     class DataSet;
 
 public:
-    using handle_ref = std::shared_ptr<FileHandle>;
 
     enum class Action {
         CREATE, OPEN
@@ -83,15 +75,17 @@ public:
 
     File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
 
-    File(const File &) = delete;
+    File(const File &) = default;
 
-    File &operator=(const File &) = delete;
+    File &operator=(const File &) = default;
+
+    File(File&&) = default;
+
+    File &operator=(File&&) = default;
 
     virtual ~File();
 
     void flush();
-
-    void close();
 
     Group createGroup(const std::string &path);
 
@@ -100,6 +94,10 @@ public:
     Group &getRootGroup();
 
     void write(const std::string &dataSetName, const std::string &data);
+
+    void close() {
+        handle.reset();
+    }
 
     template<typename T>
     void write(const std::string &dataSetName, const std::vector<T> &data) {
@@ -112,7 +110,6 @@ public:
     }
 
 private:
-    handle_ref handle;
     std::string path_;
     Group root;
 };

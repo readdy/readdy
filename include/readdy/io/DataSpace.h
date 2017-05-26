@@ -33,33 +33,31 @@
 #pragma once
 
 #include <readdy/common/common.h>
+#include "Object.h"
 #include "H5Types.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-class DataSpaceHandle {
+class DataSpaceHandle : public ObjectHandle {
 public:
-    DataSpaceHandle(h5::handle_t hid) : hid(hid) {}
+    DataSpaceHandle(h5::handle_t hid) : ObjectHandle(hid) {}
 
     ~DataSpaceHandle() {
-        if (hid >= 0) {
-            if (H5Sclose(hid) < 0) {
-                log::error("failed to close data space {}!", hid);
-                H5Eprint(H5Eget_current_stack(), stderr);
-            }
+        if (_handle >= 0) {
+            close();
         }
     }
 
-    h5::handle_t operator*() const {
-        return hid;
+    virtual void close() override {
+        if (H5Sclose(_handle) < 0) {
+            log::error("failed to close data space {}!", _handle);
+            H5Eprint(H5Eget_current_stack(), stderr);
+        }
     }
-
-private:
-    h5::handle_t hid;
 };
 
-class DataSpace {
+class DataSpace : public Object {
 public:
     explicit DataSpace(h5::handle_t handle);
 
@@ -70,11 +68,6 @@ public:
     std::vector<h5::dims_t> dims() const;
 
     std::vector<h5::dims_t> max_dims() const;
-
-    h5::handle_t handle() const;
-
-private:
-    std::shared_ptr<DataSpaceHandle> _handle;
 };
 
 NAMESPACE_END(io)
