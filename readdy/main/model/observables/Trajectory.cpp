@@ -31,7 +31,6 @@
 
 #include <readdy/model/observables/io/Trajectory.h>
 #include <readdy/io/File.h>
-#include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>
 
@@ -46,7 +45,7 @@ namespace observables {
 const std::string Trajectory::TRAJECTORY_GROUP_PATH = "/readdy/trajectory";
 
 struct Trajectory::Impl {
-    std::unique_ptr<readdy::io::DataSet<TrajectoryEntry, true>> dataSet;
+    std::unique_ptr<io::VLENDataSet> dataSet;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
@@ -58,27 +57,27 @@ Trajectory::Trajectory(readdy::model::Kernel *const kernel, unsigned int stride)
 void Trajectory::evaluate() {
     result.clear();
     const auto &currentInput = kernel->getKernelStateModel().getParticles();
-    std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle& p) {
+    std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
         result.push_back(TrajectoryEntry{p});
     });
 }
 
 void Trajectory::flush() {
-    if(pimpl->dataSet) pimpl->dataSet->flush();
-    if(pimpl->time) pimpl->time->flush();
+    if (pimpl->dataSet) pimpl->dataSet->flush();
+    if (pimpl->time) pimpl->time->flush();
 
 }
 
 Trajectory::~Trajectory() = default;
 
 void Trajectory::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->dataSet) {
+    if (!pimpl->dataSet) {
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        auto group = file.createGroup(std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
-        auto dataSet = std::make_unique<readdy::io::DataSet<TrajectoryEntry, true>>(
-                "records", group, fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()
-        );
+        auto group = file.createGroup(
+                std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
+        auto dataSet = std::make_unique<io::VLENDataSet>(group.createVLENDataSet(
+                "records", fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()));
         pimpl->dataSet = std::move(dataSet);
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
@@ -90,30 +89,31 @@ void Trajectory::append() {
 }
 
 struct FlatTrajectory::Impl {
-    std::unique_ptr<readdy::io::DataSet<TrajectoryEntry, false>> dataSet;
-    std::unique_ptr<readdy::io::DataSet<std::size_t, false>> limits;
+    std::unique_ptr<readdy::io::DataSet> dataSet;
+    std::unique_ptr<readdy::io::DataSet> limits;
     std::unique_ptr<util::TimeSeriesWriter> time;
-    std::size_t current_limits [2] {0, 0};
+    std::size_t current_limits[2]{0, 0};
 };
 
 FlatTrajectory::FlatTrajectory(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride),
                                                                             pimpl(std::make_unique<Impl>()) {}
 
 void FlatTrajectory::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if(!pimpl->dataSet) {
-        auto group = file.createGroup(std::string(Trajectory::TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
+    if (!pimpl->dataSet) {
+        auto group = file.createGroup(
+                std::string(Trajectory::TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
         {
             std::vector<readdy::io::h5::dims_t> fs = {flushStride};
             std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-            auto dataSet = std::make_unique<readdy::io::DataSet<TrajectoryEntry, false>>(
-                    "records", group, fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()
-            );
+            auto dataSet = std::make_unique<readdy::io::DataSet>(group.createDataSet(
+                    "records", fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()
+            ));
             pimpl->dataSet = std::move(dataSet);
         }
         {
             std::vector<readdy::io::h5::dims_t> fs = {flushStride, 2};
             std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, 2};
-            auto limits = std::make_unique<readdy::io::DataSet<std::size_t, false>>("limits", group, fs, dims);
+            auto limits = std::make_unique<readdy::io::DataSet>(group.createDataSet<std::size_t>("limits", fs, dims));
             pimpl->limits = std::move(limits);
         }
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
@@ -124,15 +124,15 @@ void FlatTrajectory::initializeDataSet(io::File &file, const std::string &dataSe
 void FlatTrajectory::evaluate() {
     result.clear();
     const auto &currentInput = kernel->getKernelStateModel().getParticles();
-    std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle& p) {
+    std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
         result.push_back(TrajectoryEntry{p});
     });
 }
 
 void FlatTrajectory::flush() {
-    if(pimpl->dataSet) pimpl->dataSet->flush();
-    if(pimpl->time) pimpl->time->flush();
-    if(pimpl->limits) pimpl->limits->flush();
+    if (pimpl->dataSet) pimpl->dataSet->flush();
+    if (pimpl->time) pimpl->time->flush();
+    if (pimpl->limits) pimpl->limits->flush();
 }
 
 void FlatTrajectory::append() {

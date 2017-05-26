@@ -43,11 +43,9 @@ namespace io = readdy::io;
 template<typename T>
 void exportDataSet(py::module &io, const std::string &name) {
     using group_t = io::Group;
-    using dataset_t = io::DataSet<T, false>;
+    using dataset_t = io::DataSet  ;
     std::string base_name = "DataSet_";
     py::class_<dataset_t>(io, (base_name + name).c_str())
-            .def(py::init<const std::string &, const group_t &, const std::vector<io::h5::dims_t> &,
-                    const std::vector<io::h5::dims_t> &>())
             .def("append", [](dataset_t &self, const py::array_t <T> &arr) {
                 self.append(std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             });
@@ -125,10 +123,10 @@ void exportIO(py::module &io) {
             .def("data_sets", &group_t::contained_data_sets)
             .def("get_subgroup", &group_t::subgroup);
 
-    exportDataSet<short>(io, "short"); /* DataSet_short */
-    exportDataSet<int>(io, "int"); /* DataSet_int */
-    exportDataSet<long>(io, "long"); /* DataSet_long */
-    exportDataSet<float>(io, "float"); /* DataSet_float */
-    exportDataSet<double>(io, "double"); /* DataSet_double */
+    //exportDataSet<short>(io, "short"); /* DataSet_short */
+    //exportDataSet<int>(io, "int"); /* DataSet_int */
+    //exportDataSet<long>(io, "long"); /* DataSet_long */
+    //exportDataSet<float>(io, "float"); /* DataSet_float */
+    //exportDataSet<double>(io, "double"); /* DataSet_double */
 
 }

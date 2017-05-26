@@ -60,12 +60,15 @@ protected:
 
 class Object {
 public:
-    Object(std::shared_ptr<ObjectHandle> handle) : handle(std::move(handle)) {}
+    Object(std::shared_ptr<ObjectHandle> &&handle) : handle(std::move(handle)) {}
 
     virtual ~Object() {
     }
 
-    h5::handle_t hid() const {
+    virtual h5::handle_t hid() const {
+        if(!handle) {
+            log::critical("this should not happen");
+        }
         return **handle;
     }
 

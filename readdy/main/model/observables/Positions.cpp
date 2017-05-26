@@ -41,7 +41,7 @@ namespace model {
 namespace observables {
 
 struct Positions::Impl {
-    using writer_t = io::DataSet<Vec3, true>;
+    using writer_t = io::VLENDataSet;
     std::unique_ptr<writer_t> writer;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
@@ -68,10 +68,9 @@ void Positions::initializeDataSet(io::File &file, const std::string &dataSetName
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        auto dataSet = std::make_unique<io::DataSet<Vec3, true>>(
-                "data", group, fs, dims,
-                util::Vec3MemoryType(), util::Vec3FileType()
-        );
+        auto dataSet = std::make_unique<io::VLENDataSet>(group.createVLENDataSet("data", fs, dims,
+                                                                                 util::Vec3MemoryType(),
+                                                                                 util::Vec3FileType()));
         pimpl->writer = std::move(dataSet);
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }

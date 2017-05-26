@@ -37,6 +37,7 @@
 #include "H5Types.h"
 #include "DataSetType.h"
 #include "Object.h"
+#include "DataSet.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
@@ -52,7 +53,7 @@ public:
     }
 
     virtual void close() override {
-        if(H5Gclose(_handle) < 0) {
+        if (H5Gclose(_handle) < 0) {
             log::error("error on closing group!");
             H5Eprint(H5Eget_current_stack(), stderr);
         }
@@ -63,9 +64,7 @@ public:
 class READDY_API Group : public Object {
     friend class File;
 
-    template<typename T, bool VLEN>
-    friend
-    class DataSet;
+    friend class DataSet;
 
 public:
 
@@ -86,14 +85,121 @@ public:
     std::vector<std::string> contained_data_sets() const;
 
     template<typename T>
-    void read(const std::string& dataSetName, std::vector<T> &array);
+    void read(const std::string &dataSetName, std::vector<T> &array);
 
     template<typename T>
-    void read(const std::string& dataSetName, std::vector<T> &array, DataSetType memoryType, DataSetType fileType);
+    void read(const std::string &dataSetName, std::vector<T> &array, DataSetType memoryType, DataSetType fileType);
 
     Group subgroup(const std::string &name);
 
     h5::group_info_t info() const;
+
+    template<typename T>
+    DataSet createDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
+                          const std::vector<h5::dims_t> &maxDims,
+                          DataSetCompression compression = DataSetCompression::blosc) {
+        return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>(), compression);
+    }
+
+    DataSet createDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
+                          const std::vector<h5::dims_t> &maxDims, const DataSetType &memoryType,
+                          const DataSetType &fileType, DataSetCompression compression = DataSetCompression::blosc) {
+        h5::dims_t extensionDim;
+        {
+            std::stringstream result;
+            std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
+            log::trace("creating data set with maxDims={}", result.str());
+        }
+        if (compression == DataSetCompression::blosc) {
+            blosc_compression::initialize();
+        }
+        // validate and find extension dim
+        {
+            auto unlimited_it = std::find(maxDims.begin(), maxDims.end(), h5::UNLIMITED_DIMS);
+            bool containsUnlimited = unlimited_it != maxDims.end();
+            if (!containsUnlimited) {
+                throw std::runtime_error("needs to contain unlimited_dims in some dimension to be extensible");
+            }
+            extensionDim = static_cast<h5::dims_t>(std::distance(maxDims.begin(), unlimited_it));
+            log::trace("found extension dim {}", extensionDim);
+        }
+        h5::handle_t handle;
+        {
+            // set up empty data set
+            std::vector<h5::dims_t> dims(maxDims.begin(), maxDims.end());
+            dims[extensionDim] = 0;
+            DataSpace fileSpace(dims, maxDims);
+            DataSetCreatePropertyList propertyList;
+            propertyList.set_layout_chunked();
+            propertyList.set_chunk(chunkSize);
+            if (compression == DataSetCompression::blosc) propertyList.activate_blosc();
+
+            auto _hid = H5Dcreate(hid(), name.c_str(), fileType.hid(),
+                                  fileSpace.hid(), H5P_DEFAULT, propertyList.hid(), H5P_DEFAULT);
+            if (_hid < 0) {
+                log::error("Error on creating data set {}", _hid);
+                H5Eprint(H5Eget_current_stack(), stderr);
+                throw std::runtime_error("Error on creating data set " + std::to_string(_hid));
+            } else {
+                handle = _hid;
+            }
+        }
+        DataSet ds(handle, memoryType, fileType);
+        ds.extensionDim() = extensionDim;
+        return ds;
+    }
+
+    template<typename T>
+    VLENDataSet createVLENDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
+                                  const std::vector<h5::dims_t> &maxDims) {
+        return createVLENDataSet(name, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>());
+    }
+
+    VLENDataSet createVLENDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
+                                  const std::vector<h5::dims_t> &maxDims, const DataSetType &memoryType,
+                                  const DataSetType &fileType) {
+        h5::dims_t extensionDim;
+        {
+            std::stringstream result;
+            std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
+            log::trace("creating vlen data set with maxDims={}", result.str());
+        }
+        VLENDataSetType vlenMemoryType(memoryType);
+        VLENDataSetType vlenFileType(fileType);
+
+        // validate and find extension dim
+        {
+            auto unlimited_it = std::find(maxDims.begin(), maxDims.end(), h5::UNLIMITED_DIMS);
+            bool containsUnlimited = unlimited_it != maxDims.end();
+            if (!containsUnlimited) {
+                throw std::runtime_error("needs to contain unlimited_dims in some dimension to be extensible");
+            }
+            extensionDim = static_cast<h5::dims_t>(std::distance(maxDims.begin(), unlimited_it));
+            log::trace("found extension dim {}", extensionDim);
+        }
+        h5::handle_t hid;
+        {
+            // set up empty data set
+            std::vector<h5::dims_t> dims(maxDims.begin(), maxDims.end());
+            dims[extensionDim] = 0;
+            DataSpace fileSpace(dims, maxDims);
+            DataSetCreatePropertyList propertyList;
+            propertyList.set_layout_chunked();
+            propertyList.set_chunk(chunkSize);
+
+            hid = H5Dcreate(Group::hid(), name.c_str(), vlenFileType.hid(),
+                            fileSpace.hid(), H5P_DEFAULT, propertyList.hid(), H5P_DEFAULT);
+            if (hid < 0) {
+                log::error("Error on creating data set {}", hid);
+                H5Eprint(H5Eget_current_stack(), stderr);
+                throw std::runtime_error("Error on creating data set " + std::to_string(hid));
+            }
+        }
+        VLENDataSet ds(hid, vlenMemoryType, vlenFileType);
+        ds.extensionDim() = extensionDim;
+        log::debug("set vlen extension dim to {}", ds.extensionDim());
+        return ds;
+    }
 
 protected:
 

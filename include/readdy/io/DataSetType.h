@@ -35,28 +35,38 @@
 #include <readdy/common/logging.h>
 #include <readdy/common/traits.h>
 #include "H5Types.h"
+#include "Object.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-class DataTypeHandle {
+class DataTypeHandle : public ObjectHandle {
 public:
-    h5::data_set_type_t tid;
-    DataTypeHandle(h5::data_set_type_t tid) : tid(tid) {}
+
+    DataTypeHandle(h5::handle_t handle) : ObjectHandle(handle) {}
 
     virtual ~DataTypeHandle() {
-        if(tid >= 0) {
-            if(H5Tclose(tid) < 0) {
-                log::error("error on closing data set type");
-                H5Eprint (H5Eget_current_stack(), stderr);
-            }
+        if(_handle >= 0) {
+            close();
+        }
+    }
+
+    virtual void close() override {
+        if(H5Tclose(_handle) < 0) {
+            log::error("error on closing data set type");
+            H5Eprint (H5Eget_current_stack(), stderr);
         }
     }
 };
 
-class READDY_API DataSetType {
+class READDY_API DataSetType : public Object {
 public:
-    std::shared_ptr<DataTypeHandle> tid;
+    DataSetType(h5::handle_t handle) : Object(std::make_shared<DataTypeHandle>(handle)) {}
+};
+
+class READDY_API VLENDataSetType : public DataSetType{
+public:
+    VLENDataSetType(const DataSetType &other) : DataSetType(H5Tvlen_create(other.hid())) {}
 };
 
 template<typename T>

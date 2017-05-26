@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,96 +23,78 @@
 /**
  * << detailed description >>
  *
- * @file File.h
+ * @file PropertyList.h
  * @brief << brief description >>
  * @author clonker
- * @date 31.08.16
+ * @date 26.05.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include "Group.h"
+#include <readdy/common/macros.h>
 #include "Object.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-class READDY_API FileHandle : public ObjectHandle {
-public:
-    FileHandle(h5::handle_t handle) : ObjectHandle(handle) {}
 
-    ~FileHandle() {
+namespace blosc_compression {
+void initialize();
+void activate(hid_t plist, unsigned int* cd_values);
+}
+
+
+class PropertyListHandle : public ObjectHandle {
+public:
+    PropertyListHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+
+    virtual ~PropertyListHandle() override {
         if(_handle >= 0) close();
     }
 
     virtual void close() override {
-        if (H5Fclose(_handle) < 0) {
-            log::error("error on closing file!");
+        if(H5Pclose(_handle) < 0) {
+            log::error("error on closing property list");
             H5Eprint(H5Eget_current_stack(), stderr);
         }
     }
+};
+
+class PropertyList : public Object {
+
+protected:
+    PropertyList(h5::handle_t cls_id) : Object(std::make_shared<PropertyListHandle>(cls_id)) {}
 
 };
 
-class READDY_API File : public Object {
-    friend class DataSet;
-
+class DataSetCreatePropertyList : public PropertyList {
 public:
+    DataSetCreatePropertyList() : PropertyList(H5Pcreate(H5P_DATASET_CREATE)) {}
 
-    enum class Action {
-        CREATE, OPEN
-    };
-
-    enum class Flag {
-        READ_ONLY = 0, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING, DEFAULT /* = rw, create, truncate */
-    };
-
-    File(const std::string &path, const Action &action, const std::vector<Flag> &flag);
-
-    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
-
-    File(const File &) = default;
-
-    File &operator=(const File &) = default;
-
-    File(File&&) = default;
-
-    File &operator=(File&&) = default;
-
-    virtual ~File();
-
-    void flush();
-
-    Group createGroup(const std::string &path);
-
-    const Group &getRootGroup() const;
-
-    Group &getRootGroup();
-
-    void write(const std::string &dataSetName, const std::string &data);
-
-    void close() {
-        handle.reset();
+    void set_layout_compact() {
+        H5Pset_layout(hid(), H5D_COMPACT);
     }
 
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<T> &data) {
-        root.write(dataSetName, {data.size()}, data.data());
+    void set_layout_contiguous() {
+        H5Pset_layout(hid(), H5D_CONTIGUOUS);
     }
 
-    template<typename T>
-    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data) {
-        root.write<T>(dataSetName, dims, data);
+    void set_layout_chunked() {
+        H5Pset_layout(hid(), H5D_CHUNKED);
     }
 
-private:
-    std::string path_;
-    Group root;
+    void set_chunk(const std::vector<h5::dims_t> chunk_dims) {
+        H5Pset_chunk(hid(), static_cast<int>(chunk_dims.size()), chunk_dims.data());
+    }
+
+    void activate_blosc() {
+        unsigned int cd_values[7];
+        blosc_compression::activate(hid(), cd_values);
+    }
+
+
 };
 
 NAMESPACE_END(io)
 NAMESPACE_END(readdy)
-
-#include "bits/File_bits.h"

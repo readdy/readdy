@@ -23,45 +23,51 @@
 /**
  * << detailed description >>
  *
- * @file TrajectoryEntry.h
+ * @file TestIO.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 16.03.17
+ * @date 25.05.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
+#include <readdy/model/observables/io/TrajectoryEntry.h>
+#include <readdy/model/observables/io/Types.h>
+#include "gtest/gtest.h"
+#include "readdy/readdy.h"
 
-#include <spdlog/fmt/ostr.h>
-#include <readdy/common/common.h>
-#include <readdy/model/Particle.h>
-#include <readdy/model/Vec3.h>
+namespace {
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(observables)
+TEST(TestIO, ReadTrajectory) {
 
-struct TrajectoryEntry {
+    using namespace readdy;
 
-    TrajectoryEntry() {}
+    io::File f("/home/mho/Development/readdy/readdy/readdy/test/simple_trajectory.h5", io::File::Action::OPEN, io::File::Flag::READ_ONLY);
+    auto& rootGroup = f.getRootGroup();
+    auto traj = rootGroup.subgroup("readdy/trajectory");
+    for(const auto ds : traj.contained_data_sets()) {
+        log::error("ds: {}", ds);
+    }
+    // limits
+    std::vector<std::size_t> limits;
+    traj.read("limits", limits, io::STDDataSetType<std::size_t>(), io::NativeDataSetType<std::size_t>());
+    // records
+    std::vector<model::observables::TrajectoryEntry> entries;
+    model::observables::util::TrajectoryEntryMemoryType memoryType;
+    model::observables::util::TrajectoryEntryFileType fileType;
+    traj.read("records", entries, memoryType, fileType);
 
-    TrajectoryEntry(const readdy::model::Particle &p)
-            : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(p.getFlavor()) {}
+    for(std::size_t i = 0; i < limits.size(); i += 2) {
+        auto begin = limits[i];
+        auto end = limits[i+1];
+        log::error("got n frames: {} = {} - {}", end - begin, end, begin);
+        log::error("last entry: {}", entries[end-1]);
+    }
 
-    readdy::model::Particle::type_type typeId;
-    readdy::model::Particle::id_type id;
-    readdy::model::Particle::flavor_t flavor;
-    readdy::model::Particle::pos_type pos;
-
-    friend std::ostream &operator<<(std::ostream &, const TrajectoryEntry &);
-};
-
-inline std::ostream &operator<<(std::ostream &os, const TrajectoryEntry &p) {
-    os << "TrajectoryEntry(id=" << p.id << ", type=" << p.typeId << ", position=" << p.pos << ", flavor=" << (int) p.flavor
-       << ")";
-    return os;
+    std::vector<time_step_type> timesteps;
+    traj.read("time", timesteps);
+    for(auto t : timesteps) {
+        log::error("t = {}", t);
+    }
 }
 
-NAMESPACE_END(observables)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}

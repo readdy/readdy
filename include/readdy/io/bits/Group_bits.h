@@ -51,8 +51,8 @@ inline Group::Group() : Group(-1, "/") {}
 inline void Group::write(const std::string &dataSetName, const std::string &string) {
     auto stdstr = STDDataSetType<std::string>();
     auto nativestr = NativeDataSetType<std::string>();
-    H5Tset_cset(stdstr.tid->tid, H5T_CSET_UTF8);
-    H5Tset_cset(nativestr.tid->tid, H5T_CSET_UTF8);
+    H5Tset_cset(stdstr.hid(), H5T_CSET_UTF8);
+    H5Tset_cset(nativestr.hid(), H5T_CSET_UTF8);
     if(H5LTmake_dataset_string(**handle, dataSetName.c_str(), string.c_str()) < 0) {
         log::warn("there was a problem with writing {} into a hdf5 file.", string);
     }
@@ -124,19 +124,19 @@ inline void Group::read(const std::string& name, std::vector<T> &array) {
 
 template<typename T>
 inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataSetType memoryType, DataSetType fileType) {
+    blosc_compression::initialize();
 
     const auto n_array_dims = 1 + util::n_dims<T>::value;
-    // todo clean this up into a different class so that the actual data set class can be used here
     auto hid = H5Dopen2(**handle, ds_name.data(), H5P_DEFAULT);
 
     DataSpace memorySpace (H5Dget_space(hid));
 
     const auto ndim = memorySpace.ndim();
 
-    if(ndim != n_array_dims) {
-        log::error("wrong dimensionality: {} != {}", ndim, n_array_dims);
-        throw std::invalid_argument("wrong dimensionality when attempting to read a data set");
-    }
+    //if(ndim != n_array_dims) {
+    //    log::error("wrong dimensionality: {} != {}", ndim, n_array_dims);
+    //    throw std::invalid_argument("wrong dimensionality when attempting to read a data set");
+    //}
 
     const auto dims = memorySpace.dims();
     std::size_t required_length = 1;
@@ -145,9 +145,9 @@ inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataS
         required_length *= dim;
     }
     log::error("required length = {}", required_length);
-    std::unique_ptr<T[]> data_ptr (new T[required_length]);
+    array.resize(required_length);
 
-    auto result = H5Dread(hid, memoryType.tid->tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, data_ptr.get());
+    auto result = H5Dread(hid, memoryType.hid(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
 
     if(result < 0) {
         log::error("Failed reading result!");
@@ -156,7 +156,6 @@ inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataS
 
     H5Dclose(hid);
 
-    array.resize(dims[0]);
     //for(std::size_t d = 0; d < ndim-1; ++d) {
     //    for(auto& sub_arr : array) {
     //        sub_arr.resize(dims[1]);

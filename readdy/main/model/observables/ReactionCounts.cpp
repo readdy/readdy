@@ -33,7 +33,6 @@
 #include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/model/IOUtils.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
@@ -41,7 +40,7 @@ namespace readdy {
 namespace model {
 namespace observables {
 
-using data_set_t = io::DataSet<std::size_t, false>;
+using data_set_t = io::DataSet;
 using data_set_order1_map = std::unordered_map<readdy::particle_type_type, data_set_t>;
 using data_set_order2_map = std::unordered_map<readdy::util::particle_type_pair, data_set_t,
         readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>;
@@ -54,7 +53,7 @@ struct ReactionCounts::Impl {
     bool shouldWrite = false;
     unsigned int flushStride = 0;
     bool firstWrite = true;
-    std::function<void(data_set_t&)> flushFun = [](data_set_t &value){
+    std::function<void(data_set_t &)> flushFun = [](data_set_t &value) {
         value.flush();
     };
 };
@@ -87,7 +86,8 @@ void ReactionCounts::initializeDataSet(io::File &file, const std::string &dataSe
     }
 }
 
-static void writeCountsToDataSets(const ReactionCounts::result_t &counts,data_set_order1_map &dSetOrder1, data_set_order2_map &dSetOrder2) {
+static void writeCountsToDataSets(const ReactionCounts::result_t &counts, data_set_order1_map &dSetOrder1,
+                                  data_set_order2_map &dSetOrder2) {
     {
         const auto &countsMap = std::get<0>(counts);
         for (const auto &entry : countsMap) {
@@ -139,9 +139,12 @@ void ReactionCounts::append() {
                 if (numberOrder1Reactions > 0) {
                     std::vector<readdy::io::h5::dims_t> chunkSize = {pimpl->flushStride, numberOrder1Reactions};
                     std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, numberOrder1Reactions};
-                    pimpl->ds_order1.emplace(std::piecewise_construct, std::forward_as_tuple(pType), std::forward_as_tuple(
-                            ctx.particle_types().name_of(pType) + "[id=" + std::to_string(pType) + "]",
-                            order1Subgroup, chunkSize, dims));
+                    pimpl->ds_order1.emplace(std::piecewise_construct, std::forward_as_tuple(pType),
+                                             std::forward_as_tuple(
+                                                     order1Subgroup.createDataSet<std::size_t>(
+                                                             ctx.particle_types().name_of(pType) + "[id=" +
+                                                             std::to_string(pType) + "]",
+                                                             chunkSize, dims)));
                 }
             }
             auto order2Subgroup = subgroup.createGroup("order2");
@@ -153,11 +156,16 @@ void ReactionCounts::append() {
                     const auto numberOrder2Reactions = ctx.reactions().order2_by_type(pType1, pType2).size();
                     if (numberOrder2Reactions > 0) {
                         std::vector<readdy::io::h5::dims_t> chunkSize = {pimpl->flushStride, numberOrder2Reactions};
-                        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, numberOrder2Reactions};
-                        pimpl->ds_order2.emplace(std::piecewise_construct, std::forward_as_tuple(std::tie(pType1, pType2)), std::forward_as_tuple(
-                                ctx.particle_types().name_of(pType1) + "[id=" + std::to_string(pType1) + "] + " +
-                                ctx.particle_types().name_of(pType2) + "[id=" + std::to_string(pType2) + "]",
-                                order2Subgroup, chunkSize, dims));
+                        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS,
+                                                                    numberOrder2Reactions};
+                        pimpl->ds_order2.emplace(std::piecewise_construct,
+                                                 std::forward_as_tuple(std::tie(pType1, pType2)),
+                                                 std::forward_as_tuple(order2Subgroup.createDataSet<std::size_t>(
+                                                         ctx.particle_types().name_of(pType1) + "[id=" +
+                                                         std::to_string(pType1) + "] + " +
+                                                         ctx.particle_types().name_of(pType2) + "[id=" +
+                                                         std::to_string(pType2) + "]",
+                                                         chunkSize, dims)));
                     }
                 }
             }
@@ -173,8 +181,9 @@ void ReactionCounts::append() {
 }
 
 void
-ReactionCounts::initializeCounts(std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
-                 const readdy::model::KernelContext &ctx) {
+ReactionCounts::initializeCounts(
+        std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
+        const readdy::model::KernelContext &ctx) {
     auto &order1Counts = std::get<0>(reactionCounts);
     auto &order2Counts = std::get<1>(reactionCounts);
     for (const auto &entry1 : ctx.particle_types().type_mapping()) {

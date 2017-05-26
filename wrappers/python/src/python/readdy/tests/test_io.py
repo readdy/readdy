@@ -176,20 +176,6 @@ class TestSchemeApi(unittest.TestCase):
             np.testing.assert_equal(f2.get("/my_super_group").get("my_super_subgroup")["stringds"].value.decode(), u"jap")
             np.testing.assert_equal(f2.get("/my_super_group/my_super_subgroup")["stringds"].value.decode(), u"jap")
 
-    def test_append(self):
-        fname = os.path.join(self.dir, "test_append.h5")
-        with closing(io.File(fname, io.FileAction.CREATE)) as f:
-            g = f.create_group("/append_group")
-
-            full_data = [[3.3, 2.2], [1, 1], [3.4, 2.4], [14, 14], [5.5, 5.5]]
-
-            ds_double = io.DataSet_double("doubleds", g, [2, 2], [io.unlimited_dims(), 2])
-            ds_double.append(np.array([[3.3, 2.2], [1, 1]], dtype=np.float64))
-            ds_double.append(np.array([[3.4, 2.4], [14, 14], [5.5, 5.5]], dtype=np.float64))
-
-        with h5py.File(fname, "r") as f2:
-            np.testing.assert_equal(f2.get("append_group")["doubleds"][:], full_data)
-
 
 if __name__ == '__main__':
     common.set_logging_level("debug")

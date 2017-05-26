@@ -44,9 +44,7 @@ NAMESPACE_BEGIN(util)
 class TimeSeriesWriter {
 public:
     TimeSeriesWriter(io::Group &group, unsigned int chunkSize, const std::string &dsName = "time") :
-            dataSet(std::make_unique<io::DataSet<time_step_type>>(
-                    dsName, group, std::initializer_list<io::h5::dims_t>{chunkSize},
-                    std::initializer_list<io::h5::dims_t>{io::h5::UNLIMITED_DIMS})) { }
+            dataSet(group.createDataSet<time_step_type>(dsName, {chunkSize}, {io::h5::UNLIMITED_DIMS})) {}
 
     ~TimeSeriesWriter() = default;
 
@@ -59,15 +57,15 @@ public:
     TimeSeriesWriter &operator=(TimeSeriesWriter &&) = default;
 
     void append(const time_step_type t) {
-        dataSet->append({1}, &t);
+        dataSet.append({1}, &t);
     }
 
     void flush() {
-        dataSet->flush();
+        dataSet.flush();
     }
 
 private:
-    std::unique_ptr<io::DataSet<time_step_type>> dataSet;
+    io::DataSet dataSet;
 };
 
 NAMESPACE_END(util)

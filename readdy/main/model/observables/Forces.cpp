@@ -41,7 +41,7 @@ namespace model {
 namespace observables {
 
 struct Forces::Impl {
-    using data_set_t = io::DataSet<Vec3, true>;
+    using data_set_t = io::VLENDataSet;
     std::unique_ptr<data_set_t> dataSet;
     std::unique_ptr<util::TimeSeriesWriter> timeSeries;
 };
@@ -66,10 +66,8 @@ void Forces::initializeDataSet(io::File &file, const std::string &dataSetName, u
         std::vector<readdy::io::h5::dims_t> fs = {flushStride};
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        auto dataSet = std::make_unique<io::DataSet<Vec3, true>>(
-                "data", group, fs, dims,
-                util::Vec3MemoryType(), util::Vec3FileType()
-        );
+        auto dataSet = std::make_unique<io::VLENDataSet>(
+                group.createVLENDataSet("data", fs, dims, util::Vec3MemoryType(), util::Vec3FileType()));
         pimpl->dataSet = std::move(dataSet);
         pimpl->timeSeries = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
