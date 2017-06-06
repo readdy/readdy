@@ -186,21 +186,25 @@ GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
 
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
     std::vector<GraphTopology> components;
+    auto subGraphs = graph_.connectedComponentsDestructive();
+    // todo generate particles list for each subgraph, update subgraph's vertices to obey this new list
+    // todo todo: this should be implemented with the routine below
+    // generate particles list for each sub graph, update sub graph's vertices to obey this new list
+    std::vector<particles_t> subGraphsParticles;
     {
-        auto subGraphs = graph_.connectedComponentsDestructive();
-        std::vector<particles_t> subGraphsParticles;
         subGraphsParticles.reserve(subGraphs.size());
-        for(auto it = subGraphs.begin(); it != subGraphs.end(); ++it) {
+        for (auto itGraph = subGraphs.begin(); itGraph != subGraphs.end(); ++itGraph) {
             subGraphsParticles.emplace_back();
-            auto& subParticles = subGraphsParticles.back();
-            subParticles.reserve(it->vertices().size());
-            for(auto& vertex : it->vertices()) {
+            auto &subParticles = subGraphsParticles.back();
+            subParticles.reserve(itGraph->vertices().size());
+            for (auto &vertex : itGraph->vertices()) {
                 subParticles.emplace_back(particles.at(vertex.particleIndex));
                 vertex.particleIndex = subParticles.size() - 1;
             }
         }
-        // todo generate particles list for each subgraph, update subgraph's vertices to obey this new list
-
+    }
+    // create actual GraphTopology objects from graphs and particles
+    {
         components.reserve(subGraphs.size());
         {
             auto it_graphs = subGraphs.begin();

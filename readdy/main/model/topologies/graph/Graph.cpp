@@ -402,6 +402,12 @@ Graph::Graph(vertex_list vertexList, vertex_label_mapping vertexLabelMapping)
 bool Graph::containsEdge(const Graph::label_edge &edge) const {
     const auto& v1 = namedVertexPtr(std::get<0>(edge));
     const auto& v2 = namedVertexPtr(std::get<1>(edge));
+    return containsEdge(std::make_tuple(v1, v2));
+}
+
+bool Graph::containsEdge(const Graph::cedge &edge) const {
+    const auto& v1 = std::get<0>(edge);
+    const auto& v2 = std::get<1>(edge);
     const auto& v1Neighbors = v1->neighbors();
     const auto& v2Neighbors = v2->neighbors();
     return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2.data()) != v1Neighbors.end()

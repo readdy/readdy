@@ -171,7 +171,7 @@ TEST_P(TestTopologyReactions, GEXF) {
     EXPECT_TRUE(gexf.find("source=\"0\" target=\"1\"") != std::string::npos) << "first two vertices are connected";
 }
 
-TEST_P(TestTopologyReactions, AddEdge) {
+TEST_P(TestTopologyReactions, AddEdgeNamed) {
     // add edge between first and last vertex, creating a circular structure x_2 -> x_0 <-> x_1 <-> x_2 <- x_0
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
@@ -196,6 +196,33 @@ TEST_P(TestTopologyReactions, AddEdge) {
     std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
     EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple("begin", "end")));
 }
+
+TEST_P(TestTopologyReactions, AddEdgeIterator) {
+    // add edge between first and last vertex, creating a circular structure x_2 -> x_0 <-> x_1 <-> x_2 <- x_0
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+    const auto &types = kernel->getKernelContext().particle_types();
+    topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
+    topology->graph().setVertexLabel(--topology->graph().vertices().end(), "end");
+    {
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            recipe.addEdge(std::make_tuple(top.graph().vertices().begin(), --top.graph().vertices().end()));
+            return recipe;
+        };
+        model::top::reactions::TopologyReaction reaction {reactionFunction, 5};
+        reaction.expect_connected_after_reaction();
+        reaction.raise_if_invalid();
+        topology->addReaction(reaction);
+    }
+    topology->updateReactionRates();
+    std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
+    EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple("begin", "end")));
+}
+
 
 TEST_P(TestTopologyReactions, RemoveEdge) {
     using namespace readdy;
