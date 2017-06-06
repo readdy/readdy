@@ -82,6 +82,10 @@ const Recipe::reaction_operations &Recipe::steps() const {
     return _steps;
 }
 
+Recipe &Recipe::addEdge(const std::string &edge_label1, const std::string &edge_label2) {
+    return addEdge(std::tie(edge_label1, edge_label2));
+}
+
 }
 }
 }

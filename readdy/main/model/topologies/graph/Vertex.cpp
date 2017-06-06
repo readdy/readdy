@@ -40,7 +40,12 @@ namespace graph {
 
 VertexRef::VertexRef(Vertex::vertex_ptr it) : it(it), graph(nullptr) {}
 
-VertexRef::VertexRef(Graph *const graph, const Vertex::label_t &label) : graph(graph), label(label) {}
+VertexRef::VertexRef(Graph *const graph, const Vertex::label_t &label) : graph(graph), label(label) {
+    if(graph->vertexLabelMapping().find(label) == graph->vertexLabelMapping().end()) {
+        throw std::invalid_argument("tried creating a vertex ref with label \"" +
+                                            label + "\" which was not contained in the graph vertex label mapping");
+    }
+}
 
 Vertex &VertexRef::operator*() {
     if(!graph) {

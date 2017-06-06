@@ -74,6 +74,8 @@ public:
 
     Recipe &addEdge(const label_edge &labels);
 
+    Recipe &addEdge(const std::string& edge_label1, const std::string& edge_label2);
+
     Recipe &removeEdge(const edge &edge);
 
     Recipe &removeEdge(const label_edge &labels);

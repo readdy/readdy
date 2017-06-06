@@ -399,6 +399,15 @@ std::vector<Graph> Graph::connectedComponentsDestructive() {
 Graph::Graph(vertex_list vertexList, vertex_label_mapping vertexLabelMapping)
         : _vertices(std::move(vertexList)), _vertex_label_mapping(std::move(vertexLabelMapping)){}
 
+bool Graph::containsEdge(const Graph::label_edge &edge) const {
+    const auto& v1 = namedVertexPtr(std::get<0>(edge));
+    const auto& v2 = namedVertexPtr(std::get<1>(edge));
+    const auto& v1Neighbors = v1->neighbors();
+    const auto& v2Neighbors = v2->neighbors();
+    return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2.data()) != v1Neighbors.end()
+           && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1.data()) != v2Neighbors.end();
+}
+
 }
 }
 }

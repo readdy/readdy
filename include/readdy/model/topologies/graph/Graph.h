@@ -94,6 +94,8 @@ public:
 
     Vertex &namedVertex(const label &name);
 
+    bool containsEdge(const label_edge& edge) const;
+
     cedge namedEdge(const label_edge& edge) const;
 
     edge namedEdge(const label_edge& edge);
