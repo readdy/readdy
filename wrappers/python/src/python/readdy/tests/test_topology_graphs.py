@@ -66,7 +66,7 @@ class TestTopologyGraphs(unittest.TestCase):
                 np.testing.assert_equal(len(v.neighbors()), 1)
                 np.testing.assert_equal(2 in [vv.get().particle_index for vv in v], True)
         top.configure()
-        sim.run_scheme_readdy(True).configure_and_run(1, 0)
+        sim.run_scheme_readdy(True).configure_and_run(0, 1)
 
     def test_unconnected_graph(self):
         sim = Simulation()

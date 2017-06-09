@@ -43,7 +43,7 @@ fi
 
 
 echo "calling python unit tests"
-nosetests readdy -vv --with-doctest --doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS
+nosetests readdy -s -vv --with-doctest --doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS
 err_code=$?
 if [ ${err_code} -ne 0 ]; then
     ret_code=${err_code}

@@ -21,58 +21,89 @@
 
 
 /**
- * << detailed description >>
+ * Write datasets that describe the context of the system that was used.
+ * Since these datasets are meta-data, turn off compression, i.e. no blosc-filter is necessary for reading this.
  *
  * @file IOUtils.cpp
- * @brief << brief description >>
+ * @brief Utils for writing to files that concern the model, e.g. writing reaction information.
  * @author clonker
+ * @author chrisfroe
  * @date 10.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #include <readdy/model/IOUtils.h>
+#include <iostream>
 
 namespace readdy {
 namespace model {
+namespace ioutils {
 
-void writeReactionInformation(io::Group &group, const KernelContext &context) {
+void writeReactionInformation(readdy::io::Group &group, const KernelContext &context) {
     auto subgroup = group.createGroup("./registered_reactions");
-    auto groupO1 = subgroup.createGroup("./order1");
-    auto groupO2 = subgroup.createGroup("./order2");
-    for (const auto &t1 : context.particle_types().types_flat()) {
-        const auto &reactionsOrder1 = context.reactions().order1_by_type(t1);
-        std::vector<std::string> labelsOrder1;
-        labelsOrder1.reserve(reactionsOrder1.size());
-        std::for_each(reactionsOrder1.begin(), reactionsOrder1.end(),
-                      [&labelsOrder1](reactions::Reaction<1> *r) { labelsOrder1.push_back(r->getName()); });
-        if (!labelsOrder1.empty()) {
-            groupO1.write(context.particle_types().name_of(t1) + "[id=" + std::to_string(t1) + "]", labelsOrder1);
-        }
-        for (const auto &t2 : context.particle_types().types_flat()) {
-            if (t2 < t1) continue;
-            const auto &reactionsOrder2 = context.reactions().order2_by_type(t1, t2);
-            std::vector<std::string> labelsOrder2;
-            labelsOrder2.reserve(reactionsOrder2.size());
-            std::for_each(reactionsOrder2.begin(), reactionsOrder2.end(),
-                          [&labelsOrder2](reactions::Reaction<2> *r) { labelsOrder2.push_back(r->getName()); });
-            if (!labelsOrder2.empty()) {
-                groupO2.write(
-                        context.particle_types().name_of(t1) + "[id=" + std::to_string(t1) + "] + " +
-                        context.particle_types().name_of(t2) + "[id=" + std::to_string(t2) + "]", labelsOrder2);
+    // order1
+    const auto &order1_reactions = context.reactions().order1_flat();
+    auto n_reactions = order1_reactions.size();
+    if (n_reactions > 0) {
+        std::vector<ReactionInfo> order1_info;
+        for (const auto &r : order1_reactions) {
+            const auto &reactions_current_type = context.reactions().order1_by_type(r->getEducts()[0]);
+            auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
+                                   [&r](const reactions::Reaction<1> *x) { return x->getId() == r->getId(); });
+            if (it != reactions_current_type.end()) {
+                std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
+                const std::array<particle_type_type, 2> educts = {r->getEducts()[0], 0};
+                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(), r->getRate(), r->getEductDistance(),
+                                  r->getProductDistance(), educts, r->getProducts()};
+                order1_info.push_back(info);
             }
         }
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::dims_t> extent = {n_reactions};
+        auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, ReactionInfoMemoryType(), ReactionInfoFileType(),
+                                                           io::DataSetCompression::none);
+        order1_reaction_dset.append(extent, order1_info.data());
+    }
+    // order2
+    const auto &order2_reactions = context.reactions().order2_flat();
+    n_reactions = order2_reactions.size();
+    if (n_reactions > 0) {
+        std::vector<ReactionInfo> order2_info;
+        for (const auto &r : order2_reactions) {
+            const auto &reactions_current_type = context.reactions().order2_by_type(r->getEducts()[0], r->getEducts()[1]);
+            auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
+                                   [&r](const reactions::Reaction<2> *x) { return x->getId() == r->getId(); });
+            if (it != reactions_current_type.end()) {
+                std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
+                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(), r->getRate(), r->getEductDistance(),
+                                  r->getProductDistance(), r->getEducts(), r->getProducts()};
+                order2_info.push_back(info);
+            }
+        }
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::dims_t> extent = {n_reactions};
+        auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, ReactionInfoMemoryType(), ReactionInfoFileType(),
+                                                           io::DataSetCompression::none);
+        order2_reaction_dset.append(extent, order2_info.data());
     }
 }
 
-void writeParticleTypeInformation(io::Group &group, const KernelContext &context) {
-    auto subgroup = group.createGroup("./particle_types");
-    const auto& types = context.particle_types().type_mapping();
-    for(auto it = types.begin(); it != types.end(); ++it) {
-        std::vector<std::string> strvec(1);
-        strvec.at(0) = it->first;
-        subgroup.write(std::to_string(it->second), it->first);
+void writeParticleTypeInformation(readdy::io::Group &group, const KernelContext &context) {
+    const auto &types = context.particle_types().type_mapping();
+    std::vector<ParticleTypeInfo> type_info_vec;
+    for (const auto &p_type : types) {
+        ParticleTypeInfo info{p_type.first.c_str(), p_type.second, context.particle_types().diffusion_constant_of(p_type.first)};
+        type_info_vec.push_back(info);
+    }
+    if (type_info_vec.size() > 0) {
+        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::dims_t> extent = {type_info_vec.size()};
+        auto dset = group.createDataSet("particle_types", extent, dims, ParticleTypeInfoMemoryType(), ParticleTypeInfoFileType(),
+                                        io::DataSetCompression::none);
+        dset.append(extent, type_info_vec.data());
     }
 }
 
+}
 }
 }

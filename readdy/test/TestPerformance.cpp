@@ -659,13 +659,13 @@ TEST(TestPerformance, ReactiveCPU) {
     sim.setPeriodicBoundary({true, true, true});
     sim.registerParticleType("A", 1.0, 1.0);
     for(int i = 0; i < 200; ++i) {
-        sim.addParticle(0, 0, 0, "A");
+        sim.addParticle("A", 0, 0, 0);
     }
     readdy::log::console()->set_level(spdlog::level::debug);
     {
         using timer = readdy::util::Timer;
         timer c {"timer"};
-        sim.runScheme(true).includeForces(false).evaluateObservables(false).configureAndRun(1, 100000);
+        sim.runScheme(true).includeForces(false).evaluateObservables(false).configureAndRun(100000, 1);
     }
 
 }

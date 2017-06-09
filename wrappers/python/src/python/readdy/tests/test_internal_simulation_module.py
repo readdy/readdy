@@ -87,7 +87,7 @@ class TestInternalSimulationModule(unittest.TestCase):
         self.simulation.register_potential_order_2(pot)
         self.simulation.register_potential_harmonic_repulsion("ParticleTypeA_internal", "ParticleTypeB_internal", 1.0)
         self.simulation.add_particle("ParticleTypeA", Vec(0, 0, 0))
-        self.simulation.add_particle("ParticleTypeB", Vec(1, 1, 1))
+        self.simulation.add_particle("ParticleTypeB", Vec(0.4, 0.4, 0.4))
         self.simulation.run(100, 1)
 
 

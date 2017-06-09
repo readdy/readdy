@@ -70,5 +70,9 @@ namespace std {
     struct make_index_sequence<0> : index_sequence<> { };
     template<>
     struct make_index_sequence<1> : index_sequence<0> { };
+
+    //index_sequence_for  any variadic templates
+    template< typename ... T >
+    struct index_sequence_for : make_index_sequence< sizeof...(T) >{};
 }
 #endif

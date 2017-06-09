@@ -31,15 +31,84 @@
  */
 
 #pragma once
+
 #include <readdy/common/macros.h>
 #include <readdy/io/Group.h>
 #include "KernelContext.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(ioutils)
 
-void writeReactionInformation(io::Group& group, const KernelContext &context);
-void writeParticleTypeInformation(io::Group& group, const KernelContext &context);
+struct ReactionInfo {
+    const char* name;
+    std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
+    short id {-1}; // global unique reaction id
+    std::size_t n_educts {0};
+    std::size_t n_products {0};
+    double rate {0};
+    double educt_distance {0};
+    double product_distance {0};
+    std::array<particle_type_type, 2> educt_types {{0, 0}};
+    std::array<particle_type_type, 2> product_types {{0, 0}};
+};
 
+class ReactionInfoMemoryType : public readdy::io::NativeCompoundType {
+    static readdy::io::NativeCompoundType get() {
+        static readdy::io::NativeCompoundType type = readdy::io::NativeCompoundTypeBuilder(sizeof(ReactionInfo))
+                .insertString("name", offsetof(ReactionInfo, name))
+                .insert<decltype(std::declval<ReactionInfo>().index)>("index", offsetof(ReactionInfo, index))
+                .insert<decltype(std::declval<ReactionInfo>().id)>("id", offsetof(ReactionInfo, id))
+                .insert<decltype(std::declval<ReactionInfo>().n_educts)>("n_educts", offsetof(ReactionInfo, n_educts))
+                .insert<decltype(std::declval<ReactionInfo>().n_products)>("n_products", offsetof(ReactionInfo, n_products))
+                .insert<decltype(std::declval<ReactionInfo>().rate)>("rate", offsetof(ReactionInfo, rate))
+                .insert<decltype(std::declval<ReactionInfo>().educt_distance)>("educt_distance", offsetof(ReactionInfo, educt_distance))
+                .insert<decltype(std::declval<ReactionInfo>().product_distance)>("product_distance", offsetof(ReactionInfo, product_distance))
+                .insertArray<particle_type_type, 2>("educt_types", offsetof(ReactionInfo, educt_types))
+                .insertArray<particle_type_type, 2>("product_types", offsetof(ReactionInfo, product_types))
+                .build();
+        return type;
+    }
+
+public:
+    ReactionInfoMemoryType() : NativeCompoundType(get()) {}
+};
+
+class ReactionInfoFileType : public readdy::io::STDCompoundType {
+public:
+    ReactionInfoFileType() : STDCompoundType(ReactionInfoMemoryType()) {}
+};
+
+void writeReactionInformation(io::Group &group, const KernelContext &context);
+
+struct ParticleTypeInfo {
+    const char* name;
+    std::size_t type_id;
+    double diffusion_constant;
+};
+
+class ParticleTypeInfoMemoryType : public readdy::io::NativeCompoundType {
+    static readdy::io::NativeCompoundType get() {
+        static readdy::io::NativeCompoundType type = readdy::io::NativeCompoundTypeBuilder(sizeof(ParticleTypeInfo))
+                .insertString("name", offsetof(ParticleTypeInfo, name))
+                .insert<decltype(std::declval<ParticleTypeInfo>().type_id)>("type_id", offsetof(ParticleTypeInfo, type_id))
+                .insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant",
+                                                                                       offsetof(ParticleTypeInfo, diffusion_constant))
+                .build();
+        return type;
+    }
+
+public:
+    ParticleTypeInfoMemoryType() : NativeCompoundType(get()) {}
+};
+
+class ParticleTypeInfoFileType : public readdy::io::STDCompoundType {
+public:
+    ParticleTypeInfoFileType() : STDCompoundType(ParticleTypeInfoMemoryType()) {}
+};
+
+void writeParticleTypeInformation(io::Group &group, const KernelContext &context);
+
+NAMESPACE_END(ioutils)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

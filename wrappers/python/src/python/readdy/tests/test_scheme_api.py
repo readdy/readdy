@@ -62,7 +62,7 @@ class TestSchemeApi(unittest.TestCase):
             .include_forces(False) \
             .with_reaction_scheduler("UncontrolledApproximation") \
             .evaluate_observables(False) \
-            .configure_and_run(1, 10)
+            .configure_and_run(10, 1)
 
         simulation.run_scheme_readdy(False) \
             .with_integrator("EulerBDIntegrator") \

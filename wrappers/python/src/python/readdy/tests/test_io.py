@@ -52,6 +52,7 @@ class TestSchemeApi(unittest.TestCase):
         simulation.set_kernel("SingleCPU")
         simulation.box_size = common.Vec(5,5,5)
         simulation.register_particle_type("A", 0.0, 0.0)
+        simulation.register_reaction_conversion("A->A", "A", "A", 1.)
 
         def callback(_):
             simulation.add_particle("A", common.Vec(0, 0, 0))
@@ -69,8 +70,9 @@ class TestSchemeApi(unittest.TestCase):
             for item in items:
                 np.testing.assert_equal(item.t, idx)
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
+
         with h5py.File(traj_fname) as f:
-            np.testing.assert_equal(b"A", f["readdy/config/particle_types/0"].value)
+            np.testing.assert_equal("A", f["readdy/config/particle_types"][0]["name"])
 
         common.set_logging_level("debug")
 
@@ -126,6 +128,7 @@ class TestSchemeApi(unittest.TestCase):
             for item in items:
                 np.testing.assert_equal(item.t, idx)
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
+
 
     def test_open_and_discover_file(self):
         fname = os.path.join(self.dir, "test_open_and_discover_file.h5")

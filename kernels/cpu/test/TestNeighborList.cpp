@@ -650,7 +650,7 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
         conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
         conf.withSkinSize(.1);
-        conf.configureAndRun(.01, 100);
+        conf.configureAndRun(100, .01);
     }
 }
 
@@ -705,7 +705,7 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
         conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
         conf.withSkinSize(.1);
-        conf.configureAndRun(.01, 100);
+        conf.configureAndRun(100, .01);
     }
 }
 

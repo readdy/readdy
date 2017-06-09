@@ -78,7 +78,7 @@ void Reactions::append() {
     pimpl->writer->append({1}, &result);
     if (pimpl->firstWrite) {
         pimpl->firstWrite = false;
-        writeReactionInformation(*pimpl->group, kernel->getKernelContext());
+        ioutils::writeReactionInformation(*pimpl->group, kernel->getKernelContext());
     }
     pimpl->time->append(t_current);
 }

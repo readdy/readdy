@@ -349,7 +349,7 @@ public:
      * @param z the z coordinate
      * @param type the type of the particle
      */
-    void addParticle(double x, double y, double z, const std::string &type);
+    void addParticle(const std::string &type, double x, double y, double z);
 
     /**
      * Method that gives access to all the positions of all the particles in the system.

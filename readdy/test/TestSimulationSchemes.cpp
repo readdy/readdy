@@ -50,7 +50,7 @@ public:
 
 TEST_P(TestSchemes, SimulationObject) {
     simulation.setBoxSize(1, 1, 1);
-    simulation.runScheme().configureAndRun(.5, 5);
+    simulation.runScheme().configureAndRun(5, .5);
 
     /**
      * use ReaDDyScheme without defaults
@@ -58,7 +58,7 @@ TEST_P(TestSchemes, SimulationObject) {
     simulation.runScheme<readdy::api::ReaDDyScheme>(false)
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
-            .configureAndRun(.5, 100);
+            .configureAndRun(100, .5);
 
     /**
      * default: readdy scheme, use defaults = true
@@ -67,7 +67,7 @@ TEST_P(TestSchemes, SimulationObject) {
             .includeForces(false)
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .withReactionScheduler<readdy::model::actions::reactions::UncontrolledApproximation>()
-            .configureAndRun(.5, 100);
+            .configureAndRun(100, .5);
 
     /**
      * use AdvancedScheme
@@ -76,7 +76,7 @@ TEST_P(TestSchemes, SimulationObject) {
             .includeForces(true)
             .withIntegrator<readdy::model::actions::EulerBDIntegrator>()
             .includeCompartments(true)
-            .configureAndRun(.5, 100);
+            .configureAndRun(100, .5);
 }
 
 TEST_P(TestSchemes, CorrectNumberOfTimesteps) {
@@ -107,7 +107,7 @@ TEST_P(TestSchemes, ComplexStoppingCriterion) {
     simulation.registerParticleType("A", 0., 0.1);
     // A -> A + A, with probability = 1 each timestep. After 3 timesteps there will be 8 particles. The counter will be 4 by then.
     simulation.registerFissionReaction("bla", "A", "A", "A", 1000., 0.);
-    simulation.addParticle(0, 0, 0, "A");
+    simulation.addParticle("A", 0, 0, 0);
     unsigned int counter = 0;
     bool doStop = false;
     auto increment = [&counter, &doStop](readdy::model::observables::NParticles::result_t result) {
@@ -130,8 +130,8 @@ TEST_P(TestSchemes, SkinSizeSanity) {
     simulation.setBoxSize(10., 10., 10.);
     simulation.setPeriodicBoundary({true, true, true});
     simulation.registerHarmonicRepulsionPotential("A", "A", 1.);
-    simulation.addParticle(0., 0., 0., "A");
-    simulation.addParticle(1.5, 0., 0., "A");
+    simulation.addParticle("A", 0., 0., 0.);
+    simulation.addParticle("A", 1.5, 0., 0.);
     readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme> configurator = simulation.runScheme(true);
     configurator.withSkinSize(1.);
     auto scheme = configurator.configure(0.001);
