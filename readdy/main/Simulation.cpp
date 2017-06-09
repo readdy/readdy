@@ -95,7 +95,7 @@ const std::string &Simulation::getSelectedKernelType() const {
     return pimpl->kernel->getName();
 }
 
-void Simulation::addParticle(double x, double y, double z, const std::string &type) {
+void Simulation::addParticle(const std::string &type, double x, double y, double z) {
     ensureKernelSelected();
     const auto &&s = getBoxSize();
     if (fabs(x) <= .5 * s[0] && fabs(y) <= .5 * s[1] && fabs(z) <= .5 * s[2]) {

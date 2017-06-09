@@ -21,6 +21,7 @@
 
 """
 @author: clonker
+@author: chrisfroe
 """
 
 from __future__ import print_function
@@ -35,6 +36,7 @@ import readdy._internal.readdybinding.common.io as io
 from readdy._internal.readdybinding.api import Simulation
 from readdy._internal.readdybinding.api import KernelProvider
 from readdy.util import platform_utils
+import readdy.util.io_utils as ioutils
 
 from contextlib import closing
 import numpy as np
@@ -299,17 +301,43 @@ class TestObservablesIO(unittest.TestCase):
         handle = sim.register_observable_reactions(1)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run(n_timesteps, 1)
+            sim.run_scheme_readdy(True).write_config_to_file(f).configure_and_run(n_timesteps, 1)
+
+        type_str_to_id = ioutils.get_particle_types(fname)
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
             time_series = f2["readdy/observables/reactions/time"]
             np.testing.assert_equal(time_series, np.array(range(0, n_timesteps+1)))
-            order_1_reactions_with_A = data["registered_reactions/order1/A[id=0]"][:]
-            order_2_reactions_with_B_and_C = data["registered_reactions/order2/B[id=1] + C[id=2]"][:]
-            np.testing.assert_equal(order_1_reactions_with_A[0], b"mylabel")
-            np.testing.assert_equal(order_1_reactions_with_A[1], b"A->B")
-            np.testing.assert_equal(order_2_reactions_with_B_and_C[0], b"B+C->A")
+
+            def get_item(name, collection):
+                return next(x for x in collection if x["name"] == name)
+
+            order_1_reactions = data["registered_reactions/order1_reactions"]
+
+            mylabel_reaction = get_item("mylabel", order_1_reactions)
+            np.testing.assert_equal(mylabel_reaction["rate"], .00001)
+            np.testing.assert_equal(mylabel_reaction["n_educts"], 1)
+            np.testing.assert_equal(mylabel_reaction["n_products"], 1)
+            np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
+            np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
+            atob_reaction = get_item("A->B", order_1_reactions)
+            np.testing.assert_equal(atob_reaction["rate"], 1.)
+            np.testing.assert_equal(atob_reaction["n_educts"], 1)
+            np.testing.assert_equal(atob_reaction["n_products"], 1)
+            np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
+            np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
+
+            order_2_reactions = data["registered_reactions/order2_reactions"]
+
+            fusion_reaction = get_item("B+C->A", order_2_reactions)
+            np.testing.assert_equal(fusion_reaction["rate"], 1.)
+            np.testing.assert_equal(fusion_reaction["educt_distance"], 1.)
+            np.testing.assert_equal(fusion_reaction["n_educts"], 2)
+            np.testing.assert_equal(fusion_reaction["n_products"], 1)
+            np.testing.assert_equal(fusion_reaction["educt_types"], [type_str_to_id["B"], type_str_to_id["C"]])
+            np.testing.assert_equal(fusion_reaction["product_types"], [type_str_to_id["A"], 0])
+
             records = data["records"][:]
             np.testing.assert_equal(len(records), 2)
             # records of 1st time step
@@ -345,26 +373,31 @@ class TestObservablesIO(unittest.TestCase):
         handle = sim.register_observable_reaction_counts(1)
         with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run_scheme_readdy(True).with_reaction_scheduler("GillespieParallel").configure_and_run(1, n_timesteps)
+            sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("GillespieParallel").configure_and_run(n_timesteps, 1)
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]
             time_series = f2["readdy/observables/reactions/time"]
             np.testing.assert_equal(time_series, np.array(range(0, n_timesteps+1)))
-            order_1_reactions_with_A = data["registered_reactions/order1/A[id=0]"][:]
-            order_2_reactions_with_B_and_C = data["registered_reactions/order2/B[id=1] + C[id=2]"][:]
-            np.testing.assert_equal(order_1_reactions_with_A[0], b"mylabel")
-            np.testing.assert_equal(order_1_reactions_with_A[1], b"A->B")
-            np.testing.assert_equal(order_2_reactions_with_B_and_C[0], b"B+C->A")
-            index_of_mylabel = list(data["registered_reactions/order1/A[id=0]"]).index(b'mylabel')
-            index_of_a_to_b = list(data["registered_reactions/order1/A[id=0]"]).index(b'A->B')
+
+            def get_item(name, collection):
+                return next(x for x in collection if x["name"] == name)
+
+            order_1_reactions = data["registered_reactions/order1_reactions"]
+            order_2_reactions = data["registered_reactions/order2_reactions"]
+
+            mylabel_reaction = get_item("mylabel", order_1_reactions)
+            reaction_idx_mylabel = mylabel_reaction["index"]
+            atob_reaction = get_item("A->B", order_1_reactions)
+            reaction_idx_atob = atob_reaction["index"]
+
             # counts of first time step, time is first index
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, index_of_mylabel], np.array([0]))
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, index_of_a_to_b], np.array([0]))
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, reaction_idx_mylabel], np.array([0]))
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, reaction_idx_atob], np.array([0]))
             np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][0, 0], np.array([0]))
             # counts of second time step
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, index_of_mylabel], np.array([0]))
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, index_of_a_to_b], np.array([1]))
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_mylabel], np.array([0]))
+            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_atob], np.array([1]))
             np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][1, 0], np.array([1]))
 
         common.set_logging_level("error")

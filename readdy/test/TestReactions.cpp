@@ -98,7 +98,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
             conf = std::move(conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>());
         }
-        conf.configureAndRun(1, 10);
+        conf.configureAndRun(10, 1);
     }
 
 }
@@ -159,7 +159,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
         if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
             conf = std::move(conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>());
         }
-        conf.configureAndRun(0.5, 1);
+        conf.configureAndRun(1, 0.5);
     }
 }
 
@@ -197,7 +197,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
         conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>();
         conf.withSkinSize(5.);
-        conf.configureAndRun(.01, 400);
+        conf.configureAndRun(400, 0.01);
     }
 }*/
 

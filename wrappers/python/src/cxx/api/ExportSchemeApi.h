@@ -69,10 +69,10 @@ void exportSchemeApi(pybind11::module &module, std::string schemeName) {
                  "do_evaluate"_a = true)
             .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
             .def("configure", &conf::configure, "time_step"_a)
-            .def("configure_and_run", [](conf& self, double dt, const readdy::time_step_type steps) {
+            .def("configure_and_run", [](conf& self, const readdy::time_step_type steps, double dt) {
                 py::gil_scoped_release release;
-                self.configureAndRun(dt, steps);
-            }, "time_step"_a, "n_time_steps"_a);
+                self.configureAndRun(steps, dt);
+            }, "n_time_steps"_a, "time_step"_a);
 }
 
 template<>
@@ -106,10 +106,10 @@ void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, std:
             .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal, "do_evaluate"_a = true)
             .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
             .def("configure", &conf::configure, "time_step"_a)
-            .def("configure_and_run", [](conf& self, double dt, const readdy::time_step_type steps) {
+            .def("configure_and_run", [](conf& self, const readdy::time_step_type steps, double dt) {
                 py::gil_scoped_release release;
-                self.configureAndRun(dt, steps);
-            }, "time_step"_a, "n_time_steps"_a);
+                self.configureAndRun(steps, dt);
+            }, "n_time_steps"_a, "time_step"_a);
 };
 
 #endif //READDY_MAIN_EXPORTSCHEMEAPI_H

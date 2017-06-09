@@ -169,7 +169,7 @@ void ReactionCounts::append() {
                     }
                 }
             }
-            writeReactionInformation(*pimpl->group, kernel->getKernelContext());
+            ioutils::writeReactionInformation(*pimpl->group, kernel->getKernelContext());
         }
         pimpl->firstWrite = false;
     }

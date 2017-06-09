@@ -129,6 +129,7 @@ public:
     NativeCompoundTypeBuilder& insertArray(const std::string&name, std::size_t offset);
     template<typename T, typename = typename std::enable_if<util::is_std_array<T>::value>::type>
     NativeCompoundTypeBuilder& insertStdArray(const std::string &name, std::size_t offset);
+    NativeCompoundTypeBuilder& insertString(const std::string &name, std::size_t offset);
     NativeCompoundType build();
 
 private:

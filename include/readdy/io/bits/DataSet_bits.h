@@ -182,8 +182,7 @@ inline void DataSet::append(const std::vector<h5::dims_t> &dims, const T *const 
     }
     auto fileSpace = getFileSpace();
     H5Sselect_hyperslab(fileSpace.hid(), H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
-    if (H5Dwrite(hid(), memoryType.hid(), memorySpace.hid(), fileSpace.hid(), H5P_DEFAULT, data) <
-        0) {
+    if (H5Dwrite(hid(), memoryType.hid(), memorySpace.hid(), fileSpace.hid(), H5P_DEFAULT, data) < 0) {
         log::error("Error with data set {}", hid());
         H5Eprint(H5Eget_current_stack(), stderr);
     }

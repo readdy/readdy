@@ -174,6 +174,13 @@ inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insertArray(const s
     return insert(name, offset, type.hid());
 }
 
+inline NativeCompoundTypeBuilder &NativeCompoundTypeBuilder::insertString(const std::string &name, std::size_t offset) {
+    NativeDataSetType<std::string> t;
+    H5Tset_cset(t.hid(), H5T_CSET_UTF8);
+    H5Tset_size(t.hid(), H5T_VARIABLE);
+    return insert(name, offset, t.hid());
+}
+
 inline STDCompoundType::STDCompoundType(const NativeCompoundType &nativeType) : DataSetType(-1){
     auto copy = H5Tcopy(nativeType.hid());
     H5Tpack(copy);

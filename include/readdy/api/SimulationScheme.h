@@ -105,8 +105,8 @@ public:
     virtual void run(const continue_fun_t &continueFun) override {
         kernel->getKernelContext().configure(true);
         if(configGroup) {
-            model::writeParticleTypeInformation(*configGroup, kernel->getKernelContext());
-            model::writeReactionInformation(*configGroup, kernel->getKernelContext());
+            model::ioutils::writeParticleTypeInformation(*configGroup, kernel->getKernelContext());
+            model::ioutils::writeReactionInformation(*configGroup, kernel->getKernelContext());
         }
 
         if (neighborList) neighborList->perform();
@@ -228,7 +228,7 @@ public:
         return ptr;
     }
 
-    void configureAndRun(double timeStep, const time_step_type steps) {
+    void configureAndRun(const time_step_type steps, double timeStep) {
         configure(timeStep)->run(steps);
     }
 
@@ -384,7 +384,7 @@ public:
         return ptr;
     }
 
-    void configureAndRun(double timeStep, const time_step_type steps) {
+    void configureAndRun(const time_step_type steps, double timeStep) {
         configure(timeStep)->run(steps);
     }
 

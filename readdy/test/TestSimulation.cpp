@@ -85,7 +85,7 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
     double diffusionConstant = 1;
     simulation.registerParticleType("type", diffusionConstant, .1);
     for (auto _ = 0; _ < n_particles; ++_) {
-        simulation.addParticle(0, 0, 0, "type");
+        simulation.addParticle("type", 0, 0, 0);
     }
     double timestep = 1;
     MSDAggregator aggregator;
@@ -110,7 +110,7 @@ TEST_F(TestSimulation, TestObservables) {
     double diffusionConstant = 1;
     simulation.registerParticleType("type", diffusionConstant, .1);
     for (auto _ = 0; _ < n_particles; ++_) {
-        simulation.addParticle(0, 0, 0, "type");
+        simulation.addParticle("type", 0, 0, 0);
     }
     double timestep = 1;
 
