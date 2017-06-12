@@ -72,13 +72,19 @@ public:
 
     Recipe &addEdge(const edge &edge);
 
+    Recipe &addEdge(vertex_ref v1, vertex_ref v2);
+
     Recipe &addEdge(const label_edge &labels);
 
     Recipe &addEdge(const std::string& edge_label1, const std::string& edge_label2);
 
     Recipe &removeEdge(const edge &edge);
 
+    Recipe &removeEdge(vertex_ref v1, vertex_ref v2);
+
     Recipe &removeEdge(const label_edge &labels);
+
+    Recipe &removeEdge(const std::string& label1, const std::string& label2);
 
     Recipe &separateVertex(const vertex_ref &vertex);
 

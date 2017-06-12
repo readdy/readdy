@@ -212,6 +212,8 @@ public:
 
     virtual ~VertexCRef() = default;
 
+    VertexCRef(Vertex::vertex_cptr it);
+
     VertexCRef(Vertex::vertex_ptr it);
 
     VertexCRef(const Graph *const graph, const Vertex::label_t &label);

@@ -45,14 +45,16 @@ struct Element {
     }
 };
 
-struct NoElement {
-    int val;
-};
-
 TEST(TestIndexPersistentVector, DetectDeactivateable) {
     using namespace readdy;
+
+    struct NoElement {
+        int val;
+    };
+
     ASSERT_TRUE(util::can_be_deactivated<Element>::value);
     ASSERT_FALSE(util::can_be_deactivated<NoElement>::value);
+    ASSERT_FALSE(util::can_be_deactivated<std::string>::value);
 }
 
 TEST(TestIndexPersistentVector, AddAndRemove) {

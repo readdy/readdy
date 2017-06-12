@@ -51,8 +51,9 @@ GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::
 GraphTopology::GraphTopology(Topology::particles_t &&particles, graph::Graph &&graph,
                              const api::PotentialConfiguration& config)
         : Topology(std::move(particles)), config(config), graph_(std::move(graph)) {
-    assert(GraphTopology::graph().vertices().size() == particles.size());
-    if (GraphTopology::graph().vertices().size() != particles.size()) {
+    if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
+        log::error("tried creating graph topology with {} vertices but only {} particles.",
+                   GraphTopology::graph().vertices().size(), GraphTopology::getNParticles());
         throw std::invalid_argument("the number of particles and the number of vertices should match when creating"
                                             "a graph in this way!");
     }
@@ -187,8 +188,6 @@ GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
     std::vector<GraphTopology> components;
     auto subGraphs = graph_.connectedComponentsDestructive();
-    // todo generate particles list for each subgraph, update subgraph's vertices to obey this new list
-    // todo todo: this should be implemented with the routine below
     // generate particles list for each sub graph, update sub graph's vertices to obey this new list
     std::vector<particles_t> subGraphsParticles;
     {

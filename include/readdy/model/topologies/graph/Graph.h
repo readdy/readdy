@@ -96,7 +96,11 @@ public:
 
     bool containsEdge(const cedge& edge) const;
 
+    bool containsEdge(const vertex_cref v1, const vertex_cref v2) const;
+
     bool containsEdge(const label_edge& edge) const;
+
+    bool containsEdge(const std::string& label1, const std::string& label2) const;
 
     cedge namedEdge(const label_edge& edge) const;
 

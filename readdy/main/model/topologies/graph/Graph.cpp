@@ -414,6 +414,14 @@ bool Graph::containsEdge(const Graph::cedge &edge) const {
            && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1.data()) != v2Neighbors.end();
 }
 
+bool Graph::containsEdge(const Graph::vertex_cref v1, const Graph::vertex_cref v2) const {
+    return containsEdge(std::tie(v1, v2));
+}
+
+bool Graph::containsEdge(const std::string &label1, const std::string &label2) const {
+    return containsEdge(std::tie(label1, label2));
+}
+
 }
 }
 }

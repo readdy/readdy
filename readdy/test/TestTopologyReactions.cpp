@@ -141,7 +141,8 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
     EXPECT_EQ(std::get<1>(r2), 15) << "Expected (function) rate: 15";
 
     {
-        std::get<0>(r1).execute(*topology, kernel.get());
+        auto result = std::get<0>(r1).execute(*topology, kernel.get());
+        ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->getKernelStateModel().getParticlesForTopology(*topology);
         auto v = topology->graph().namedVertexPtr("begin");
         ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology B"));
@@ -149,7 +150,8 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
                             "the graph representation and the particle data coincide";
     }
     {
-        std::get<0>(r2).execute(*topology, kernel.get());
+        auto result = std::get<0>(r2).execute(*topology, kernel.get());
+        ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->getKernelStateModel().getParticlesForTopology(*topology);
         auto v = topology->graph().namedVertexPtr("begin");
         ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology A"));
@@ -193,7 +195,8 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
         topology->addReaction(reaction);
     }
     topology->updateReactionRates();
-    std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
+    auto result = std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
+    ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
     EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple("begin", "end")));
 }
 
@@ -204,7 +207,6 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
-    const auto &types = kernel->getKernelContext().particle_types();
     topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
     topology->graph().setVertexLabel(--topology->graph().vertices().end(), "end");
     {
@@ -219,18 +221,95 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
         topology->addReaction(reaction);
     }
     topology->updateReactionRates();
-    std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
+    auto result = std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
+    ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
     EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple("begin", "end")));
 }
 
 
-TEST_P(TestTopologyReactions, RemoveEdge) {
+TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
     using namespace readdy;
     if (!kernel->supportsTopologies()) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
-    // todo topology (decomposes/doesnt decompose) into child topologies (expected / not expected) with (rollback/norollback)
+
+    {
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            recipe.removeEdge(top.graph().vertices().begin(), ++top.graph().vertices().begin());
+            return recipe;
+        };
+        model::top::reactions::TopologyReaction reaction {reactionFunction, 5};
+        reaction.create_child_topologies_after_reaction();
+        reaction.raise_if_invalid();
+        topology->addReaction(reaction);
+    }
+    topology->updateReactionRates();
+    model::top::Topology::particles_t particles;
+    {
+        std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
+    }
+    auto result = std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
+    ASSERT_EQ(result.size(), 2);
+
+    const auto& top1 = result.at(0);
+    const auto& top2 = result.at(1);
+
+    ASSERT_EQ(top1.getNParticles(), 1) << "first topology should have only 1 particle";
+    ASSERT_EQ(top2.getNParticles(), 2) << "second topology should have 2 particles";
+    ASSERT_EQ(top2.graph().vertices().begin()->neighbors().size(), 1) << "second topology has one edge";
+    ASSERT_EQ((++top2.graph().vertices().begin())->neighbors().size(), 1) << "second topology has one edge";
+    ASSERT_EQ(top2.graph().vertices().begin()->neighbors().at(0), ++top2.graph().vertices().begin())
+                                << "second topology has one edge";
+    ASSERT_EQ((++top2.graph().vertices().begin())->neighbors().at(0), top2.graph().vertices().begin())
+                                << "second topology has one edge";
+    ASSERT_EQ(top1.graph().vertices().begin()->particleIndex, 0)
+                                << "particle indices are topology relative and should begin with 0";
+    ASSERT_EQ(top2.graph().vertices().begin()->particleIndex, 0)
+                                << "particle indices are topology relative and should begin with 0";
+    ASSERT_EQ((++top2.graph().vertices().begin())->particleIndex, 1)
+                                << "particle indices are topology relative and should begin with 0";
+
+    // check if particle mappings are still valid
+    ASSERT_EQ(top1.getParticles().at(0), particles.at(0));
+    ASSERT_EQ(top2.getParticles().at(0), particles.at(1));
+    ASSERT_EQ(top2.getParticles().at(1), particles.at(2));
+}
+
+TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+
+    {
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            recipe.removeEdge(top.graph().vertices().begin(), ++top.graph().vertices().begin());
+            return recipe;
+        };
+        model::top::reactions::TopologyReaction reaction {reactionFunction, 5};
+        reaction.expect_connected_after_reaction();
+        reaction.roll_back_if_invalid();
+        topology->addReaction(reaction);
+    }
+    topology->updateReactionRates();
+    model::top::Topology::particles_t particles;
+    {
+        std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
+    }
+    std::vector<model::top::GraphTopology> result;
+    {
+        log::Level level (spdlog::level::err);
+        result = std::get<0>(topology->registeredReactions().back()).execute(*topology, kernel.get());
+    }
+    const auto& graph = topology->graph();
+    const auto& vertices = graph.vertices();
+    EXPECT_TRUE(result.empty());
+    EXPECT_TRUE(graph.containsEdge(vertices.begin(), ++vertices.begin()));
+    EXPECT_TRUE(graph.containsEdge(++vertices.begin(), --vertices.end()));
 }
 
 INSTANTIATE_TEST_CASE_P(TestTopologyReactionsKernelTests, TestTopologyReactions,

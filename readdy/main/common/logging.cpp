@@ -37,7 +37,7 @@ namespace readdy {
 namespace log {
 
 std::shared_ptr<spdlog::logger> get() {
-    if(!spdlog::get("console")) {
+    if (!spdlog::get("console")) {
         spdlog::set_sync_mode();
         auto console = spdlog::stdout_color_mt("console");
         console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
@@ -49,6 +49,15 @@ std::shared_ptr<spdlog::logger> console() {
     static std::shared_ptr<spdlog::logger> logger = get();
     return logger;
 }
+
+Level::Level(spdlog::level::level_enum newLevel) : oldLevel(console()->level()) {
+    console()->set_level(newLevel);
+}
+
+Level::~Level() {
+    console()->set_level(oldLevel);
+}
+
 
 }
 }

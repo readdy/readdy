@@ -87,7 +87,7 @@ void TopologyReaction::create_child_topologies_after_reaction() {
 TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const double &rate)
         : TopologyReaction(reaction_function, [rate](const GraphTopology&) { return rate; }) {}
 
-void TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) {
+std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) {
     auto recipe = operations(topology);
     auto topologyActionFactory = kernel->getTopologyActionFactory();
     auto& steps = recipe.steps();
@@ -158,7 +158,7 @@ void TopologyReaction::execute(GraphTopology &topology, const Kernel* const kern
         if(!topology.graph().isConnected()) {
             auto subTopologies = topology.connectedComponents();
             assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
-            // todo remove this topology (we probably need a topology id for that) and add the sub topologies
+            return std::move(subTopologies);
         } else {
             // if valid, update force field
             topology.configure();
@@ -166,7 +166,7 @@ void TopologyReaction::execute(GraphTopology &topology, const Kernel* const kern
             topology.updateReactionRates();
         }
     }
-
+    return {};
 }
 
 void Mode::raise() {

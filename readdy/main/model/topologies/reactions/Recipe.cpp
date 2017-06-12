@@ -86,6 +86,18 @@ Recipe &Recipe::addEdge(const std::string &edge_label1, const std::string &edge_
     return addEdge(std::tie(edge_label1, edge_label2));
 }
 
+Recipe &Recipe::addEdge(Recipe::vertex_ref v1, Recipe::vertex_ref v2) {
+    return addEdge(std::tie(v1, v2));
+}
+
+Recipe &Recipe::removeEdge(Recipe::vertex_ref v1, Recipe::vertex_ref v2) {
+    return removeEdge(std::tie(v1, v2));
+}
+
+Recipe &Recipe::removeEdge(const std::string &label1, const std::string &label2) {
+    return removeEdge(std::tie(label1, label2));
+}
+
 }
 }
 }

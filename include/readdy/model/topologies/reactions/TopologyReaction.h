@@ -100,7 +100,7 @@ public:
 
     void create_child_topologies_after_reaction();
 
-    void execute(GraphTopology &topology, const Kernel *const kernel);
+    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *const kernel);
 
 private:
     rate_function rate_function_;

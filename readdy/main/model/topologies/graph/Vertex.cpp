@@ -146,6 +146,11 @@ const Vertex *VertexCRef::operator->() const {
     }
 }
 
+
+VertexCRef::VertexCRef(Vertex::vertex_cptr it) : it(it), graph(nullptr){
+
+}
+
 VertexCRef::VertexCRef(Vertex::vertex_ptr it) : it(it), graph(nullptr) {}
 
 VertexCRef::VertexCRef(const Graph *const graph, const Vertex::label_t &label) : graph(graph), label(label) {
