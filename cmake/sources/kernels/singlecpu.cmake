@@ -37,6 +37,7 @@ LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUUpdateNeighborList.cpp
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUCalculateForces.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUReactionImpls.cpp")
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEvaluateCompartments.cpp")
+LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/actions/SCPUEvaluateTopologyReactions.cpp")
 
 # --- model ---
 LIST(APPEND SINGLECPU_SOURCES "${SOURCES_DIR}/model/SCPUParticleData.cpp")

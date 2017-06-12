@@ -168,8 +168,11 @@ void GraphTopology::validate() {
 }
 
 void GraphTopology::updateReactionRates() {
+    _cumulativeRate = 0;
     for(auto&& reaction : reactions_) {
-        std::get<1>(reaction) = std::get<0>(reaction).rate(*this);
+        const auto rate = std::get<0>(reaction).rate(*this);
+        std::get<1>(reaction) = rate;
+        _cumulativeRate += rate;
     }
 }
 
@@ -222,6 +225,10 @@ const bool GraphTopology::isDeactivated() const {
 
 void GraphTopology::deactivate() {
     deactivated = true;
+}
+
+const GraphTopology::rate_t GraphTopology::cumulativeRate() const {
+    return _cumulativeRate;
 }
 
 }

@@ -23,17 +23,14 @@
 /**
  * << detailed description >>
  *
- * @file SCPUEvaluateTopologyReactions.h
+ * @file SCPUEvaluateTopologyReactions.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 18.04.17
+ * @date 12.06.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
-
-#include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>
 
 namespace readdy {
 namespace kernel {
@@ -41,15 +38,19 @@ namespace scpu {
 namespace actions {
 namespace top {
 
-class SCPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
-public:
-    SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, double timeStep);
+SCPUEvaluateTopologyReactions::SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, double timeStep)
+        : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
 
-    virtual void perform() override;
+void SCPUEvaluateTopologyReactions::perform() {
+    auto& topologies = kernel->getSCPUKernelStateModel().topologies();
+    readdy::model::top::GraphTopology::rate_t totalRate = 0;
+    for(auto& topRef : topologies) {
+        topRef->updateReactionRates();
+        totalRate += topRef->cumulativeRate();
+    }
 
-private:
-    SCPUKernel *const kernel;
-};
+}
+
 
 }
 }

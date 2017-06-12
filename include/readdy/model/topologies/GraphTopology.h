@@ -44,13 +44,14 @@ NAMESPACE_BEGIN(top)
 
 class GraphTopology : public Topology {
 public:
-    
+
     using graph_t = graph::Graph;
+    using rate_t = scalar;
     
     /**
      * a list of (reaction, (current) rate)
      */
-    using topology_reactions = std::vector<std::tuple<reactions::TopologyReaction, double>>;
+    using topology_reactions = std::vector<std::tuple<reactions::TopologyReaction, rate_t>>;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
@@ -103,10 +104,13 @@ public:
 
     void deactivate();
 
+    const rate_t cumulativeRate() const;
+
 protected:
     graph_t graph_;
     const api::PotentialConfiguration &config;
     topology_reactions reactions_;
+    rate_t _cumulativeRate;
     bool deactivated {false};
 };
 
