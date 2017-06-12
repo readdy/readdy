@@ -99,10 +99,15 @@ public:
 
     std::vector<GraphTopology> connectedComponents();
 
+    const bool isDeactivated() const;
+
+    void deactivate();
+
 protected:
     graph_t graph_;
     const api::PotentialConfiguration &config;
     topology_reactions reactions_;
+    bool deactivated {false};
 };
 
 NAMESPACE_END(top)

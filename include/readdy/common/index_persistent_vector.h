@@ -36,11 +36,12 @@
 #include <stack>
 #include <algorithm>
 #include "macros.h"
+#include "traits.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 
-NAMESPACE_BEGIN(detail)
+/*NAMESPACE_BEGIN(detail)
 
 template<typename>
 struct sfinae_true : std::true_type{};
@@ -53,7 +54,12 @@ static auto test_deactivate(long) -> std::false_type;
 NAMESPACE_END(detail)
 
 template<typename T>
-struct can_be_deactivated : decltype(detail::test_deactivate<T>(0)) {};
+struct can_be_deactivated : decltype(detail::test_deactivate<T>(0)) {};*/
+
+template<typename T, typename = void>
+struct can_be_deactivated : std::false_type {};
+template<typename T>
+struct can_be_deactivated<T, void_t<decltype(std::declval<T>().deactivate())>> : std::true_type {};
 
 template<typename T>
 class index_persistent_vector {
@@ -94,8 +100,8 @@ public:
         _blanks.clear();
     }
 
-    void push_back(T&& val) {
-        if(_blanks.empty()) {
+    void push_back(T &&val) {
+        if (_blanks.empty()) {
             _backing_vector.push_back(std::forward<T>(val));
         } else {
             const auto idx = _blanks.back();
@@ -104,8 +110,8 @@ public:
         }
     }
 
-    void push_back(const T& val) {
-        if(_blanks.empty()) {
+    void push_back(const T &val) {
+        if (_blanks.empty()) {
             _backing_vector.push_back(val);
         } else {
             const auto idx = _blanks.back();
@@ -114,14 +120,14 @@ public:
         }
     }
 
-    void erase(const_iterator pos) {
-        _backing_vector.at(pos).deactivate();
+    void erase(iterator pos) {
+        pos->deactivate();
         _blanks.push_back(pos - _backing_vector.begin());
     }
 
-    void erase(const_iterator start, const_iterator end) {
+    void erase(iterator start, const_iterator end) {
         auto offset = start - _backing_vector.begin();
-        for(auto it = start; it != end; ++it, ++offset) {
+        for (auto it = start; it != end; ++it, ++offset) {
             it->deactivate();
             _blanks.push_back(offset);
         }
@@ -131,11 +137,11 @@ public:
         return _blanks.size();
     }
 
-    T& at(size_type index) {
+    T &at(size_type index) {
         return _backing_vector.at(index);
     }
 
-    const T& at(size_type index) const {
+    const T &at(size_type index) const {
         return _backing_vector.at(index);
     }
 

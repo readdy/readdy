@@ -98,7 +98,7 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
         }
         ++neighbors_it;
     }
-
+    // todo reactivate this ?
     /*barrier.wait();
 
     for (auto t_it = tbegin; t_it != tend; ++t_it) {
@@ -198,18 +198,20 @@ void CPUStateModel::calculateForces() {
 
     for (auto t_it = pimpl->topologies.cbegin(); t_it != pimpl->topologies.cend(); ++t_it) {
         const auto &top = *t_it;
-        for (const auto &bondedPot : top->getBondedPotentials()) {
-            auto action = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory);
-            auto energy = action->perform();
-            pimpl->currentEnergy += energy;
-        }
-        for (const auto &anglePot : top->getAnglePotentials()) {
-            auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-            pimpl->currentEnergy += energy;
-        }
-        for (const auto &torsionPot : top->getTorsionPotentials()) {
-            auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-            pimpl->currentEnergy += energy;
+        if (!top->isDeactivated()) {
+            for (const auto &bondedPot : top->getBondedPotentials()) {
+                auto action = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory);
+                auto energy = action->perform();
+                pimpl->currentEnergy += energy;
+            }
+            for (const auto &anglePot : top->getAnglePotentials()) {
+                auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                pimpl->currentEnergy += energy;
+            }
+            for (const auto &torsionPot : top->getTorsionPotentials()) {
+                auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                pimpl->currentEnergy += energy;
+            }
         }
     }
 }
@@ -269,7 +271,7 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
     pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             pimpl->data().registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : pimpl->topologies) {
-                    top->permuteIndices(indices);
+                    if(!top->isDeactivated()) top->permuteIndices(indices);
                 }
             }));
 

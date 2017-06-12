@@ -31,6 +31,7 @@
  */
 
 #include <readdy/common/index_persistent_vector.h>
+#include <readdy/common/range.h>
 #include "gtest/gtest.h"
 
 namespace {
@@ -44,15 +45,79 @@ struct Element {
     }
 };
 
-TEST(Foo, Foo) {
+struct NoElement {
+    int val;
+};
+
+TEST(TestIndexPersistentVector, DetectDeactivateable) {
+    using namespace readdy;
+    ASSERT_TRUE(util::can_be_deactivated<Element>::value);
+    ASSERT_FALSE(util::can_be_deactivated<NoElement>::value);
+}
+
+TEST(TestIndexPersistentVector, AddAndRemove) {
     using namespace readdy;
     util::index_persistent_vector<Element> vec;
 
+    ASSERT_TRUE(vec.empty());
     vec.push_back({});
     vec.push_back({});
     vec.push_back({});
 
     ASSERT_EQ(vec.size(), 3);
+    ASSERT_FALSE(vec.empty());
+    vec.erase(vec.begin());
+    vec.erase(vec.begin()+1);
+    vec.erase(vec.begin()+2);
+
+    ASSERT_EQ(vec.size(), 3);
+    ASSERT_EQ(vec.n_deactivated(), 3);
+    ASSERT_TRUE(vec.empty());
+
+    for(const auto& x : vec) {
+        ASSERT_TRUE(x.deactivated);
+    }
+}
+
+TEST(TestIndexPersistentVector, EraseRange) {
+    using namespace readdy;
+    util::index_persistent_vector<Element> vec;
+    util::range<int> range {0, 10};
+    std::for_each(range.begin(), range.end(), [&](int) { vec.push_back({}); });
+
+    ASSERT_EQ(vec.size(), 10);
+    vec.erase(vec.begin(), vec.end()-5);
+
+    ASSERT_EQ(vec.size(), 10);
+    ASSERT_EQ(vec.n_deactivated(), 5);
+
+    for(std::size_t i = 0; i < vec.size(); ++i) {
+        if(i < 5) {
+            EXPECT_TRUE(vec.at(i).deactivated);
+        } else {
+            EXPECT_FALSE(vec.at(i).deactivated);
+        }
+    }
+}
+
+TEST(TestIndexPersistentVector, ReclaimIndex) {
+    using namespace readdy;
+    util::index_persistent_vector<Element> vec;
+    vec.push_back({});
+    vec.push_back({});
+
+    vec.erase(vec.begin());
+    ASSERT_EQ(vec.size(), 2);
+    ASSERT_EQ(vec.n_deactivated(), 1);
+
+    vec.push_back({-1, false});
+    ASSERT_EQ(vec.size(), 2);
+    ASSERT_EQ(vec.n_deactivated(), 0);
+    ASSERT_EQ(vec.begin()->val, -1);
+
+    for(const auto& x : vec) {
+        ASSERT_FALSE(x.deactivated);
+    }
 }
 
 }

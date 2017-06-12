@@ -217,6 +217,14 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
     return std::move(components);
 }
 
+const bool GraphTopology::isDeactivated() const {
+    return deactivated;
+}
+
+void GraphTopology::deactivate() {
+    deactivated = true;
+}
+
 }
 }
 }
