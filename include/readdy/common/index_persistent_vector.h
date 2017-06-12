@@ -56,15 +56,23 @@ NAMESPACE_END(detail)
 template<typename T>
 struct can_be_deactivated : decltype(detail::test_deactivate<T>(0)) {};*/
 
+NAMESPACE_BEGIN(detail)
 template<typename T, typename = void>
 struct can_be_deactivated : std::false_type {};
 template<typename T>
 struct can_be_deactivated<T, void_t<decltype(std::declval<T>().deactivate())>> : std::true_type {};
 
+template<typename T, typename = void>
+struct can_be_ptr_deactivated : std::false_type {};
+template<typename T>
+struct can_be_ptr_deactivated<T, void_t<decltype(std::declval<T>()->deactivate())>> : std::true_type {};
+
+NAMESPACE_END(detail)
+
 template<typename T>
 class index_persistent_vector {
-    static_assert(can_be_deactivated<T>::value, "index_persistent_vector can only work with element types which "
-            "have a deactivate() method");
+    static_assert(detail::can_be_deactivated<T>::value || detail::can_be_ptr_deactivated<T>::value,
+                  "index_persistent_vector can only work with (ptr) element types which have a deactivate() method");
 public:
     using backing_vector = typename std::vector<T>;
     using blanks = std::vector<std::size_t>;
@@ -100,35 +108,39 @@ public:
         _blanks.clear();
     }
 
-    void push_back(T &&val) {
+    iterator push_back(T &&val) {
         if (_blanks.empty()) {
             _backing_vector.push_back(std::forward<T>(val));
+            return _backing_vector.end()-1;
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backing_vector.at(idx) = std::move(val);
+            return _backing_vector.begin() + idx;
         }
     }
 
-    void push_back(const T &val) {
+    iterator push_back(const T &val) {
         if (_blanks.empty()) {
             _backing_vector.push_back(val);
+            return _backing_vector.end()-1;
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backing_vector.at(idx) = val;
+            return _backing_vector.begin() + idx;
         }
     }
 
     void erase(iterator pos) {
-        pos->deactivate();
+        deactivate(pos);
         _blanks.push_back(pos - _backing_vector.begin());
     }
 
     void erase(iterator start, const_iterator end) {
         auto offset = start - _backing_vector.begin();
         for (auto it = start; it != end; ++it, ++offset) {
-            it->deactivate();
+            deactivate(it);
             _blanks.push_back(offset);
         }
     }
@@ -194,6 +206,17 @@ public:
     }
 
 private:
+
+    template<typename Q = T>
+    typename std::enable_if<detail::can_be_deactivated<Q>::value>::type deactivate(iterator it) {
+        it->deactivate();
+    }
+
+    template<typename Q = T>
+    typename std::enable_if<detail::can_be_ptr_deactivated<Q>::value>::type deactivate(iterator it) {
+        (*it)->deactivate();
+    }
+
     blanks _blanks;
     backing_vector _backing_vector;
 };

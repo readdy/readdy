@@ -35,6 +35,7 @@
 #include <readdy/common/thread/scoped_async.h>
 #include <readdy/kernel/cpu/util/config.h>
 #include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -128,7 +129,7 @@ struct CPUStateModel::Impl {
     bool initial_neighbor_list_setup {true};
     double currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
-    std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
+    readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
@@ -309,10 +310,10 @@ CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &p
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
+    auto it = pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
             std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
     );
-    return pimpl->topologies.back().get();
+    return it->get();
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() {

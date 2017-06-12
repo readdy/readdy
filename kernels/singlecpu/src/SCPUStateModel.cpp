@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
+#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -41,7 +42,7 @@ struct SCPUStateModel::Impl {
     double currentEnergy = 0;
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
-    std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies;
+    readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies;
     SCPUStateModel::topology_action_factory const *topologyActionFactory;
     readdy::model::KernelContext const *context;
     // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
@@ -180,10 +181,10 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
+    auto it = pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
             std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
     );
-    return pimpl->topologies.back().get();
+    return it->get();
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionRecords() {

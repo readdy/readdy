@@ -32,6 +32,7 @@
 
 #include <readdy/common/index_persistent_vector.h>
 #include <readdy/common/range.h>
+#include <memory>
 #include "gtest/gtest.h"
 
 namespace {
@@ -52,9 +53,9 @@ TEST(TestIndexPersistentVector, DetectDeactivateable) {
         int val;
     };
 
-    ASSERT_TRUE(util::can_be_deactivated<Element>::value);
-    ASSERT_FALSE(util::can_be_deactivated<NoElement>::value);
-    ASSERT_FALSE(util::can_be_deactivated<std::string>::value);
+    ASSERT_TRUE(util::detail::can_be_deactivated<Element>::value);
+    ASSERT_FALSE(util::detail::can_be_deactivated<NoElement>::value);
+    ASSERT_FALSE(util::detail::can_be_deactivated<std::string>::value);
 }
 
 TEST(TestIndexPersistentVector, AddAndRemove) {
@@ -120,6 +121,46 @@ TEST(TestIndexPersistentVector, ReclaimIndex) {
     for(const auto& x : vec) {
         ASSERT_FALSE(x.deactivated);
     }
+}
+
+TEST(TestIndexPersistentVector, Deactivation) {
+    using namespace readdy;
+    util::index_persistent_vector<Element> vec;
+
+    vec.push_back({});
+    ASSERT_EQ(vec.size(), 1);
+    ASSERT_EQ(vec.n_deactivated(), 0);
+    ASSERT_FALSE(vec.begin()->deactivated);
+
+    vec.erase(vec.begin());
+    ASSERT_EQ(vec.size(), 1);
+    ASSERT_EQ(vec.n_deactivated(), 1);
+    ASSERT_TRUE(vec.begin()->deactivated);
+
+    vec.push_back({});
+    ASSERT_EQ(vec.size(), 1);
+    ASSERT_EQ(vec.n_deactivated(), 0);
+    ASSERT_FALSE(vec.begin()->deactivated);
+}
+
+TEST(TestIndexPersistentVector, PointerDeactivation) {
+    using namespace readdy;
+    util::index_persistent_vector<std::shared_ptr<Element>> vec;
+
+    vec.push_back(std::make_shared<Element>());
+    ASSERT_EQ(vec.size(), 1);
+    ASSERT_EQ(vec.n_deactivated(), 0);
+    ASSERT_FALSE((*vec.begin())->deactivated);
+
+    vec.erase(vec.begin());
+    ASSERT_EQ(vec.size(), 1);
+    ASSERT_EQ(vec.n_deactivated(), 1);
+    ASSERT_TRUE((*vec.begin())->deactivated);
+
+    vec.push_back(std::make_shared<Element>());
+    ASSERT_EQ(vec.size(), 1);
+    ASSERT_EQ(vec.n_deactivated(), 0);
+    ASSERT_FALSE((*vec.begin())->deactivated);
 }
 
 }
