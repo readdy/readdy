@@ -42,11 +42,42 @@ SCPUEvaluateTopologyReactions::SCPUEvaluateTopologyReactions(SCPUKernel *const k
         : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
 
 void SCPUEvaluateTopologyReactions::perform() {
+    using rate_t = readdy::model::top::GraphTopology::rate_t;
     auto& topologies = kernel->getSCPUKernelStateModel().topologies();
-    readdy::model::top::GraphTopology::rate_t totalRate = 0;
+
+    struct TREvent {
+        rate_t cumulative_rate;
+        rate_t own_rate;
+        std::size_t topology_idx;
+        std::size_t reaction_idx;
+    };
+
+    // cumulative rate -> own rate -> topology index -> reaction index
+    std::vector<TREvent> events;
+
+    rate_t current_cumulative_rate = 0;
+    std::size_t topology_idx = 0;
     for(auto& topRef : topologies) {
-        topRef->updateReactionRates();
-        totalRate += topRef->cumulativeRate();
+
+        if(!topRef->isDeactivated()) {
+
+            std::size_t reaction_idx = 0;
+            for (const auto &reaction : topRef->registeredReactions()) {
+
+                TREvent event;
+                event.own_rate = std::get<1>(reaction);
+                event.cumulative_rate = event.own_rate + current_cumulative_rate;
+                current_cumulative_rate = event.cumulative_rate;
+                event.topology_idx = topology_idx;
+                event.reaction_idx = reaction_idx;
+
+                events.push_back(std::move(event));
+
+                ++reaction_idx;
+            }
+
+        }
+        ++topology_idx;
     }
 
 }

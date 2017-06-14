@@ -80,9 +80,9 @@ public:
 
     void setup_uniform_neighbors(const std::uint8_t radius);
 
-    void insert_particle(const particle_index index, bool mark_dirty=false) const override;
+    virtual void insert_particle(const particle_index index, bool mark_dirty=false) const override;
 
-    void insert_particle(const particle_index index, bool mark_dirty=false);
+    virtual void insert_particle(const particle_index index, bool mark_dirty=false) override;
 
     virtual void clear() override;
 

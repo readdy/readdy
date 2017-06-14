@@ -40,6 +40,8 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(ioutils)
 
+void writeSimulationSetup(io::Group &group, const KernelContext &context);
+
 struct ReactionInfo {
     const char* name;
     std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
@@ -92,8 +94,7 @@ class ParticleTypeInfoMemoryType : public readdy::io::NativeCompoundType {
         static readdy::io::NativeCompoundType type = readdy::io::NativeCompoundTypeBuilder(sizeof(ParticleTypeInfo))
                 .insertString("name", offsetof(ParticleTypeInfo, name))
                 .insert<decltype(std::declval<ParticleTypeInfo>().type_id)>("type_id", offsetof(ParticleTypeInfo, type_id))
-                .insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant",
-                                                                                       offsetof(ParticleTypeInfo, diffusion_constant))
+                .insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant))
                 .build();
         return type;
     }

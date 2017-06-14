@@ -316,7 +316,7 @@ void CPUParticleData::hilbert_sort(const scalar grid_width) {
         std::iota(indices.begin(), indices.end(), 0);
         hilbert_indices.resize(size());
 
-        auto worker = [&](const_iterator begin, const_iterator end, indices_it hilbert_begin) {
+        auto worker = [&](std::size_t, const_iterator begin, const_iterator end, indices_it hilbert_begin) {
             {
                 auto it = begin;
                 auto hilbert_it = hilbert_begin;
@@ -331,16 +331,18 @@ void CPUParticleData::hilbert_sort(const scalar grid_width) {
             }
         };
         {
-            std::vector<threading_model> threads;
-            threads.reserve(_config.nThreads());
+            std::vector<std::function<void(std::size_t)>> executables;
+            executables.reserve(_config.nThreads());
+            const auto& executor = *_config.executor();
             auto data_it = begin();
             auto hilberts_it = hilbert_indices.begin();
             for (std::size_t i = 0; i < _config.nThreads() - 1; ++i) {
-                threads.emplace_back(worker, data_it, data_it + grainSize, hilberts_it);
+                executables.push_back(executor.pack(worker, data_it, data_it + grainSize, hilberts_it));
                 data_it += grainSize;
                 hilberts_it += grainSize;
             }
-            threads.emplace_back(worker, data_it, end(), hilberts_it);
+            executables.push_back(executor.pack(worker, data_it, end(), hilberts_it));
+            executor.execute_and_wait(std::move(executables));
         }
         {
             std::sort(indices.begin(), indices.end(),

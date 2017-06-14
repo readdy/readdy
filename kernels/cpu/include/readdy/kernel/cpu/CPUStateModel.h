@@ -37,7 +37,6 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
-#include <readdy/common/thread/scoped_async.h>
 #include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/kernel/cpu/util/config.h>
 

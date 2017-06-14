@@ -68,7 +68,7 @@ transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap,
         result.emplace(id1, id2);
     }
     return result;
-};
+}
 
 template<typename T>
 std::string to_string(const T& ref) {

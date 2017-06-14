@@ -57,6 +57,8 @@ readdy::model::Kernel* CPUKernel::create() {
 
 CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Impl>()) {
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
+    pimpl->config->setMode(readdy::util::thread::ThreadMode::pool);
+
     pimpl->reactionFactory = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
@@ -121,6 +123,20 @@ const readdy::util::thread::Config &CPUKernel::threadConfig() const {
 
 readdy::util::thread::Config &CPUKernel::threadConfig() {
     return *pimpl->config;
+}
+
+void CPUKernel::initialize() {
+    readdy::model::Kernel::initialize();
+    threadConfig().setMode(readdy::util::thread::ThreadMode::pool);
+}
+
+void CPUKernel::finalize() {
+    readdy::model::Kernel::finalize();
+    threadConfig().setMode(readdy::util::thread::ThreadMode::inactive);
+}
+
+const readdy::util::thread::executor_base &CPUKernel::executor() const {
+    return *threadConfig().executor();
 }
 
 CPUKernel::~CPUKernel() = default;

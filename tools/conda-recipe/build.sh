@@ -15,7 +15,7 @@ CMAKE_FLAGS+=" -DREADDY_GENERATE_DOCUMENTATION_TARGET:BOOL=OFF"
 # build monolithic lib
 CMAKE_FLAGS+=" -DREADDY_BUILD_SHARED_COMBINED:BOOL=ON"
 # release compile flags
-CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=Release"
+CMAKE_FLAGS+=" -DCMAKE_BUILD_TYPE=${BUILD_TYPE}" # BUILD_TYPE="Release" if not a PR, otherwise RelWithDebInfo
 # debug cmake config
 CMAKE_FLAGS+=" -DREADDY_LOG_CMAKE_CONFIGURATION:BOOL=ON"
 # enable testing and install test target

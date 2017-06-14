@@ -21,67 +21,44 @@
 
 
 /**
- * This header file is mainly to replace boost.dll. It contains a shared_library struct that loads and unloads shared
- * libraries and is also capable of calling exported functions thereof.
+ * << detailed description >>
  *
- * @file dll.h
- * @brief Definition of shared_library.
+ * @file joining_future.h
+ * @brief << brief description >>
  * @author clonker
- * @date 14.10.16
+ * @date 13.06.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <string>
-#if READDY_OSX || READDY_LINUX
-#include <dlfcn.h>
+#include <future>
+#include <readdy/common/macros.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
-NAMESPACE_BEGIN(dll)
+NAMESPACE_BEGIN(thread)
 
-struct shared_library {
+template<typename T>
+class joining_future {
+    std::future<T> _future;
 
-    void* handle = nullptr;
+public:
+    explicit joining_future(std::future<T> &&f) : _future(std::move(f)) {}
 
-    shared_library(const std::string& path, int mode) {
-        handle = dlopen(path.c_str(), mode);
+    joining_future(joining_future &&) = default;
+
+    joining_future &operator=(joining_future &&) = default;
+
+    joining_future(const joining_future &) = delete;
+
+    joining_future &operator=(const joining_future &) = delete;
+
+    ~joining_future() {
+        if (_future.valid()) _future.wait();
     }
-
-    shared_library(const shared_library&) = delete;
-    shared_library& operator=(const shared_library&) = delete;
-
-    bool has_symbol(const std::string& symbol) {
-        if(handle) {
-            return dlsym(handle, symbol.c_str()) != nullptr;
-        }
-        return false;
-    }
-
-    virtual ~shared_library() {
-        if(handle) {
-            dlclose(handle);
-            handle = 0;
-        }
-    }
-
-    template<typename Signature>
-    std::function<Signature> load(const std::string &symbol) {
-        dlerror();
-        const auto result = dlsym(handle, symbol.c_str());
-        if(!result) {
-            const auto error = dlerror();
-            if(error) {
-                throw std::logic_error("couldn't find symbol \""+symbol+"\": " + error);
-            }
-        }
-        return reinterpret_cast<Signature*>(result);
-    }
-
 };
 
-NAMESPACE_END(dll)
+NAMESPACE_END(thread)
 NAMESPACE_END(util)
 NAMESPACE_END(readdy)
-
-#endif

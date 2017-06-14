@@ -105,7 +105,7 @@ public:
     template<typename T, typename Obs1, typename Obs2>
     std::unique_ptr<T> createObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) {
         return getObservableFactory().create<T>(obs1, obs2, stride);
-    };
+    }
 
     /**
      * Connects an observable to the kernel signal.
@@ -149,7 +149,7 @@ public:
     potentials::Potential::id_t registerPotential(Args &&... args) {
         auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
         return getKernelContext().potentials().add(std::move(pot));
-    };
+    }
 
     template<typename T, typename... Args>
     compartments::Compartment::id_t
@@ -157,12 +157,12 @@ public:
         auto conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr, getKernelContext());
         auto comp = getCompartmentFactory().createCompartment<T>(conversionsMapInt, std::forward<Args>(args)...);
         return getKernelContext().registerCompartment(std::move(comp));
-    };
+    }
 
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
         return getObservableFactory().create(obs1, obs2, stride);
-    };
+    }
 
     template<typename R, typename... Args>
     inline std::unique_ptr<R> createObservable(unsigned int stride, Args &&... args) const {
@@ -173,7 +173,7 @@ public:
     const short registerReaction(Args &&... args) {
         return getKernelContext().reactions().add(
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
-    };
+    }
 
     bool supportsTopologies() const;
 
@@ -238,6 +238,10 @@ public:
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
 
     void expected_n_particles(const std::size_t n);
+
+    virtual void initialize();
+
+    virtual void finalize();
 
 protected:
 

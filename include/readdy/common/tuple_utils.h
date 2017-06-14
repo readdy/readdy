@@ -104,7 +104,7 @@ R call(std::function<R(Args...)> const &func, Params<Args...> const &params) {
 template<typename R, template<typename...> class Params, typename... Args>
 R call(R (*func)(Args...), Params<Args...> const &params) {
     return detail::call_helper(func, params, std::index_sequence_for<Args...>{});
-};
+}
 
 /**
  * Reverse a tuple
@@ -118,7 +118,7 @@ auto reverse(T &&t) -> decltype(detail::reverse_impl(std::forward<T>(t),
                                                      std::make_index_sequence<std::tuple_size<TT>::value>())) {
     return detail::reverse_impl(std::forward<T>(t),
                                 std::make_index_sequence<std::tuple_size<TT>::value>());
-};
+}
 
 /**
  * map a function to each element in a tuple starting with the last element
@@ -130,7 +130,7 @@ auto reverse(T &&t) -> decltype(detail::reverse_impl(std::forward<T>(t),
 template<class F, class... Ts>
 void for_each_in_tuple_reverse(const std::tuple<Ts...> &tuple, F func) {
     return detail::for_each_in_tuple_reverse_impl(tuple, func, std::make_index_sequence<sizeof...(Ts)>());
-};
+}
 
 
 /**

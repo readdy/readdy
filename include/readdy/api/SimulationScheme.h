@@ -103,10 +103,9 @@ public:
     using SimulationScheme::run;
 
     virtual void run(const continue_fun_t &continueFun) override {
-        kernel->getKernelContext().configure(true);
+        kernel->initialize();
         if(configGroup) {
-            model::ioutils::writeParticleTypeInformation(*configGroup, kernel->getKernelContext());
-            model::ioutils::writeReactionInformation(*configGroup, kernel->getKernelContext());
+            model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
 
         if (neighborList) neighborList->perform();
@@ -126,6 +125,7 @@ public:
         }
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
+        kernel->finalize();
         log::debug("Simulation completed");
     }
 };
@@ -247,7 +247,10 @@ public:
     using SimulationScheme::run;
 
     virtual void run(const continue_fun_t &fun) override {
-        kernel->getKernelContext().configure(true);
+        kernel->initialize();
+        if(configGroup) {
+            model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
+        }
 
         if (neighborList) neighborList->perform();
         if (forces) forces->perform();
@@ -269,6 +272,7 @@ public:
 
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
+        kernel->finalize();
         log::debug("Simulation completed");
     }
 

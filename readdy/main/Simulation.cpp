@@ -123,7 +123,7 @@ const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() con
 
 void Simulation::deregisterPotential(const short uuid) {
     pimpl->kernel->getKernelContext().potentials().remove(uuid);
-};
+}
 
 const short
 Simulation::registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
@@ -236,7 +236,7 @@ Simulation::Simulation(Simulation &&rhs) = default;
 
 Simulation::~Simulation() {
     log::trace("destroying simulation");
-};
+}
 
 const short
 Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,
@@ -391,6 +391,6 @@ void Simulation::setExpectedMaxNParticles(const std::size_t n) {
     getSelectedKernel()->expected_n_particles(n);
 }
 
-NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {};
+NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }

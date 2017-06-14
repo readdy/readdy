@@ -139,7 +139,7 @@ inline void VLENDataSet::append(const std::vector<h5::dims_t> &dims, std::vector
         H5Sselect_hyperslab(fileSpace.hid(), H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
         H5Dwrite(hid(), memoryType.hid(), memorySpace.hid(), fileSpace.hid(), H5P_DEFAULT, traj.data());
     }
-};
+}
 
 template<typename T>
 inline void DataSet::append(const std::vector<h5::dims_t> &dims, const T *const data) {

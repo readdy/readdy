@@ -32,10 +32,15 @@
 #include <thread>
 
 #include <readdy/common/common.h>
+#include "executor.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 NAMESPACE_BEGIN(thread)
+
+enum class ThreadMode {
+    inactive, pool, std_thread, std_async
+};
 
 /**
  * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
@@ -51,6 +56,7 @@ struct Config {
      * constructs a new config (should only be performed by the kernels)
      */
     Config();
+
     /**
      * Returns the number of threads. Defaults to:
      *  - hardware_concurrency() if in DEBUG mode
@@ -58,12 +64,23 @@ struct Config {
      * @return the number of threads
      */
     n_threads_t nThreads() const;
+
     /**
      * Set the number of threads to be used
      */
     void setNThreads(const n_threads_t);
+
+    void setMode(ThreadMode mode);
+
+    const executor_base *const executor() const;
+
 private:
     n_threads_t m_nThreads;
+    ThreadMode _mode{ThreadMode::std_thread};
+    std::unique_ptr<executor_base> _executor;
+    std::unique_ptr<ctpl::thread_pool> pool;
+
+    void update();
 };
 
 NAMESPACE_END(thread)

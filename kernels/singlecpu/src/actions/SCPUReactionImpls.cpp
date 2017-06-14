@@ -395,6 +395,9 @@ data_t::update_t handleEventsGillespie(
 
 void SCPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
+    if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
+        return;
+    }
     auto &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
     if(ctx.recordReactionCounts()) {

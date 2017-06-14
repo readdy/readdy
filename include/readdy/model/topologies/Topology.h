@@ -91,21 +91,21 @@ public:
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<bonded_potential, T>::value>::type addBondedPotential(Args &&...args) {
         bondedPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
-    };
+    }
 
     void addBondedPotential(std::unique_ptr<bonded_potential> &&);
 
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<angle_potential, T>::value>::type addAnglePotential(Args &&...args) {
         anglePotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
-    };
+    }
 
     void addAnglePotential(std::unique_ptr<angle_potential> &&);
 
     template<typename T, typename... Args>
     typename std::enable_if<std::is_base_of<torsion_potential, T>::value>::type addTorsionPotential(Args &&...args) {
         torsionPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
-    };
+    }
 
     void addTorsionPotential(std::unique_ptr<torsion_potential> &&);
 

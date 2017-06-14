@@ -41,6 +41,9 @@ CPUGillespie::CPUGillespie(CPUKernel *const kernel, double timeStep) : super(tim
 
 void CPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
+    if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
+        return;
+    }
     auto &stateModel = kernel->getCPUKernelStateModel();
     auto data = stateModel.getParticleData();
     const auto &dist = ctx.getDistSquaredFun();
