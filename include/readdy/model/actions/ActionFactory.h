@@ -55,7 +55,7 @@ public:
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
                 getActionName<UpdateNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
                 getActionName<reactions::Gillespie>(), getActionName<reactions::GillespieParallel>(),
-                getActionName<reactions::NextSubvolumes>()
+                getActionName<reactions::NextSubvolumes>(), getActionName<top::EvaluateTopologyReactions>()
         };
     }
 
@@ -113,6 +113,8 @@ protected:
 
     virtual reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const = 0;
 
+    virtual top::EvaluateTopologyReactions *createEvaluateTopologyReactions(double timeStep) const = 0;
+
     template<typename T, typename... Args>
     struct get_dispatcher;
 
@@ -142,6 +144,8 @@ READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, Gillespie)
 READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, GillespieParallel)
 
 READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, NextSubvolumes)
+
+READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, top, EvaluateTopologyReactions)
 
 NAMESPACE_END(actions)
 NAMESPACE_END(model)

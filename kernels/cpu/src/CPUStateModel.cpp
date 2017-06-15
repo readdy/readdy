@@ -343,6 +343,14 @@ std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_cou
     return pimpl->reactionCounts;
 }
 
+const CPUStateModel::topologies_t &CPUStateModel::topologies() const {
+    return pimpl->topologies;
+}
+
+CPUStateModel::topologies_t &CPUStateModel::topologies() {
+    return pimpl->topologies;
+}
+
 CPUStateModel::~CPUStateModel() = default;
 
 

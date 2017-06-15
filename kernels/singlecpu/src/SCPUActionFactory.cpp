@@ -31,6 +31,7 @@
 #include <readdy/kernel/singlecpu/actions/SCPUReactionImpls.h>
 #include <readdy/kernel/singlecpu/actions/SCPUUpdateNeighborList.h>
 #include <readdy/kernel/singlecpu/actions/SCPUEvaluateCompartments.h>
+#include <readdy/kernel/singlecpu/actions/SCPUEvaluateTopologyReactions.h>
 
 namespace core_actions = readdy::model::actions;
 
@@ -83,6 +84,11 @@ SCPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle>
     return new readdy::model::actions::AddParticles(kernel, particles);
 }
 
+readdy::model::actions::top::EvaluateTopologyReactions *
+SCPUActionFactory::createEvaluateTopologyReactions(double timeStep) const {
+    return new actions::top::SCPUEvaluateTopologyReactions(kernel, timeStep);
+}
+
 namespace rma = readdy::model::actions;
 
 std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
@@ -91,7 +97,8 @@ std::vector<std::string> SCPUActionFactory::getAvailableActions() const {
             rma::getActionName<rma::CalculateForces>(),
             rma::getActionName<rma::UpdateNeighborList>(),
             rma::getActionName<rma::reactions::UncontrolledApproximation>(),
-            rma::getActionName<rma::reactions::Gillespie>()
+            rma::getActionName<rma::reactions::Gillespie>(),
+            rma::getActionName<rma::top::EvaluateTopologyReactions>()
     };
 }
 

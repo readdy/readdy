@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,49 +23,37 @@
 /**
  * << detailed description >>
  *
- * @file CPUProgramFactory.h
+ * @file CPUEvaluateTopologyReactions.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.06.16
+ * @date 15.06.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
-#include <readdy/kernel/cpu/CPUKernel.h>
+
+
+#include <readdy/model/actions/Actions.h>
+#include "../CPUKernel.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace actions {
-class CPUActionFactory : public readdy::model::actions::ActionFactory {
-    CPUKernel *const kernel;
+namespace top {
+
+class CPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
 public:
-    CPUActionFactory(CPUKernel *const kernel);
+    CPUEvaluateTopologyReactions(CPUKernel *const kernel, double timeStep);
 
-protected:
-    readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
+    virtual void perform() override;
 
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override;
-
-    readdy::model::actions::CalculateForces *createCalculateForces() const override;
-
-    readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, double skinSize) const override;
-
-    readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
-
-    readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(double timeStep) const override;
-
-    readdy::model::actions::reactions::Gillespie *createGillespie(double timeStep) const override;
-
-    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(double timeStep) const override;
-
-    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override;
-
-    virtual readdy::model::actions::top::EvaluateTopologyReactions *
-    createEvaluateTopologyReactions(double timeStep) const override;
+private:
+    CPUKernel *const kernel;
 };
 
+
+}
 }
 }
 }
