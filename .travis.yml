@@ -27,7 +27,7 @@ env:
   - MACOSX_DEPLOYMENT_TARGET=10.7
 
   matrix:
-  # - python=2.7 CONDA_PY=27
+  - python=2.7 CONDA_PY=27
   - python=3.5 CONDY_PY=35
 
 matrix:

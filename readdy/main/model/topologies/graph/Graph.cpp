@@ -329,7 +329,6 @@ Graph::vertex_ref Graph::namedVertexPtr(const Graph::label &name) {
 }
 
 std::vector<Graph> Graph::connectedComponentsDestructive() {
-    std::vector<Graph> subGraphs;
     std::vector<vertex_list> subVertexLists;
     std::vector<vertex_label_mapping> subVertexLabelMappings;
 
@@ -347,11 +346,6 @@ std::vector<Graph> Graph::connectedComponentsDestructive() {
 
                 auto& component = components.back();
                 auto& mapping = subVertexLabelMappings.back();
-
-                {
-                    component.emplace_back(it);
-                    if (!it->_label.empty()) mapping[it->_label] = it;
-                }
 
                 std::vector<vertex_ref> unvisitedInComponent;
                 unvisitedInComponent.emplace_back(it);
@@ -385,6 +379,8 @@ std::vector<Graph> Graph::connectedComponentsDestructive() {
             }
         }
     }
+
+    std::vector<Graph> subGraphs;
     subGraphs.reserve(subVertexLists.size());
     {
         auto it_mappings = subVertexLabelMappings.begin();
@@ -393,7 +389,7 @@ std::vector<Graph> Graph::connectedComponentsDestructive() {
             subGraphs.emplace_back(std::move(*it_subLists), std::move(*it_mappings));
         }
     }
-    return subGraphs;
+    return std::move(subGraphs);
 }
 
 Graph::Graph(vertex_list vertexList, vertex_label_mapping vertexLabelMapping)

@@ -189,7 +189,6 @@ GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
 }
 
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
-    std::vector<GraphTopology> components;
     auto subGraphs = graph_.connectedComponentsDestructive();
     // generate particles list for each sub graph, update sub graph's vertices to obey this new list
     std::vector<particles_t> subGraphsParticles;
@@ -206,6 +205,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
         }
     }
     // create actual GraphTopology objects from graphs and particles
+    std::vector<GraphTopology> components;
     {
         components.reserve(subGraphs.size());
         {
@@ -213,6 +213,10 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             auto it_particles = subGraphsParticles.begin();
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
                 components.emplace_back(std::move(*it_particles), std::move(*it_graphs), config);
+                for(const auto& reaction : reactions_) {
+                    components.back().addReaction(std::get<0>(reaction));
+                }
+                components.back().updateReactionRates();
             }
         }
     }

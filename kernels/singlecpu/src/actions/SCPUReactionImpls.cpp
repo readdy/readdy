@@ -296,7 +296,7 @@ data_t::update_t handleEventsGillespie(
                             return elem1.cumulativeRate < elem2;
                         }
                 );
-                const auto event = *eventIt;
+                const auto &event = *eventIt;
                 if (eventIt == events.end() - nDeactivated) {
                     throw std::runtime_error("this should not happen (event not found)");
                 }
