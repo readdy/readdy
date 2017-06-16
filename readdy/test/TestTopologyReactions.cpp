@@ -42,8 +42,6 @@ using particle_t = readdy::model::Particle;
 using topology_particle_t = readdy::model::TopologyParticle;
 
 class TestTopologyReactions : public KernelTest {
-public:
-    readdy::model::top::GraphTopology *topology;
 protected:
     virtual void SetUp() override {
         if (kernel->supportsTopologies()) {
@@ -58,32 +56,39 @@ protected:
             ctx.configureTopologyBondPotential("Topology B", "Topology B", {10, 10});
 
             ctx.setBoxSize(10, 10, 10);
-            topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-            topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-            topology_particle_t x_2{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-            topology = kernel->getKernelStateModel().addTopology({x_0, x_1, x_2});
-            {
-                auto it = topology->graph().vertices().begin();
-                auto it2 = ++topology->graph().vertices().begin();
-                topology->graph().addEdge(it, it2);
-                std::advance(it, 1);
-                std::advance(it2, 1);
-                topology->graph().addEdge(it, it2);
-            }
         }
     }
 
 };
 
+static readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel) {
+    auto &ctx = kernel->getKernelContext();
+    topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_2{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+    auto topology = kernel->getKernelStateModel().addTopology({x_0, x_1, x_2});
+    {
+        auto it = topology->graph().vertices().begin();
+        auto it2 = ++topology->graph().vertices().begin();
+        topology->graph().addEdge(it, it2);
+        std::advance(it, 1);
+        std::advance(it2, 1);
+        topology->graph().addEdge(it, it2);
+    }
+    return topology;
+}
+
 TEST(TestTopologyReactions, ModeFlags) {
     using namespace readdy;
     using namespace readdy::model::top;
-    reactions::TopologyReaction topologyReaction{[](GraphTopology &t) {
+
+    reactions::TopologyReaction::reaction_function rfun = [](GraphTopology &t) -> reactions::Recipe {
         reactions::TopologyReaction::reaction_recipe recipe {t};
         return recipe;
-    }, [](const GraphTopology &) {
+    };
+    reactions::TopologyReaction topologyReaction (rfun, [](const GraphTopology &) {
         return 0;
-    }};
+    });
     topologyReaction.expect_connected_after_reaction();
     ASSERT_TRUE(topologyReaction.expects_connected_after_reaction());
     ASSERT_FALSE(topologyReaction.creates_child_topologies_after_reaction());
@@ -107,6 +112,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
+    auto topology = setUpSmallTopology(kernel.get());
     const auto &types = kernel->getKernelContext().particle_types();
     topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
     {
@@ -166,6 +172,7 @@ TEST_P(TestTopologyReactions, GEXF) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
+    auto topology = setUpSmallTopology(kernel.get());
     auto middle = ++topology->graph().vertices().begin();
     topology->graph().setVertexLabel(middle, "middle");
     auto gexf = model::top::util::to_gexf(topology->graph());
@@ -180,6 +187,7 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
+    auto topology = setUpSmallTopology(kernel.get());
     const auto &types = kernel->getKernelContext().particle_types();
     topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
     topology->graph().setVertexLabel(--topology->graph().vertices().end(), "end");
@@ -207,6 +215,7 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
+    auto topology = setUpSmallTopology(kernel.get());
     topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
     topology->graph().setVertexLabel(--topology->graph().vertices().end(), "end");
     {
@@ -233,6 +242,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
+    auto topology = setUpSmallTopology(kernel.get());
 
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
@@ -283,6 +293,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
+    auto topology = setUpSmallTopology(kernel.get());
 
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
@@ -310,6 +321,196 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
     EXPECT_TRUE(result.empty());
     EXPECT_TRUE(graph.containsEdge(vertices.begin(), ++vertices.begin()));
     EXPECT_TRUE(graph.containsEdge(++vertices.begin(), --vertices.end()));
+}
+
+TEST_P(TestTopologyReactions, SplitUpChain) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+
+    std::size_t n_chain_elements = 50;
+    auto &ctx = kernel->getKernelContext();
+
+    ctx.setBoxSize(10, 10, 10);
+    std::vector<readdy::model::TopologyParticle> topologyParticles;
+    {
+        topologyParticles.reserve(n_chain_elements);
+        for (std::size_t i = 0; i < n_chain_elements; ++i) {
+            const auto id = ctx.particle_types().id_of("Topology A");
+            topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
+        }
+    }
+    auto topology = kernel->getKernelStateModel().addTopology(topologyParticles);
+    {
+        auto it = topology->graph().vertices().begin();
+        auto it2 = ++topology->graph().vertices().begin();
+        while(it2 != topology->graph().vertices().end()) {
+            topology->graph().addEdge(it, it2);
+            std::advance(it, 1);
+            std::advance(it2, 1);
+        }
+    }
+
+    {
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            auto& vertices = top.graph().vertices();
+            int current_n_vertices = (int) vertices.size();
+            if(current_n_vertices > 1) {
+                auto edge = readdy::model::rnd::uniform_int<>(0, current_n_vertices-2);
+                auto it1 = vertices.begin();
+                auto it2 = ++vertices.begin();
+                for(int i = 0; i < edge; ++i) {
+                    ++it1;
+                    ++it2;
+                }
+                recipe.removeEdge(it1, it2);
+            }
+            return recipe;
+        };
+        auto rateFunction = [](const model::top::GraphTopology &top) {
+            return top.getNParticles() > 1 ? top.getNParticles()/50. : 0;
+        };
+        model::top::reactions::TopologyReaction reaction {reactionFunction, rateFunction};
+        reaction.create_child_topologies_after_reaction();
+        reaction.roll_back_if_invalid();
+        topology->addReaction(reaction);
+    }
+
+    {
+        auto integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", 1.0);
+        auto forces = kernel->getActionFactory().createAction<readdy::model::actions::CalculateForces>();
+        auto topReactions = kernel->getActionFactory().createAction<readdy::model::actions::top::EvaluateTopologyReactions>(1.0);
+
+        std::size_t time = 0;
+        std::size_t n_time_steps = 500;
+
+        kernel->initialize();
+
+        forces->perform();
+        kernel->evaluateObservables(time);
+        for(time = 1; time < n_time_steps; ++time) {
+            integrator->perform();
+            topReactions->perform();
+            forces->perform();
+            kernel->evaluateObservables(time);
+        }
+        kernel->finalize();
+    }
+
+    auto topologies = kernel->getKernelStateModel().getTopologies();
+    for(const auto topPtr : topologies) {
+        EXPECT_EQ(topPtr->getNParticles(), 1);
+        EXPECT_EQ(topPtr->graph().vertices().size(), 1);
+    }
+
+}
+
+TEST_P(TestTopologyReactions, SplitUpChainDecay) {
+    using namespace readdy;
+    if (!kernel->supportsTopologies()) {
+        log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
+        return;
+    }
+
+    std::size_t n_chain_elements = 50;
+    auto &ctx = kernel->getKernelContext();
+
+    ctx.setBoxSize(10, 10, 10);
+    std::vector<readdy::model::TopologyParticle> topologyParticles;
+    {
+        topologyParticles.reserve(n_chain_elements);
+        for (std::size_t i = 0; i < n_chain_elements; ++i) {
+            const auto id = ctx.particle_types().id_of("Topology A");
+            topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
+        }
+    }
+    auto topology = kernel->getKernelStateModel().addTopology(topologyParticles);
+    {
+        auto it = topology->graph().vertices().begin();
+        auto it2 = ++topology->graph().vertices().begin();
+        while(it2 != topology->graph().vertices().end()) {
+            topology->graph().addEdge(it, it2);
+            std::advance(it, 1);
+            std::advance(it2, 1);
+        }
+    }
+
+    {
+        // split reaction
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            auto& vertices = top.graph().vertices();
+            int current_n_vertices = (int) vertices.size();
+            if(current_n_vertices > 1) {
+                auto edge = readdy::model::rnd::uniform_int<>(0, current_n_vertices-2);
+                auto it1 = vertices.begin();
+                auto it2 = ++vertices.begin();
+                for(int i = 0; i < edge; ++i) {
+                    ++it1;
+                    ++it2;
+                }
+                recipe.removeEdge(it1, it2);
+            }
+
+            return recipe;
+        };
+        auto rateFunction = [](const model::top::GraphTopology &top) {
+            return top.getNParticles() > 1 ? top.getNParticles()/50. : 0;
+        };
+        model::top::reactions::TopologyReaction reaction {reactionFunction, rateFunction};
+        reaction.create_child_topologies_after_reaction();
+        reaction.roll_back_if_invalid();
+
+        topology->addReaction(reaction);
+    }
+    {
+        // decay reaction
+        auto reactionFunction = [&](model::top::GraphTopology &top) {
+            model::top::reactions::Recipe recipe (top);
+            if(top.graph().vertices().size() == 1) {
+                recipe.changeParticleType(top.graph().vertices().begin(),
+                                          kernel->getKernelContext().particle_types().id_of("A"));
+            } else {
+                throw std::logic_error("this reaction should only be executed when there is exactly "
+                                               "one particle in the topology");
+            }
+            return recipe;
+        };
+        auto rateFunction = [](const model::top::GraphTopology &top) {
+            return top.getNParticles() > 1 ? 0 : 1;
+        };
+        model::top::reactions::TopologyReaction reaction {reactionFunction, rateFunction};
+        reaction.create_child_topologies_after_reaction();
+        reaction.roll_back_if_invalid();
+        topology->addReaction(reaction);
+    }
+
+    {
+        auto integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", 1.0);
+        auto forces = kernel->getActionFactory().createAction<readdy::model::actions::CalculateForces>();
+        auto topReactions = kernel->getActionFactory().createAction<readdy::model::actions::top::EvaluateTopologyReactions>(1.0);
+
+        std::size_t time = 0;
+        std::size_t n_time_steps = 500;
+
+        kernel->initialize();
+
+        forces->perform();
+        kernel->evaluateObservables(time);
+        for(time = 1; time < n_time_steps; ++time) {
+            integrator->perform();
+            topReactions->perform();
+            forces->perform();
+            kernel->evaluateObservables(time);
+
+        }
+        kernel->finalize();
+    }
+
+    EXPECT_EQ(kernel->getKernelStateModel().getTopologies().size(), 0);
 }
 
 INSTANTIATE_TEST_CASE_P(TestTopologyReactionsKernelTests, TestTopologyReactions,

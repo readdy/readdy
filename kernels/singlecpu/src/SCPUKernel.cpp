@@ -111,6 +111,13 @@ SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() {
     return getKernelStateModelInternal();
 }
 
+void SCPUKernel::initialize() {
+    readdy::model::Kernel::initialize();
+    for(auto& top : getSCPUKernelStateModel().topologies()) {
+        top->updateReactionRates();
+    }
+}
+
 SCPUKernel &SCPUKernel::operator=(SCPUKernel &&rhs) = default;
 
 SCPUKernel::SCPUKernel(SCPUKernel &&rhs) = default;

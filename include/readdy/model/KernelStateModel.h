@@ -50,6 +50,8 @@ public:
 
     virtual Particle getParticleForIndex(const std::size_t index) const = 0;
 
+    virtual particle_type_type getParticleType(const std::size_t index) const = 0;
+
     virtual void updateNeighborList() = 0;
 
     virtual void clearNeighborList() = 0;
@@ -63,6 +65,8 @@ public:
     virtual readdy::model::top::GraphTopology *const addTopology(const std::vector<TopologyParticle> &particles) = 0;
 
     virtual std::vector<Particle> getParticlesForTopology(const top::GraphTopology &topology) const;
+
+    virtual std::vector<top::GraphTopology const*> getTopologies() const = 0;
 
     virtual void removeParticle(const Particle &p) = 0;
 

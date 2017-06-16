@@ -30,8 +30,10 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/GraphTopology.h>
 #include <sstream>
+
+#include <readdy/model/Kernel.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
 
 namespace readdy {
@@ -170,9 +172,14 @@ void GraphTopology::validate() {
 void GraphTopology::updateReactionRates() {
     _cumulativeRate = 0;
     for(auto&& reaction : reactions_) {
-        const auto rate = std::get<0>(reaction).rate(*this);
+        log::error("hmmm");
+        const auto& r = std::get<0>(reaction);
+        log::error("hmmm2");
+        const auto rate = r.rate(*this);
+        log::error("aga");
         std::get<1>(reaction) = rate;
         _cumulativeRate += rate;
+        log::error("ugu");
     }
 }
 
@@ -214,9 +221,13 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
                 components.emplace_back(std::move(*it_particles), std::move(*it_graphs), config);
                 for(const auto& reaction : reactions_) {
+                    log::error("000");
                     components.back().addReaction(std::get<0>(reaction));
+                    log::error("111");
                 }
+                log::error("222");
                 components.back().updateReactionRates();
+                log::error("333");
             }
         }
     }
@@ -233,6 +244,14 @@ void GraphTopology::deactivate() {
 
 const GraphTopology::rate_t GraphTopology::cumulativeRate() const {
     return _cumulativeRate;
+}
+
+const bool GraphTopology::isNormalParticle(const Kernel &k) const {
+    if(getNParticles() == 1){
+        const auto particle_type = k.getKernelStateModel().getParticleType(particles.front());
+        return k.getKernelContext().particle_types().info_of(particle_type).flavor != Particle::FLAVOR_TOPOLOGY;
+    }
+    return false;
 }
 
 }

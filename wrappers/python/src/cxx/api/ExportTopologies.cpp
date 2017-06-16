@@ -32,13 +32,17 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/topologies/GraphTopology.h>
 #include <readdy/model/_internal/Util.h>
+#include "PyFunction.h"
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
 
 using particle = readdy::model::Particle;
 using topology_particle = readdy::model::TopologyParticle;
+using base_topology = readdy::model::top::Topology;
 using topology = readdy::model::top::GraphTopology;
+using reaction = readdy::model::top::reactions::TopologyReaction;
+using reaction_recipe = readdy::model::top::reactions::Recipe;
 using graph = readdy::model::top::graph::Graph;
 using vertex = readdy::model::top::graph::Vertex;
 using topology_potential = readdy::model::top::pot::TopologyPotential;
@@ -50,15 +54,147 @@ using harmonic_angle = readdy::model::top::pot::HarmonicAnglePotential;
 using cosine_dihedral = readdy::model::top::pot::CosineDihedralPotential;
 using vec3 = readdy::model::Vec3;
 
+using reaction_function_generator = readdy::model::top::reactions::ReactionFunctionGenerator;
+using rate_function_generator = readdy::model::top::reactions::RateFunctionGenerator;
+
+class PyReactionFunctionGenerator : public reaction_function_generator {
+public:
+    PyReactionFunctionGenerator() {
+        pybind11::gil_scoped_acquire gil;
+        overload = pybind11::get_overload(static_cast<const reaction_function_generator *>(this), "generate");
+    };
+
+    virtual reaction_function generate(topology& topology) override {
+        if (overload) {
+            o = std::shared_ptr<py::object>(new py::object(overload(topology)), [](py::object* o) {
+                py::gil_scoped_acquire lock;
+                delete o;
+            });
+            ptr = pybind11::cast<std::shared_ptr<reaction_function_generator>>(*o);
+        } else {
+            readdy::log::critical("no overload reaction fun generator");
+        }
+        return ptr->generate(topology);
+    }
+
+    py::function overload;
+    std::shared_ptr<py::object> o;
+    std::shared_ptr<reaction_function_generator> ptr;
+};
+
+class PyRateFunctionGenerator : public rate_function_generator {
+public:
+    PyRateFunctionGenerator() {
+        py::gil_scoped_acquire gil;
+        overload = py::get_overload(static_cast<const PyRateFunctionGenerator *>(this), "generate");
+    };
+
+    virtual rate_function generate(const topology& topology) override {
+        py::gil_scoped_acquire gil;
+        if (overload) {
+            readdy::log::error("1");
+            o = std::shared_ptr<py::object>(new py::object(overload(topology)), [](py::object* o) {
+                py::gil_scoped_acquire lock;
+                readdy::log::critical("333333");
+                delete o;
+            });
+            readdy::log::error("2");
+            } else {
+            readdy::log::critical("no overload rate fun generator");
+        }
+        return [=]() {
+            auto fun = py::function(py::cast<py::function>(*o));
+            readdy::log::critical("str: {}", py::str(fun));
+            if(fun.is_none()) {
+                readdy::log::critical("was none");
+            }
+            if(fun.is_cpp_function()) {
+                readdy::log::critical("was cpp fun");
+            }
+            return fun().cast<rate_function_generator::rate_function::result_type>();
+        };
+    }
+
+    py::function overload;
+    std::shared_ptr<py::object> o;
+};
+
+reaction createTopologyReaction(PyReactionFunctionGenerator gen1, PyRateFunctionGenerator gen2) {
+    return reaction(std::shared_ptr<reaction_function_generator>(new PyReactionFunctionGenerator(gen1)),
+                    std::shared_ptr<rate_function_generator>(new PyRateFunctionGenerator(gen2)));
+}
+
 void exportTopologies(py::module &m) {
     using namespace py::literals;
+
+    py::class_<reaction_function_generator, PyReactionFunctionGenerator, std::shared_ptr<reaction_function_generator>>(m, "ReactionFunctionGenerator")
+            .def(py::init<>())
+            .def("generate", &reaction_function_generator::generate);
+
+    py::class_<rate_function_generator, PyRateFunctionGenerator, std::shared_ptr<rate_function_generator>>(m, "RateFunctionGenerator")
+            .def(py::init<>())
+            .def("generate", &rate_function_generator::generate);
+
     py::class_<topology_particle>(m, "TopologyParticle")
             .def("get_position", [](topology_particle &self) { return self.getPos(); })
             .def("get_type", [](topology_particle &self) { return self.getType(); })
             .def("get_id", [](topology_particle &self) { return self.getId(); });
 
-    py::class_<topology>(m, "Topology")
-            .def("get_n_particles", &topology::getNParticles)
+    py::class_<reaction>(m, "TopologyReaction")
+            .def_static("create", &createTopologyReaction)
+            .def("rate", &reaction::rate, "topology"_a)
+            .def("raises_if_invalid", &reaction::raises_if_invalid)
+            .def("raise_if_invalid", &reaction::raise_if_invalid)
+            .def("rolls_back_if_invalid", &reaction::rolls_back_if_invalid)
+            .def("roll_back_if_invalid", &reaction::roll_back_if_invalid)
+            .def("expects_connected_after_reaction", &reaction::expects_connected_after_reaction)
+            .def("expect_connected_after_reaction", &reaction::expect_connected_after_reaction)
+            .def("creates_child_topologies_after_reaction", &reaction::creates_child_topologies_after_reaction)
+            .def("create_child_topologies_after_reaction", &reaction::create_child_topologies_after_reaction);
+
+    py::class_<reaction_recipe>(m, "Recipe")
+            .def(py::init<topology&>())
+            .def("change_particle_type", [](reaction_recipe &self, const std::string& vertex_label, const readdy::particle_type_type to) {
+                return self.changeParticleType(vertex_label, to);
+            }, py::return_value_policy::reference_internal)
+            .def("change_particle_type", [](reaction_recipe &self, const std::size_t vertex_index, const readdy::particle_type_type to) {
+                auto it = self.topology().graph().vertices().begin();
+                std::advance(it, vertex_index);
+                return self.changeParticleType(it, to);
+            }, py::return_value_policy::reference_internal)
+            .def("add_edge", [](reaction_recipe &self, const std::string& vlabel1, const std::string& vlabel2) {
+                return self.addEdge(vlabel1, vlabel2);
+            }, py::return_value_policy::reference_internal)
+            .def("add_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) {
+                auto it1 = self.topology().graph().vertices().begin();
+                auto it2 = self.topology().graph().vertices().begin();
+                std::advance(it1, v_index1);
+                std::advance(it2, v_index2);
+                return self.addEdge(it1, it2);
+            }, py::return_value_policy::reference_internal)
+            .def("remove_edge", [](reaction_recipe &self, const std::string& vlabel1, const std::string& vlabel2) {
+                return self.removeEdge(vlabel1, vlabel2);
+            }, py::return_value_policy::reference_internal)
+            .def("remove_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) {
+                auto it1 = self.topology().graph().vertices().begin();
+                auto it2 = self.topology().graph().vertices().begin();
+                std::advance(it1, v_index1);
+                std::advance(it2, v_index2);
+                return self.removeEdge(it1, it2);
+            }, py::return_value_policy::reference_internal)
+            .def("separate_vertex", [](reaction_recipe &self, const std::string& label) -> reaction_recipe& {
+                return self.separateVertex(self.topology().graph().namedVertexPtr(label));
+            }, py::return_value_policy::reference_internal)
+            .def("separate_vertex", [](reaction_recipe &self, const std::size_t index) {
+                auto it = self.topology().graph().vertices().begin();
+                std::advance(it, index);
+                return self.separateVertex(it);
+            }, py::return_value_policy::reference_internal);
+
+    py::class_<base_topology>(m, "BaseTopology")
+            .def("get_n_particles", &base_topology::getNParticles);
+
+    py::class_<topology, base_topology>(m, "Topology")
             .def("add_harmonic_angle_potential", [](topology &self, const harmonic_angle::angles_t &angles) {
                 self.addAnglePotential<harmonic_angle>(angles);
             }, "angles"_a)
@@ -70,7 +206,8 @@ void exportTopologies(py::module &m) {
             }, "dihedrals"_a)
             .def("get_graph", [](topology &self) -> graph & { return self.graph(); }, rvp::reference_internal)
             .def("configure", &topology::configure)
-            .def("validate", &topology::validate);
+            .def("validate", &topology::validate)
+            .def("add_reaction", &topology::addReaction);
 
     py::class_<graph>(m, "Graph")
             .def("get_vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },

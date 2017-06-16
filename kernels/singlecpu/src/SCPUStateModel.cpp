@@ -220,6 +220,21 @@ SCPUStateModel::topologies_t &SCPUStateModel::topologies() {
     return _topologies;
 }
 
+std::vector<readdy::model::top::GraphTopology const *> SCPUStateModel::getTopologies() const {
+    std::vector<readdy::model::top::GraphTopology const*> result;
+    result.reserve(_topologies.size() - _topologies.n_deactivated());
+    for(const auto& top : _topologies) {
+        if(!top->isDeactivated()) {
+            result.push_back(top.get());
+        }
+    }
+    return result;
+}
+
+particle_type_type SCPUStateModel::getParticleType(const std::size_t index) const {
+    return getParticleData()->entry_at(index).type;
+}
+
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) = default;
 
 SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) = default;

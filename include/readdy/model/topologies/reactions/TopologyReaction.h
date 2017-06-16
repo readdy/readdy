@@ -69,16 +69,68 @@ struct Mode {
     void create_children();
 };
 
+class ReactionFunctionGenerator {
+public:
+    using reaction_recipe = Recipe;
+    using reaction_function = std::function<reaction_recipe(void)>;
+
+    virtual reaction_function generate(GraphTopology& topology) = 0;
+};
+
+class STDFunctionReactionFunctionGenerator : public ReactionFunctionGenerator {
+public:
+    using std_reaction_function = std::function<reaction_recipe(GraphTopology&)>;
+
+    STDFunctionReactionFunctionGenerator(const std_reaction_function &fun);
+
+    virtual reaction_function generate(GraphTopology &topology) override;
+
+private:
+    std_reaction_function fun;
+};
+
+class RateFunctionGenerator {
+public:
+    using rate_function = std::function<readdy::scalar(void)>;
+
+    virtual rate_function generate(const GraphTopology& topology) = 0;
+};
+
+class STDFunctionRateFunctionGenerator : public RateFunctionGenerator {
+public:
+    using std_rate_function = std::function<scalar(const GraphTopology&)>;
+
+    STDFunctionRateFunctionGenerator(const std_rate_function &fun);
+
+    virtual rate_function generate(const GraphTopology &topology) override;
+
+private:
+    std_rate_function fun;
+};
+
 class TopologyReaction {
 public:
     using mode = Mode;
-    using reaction_recipe = Recipe;
-    using reaction_function = std::function<reaction_recipe(GraphTopology &)>;
-    using rate_function = std::function<double(const GraphTopology &)>;
+    using reaction_recipe = ReactionFunctionGenerator::reaction_recipe;
+    using reaction_function = STDFunctionReactionFunctionGenerator::std_reaction_function;
+    using rate_function = STDFunctionRateFunctionGenerator::std_rate_function;
 
     TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
 
     TopologyReaction(const reaction_function &reaction_function, const double &rate);
+
+    TopologyReaction(std::shared_ptr<ReactionFunctionGenerator> reaction_function_generator,
+                     std::shared_ptr<RateFunctionGenerator> rate_function_generator);
+
+    TopologyReaction(const TopologyReaction&) = default;
+
+    TopologyReaction& operator=(const TopologyReaction&) = default;
+
+    TopologyReaction(TopologyReaction&&) = default;
+
+    TopologyReaction& operator=(TopologyReaction&&) = default;
+
+    ~TopologyReaction() = default;
 
     double rate(const GraphTopology &topology) const;
 
@@ -103,8 +155,8 @@ public:
     std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *const kernel);
 
 private:
-    rate_function rate_function_;
-    reaction_function reaction_function_;
+    std::shared_ptr<RateFunctionGenerator> rate_function_generator_;
+    std::shared_ptr<ReactionFunctionGenerator> reaction_function_generator_;
     mode mode_;
 };
 

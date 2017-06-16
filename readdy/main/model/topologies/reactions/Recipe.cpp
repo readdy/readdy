@@ -39,10 +39,10 @@ namespace top {
 namespace reactions {
 
 Recipe &Recipe::changeParticleType(const Recipe::label_vertex &of, const particle_type_type &to) {
-    return changeParticleType(vertex_ref(&topology.graph(), of), to);
+    return changeParticleType(vertex_ref(&_topology.get().graph(), of), to);
 }
 
-Recipe::Recipe(GraphTopology &topology) : topology(topology) {}
+Recipe::Recipe(GraphTopology &topology) : _topology(topology) {}
 
 Recipe &Recipe::changeParticleType(const Recipe::vertex_ref &ref, const particle_type_type &to) {
     _steps.push_back(std::make_shared<op::ChangeParticleType>(ref, to));
@@ -56,7 +56,7 @@ Recipe &Recipe::addEdge(const Recipe::edge &edge) {
 
 Recipe &Recipe::addEdge(const label_edge &labels) {
     return addEdge(std::make_tuple(
-            vertex_ref(&topology.graph(), std::get<0>(labels)), vertex_ref(&topology.graph(), std::get<1>(labels))
+            vertex_ref(&_topology.get().graph(), std::get<0>(labels)), vertex_ref(&_topology.get().graph(), std::get<1>(labels))
     ));
 }
 
@@ -67,7 +67,7 @@ Recipe &Recipe::removeEdge(const Recipe::edge &edge) {
 
 Recipe &Recipe::removeEdge(const Recipe::label_edge &labels) {
     return removeEdge(std::make_tuple(
-            vertex_ref(&topology.graph(), std::get<0>(labels)), vertex_ref(&topology.graph(), std::get<1>(labels))
+            vertex_ref(&_topology.get().graph(), std::get<0>(labels)), vertex_ref(&_topology.get().graph(), std::get<1>(labels))
     ));
 }
 
@@ -96,6 +96,14 @@ Recipe &Recipe::removeEdge(Recipe::vertex_ref v1, Recipe::vertex_ref v2) {
 
 Recipe &Recipe::removeEdge(const std::string &label1, const std::string &label2) {
     return removeEdge(std::tie(label1, label2));
+}
+
+Recipe::topology_t &Recipe::topology() {
+    return _topology;
+}
+
+const Recipe::topology_t &Recipe::topology() const {
+    return _topology;
 }
 
 }

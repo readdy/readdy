@@ -103,9 +103,13 @@ public:
 
     virtual particle_t getParticleForIndex(const std::size_t index) const override;
 
+    virtual particle_type_type getParticleType(const std::size_t index) const override;
+
     const topologies_t &topologies() const;
 
     topologies_t &topologies();
+
+    virtual std::vector<readdy::model::top::GraphTopology const *> getTopologies() const override;
 
 private:
     struct Impl;

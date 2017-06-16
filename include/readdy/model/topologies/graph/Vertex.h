@@ -127,7 +127,7 @@ public:
         if ((it = std::find(neighbors_.begin(), neighbors_.end(), edge)) != neighbors_.end()) {
             neighbors_.erase(it);
         } else {
-            log::warn("tried to remove an unexisting edge {} - {}", particleIndex, edge->particleIndex);
+            log::warn("tried to remove a non existing edge {} - {}", particleIndex, edge->particleIndex);
         }
     }
 

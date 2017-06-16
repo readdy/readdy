@@ -42,14 +42,22 @@ namespace top {
 namespace reactions {
 
 TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
-        : reaction_function_(reaction_function), rate_function_(rate_function) { }
+        : reaction_function_generator_(std::make_shared<STDFunctionReactionFunctionGenerator>(reaction_function))
+        , rate_function_generator_(std::make_shared<STDFunctionRateFunctionGenerator>(rate_function)) { }
+
+
+TopologyReaction::TopologyReaction(std::shared_ptr<ReactionFunctionGenerator> reaction_function_generator,
+                                   std::shared_ptr<RateFunctionGenerator> rate_function_generator)
+        : reaction_function_generator_(reaction_function_generator),
+          rate_function_generator_(rate_function_generator){}
 
 double TopologyReaction::rate(const GraphTopology &topology) const {
-    return rate_function_(topology);
+    log::error("hmm3");
+    return rate_function_generator_->generate(topology)();
 }
 
 TopologyReaction::reaction_recipe TopologyReaction::operations(GraphTopology &topology) const {
-    return reaction_function_(topology);
+    return reaction_function_generator_->generate(topology)();
 }
 
 const bool TopologyReaction::raises_if_invalid() const {
@@ -85,7 +93,7 @@ void TopologyReaction::create_child_topologies_after_reaction() {
 }
 
 TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const double &rate)
-        : TopologyReaction(reaction_function, [rate](const GraphTopology&) { return rate; }) {}
+        : TopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
 
 std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) {
     auto recipe = operations(topology);
@@ -158,9 +166,10 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
             }
         } else {
             if (!topology.graph().isConnected()) {
+                log::error("hier");
                 auto subTopologies = topology.connectedComponents();
+                log::error("gehts schief");
                 assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
-                // todo inherit registered reactions to child topologies
                 return std::move(subTopologies);
             } else {
                 // if valid, update force field
@@ -172,6 +181,7 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
     }
     return {};
 }
+
 
 void Mode::raise() {
     flags[raise_or_rollback_flag] = true;
@@ -188,6 +198,21 @@ void Mode::expect_connected() {
 void Mode::create_children() {
     flags[expect_connected_or_create_children_flag] = false;
 }
+
+ReactionFunctionGenerator::reaction_function
+STDFunctionReactionFunctionGenerator::generate(GraphTopology &topology) {
+    return [&topology, this]() { return fun(topology); };
+}
+
+STDFunctionReactionFunctionGenerator::STDFunctionReactionFunctionGenerator(
+        const std_reaction_function &fun) : fun(fun){}
+
+RateFunctionGenerator::rate_function STDFunctionRateFunctionGenerator::generate(const GraphTopology &topology) {
+    return [&topology, this]() { return fun(topology); };
+}
+
+STDFunctionRateFunctionGenerator::STDFunctionRateFunctionGenerator(const std_rate_function &fun) : fun(fun){}
+
 }
 }
 }

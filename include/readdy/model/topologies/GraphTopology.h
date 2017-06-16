@@ -104,6 +104,8 @@ public:
 
     void deactivate();
 
+    const bool isNormalParticle(const Kernel& k) const;
+
     const rate_t cumulativeRate() const;
 
 protected:

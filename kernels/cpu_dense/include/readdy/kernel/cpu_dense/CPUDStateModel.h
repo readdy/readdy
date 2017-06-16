@@ -79,6 +79,10 @@ public:
 
     virtual void expected_n_particles(const std::size_t n) override;
 
+    virtual particle_type_type getParticleType(const std::size_t index) const override;
+
+    virtual std::vector<readdy::model::top::GraphTopology const*> getTopologies() const override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;

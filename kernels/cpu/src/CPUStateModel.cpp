@@ -351,6 +351,21 @@ CPUStateModel::topologies_t &CPUStateModel::topologies() {
     return pimpl->topologies;
 }
 
+std::vector<readdy::model::top::GraphTopology const*> CPUStateModel::getTopologies() const {
+    std::vector<readdy::model::top::GraphTopology const*> result;
+    result.reserve(pimpl->topologies.size() - pimpl->topologies.n_deactivated());
+    for(const auto& top : pimpl->topologies) {
+        if(!top->isDeactivated()) {
+            result.push_back(top.get());
+        }
+    }
+    return result;
+}
+
+particle_type_type CPUStateModel::getParticleType(const std::size_t index) const {
+    return pimpl->cdata().entry_at(index).type;
+}
+
 CPUStateModel::~CPUStateModel() = default;
 
 

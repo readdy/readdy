@@ -55,16 +55,17 @@ public:
     using edge = graph_t::edge;
     using label_edge = graph_t::label_edge;
     using label_vertex = graph_t::label;
+    using topology_t = GraphTopology;
 
-    Recipe(GraphTopology &topology);
+    Recipe(topology_t &topology);
 
     Recipe(Recipe &&) = default;
 
     Recipe &operator=(Recipe &&) = default;
 
-    Recipe(const Recipe &) = delete;
+    Recipe(const Recipe &) = default;
 
-    Recipe &operator=(const Recipe &) = delete;
+    Recipe &operator=(const Recipe &) = default;
 
     Recipe &changeParticleType(const vertex_ref &ref, const particle_type_type &to);
 
@@ -90,8 +91,12 @@ public:
 
     const reaction_operations &steps() const;
 
+    topology_t &topology();
+
+    const topology_t &topology() const;
+
 private:
-    GraphTopology &topology;
+    std::reference_wrapper<topology_t> _topology;
     reaction_operations _steps;
 };
 
