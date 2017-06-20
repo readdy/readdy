@@ -30,45 +30,12 @@ from __future__ import print_function
 import unittest
 
 import numpy as np
-import readdy._internal.readdybinding.common as common
 import readdy._internal.readdybinding.api.top as top
+import readdy._internal.readdybinding.common as common
 from readdy._internal.readdybinding.api import KernelProvider
 from readdy._internal.readdybinding.api import ParticleTypeFlavor
 from readdy._internal.readdybinding.api import Simulation
 from readdy.util import platform_utils
-
-class ReactionGenerator(top.ReactionFunctionGenerator):
-
-    def __init__(self):
-        super(ReactionGenerator, self).__init__()
-
-    def generate(self):
-        print("foooooooo")
-
-        def reaction_function():
-            print("foo")
-            recipe = top.Recipe(topology)
-            if topology.get_n_particles() > 1:
-                edge = np.random.randint(0, topology.get_n_particles()-2)
-                recipe.remove_edge(edge, edge+1)
-            return recipe
-        return reaction_function
-
-class RateGenerator(top.RateFunctionGenerator):
-
-    def __init__(self):
-        super(RateGenerator, self).__init__()
-
-    def generate(self, topology):
-        print("aga!")
-
-        def rate_function():
-            print("huhu")
-            if topology.get_n_particles() > 1:
-                return topology.get_n_particles() / 50.
-            else:
-                return 0
-        return rate_function
 
 
 class TestTopologyReactions(unittest.TestCase):
@@ -81,16 +48,43 @@ class TestTopologyReactions(unittest.TestCase):
         self.chain_decay("SingleCPU")
 
     def test_chain_decay_cpu(self):
-        pass # self.chain_decay("CPU")
+        self.chain_decay("CPU")
 
-    def _get_decay_reaction(self):
+    def _get_split_reaction(self):
+        def reaction_function(topology):
+            recipe = top.Recipe(topology)
+            if topology.get_n_particles() > 1:
+                edge = np.random.randint(0, topology.get_n_particles() - 1)
+                recipe.remove_edge(edge, edge + 1)
+            return recipe
 
+        def rate_function(topology):
+            if topology.get_n_particles() > 1:
+                return topology.get_n_particles() / 20.
+            else:
+                return .00001
 
+        fun1 = top.ReactionFunction(reaction_function)
+        fun2 = top.RateFunction(rate_function)
 
-
-
-        reaction = top.TopologyReaction.create(ReactionGenerator(), RateGenerator())
+        reaction = top.TopologyReaction(fun1, fun2)
         reaction.roll_back_if_invalid()
+        reaction.create_child_topologies_after_reaction()
+        return reaction
+
+    def _get_decay_reaction(self, typeidb):
+        def reaction_function(topology):
+            recipe = top.Recipe(topology)
+            if topology.get_n_particles() == 1:
+                recipe.change_particle_type(0, typeidb)
+            return recipe
+
+        def rate_function(topology):
+            return 1.0 if topology.get_n_particles() == 1 else 0
+
+        fun1, fun2 = top.ReactionFunction(reaction_function), top.RateFunction(rate_function)
+        reaction = top.TopologyReaction(fun1, fun2)
+        reaction.raise_if_invalid()
         reaction.create_child_topologies_after_reaction()
         return reaction
 
@@ -100,8 +94,8 @@ class TestTopologyReactions(unittest.TestCase):
         sim.box_size = common.Vec(10, 10, 10)
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
 
+        typeid_b = sim.register_particle_type("B", 1.0, 1.0, ParticleTypeFlavor.NORMAL)
         sim.register_particle_type("Topology A", 1.0, 1.0, ParticleTypeFlavor.TOPOLOGY)
-        sim.register_particle_type("B", 1.0, 1.0, ParticleTypeFlavor.NORMAL)
         sim.configure_topology_bond_potential("Topology A", "Topology A", 10, 10)
 
         n_elements = 50.
@@ -109,12 +103,19 @@ class TestTopologyReactions(unittest.TestCase):
                      for i in range(int(n_elements))]
         topology = sim.add_topology(particles)
 
-        for i in range(int(n_elements-1)):
-            topology.get_graph().add_edge(i, i+1)
+        for i in range(int(n_elements - 1)):
+            topology.get_graph().add_edge(i, i + 1)
 
-        topology.add_reaction(self._get_decay_reaction())
+        topology.add_reaction(self._get_decay_reaction(typeid_b))
+        topology.add_reaction(self._get_split_reaction())
 
-        sim.run_scheme_readdy(True).evaluate_topology_reactions().configure_and_run(int(5), float(1.0))
+        # h = sim.register_observable_n_particles(1, [], lambda x: print("n particles=%s" % x))
+
+        np.testing.assert_equal(1, len(sim.current_topologies()))
+
+        sim.run_scheme_readdy(True).evaluate_topology_reactions().configure_and_run(int(500), float(1.0))
+
+        np.testing.assert_equal(0, len(sim.current_topologies()))
 
 
 if __name__ == '__main__':

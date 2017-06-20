@@ -148,18 +148,20 @@ void SCPUStateModel::calculateForces() {
     // update forces and energy for topologies
     {
         for (const auto &topology : _topologies) {
-            // calculate bonded potentials
-            for (const auto &bondedPot : topology->getBondedPotentials()) {
-                auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-                pimpl->currentEnergy += energy;
-            }
-            for (const auto &anglePot : topology->getAnglePotentials()) {
-                auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-                pimpl->currentEnergy += energy;
-            }
-            for (const auto &torsionPot : topology->getTorsionPotentials()) {
-                auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-                pimpl->currentEnergy += energy;
+            if(!topology->isDeactivated()) {
+                // calculate bonded potentials
+                for (const auto &bondedPot : topology->getBondedPotentials()) {
+                    auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                    pimpl->currentEnergy += energy;
+                }
+                for (const auto &anglePot : topology->getAnglePotentials()) {
+                    auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                    pimpl->currentEnergy += energy;
+                }
+                for (const auto &torsionPot : topology->getTorsionPotentials()) {
+                    auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                    pimpl->currentEnergy += energy;
+                }
             }
         }
     }

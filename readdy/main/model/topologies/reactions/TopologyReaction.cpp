@@ -42,22 +42,16 @@ namespace top {
 namespace reactions {
 
 TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
-        : reaction_function_generator_(std::make_shared<STDFunctionReactionFunctionGenerator>(reaction_function))
-        , rate_function_generator_(std::make_shared<STDFunctionRateFunctionGenerator>(rate_function)) { }
+        : _reaction_function(reaction_function)
+        , _rate_function(rate_function) { }
 
-
-TopologyReaction::TopologyReaction(std::shared_ptr<ReactionFunctionGenerator> reaction_function_generator,
-                                   std::shared_ptr<RateFunctionGenerator> rate_function_generator)
-        : reaction_function_generator_(reaction_function_generator),
-          rate_function_generator_(rate_function_generator){}
 
 double TopologyReaction::rate(const GraphTopology &topology) const {
-    log::error("hmm3");
-    return rate_function_generator_->generate(topology)();
+    return _rate_function(topology);
 }
 
 TopologyReaction::reaction_recipe TopologyReaction::operations(GraphTopology &topology) const {
-    return reaction_function_generator_->generate(topology)();
+    return _reaction_function(topology);
 }
 
 const bool TopologyReaction::raises_if_invalid() const {
@@ -97,85 +91,85 @@ TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &re
 
 std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) {
     auto recipe = operations(topology);
-    auto topologyActionFactory = kernel->getTopologyActionFactory();
     auto& steps = recipe.steps();
-    std::vector<op::Operation::action_ptr> actions;
-    actions.reserve(steps.size());
-    for(auto& op : steps) {
-        actions.push_back(op->create_action(&topology, topologyActionFactory));
-    }
+    if(!steps.empty()) {
+        auto topologyActionFactory = kernel->getTopologyActionFactory();
+        std::vector<op::Operation::action_ptr> actions;
+        actions.reserve(steps.size());
+        for (auto &op : steps) {
+            actions.push_back(op->create_action(&topology, topologyActionFactory));
+        }
 
-    bool exceptionOccurred = false;
-    {
-        // perform reaction
-        auto it = actions.begin();
-        try {
-            for (; it != actions.end(); ++it) {
-                (*it)->execute();
-            }
-        } catch (const TopologyReactionException &exception) {
-            log::warn("exception occurred while executing topology reaction: {}", exception.what());
-            exceptionOccurred = true;
-            if (raises_if_invalid()) {
-                throw;
-            }
-        }
-        if (exceptionOccurred && rolls_back_if_invalid() && it != actions.begin()) {
-            log::warn("rolling back...");
-            for (; ; --it) {
-                (*it)->undo();
-                if(it == actions.begin()) break;
-            }
-        }
-    }
-    if(!exceptionOccurred) {
-        // post reaction
-        if (expects_connected_after_reaction()) {
-            bool valid = true;
-            if (!topology.graph().isConnected()) {
-                // we expected it to be connected after the reaction.. but it is not, raise or rollback.
-                log::warn("The topology was expected to still be connected after the reaction, but it was not.");
-                valid = false;
-            }
-            {
-                // check if all particle types are topology flavored
-                const auto &types = kernel->getKernelContext().particle_types();
-                for (const auto &v : topology.graph().vertices()) {
-                    if (types.info_of(v.particleType()).flavor != Particle::FLAVOR_TOPOLOGY) {
-                        log::warn("The topology contained particles that were not topology flavored.");
-                        valid = false;
-                    }
+        bool exceptionOccurred = false;
+        {
+            // perform reaction
+            auto it = actions.begin();
+            try {
+                for (; it != actions.end(); ++it) {
+                    (*it)->execute();
+                }
+            } catch (const TopologyReactionException &exception) {
+                log::warn("exception occurred while executing topology reaction: {}", exception.what());
+                exceptionOccurred = true;
+                if (raises_if_invalid()) {
+                    throw;
                 }
             }
-            if (!valid) {
-                log::warn("GEXF representation: {}", util::to_gexf(topology.graph()));
-                if (rolls_back_if_invalid()) {
-                    log::warn("rolling back...");
-                    for (auto it = actions.rbegin(); it != actions.rend(); ++it) {
-                        (*it)->undo();
+            if (exceptionOccurred && rolls_back_if_invalid() && it != actions.begin()) {
+                log::warn("rolling back...");
+                for (;; --it) {
+                    (*it)->undo();
+                    if (it == actions.begin()) break;
+                }
+            }
+        }
+        if (!exceptionOccurred) {
+            // post reaction
+            if (expects_connected_after_reaction()) {
+                bool valid = true;
+                if (!topology.graph().isConnected()) {
+                    // we expected it to be connected after the reaction.. but it is not, raise or rollback.
+                    log::warn("The topology was expected to still be connected after the reaction, but it was not.");
+                    valid = false;
+                }
+                {
+                    // check if all particle types are topology flavored
+                    const auto &types = kernel->getKernelContext().particle_types();
+                    for (const auto &v : topology.graph().vertices()) {
+                        if (types.info_of(v.particleType()).flavor != Particle::FLAVOR_TOPOLOGY) {
+                            log::warn("The topology contained particles that were not topology flavored.");
+                            valid = false;
+                        }
+                    }
+                }
+                if (!valid) {
+                    log::warn("GEXF representation: {}", util::to_gexf(topology.graph()));
+                    if (rolls_back_if_invalid()) {
+                        log::warn("rolling back...");
+                        for (auto it = actions.rbegin(); it != actions.rend(); ++it) {
+                            (*it)->undo();
+                        }
+                    } else {
+                        throw TopologyReactionException(
+                                "The topology was invalid after the reaction, see previous warning messages.");
                     }
                 } else {
-                    throw TopologyReactionException(
-                            "The topology was invalid after the reaction, see previous warning messages.");
+                    // if valid, update force field
+                    topology.configure();
+                    // and update reaction rates
+                    topology.updateReactionRates();
                 }
             } else {
-                // if valid, update force field
-                topology.configure();
-                // and update reaction rates
-                topology.updateReactionRates();
-            }
-        } else {
-            if (!topology.graph().isConnected()) {
-                log::error("hier");
-                auto subTopologies = topology.connectedComponents();
-                log::error("gehts schief");
-                assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
-                return std::move(subTopologies);
-            } else {
-                // if valid, update force field
-                topology.configure();
-                // and update reaction rates
-                topology.updateReactionRates();
+                if (!topology.graph().isConnected()) {
+                    auto subTopologies = topology.connectedComponents();
+                    assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
+                    return std::move(subTopologies);
+                } else {
+                    // if valid, update force field
+                    topology.configure();
+                    // and update reaction rates
+                    topology.updateReactionRates();
+                }
             }
         }
     }
@@ -198,20 +192,6 @@ void Mode::expect_connected() {
 void Mode::create_children() {
     flags[expect_connected_or_create_children_flag] = false;
 }
-
-ReactionFunctionGenerator::reaction_function
-STDFunctionReactionFunctionGenerator::generate(GraphTopology &topology) {
-    return [&topology, this]() { return fun(topology); };
-}
-
-STDFunctionReactionFunctionGenerator::STDFunctionReactionFunctionGenerator(
-        const std_reaction_function &fun) : fun(fun){}
-
-RateFunctionGenerator::rate_function STDFunctionRateFunctionGenerator::generate(const GraphTopology &topology) {
-    return [&topology, this]() { return fun(topology); };
-}
-
-STDFunctionRateFunctionGenerator::STDFunctionRateFunctionGenerator(const std_rate_function &fun) : fun(fun){}
 
 }
 }

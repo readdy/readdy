@@ -59,7 +59,7 @@ void addParticle(sim &self, const std::string &type, const vec &pos) { self.addP
 
 
 enum class ParticleTypeFlavor {
-    NORMAL = 0, TOPOLOGY, MEMBRANE
+    NORMAL = 0, TOPOLOGY = 1, MEMBRANE = 2
 };
 
 void exportApi(py::module &api) {
@@ -151,6 +151,7 @@ void exportApi(py::module &api) {
                  "type"_a = readdy::api::TorsionType::COS_DIHEDRAL)
             .def("add_topology", &sim::addTopology, rvp::reference, "particles"_a,
                  "labels"_a = std::vector<std::string>())
+            .def("current_topologies", &sim::currentTopologies)
             .def("set_kernel", &sim::setKernel, "name"_a)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(

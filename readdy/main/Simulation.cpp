@@ -391,6 +391,11 @@ void Simulation::setExpectedMaxNParticles(const std::size_t n) {
     getSelectedKernel()->expected_n_particles(n);
 }
 
+std::vector<const readdy::model::top::GraphTopology *> Simulation::currentTopologies() const {
+    ensureKernelSelected();
+    return getSelectedKernel()->getKernelStateModel().getTopologies();
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }

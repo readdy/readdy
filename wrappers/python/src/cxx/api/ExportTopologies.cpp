@@ -54,94 +54,43 @@ using harmonic_angle = readdy::model::top::pot::HarmonicAnglePotential;
 using cosine_dihedral = readdy::model::top::pot::CosineDihedralPotential;
 using vec3 = readdy::model::Vec3;
 
-using reaction_function_generator = readdy::model::top::reactions::ReactionFunctionGenerator;
-using rate_function_generator = readdy::model::top::reactions::RateFunctionGenerator;
+struct reaction_function_sink {
+    std::shared_ptr<py::function> f;
+    reaction_function_sink(py::function f) : f(std::make_shared<py::function>(f)) {};
 
-class PyReactionFunctionGenerator : public reaction_function_generator {
-public:
-    PyReactionFunctionGenerator() {
-        pybind11::gil_scoped_acquire gil;
-        overload = pybind11::get_overload(static_cast<const reaction_function_generator *>(this), "generate");
-    };
-
-    virtual reaction_function generate(topology& topology) override {
-        if (overload) {
-            o = std::shared_ptr<py::object>(new py::object(overload(topology)), [](py::object* o) {
-                py::gil_scoped_acquire lock;
-                delete o;
-            });
-            ptr = pybind11::cast<std::shared_ptr<reaction_function_generator>>(*o);
-        } else {
-            readdy::log::critical("no overload reaction fun generator");
-        }
-        return ptr->generate(topology);
+    inline reaction::reaction_function::result_type operator()(topology& top) {
+        py::gil_scoped_acquire gil;
+        auto t = py::cast(&top, py::return_value_policy::automatic_reference);
+        auto rv = (*f)(*t.cast<topology*>());
+        return rv.cast<reaction::reaction_function::result_type>();
     }
-
-    py::function overload;
-    std::shared_ptr<py::object> o;
-    std::shared_ptr<reaction_function_generator> ptr;
 };
 
-class PyRateFunctionGenerator : public rate_function_generator {
-public:
-    PyRateFunctionGenerator() {
-        py::gil_scoped_acquire gil;
-        overload = py::get_overload(static_cast<const PyRateFunctionGenerator *>(this), "generate");
-    };
+struct rate_function_sink {
+    std::shared_ptr<py::function> f;
+    rate_function_sink(py::function f) : f(std::make_shared<py::function>(f)) {};
 
-    virtual rate_function generate(const topology& topology) override {
+    inline reaction::rate_function::result_type operator()(const topology& top) {
         py::gil_scoped_acquire gil;
-        if (overload) {
-            readdy::log::error("1");
-            o = std::shared_ptr<py::object>(new py::object(overload(topology)), [](py::object* o) {
-                py::gil_scoped_acquire lock;
-                readdy::log::critical("333333");
-                delete o;
-            });
-            readdy::log::error("2");
-            } else {
-            readdy::log::critical("no overload rate fun generator");
-        }
-        return [=]() {
-            auto fun = py::function(py::cast<py::function>(*o));
-            readdy::log::critical("str: {}", py::str(fun));
-            if(fun.is_none()) {
-                readdy::log::critical("was none");
-            }
-            if(fun.is_cpp_function()) {
-                readdy::log::critical("was cpp fun");
-            }
-            return fun().cast<rate_function_generator::rate_function::result_type>();
-        };
+        auto t = py::cast(&top, py::return_value_policy::automatic_reference);
+        auto rv = (*f)(*t.cast<topology*>());
+        return rv.cast<reaction::rate_function::result_type>();
     }
-
-    py::function overload;
-    std::shared_ptr<py::object> o;
 };
-
-reaction createTopologyReaction(PyReactionFunctionGenerator gen1, PyRateFunctionGenerator gen2) {
-    return reaction(std::shared_ptr<reaction_function_generator>(new PyReactionFunctionGenerator(gen1)),
-                    std::shared_ptr<rate_function_generator>(new PyRateFunctionGenerator(gen2)));
-}
 
 void exportTopologies(py::module &m) {
     using namespace py::literals;
-
-    py::class_<reaction_function_generator, PyReactionFunctionGenerator, std::shared_ptr<reaction_function_generator>>(m, "ReactionFunctionGenerator")
-            .def(py::init<>())
-            .def("generate", &reaction_function_generator::generate);
-
-    py::class_<rate_function_generator, PyRateFunctionGenerator, std::shared_ptr<rate_function_generator>>(m, "RateFunctionGenerator")
-            .def(py::init<>())
-            .def("generate", &rate_function_generator::generate);
 
     py::class_<topology_particle>(m, "TopologyParticle")
             .def("get_position", [](topology_particle &self) { return self.getPos(); })
             .def("get_type", [](topology_particle &self) { return self.getType(); })
             .def("get_id", [](topology_particle &self) { return self.getId(); });
 
+    py::class_<reaction_function_sink>(m, "ReactionFunction").def(py::init<py::function>());
+    py::class_<rate_function_sink>(m, "RateFunction").def(py::init<py::function>());
+
     py::class_<reaction>(m, "TopologyReaction")
-            .def_static("create", &createTopologyReaction)
+            .def(py::init<reaction_function_sink, rate_function_sink>())
             .def("rate", &reaction::rate, "topology"_a)
             .def("raises_if_invalid", &reaction::raises_if_invalid)
             .def("raise_if_invalid", &reaction::raise_if_invalid)
@@ -207,7 +156,9 @@ void exportTopologies(py::module &m) {
             .def("get_graph", [](topology &self) -> graph & { return self.graph(); }, rvp::reference_internal)
             .def("configure", &topology::configure)
             .def("validate", &topology::validate)
-            .def("add_reaction", &topology::addReaction);
+            .def("add_reaction", [](topology& self, const reaction& reaction) {
+                self.addReaction(reaction);
+            });
 
     py::class_<graph>(m, "Graph")
             .def("get_vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },

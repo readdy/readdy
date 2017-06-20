@@ -95,6 +95,8 @@ public:
 
     void addReaction(const reactions::TopologyReaction &reaction);
 
+    void addReaction(reactions::TopologyReaction &&reaction);
+
     const topology_reactions &registeredReactions() const;
     topology_reactions &registeredReactions();
 

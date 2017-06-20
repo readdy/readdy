@@ -75,7 +75,6 @@ const graph::Graph &GraphTopology::graph() const {
 }
 
 void GraphTopology::configure() {
-
     validate();
 
     bondedPotentials.clear();
@@ -172,19 +171,29 @@ void GraphTopology::validate() {
 void GraphTopology::updateReactionRates() {
     _cumulativeRate = 0;
     for(auto&& reaction : reactions_) {
-        log::error("hmmm");
         const auto& r = std::get<0>(reaction);
-        log::error("hmmm2");
         const auto rate = r.rate(*this);
-        log::error("aga");
         std::get<1>(reaction) = rate;
         _cumulativeRate += rate;
-        log::error("ugu");
+    }
+    {
+        std::stringstream ss;
+        for(const auto& r : reactions_) {
+            ss << std::get<1>(r) << " + ";
+        }
+        const void * address = static_cast<const void*>(this);
+        std::stringstream ss2;
+        ss2 << address;
+        std::string name = ss2.str();
     }
 }
 
 void GraphTopology::addReaction(const reactions::TopologyReaction &reaction) {
     reactions_.push_back(std::make_tuple(reaction, 0));
+}
+
+void GraphTopology::addReaction(reactions::TopologyReaction &&reaction) {
+    reactions_.push_back(std::make_tuple(std::move(reaction), 0));
 }
 
 const GraphTopology::topology_reactions &GraphTopology::registeredReactions() const {
@@ -221,13 +230,8 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
                 components.emplace_back(std::move(*it_particles), std::move(*it_graphs), config);
                 for(const auto& reaction : reactions_) {
-                    log::error("000");
-                    components.back().addReaction(std::get<0>(reaction));
-                    log::error("111");
+                    components.back().addReaction(std::move(std::get<0>(reaction)));
                 }
-                log::error("222");
-                components.back().updateReactionRates();
-                log::error("333");
             }
         }
     }
@@ -249,7 +253,8 @@ const GraphTopology::rate_t GraphTopology::cumulativeRate() const {
 const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
         const auto particle_type = k.getKernelStateModel().getParticleType(particles.front());
-        return k.getKernelContext().particle_types().info_of(particle_type).flavor != Particle::FLAVOR_TOPOLOGY;
+        const auto& info = k.getKernelContext().particle_types().info_of(particle_type);
+        return info.flavor != Particle::FLAVOR_TOPOLOGY;
     }
     return false;
 }

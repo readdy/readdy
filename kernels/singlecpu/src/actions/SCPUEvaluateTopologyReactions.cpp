@@ -58,168 +58,164 @@ void SCPUEvaluateTopologyReactions::perform() {
     using rate_t = readdy::model::top::GraphTopology::rate_t;
     auto &topologies = kernel->getSCPUKernelStateModel().topologies();
 
-    struct TREvent {
-        rate_t cumulative_rate;
-        rate_t own_rate;
-        std::size_t topology_idx;
-        std::size_t reaction_idx;
-    };
-
-    std::vector <TREvent> events;
-
-    {
-        rate_t current_cumulative_rate = 0;
-        std::size_t topology_idx = 0;
-        for (auto &topRef : topologies) {
-
-            if (!topRef->isDeactivated()) {
-
-                std::size_t reaction_idx = 0;
-                for (const auto &reaction : topRef->registeredReactions()) {
-
-                    TREvent event;
-                    event.own_rate = std::get<1>(reaction);
-                    event.cumulative_rate = event.own_rate + current_cumulative_rate;
-                    current_cumulative_rate = event.cumulative_rate;
-                    event.topology_idx = topology_idx;
-                    event.reaction_idx = reaction_idx;
-
-                    events.push_back(std::move(event));
-
-                    ++reaction_idx;
-                }
-
+    if(!topologies.empty()) {
+        std::stringstream ss;
+        for(const auto& top : topologies) {
+            if(!top->isDeactivated()) {
+                const void * address = static_cast<const void*>(top.get());
+                std::stringstream ss2;
+                ss2 << address;
+                std::string name = ss2.str();
+                ss << ", " << name << "(" << top->getNParticles() <<")";
             }
-            ++topology_idx;
         }
-    }
+        struct TREvent {
+            rate_t cumulative_rate;
+            rate_t own_rate;
+            std::size_t topology_idx;
+            std::size_t reaction_idx;
+        };
 
-    if (!events.empty()) {
+        std::vector<TREvent> events;
 
-        auto end = events.end();
+        {
+            rate_t current_cumulative_rate = 0;
+            std::size_t topology_idx = 0;
+            for (auto &topRef : topologies) {
 
-        std::vector <readdy::model::top::GraphTopology> new_topologies;
-        while (end != events.begin()) {
-            const auto cumulative_rate = (end - 1)->cumulative_rate;
+                if (!topRef->isDeactivated()) {
 
-            const auto x = readdy::model::rnd::uniform_real(0., cumulative_rate);
+                    std::size_t reaction_idx = 0;
+                    for (const auto &reaction : topRef->registeredReactions()) {
 
-            const auto eventIt = std::lower_bound(
-                    events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {
-                        return elem1.cumulative_rate < elem2;
+                        TREvent event;
+                        event.own_rate = std::get<1>(reaction);
+                        event.cumulative_rate = event.own_rate + current_cumulative_rate;
+                        current_cumulative_rate = event.cumulative_rate;
+                        event.topology_idx = topology_idx;
+                        event.reaction_idx = reaction_idx;
+
+                        events.push_back(std::move(event));
+
+                        ++reaction_idx;
                     }
-            );
+                }
+                ++topology_idx;
+            }
+        }
 
-            if (eventIt != events.end()) {
-//                log::warn("drawn event with top idx {} from [0, {})", eventIt->topology_idx,
-//                          std::distance(events.begin(), end));
-                const auto &event = *eventIt;
+        if (!events.empty()) {
 
-                if (shouldPerformEvent(event.own_rate, timeStep, true)) {
-                    // perform the event!
-                    auto &topology = topologies.at(event.topology_idx);
-                    if (topology->isDeactivated()) {
-                        log::critical("deactivated topology with idx {}", event.topology_idx);
-                        for (auto it = events.begin(); it != end; ++it) {
-                            log::warn(" -> event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate,
-                                      it->cumulative_rate);
+            auto end = events.end();
+
+            std::vector<readdy::model::top::GraphTopology> new_topologies;
+            while (end != events.begin()) {
+                const auto cumulative_rate = (end - 1)->cumulative_rate;
+
+                const auto x = readdy::model::rnd::uniform_real(0., cumulative_rate);
+
+                const auto eventIt = std::lower_bound(
+                        events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {
+                            return elem1.cumulative_rate < elem2;
                         }
-                        for (auto it = end; it != events.end(); ++it) {
-                            log::warn(" -> deactivated event {}, {}, {}, {}", it->topology_idx, it->reaction_idx,
-                                      it->own_rate, it->cumulative_rate);
+                );
+
+                if (eventIt != events.end()) {
+                    const auto &event = *eventIt;
+
+                    if (shouldPerformEvent(event.own_rate, timeStep, true)) {
+                        log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt)+1, events.size(), eventIt->own_rate);
+                        // perform the event!
+                        auto &topology = topologies.at(event.topology_idx);
+                        if (topology->isDeactivated()) {
+                            log::critical("deactivated topology with idx {}", event.topology_idx);
+                            for (auto it = events.begin(); it != end; ++it) {
+                                log::warn(" -> event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate,
+                                          it->cumulative_rate);
+                            }
+                            for (auto it = end; it != events.end(); ++it) {
+                                log::warn(" -> deactivated event {}, {}, {}, {}", it->topology_idx, it->reaction_idx,
+                                          it->own_rate, it->cumulative_rate);
+                            }
                         }
-                    }
-                    assert(!topology->isDeactivated());
-                    auto &reaction = topology->registeredReactions().at(event.reaction_idx);
-                    auto result = std::get<0>(reaction).execute(*topology, kernel);
-                    if (!result.empty()) {
-                        // we had a topology fission, so we need to actually remove the current topology from the
-                        // data structure
-                        topologies.erase(topologies.begin() + event.topology_idx);
-                        //log::error("erased topology with index {}", event.topology_idx);
-                        assert(topology->isDeactivated());
-                        std::move(result.begin(), result.end(), std::back_inserter(new_topologies));
-                    } else {
-                        if (topology->isNormalParticle(*kernel)) {
+                        assert(!topology->isDeactivated());
+                        auto &reaction = topology->registeredReactions().at(event.reaction_idx);
+                        auto result = std::get<0>(reaction).execute(*topology, kernel);
+                        if (!result.empty()) {
+                            // we had a topology fission, so we need to actually remove the current topology from the
+                            // data structure
                             topologies.erase(topologies.begin() + event.topology_idx);
                             //log::error("erased topology with index {}", event.topology_idx);
                             assert(topology->isDeactivated());
+                            std::move(result.begin(), result.end(), std::back_inserter(new_topologies));
+                        } else {
+                            if (topology->isNormalParticle(*kernel)) {
+                                topologies.erase(topologies.begin() + event.topology_idx);
+                                //log::error("erased topology with index {}", event.topology_idx);
+                                assert(topology->isDeactivated());
+                            }
                         }
+
+                        // loop over all other events, swap events considering this particular topology to the end
+                        rate_t cumsum = 0;
+                        //log::warn("------");
+                        for (auto it = events.begin();;) {
+                            if (it->topology_idx == event.topology_idx) {
+                                --end;
+                                //log::warn("swapping event with topology idx {}", it->topology_idx);
+                                std::iter_swap(it, end);
+                            }
+                            cumsum += it->own_rate;
+                            it->cumulative_rate = cumsum;
+                            if (it >= end) {
+                                break;
+                            }
+                            if (it->topology_idx != event.topology_idx) {
+                                ++it;
+                            }
+                        }
+
+                    } else {
+
+                        // remove event from the list (ie shift it to the end)
+                        --end;
+
+                        // swap with last element that is not yet deactivated
+                        std::iter_swap(eventIt, end);
+
+                        // this element's cumulative rate gets initialized with its own rate
+                        eventIt->cumulative_rate = eventIt->own_rate;
+                        if (eventIt > events.begin()) {
+                            // and then increased by the cumulative rate of its predecessor
+                            eventIt->cumulative_rate += (eventIt - 1)->cumulative_rate;
+                        }
+                        // now update the cumulative rates of all following elements...
+                        auto cumsum = (*eventIt).cumulative_rate;
+                        for (auto _it = eventIt + 1; _it < end; ++_it) {
+                            cumsum += (*_it).own_rate;
+                            (*_it).cumulative_rate = cumsum;
+                        }
+
                     }
 
-                    // loop over all other events, swap events considering this particular topology to the end
-                    rate_t cumsum = 0;
-                    //log::warn("------");
-                    for (auto it = events.begin();;) {
-                        if (it->topology_idx == event.topology_idx) {
-                            --end;
-                            //log::warn("swapping event with topology idx {}", it->topology_idx);
-                            std::iter_swap(it, end);
-                        }
-                        cumsum += it->own_rate;
-                        it->cumulative_rate = cumsum;
-                        if (it >= end) {
-                            break;
-                        }
-                        if (it->topology_idx != event.topology_idx) {
-                            ++it;
-                        }
-                    }
-
-                    /*log::error("after event perform");
-                    for(auto it = events.begin(); it != end; ++it) {
-                        log::warn(" -> event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate, it->cumulative_rate);
-                    }
-                    for(auto it = end; it != events.end(); ++it) {
-                        log::warn(" -> deactivated event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate, it->cumulative_rate);
-                    }*/
                 } else {
-
-                    // remove event from the list (ie shift it to the end)
-                    --end;
-
-                    // swap with last element that is not yet deactivated
-                    std::iter_swap(eventIt, end);
-
-                    // this element's cumulative rate gets initialized with its own rate
-                    eventIt->cumulative_rate = eventIt->own_rate;
-                    if (eventIt > events.begin()) {
-                        // and then increased by the cumulative rate of its predecessor
-                        eventIt->cumulative_rate += (eventIt - 1)->cumulative_rate;
-                    }
-                    // now update the cumulative rates of all following elements...
-                    auto cumsum = (*eventIt).cumulative_rate;
-                    for (auto _it = eventIt + 1; _it < end; ++_it) {
-                        cumsum += (*_it).own_rate;
-                        (*_it).cumulative_rate = cumsum;
-                    }
-
-                    /*log::error("after event not perform");
-                    for(auto it = events.begin(); it != end; ++it) {
-                        log::warn(" -> event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate, it->cumulative_rate);
-                    }
-                    for(auto it = end; it != events.end(); ++it) {
-                        log::warn(" -> deactivated event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate, it->cumulative_rate);
-                    }*/
+                    log::critical("this should not happen (event not found by drawn rate)");
+                    throw std::logic_error("this should not happen (event not found by drawn rate)");
                 }
-
-            } else {
-                log::critical("this should not happen (event not found by drawn rate)");
-                throw std::logic_error("this should not happen (event not found by drawn rate)");
             }
-        }
 
-        if (!new_topologies.empty()) {
-            for (auto &&top : new_topologies) {
-                // if we have a single particle that is not of flavor topology, ignore!
-                if (!top.isNormalParticle(*kernel)) {
-                    auto new_top = std::make_unique<readdy::model::top::GraphTopology>(std::move(top));
-                    new_top->updateReactionRates();
-                    topologies.push_back(std::move(new_top));
+            if (!new_topologies.empty()) {
+                for (auto &&top : new_topologies) {
+                    // if we have a single particle that is not of flavor topology, ignore!
+                    if (!top.isNormalParticle(*kernel)) {
+                        auto new_top = std::make_unique<readdy::model::top::GraphTopology>(std::move(top));
+                        auto it = topologies.push_back(std::move(new_top));
+                        (*it)->updateReactionRates();
+                        (*it)->configure();
+                    }
                 }
             }
         }
-
     }
 
 }

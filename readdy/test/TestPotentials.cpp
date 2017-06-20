@@ -55,7 +55,7 @@ void setupParticles(readdy::model::Kernel &kernel) {
 }
 
 void run(readdy::model::Kernel &kernel, double timeStep) {
-    unsigned int nSteps = 2000;
+    unsigned int nSteps = 200;
     auto &&integrator = kernel.createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
     auto &&nl = kernel.createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&forces = kernel.createAction<readdy::model::actions::CalculateForces>();
