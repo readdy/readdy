@@ -20,35 +20,31 @@
 # <http://www.gnu.org/licenses/>.
 
 """
-Created on 19.6.17
+Created on 21.06.17
 
 @author: clonker
 """
 
 from __future__ import print_function
 
-import unittest
+from contextlib import closing
 
 import numpy as np
 import readdy._internal.readdybinding.api.top as top
+import readdy._internal.readdybinding.common.io as io
 import readdy._internal.readdybinding.common as common
 from readdy._internal.readdybinding.api import KernelProvider
 from readdy._internal.readdybinding.api import ParticleTypeFlavor
 from readdy._internal.readdybinding.api import Simulation
 from readdy.util import platform_utils
 
+class ChainDecay(object):
 
-class TestTopologyReactions(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.kernel_provider = KernelProvider.get()
-        cls.kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
-
-    def test_chain_decay_scpu(self):
-        self.chain_decay("SingleCPU")
-
-    def test_chain_decay_cpu(self):
-        self.chain_decay("CPU")
+    def __init__(self, kernel, time_step):
+        self.kernel_provider = KernelProvider.get()
+        self.kernel_provider.load_from_dir(platform_utils.get_readdy_plugin_dir())
+        self.kernel = kernel
+        self.time_step = time_step
 
     def _get_split_reaction(self):
         def reaction_function(topology):
@@ -60,7 +56,7 @@ class TestTopologyReactions(unittest.TestCase):
 
         def rate_function(topology):
             if topology.get_n_particles() > 1:
-                return topology.get_n_particles() / 20.
+                return float(topology.get_n_particles()) / 5.
             else:
                 return .0
 
@@ -77,10 +73,11 @@ class TestTopologyReactions(unittest.TestCase):
             recipe = top.Recipe(topology)
             if topology.get_n_particles() == 1:
                 recipe.change_particle_type(0, typeidb)
+                print("green!")
             return recipe
 
         def rate_function(topology):
-            return 1.0 if topology.get_n_particles() == 1 else 0
+            return 1./self.time_step if topology.get_n_particles() == 1 else 0
 
         fun1, fun2 = top.ReactionFunction(reaction_function), top.RateFunction(rate_function)
         reaction = top.TopologyReaction(fun1, fun2)
@@ -88,18 +85,25 @@ class TestTopologyReactions(unittest.TestCase):
         reaction.create_child_topologies_after_reaction()
         return reaction
 
-    def chain_decay(self, kernel):
+    def run(self, time_steps, out_file):
         sim = Simulation()
-        sim.set_kernel(kernel)
-        sim.box_size = common.Vec(10, 10, 10)
-        np.testing.assert_equal(sim.kernel_supports_topologies(), True)
+        sim.set_kernel(self.kernel)
+        sim.box_size = common.Vec(60, 20, 20)
+        sim.periodic_boundary = [True, True, True]
 
         typeid_b = sim.register_particle_type("B", 1.0, 1.0, ParticleTypeFlavor.NORMAL)
-        sim.register_particle_type("Topology A", 1.0, 1.0, ParticleTypeFlavor.TOPOLOGY)
-        sim.configure_topology_bond_potential("Topology A", "Topology A", 10, 10)
+        sim.register_particle_type("Topology A", .5, .5, ParticleTypeFlavor.TOPOLOGY)
+
+        sim.register_potential_harmonic_repulsion("Topology A", "Topology A", 10)
+        sim.register_potential_harmonic_repulsion("Topology A", "B", 10)
+        sim.register_potential_harmonic_repulsion("B", "B", 10)
+
+        sim.configure_topology_bond_potential("Topology A", "Topology A", 10, 1.)
+        sim.configure_topology_angle_potential("Topology A", "Topology A", "Topology A", 10, np.pi)
+        # sim.configure_topology_dihedral_potential("Topology A", "Topology A", "Topology A", "Topology A", 1, 1, -np.pi)
 
         n_elements = 50.
-        particles = [sim.create_topology_particle("Topology A", common.Vec(-5. + i * 10. / n_elements, 0, 0))
+        particles = [sim.create_topology_particle("Topology A", common.Vec(-25. + i, 0, 0))
                      for i in range(int(n_elements))]
         topology = sim.add_topology(particles)
 
@@ -109,14 +113,16 @@ class TestTopologyReactions(unittest.TestCase):
         topology.add_reaction(self._get_decay_reaction(typeid_b))
         topology.add_reaction(self._get_split_reaction())
 
-        # h = sim.register_observable_n_particles(1, [], lambda x: print("n particles=%s" % x))
-
-        np.testing.assert_equal(1, len(sim.current_topologies()))
-
-        sim.run_scheme_readdy(True).evaluate_topology_reactions().configure_and_run(int(500), float(1.0))
-
-        np.testing.assert_equal(0, len(sim.current_topologies()))
+        traj_handle = sim.register_observable_flat_trajectory(1)
+        with closing(io.File(out_file, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+            traj_handle.enable_write_to_file(f, u"", 50)
+            sim.run_scheme_readdy(True)\
+                .evaluate_topology_reactions()\
+                .write_config_to_file(f)\
+                .configure_and_run(time_steps, self.time_step)
+        print("currently %s topologies" % len(sim.current_topologies()))
 
 
 if __name__ == '__main__':
-    unittest.main()
+    sim = ChainDecay("SingleCPU", .001)
+    sim.run(10000, "out.h5")

@@ -114,6 +114,7 @@ SCPUStateModel &SCPUKernel::getSCPUKernelStateModel() {
 void SCPUKernel::initialize() {
     readdy::model::Kernel::initialize();
     for(auto& top : getSCPUKernelStateModel().topologies()) {
+        top->configure();
         top->updateReactionRates();
     }
 }

@@ -141,7 +141,8 @@ void exportTopologies(py::module &m) {
             }, py::return_value_policy::reference_internal);
 
     py::class_<base_topology>(m, "BaseTopology")
-            .def("get_n_particles", &base_topology::getNParticles);
+            .def("get_n_particles", &base_topology::getNParticles)
+            .def("get_particles", [](const base_topology &self) {return self.getParticles();});
 
     py::class_<topology, base_topology>(m, "Topology")
             .def("add_harmonic_angle_potential", [](topology &self, const harmonic_angle::angles_t &angles) {

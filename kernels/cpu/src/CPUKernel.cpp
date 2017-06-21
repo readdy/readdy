@@ -129,6 +129,7 @@ void CPUKernel::initialize() {
     readdy::model::Kernel::initialize();
     threadConfig().setMode(readdy::util::thread::ThreadMode::pool);
     for(auto& top : getCPUKernelStateModel().topologies()) {
+        top->configure();
         top->updateReactionRates();
     }
 }

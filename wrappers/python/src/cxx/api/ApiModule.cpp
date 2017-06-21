@@ -98,7 +98,7 @@ void exportApi(py::module &api) {
                                  return readdy::model::Particle::FLAVOR_TOPOLOGY;
                          }
                      }();
-                     return self.registerParticleType(name, diffusionCoefficient, radius);
+                     return self.registerParticleType(name, diffusionCoefficient, radius, f);
                  }, "name"_a, "diffusion_coefficient"_a, "radius"_a, "flavor"_a = ParticleTypeFlavor::NORMAL)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
