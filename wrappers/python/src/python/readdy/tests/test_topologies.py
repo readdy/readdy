@@ -60,11 +60,7 @@ class TestTopologies(unittest.TestCase):
             forces.append(result)
 
         sim.register_observable_forces(1, ["T"], callback)
-        sim.run_scheme_readdy(True).configure_and_run(0, 1)
-        np.testing.assert_equal(len(forces), 1)
-        np.testing.assert_equal(len(forces[0]), 4)
-        np.testing.assert_equal(forces[0][3], common.Vec(0, 0, 0))
-
+        self.assertRaises(ValueError, sim.run_scheme_readdy(True).configure_and_run, 0, 1)
 
 if __name__ == '__main__':
     unittest.main()
