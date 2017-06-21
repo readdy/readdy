@@ -346,8 +346,8 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
         top->graph().setVertexLabel(it++, "a");
         top->graph().setVertexLabel(it++, "b");
         top->graph().setVertexLabel(it++, "c");
-        top->graph().addEdge("a", "b");
-        top->graph().addEdge("b", "c");
+        top->graph().addEdge("b", "a");
+        top->graph().addEdge("a", "c");
     }
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
