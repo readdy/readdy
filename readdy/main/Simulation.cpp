@@ -396,6 +396,11 @@ std::vector<const readdy::model::top::GraphTopology *> Simulation::currentTopolo
     return getSelectedKernel()->getKernelStateModel().getTopologies();
 }
 
+std::vector<model::Particle> Simulation::getParticlesForTopology(const model::top::GraphTopology &topology) const {
+    ensureKernelSelected();
+    return getSelectedKernel()->getKernelStateModel().getParticlesForTopology(topology);
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }

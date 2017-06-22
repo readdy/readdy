@@ -79,7 +79,7 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
 
     // avoid too large values of r
     double r = std::sqrt(1.0 - cos_theta * cos_theta);
-    if(r < .001) r = .001;
+    if(r < SMALL) r = SMALL;
     r = 1./r;
 
     const double c = 2. * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;

@@ -84,9 +84,14 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
     auto n_norm_squared = n.normSquared();
     n_norm_squared = n_norm_squared < SMALL ? SMALL : n_norm_squared;
     const auto n_norm = std::sqrt(n_norm_squared);
-    const auto n_m_norm = m_norm * n_norm;
+    auto n_m_norm = m_norm * n_norm;
+    n_m_norm < SMALL ? SMALL : n_m_norm;
     const auto m_x_n = m.cross(n);
-    const auto cos_phi = (m * n) / n_m_norm;
+    const auto n_m = n*m;
+    const auto cos_phi = n_m / n_m_norm;
+    if(std::abs(cos_phi) < SMALL) {
+        return;
+    }
     const auto sin_phi = (m.cross(n)) * x_jk / (n_m_norm * x_jk_norm);
     const auto phi = -std::atan2(sin_phi, cos_phi);
     const auto d_V_d_phi = -dih.forceConstant * dih.multiplicity * std::sin(dih.multiplicity * phi - dih.phi_0);

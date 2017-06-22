@@ -73,7 +73,6 @@ class ChainDecay(object):
             recipe = top.Recipe(topology)
             if topology.get_n_particles() == 1:
                 recipe.change_particle_type(0, typeidb)
-                print("green!")
             return recipe
 
         def rate_function(topology):
