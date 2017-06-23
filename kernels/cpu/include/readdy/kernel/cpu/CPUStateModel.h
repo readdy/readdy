@@ -53,7 +53,7 @@ public:
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 
-    using topologies_t = readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>>;
+    using topologies_t = readdy::util::index_persistent_vector<readdy::model::top::GraphTopology>;
 
     CPUStateModel(readdy::model::KernelContext* context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);

@@ -37,6 +37,7 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+class Topology;
 NAMESPACE_BEGIN(pot)
 
 class TopologyPotentialAction {
@@ -62,7 +63,7 @@ public:
 
     ~EvaluatePotentialAction() override = default;
 
-    virtual scalar perform() = 0;
+    virtual scalar perform(const Topology* const topology) = 0;
 };
 
 NAMESPACE_END(pot)

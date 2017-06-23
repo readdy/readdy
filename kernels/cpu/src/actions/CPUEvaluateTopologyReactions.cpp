@@ -82,12 +82,12 @@ void CPUEvaluateTopologyReactions::perform() {
         {
             rate_t current_cumulative_rate = 0;
             std::size_t topology_idx = 0;
-            for (auto &topRef : topologies) {
+            for (auto &top : topologies) {
 
-                if (!topRef->isDeactivated()) {
+                if (!top.isDeactivated()) {
 
                     std::size_t reaction_idx = 0;
-                    for (const auto &reaction : topRef->registeredReactions()) {
+                    for (const auto &reaction : top.registeredReactions()) {
 
                         TREvent event{};
                         event.own_rate = std::get<1>(reaction);
@@ -113,7 +113,7 @@ void CPUEvaluateTopologyReactions::perform() {
             while (end != events.begin()) {
                 const auto cumulative_rate = (end - 1)->cumulative_rate;
 
-                const auto x = readdy::model::rnd::uniform_real(static_cast<scalar>(0.), cumulative_rate);
+                const auto x = readdy::model::rnd::uniform_real(c_::zero, cumulative_rate);
 
                 const auto eventIt = std::lower_bound(
                         events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {
@@ -128,7 +128,7 @@ void CPUEvaluateTopologyReactions::perform() {
                         log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt)+1, events.size(), eventIt->own_rate);
                         // perform the event!
                         auto &topology = topologies.at(event.topology_idx);
-                        if (topology->isDeactivated()) {
+                        if (topology.isDeactivated()) {
                             log::critical("deactivated topology with idx {}", event.topology_idx);
                             for (auto it = events.begin(); it != end; ++it) {
                                 log::warn(" -> event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate,
@@ -139,21 +139,21 @@ void CPUEvaluateTopologyReactions::perform() {
                                           it->own_rate, it->cumulative_rate);
                             }
                         }
-                        assert(!topology->isDeactivated());
-                        auto &reaction = topology->registeredReactions().at(event.reaction_idx);
-                        auto result = std::get<0>(reaction).execute(*topology, kernel);
+                        assert(!topology.isDeactivated());
+                        auto &reaction = topology.registeredReactions().at(event.reaction_idx);
+                        auto result = std::get<0>(reaction).execute(topology, kernel);
                         if (!result.empty()) {
                             // we had a topology fission, so we need to actually remove the current topology from the
                             // data structure
                             topologies.erase(topologies.begin() + event.topology_idx);
                             //log::error("erased topology with index {}", event.topology_idx);
-                            assert(topology->isDeactivated());
+                            assert(topology.isDeactivated());
                             std::move(result.begin(), result.end(), std::back_inserter(new_topologies));
                         } else {
-                            if (topology->isNormalParticle(*kernel)) {
+                            if (topology.isNormalParticle(*kernel)) {
                                 topologies.erase(topologies.begin() + event.topology_idx);
                                 //log::error("erased topology with index {}", event.topology_idx);
-                                assert(topology->isDeactivated());
+                                assert(topology.isDeactivated());
                             }
                         }
 
@@ -209,10 +209,9 @@ void CPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     // if we have a single particle that is not of flavor topology, ignore!
                     if (!top.isNormalParticle(*kernel)) {
-                        auto new_top = std::make_unique<readdy::model::top::GraphTopology>(std::move(top));
-                        auto it = topologies.push_back(std::move(new_top));
-                        (*it)->updateReactionRates();
-                        (*it)->configure();
+                        auto it = topologies.push_back(std::move(top));
+                        it->updateReactionRates();
+                        it->configure();
                     }
                 }
             }

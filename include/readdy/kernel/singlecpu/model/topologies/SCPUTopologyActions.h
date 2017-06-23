@@ -56,9 +56,9 @@ public:
                                        const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-    scalar perform() override {
+    scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &particleIndices = topology->getParticles();
         const auto &d = context->getShortestDifferenceFun();
         for (const auto &bond : potential->getBonds()) {
             readdy::model::Vec3 forceUpdate{0, 0, 0};
@@ -83,9 +83,9 @@ public:
                                         const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
-    scalar perform() override {
+    scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &particleIndices = topology->getParticles();
         const auto &d = context->getShortestDifferenceFun();
 
 
@@ -107,15 +107,14 @@ class SCPUCalculateCosineDihedralPotential : public readdy::model::top::pot::Cal
     const cos_dihedral *const potential;
     SCPUParticleData *const data;
 public:
-    SCPUCalculateCosineDihedralPotential(const readdy::model::KernelContext *const context,
-                                         SCPUParticleData *const data,
+    SCPUCalculateCosineDihedralPotential(const readdy::model::KernelContext *const context, SCPUParticleData *const data,
                                          const cos_dihedral *const pot)
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
-    scalar perform() override {
+    scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &particleIndices = topology->getParticles();
         const auto &d = context->getShortestDifferenceFun();
 
         for (const auto &dih : potential->getDihedrals()) {

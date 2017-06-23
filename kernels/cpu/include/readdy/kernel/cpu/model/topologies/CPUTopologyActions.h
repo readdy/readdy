@@ -54,9 +54,9 @@ public:
                                       const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-    readdy::scalar perform() override {
+    readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &particleIndices = topology->getParticles();
         const auto &d = context->getShortestDifferenceFun();
         for (const auto &bond : potential->getBonds()) {
             readdy::model::Vec3 forceUpdate{0, 0, 0};
@@ -82,9 +82,9 @@ public:
                                        const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
-    readdy::scalar perform() override {
+    readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &particleIndices = topology->getParticles();
         const auto &d = context->getShortestDifferenceFun();
 
 
@@ -111,9 +111,9 @@ public:
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
-    readdy::scalar perform() override {
+    readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
-        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &particleIndices = topology->getParticles();
         const auto &d = context->getShortestDifferenceFun();
 
         for (const auto &dih : potential->getDihedrals()) {

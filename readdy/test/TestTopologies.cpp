@@ -276,7 +276,7 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
     {
         std::vector<dihedral_bond::dihedral_t> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
-        top->addTorsionPotential(std::make_unique<dihedral_bond>(top, dihedral));
+        top->addTorsionPotential(std::make_unique<dihedral_bond>(dihedral));
     }
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;

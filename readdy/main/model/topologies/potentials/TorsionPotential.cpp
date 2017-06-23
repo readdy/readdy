@@ -41,10 +41,10 @@ namespace model {
 namespace top {
 namespace pot {
 
-TorsionPotential::TorsionPotential(Topology *const topology) : TopologyPotential(topology) {}
+TorsionPotential::TorsionPotential() : TopologyPotential() {}
 
-CosineDihedralPotential::CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals)
-        : TorsionPotential(topology), dihedrals(dihedrals) {
+CosineDihedralPotential::CosineDihedralPotential(const dihedrals_t &dihedrals)
+        : TorsionPotential(), dihedrals(dihedrals) {
 }
 
 const CosineDihedralPotential::dihedrals_t &CosineDihedralPotential::getDihedrals() const {

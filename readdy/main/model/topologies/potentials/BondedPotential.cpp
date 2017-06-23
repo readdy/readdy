@@ -41,8 +41,8 @@ namespace pot {
  * Super class
  */
 
-BondedPotential::BondedPotential(Topology *const topology, const bonds_t &bonds)
-        : TopologyPotential(topology), bonds(bonds) {}
+BondedPotential::BondedPotential(const bonds_t &bonds)
+        : TopologyPotential(), bonds(bonds) {}
 
 const BondedPotential::bonds_t &BondedPotential::getBonds() const {
     return bonds;
@@ -52,18 +52,8 @@ const BondedPotential::bonds_t &BondedPotential::getBonds() const {
  * Harmonic bond
  */
 
-HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const bonds_t &bonds)
-        : BondedPotential(topology, bonds) {
-    const auto n = topology->getNParticles();
-    for(const auto& bond : bonds) {
-        if (bond.idx1 >= n) {
-            throw std::invalid_argument("the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
-        }
-        if (bond.idx2 >= n) {
-            throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
-        }
-    }
-}
+HarmonicBondPotential::HarmonicBondPotential(const bonds_t &bonds)
+        : BondedPotential(bonds) {}
 
 scalar HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const BondConfiguration &bond) const {
     const auto norm = std::sqrt(x_ij * x_ij);

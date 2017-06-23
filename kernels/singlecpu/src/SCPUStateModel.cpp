@@ -147,19 +147,19 @@ void SCPUStateModel::calculateForces() {
     }
     // update forces and energy for topologies
     {
-        for (const auto &topology : _topologies) {
-            if(!topology->isDeactivated()) {
+        for ( auto &topology : _topologies) {
+            if(!topology.isDeactivated()) {
                 // calculate bonded potentials
-                for (const auto &bondedPot : topology->getBondedPotentials()) {
-                    auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                for (const auto &bondedPot : topology.getBondedPotentials()) {
+                    auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(&topology);
                     pimpl->currentEnergy += energy;
                 }
-                for (const auto &anglePot : topology->getAnglePotentials()) {
-                    auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                for (const auto &anglePot : topology.getAnglePotentials()) {
+                    auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(&topology);
                     pimpl->currentEnergy += energy;
                 }
-                for (const auto &torsionPot : topology->getTorsionPotentials()) {
-                    auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                for (const auto &torsionPot : topology.getTorsionPotentials()) {
+                    auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(&topology);
                     pimpl->currentEnergy += energy;
                 }
             }
@@ -182,10 +182,8 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    auto it = _topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
-            std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
-    );
-    return it->get();
+    auto it = _topologies.emplace_back(std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()));
+    return &*it;
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionRecords() {
@@ -226,8 +224,8 @@ std::vector<readdy::model::top::GraphTopology const *> SCPUStateModel::getTopolo
     std::vector<readdy::model::top::GraphTopology const*> result;
     result.reserve(_topologies.size() - _topologies.n_deactivated());
     for(const auto& top : _topologies) {
-        if(!top->isDeactivated()) {
-            result.push_back(top.get());
+        if(!top.isDeactivated()) {
+            result.push_back(&top);
         }
     }
     return result;

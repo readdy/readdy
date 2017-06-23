@@ -52,12 +52,7 @@ public:
 
     virtual ~TopologyPotential() = default;
 
-    Topology *const getTopology() const;
-
     virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*) = 0;
-
-protected:
-    Topology *const topology;
 };
 
 NAMESPACE_END(pot)

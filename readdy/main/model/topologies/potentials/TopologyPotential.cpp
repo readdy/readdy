@@ -36,11 +36,8 @@ namespace readdy {
 namespace model {
 namespace top {
 namespace pot {
-TopologyPotential::TopologyPotential(Topology *const topology) : topology(topology) {}
 
-Topology *const TopologyPotential::getTopology() const {
-    return topology;
-}
+TopologyPotential::TopologyPotential() = default;
 
 }
 }

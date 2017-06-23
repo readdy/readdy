@@ -111,7 +111,7 @@ public:
     iterator push_back(T &&val) {
         if (_blanks.empty()) {
             _backing_vector.push_back(std::forward<T>(val));
-            return _backing_vector.end()-1;
+            return std::prev(_backing_vector.end());
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
@@ -123,11 +123,24 @@ public:
     iterator push_back(const T &val) {
         if (_blanks.empty()) {
             _backing_vector.push_back(val);
-            return _backing_vector.end()-1;
+            return std::prev(_backing_vector.end());
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backing_vector.at(idx) = val;
+            return _backing_vector.begin() + idx;
+        }
+    }
+
+    template<typename... Args>
+    iterator emplace_back(Args&&... args) {
+        if (_blanks.empty()) {
+            _backing_vector.emplace_back(std::forward<Args>(args)...);
+            return std::prev(_backing_vector.end());
+        } else {
+            const auto idx = _blanks.back();
+            _blanks.pop_back();
+            _backing_vector.get_allocator().construct(&*_backing_vector.begin() + idx, std::forward<Args>(args)...);
             return _backing_vector.begin() + idx;
         }
     }

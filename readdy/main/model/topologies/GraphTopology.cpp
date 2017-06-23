@@ -86,9 +86,9 @@ void GraphTopology::configure() {
     graph_.findNTuples([&](const graph_t::edge &tuple) {
         auto v1 = std::get<0>(tuple);
         auto v2 = std::get<1>(tuple);
-        auto it = config.pairPotentials.find(
+        auto it = config.get().pairPotentials.find(
                 std::tie(v1->particleType(), v2->particleType()));
-        if (it != config.pairPotentials.end()) {
+        if (it != config.get().pairPotentials.end()) {
             for (const auto &cfg : it->second) {
                 bonds[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex,
                                              cfg.forceConstant, cfg.length);
@@ -112,8 +112,8 @@ void GraphTopology::configure() {
         const auto &v1 = std::get<0>(triple);
         const auto &v2 = std::get<1>(triple);
         const auto &v3 = std::get<2>(triple);
-        auto it = config.anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
-        if (it != config.anglePotentials.end()) {
+        auto it = config.get().anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
+        if (it != config.get().anglePotentials.end()) {
             for (const auto &cfg : it->second) {
                 angles[cfg.type].emplace_back(v2->particleIndex, v1->particleIndex, v3->particleIndex,
                                               cfg.forceConstant, cfg.equilibriumAngle);
@@ -124,9 +124,9 @@ void GraphTopology::configure() {
         const auto &v2 = std::get<1>(quadruple);
         const auto &v3 = std::get<2>(quadruple);
         const auto &v4 = std::get<3>(quadruple);
-        auto it = config.torsionPotentials.find(
+        auto it = config.get().torsionPotentials.find(
                 std::tie(v1->particleType(), v2->particleType(), v3->particleType(), v4->particleType()));
-        if (it != config.torsionPotentials.end()) {
+        if (it != config.get().torsionPotentials.end()) {
             for (const auto &cfg : it->second) {
                 dihedrals[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
                                                  v4->particleIndex, cfg.forceConstant, cfg.multiplicity,
@@ -137,7 +137,7 @@ void GraphTopology::configure() {
     for (const auto &bond : bonds) {
         switch (bond.first) {
             case api::BondType::HARMONIC: {
-                addBondedPotential(std::make_unique<harmonic_bond>(this, bond.second));
+                addBondedPotential(std::make_unique<harmonic_bond>(bond.second));
                 break;
             };
         }
@@ -145,7 +145,7 @@ void GraphTopology::configure() {
     for (const auto &angle : angles) {
         switch (angle.first) {
             case api::AngleType::HARMONIC: {
-                addAnglePotential(std::make_unique<harmonic_angle>(this, angle.second));
+                addAnglePotential(std::make_unique<harmonic_angle>(angle.second));
                 break;
             };
         }
@@ -153,7 +153,7 @@ void GraphTopology::configure() {
     for (const auto &dih : dihedrals) {
         switch (dih.first) {
             case api::TorsionType::COS_DIHEDRAL: {
-                addTorsionPotential(std::make_unique<cos_dihedral>(this, dih.second));
+                addTorsionPotential(std::make_unique<cos_dihedral>(dih.second));
                 break;
             };
         }

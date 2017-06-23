@@ -46,7 +46,7 @@ class AnglePotential : public TopologyPotential {
 public:
     using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
 
-    AnglePotential(Topology *const topology);
+    AnglePotential();
 
     virtual ~AnglePotential() = default;
 };
