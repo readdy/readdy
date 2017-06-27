@@ -161,6 +161,12 @@ const ReactionRegistry::reaction_o2_registry &ReactionRegistry::order2() const {
     return two_educts_registry;
 }
 
+void ReactionRegistry::add_topology_reaction(const std::string &name, const util::particle_type_pair &types,
+                                             const util::particle_type_pair &types_to, const scalar rate,
+                                             const scalar radius) {
+    topology_reactions.insert(std::make_pair(types, topology_reaction(name, types, types_to, rate, radius)));
+}
+
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {
     two_educts_registry_external[std::tie(r->getEducts()[0], r->getEducts()[1])].push_back(r);
     n_order2_ += 1;

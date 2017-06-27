@@ -183,6 +183,10 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
         types.push_back(p.getType());
     }
     auto it = _topologies.emplace_back(std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()));
+    const auto idx = std::distance(topologies().begin(), it);
+    for(const auto p: it->getParticles()) {
+        pimpl->particleData->entry_at(p).topology_index = idx;
+    }
     return &*it;
 }
 
