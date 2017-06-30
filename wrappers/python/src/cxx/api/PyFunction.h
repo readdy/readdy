@@ -50,6 +50,9 @@ struct PyFunction<R(Args...)> {
     }) {
     }
 
+    PyFunction(const PyFunction&) = default;
+    PyFunction& operator=(const PyFunction&) = default;
+
     R operator()(Args &&... args) {
         pybind11::gil_scoped_acquire lock;
         pybind11::object res = (*py_obj)(std::forward<Args>(args)...);
@@ -67,6 +70,9 @@ struct PyFunction<void(Args...)> {
         delete o;
     }) {
     }
+
+    PyFunction(const PyFunction&) = default;
+    PyFunction& operator=(const PyFunction&) = default;
 
     void operator()(Args &&... args) {
         pybind11::gil_scoped_acquire lock;

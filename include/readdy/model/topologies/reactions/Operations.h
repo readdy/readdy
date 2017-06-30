@@ -23,65 +23,74 @@
 /**
  * << detailed description >>
  *
- * @file AnglePotential.h
+ * @file Operations.h
  * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 13.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <cstddef>
-#include <tuple>
-#include <vector>
-#include "TopologyPotential.h"
+#include <memory>
+#include <readdy/common/macros.h>
+#include "TopologyReactionAction.h"
+#include "TopologyReactionActionFactory.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+class GraphTopology;
+NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(op)
 
-class AnglePotential : public TopologyPotential {
+class Operation {
 public:
-    using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
+    using Ref = std::shared_ptr<Operation>;
+    using factory_ref = const actions::TopologyReactionActionFactory *const;
+    using topology_ref = GraphTopology *const;
+    using graph_t = actions::TopologyReactionAction::graph_t;
+    using action_ptr = std::unique_ptr<actions::TopologyReactionAction>;
 
-    AnglePotential(Topology *const topology);
+    using vertex_ref = graph_t::vertex_ref;
+    using edge = graph_t::edge;
 
-    virtual ~AnglePotential() = default;
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const = 0;
 };
 
-struct AngleConfiguration {
-
-    AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double equilibriumAngle);
-
-    const std::size_t idx1, idx2, idx3;
-    const double equilibriumAngle, forceConstant;
-};
-
-
-class HarmonicAnglePotential : public AnglePotential {
+class ChangeParticleType : public Operation {
 public:
-    using angle_t = AngleConfiguration;
-    using angles_t = std::vector<AngleConfiguration>;
+    ChangeParticleType(const vertex_ref &vertex, particle_type_type type_to);
 
-    HarmonicAnglePotential(Topology *const topology, const angles_t &angles);
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
 
-    virtual ~HarmonicAnglePotential() = default;
-
-    virtual std::unique_ptr<EvaluatePotentialAction>
-    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
-
-    const angles_t &getAngles() const;
-
-    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
-
-    void
-    calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
-
-protected:
-    angles_t angles;
+private:
+    vertex_ref _vertex;
+    particle_type_type _type_to;
 };
 
+class AddEdge : public Operation {
+public:
+    AddEdge(const edge &edge);
+
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
+
+private:
+    edge _edge;
+};
+
+class RemoveEdge : public Operation {
+public:
+    RemoveEdge(const edge &edge);
+
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
+
+private:
+    edge _edge;
+};
+
+NAMESPACE_END(op)
+NAMESPACE_END(reactions)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

@@ -130,8 +130,8 @@ void NeighborList::fill_container() {
 
         const auto grainSize = _data.size() / _config.nThreads();
         const auto data_begin = _data.cbegin();
-        auto worker = [=](model::CPUParticleData::const_iterator begin, model::CPUParticleData::const_iterator end,
-                          const CellContainer &container) {
+        auto worker = [=](std::size_t, model::CPUParticleData::const_iterator begin,
+                          model::CPUParticleData::const_iterator end, const CellContainer &container) {
             CellContainer::particle_index i = (CellContainer::particle_index) std::distance(data_begin, begin);
             for (auto it = begin; it != end; ++it, ++i) {
                 if (!it->is_deactivated()) {
@@ -139,14 +139,21 @@ void NeighborList::fill_container() {
                 }
             }
         };
-        std::vector<threading_model> threads;
-        threads.reserve(_config.nThreads());
+
+        auto& executor = *config().executor();
+
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(config().nThreads());
+
         auto it = _data.cbegin();
         for (auto i = 0; i < _config.nThreads() - 1; ++i) {
-            threads.emplace_back(worker, it, it + grainSize, std::cref(_cell_container));
+            executables.push_back(executor.pack(worker, it, it + grainSize, std::cref(_cell_container)));
             it += grainSize;
         }
-        threads.emplace_back(worker, it, _data.end(), std::cref(_cell_container));
+        executables.push_back(executor.pack(worker, it, _data.end(), std::cref(_cell_container)));
+
+        executor.execute_and_wait(std::move(executables));
+        // threads.emplace_back(worker, it, _data.end(), std::cref(_cell_container));
         /*std::size_t i = 0;
         for(auto it = _data.begin(); it != _data.end(); ++it, ++i) {
             if(!it->is_deactivated()) {

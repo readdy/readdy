@@ -296,7 +296,7 @@ data_t::update_t handleEventsGillespie(
                             return elem1.cumulativeRate < elem2;
                         }
                 );
-                const auto event = *eventIt;
+                const auto &event = *eventIt;
                 if (eventIt == events.end() - nDeactivated) {
                     throw std::runtime_error("this should not happen (event not found)");
                 }
@@ -395,6 +395,9 @@ data_t::update_t handleEventsGillespie(
 
 void SCPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
+    if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
+        return;
+    }
     auto &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
     if(ctx.recordReactionCounts()) {

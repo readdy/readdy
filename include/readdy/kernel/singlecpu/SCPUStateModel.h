@@ -39,6 +39,7 @@
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
+#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -49,6 +50,8 @@ class SCPUStateModel : public readdy::model::KernelStateModel {
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 public:
+
+    using topologies_t = readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>>;
 
     virtual void updateNeighborList() override;
 
@@ -69,6 +72,8 @@ public:
     virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
     virtual readdy::model::Particle getParticleForIndex(const std::size_t index) const override;
+
+    virtual particle_type_type getParticleType(const std::size_t index) const override;
 
     virtual double getEnergy() const override;
 
@@ -99,9 +104,17 @@ public:
 
     virtual void expected_n_particles(const std::size_t n) override;
 
+    const topologies_t &topologies() const;
+
+    topologies_t &topologies();
+
+    virtual std::vector<readdy::model::top::GraphTopology const*> getTopologies() const override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
+
+    topologies_t _topologies;
 };
 
 }

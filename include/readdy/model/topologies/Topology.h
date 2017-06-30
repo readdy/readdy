@@ -35,9 +35,6 @@
 #include <memory>
 #include <vector>
 
-#include "BondedPotential.h"
-#include "AnglePotential.h"
-#include "TorsionPotential.h"
 #include "TopologyActionFactory.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -57,17 +54,25 @@ class Topology {
 public:
     using particles_t = std::vector<std::size_t>;
 
-    Topology(particles_t &&particles);
+    using bonded_potential = pot::BondedPotential;
+    using harmonic_bond = TopologyActionFactory::harmonic_bond;
 
+    using angle_potential = pot::AnglePotential;
+    using harmonic_angle = TopologyActionFactory::harmonic_angle;
+
+    using torsion_potential = pot::TorsionPotential;
+    using cos_dihedral = TopologyActionFactory::cos_dihedral;
+
+    Topology(particles_t &&particles);
     Topology(const particles_t &particles);
 
     Topology(const Topology &) = delete;
 
     Topology &operator=(const Topology &) = delete;
 
-    Topology(Topology &&) = delete;
+    Topology(Topology &&) = default;
 
-    Topology &operator=(Topology &&) = delete;
+    Topology &operator=(Topology &&) = default;
 
     virtual ~Topology();
 
@@ -77,40 +82,40 @@ public:
 
     particles_t &getParticles();
 
-    const std::vector<std::unique_ptr<BondedPotential>> &getBondedPotentials() const;
+    const std::vector<std::unique_ptr<bonded_potential>> &getBondedPotentials() const;
 
-    const std::vector<std::unique_ptr<AnglePotential>> &getAnglePotentials() const;
+    const std::vector<std::unique_ptr<angle_potential>> &getAnglePotentials() const;
 
-    const std::vector<std::unique_ptr<TorsionPotential>> &getTorsionPotentials() const;
+    const std::vector<std::unique_ptr<torsion_potential>> &getTorsionPotentials() const;
 
     template<typename T, typename... Args>
-    typename std::enable_if<std::is_base_of<BondedPotential, T>::value>::type addBondedPotential(Args &&...args) {
+    typename std::enable_if<std::is_base_of<bonded_potential, T>::value>::type addBondedPotential(Args &&...args) {
         bondedPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
-    };
+    }
 
-    void addBondedPotential(std::unique_ptr<BondedPotential> &&);
+    void addBondedPotential(std::unique_ptr<bonded_potential> &&);
 
     template<typename T, typename... Args>
-    typename std::enable_if<std::is_base_of<AnglePotential, T>::value>::type addAnglePotential(Args &&...args) {
+    typename std::enable_if<std::is_base_of<angle_potential, T>::value>::type addAnglePotential(Args &&...args) {
         anglePotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
-    };
+    }
 
-    void addAnglePotential(std::unique_ptr<AnglePotential> &&);
+    void addAnglePotential(std::unique_ptr<angle_potential> &&);
 
     template<typename T, typename... Args>
-    typename std::enable_if<std::is_base_of<TorsionPotential, T>::value>::type addTorsionPotential(Args &&...args) {
+    typename std::enable_if<std::is_base_of<torsion_potential, T>::value>::type addTorsionPotential(Args &&...args) {
         torsionPotentials.push_back(std::make_unique<T>(this, std::forward<Args>(args)...));
-    };
+    }
 
-    void addTorsionPotential(std::unique_ptr<TorsionPotential> &&);
+    void addTorsionPotential(std::unique_ptr<torsion_potential> &&);
 
     virtual void permuteIndices(const std::vector<std::size_t> &permutation);
 
 protected:
     particles_t particles;
-    std::vector<std::unique_ptr<BondedPotential>> bondedPotentials;
-    std::vector<std::unique_ptr<AnglePotential>> anglePotentials;
-    std::vector<std::unique_ptr<TorsionPotential>> torsionPotentials;
+    std::vector<std::unique_ptr<bonded_potential>> bondedPotentials;
+    std::vector<std::unique_ptr<angle_potential>> anglePotentials;
+    std::vector<std::unique_ptr<torsion_potential>> torsionPotentials;
 };
 
 NAMESPACE_END(top)

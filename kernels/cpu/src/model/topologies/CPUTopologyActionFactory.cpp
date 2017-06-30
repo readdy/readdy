@@ -33,30 +33,41 @@
 #include <readdy/kernel/cpu/model/topologies/CPUTopologyActionFactory.h>
 #include <readdy/kernel/cpu/model/topologies/CPUTopologyActions.h>
 
-readdy::kernel::cpu::model::top::CPUTopologyActionFactory::CPUTopologyActionFactory(
+namespace top = readdy::model::top;
+namespace ctop = readdy::kernel::cpu::model::top;
+
+ctop::CPUTopologyActionFactory::CPUTopologyActionFactory(
         readdy::kernel::cpu::CPUKernel *const kernel) : kernel(kernel) {
 }
 
-std::unique_ptr<readdy::model::top::CalculateHarmonicBondPotential>
-readdy::kernel::cpu::model::top::CPUTopologyActionFactory::createCalculateHarmonicBondPotential(
-        const readdy::model::top::HarmonicBondPotential *const potential) const {
+std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
+ctop::CPUTopologyActionFactory::createCalculateHarmonicBondPotential(
+        const harmonic_bond *const potential) const {
     return std::make_unique<CPUCalculateHarmonicBondPotential>(
             &kernel->getKernelContext(), kernel->getCPUKernelStateModel().getParticleData(), potential
     );
 }
 
-std::unique_ptr<readdy::model::top::CalculateHarmonicAnglePotential>
-readdy::kernel::cpu::model::top::CPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
-        const readdy::model::top::HarmonicAnglePotential *const potential) const {
+std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
+ctop::CPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
+        const harmonic_angle *const potential) const {
     return std::make_unique<CPUCalculateHarmonicAnglePotential>(
             &kernel->getKernelContext(), kernel->getCPUKernelStateModel().getParticleData(), potential
     );
 }
 
-std::unique_ptr<readdy::model::top::CalculateCosineDihedralPotential>
-readdy::kernel::cpu::model::top::CPUTopologyActionFactory::createCalculateCosineDihedralPotential(
-        const readdy::model::top::CosineDihedralPotential *const potential) const {
+std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
+ctop::CPUTopologyActionFactory::createCalculateCosineDihedralPotential(
+        const cos_dihedral *const potential) const {
     return std::make_unique<CPUCalculateCosineDihedralPotential>(
             &kernel->getKernelContext(), kernel->getCPUKernelStateModel().getParticleData(), potential
     );
+}
+
+ctop::CPUTopologyActionFactory::operation_ref
+ctop::CPUTopologyActionFactory::createChangeParticleType(
+        top::GraphTopology *const topology, const vertex_t &v,
+        const readdy::particle_type_type &type_to) const {
+    return std::make_unique<reactions::op::CPUChangeParticleType>(kernel->getCPUKernelStateModel().getParticleData(),
+                                                                  topology, v, type_to);
 }

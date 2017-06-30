@@ -658,6 +658,7 @@ TEST(TestPerformance, ReactiveCPU) {
     sim.setBoxSize(100, 100, 100);
     sim.setPeriodicBoundary({true, true, true});
     sim.registerParticleType("A", 1.0, 1.0);
+    sim.registerHarmonicRepulsionPotential("A", "A", 1.0);
     for(int i = 0; i < 200; ++i) {
         sim.addParticle("A", 0, 0, 0);
     }
@@ -665,7 +666,8 @@ TEST(TestPerformance, ReactiveCPU) {
     {
         using timer = readdy::util::Timer;
         timer c {"timer"};
-        sim.runScheme(true).includeForces(false).evaluateObservables(false).configureAndRun(100000, 1);
+        sim.runScheme(true).includeForces(false).withReactionScheduler("Gillespie")
+                .evaluateObservables(false).configureAndRun(100000, 1);
     }
 
 }

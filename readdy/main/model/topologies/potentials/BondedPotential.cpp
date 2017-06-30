@@ -30,12 +30,12 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/BondedPotential.h>
 #include <readdy/model/topologies/Topology.h>
 
 namespace readdy {
 namespace model {
 namespace top {
+namespace pot {
 
 /*
  * Super class
@@ -83,6 +83,7 @@ HarmonicBondPotential::createForceAndEnergyAction(const TopologyActionFactory *c
 
 BondConfiguration::BondConfiguration(std::size_t idx1, std::size_t idx2, double forceConstant, double length)
         : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
+}
 }
 }
 }

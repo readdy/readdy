@@ -85,7 +85,7 @@ void CPUHistogramAlongAxis::evaluate() {
 
     std::vector<std::future<result_t>> updates;
     updates.reserve(kernel->getNThreads());
-    auto worker = [binBorders, typesToCount, resultSize, data, axis](Iter from, Iter to, std::promise<result_t> update) {
+    auto worker = [binBorders, typesToCount, resultSize, data, axis](std::size_t, Iter from, Iter to, std::promise<result_t>& update) {
         result_t resultUpdate;
         resultUpdate.resize(resultSize);
 
@@ -93,7 +93,7 @@ void CPUHistogramAlongAxis::evaluate() {
             if (!it->is_deactivated() && typesToCount.find(it->type) != typesToCount.end()) {
                 auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), it->position()[axis]);
                 if (upperBound != binBorders.end()) {
-                    unsigned long binBordersIdx = upperBound - binBorders.begin();
+                    auto binBordersIdx = upperBound - binBorders.begin();
                     if (binBordersIdx >= 1 && binBordersIdx < resultSize) {
                         ++resultUpdate[binBordersIdx - 1];
                     }
@@ -107,17 +107,24 @@ void CPUHistogramAlongAxis::evaluate() {
     {
         const std::size_t grainSize = data->size() / kernel->getNThreads();
 
-        std::vector<threading_model> threads;
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(kernel->getNThreads());
+        std::vector<std::promise<result_t>> promises;
+        promises.resize(kernel->getNThreads());
+
+        const auto& executor = kernel->executor();
+
         Iter workIter = data->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
-            std::promise<result_t> promise;
-            updates.push_back(promise.get_future());
-            threads.emplace_back(worker, workIter, workIter + grainSize, std::move(promise));
+            updates.push_back(promises.at(i).get_future());
+            executables.push_back(executor.pack(worker, workIter, workIter + grainSize, std::ref(promises.at(i))));
             workIter += grainSize;
         }
-        std::promise<result_t> promise;
+        auto& promise = promises.back();
         updates.push_back(promise.get_future());
-        threads.emplace_back(worker, workIter, data->cend(), std::move(promise));
+        executables.push_back(executor.pack(worker, workIter, data->cend(), std::ref(promise)));
+
+        executor.execute_and_wait(std::move(executables));
     }
 
     for (auto &update : updates) {

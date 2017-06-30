@@ -38,8 +38,7 @@ namespace top {
 readdy::model::top::Topology::~Topology() = default;
 
 Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) { }
-
-Topology::Topology(const Topology::particles_t &particles) : particles(particles){}
+Topology::Topology(const Topology::particles_t &p) : particles(p) { }
 
 Topology::particles_t::size_type Topology::getNParticles() const {
     return particles.size();
@@ -53,33 +52,33 @@ Topology::particles_t &Topology::getParticles() {
     return particles;
 }
 
-const std::vector<std::unique_ptr<BondedPotential>> &Topology::getBondedPotentials() const {
+const std::vector<std::unique_ptr<pot::BondedPotential>> &Topology::getBondedPotentials() const {
     return bondedPotentials;
 }
 
-const std::vector<std::unique_ptr<AnglePotential>> &Topology::getAnglePotentials() const {
+const std::vector<std::unique_ptr<pot::AnglePotential>> &Topology::getAnglePotentials() const {
     return anglePotentials;
 }
 
-const std::vector<std::unique_ptr<TorsionPotential>> &Topology::getTorsionPotentials() const {
+const std::vector<std::unique_ptr<pot::TorsionPotential>> &Topology::getTorsionPotentials() const {
     return torsionPotentials;
 }
 
-void Topology::addAnglePotential(std::unique_ptr<AnglePotential> &&pot) {
+void Topology::addAnglePotential(std::unique_ptr<pot::AnglePotential> &&pot) {
     if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     anglePotentials.push_back(std::move(pot));
 }
 
-void Topology::addTorsionPotential(std::unique_ptr<TorsionPotential> &&pot) {
+void Topology::addTorsionPotential(std::unique_ptr<pot::TorsionPotential> &&pot) {
     if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }
     torsionPotentials.push_back(std::move(pot));
 }
 
-void Topology::addBondedPotential(std::unique_ptr<BondedPotential> &&pot) {
+void Topology::addBondedPotential(std::unique_ptr<pot::BondedPotential> &&pot) {
     if (pot->getTopology() != this) {
         throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
     }

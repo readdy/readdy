@@ -53,15 +53,16 @@ void writeReactionInformation(readdy::io::Group &group, const KernelContext &con
             if (it != reactions_current_type.end()) {
                 std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
                 const std::array<particle_type_type, 2> educts = {r->getEducts()[0], 0};
-                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(), r->getRate(), r->getEductDistance(),
+                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(),
+                                  r->getRate(), r->getEductDistance(),
                                   r->getProductDistance(), educts, r->getProducts()};
                 order1_info.push_back(info);
             }
         }
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         std::vector<readdy::io::h5::dims_t> extent = {n_reactions};
-        auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, ReactionInfoMemoryType(), ReactionInfoFileType(),
-                                                           io::DataSetCompression::none);
+        auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, ReactionInfoMemoryType(),
+                                                           ReactionInfoFileType(), io::DataSetCompression::none);
         order1_reaction_dset.append(extent, order1_info.data());
     }
     // order2
@@ -70,20 +71,22 @@ void writeReactionInformation(readdy::io::Group &group, const KernelContext &con
     if (n_reactions > 0) {
         std::vector<ReactionInfo> order2_info;
         for (const auto &r : order2_reactions) {
-            const auto &reactions_current_type = context.reactions().order2_by_type(r->getEducts()[0], r->getEducts()[1]);
+            const auto &reactions_current_type = context.reactions().order2_by_type(r->getEducts()[0],
+                                                                                    r->getEducts()[1]);
             auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
                                    [&r](const reactions::Reaction<2> *x) { return x->getId() == r->getId(); });
             if (it != reactions_current_type.end()) {
                 std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
-                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(), r->getRate(), r->getEductDistance(),
+                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(),
+                                  r->getRate(), r->getEductDistance(),
                                   r->getProductDistance(), r->getEducts(), r->getProducts()};
                 order2_info.push_back(info);
             }
         }
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         std::vector<readdy::io::h5::dims_t> extent = {n_reactions};
-        auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, ReactionInfoMemoryType(), ReactionInfoFileType(),
-                                                           io::DataSetCompression::none);
+        auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, ReactionInfoMemoryType(),
+                                                           ReactionInfoFileType(), io::DataSetCompression::none);
         order2_reaction_dset.append(extent, order2_info.data());
     }
 }
@@ -92,16 +95,22 @@ void writeParticleTypeInformation(readdy::io::Group &group, const KernelContext 
     const auto &types = context.particle_types().type_mapping();
     std::vector<ParticleTypeInfo> type_info_vec;
     for (const auto &p_type : types) {
-        ParticleTypeInfo info{p_type.first.c_str(), p_type.second, context.particle_types().diffusion_constant_of(p_type.first)};
+        ParticleTypeInfo info{p_type.first.c_str(), p_type.second,
+                              context.particle_types().diffusion_constant_of(p_type.first)};
         type_info_vec.push_back(info);
     }
     if (type_info_vec.size() > 0) {
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         std::vector<readdy::io::h5::dims_t> extent = {type_info_vec.size()};
-        auto dset = group.createDataSet("particle_types", extent, dims, ParticleTypeInfoMemoryType(), ParticleTypeInfoFileType(),
-                                        io::DataSetCompression::none);
+        auto dset = group.createDataSet("particle_types", extent, dims, ParticleTypeInfoMemoryType(),
+                                        ParticleTypeInfoFileType(), io::DataSetCompression::none);
         dset.append(extent, type_info_vec.data());
     }
+}
+
+void writeSimulationSetup(io::Group &group, const KernelContext &context) {
+    writeParticleTypeInformation(group, context);
+    writeReactionInformation(group, context);
 }
 
 }

@@ -34,6 +34,7 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/kernel/singlecpu/SCPUKernel.h>
+#include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
@@ -43,19 +44,22 @@ NAMESPACE_BEGIN(top)
 
 namespace top = readdy::model::top;
 
-class SCPUTopologyActionFactory : public readdy::model::top::TopologyActionFactory {
+class SCPUTopologyActionFactory : public top::TopologyActionFactory {
     const SCPUKernel *const kernel;
 public:
     SCPUTopologyActionFactory(const SCPUKernel *const kernel);
 
-    virtual std::unique_ptr<top::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const top::HarmonicBondPotential *const) const override;
+    virtual std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
+    createCalculateHarmonicBondPotential(const harmonic_bond *const) const override;
 
-    virtual std::unique_ptr<top::CalculateHarmonicAnglePotential>
-    createCalculateHarmonicAnglePotential(const top::HarmonicAnglePotential *const potential) const override;
+    virtual std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
+    createCalculateHarmonicAnglePotential(const harmonic_angle *const potential) const override;
 
-    virtual std::unique_ptr<top::CalculateCosineDihedralPotential>
-    createCalculateCosineDihedralPotential(const top::CosineDihedralPotential *const potential) const override;
+    virtual std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
+    createCalculateCosineDihedralPotential(const cos_dihedral *const potential) const override;
+
+    virtual operation_ref createChangeParticleType(top::GraphTopology *const topology, const vertex_t &v,
+                                                   const particle_type_type &type_to) const override;
 };
 
 NAMESPACE_END(top)

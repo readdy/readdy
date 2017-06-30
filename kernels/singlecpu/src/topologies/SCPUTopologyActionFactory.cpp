@@ -35,9 +35,6 @@
 
 namespace c_top = readdy::model::top;
 
-using harmonic_bond = c_top::HarmonicBondPotential;
-using calc_harmonic_bond = c_top::CalculateHarmonicBondPotential;
-
 namespace readdy {
 namespace kernel {
 namespace scpu {
@@ -46,26 +43,34 @@ namespace top {
 
 SCPUTopologyActionFactory::SCPUTopologyActionFactory(const SCPUKernel *const kernel) : kernel(kernel) {}
 
-std::unique_ptr<calc_harmonic_bond>
+std::unique_ptr<c_top::pot::CalculateHarmonicBondPotential>
 SCPUTopologyActionFactory::createCalculateHarmonicBondPotential(const harmonic_bond *const potential) const {
     return std::make_unique<SCPUCalculateHarmonicBondPotential>(
             &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
     );
 }
 
-std::unique_ptr<readdy::model::top::CalculateHarmonicAnglePotential>
+std::unique_ptr<readdy::model::top::pot::CalculateHarmonicAnglePotential>
 SCPUTopologyActionFactory::createCalculateHarmonicAnglePotential(
-        const readdy::model::top::HarmonicAnglePotential *const potential) const {
+        const harmonic_angle *const potential) const {
     return std::make_unique<SCPUCalculateHarmonicAnglePotential>(
             &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
     );
 }
 
-std::unique_ptr<top::CalculateCosineDihedralPotential>
+std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
 SCPUTopologyActionFactory::createCalculateCosineDihedralPotential(
-        const readdy::model::top::CosineDihedralPotential *const potential) const {
+        const cos_dihedral *const potential) const {
     return std::make_unique<SCPUCalculateCosineDihedralPotential>(
             &kernel->getKernelContext(), kernel->getSCPUKernelStateModel().getParticleData(), potential
+    );
+}
+
+SCPUTopologyActionFactory::operation_ref
+SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const topology, const vertex_t &v,
+                                                    const particle_type_type &type_to) const {
+    return std::make_unique<reactions::op::SCPUChangeParticleType>(
+            kernel->getSCPUKernelStateModel().getParticleData(), topology, v, type_to
     );
 }
 

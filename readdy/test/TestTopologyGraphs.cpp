@@ -31,13 +31,11 @@
 #include <readdy/common/logging.h>
 #include <readdy/common/numeric.h>
 #include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/model/topologies/connectivity/Graph.h>
-#include <readdy/model/topologies/TorsionPotential.h>
+#include <readdy/model/topologies/graph/Graph.h>
+#include <readdy/model/topologies/potentials/TorsionPotential.h>
 #include <readdy/plugin/KernelProvider.h>
 
-struct TestTopologyGraphs : KernelTest {
-
-};
+class TestTopologyGraphs : public KernelTest {};
 
 /**
  * << detailed description >>
@@ -52,7 +50,7 @@ struct TestTopologyGraphs : KernelTest {
 using particle_t = readdy::model::Particle;
 using topology_particle_t = readdy::model::TopologyParticle;
 
-using dihedral_bond = readdy::model::top::CosineDihedralPotential;
+using dihedral_bond = readdy::model::top::pot::CosineDihedralPotential;
 
 TEST(TestTopologyGraphs, TestQuadruple) {
     readdy::util::particle_type_quadruple_hasher hasher;
@@ -83,7 +81,7 @@ TEST(TestTopologyGraphs, TestTriple) {
 TEST(TestTopologyGraphs, TestTuple) {
     readdy::util::particle_type_pair_hasher hasher;
     EXPECT_EQ(hasher(std::make_tuple(1, 2)), hasher(std::make_tuple(2, 1)));
-    std::unordered_map<readdy::util::particle_type_pair, int, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to> map;
+    readdy::util::particle_type_pair_unordered_map<int> map;
     int a = 1, b = 2;
     map[std::make_tuple(a, b)] = 5;
     EXPECT_EQ(map[std::make_tuple(1, 2)], 5);
@@ -96,15 +94,15 @@ TEST(TestTopologyGraphs, TestGraphWithNamedVertices) {
     graph.addVertex(1, 0, "myVertex2");
     graph.addEdge("myVertex", "myVertex2");
     EXPECT_EQ(graph.vertices().size(), 2);
-    EXPECT_EQ(graph.vertices().front().label, "myVertex");
-    EXPECT_EQ(graph.vertices().back().label, "myVertex2");
+    EXPECT_EQ(graph.vertices().front().label(), "myVertex");
+    EXPECT_EQ(graph.vertices().back().label(), "myVertex2");
     EXPECT_EQ(graph.namedVertex("myVertex").neighbors().size(), 1);
     EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 1);
-    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().front()->label, "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().back()->label, "myVertex");
+    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().front()->label(), "myVertex2");
+    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().back()->label(), "myVertex");
     graph.removeVertex("myVertex");
     EXPECT_EQ(graph.vertices().size(), 1);
-    EXPECT_EQ(graph.vertices().front().label, "myVertex2");
+    EXPECT_EQ(graph.vertices().front().label(), "myVertex2");
     EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 0);
 }
 
@@ -124,6 +122,60 @@ TEST(TestTopologyGraphs, TestGraphWithIndices) {
     EXPECT_EQ(graph.vertices().size(), 1);
     EXPECT_EQ(graph.vertexForParticleIndex(1).particleIndex, 1);
     EXPECT_EQ(graph.vertexForParticleIndex(1).neighbors().size(), 0);
+}
+
+TEST(TestTopologyGraphs, ConnectedSubComponents) {
+    readdy::model::top::graph::Graph graph;
+    graph.addVertex(0, 0);
+    graph.addVertex(1, 0);
+    graph.addVertex(2, 0);
+
+    auto vertex_ref_0 = graph.vertices().begin();
+    auto vertex_ref_1 = ++graph.vertices().begin();
+    auto vertex_ref_2 = ++(++graph.vertices().begin());
+
+    auto it = graph.vertices().begin();
+    auto it_adv = ++graph.vertices().begin();
+    graph.addEdge(it, it_adv);
+
+    auto subGraphs = graph.connectedComponentsDestructive();
+    ASSERT_EQ(subGraphs.size(), 2);
+    {
+        ASSERT_EQ(subGraphs[0].vertices().size(), 2);
+        ASSERT_EQ(subGraphs[0].vertices().begin(), vertex_ref_0);
+        ASSERT_EQ(++subGraphs[0].vertices().begin(), vertex_ref_1);
+    }
+    {
+        ASSERT_EQ(subGraphs[1].vertices().size(), 1);
+        ASSERT_EQ(subGraphs[1].vertices().begin(), vertex_ref_2);
+    }
+}
+
+TEST(TestTopologyGraphs, ConnectedSubComponentsWithLabels) {
+    readdy::model::top::graph::Graph graph;
+    graph.addVertex(0, 0, "0");
+    graph.addVertex(1, 0, "1");
+    graph.addVertex(2, 0, "2");
+
+    auto vertex_ref_0 = graph.vertices().begin();
+    auto vertex_ref_1 = ++graph.vertices().begin();
+    auto vertex_ref_2 = ++(++graph.vertices().begin());
+
+    auto it = graph.vertices().begin();
+    auto it_adv = ++graph.vertices().begin();
+    graph.addEdge(it, it_adv);
+
+    auto subGraphs = graph.connectedComponentsDestructive();
+    ASSERT_EQ(subGraphs.size(), 2);
+    {
+        ASSERT_EQ(subGraphs[0].vertexLabelMapping().size(), 2);
+        ASSERT_EQ(subGraphs[0].namedVertexPtr("0").data(), vertex_ref_0);
+        ASSERT_EQ(subGraphs[0].namedVertexPtr("1").data(), vertex_ref_1);
+    }
+    {
+        ASSERT_EQ(subGraphs[1].vertexLabelMapping().size(), 1);
+        ASSERT_EQ(subGraphs[1].namedVertexPtr("2").data(), vertex_ref_2);
+    }
 }
 
 TEST(TestTopologyGraphs, TestTopologyWithGraph) {
@@ -294,8 +346,8 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
         top->graph().setVertexLabel(it++, "a");
         top->graph().setVertexLabel(it++, "b");
         top->graph().setVertexLabel(it++, "c");
-        top->graph().addEdge("a", "b");
-        top->graph().addEdge("b", "c");
+        top->graph().addEdge("b", "a");
+        top->graph().addEdge("a", "c");
     }
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);

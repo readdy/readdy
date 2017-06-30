@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,26 +21,31 @@
 
 
 /**
- * Core library implementation of observables. Since every kernel usually has its own implementation, there are mostly constructors here.
+ * << detailed description >>
  *
- * @file Observables.cpp
- * @brief Implementation of observables
+ * @file TopologyReactionException.h
+ * @brief << brief description >>
  * @author clonker
- * @author chrisfroe
- * @date 26.04.16
+ * @date 19.04.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/observables/Observables.h>
-#include <readdy/model/Kernel.h>
-#include <readdy/common/numeric.h>
-#include <readdy/io/DataSet.h>
-#include <readdy/model/IOUtils.h>
-#include <readdy/model/observables/io/Types.h>
+#pragma once
 
-namespace readdy {
-namespace model {
-namespace observables {
+#include <readdy/common/macros.h>
+#include <stdexcept>
 
-}
-}
-}
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(reactions)
+
+class TopologyReactionException : public std::runtime_error {
+public:
+    TopologyReactionException(const std::string &message) : runtime_error(message) {}
+};
+
+NAMESPACE_END(reactions)
+NAMESPACE_END(top)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

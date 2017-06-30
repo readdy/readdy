@@ -38,6 +38,7 @@
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
 #include <readdy/kernel/cpu/actions/reactions/NextSubvolumesReactionScheduler.h>
+#include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
 
 namespace core_p = readdy::model::actions;
 
@@ -85,6 +86,11 @@ core_p::reactions::NextSubvolumes *CPUActionFactory::createNextSubvolumes(double
 readdy::model::actions::AddParticles *
 CPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
     return new readdy::model::actions::AddParticles(kernel, particles);
+}
+
+readdy::model::actions::top::EvaluateTopologyReactions *
+CPUActionFactory::createEvaluateTopologyReactions(double timeStep) const {
+    return new top::CPUEvaluateTopologyReactions(kernel, timeStep);
 }
 }
 }

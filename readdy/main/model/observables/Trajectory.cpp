@@ -52,7 +52,7 @@ struct Trajectory::Impl {
 
 Trajectory::Trajectory(readdy::model::Kernel *const kernel, unsigned int stride)
         : super(kernel, stride), pimpl(std::make_unique<Impl>()) {
-};
+}
 
 void Trajectory::evaluate() {
     result.clear();

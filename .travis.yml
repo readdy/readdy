@@ -47,6 +47,7 @@ before_install:
 
 install:
 - if [ "$CXX" = "g++" ]; then export CXX="/usr/lib/ccache/g++-5" CC="/usr/lib/ccache/gcc-5"; fi
+- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then export BUILD_TYPE="RelWithDebInfo"; else export BUILD_TYPE="Release"; fi
 
 script:
 - conda build -q tools/conda-recipe

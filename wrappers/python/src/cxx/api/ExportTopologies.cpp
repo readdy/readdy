@@ -32,33 +32,119 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/topologies/GraphTopology.h>
 #include <readdy/model/_internal/Util.h>
+#include "PyFunction.h"
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
 
 using particle = readdy::model::Particle;
 using topology_particle = readdy::model::TopologyParticle;
+using base_topology = readdy::model::top::Topology;
 using topology = readdy::model::top::GraphTopology;
+using reaction = readdy::model::top::reactions::TopologyReaction;
+using reaction_recipe = readdy::model::top::reactions::Recipe;
 using graph = readdy::model::top::graph::Graph;
 using vertex = readdy::model::top::graph::Vertex;
-using topology_potential = readdy::model::top::TopologyPotential;
-using bonded_potential = readdy::model::top::BondedPotential;
-using angle_potential = readdy::model::top::AnglePotential;
-using torsion_potential = readdy::model::top::TorsionPotential;
-using harmonic_bond = readdy::model::top::HarmonicBondPotential;
-using harmonic_angle = readdy::model::top::HarmonicAnglePotential;
-using cosine_dihedral = readdy::model::top::CosineDihedralPotential;
+using topology_potential = readdy::model::top::pot::TopologyPotential;
+using bonded_potential = readdy::model::top::pot::BondedPotential;
+using angle_potential = readdy::model::top::pot::AnglePotential;
+using torsion_potential = readdy::model::top::pot::TorsionPotential;
+using harmonic_bond = readdy::model::top::pot::HarmonicBondPotential;
+using harmonic_angle = readdy::model::top::pot::HarmonicAnglePotential;
+using cosine_dihedral = readdy::model::top::pot::CosineDihedralPotential;
 using vec3 = readdy::model::Vec3;
+
+struct reaction_function_sink {
+    std::shared_ptr<py::function> f;
+    reaction_function_sink(py::function f) : f(std::make_shared<py::function>(f)) {};
+
+    inline reaction::reaction_function::result_type operator()(topology& top) {
+        py::gil_scoped_acquire gil;
+        auto t = py::cast(&top, py::return_value_policy::automatic_reference);
+        auto rv = (*f)(*t.cast<topology*>());
+        return rv.cast<reaction::reaction_function::result_type>();
+    }
+};
+
+struct rate_function_sink {
+    std::shared_ptr<py::function> f;
+    rate_function_sink(py::function f) : f(std::make_shared<py::function>(f)) {};
+
+    inline reaction::rate_function::result_type operator()(const topology& top) {
+        py::gil_scoped_acquire gil;
+        auto t = py::cast(&top, py::return_value_policy::automatic_reference);
+        auto rv = (*f)(*t.cast<topology*>());
+        return rv.cast<reaction::rate_function::result_type>();
+    }
+};
 
 void exportTopologies(py::module &m) {
     using namespace py::literals;
+
     py::class_<topology_particle>(m, "TopologyParticle")
             .def("get_position", [](topology_particle &self) { return self.getPos(); })
             .def("get_type", [](topology_particle &self) { return self.getType(); })
             .def("get_id", [](topology_particle &self) { return self.getId(); });
 
-    py::class_<topology>(m, "Topology")
-            .def("get_n_particles", &topology::getNParticles)
+    py::class_<reaction_function_sink>(m, "ReactionFunction").def(py::init<py::function>());
+    py::class_<rate_function_sink>(m, "RateFunction").def(py::init<py::function>());
+
+    py::class_<reaction>(m, "TopologyReaction")
+            .def(py::init<reaction_function_sink, rate_function_sink>())
+            .def("rate", &reaction::rate, "topology"_a)
+            .def("raises_if_invalid", &reaction::raises_if_invalid)
+            .def("raise_if_invalid", &reaction::raise_if_invalid)
+            .def("rolls_back_if_invalid", &reaction::rolls_back_if_invalid)
+            .def("roll_back_if_invalid", &reaction::roll_back_if_invalid)
+            .def("expects_connected_after_reaction", &reaction::expects_connected_after_reaction)
+            .def("expect_connected_after_reaction", &reaction::expect_connected_after_reaction)
+            .def("creates_child_topologies_after_reaction", &reaction::creates_child_topologies_after_reaction)
+            .def("create_child_topologies_after_reaction", &reaction::create_child_topologies_after_reaction);
+
+    py::class_<reaction_recipe>(m, "Recipe")
+            .def(py::init<topology&>())
+            .def("change_particle_type", [](reaction_recipe &self, const std::string& vertex_label, const readdy::particle_type_type to) {
+                return self.changeParticleType(vertex_label, to);
+            }, py::return_value_policy::reference_internal)
+            .def("change_particle_type", [](reaction_recipe &self, const std::size_t vertex_index, const readdy::particle_type_type to) {
+                auto it = self.topology().graph().vertices().begin();
+                std::advance(it, vertex_index);
+                return self.changeParticleType(it, to);
+            }, py::return_value_policy::reference_internal)
+            .def("add_edge", [](reaction_recipe &self, const std::string& vlabel1, const std::string& vlabel2) {
+                return self.addEdge(vlabel1, vlabel2);
+            }, py::return_value_policy::reference_internal)
+            .def("add_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) {
+                auto it1 = self.topology().graph().vertices().begin();
+                auto it2 = self.topology().graph().vertices().begin();
+                std::advance(it1, v_index1);
+                std::advance(it2, v_index2);
+                return self.addEdge(it1, it2);
+            }, py::return_value_policy::reference_internal)
+            .def("remove_edge", [](reaction_recipe &self, const std::string& vlabel1, const std::string& vlabel2) {
+                return self.removeEdge(vlabel1, vlabel2);
+            }, py::return_value_policy::reference_internal)
+            .def("remove_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) {
+                auto it1 = self.topology().graph().vertices().begin();
+                auto it2 = self.topology().graph().vertices().begin();
+                std::advance(it1, v_index1);
+                std::advance(it2, v_index2);
+                return self.removeEdge(it1, it2);
+            }, py::return_value_policy::reference_internal)
+            .def("separate_vertex", [](reaction_recipe &self, const std::string& label) -> reaction_recipe& {
+                return self.separateVertex(self.topology().graph().namedVertexPtr(label));
+            }, py::return_value_policy::reference_internal)
+            .def("separate_vertex", [](reaction_recipe &self, const std::size_t index) {
+                auto it = self.topology().graph().vertices().begin();
+                std::advance(it, index);
+                return self.separateVertex(it);
+            }, py::return_value_policy::reference_internal);
+
+    py::class_<base_topology>(m, "BaseTopology")
+            .def("get_n_particles", &base_topology::getNParticles)
+            .def("get_particles", [](const base_topology &self) {return self.getParticles();});
+
+    py::class_<topology, base_topology>(m, "Topology")
             .def("add_harmonic_angle_potential", [](topology &self, const harmonic_angle::angles_t &angles) {
                 self.addAnglePotential<harmonic_angle>(angles);
             }, "angles"_a)
@@ -70,10 +156,13 @@ void exportTopologies(py::module &m) {
             }, "dihedrals"_a)
             .def("get_graph", [](topology &self) -> graph & { return self.graph(); }, rvp::reference_internal)
             .def("configure", &topology::configure)
-            .def("validate", &topology::validate);
+            .def("validate", &topology::validate)
+            .def("add_reaction", [](topology& self, const reaction& reaction) {
+                self.addReaction(reaction);
+            });
 
     py::class_<graph>(m, "Graph")
-            .def("get_vertices", [](graph &self) -> graph::vertices_t & { return self.vertices(); },
+            .def("get_vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },
                  rvp::reference_internal)
             .def("add_edge", [](graph &self, const std::string &v1, const std::string &v2) {
                 self.addEdge(v1, v2);
@@ -90,11 +179,11 @@ void exportTopologies(py::module &m) {
                 }
             }, "vertex_index_1"_a, "vertex_index_2"_a);
 
-    py::class_<vertex::vertex_edge>(m, "VertexPointer")
-            .def("get", [](const vertex::vertex_edge &edge) -> const vertex & { return *edge; });
+    py::class_<vertex::vertex_ptr>(m, "VertexPointer")
+            .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; });
 
     py::class_<vertex>(m, "Vertex")
-            .def_readonly("label", &vertex::label)
+            .def_property_readonly("label", [](const vertex& self) { return self.label(); })
             .def_readonly("particle_index", &vertex::particleIndex)
             .def("particle_type", &vertex::particleType)
             .def("neighbors", [](const vertex &self) { return self.neighbors(); })

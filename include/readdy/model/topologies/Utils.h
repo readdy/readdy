@@ -23,41 +23,26 @@
 /**
  * << detailed description >>
  *
- * @file TopologyActions.h
+ * @file Utils.h
  * @brief << brief description >>
  * @author clonker
- * @date 30.01.17
+ * @date 19.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
-#include "TopologyAction.h"
-#include <readdy/model/topologies/BondedPotential.h>
-#include <readdy/model/topologies/AnglePotential.h>
-#include <readdy/model/topologies/TorsionPotential.h>
+
+#include <readdy/common/macros.h>
+#include <readdy/model/topologies/graph/Graph.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(util)
 
-class CalculateHarmonicBondPotential : public EvaluatePotentialAction {
-public:
-    CalculateHarmonicBondPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
-    virtual ~CalculateHarmonicBondPotential() = default;
-};
+std::string to_gexf(graph::Graph& graph);
 
-class CalculateHarmonicAnglePotential : public EvaluatePotentialAction {
-public:
-    CalculateHarmonicAnglePotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
-    virtual ~CalculateHarmonicAnglePotential() = default;
-};
-
-class CalculateCosineDihedralPotential : public EvaluatePotentialAction {
-public:
-    CalculateCosineDihedralPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
-    virtual ~CalculateCosineDihedralPotential() = default;
-};
-
+NAMESPACE_END(util)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

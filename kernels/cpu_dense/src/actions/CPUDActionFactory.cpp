@@ -88,6 +88,11 @@ readdy::model::actions::AddParticles *
 CPUDActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
     return new readdy::model::actions::AddParticles(kernel, particles);
 }
+
+readdy::model::actions::top::EvaluateTopologyReactions *
+CPUDActionFactory::createEvaluateTopologyReactions(double timeStep) const {
+    return nullptr;
+}
 }
 }
 }

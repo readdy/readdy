@@ -31,25 +31,14 @@
  */
 
 #pragma once
-#include <memory>
-#include <readdy/common/macros.h>
-#include <readdy/model/topologies/actions/TopologyActions.h>
+#include <readdy/model/topologies/reactions/TopologyReactionActionFactory.h>
+#include <readdy/model/topologies/potentials/TopologyPotentialActionFactory.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-class TopologyActionFactory {
-public:
-    virtual std::unique_ptr<CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const HarmonicBondPotential *const) const = 0;
-
-    virtual std::unique_ptr<CalculateHarmonicAnglePotential>
-    createCalculateHarmonicAnglePotential(const HarmonicAnglePotential *const) const = 0;
-
-    virtual std::unique_ptr<CalculateCosineDihedralPotential>
-    createCalculateCosineDihedralPotential(const CosineDihedralPotential *const) const = 0;
-};
+class TopologyActionFactory : public pot::TopologyPotentialActionFactory, public reactions::actions::TopologyReactionActionFactory{};
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)

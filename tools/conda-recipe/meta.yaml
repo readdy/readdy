@@ -13,6 +13,7 @@ build:
     - CXX
     - CC
     - TRAVIS
+    - BUILD_TYPE
   rpaths:
     - lib/
     - readdy/readdy_plugins/

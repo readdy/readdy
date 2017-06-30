@@ -30,15 +30,15 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/AnglePotential.h>
-#include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/common/numeric.h>
+#include <readdy/model/topologies/TopologyActionFactory.h>
 
 #define SMALL .0001
 
 namespace readdy {
 namespace model {
 namespace top {
+namespace pot {
 
 AnglePotential::AnglePotential(Topology *const topology) : TopologyPotential(topology) {}
 
@@ -79,7 +79,7 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
 
     // avoid too large values of r
     double r = std::sqrt(1.0 - cos_theta * cos_theta);
-    if(r < .001) r = .001;
+    if(r < SMALL) r = SMALL;
     r = 1./r;
 
     const double c = 2. * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
@@ -94,6 +94,7 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
 
 AngleConfiguration::AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double theta_0)
         : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
+}
 }
 }
 }

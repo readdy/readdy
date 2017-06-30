@@ -33,7 +33,8 @@
  */
 
 #pragma once
-#include <map> 
+
+#include <map>
 #include <iostream>
 #include <readdy/common/signals.h>
 #include <readdy/model/Plugin.h>
@@ -104,7 +105,7 @@ public:
     template<typename T, typename Obs1, typename Obs2>
     std::unique_ptr<T> createObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) {
         return getObservableFactory().create<T>(obs1, obs2, stride);
-    };
+    }
 
     /**
      * Connects an observable to the kernel signal.
@@ -124,7 +125,7 @@ public:
     virtual std::tuple<std::unique_ptr<observables::ObservableWrapper>, readdy::signals::scoped_connection>
     registerObservable(const observables::observable_type &observable, unsigned int stride);
 
-    
+
     /**
      * Returns a vector containing all available program names for this specific kernel instance.
      *
@@ -140,7 +141,7 @@ public:
      */
     readdy::model::Particle::id_type addParticle(const std::string &type, const Vec3 &pos);
 
-    TopologyParticle createTopologyParticle(const std::string& type, const Vec3& pos) const;
+    TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const;
 
     virtual std::vector<std::string> getAvailablePotentials() const;
 
@@ -148,22 +149,23 @@ public:
     potentials::Potential::id_t registerPotential(Args &&... args) {
         auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
         return getKernelContext().potentials().add(std::move(pot));
-    };
+    }
 
     template<typename T, typename... Args>
-    compartments::Compartment::id_t registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
+    compartments::Compartment::id_t
+    registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
         auto conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr, getKernelContext());
         auto comp = getCompartmentFactory().createCompartment<T>(conversionsMapInt, std::forward<Args>(args)...);
         return getKernelContext().registerCompartment(std::move(comp));
-    };
+    }
 
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
         return getObservableFactory().create(obs1, obs2, stride);
-    };
+    }
 
     template<typename R, typename... Args>
-    inline std::unique_ptr<R> createObservable(unsigned int stride, Args&&... args) const {
+    inline std::unique_ptr<R> createObservable(unsigned int stride, Args &&... args) const {
         return getObservableFactory().create(stride, std::forward<Args>(args)...);
     }
 
@@ -171,7 +173,7 @@ public:
     const short registerReaction(Args &&... args) {
         return getKernelContext().reactions().add(
                 detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
-    };
+    }
 
     bool supportsTopologies() const;
 
@@ -204,30 +206,42 @@ public:
      */
 
     const readdy::model::KernelStateModel &getKernelStateModel() const;
+
     readdy::model::KernelStateModel &getKernelStateModel();
-    
+
     const readdy::model::KernelContext &getKernelContext() const;
+
     readdy::model::KernelContext &getKernelContext();
 
     const readdy::model::actions::ActionFactory &getActionFactory() const;
+
     readdy::model::actions::ActionFactory &getActionFactory();
 
     const readdy::model::potentials::PotentialFactory &getPotentialFactory() const;
+
     readdy::model::potentials::PotentialFactory &getPotentialFactory();
 
     const readdy::model::reactions::ReactionFactory &getReactionFactory() const;
+
     readdy::model::reactions::ReactionFactory &getReactionFactory();
 
     const readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const;
+
     readdy::model::compartments::CompartmentFactory &getCompartmentFactory();
 
     const readdy::model::observables::ObservableFactory &getObservableFactory() const;
+
     readdy::model::observables::ObservableFactory &getObservableFactory();
 
     const readdy::model::top::TopologyActionFactory *const getTopologyActionFactory() const;
+
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
 
     void expected_n_particles(const std::size_t n);
+
+    virtual void initialize();
+
+    virtual void finalize();
 
 protected:
 
@@ -238,7 +252,7 @@ protected:
     virtual readdy::model::KernelContext &getKernelContextInternal() const = 0;
 
     virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
-    
+
     virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const = 0;
 
     virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const = 0;
@@ -247,7 +261,7 @@ protected:
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const;
 
-    virtual readdy::model::top::TopologyActionFactory * getTopologyActionFactoryInternal() const = 0;
+    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const = 0;
 
 
     struct Impl;

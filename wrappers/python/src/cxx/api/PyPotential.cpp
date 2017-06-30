@@ -42,7 +42,7 @@ PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &particleType1,
                   }), calcForceFun(new pybind11::object(o2), [](pybind11::object *o) {
                       pybind11::gil_scoped_acquire lock;
                       delete o;
-                  }) {};
+                  }) {}
 
 double PotentialOrder2Wrapper::calculateEnergy(const model::Vec3 &x_ij) const {
     pybind11::gil_scoped_acquire lock;

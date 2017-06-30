@@ -222,7 +222,7 @@ protected:
     template<typename T, typename Dims>
     static T get_contiguous_index(T i, T j, T k, Dims I, Dims J) {
         return k + j * J + i * I * J;
-    };
+    }
 
     sub_cells_t _sub_cells{};
     dimension _n_sub_cells{{0, 0, 0}};
@@ -243,7 +243,7 @@ protected:
 
     model::CPUParticleData &_data;
     const readdy::model::KernelContext &_context;
-    const readdy::util::thread::Config _config;
+    const readdy::util::thread::Config& _config;
 };
 
 }

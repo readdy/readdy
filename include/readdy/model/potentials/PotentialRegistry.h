@@ -66,7 +66,7 @@ public:
     using potentials_o2 = std::vector<PotentialOrder2 *>;
 
     using potential_o1_registry = std::unordered_map<particle_type_type, potentials_o1>;
-    using potential_o2_registry = std::unordered_map<util::particle_type_pair, potentials_o2, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
+    using potential_o2_registry = util::particle_type_pair_unordered_map<potentials_o2>;
 
     const Potential::id_t add_external(potentials::PotentialOrder1 *potential);
 
@@ -96,7 +96,7 @@ public:
 
 private:
     using potential_o1_registry_internal = std::unordered_map<particle_type_type, pot_ptr_vec1>;
-    using potential_o2_registry_internal = std::unordered_map<util::particle_type_pair, pot_ptr_vec2, util::particle_type_pair_hasher, util::particle_type_pair_equal_to>;
+    using potential_o2_registry_internal = util::particle_type_pair_unordered_map<pot_ptr_vec2>;
 
     const ParticleTypeRegistry &typeRegistry;
 

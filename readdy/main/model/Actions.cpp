@@ -66,6 +66,9 @@ void AddParticles::perform() {
 }
 
 CalculateForces::CalculateForces() : Action() {}
+
+top::EvaluateTopologyReactions::EvaluateTopologyReactions(double timeStep) : TimeStepDependentAction(timeStep) {}
+
 }
 }
 }

@@ -44,6 +44,8 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(graph)
 
+class Graph;
+
 /**
  * Struct representing a vertex in a topology-connectivity-graph
  */
@@ -52,7 +54,10 @@ public:
     /**
      * edge in the graph (i.e., pointer to neighboring vertex)
      */
-    using vertex_edge = std::list<Vertex>::iterator;
+    using vertex_ptr = std::list<Vertex>::iterator;
+    using vertex_cptr = std::list<Vertex>::const_iterator;
+
+    using label_t = std::string;
 
     /**
      * default constructor
@@ -63,13 +68,16 @@ public:
      * constructs a vertex to a graph
      * @param particleIndex the particle index this vertex belongs to
      */
-    Vertex(std::size_t particleIndex, particle_type_type particleType, const std::string& label = "")
-            : particleIndex(particleIndex), label(label), visited(false), particleType_(particleType) {}
+    Vertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label = "")
+            : particleIndex(particleIndex), _label(label), visited(false), particleType_(particleType) {}
 
-    Vertex(const Vertex&) = delete;
-    Vertex& operator=(const Vertex&) = delete;
-    Vertex(Vertex&&) = default;
-    Vertex& operator=(Vertex&&) = default;
+    Vertex(const Vertex &) = delete;
+
+    Vertex &operator=(const Vertex &) = delete;
+
+    Vertex(Vertex &&) = default;
+
+    Vertex &operator=(Vertex &&) = default;
 
     /**
      * default destructor
@@ -79,7 +87,10 @@ public:
     /**
      * vertex' name, can be left empty and is then ignored
      */
-    std::string label {""};
+    const label_t &label() const;
+
+    label_t &label();
+
     /**
      * particle index in the topology this vertex belongs to
      */
@@ -90,7 +101,7 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex) {
-        os << "Vertex[label: " << vertex.label << ", particleIndex: "
+        os << "Vertex[label: " << vertex.label() << ", particleIndex: "
            << vertex.particleIndex << ", neighbors=[";
         for (const auto neighbor : vertex.neighbors_) {
             os << neighbor->particleIndex << ",";
@@ -103,29 +114,33 @@ public:
         return !(rhs == *this);
     }
 
-    void addNeighbor(const vertex_edge& edge) {
-        if(std::find(neighbors_.begin(), neighbors_.end(), edge) == neighbors_.end()) {
+    void addNeighbor(const vertex_ptr &edge) {
+        if (std::find(neighbors_.begin(), neighbors_.end(), edge) == neighbors_.end()) {
             neighbors_.push_back(edge);
         } else {
             log::warn("tried to add an already existing edge ({} - {})", particleIndex, edge->particleIndex);
         }
     }
 
-    void removeNeighbor(const vertex_edge& edge) {
+    void removeNeighbor(const vertex_ptr &edge) {
         decltype(neighbors_.begin()) it;
-        if((it = std::find(neighbors_.begin(), neighbors_.end(), edge)) != neighbors_.end()) {
+        if ((it = std::find(neighbors_.begin(), neighbors_.end(), edge)) != neighbors_.end()) {
             neighbors_.erase(it);
         } else {
-            log::warn("tried to remove an unexisting edge {} - {}", particleIndex, edge->particleIndex);
+            log::warn("tried to remove a non existing edge {} - {}", particleIndex, edge->particleIndex);
         }
     }
 
-    const std::vector<vertex_edge>& neighbors() const {
+    const std::vector<vertex_ptr> &neighbors() const {
         return neighbors_;
     }
 
-    const particle_type_type& particleType() const {
+    const particle_type_type &particleType() const {
         return particleType_;
+    }
+
+    void setParticleType(particle_type_type type) {
+        particleType_ = type;
     }
 
     /**
@@ -134,13 +149,103 @@ public:
     bool visited;
 
 private:
+    friend class readdy::model::top::graph::Graph;
+
     /**
      * the edges (i.e., pointers to neighboring vertices)
      */
-    std::vector<vertex_edge> neighbors_ {};
+    std::vector<vertex_ptr> neighbors_{};
 
     particle_type_type particleType_;
+    label_t _label{""};
 };
+
+class VertexRef;
+
+class VertexCRef;
+
+class VertexRef {
+public:
+    VertexRef();
+
+    virtual ~VertexRef() = default;
+
+    VertexRef(Vertex::vertex_ptr it);
+
+    VertexRef(Graph *const graph, const Vertex::label_t &label);
+
+    VertexRef(VertexRef &&) = default;
+
+    VertexRef &operator=(VertexRef &&) = default;
+
+    VertexRef(const VertexRef &) = default;
+
+    VertexRef &operator=(const VertexRef &) = default;
+
+    bool operator==(const VertexRef &rhs) const;
+
+    bool operator!=(const VertexRef &rhs) const;
+
+    Vertex &operator*();
+
+    Vertex *operator->();
+
+    const Vertex *operator->() const;
+
+    const Vertex &operator*() const;
+
+    Vertex::vertex_ptr &data();
+
+    const Vertex::vertex_ptr &data() const;
+
+    friend std::ostream &operator<<(std::ostream &os, const VertexRef &vertex);
+
+private:
+    Vertex::vertex_ptr it;
+    Vertex::label_t label;
+    Graph *graph;
+};
+
+class VertexCRef {
+public:
+    VertexCRef() = default;
+
+    virtual ~VertexCRef() = default;
+
+    VertexCRef(Vertex::vertex_cptr it);
+
+    VertexCRef(Vertex::vertex_ptr it);
+
+    VertexCRef(const Graph *const graph, const Vertex::label_t &label);
+
+    VertexCRef(const VertexRef &ref);
+
+    VertexCRef(VertexCRef &&) = default;
+
+    VertexCRef &operator=(VertexCRef &&) = default;
+
+    VertexCRef(const VertexCRef &) = default;
+
+    VertexCRef &operator=(const VertexCRef &) = default;
+
+    Vertex::vertex_cptr data() const;
+
+    bool operator==(const VertexCRef &rhs) const;
+
+    bool operator!=(const VertexCRef &rhs) const;
+
+    const Vertex *operator->() const;
+
+    const Vertex &operator*() const;
+
+    friend std::ostream &operator<<(std::ostream &os, const VertexCRef &c);
+
+private:
+    Vertex::vertex_cptr it;
+    Vertex::label_t label;
+    const Graph *graph;
+};
+
 
 NAMESPACE_END(graph)
 NAMESPACE_END(top)

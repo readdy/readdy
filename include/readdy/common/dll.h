@@ -76,7 +76,7 @@ struct shared_library {
             }
         }
         return reinterpret_cast<Signature*>(result);
-    };
+    }
 
 };
 

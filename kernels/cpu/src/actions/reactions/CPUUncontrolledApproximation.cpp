@@ -31,12 +31,9 @@
 
 #include <future>
 
-#include <readdy/common/thread/scoped_async.h>
-
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/Event.h>
 #include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
 namespace kernel {
@@ -60,8 +57,9 @@ CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kern
 
 }
 
-void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, const CPUKernel *const kernel,
-                double dt, bool approximateRate, event_promise_t events, std::promise<std::size_t> n_events) {
+void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin,
+                const CPUKernel *const kernel, double dt, bool approximateRate, event_promise_t &events,
+                std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
@@ -90,7 +88,7 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
                 if (index > idx_neighbor) continue;
                 const auto &neighbor = data.entry_at(idx_neighbor);
                 const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
-                                                                                                     neighbor.type);
+                                                                                              neighbor.type);
                 if (!reactions.empty()) {
                     const auto distSquared = d2(neighbor.position(), entry.position());
                     for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
@@ -100,8 +98,9 @@ void findEvents(data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begi
                             && shouldPerformEvent(rate, dt, approximateRate)) {
                             const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                                   reactions.begin());
-                            eventsUpdate.push_back({2, react->getNProducts(), index, idx_neighbor, rate, 0, reaction_index,
-                                              entry.type, neighbor.type});
+                            eventsUpdate.push_back(
+                                    {2, react->getNProducts(), index, idx_neighbor, rate, 0, reaction_index,
+                                     entry.type, neighbor.type});
                         }
                     }
                 }
@@ -120,43 +119,49 @@ void CPUUncontrolledApproximation::perform() {
     auto &data = *stateModel.getParticleData();
     auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
 
-    if(ctx.recordReactionsWithPositions()) {
+    if (ctx.recordReactionsWithPositions()) {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
     }
-    if(ctx.recordReactionCounts()) {
+    if (ctx.recordReactionCounts()) {
         readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
     }
 
     // gather events
     std::vector<std::future<std::size_t>> n_eventsFutures;
+    std::vector<std::promise<std::size_t>> n_events_promises(kernel->getNThreads());
     std::vector<event_future_t> eventFutures;
+    std::vector<event_promise_t> promises(kernel->getNThreads());
     {
-        const std::size_t grainSize = data.size() / kernel->getNThreads();
 
-        std::vector<threading_model> threads;
+        const auto &executor = kernel->executor();
+
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(kernel->getNThreads());
+
+        const std::size_t grainSize = data.size() / kernel->getNThreads();
 
         auto it = data.cbegin();
         auto it_nl = nl.cbegin();
-        for (unsigned int i = 0; i < kernel->getNThreads()-1; ++i) {
-            event_promise_t eventPromise;
-            eventFutures.push_back(eventPromise.get_future());
-            std::promise<std::size_t> n_events;
-            n_eventsFutures.push_back(n_events.get_future());
+        for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
+            eventFutures.push_back(promises.at(i).get_future());
+            n_eventsFutures.push_back(n_events_promises.at(i).get_future());
 
-            threads.emplace_back(findEvents, it, it + grainSize, it_nl, kernel, timeStep, true,
-                                 std::move(eventPromise), std::move(n_events));
+            executables.push_back(executor.pack(findEvents, it, it + grainSize, it_nl, kernel, timeStep, true,
+                                                std::ref(promises.at(i)), std::ref(n_events_promises.at(i))));
             it += grainSize;
             it_nl += grainSize;
         }
         {
-            event_promise_t eventPromise;
+            auto &eventPromise = promises.back();
             eventFutures.push_back(eventPromise.get_future());
-            std::promise<std::size_t> n_events;
+            auto &n_events = n_events_promises.back();
             n_eventsFutures.push_back(n_events.get_future());
 
-            threads.emplace_back(findEvents, it, data.cend(), it_nl, kernel, timeStep, true,
-                                 std::move(eventPromise), std::move(n_events));
+
+            executables.push_back(executor.pack(findEvents, it, data.cend(), it_nl, kernel, timeStep, true,
+                                                std::ref(eventPromise), std::ref(n_events)));
         }
+        executor.execute_and_wait(std::move(executables));
     }
 
     // collect events
@@ -181,16 +186,16 @@ void CPUUncontrolledApproximation::perform() {
     // execute reactions
     {
         data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries {};
+        std::vector<data_t::index_t> decayedEntries{};
 
         // todo better conflict detection?
-        for(auto it = events.begin(); it != events.end(); ++it) {
-            auto& event = *it;
-            if(event.cumulativeRate == 0) {
+        for (auto it = events.begin(); it != events.end(); ++it) {
+            auto &event = *it;
+            if (event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
                     auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
-                    if(ctx.recordReactionsWithPositions()) {
+                    if (ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
@@ -199,18 +204,18 @@ void CPUUncontrolledApproximation::perform() {
                     } else {
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
-                    if(ctx.recordReactionCounts()) {
-                        auto& countsOrder1 = std::get<0>(stateModel.reactionCounts());
+                    if (ctx.recordReactionCounts()) {
+                        auto &countsOrder1 = std::get<0>(stateModel.reactionCounts());
                         countsOrder1.at(event.t1).at(event.reactionIdx)++;
                     }
-                    for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
-                        if(_it2->idx1 == entry1 || _it2->idx2 == entry1) {
+                    for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
+                        if (_it2->idx1 == entry1 || _it2->idx2 == entry1) {
                             _it2->cumulativeRate = 1;
                         }
                     }
                 } else {
                     auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
-                    if(ctx.recordReactionsWithPositions()) {
+                    if (ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
@@ -219,13 +224,13 @@ void CPUUncontrolledApproximation::perform() {
                     } else {
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }
-                    if(ctx.recordReactionCounts()) {
-                        auto& countsOrder2 = std::get<1>(stateModel.reactionCounts());
+                    if (ctx.recordReactionCounts()) {
+                        auto &countsOrder2 = std::get<1>(stateModel.reactionCounts());
                         countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
                     }
-                    for(auto _it2 = it+1; _it2 != events.end(); ++_it2) {
-                        if(_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
-                                _it2 ->idx1 == event.idx2 || _it2->idx2 == event.idx2) {
+                    for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
+                        if (_it2->idx1 == entry1 || _it2->idx2 == entry1 ||
+                            _it2->idx1 == event.idx2 || _it2->idx2 == event.idx2) {
                             _it2->cumulativeRate = 1;
                         }
                     }

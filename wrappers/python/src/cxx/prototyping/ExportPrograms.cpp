@@ -116,7 +116,7 @@ void exportPrograms(py::module &proto) {
      */
 
     py::class_<readdy::model::actions::reactions::UncontrolledApproximation>(proto, "UncontrolledApproxBase", program);
-    py::class_<reactions_u_a_t, readdy::model::actions::reactions::UncontrolledApproximation>(proto, "ReactionsUncontrolledApproximation", program)
+    py::class_<reactions_u_a_t, readdy::model::actions::reactions::UncontrolledApproximation>(proto, "ReactionsUncontrolledApproximation")
             .def(py::init<scpu_kernel_t *, double>())
             .def("perform", &reactions_u_a_t::perform)
             .def("register_reaction_scheme_11", &reactions_u_a_t::registerReactionScheme_11)

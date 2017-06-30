@@ -34,7 +34,7 @@
 
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/Topology.h>
-#include <readdy/model/topologies/actions/TopologyActions.h>
+#include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -43,25 +43,25 @@ NAMESPACE_BEGIN(cpu)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 
-class CPUCalculateHarmonicBondPotential : public readdy::model::top::CalculateHarmonicBondPotential {
+class CPUCalculateHarmonicBondPotential : public readdy::model::top::pot::CalculateHarmonicBondPotential {
 
-    const readdy::model::top::HarmonicBondPotential *const potential;
+    const harmonic_bond *const potential;
     CPUParticleData *const data;
 
 public:
     CPUCalculateHarmonicBondPotential(const readdy::model::KernelContext *const context,
-                                       CPUParticleData *const data,
-                                       const readdy::model::top::HarmonicBondPotential *const potential)
+                                      CPUParticleData *const data,
+                                      const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
     virtual double perform() override {
         readdy::model::Vec3::value_t energy = 0;
-        const auto& particleIndices = potential->getTopology()->getParticles();
-        const auto& d = context->getShortestDifferenceFun();
-        for(const auto& bond : potential->getBonds()) {
+        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &d = context->getShortestDifferenceFun();
+        for (const auto &bond : potential->getBonds()) {
             readdy::model::Vec3 forceUpdate{0, 0, 0};
-            auto& e1 = data->entry_at(particleIndices.at(bond.idx1));
-            auto& e2 = data->entry_at(particleIndices.at(bond.idx2));
+            auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
+            auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
             const auto x_ij = d(e1.position(), e2.position());
             potential->calculateForce(forceUpdate, x_ij, bond);
             e1.force += forceUpdate;
@@ -74,24 +74,24 @@ public:
 };
 
 
-class CPUCalculateHarmonicAnglePotential : public readdy::model::top::CalculateHarmonicAnglePotential {
-    const readdy::model::top::HarmonicAnglePotential *const potential;
+class CPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::CalculateHarmonicAnglePotential {
+    const harmonic_angle *const potential;
     CPUParticleData *const data;
 public:
     CPUCalculateHarmonicAnglePotential(const readdy::model::KernelContext *const context, CPUParticleData *const data,
-                                        const readdy::model::top::HarmonicAnglePotential*const potential)
+                                       const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
     virtual double perform() override {
         readdy::model::Vec3::value_t energy = 0;
-        const auto& particleIndices = potential->getTopology()->getParticles();
-        const auto& d = context->getShortestDifferenceFun();
+        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &d = context->getShortestDifferenceFun();
 
 
-        for(const auto& angle : potential->getAngles()) {
-            auto& e1 = data->entry_at(particleIndices.at(angle.idx1));
-            auto& e2 = data->entry_at(particleIndices.at(angle.idx2));
-            auto& e3 = data->entry_at(particleIndices.at(angle.idx3));
+        for (const auto &angle : potential->getAngles()) {
+            auto &e1 = data->entry_at(particleIndices.at(angle.idx1));
+            auto &e2 = data->entry_at(particleIndices.at(angle.idx2));
+            auto &e3 = data->entry_at(particleIndices.at(angle.idx3));
             const auto x_ji = d(e2.position(), e1.position());
             const auto x_jk = d(e2.position(), e3.position());
             energy += potential->calculateEnergy(x_ji, x_jk, angle);
@@ -101,26 +101,26 @@ public:
     }
 };
 
-class CPUCalculateCosineDihedralPotential : public readdy::model::top::CalculateCosineDihedralPotential {
-    const readdy::model::top::CosineDihedralPotential *const potential;
+class CPUCalculateCosineDihedralPotential : public readdy::model::top::pot::CalculateCosineDihedralPotential {
+    const cos_dihedral *const potential;
     CPUParticleData *const data;
 public:
     CPUCalculateCosineDihedralPotential(const readdy::model::KernelContext *const context,
                                         CPUParticleData *const data,
-                                        const readdy::model::top::CosineDihedralPotential* const pot)
-            : CalculateCosineDihedralPotential(context), potential(pot), data(data){
+                                        const cos_dihedral *const pot)
+            : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
     virtual double perform() override {
         readdy::model::Vec3::value_t energy = 0;
-        const auto& particleIndices = potential->getTopology()->getParticles();
-        const auto& d = context->getShortestDifferenceFun();
+        const auto &particleIndices = potential->getTopology()->getParticles();
+        const auto &d = context->getShortestDifferenceFun();
 
-        for(const auto& dih : potential->getDihedrals()) {
-            auto& e_i = data->entry_at(particleIndices.at(dih.idx1));
-            auto& e_j = data->entry_at(particleIndices.at(dih.idx2));
-            auto& e_k = data->entry_at(particleIndices.at(dih.idx3));
-            auto& e_l = data->entry_at(particleIndices.at(dih.idx4));
+        for (const auto &dih : potential->getDihedrals()) {
+            auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
+            auto &e_j = data->entry_at(particleIndices.at(dih.idx2));
+            auto &e_k = data->entry_at(particleIndices.at(dih.idx3));
+            auto &e_l = data->entry_at(particleIndices.at(dih.idx4));
             const auto x_ji = d(e_j.position(), e_i.position());
             const auto x_kj = d(e_k.position(), e_j.position());
             const auto x_kl = d(e_k.position(), e_l.position());
@@ -130,6 +130,30 @@ public:
         return energy;
     }
 };
+
+NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(op)
+
+class CPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
+    CPUParticleData *const data;
+public:
+    CPUChangeParticleType(CPUParticleData *const data, top::GraphTopology *const topology, const vertex &v,
+                          const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
+
+    virtual void execute() override {
+        const auto idx = topology->getParticles().at(_vertex->particleIndex);
+        _vertex->setParticleType(previous_type);
+        std::swap(data->entry_at(idx).type, previous_type);
+    }
+
+    virtual void undo() override {
+        execute();
+    }
+
+};
+
+NAMESPACE_END(op)
+NAMESPACE_END(reactions)
 
 NAMESPACE_END(top)
 NAMESPACE_END(model)

@@ -31,6 +31,7 @@
 #pragma once
 
 #include <readdy/common/macros.h>
+#include <readdy/kernel/cpu/util/config.h>
 
 #include "CellContainer.h"
 #include "SubCell.h"

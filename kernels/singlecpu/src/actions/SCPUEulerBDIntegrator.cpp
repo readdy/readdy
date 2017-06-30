@@ -37,7 +37,7 @@ namespace scpu {
 namespace actions {
 
 SCPUEulerBDIntegrator::SCPUEulerBDIntegrator(SCPUKernel *kernel, double timeStep)
-        : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {};
+        : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {}
 
 void SCPUEulerBDIntegrator::perform() {
     const auto &context = kernel->getKernelContext();

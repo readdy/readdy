@@ -30,6 +30,7 @@
  */
 
 #pragma once
+
 #include <spdlog/spdlog.h>
 #include "macros.h"
 
@@ -67,6 +68,16 @@ template<typename... Args>
 void info(Args &&... args) {
     console()->info(std::forward<Args>(args)...);
 }
+
+class Level {
+public:
+    Level(spdlog::level::level_enum newLevel);
+
+    ~Level();
+
+private:
+    spdlog::level::level_enum oldLevel;
+};
 
 NAMESPACE_END(log)
 NAMESPACE_END(readdy)

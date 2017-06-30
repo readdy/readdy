@@ -334,8 +334,9 @@ void CellContainer::update_dirty_cells() {
     // 1. reset displacement of DIRTY cells
     // 3. reassign these particles to cells, rebuild verlet list (in NL?) for particles in DIRTY and NEIGHBORS
 
-    auto worker = [this](const CellContainer &container, const barrier_t &barrier, sub_cells_t::iterator begin,
-                         sub_cells_t::iterator end) {
+    auto worker = [this](std::size_t, const CellContainer& container,
+                         const barrier_t& barrier,
+                         sub_cells_t::iterator begin, sub_cells_t::iterator end) {
         std::vector<std::vector<particle_index>> dirty_cell_particles;
         {
             for (auto it = begin; it != end; ++it) {
@@ -363,14 +364,18 @@ void CellContainer::update_dirty_cells() {
 
     barrier_t barrier{_config.nThreads()};
     const auto grainSize = sub_cells().size() / config().nThreads();
-    std::vector<threading_model> threads;
-    threads.reserve(config().nThreads());
+
+    std::vector<std::function<void(std::size_t)>> executables;
+    executables.reserve(config().nThreads());
+    const auto& executor = *config().executor();
+
     auto it = sub_cells().begin();
     for (auto i = 0; i < config().nThreads() - 1; ++i) {
-        threads.emplace_back(worker, std::cref(*this), std::cref(barrier), it, it + grainSize);
+        executables.push_back(executor.pack(worker, std::cref(*this), std::cref(barrier), it, it + grainSize));
         it += grainSize;
     }
-    threads.emplace_back(worker, std::cref(*this), std::cref(barrier), it, sub_cells().end());
+    executables.push_back(executor.pack(worker, std::cref(*this), std::cref(barrier), it, sub_cells().end()));
+    executor.execute_and_wait(std::move(executables));
 }
 
 const std::size_t CellContainer::n_dirty_macro_cells() const {
@@ -391,19 +396,23 @@ void CellContainer::execute_for_each_leaf(const std::function<void(const CellCon
 
 void CellContainer::execute_for_each_sub_cell(const std::function<void(CellContainer::sub_cell &)> &function) {
     const auto grainSize = sub_cells().size() / config().nThreads();
-    auto worker = [&](CellContainer::sub_cells_t::iterator begin, CellContainer::sub_cells_t::iterator end) {
+    auto worker = [&](std::size_t, CellContainer::sub_cells_t::iterator begin, CellContainer::sub_cells_t::iterator end) {
         for (auto it = begin; it != end; ++it) {
             function(*it);
         }
     };
-    std::vector<threading_model> threads;
-    threads.reserve(config().nThreads());
+
+    const auto& executor = *config().executor();
+    std::vector<std::function<void(std::size_t)>> executables;
+    executables.reserve(config().nThreads());
+
     auto it = sub_cells().begin();
     for (auto i = 0; i < config().nThreads() - 1; ++i) {
-        threads.emplace_back(worker, it, it + grainSize);
+        executables.push_back(executor.pack(worker, it, it+grainSize));
         it += grainSize;
     }
-    threads.emplace_back(worker, it, sub_cells().end());
+    executables.push_back(executor.pack(worker, it, sub_cells().end()));
+    executor.execute_and_wait(std::move(executables));
 }
 
 model::CPUParticleData &CellContainer::data() {
@@ -433,19 +442,25 @@ void CellContainer::set_dirty() const {
 void
 CellContainer::execute_for_each_sub_cell(const std::function<void(const CellContainer::sub_cell &)> &function) const {
     const auto grainSize = sub_cells().size() / config().nThreads();
-    auto worker = [&](CellContainer::sub_cells_t::const_iterator begin, CellContainer::sub_cells_t::const_iterator end) {
+    auto worker = [&](std::size_t, CellContainer::sub_cells_t::const_iterator begin,
+                      CellContainer::sub_cells_t::const_iterator end) {
         for (auto it = begin; it != end; ++it) {
             function(*it);
         }
     };
-    std::vector<threading_model> threads;
-    threads.reserve(config().nThreads());
+
+    const auto& executor = *config().executor();
+    std::vector<std::function<void(std::size_t)>> executables;
+    executables.reserve(config().nThreads());
+
     auto it = sub_cells().begin();
     for (auto i = 0; i < config().nThreads() - 1; ++i) {
-        threads.emplace_back(worker, it, it + grainSize);
+        executables.push_back(executor.pack(worker, it, it+grainSize));
         it += grainSize;
     }
-    threads.emplace_back(worker, it, sub_cells().end());
+    executables.push_back(executor.pack(worker, it, sub_cells().end()));
+    executor.execute_and_wait(std::move(executables));
+
 }
 
 void CellContainer::update_root_size() {

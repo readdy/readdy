@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file Bond.h
+ * @file TorsionPotential.h
  * @brief << brief description >>
  * @author clonker
  * @date 26.01.17
@@ -34,51 +34,50 @@
 #include <cstddef>
 #include <tuple>
 #include <vector>
-#include <string>
-#include <readdy/model/Vec3.h>
 #include "TopologyPotential.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(pot)
 
-struct BondConfiguration {
-    BondConfiguration(std::size_t idx1, std::size_t idx2, double forceConstant, double length);
-
-    std::size_t idx1, idx2;
-    double length, forceConstant;
+class TorsionPotential : public TopologyPotential {
+public:
+    TorsionPotential(Topology *const topology);
+    virtual ~TorsionPotential() = default;
 };
 
+struct DihedralConfiguration {
+    DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant, double multiplicity,
+             double equilibriumAngle);
 
-class BondedPotential : public TopologyPotential {
-public:
-    using bond_t = BondConfiguration;
-    using bonds_t = std::vector<bond_t>;
-
-    BondedPotential(Topology *const topology, const bonds_t &bonds);
-    virtual ~BondedPotential() = default;
-
-    const bonds_t &getBonds() const;
-protected:
-    bonds_t bonds;
+    std::size_t idx1, idx2, idx3, idx4;
+    double forceConstant, multiplicity, phi_0;
 };
 
-
-class HarmonicBondPotential : public BondedPotential {
+class CosineDihedralPotential : public TorsionPotential {
 public:
+    using dihedral_t = DihedralConfiguration;
+    using dihedrals_t = std::vector<dihedral_t>;
 
-    HarmonicBondPotential(Topology *const topology, const bonds_t &bonds);
-    virtual ~HarmonicBondPotential() = default;
+    CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
+    virtual ~CosineDihedralPotential() = default;
 
-    double calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
+    const dihedrals_t &getDihedrals() const;
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_t &bond) const;
+    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_t &) const;
+
+    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
+                        const dihedral_t &) const;
 
     virtual std::unique_ptr<EvaluatePotentialAction>
-    createForceAndEnergyAction(const TopologyActionFactory *const) override;
+    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
 
+protected:
+    dihedrals_t dihedrals;
 };
 
+NAMESPACE_END(pot)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

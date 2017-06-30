@@ -23,38 +23,26 @@
 /**
  * << detailed description >>
  *
- * @file TopologyPotential.h
+ * @file TopologyPotential.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 27.01.17
+ * @date 30.01.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
-#include <readdy/common/macros.h>
-#include <readdy/model/topologies/actions/TopologyAction.h>
+#include <readdy/model/topologies/potentials/TopologyPotential.h>
+#include <readdy/model/topologies/Topology.h>
+namespace readdy {
+namespace model {
+namespace top {
+namespace pot {
+TopologyPotential::TopologyPotential(Topology *const topology) : topology(topology) {}
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+Topology *const TopologyPotential::getTopology() const {
+    return topology;
+}
 
-class Topology;
-class TopologyActionFactory;
-
-class TopologyPotential {
-public:
-    TopologyPotential(Topology *const topology);
-
-    virtual ~TopologyPotential() = default;
-
-    Topology *const getTopology() const;
-
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) = 0;
-
-protected:
-    Topology *const topology;
-};
-
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}
+}

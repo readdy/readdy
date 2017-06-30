@@ -34,6 +34,8 @@
 
 #include <readdy/model/Kernel.h>
 #include <readdy/common/dll.h>
+#include <readdy/common/thread/ctpl.h>
+#include <readdy/common/thread/executor.h>
 #include "CPUStateModel.h"
 
 namespace readdy {
@@ -61,6 +63,12 @@ public:
 
     const readdy::util::thread::Config& threadConfig() const;
     readdy::util::thread::Config& threadConfig();
+
+    const readdy::util::thread::executor_base &executor() const;
+
+    virtual void initialize() override;
+
+    virtual void finalize() override;
 
 protected:
 

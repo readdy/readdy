@@ -32,9 +32,8 @@
 #include <future>
 #include <readdy/kernel/cpu/CPUStateModel.h>
 #include <readdy/common/thread/barrier.h>
-#include <readdy/common/thread/scoped_async.h>
-#include <readdy/kernel/cpu/util/config.h>
 #include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -44,17 +43,14 @@ namespace thd = readdy::util::thread;
 
 using entries_it = CPUStateModel::data_t::entries_t::iterator;
 using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
-using neighbors_it = neighbor_list::const_iterator;
-using pot1Map = decltype(std::declval<readdy::model::KernelContext>().potentials().potentials_order1());
-using pot2Map = decltype(std::declval<readdy::model::KernelContext>().potentials().potentials_order2());
+using pot1Map = readdy::model::potentials::PotentialRegistry::potential_o1_registry;
+using pot2Map = readdy::model::potentials::PotentialRegistry::potential_o2_registry;
 using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
 using top_action_factory = readdy::model::top::TopologyActionFactory;
 
-void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighbors_it,
-                           std::promise<double> energyPromise, const CPUStateModel::data_t &data,
-                           pot1Map pot1, pot2Map pot2, dist_fun d,
-                           topologies_it tbegin, topologies_it tend, top_action_factory const *const taf,
-                           const thd::barrier &barrier) {
+void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighbor_list::const_iterator neighbors_it,
+                           std::promise<double>& energyPromise, const CPUStateModel::data_t& data, const pot1Map& pot1,
+                           const pot2Map& pot2, const dist_fun& d) {
     double energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it) {
         if (!it->is_deactivated()) {
@@ -98,7 +94,7 @@ void calculateForcesThread(entries_it begin, entries_it end, neighbors_it neighb
         }
         ++neighbors_it;
     }
-
+    // todo reactivate this ?
     /*barrier.wait();
 
     for (auto t_it = tbegin; t_it != tend; ++t_it) {
@@ -128,7 +124,7 @@ struct CPUStateModel::Impl {
     bool initial_neighbor_list_setup {true};
     double currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
-    std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
+    readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
@@ -154,62 +150,69 @@ private:
 void CPUStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
     const auto &particleData = pimpl->cdata();
-    const auto potOrder1 = pimpl->context->potentials().potentials_order1();
-    const auto potOrder2 = pimpl->context->potentials().potentials_order2();
-    auto d = pimpl->context->getShortestDifferenceFun();
+    const auto &potOrder1 = pimpl->context->potentials().potentials_order1();
+    const auto &potOrder2 = pimpl->context->potentials().potentials_order2();
+    const auto &d = pimpl->context->getShortestDifferenceFun();
     {
-        std::vector<std::future<double>> energyFutures;
-        energyFutures.reserve(config->nThreads());
+        //std::vector<std::future<double>> energyFutures;
+        //energyFutures.reserve(config->nThreads());
+        std::vector<std::promise<double>> promises (config->nThreads());
         {
-            std::vector<threading_model> threads;
-            threads.reserve(config->nThreads());
             const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
             const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
-            auto it_data_end = pimpl->data().end();
-            auto it_data = pimpl->data().begin();
+            entries_it it_data_end = pimpl->data().end();
+            entries_it it_data = pimpl->data().begin();
             auto it_nl = pimpl->neighborList->begin();
             auto it_tops = pimpl->topologies.cbegin();
             const thd::barrier barrier{config->nThreads()};
-            for (auto i = 0; i < config->nThreads() - 1; ++i) {
-                std::promise<double> energyPromise;
-                energyFutures.push_back(energyPromise.get_future());
-                threads.emplace_back(calculateForcesThread, it_data, it_data + grainSize, it_nl,
-                                     std::move(energyPromise), std::cref(particleData), potOrder1, potOrder2, d,
-                                     it_tops,
-                                     it_tops + grainSizeTopologies, pimpl->topologyActionFactory, std::cref(barrier));
+
+            const auto& executor = *config->executor();
+            std::vector<std::function<void(std::size_t)>> executables;
+            executables.reserve(config->nThreads());
+
+            for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
+                //energyFutures.push_back(promises[i].get_future());
+                //ForcesThreadArgs args (, std::cref(barrier));
+                executables.push_back(executor.pack(calculateForcesThread, it_data, it_data + grainSize, it_nl, std::ref(promises.at(i)),
+                                                    std::cref(particleData), std::cref(potOrder1), std::cref(potOrder2),
+                                                    std::cref(d)));
                 it_nl += grainSize;
                 it_data += grainSize;
                 it_tops += grainSizeTopologies;
             }
             {
-                std::promise<double> lastPromise;
-                energyFutures.push_back(lastPromise.get_future());
-                threads.emplace_back(calculateForcesThread, it_data, it_data_end, it_nl, std::move(lastPromise),
-                                     std::cref(particleData), potOrder1, potOrder2, d, it_tops,
-                                     pimpl->topologies.cend(),
-                                     pimpl->topologyActionFactory, std::cref(barrier));
+                std::promise<double> &lastPromise = promises.back();
+                //energyFutures.push_back(lastPromise.get_future());
+                //ForcesThreadArgs args (, std::cref(barrier));
+                executables.push_back(
+                        executor.pack(calculateForcesThread, it_data, it_data_end, it_nl, std::ref(lastPromise),
+                                      std::cref(particleData), std::cref(potOrder1), std::cref(potOrder2),
+                                      std::cref(d)));
             }
+            executor.execute_and_wait(std::move(executables));
 
         }
-        for (auto &f : energyFutures) {
-            pimpl->currentEnergy += f.get();
+        for (auto &f : promises) {
+            pimpl->currentEnergy += f.get_future().get();
         }
     }
 
     for (auto t_it = pimpl->topologies.cbegin(); t_it != pimpl->topologies.cend(); ++t_it) {
         const auto &top = *t_it;
-        for (const auto &bondedPot : top->getBondedPotentials()) {
-            auto action = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory);
-            auto energy = action->perform();
-            pimpl->currentEnergy += energy;
-        }
-        for (const auto &anglePot : top->getAnglePotentials()) {
-            auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-            pimpl->currentEnergy += energy;
-        }
-        for (const auto &torsionPot : top->getTorsionPotentials()) {
-            auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-            pimpl->currentEnergy += energy;
+        if (!top->isDeactivated()) {
+            for (const auto &bondedPot : top->getBondedPotentials()) {
+                auto action = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory);
+                auto energy = action->perform();
+                pimpl->currentEnergy += energy;
+            }
+            for (const auto &anglePot : top->getAnglePotentials()) {
+                auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                pimpl->currentEnergy += energy;
+            }
+            for (const auto &torsionPot : top->getTorsionPotentials()) {
+                auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                pimpl->currentEnergy += energy;
+            }
         }
     }
 }
@@ -269,7 +272,7 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
     pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             pimpl->data().registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : pimpl->topologies) {
-                    top->permuteIndices(indices);
+                    if(!top->isDeactivated()) top->permuteIndices(indices);
                 }
             }));
 
@@ -307,9 +310,10 @@ CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &p
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types),
-                                                                                    &pimpl->context->topology_potentials()));
-    return pimpl->topologies.back().get();
+    auto it = pimpl->topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
+            std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
+    );
+    return it->get();
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() {
@@ -337,6 +341,29 @@ const std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reacti
 
 std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() {
     return pimpl->reactionCounts;
+}
+
+const CPUStateModel::topologies_t &CPUStateModel::topologies() const {
+    return pimpl->topologies;
+}
+
+CPUStateModel::topologies_t &CPUStateModel::topologies() {
+    return pimpl->topologies;
+}
+
+std::vector<readdy::model::top::GraphTopology const*> CPUStateModel::getTopologies() const {
+    std::vector<readdy::model::top::GraphTopology const*> result;
+    result.reserve(pimpl->topologies.size() - pimpl->topologies.n_deactivated());
+    for(const auto& top : pimpl->topologies) {
+        if(!top->isDeactivated()) {
+            result.push_back(top.get());
+        }
+    }
+    return result;
+}
+
+particle_type_type CPUStateModel::getParticleType(const std::size_t index) const {
+    return pimpl->cdata().entry_at(index).type;
 }
 
 CPUStateModel::~CPUStateModel() = default;

@@ -23,60 +23,52 @@
 /**
  * << detailed description >>
  *
- * @file TorsionPotential.h
+ * @file Operations.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 05.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
-#include <cstddef>
-#include <tuple>
-#include <vector>
-#include "TopologyPotential.h"
+#include <readdy/model/topologies/reactions/TopologyReactionAction.h>
+#include <readdy/model/topologies/GraphTopology.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
+namespace readdy {
+namespace model {
+namespace top {
+namespace reactions {
+namespace actions {
 
-class TorsionPotential : public TopologyPotential {
-public:
-    TorsionPotential(Topology *const topology);
-    virtual ~TorsionPotential() = default;
-};
+TopologyReactionAction::TopologyReactionAction(GraphTopology *const topology) : topology(topology){ }
 
-struct DihedralConfiguration {
-    DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant, double multiplicity,
-             double equilibriumAngle);
+ChangeParticleType::ChangeParticleType(GraphTopology *const topology, const vertex &v,
+                                       const particle_type_type &type_to)
+        : TopologyReactionAction(topology), _vertex(v), type_to(type_to), previous_type(type_to){}
 
-    std::size_t idx1, idx2, idx3, idx4;
-    double forceConstant, multiplicity, phi_0;
-};
+AddEdge::AddEdge(GraphTopology *const topology, const edge &edge)
+        : TopologyReactionAction(topology), label_edge_(edge) {}
 
-class CosineDihedralPotential : public TorsionPotential {
-public:
-    using dihedral_t = DihedralConfiguration;
-    using dihedrals_t = std::vector<dihedral_t>;
+void AddEdge::execute() {
+    topology->graph().addEdge(label_edge_);
+}
 
-    CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
-    virtual ~CosineDihedralPotential() = default;
+void AddEdge::undo() {
+    topology->graph().removeEdge(label_edge_);
+}
 
-    const dihedrals_t &getDihedrals() const;
+RemoveEdge::RemoveEdge(GraphTopology *const topology, const edge& edge)
+        : TopologyReactionAction(topology), label_edge_(edge) {}
 
-    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_t &) const;
+void RemoveEdge::execute() {
+    topology->graph().removeEdge(label_edge_);
+}
 
-    void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
-                        const dihedral_t &) const;
+void RemoveEdge::undo() {
+    topology->graph().addEdge(label_edge_);
+}
 
-    virtual std::unique_ptr<EvaluatePotentialAction>
-    createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
-
-protected:
-    dihedrals_t dihedrals;
-};
-
-
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+}
+}
+}
+}
+}

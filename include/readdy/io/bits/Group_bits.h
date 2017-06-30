@@ -90,9 +90,10 @@ inline std::vector<std::string> Group::sub_elements(H5O_type_t type) const {
             if(size < 0) {
                 H5Eprint(H5Eget_current_stack(), stderr);
             }
-            char c_string [size];
-            H5Lget_name_by_idx (hid(), ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string, (std::size_t) size, H5P_DEFAULT);
-            std::string label (c_string);
+
+            std::vector<char> c_string (static_cast<std::size_t>(size));
+            H5Lget_name_by_idx (hid(), ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string.data(), (std::size_t) size, H5P_DEFAULT);
+            std::string label (c_string.data());
 
             result.push_back(std::move(label));
         }

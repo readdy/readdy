@@ -93,7 +93,7 @@ protected:
     const double skinSize;
 };
 
-namespace reactions {
+NAMESPACE_BEGIN(reactions)
 
 class UncontrolledApproximation : public TimeStepDependentAction {
 
@@ -129,7 +129,17 @@ public:
 struct NextSubvolumes : public TimeStepDependentAction {
     NextSubvolumes(double timeStep);
 };
-}
+
+NAMESPACE_END(reactions)
+
+NAMESPACE_BEGIN(top)
+
+class EvaluateTopologyReactions : public TimeStepDependentAction {
+public:
+    EvaluateTopologyReactions(double timeStep);
+};
+
+NAMESPACE_END(top)
 
 class EvaluateCompartments : public Action {
 public:
@@ -139,51 +149,55 @@ public:
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<AddParticles, T>::value>::type * = 0) {
     return "AddParticles";
-};
+}
 
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<EulerBDIntegrator, T>::value>::type * = 0) {
     return "EulerBDIntegrator";
-};
+}
 
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<CalculateForces, T>::value>::type * = 0) {
     return "Calculate forces";
-};
+}
 
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<UpdateNeighborList, T>::value>::type * = 0) {
     return "Update neighbor list";
-};
+}
 
 template<typename T>
 const std::string
 getActionName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApproximation, T>::value>::type * = 0) {
     return "UncontrolledApproximation";
-};
+}
 
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
     return "Gillespie";
-};
+}
 
 template<typename T>
 const std::string
 getActionName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type * = 0) {
     return "GillespieParallel";
-};
+}
 
 template<typename T>
 const std::string
 getActionName(typename std::enable_if<std::is_base_of<reactions::NextSubvolumes, T>::value>::type * = 0) {
     return "NextSubvolumes";
-};
+}
 
+template<typename T>
+const std::string getActionName(typename std::enable_if<std::is_base_of<top::EvaluateTopologyReactions, T>::value>::type * = 0) {
+    return "EvaluateTopologyReactions";
+}
 
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<EvaluateCompartments, T>::value>::type * = 0) {
     return "EvaluateCompartments";
-};
+}
 
 NAMESPACE_END(actions)
 NAMESPACE_END(model)

@@ -55,8 +55,9 @@ Config::Config() {
     const char *env = std::getenv("READDY_N_CORES");
     if (env) {
         m_nThreads = static_cast<n_threads_t>(std::stol(env));
-        log::debug("Using {} threads (by environment variable READDY_N_CORES", m_nThreads);
+        log::debug("Using {} threads (set by environment variable READDY_N_CORES)", m_nThreads);
     }
+    update();
 }
 
 Config::n_threads_t Config::nThreads() const {
@@ -65,6 +66,58 @@ Config::n_threads_t Config::nThreads() const {
 
 void Config::setNThreads(const Config::n_threads_t n) {
     m_nThreads = n;
+    update();
+}
+
+void Config::setMode(ThreadMode mode) {
+    _mode = mode;
+    update();
+}
+
+void Config::update() {
+    using pool_executor = readdy::util::thread::executor<readdy::util::thread::executor_type::pool>;
+    using thread_executor = readdy::util::thread::executor<readdy::util::thread::executor_type::std_thread>;
+    using async_executor = readdy::util::thread::executor<readdy::util::thread::executor_type::std_async>;
+
+    switch (_mode) {
+        case ThreadMode::pool: {
+            if (pool) {
+                pool->resize(m_nThreads);
+            } else {
+                pool = std::make_unique<ctpl::thread_pool>(m_nThreads);
+            }
+            _executor = std::unique_ptr<executor_base>(new pool_executor(pool.get()));
+            break;
+        }
+        case ThreadMode::std_thread: {
+            if(pool) {
+                pool->stop(true);
+                pool.reset(nullptr);
+            }
+            _executor = std::unique_ptr<executor_base>(new thread_executor(nullptr));
+            break;
+        }
+        case ThreadMode::std_async: {
+            if(pool) {
+                pool->stop(true);
+                pool.reset(nullptr);
+            }
+            _executor = std::unique_ptr<executor_base>(new async_executor(nullptr));
+            break;
+        }
+        case ThreadMode::inactive: {
+            if(pool) {
+                pool->stop(true);
+                pool.reset(nullptr);
+            }
+            _executor.reset(nullptr);
+            break;
+        }
+    }
+}
+
+const executor_base *const Config::executor() const {
+    return _executor.get();
 }
 
 }

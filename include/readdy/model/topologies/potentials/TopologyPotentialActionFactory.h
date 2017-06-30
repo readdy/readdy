@@ -23,38 +23,44 @@
 /**
  * << detailed description >>
  *
- * @file TopologyAction.h
+ * @file TopologyPotentialActionFactory.h
  * @brief << brief description >>
  * @author clonker
- * @date 30.01.17
+ * @date 06.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
+
 #include <readdy/common/macros.h>
-#include <readdy/model/KernelContext.h>
+#include "TopologyPotentialActions.h"
+#include "BondedPotential.h"
+#include "AnglePotential.h"
+#include "TorsionPotential.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+NAMESPACE_BEGIN(pot)
 
-class TopologyAction {
+class TopologyPotentialActionFactory {
 public:
-    TopologyAction(const KernelContext *const context) : context(context) {}
-    virtual ~TopologyAction() = default;
 
-protected:
-    const KernelContext* const context;
+    using harmonic_bond = CalculateHarmonicBondPotential::harmonic_bond;
+    using harmonic_angle = CalculateHarmonicAnglePotential::harmonic_angle;
+    using cos_dihedral = CalculateCosineDihedralPotential::cos_dihedral;
+
+    virtual std::unique_ptr<CalculateHarmonicBondPotential>
+    createCalculateHarmonicBondPotential(const harmonic_bond *const) const = 0;
+
+    virtual std::unique_ptr<CalculateHarmonicAnglePotential>
+    createCalculateHarmonicAnglePotential(const harmonic_angle *const) const = 0;
+
+    virtual std::unique_ptr<CalculateCosineDihedralPotential>
+    createCalculateCosineDihedralPotential(const cos_dihedral *const) const = 0;
 };
 
-class EvaluatePotentialAction : public TopologyAction {
-public:
-    EvaluatePotentialAction(const KernelContext *const context) : TopologyAction(context) {}
-    virtual ~EvaluatePotentialAction() = default;
-
-    virtual double perform() = 0;
-};
-
+NAMESPACE_END(pot)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

@@ -55,6 +55,8 @@ public:
     const SCPUStateModel &getSCPUKernelStateModel() const;
     SCPUStateModel &getSCPUKernelStateModel();
 
+    virtual void initialize() override;
+
 protected:
     virtual SCPUStateModel &getKernelStateModelInternal() const override;
 

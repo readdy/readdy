@@ -57,9 +57,9 @@
 using particle_t = readdy::model::Particle;
 using topology_particle_t = readdy::model::TopologyParticle;
 
-using harmonic_bond = readdy::model::top::HarmonicBondPotential;
-using angle_bond = readdy::model::top::HarmonicAnglePotential;
-using dihedral_bond = readdy::model::top::CosineDihedralPotential;
+using harmonic_bond = readdy::model::top::pot::HarmonicBondPotential;
+using angle_bond = readdy::model::top::pot::HarmonicAnglePotential;
+using dihedral_bond = readdy::model::top::pot::CosineDihedralPotential;
 
 namespace {
 

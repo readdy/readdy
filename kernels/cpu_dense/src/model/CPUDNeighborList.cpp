@@ -48,7 +48,7 @@ namespace thd = readdy::util::thread;
 template<typename T, typename Dims>
 T get_contiguous_index(T i, T j, T k, Dims I, Dims J) {
     return k + j * J + i * I * J;
-};
+}
 
 const static std::vector<CPUDNeighborList::neighbor_t> no_neighbors{};
 

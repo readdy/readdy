@@ -37,9 +37,9 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
-#include <readdy/common/thread/scoped_async.h>
 #include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/kernel/cpu/util/config.h>
+#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -52,6 +52,8 @@ public:
     using particle_t = readdy::model::Particle;
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
+
+    using topologies_t = readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>>;
 
     CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config,
                   readdy::model::top::TopologyActionFactory const *const taf);
@@ -100,6 +102,14 @@ public:
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
     virtual particle_t getParticleForIndex(const std::size_t index) const override;
+
+    virtual particle_type_type getParticleType(const std::size_t index) const override;
+
+    const topologies_t &topologies() const;
+
+    topologies_t &topologies();
+
+    virtual std::vector<readdy::model::top::GraphTopology const *> getTopologies() const override;
 
 private:
     struct Impl;

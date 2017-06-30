@@ -231,6 +231,13 @@ void Kernel::expected_n_particles(const std::size_t n) {
     getKernelStateModel().expected_n_particles(n);
 }
 
+void Kernel::initialize() {
+    getKernelContext().configure(true);
+}
+
+void Kernel::finalize() {
+}
+
 Kernel &Kernel::operator=(Kernel &&rhs) = default;
 
 Kernel::Kernel(Kernel &&rhs) = default;

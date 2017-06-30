@@ -53,7 +53,7 @@ public:
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> create(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
         return std::make_unique<T>(kernel, obs1, obs2, stride);
-    };
+    }
 
     template<typename R, typename... Args>
     inline std::unique_ptr<R> create(unsigned int stride, Args &&... args) const {

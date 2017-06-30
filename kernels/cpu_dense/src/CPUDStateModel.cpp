@@ -235,6 +235,14 @@ void CPUDStateModel::expected_n_particles(const std::size_t n) {
     }
 }
 
+std::vector<readdy::model::top::GraphTopology const*> CPUDStateModel::getTopologies() const {
+    return {};
+}
+
+particle_type_type CPUDStateModel::getParticleType(const std::size_t index) const {
+    return pimpl->cdata().entry_at(index).type;
+}
+
 CPUDStateModel::~CPUDStateModel() = default;
 
 

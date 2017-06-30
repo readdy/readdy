@@ -44,5 +44,8 @@ struct is_std_array : public std::false_type {};
 template<typename T, std::size_t N>
 struct is_std_array<std::array<T, N>> : public std::true_type {};
 
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
 NAMESPACE_END(util)
 NAMESPACE_END(readdy)

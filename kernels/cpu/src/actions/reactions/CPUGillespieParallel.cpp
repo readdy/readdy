@@ -32,7 +32,6 @@
 #include <future>
 #include <queue>
 
-#include <readdy/common/thread/scoped_async.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
 #include <readdy/kernel/cpu/nl/NeighborList.h>
 
@@ -79,6 +78,9 @@ bool CPUGillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
 void CPUGillespieParallel::perform() {
     {
         const auto &ctx = kernel->getKernelContext();
+        if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
+            return;
+        }
         if (ctx.recordReactionCounts()) {
             auto &stateModel = kernel->getCPUKernelStateModel();
             readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
@@ -189,8 +191,8 @@ void CPUGillespieParallel::handleBoxReactions() {
     using promise_records = std::promise<std::vector<record_t>>;
     using promise_counts = std::promise<reaction_counts_t>;
 
-    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t *data, neighbor_list *nl, promise_t update,
-                         promise_new_particles_t newParticles, promise_records promiseRecords, promise_counts counts) {
+    auto worker = [this](std::size_t, SlicedBox &box, ctx_t ctx, data_t *data, neighbor_list *nl, promise_t &update,
+                         promise_new_particles_t &newParticles, promise_records &promiseRecords, promise_counts &counts) {
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
         std::set<data_t::index_t> problematic{};
@@ -240,31 +242,40 @@ void CPUGillespieParallel::handleBoxReactions() {
         update.set_value(std::move(problematic));
     };
 
-    std::vector<std::future<std::set<data_t::index_t>>> updates;
+
+    /*std::vector<std::future<std::set<data_t::index_t>>> updates;
     std::vector<std::future<data_t::update_t>> newParticles;
     std::vector<std::future<std::vector<record_t>>> records;
-    std::vector<std::future<reaction_counts_t>> counts;
+    std::vector<std::future<reaction_counts_t>> counts;*/
     auto &stateModel = kernel->getCPUKernelStateModel();
+    std::vector<std::promise<std::set<data_t::index_t>>> updates_promises(kernel->getNThreads());
+    std::vector<std::promise<data_t::update_t>> newParticles_promises(kernel->getNThreads());
+    std::vector<std::promise<std::vector<record_t>>> records_promises(kernel->getNThreads());
+    std::vector<std::promise<reaction_counts_t>> counts_promises(kernel->getNThreads());
     {
-        //readdy::util::Timer t ("\t run threads");
-        std::vector<threading_model> threads;
-        for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
-            // nboxes == nthreads
-            promise_t promise;
-            updates.push_back(promise.get_future());
-            promise_new_particles_t promiseParticles;
-            newParticles.push_back(promiseParticles.get_future());
-            promise_records promiseRecords;
-            records.push_back(promiseRecords.get_future());
-            promise_counts promiseCounts;
-            counts.push_back(promiseCounts.get_future());
-            threads.emplace_back(worker, std::ref(boxes[i]), std::ref(kernel->getKernelContext()),
-                                 stateModel.getParticleData(), stateModel.getNeighborList(), std::move(promise),
-                                 std::move(promiseParticles), std::move(promiseRecords), std::move(promiseCounts));
+        const auto& executor = kernel->executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+
+        {
+            for (unsigned int i = 0; i < kernel->getNThreads(); ++i) {
+                // nboxes == nthreads
+                promise_t &promise = updates_promises.at(i);
+                //updates.push_back(promise.get_future());
+                promise_new_particles_t &promiseParticles = newParticles_promises.at(i);
+                //newParticles.push_back(promiseParticles.get_future());
+                promise_records &promiseRecords = records_promises.at(i);
+                //records.push_back(promiseRecords.get_future());
+                promise_counts &promiseCounts = counts_promises.at(i);
+                //counts.push_back(promiseCounts.get_future());
+                executables.push_back(executor.pack(worker, std::ref(boxes[i]), std::ref(kernel->getKernelContext()),
+                                                    stateModel.getParticleData(), stateModel.getNeighborList(), std::ref(promise),
+                                                    std::ref(promiseParticles), std::ref(promiseRecords), std::ref(promiseCounts)));
+            }
         }
+        executor.execute_and_wait(std::move(executables));
     }
     std::vector<std::vector<record_t>> attainedRecords;
-    attainedRecords.reserve(records.size() + 1);
+    attainedRecords.reserve(records_promises.size() + 1);
     {
         const auto &ctx = kernel->getKernelContext();
         //readdy::util::Timer t ("\t fix marked");
@@ -274,8 +285,8 @@ void CPUGillespieParallel::handleBoxReactions() {
         std::vector<event_t> evilEvents{};
         double alpha = 0;
         long n_local_problematic = 0;
-        for (auto &&update : updates) {
-            auto local_problematic = std::move(update.get());
+        for (auto &&update : updates_promises) {
+            auto local_problematic = std::move(update.get_future().get());
             n_local_problematic += local_problematic.size();
             gatherEvents(kernel, std::move(local_problematic), neighbor_list, data, alpha, evilEvents, d2);
         }
@@ -288,14 +299,14 @@ void CPUGillespieParallel::handleBoxReactions() {
             auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate,
                                                              std::move(evilEvents), &newRecords, countsPtr);
             const auto &fixPos = ctx.getFixPositionFun();
-            for (auto &&future : newParticles) {
-                neighbor_list->updateData(std::move(future.get()));
+            for (auto &&future : newParticles_promises) {
+                neighbor_list->updateData(std::move(future.get_future().get()));
             }
             neighbor_list->updateData(std::move(newProblemParticles));
             std::size_t totalRecordSize = newRecords.size();
             attainedRecords.push_back(std::move(newRecords));
-            for (auto &&future : records) {
-                attainedRecords.push_back(std::move(future.get()));
+            for (auto &&future : records_promises) {
+                attainedRecords.push_back(std::move(future.get_future().get()));
                 totalRecordSize += attainedRecords.back().size();
             }
             auto &modelRecords = kernel->getCPUKernelStateModel().reactionRecords();
@@ -308,8 +319,8 @@ void CPUGillespieParallel::handleBoxReactions() {
             auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate,
                                                              std::move(evilEvents), nullptr, countsPtr);
             const auto &fixPos = ctx.getFixPositionFun();
-            for (auto &&future : newParticles) {
-                neighbor_list->updateData(std::move(future.get()));
+            for (auto &&future : newParticles_promises) {
+                neighbor_list->updateData(std::move(future.get_future().get()));
             }
             neighbor_list->updateData(std::move(newProblemParticles));
         }
@@ -318,8 +329,8 @@ void CPUGillespieParallel::handleBoxReactions() {
             auto &modelCounts = stateModel.reactionCounts();
             auto &modelCountsOrder1 = std::get<0>(modelCounts);
             auto &modelCountsOrder2 = std::get<1>(modelCounts);
-            for (auto &&future : counts) {
-                auto c = std::move(future.get());
+            for (auto &&future : counts_promises) {
+                auto c = std::move(future.get_future().get());
                 const auto &countsOrder1 = std::get<0>(c);
                 const auto &countsOrder2 = std::get<1>(c);
                 for (const auto &entry : countsOrder1) {

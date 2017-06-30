@@ -61,6 +61,8 @@ protected:
 
     readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override;
 
+    virtual readdy::model::actions::top::EvaluateTopologyReactions *createEvaluateTopologyReactions(double timeStep) const override;
+
 private:
     SCPUKernel *const kernel;
 };

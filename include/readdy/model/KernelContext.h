@@ -108,7 +108,7 @@ public:
         const auto id = compartment->getId();
         compartmentRegistry->push_back(std::move(compartment));
         return id;
-    };
+    }
 
     const compartment_registry &getCompartments() const;
 

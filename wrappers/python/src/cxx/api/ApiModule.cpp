@@ -59,7 +59,7 @@ void addParticle(sim &self, const std::string &type, const vec &pos) { self.addP
 
 
 enum class ParticleTypeFlavor {
-    NORMAL = 0, TOPOLOGY, MEMBRANE
+    NORMAL = 0, TOPOLOGY = 1, MEMBRANE = 2
 };
 
 void exportApi(py::module &api) {
@@ -98,7 +98,7 @@ void exportApi(py::module &api) {
                                  return readdy::model::Particle::FLAVOR_TOPOLOGY;
                          }
                      }();
-                     return self.registerParticleType(name, diffusionCoefficient, radius);
+                     return self.registerParticleType(name, diffusionCoefficient, radius, f);
                  }, "name"_a, "diffusion_coefficient"_a, "radius"_a, "flavor"_a = ParticleTypeFlavor::NORMAL)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
@@ -149,8 +149,9 @@ void exportApi(py::module &api) {
             .def("configure_topology_dihedral_potential", &sim::configureTopologyTorsionPotential, "type1"_a,
                  "type2"_a, "type3"_a, "type4"_a, "force_constant"_a, "multiplicity"_a, "phi_0"_a,
                  "type"_a = readdy::api::TorsionType::COS_DIHEDRAL)
-            .def("add_topology", &sim::addTopology, rvp::reference, "particles"_a,
-                 "labels"_a = std::vector<std::string>())
+            .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
+            .def("add_topology", &sim::addTopology, rvp::reference, "particles"_a, "labels"_a = std::vector<std::string>())
+            .def("current_topologies", &sim::currentTopologies)
             .def("set_kernel", &sim::setKernel, "name"_a)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(

@@ -61,8 +61,11 @@ NAMESPACE_BEGIN(api)
 template<typename SchemeType>
 class SchemeConfigurator;
 
-struct SimulationScheme {
+class SimulationScheme {
+public:
     using continue_fun_t = std::function<bool(time_step_type)>;
+
+    using evaluate_topology_reactions = model::actions::top::EvaluateTopologyReactions;
 
     SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
 
@@ -86,11 +89,12 @@ protected:
     class SchemeConfigurator;
 
     model::Kernel *const kernel;
-    std::unique_ptr<model::actions::TimeStepDependentAction> integrator = nullptr;
-    std::unique_ptr<model::actions::Action> forces = nullptr;
-    std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler = nullptr;
-    std::unique_ptr<model::actions::UpdateNeighborList> neighborList = nullptr;
-    std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList = nullptr;
+    std::unique_ptr<model::actions::TimeStepDependentAction> integrator {nullptr};
+    std::unique_ptr<model::actions::Action> forces {nullptr};
+    std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler {nullptr};
+    std::unique_ptr<model::actions::UpdateNeighborList> neighborList {nullptr};
+    std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList {nullptr};
+    std::unique_ptr<evaluate_topology_reactions> evaluateTopologyReactions {nullptr};
     std::unique_ptr<io::Group> configGroup = nullptr;
     bool evaluateObservables = true;
     time_step_type start = 0;
@@ -103,10 +107,9 @@ public:
     using SimulationScheme::run;
 
     virtual void run(const continue_fun_t &continueFun) override {
-        kernel->getKernelContext().configure(true);
+        kernel->initialize();
         if(configGroup) {
-            model::ioutils::writeParticleTypeInformation(*configGroup, kernel->getKernelContext());
-            model::ioutils::writeReactionInformation(*configGroup, kernel->getKernelContext());
+            model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
 
         if (neighborList) neighborList->perform();
@@ -119,6 +122,7 @@ public:
             // if (forces) forces->perform();
 
             if (reactionScheduler) reactionScheduler->perform();
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform();
             if (neighborList) neighborList->perform();
             if (forces) forces->perform();
             if (evaluateObservables) kernel->evaluateObservables(t + 1);
@@ -126,6 +130,7 @@ public:
         }
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
+        kernel->finalize();
         log::debug("Simulation completed");
     }
 };
@@ -167,6 +172,11 @@ public:
 
     SchemeConfigurator &withReactionScheduler(const std::string &name) {
         scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
+        return *this;
+    }
+
+    SchemeConfigurator &evaluateTopologyReactions() {
+        scheme->evaluateTopologyReactions = scheme->kernel->template createAction<SimulationScheme::evaluate_topology_reactions>(0.);
         return *this;
     }
 
@@ -223,6 +233,7 @@ public:
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
+        if (scheme->evaluateTopologyReactions) scheme->evaluateTopologyReactions->setTimeStep(timeStep);
         std::unique_ptr<SchemeType> ptr = std::move(scheme);
         scheme = nullptr;
         return ptr;
@@ -247,7 +258,10 @@ public:
     using SimulationScheme::run;
 
     virtual void run(const continue_fun_t &fun) override {
-        kernel->getKernelContext().configure(true);
+        kernel->initialize();
+        if(configGroup) {
+            model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
+        }
 
         if (neighborList) neighborList->perform();
         if (forces) forces->perform();
@@ -260,6 +274,7 @@ public:
             // if (forces) forces->perform();
 
             if (reactionScheduler) reactionScheduler->perform();
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform();
             if (compartments) compartments->perform();
             if (neighborList) neighborList->perform();
             if (forces) forces->perform();
@@ -269,6 +284,7 @@ public:
 
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
+        kernel->finalize();
         log::debug("Simulation completed");
     }
 
@@ -315,6 +331,11 @@ public:
     template<typename ReactionSchedulerType>
     SchemeConfigurator &withReactionScheduler() {
         scheme->reactionScheduler = scheme->kernel->template createAction<ReactionSchedulerType>(0.);
+        return *this;
+    }
+
+    SchemeConfigurator &evaluateTopologyReactions() {
+        scheme->evaluateTopologyReactions = scheme->kernel->template createAction<SimulationScheme::evaluate_topology_reactions>(0.);
         return *this;
     }
 
@@ -379,6 +400,7 @@ public:
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
+        if (scheme->evaluateTopologyReactions) scheme->evaluateTopologyReactions->setTimeStep(timeStep);
         std::unique_ptr<AdvancedScheme> ptr = std::move(scheme);
         scheme = nullptr;
         return ptr;

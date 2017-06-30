@@ -23,24 +23,26 @@
 /**
  * << detailed description >>
  *
- * @file TopologyPotential.cpp
+ * @file StateModel.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 30.01.17
+ * @date 19.04.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/TopologyPotential.h>
-#include <readdy/model/topologies/Topology.h>
+#include <readdy/model/KernelStateModel.h>
+
 namespace readdy {
 namespace model {
-namespace top {
-TopologyPotential::TopologyPotential(Topology *const topology) : topology(topology) {}
 
-Topology *const TopologyPotential::getTopology() const {
-    return topology;
+std::vector<Particle> KernelStateModel::getParticlesForTopology(const top::GraphTopology &topology) const {
+    std::vector<Particle> result;
+    result.reserve(topology.getNParticles());
+    for(const auto& p : topology.getParticles()) {
+        result.push_back(getParticleForIndex(p));
+    }
+    return result;
 }
 
-}
 }
 }

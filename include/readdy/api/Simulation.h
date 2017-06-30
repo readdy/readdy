@@ -94,6 +94,10 @@ public:
     readdy::model::top::GraphTopology *addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
                                                    const std::vector<std::string> &labels = {});
 
+    std::vector<const readdy::model::top::GraphTopology*> currentTopologies() const;
+
+    std::vector<model::Particle> getParticlesForTopology(const model::top::GraphTopology &topology) const;
+
     /**
      * Method to set the box size.
      * @param dx length of the x-axis

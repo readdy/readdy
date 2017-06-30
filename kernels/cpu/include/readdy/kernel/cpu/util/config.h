@@ -32,17 +32,13 @@
 
 #pragma once
 
-#include <readdy/common/thread/scoped_async.h>
-#include <readdy/common/thread/scoped_thread.h>
-
 namespace readdy {
 namespace kernel {
 namespace cpu {
+class CPUKernel;
 namespace nl {
 class NeighborList;
 }
-//using threading_model = readdy::util::thread::scoped_thread;
-using threading_model = readdy::util::thread::scoped_async;
 using neighbor_list = readdy::kernel::cpu::nl::NeighborList;
 }
 }

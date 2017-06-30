@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
+#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -41,7 +42,6 @@ struct SCPUStateModel::Impl {
     double currentEnergy = 0;
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
-    std::vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies;
     SCPUStateModel::topology_action_factory const *topologyActionFactory;
     readdy::model::KernelContext const *context;
     // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
@@ -147,19 +147,21 @@ void SCPUStateModel::calculateForces() {
     }
     // update forces and energy for topologies
     {
-        for (const auto &topology : pimpl->topologies) {
-            // calculate bonded potentials
-            for (const auto &bondedPot : topology->getBondedPotentials()) {
-                auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-                pimpl->currentEnergy += energy;
-            }
-            for (const auto &anglePot : topology->getAnglePotentials()) {
-                auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-                pimpl->currentEnergy += energy;
-            }
-            for (const auto &torsionPot : topology->getTorsionPotentials()) {
-                auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
-                pimpl->currentEnergy += energy;
+        for (const auto &topology : _topologies) {
+            if(!topology->isDeactivated()) {
+                // calculate bonded potentials
+                for (const auto &bondedPot : topology->getBondedPotentials()) {
+                    auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                    pimpl->currentEnergy += energy;
+                }
+                for (const auto &anglePot : topology->getAnglePotentials()) {
+                    auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                    pimpl->currentEnergy += energy;
+                }
+                for (const auto &torsionPot : topology->getTorsionPotentials()) {
+                    auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform();
+                    pimpl->currentEnergy += energy;
+                }
             }
         }
     }
@@ -180,9 +182,10 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    pimpl->topologies.push_back(
-            std::make_unique<readdy::model::top::GraphTopology>(std::move(ids), std::move(types), &pimpl->context->topology_potentials()));
-    return pimpl->topologies.back().get();
+    auto it = _topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(
+            std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
+    );
+    return it->get();
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionRecords() {
@@ -209,6 +212,29 @@ void SCPUStateModel::expected_n_particles(const std::size_t n) {
     if (pimpl->particleData->size() < n) {
         pimpl->particleData->reserve(n);
     }
+}
+
+const SCPUStateModel::topologies_t &SCPUStateModel::topologies() const {
+    return _topologies;
+}
+
+SCPUStateModel::topologies_t &SCPUStateModel::topologies() {
+    return _topologies;
+}
+
+std::vector<readdy::model::top::GraphTopology const *> SCPUStateModel::getTopologies() const {
+    std::vector<readdy::model::top::GraphTopology const*> result;
+    result.reserve(_topologies.size() - _topologies.n_deactivated());
+    for(const auto& top : _topologies) {
+        if(!top->isDeactivated()) {
+            result.push_back(top.get());
+        }
+    }
+    return result;
+}
+
+particle_type_type SCPUStateModel::getParticleType(const std::size_t index) const {
+    return getParticleData()->entry_at(index).type;
 }
 
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) = default;
