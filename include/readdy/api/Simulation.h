@@ -248,6 +248,20 @@ public:
     registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
                                double radius);
 
+    /**
+     * Register a spherical barrier potential. For positive height it represents a concentric barrier around the point origin
+     * with a certain radius. The potential consists of multiple harmonic snippets.
+     * 
+     * @param particleType the particle type for which the potential should take effect
+     * @param origin the center of the sphere
+     * @param radius the radius of the sphere
+     * @param height the energetic height of the barrier, can be negative
+     * @param width width of the barrier, behaves like full-width-at-half-maximum (FWHM)
+     * @return a uuid with which the potential can be removed
+     */
+    const short
+    registerSphericalBarrier(std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width);
+
     //----------------------
     // Order 2 potentials
     //----------------------

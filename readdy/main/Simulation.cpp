@@ -192,6 +192,13 @@ Simulation::registerSphereOutPotential(std::string particleType, double forceCon
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
 
+const short
+Simulation::registerSphericalBarrier(std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width) {
+    using potential_t = readdy::model::potentials::SphericalBarrier;
+    ensureKernelSelected();
+    return pimpl->kernel->registerPotential<potential_t>(particleType, origin, radius, height, width);
+}
+
 void Simulation::ensureKernelSelected() const {
     if (!isKernelSelected()) {
         throw NoKernelSelectedException("No kernel was selected!");
