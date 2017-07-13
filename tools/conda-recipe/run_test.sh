@@ -55,19 +55,17 @@ if [ ${err_code} -ne 0 ]; then
     fi
 fi
 
-echo "calling c++ cpu_dense unit tests"
-runUnitTests_cpu_dense
-err_code=$?
-if [ ${err_code} -ne 0 ]; then
-    ret_code=${err_code}
-    echo "cpu_dense unit tests failed with ${ret_code}"
-    if [ $(uname) = "Linux" ]; then
-        echo "re-running with logbt"
-        ./logbt runUnitTests_cpu_dense
-    fi
-fi
-
-
+#echo "calling c++ cpu_dense unit tests"
+#runUnitTests_cpu_dense
+#err_code=$?
+#if [ ${err_code} -ne 0 ]; then
+#    ret_code=${err_code}
+#    echo "cpu_dense unit tests failed with ${ret_code}"
+#    if [ $(uname) = "Linux" ]; then
+#        echo "re-running with logbt"
+#        ./logbt runUnitTests_cpu_dense
+#    fi
+#fi
 
 echo "calling python unit tests"
 nosetests readdy -s -vv --with-doctest --doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS
