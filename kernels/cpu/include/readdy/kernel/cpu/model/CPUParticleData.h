@@ -67,7 +67,7 @@ public:
     using update_t = std::pair<entries_update_t, std::vector<index_t>>;
     using vec3 = readdy::model::Vec3;
     using force_t = vec3;
-    using displacement_t = double;
+    using displacement_t = readdy::scalar;
     using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
 
     using iterator = decltype(std::declval<entries_t>().begin());

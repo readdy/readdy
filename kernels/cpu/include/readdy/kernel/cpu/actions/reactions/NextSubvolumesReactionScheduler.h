@@ -44,12 +44,12 @@ using cell_index_t = unsigned int;
 using signed_cell_index_t = typename std::make_signed<cell_index_t>::type;
     using super = readdy::model::actions::reactions::NextSubvolumes;
 public:
-    CPUNextSubvolumes(const CPUKernel *const kernel, double timeStep);
+    CPUNextSubvolumes(const CPUKernel *const kernel, readdy::scalar timeStep);
     ~CPUNextSubvolumes();
 
     virtual void perform() override;
 
-    double getMaxReactionRadius() const;
+    readdy::scalar getMaxReactionRadius() const;
 private:
     struct ReactionEvent;
     struct GridCell;

@@ -94,8 +94,8 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries {};
 
-        double eductDistance = .4;
-        double weight1 = .3, weight2 = .7;
+        readdy::scalar eductDistance = .4;
+        readdy::scalar weight1 = .3, weight2 = .7;
         auto fusion = kernel->getReactionFactory().createReaction<fusion_t>("A+B->C", 0, 1, 2, 1, eductDistance,
                                                                             weight1, weight2);
         particle_t p_A{1, 0, 0, 0};
@@ -117,8 +117,8 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         data_t::entries_update_t newParticles{};
         std::vector<data_t::index_t> decayedEntries {};
 
-        double productDistance = .4;
-        double weight1 = .3, weight2 = .7;
+        readdy::scalar productDistance = .4;
+        readdy::scalar weight1 = .3, weight2 = .7;
         auto fission = kernel->getReactionFactory().createReaction<fission_t>("C->A+B", 2, 0, 1, 1, productDistance,
                                                                               weight1, weight2);
         particle_t p_C{0, 0, 0, 2};
@@ -259,9 +259,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->getKernelContext().particle_types().add("A", .25, 1.);
     kernel->getKernelContext().particle_types().add("B", .25, 1.);
     kernel->getKernelContext().particle_types().add("C", .25, 1.);
-    double reactionRadius = 1.0;
+    readdy::scalar reactionRadius = 1.0;
     kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, reactionRadius);
-    kernel->registerReaction<fusion_t>("very unlikely", "A", "C", "A", std::numeric_limits<double>::min(),
+    kernel->registerReaction<fusion_t>("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(),
                                        reactionRadius);
     kernel->registerReaction<fusion_t>("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 

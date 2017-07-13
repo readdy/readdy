@@ -35,7 +35,7 @@
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
 
 readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::FilteredGillespieParallel(
-        readdy::kernel::cpu::CPUKernel *const kernel, double timeStep) : CPUGillespieParallel(kernel, timeStep) {}
+        readdy::kernel::cpu::CPUKernel *const kernel, scalar timeStep) : CPUGillespieParallel(kernel, timeStep) {}
 
 void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleBoxReactions() {
     using promise_t = std::promise<std::set<event_t>>;
@@ -44,7 +44,7 @@ void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleB
 
     auto worker = [this](SlicedBox &box, ctx_t ctx, data_t* data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
 
-        double localAlpha = 0.0;
+        scalar localAlpha = 0.0;
         std::vector<event_t> localEvents{};
         std::set<event_t> boxoverlappingEvents {};
         gatherEvents(kernel, box.particleIndices, nl, *data, localAlpha, localEvents);
@@ -80,7 +80,7 @@ void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleB
     {
         //readdy::util::Timer t ("\t fix marked");
         std::vector<event_t> evilEvents{};
-        double alpha = 0;
+        scalar alpha = 0;
         long n_local_problematic = 0;
         for (auto &&update : updates) {
             auto &&local_problematic = update.get();

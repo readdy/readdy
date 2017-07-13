@@ -67,7 +67,7 @@ void exportModelClasses(py::module &proto) {
     using namespace pybind11::literals;
 
     py::class_<particle_t>(proto, "Particle")
-            .def(py::init<double, double, double, rdy_uint>(), "x"_a, "y"_a, "z"_a, "type"_a)
+            .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar, rdy_uint>(), "x"_a, "y"_a, "z"_a, "type"_a)
             .def_property_readonly("pos", [](particle_t &self) { return self.getPos(); })
             .def_property_readonly("type", &particle_t::getType)
             .def_property_readonly("id", &particle_t::getId, rvp::reference_internal)
@@ -75,7 +75,7 @@ void exportModelClasses(py::module &proto) {
             .def(py::self != py::self);
 
     py::class_<type_registry>(proto, "ParticleTypeRegistry")
-            .def("add", [](type_registry& self, const std::string& name, double D, double r, particle_t::flavor_t flavor) {
+            .def("add", [](type_registry& self, const std::string& name, readdy::scalar D, readdy::scalar r, particle_t::flavor_t flavor) {
                 self.add(name, D, r, flavor);
             }, "name"_a, "diffusion_constant"_a, "radius"_a, "flavor"_a = 0)
             .def("diffusion_constant_of", [](const type_registry& self, const std::string& type) {

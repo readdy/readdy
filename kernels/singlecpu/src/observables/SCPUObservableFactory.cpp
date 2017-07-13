@@ -44,7 +44,7 @@ SCPUObservableFactory::SCPUObservableFactory(readdy::kernel::scpu::SCPUKernel *c
 }
 
 readdy::model::observables::HistogramAlongAxis *
-SCPUObservableFactory::createHistogramAlongAxis(unsigned int stride, std::vector<double> binBorders,
+SCPUObservableFactory::createHistogramAlongAxis(unsigned int stride, std::vector<scalar> binBorders,
                                                 std::vector<std::string> typesToCount,
                                                 unsigned int axis) const {
     return new SCPUHistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
@@ -66,8 +66,8 @@ SCPUObservableFactory::createPositions(unsigned int stride, std::vector<std::str
 }
 
 readdy::model::observables::RadialDistribution *
-SCPUObservableFactory::createRadialDistribution(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
-                                                std::vector<std::string> typeCountTo, double particleToDensity) const {
+SCPUObservableFactory::createRadialDistribution(unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
+                                                std::vector<std::string> typeCountTo, scalar particleToDensity) const {
     return new SCPURadialDistribution<SCPUKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo, particleToDensity);
 }
 

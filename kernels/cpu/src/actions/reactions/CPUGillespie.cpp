@@ -37,7 +37,7 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-CPUGillespie::CPUGillespie(CPUKernel *const kernel, double timeStep) : super(timeStep), kernel(kernel) {}
+CPUGillespie::CPUGillespie(CPUKernel *const kernel, scalar timeStep) : super(timeStep), kernel(kernel) {}
 
 void CPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
@@ -54,7 +54,7 @@ void CPUGillespie::perform() {
         readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
     }
 
-    double alpha = 0.0;
+    scalar alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, *data, alpha, events, dist);
     if(ctx.recordReactionsWithPositions()) {

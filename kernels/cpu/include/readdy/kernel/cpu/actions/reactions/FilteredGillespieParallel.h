@@ -40,7 +40,7 @@ namespace reactions {
 
 class FilteredGillespieParallel : public CPUGillespieParallel {
 public:
-    FilteredGillespieParallel(kernel_t *const kernel, double timeStep);
+    FilteredGillespieParallel(kernel_t *const kernel, readdy::scalar timeStep);
 
 private:
     virtual void handleBoxReactions() override;

@@ -48,7 +48,7 @@ namespace cpu {
 namespace actions {
 CPUActionFactory::CPUActionFactory(CPUKernel *const kernel) : kernel(kernel) { }
 
-core_p::EulerBDIntegrator *CPUActionFactory::createEulerBDIntegrator(double timeStep) const {
+core_p::EulerBDIntegrator *CPUActionFactory::createEulerBDIntegrator(scalar timeStep) const {
     return new CPUEulerBDIntegrator(kernel, timeStep);
 }
 
@@ -58,7 +58,7 @@ core_p::CalculateForces *CPUActionFactory::createCalculateForces() const {
 
 core_p::UpdateNeighborList *
 CPUActionFactory::createUpdateNeighborList(core_p::UpdateNeighborList::Operation operation,
-                                            double skinSize) const {
+                                            scalar skinSize) const {
     return new CPUUpdateNeighborList(kernel, operation, skinSize);
 }
 
@@ -67,19 +67,19 @@ core_p::EvaluateCompartments *CPUActionFactory::createEvaluateCompartments() con
 }
 
 core_p::reactions::UncontrolledApproximation *
-CPUActionFactory::createUncontrolledApproximation(double timeStep) const {
+CPUActionFactory::createUncontrolledApproximation(scalar timeStep) const {
     return new reactions::CPUUncontrolledApproximation(kernel, timeStep);
 }
 
-core_p::reactions::Gillespie *CPUActionFactory::createGillespie(double timeStep) const {
+core_p::reactions::Gillespie *CPUActionFactory::createGillespie(scalar timeStep) const {
     return new reactions::CPUGillespie(kernel, timeStep);
 }
 
-core_p::reactions::GillespieParallel *CPUActionFactory::createGillespieParallel(double timeStep) const {
+core_p::reactions::GillespieParallel *CPUActionFactory::createGillespieParallel(scalar timeStep) const {
     return new reactions::CPUGillespieParallel(kernel, timeStep);
 }
 
-core_p::reactions::NextSubvolumes *CPUActionFactory::createNextSubvolumes(double timeStep) const {
+core_p::reactions::NextSubvolumes *CPUActionFactory::createNextSubvolumes(scalar timeStep) const {
     return new reactions::CPUNextSubvolumes(kernel, timeStep);
 }
 
@@ -89,7 +89,7 @@ CPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> 
 }
 
 readdy::model::actions::top::EvaluateTopologyReactions *
-CPUActionFactory::createEvaluateTopologyReactions(double timeStep) const {
+CPUActionFactory::createEvaluateTopologyReactions(scalar timeStep) const {
     return new top::CPUEvaluateTopologyReactions(kernel, timeStep);
 }
 }

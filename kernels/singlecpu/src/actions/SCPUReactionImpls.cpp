@@ -42,8 +42,8 @@ namespace actions {
 
 namespace reactions {
 
-Event::Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
-             double cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2)
+Event::Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
+             scalar cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2)
         : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
           cumulativeRate(cumulativeRate), reactionIdx(reactionIdx), t1(t1), t2(t2) {
 }
@@ -60,12 +60,12 @@ std::ostream &operator<<(std::ostream &os, const Event &evt) {
 
 using event_t = Event;
 
-SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel *const kernel, double timeStep)
+SCPUUncontrolledApproximation::SCPUUncontrolledApproximation(SCPUKernel *const kernel, scalar timeStep)
         : readdy::model::actions::reactions::UncontrolledApproximation(timeStep), kernel(kernel) {
 }
 
 template<bool approximated>
-bool performReactionEvent(const double rate, const double timeStep) {
+bool performReactionEvent(const scalar rate, const scalar timeStep) {
     if (approximated) {
         return readdy::model::rnd::uniform_real() < rate * timeStep;
     } else {
@@ -74,11 +74,11 @@ bool performReactionEvent(const double rate, const double timeStep) {
 }
 
 
-inline bool shouldPerformEvent(const double rate, const double timestep, bool approximated) {
+inline bool shouldPerformEvent(const scalar rate, const scalar timestep, bool approximated) {
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
-std::vector<event_t> findEvents(const SCPUKernel *const kernel, double dt, bool approximateRate = true) {
+std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool approximateRate = true) {
     std::vector<event_t> eventsUpdate;
     auto &stateModel = kernel->getSCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();
@@ -92,8 +92,8 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, double dt, bool 
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
-                        //unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
-                        //double cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2
+                        //unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
+                        //scalar cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2
                         Event evt{1, (*it_reactions)->getNProducts(), idx, idx, rate, 0,
                                   static_cast<std::size_t>(it_reactions - reactions.begin()),
                                   e.type, 0};
@@ -223,7 +223,7 @@ void SCPUUncontrolledApproximation::registerReactionScheme_22(const std::string 
 }
 
 void gatherEvents(SCPUKernel const *const kernel,
-                  const readdy::kernel::scpu::model::SCPUNeighborList &nl, const data_t &data, double &alpha,
+                  const readdy::kernel::scpu::model::SCPUNeighborList &nl, const data_t &data, scalar &alpha,
                   std::vector<event_t> &events, const readdy::model::KernelContext::dist_squared_fun &d2) {
     {
         std::size_t index = 0;
@@ -270,7 +270,7 @@ void gatherEvents(SCPUKernel const *const kernel,
 }
 
 data_t::update_t handleEventsGillespie(
-        SCPUKernel *const kernel, double timeStep,
+        SCPUKernel *const kernel, scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events) {
     data_t::entries_update_t newParticles{};
@@ -292,7 +292,7 @@ data_t::update_t handleEventsGillespie(
                 const auto x = readdy::model::rnd::uniform_real(0., alpha);
                 const auto eventIt = std::lower_bound(
                         events.begin(), events.end() - nDeactivated, x,
-                        [](const event_t &elem1, double elem2) {
+                        [](const event_t &elem1, scalar elem2) {
                             return elem1.cumulativeRate < elem2;
                         }
                 );
@@ -343,7 +343,7 @@ data_t::update_t handleEventsGillespie(
                      */
                     {
                         auto _it = events.begin();
-                        double cumsum = 0.0;
+                        scalar cumsum = 0.0;
                         const auto idx1 = event.idx1;
                         if (event.nEducts == 1) {
                             while (_it < events.end() - nDeactivated) {
@@ -408,7 +408,7 @@ void SCPUGillespie::perform() {
     const auto &fixPos = ctx.getFixPositionFun();
     const auto nl = stateModel.getNeighborList();
 
-    double alpha = 0.0;
+    scalar alpha = 0.0;
     std::vector<event_t> events;
     gatherEvents(kernel, *nl, *data, alpha, events, dist);
     auto particlesUpdate = handleEventsGillespie(kernel, timeStep, false, true, std::move(events));

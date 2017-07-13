@@ -44,9 +44,9 @@ PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &particleType1,
                       delete o;
                   }) {}
 
-double PotentialOrder2Wrapper::calculateEnergy(const model::Vec3 &x_ij) const {
+readdy::scalar PotentialOrder2Wrapper::calculateEnergy(const model::Vec3 &x_ij) const {
     pybind11::gil_scoped_acquire lock;
-    return ((*calcEnergyFun)(x_ij)).cast<double>();
+    return ((*calcEnergyFun)(x_ij)).cast<readdy::scalar>();
 }
 
 void PotentialOrder2Wrapper::calculateForce(model::Vec3 &force, const model::Vec3 &x_ij) const {
@@ -55,13 +55,13 @@ void PotentialOrder2Wrapper::calculateForce(model::Vec3 &force, const model::Vec
 }
 
 void
-PotentialOrder2Wrapper::calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_ij) const {
+PotentialOrder2Wrapper::calculateForceAndEnergy(model::Vec3 &force, readdy::scalar &energy, const model::Vec3 &x_ij) const {
     pybind11::gil_scoped_acquire lock;
-    energy += ((*calcEnergyFun)(x_ij)).cast<double>();
+    energy += ((*calcEnergyFun)(x_ij)).cast<readdy::scalar>();
     force += ((*calcForceFun)(x_ij)).cast<readdy::model::Vec3>();
 }
 
-double PotentialOrder2Wrapper::getCutoffRadiusSquared() const {
+readdy::scalar PotentialOrder2Wrapper::getCutoffRadiusSquared() const {
     return getCutoffRadius() * getCutoffRadius();
 }
 

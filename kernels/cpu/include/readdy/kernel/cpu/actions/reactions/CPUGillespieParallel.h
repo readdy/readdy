@@ -45,7 +45,7 @@ namespace reactions {
 class CPUGillespieParallel : public readdy::model::actions::reactions::GillespieParallel {
     using super = readdy::model::actions::reactions::GillespieParallel;
 public:
-    CPUGillespieParallel(kernel_t *const kernel, double timeStep);
+    CPUGillespieParallel(kernel_t *const kernel, readdy::scalar timeStep);
 
     ~CPUGillespieParallel();
 
@@ -53,9 +53,9 @@ public:
 
     void clear();
 
-    double getMaxReactionRadius() const;
+    readdy::scalar getMaxReactionRadius() const;
 
-    double getBoxWidth() const;
+    readdy::scalar getBoxWidth() const;
 
     unsigned int getLongestAxis() const;
 
@@ -67,8 +67,8 @@ public:
 
 protected:
     kernel_t *const kernel;
-    double maxReactionRadius = 0.0;
-    double boxWidth = 0.0;
+    readdy::scalar maxReactionRadius = 0.0;
+    readdy::scalar boxWidth = 0.0;
     unsigned int longestAxis;
     unsigned int otherAxis1, otherAxis2;
 
@@ -77,16 +77,16 @@ protected:
         particle_indices_t particleIndices{};
         unsigned int id = 0;
         vec_t lowerLeftVertex, upperRightVertex;
-        double leftBoundary = 0;
-        double rightBoundary = 0;
+        readdy::scalar leftBoundary = 0;
+        readdy::scalar rightBoundary = 0;
         particle_indices_t::size_type n_shells;
         unsigned int longestAxis;
-        double boxWidth;
-        double shellWidth = 0.0;
+        readdy::scalar boxWidth;
+        readdy::scalar shellWidth = 0.0;
 
         long getShellIndex(const vec_t &pos) const;
 
-        SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, double maxReactionRadius,
+        SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, readdy::scalar maxReactionRadius,
                   unsigned int longestAxis);
 
         friend bool operator==(const SlicedBox &lhs, const SlicedBox &rhs) {

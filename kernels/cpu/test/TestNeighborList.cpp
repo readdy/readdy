@@ -58,7 +58,7 @@ struct TestNeighborList : ::testing::Test {
     TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
         auto &ctx = kernel->getKernelContext();
         ctx.particle_types().add("A", 1., 1.);
-        double eductDistance = 1.2;
+        readdy::scalar eductDistance = 1.2;
         ctx.reactions().add(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
 
         ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
@@ -626,8 +626,8 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->getKernelContext().setBoxSize(100, 10, 10);
 
-    const double weightF = 0.;
-    const double weightA = 1.;
+    const readdy::scalar weightF = 0.;
+    const readdy::scalar weightA = 1.;
     kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "A", "F", "F", .1, 2.0, weightF, weightA);
     //kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F2", "V", "V", "V", .1, 2.0, weightF, weightA);
 

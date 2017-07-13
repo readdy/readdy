@@ -47,7 +47,7 @@ class CPUGillespie : public readdy::model::actions::reactions::Gillespie {
 
 public:
 
-    CPUGillespie(CPUKernel *const kernel, double timeStep);
+    CPUGillespie(CPUKernel *const kernel, readdy::scalar timeStep);
 
     virtual void perform() override;
 

@@ -63,7 +63,7 @@ class CPUHistogramAlongAxis : public readdy::model::observables::HistogramAlongA
 
 public:
     CPUHistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
-                       const std::vector<double> &binBorders,
+                       const std::vector<scalar> &binBorders,
                        const std::vector<std::string> &typesToCount,
                        unsigned int axis);
 

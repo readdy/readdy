@@ -38,11 +38,11 @@ namespace scpu {
 namespace actions {
 namespace top {
 
-SCPUEvaluateTopologyReactions::SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, double timeStep)
+SCPUEvaluateTopologyReactions::SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, scalar timeStep)
         : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
 
 template<bool approximated>
-bool performReactionEvent(const double rate, const double timeStep) {
+bool performReactionEvent(const scalar rate, const scalar timeStep) {
     if (approximated) {
         return readdy::model::rnd::uniform_real() < rate * timeStep;
     } else {
@@ -50,7 +50,7 @@ bool performReactionEvent(const double rate, const double timeStep) {
     }
 }
 
-bool shouldPerformEvent(const double rate, const double timeStep, bool approximated) {
+bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approximated) {
     return approximated ? performReactionEvent<true>(rate, timeStep) : performReactionEvent<false>(rate, timeStep);
 }
 

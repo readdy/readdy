@@ -65,7 +65,7 @@ void CPUPositions::evaluate() {
 }
 
 CPUHistogramAlongAxis::CPUHistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
-                                             const std::vector<double> &binBorders,
+                                             const std::vector<scalar> &binBorders,
                                              const std::vector<std::string> &typesToCount, unsigned int axis)
         : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
           kernel(kernel) {

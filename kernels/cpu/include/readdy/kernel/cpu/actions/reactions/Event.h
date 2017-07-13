@@ -46,11 +46,11 @@ struct Event {
     index_type idx1, idx2;
     reaction_index_type reactionIdx;
     readdy::model::Particle::type_type t1, t2;
-    double reactionRate;
-    double cumulativeRate;
+    readdy::scalar reactionRate;
+    readdy::scalar cumulativeRate;
 
-    Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
-          double cumulativeRate, reaction_index_type reactionIdx, unsigned int t1, unsigned int t2);
+    Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, readdy::scalar reactionRate,
+          readdy::scalar cumulativeRate, reaction_index_type reactionIdx, unsigned int t1, unsigned int t2);
 
     friend std::ostream &operator<<(std::ostream &, const Event &);
 

@@ -88,13 +88,13 @@ inline obs_handle_t registerObservable_Particles(sim &self, unsigned int stride,
 
 
 inline obs_handle_t
-registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_t<double> &binBorders,
+registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_t<readdy::scalar> &binBorders,
                                       std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
-                                      double particleToDensity, const pybind11::object& callbackFun = py::none()) {
+                                      readdy::scalar particleToDensity, const pybind11::object& callbackFun = py::none()) {
     const auto info = binBorders.request();
-    std::vector<double> binBordersVec{};
+    std::vector<readdy::scalar> binBordersVec{};
     binBordersVec.reserve(info.shape[0]);
-    const auto data = static_cast<double *>(info.ptr);
+    const auto data = static_cast<readdy::scalar *>(info.ptr);
     for (auto i = 0; i < info.shape[0]; ++i) binBordersVec.push_back(data[i]);
     if (callbackFun.is_none()) {
         return self.registerObservable<readdy::model::observables::RadialDistribution>(
@@ -123,13 +123,13 @@ registerObservable_CenterOfMass(sim &self, unsigned int stride, std::vector<std:
 }
 
 inline obs_handle_t
-registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, py::array_t<double> binBorders,
+registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, py::array_t<readdy::scalar> binBorders,
                                                 unsigned int axis, std::vector<std::string> types,
                                                 const py::object &callbackFun = py::none()) {
     const auto info = binBorders.request();
     const auto sizeBorders = info.shape[0];
-    auto binBordersData = static_cast<double *>(info.ptr);
-    std::vector<double> binBordersVec{};
+    auto binBordersData = static_cast<readdy::scalar *>(info.ptr);
+    std::vector<readdy::scalar> binBordersVec{};
     binBordersVec.reserve(sizeBorders);
     for (auto i = 0; i < sizeBorders; ++i) {
         binBordersVec.push_back(binBordersData[i]);

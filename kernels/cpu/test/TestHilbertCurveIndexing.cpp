@@ -38,9 +38,9 @@ namespace {
 
 
 struct Position {
-    std::array<double, 3> data;
+    std::array<readdy::scalar, 3> data;
 
-    Position(const std::array<double, 3> &data) : data(data) {}
+    Position(const std::array<readdy::scalar, 3> &data) : data(data) {}
     Position() : Position({0,0,0}) {}
 
     Position(Position&&) = default;
@@ -71,7 +71,7 @@ TEST(TestCurveIndexing, Cells) {
 
     // 2x2x2 = 8 boxes
     const std::array<unsigned int, 3> nCells{{2, 2, 2}};
-    const std::array<double, 3> cellWidth{{1, 1, 1}};
+    const std::array<readdy::scalar, 3> cellWidth{{1, 1, 1}};
 
 
     const std::size_t data_size = 100;

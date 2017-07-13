@@ -37,8 +37,8 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-Event::Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
-             double cumulativeRate, reaction_index_type reactionIdx, unsigned int t1, unsigned int t2)
+Event::Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
+             scalar cumulativeRate, reaction_index_type reactionIdx, unsigned int t1, unsigned int t2)
         : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
           cumulativeRate(cumulativeRate), reactionIdx(reactionIdx), t1(t1), t2(t2) {
 }

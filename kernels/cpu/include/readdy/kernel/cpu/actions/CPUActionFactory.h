@@ -44,26 +44,26 @@ public:
 protected:
     readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
 
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override;
+    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(readdy::scalar timeStep) const override;
 
     readdy::model::actions::CalculateForces *createCalculateForces() const override;
 
     readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, double skinSize) const override;
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation, readdy::scalar skinSize) const override;
 
     readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
 
     readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(double timeStep) const override;
+    createUncontrolledApproximation(readdy::scalar timeStep) const override;
 
-    readdy::model::actions::reactions::Gillespie *createGillespie(double timeStep) const override;
+    readdy::model::actions::reactions::Gillespie *createGillespie(readdy::scalar timeStep) const override;
 
-    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(double timeStep) const override;
+    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(readdy::scalar timeStep) const override;
 
-    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override;
+    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(readdy::scalar timeStep) const override;
 
     virtual readdy::model::actions::top::EvaluateTopologyReactions *
-    createEvaluateTopologyReactions(double timeStep) const override;
+    createEvaluateTopologyReactions(readdy::scalar timeStep) const override;
 };
 
 }

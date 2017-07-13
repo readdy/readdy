@@ -44,23 +44,23 @@ public:
     PotentialOrder2Wrapper(const std::string &particleType1, const std::string &particleType2,
                            pybind11::object o1, pybind11::object o2);
 
-    virtual double calculateEnergy(const model::Vec3 &x_ij) const override;
+    virtual readdy::scalar calculateEnergy(const model::Vec3 &x_ij) const override;
 
     virtual void calculateForce(model::Vec3 &force, const model::Vec3 &x_ij) const override;
 
-    virtual void calculateForceAndEnergy(model::Vec3 &force, double &energy, const model::Vec3 &x_ij) const override;
+    virtual void calculateForceAndEnergy(model::Vec3 &force, readdy::scalar &energy, const model::Vec3 &x_ij) const override;
 
-    virtual double getCutoffRadius() const override {
+    virtual readdy::scalar getCutoffRadius() const override {
         // todo!
         return 50;
     }
 
-    virtual double getMaximalForce(double kbt) const noexcept override {
+    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
         // todo!
         return 0;
     }
 
-    virtual double getCutoffRadiusSquared() const override;
+    virtual readdy::scalar getCutoffRadiusSquared() const override;
 
 
 protected:

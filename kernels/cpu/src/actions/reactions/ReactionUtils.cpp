@@ -38,7 +38,7 @@ namespace actions {
 namespace reactions {
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel *const kernel, double timeStep, bool filterEventsInAdvance, bool approximateRate,
+        CPUKernel *const kernel, scalar timeStep, bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
     const auto& fixPos = kernel->getKernelContext().getFixPositionFun();
@@ -60,7 +60,7 @@ data_t::update_t handleEventsGillespie(
                 const auto x = readdy::model::rnd::uniform_real(0., alpha);
                 const auto eventIt = std::lower_bound(
                         events.begin(), events.end() - nDeactivated, x,
-                        [](const event_t &elem1, double elem2) {
+                        [](const event_t &elem1, scalar elem2) {
                             return elem1.cumulativeRate < elem2;
                         }
                 );
@@ -114,7 +114,7 @@ data_t::update_t handleEventsGillespie(
                      */
                     {
                         auto _it = events.begin();
-                        double cumsum = 0.0;
+                        scalar cumsum = 0.0;
                         const auto idx1 = event.idx1;
                         if (event.nEducts == 1) {
                             while (_it < events.end() - nDeactivated) {

@@ -79,13 +79,13 @@ void exportCommon(py::module& common) {
     }
 
     py::class_<readdy::model::Vec3>(common, "Vec")
-            .def(py::init<double, double, double>())
+            .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar>())
             .def(py::self + py::self)
             .def(py::self - py::self)
-            .def(double() * py::self)
-            .def(py::self / double())
+            .def(readdy::scalar() * py::self)
+            .def(py::self / readdy::scalar())
             .def(py::self += py::self)
-            .def(py::self *= double())
+            .def(py::self *= readdy::scalar())
             .def(py::self == py::self)
             .def(py::self != py::self)
             .def(py::self * py::self)

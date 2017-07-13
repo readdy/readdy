@@ -49,7 +49,7 @@ void SCPUUpdateNeighborList::perform() {
 }
 
 SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *const kernel, core_actions::UpdateNeighborList::Operation op,
-                                               double skinSize)
+                                               scalar skinSize)
         : UpdateNeighborList(op, skinSize), kernel(kernel){
     if(skinSize >= 0) {
         log::warn("Ignoring skin size for single cpu kernel, as there is no Verlet list implementation");

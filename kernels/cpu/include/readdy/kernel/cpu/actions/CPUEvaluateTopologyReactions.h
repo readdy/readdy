@@ -44,7 +44,7 @@ namespace top {
 
 class CPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
 public:
-    CPUEvaluateTopologyReactions(CPUKernel *const kernel, double timeStep);
+    CPUEvaluateTopologyReactions(CPUKernel *const kernel, readdy::scalar timeStep);
 
     virtual void perform() override;
 

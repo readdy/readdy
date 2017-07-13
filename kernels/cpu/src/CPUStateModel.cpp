@@ -49,9 +49,9 @@ using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
 using top_action_factory = readdy::model::top::TopologyActionFactory;
 
 void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighbor_list::const_iterator neighbors_it,
-                           std::promise<double>& energyPromise, const CPUStateModel::data_t& data, const pot1Map& pot1,
+                           std::promise<scalar>& energyPromise, const CPUStateModel::data_t& data, const pot1Map& pot1,
                            const pot2Map& pot2, const dist_fun& d) {
-    double energyUpdate = 0.0;
+    scalar energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it) {
         if (!it->is_deactivated()) {
             readdy::model::Vec3 force{0, 0, 0};
@@ -70,7 +70,7 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
             //
             // 2nd order potentials
             //
-            double mySecondOrderEnergy = 0.;
+            scalar mySecondOrderEnergy = 0.;
             for (const auto neighbor : *neighbors_it) {
                 auto &neighborEntry = data.entry_at(neighbor);
                 auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
@@ -122,7 +122,7 @@ struct CPUStateModel::Impl {
     readdy::model::KernelContext *context;
     std::unique_ptr<neighbor_list> neighborList;
     bool initial_neighbor_list_setup {true};
-    double currentEnergy = 0;
+    scalar currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
     readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>> topologies{};
     top_action_factory const *const topologyActionFactory;
@@ -154,9 +154,9 @@ void CPUStateModel::calculateForces() {
     const auto &potOrder2 = pimpl->context->potentials().potentials_order2();
     const auto &d = pimpl->context->getShortestDifferenceFun();
     {
-        //std::vector<std::future<double>> energyFutures;
+        //std::vector<std::future<scalar>> energyFutures;
         //energyFutures.reserve(config->nThreads());
-        std::vector<std::promise<double>> promises (config->nThreads());
+        std::vector<std::promise<scalar>> promises (config->nThreads());
         {
             const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
             const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
@@ -181,7 +181,7 @@ void CPUStateModel::calculateForces() {
                 it_tops += grainSizeTopologies;
             }
             {
-                std::promise<double> &lastPromise = promises.back();
+                std::promise<scalar> &lastPromise = promises.back();
                 //energyFutures.push_back(lastPromise.get_future());
                 //ForcesThreadArgs args (, std::cref(barrier));
                 executables.push_back(
@@ -260,7 +260,7 @@ void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
     pimpl->data().removeParticle(p);
 }
 
-double CPUStateModel::getEnergy() const {
+scalar CPUStateModel::getEnergy() const {
     return pimpl->currentEnergy;
 }
 

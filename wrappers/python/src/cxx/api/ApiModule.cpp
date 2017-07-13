@@ -86,7 +86,7 @@ void exportApi(py::module &api) {
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)
             .def("set_expected_max_n_particles", &sim::setExpectedMaxNParticles, "n"_a)
             .def("register_particle_type",
-                 [](sim &self, const std::string &name, double diffusionCoefficient, double radius,
+                 [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient, readdy::scalar radius,
                     ParticleTypeFlavor flavor) {
                      readdy::model::Particle::flavor_t f = [=] {
                          switch (flavor) {
@@ -167,7 +167,7 @@ void exportApi(py::module &api) {
                      );
                  }, "defaults"_a
             )
-            .def("run", [](sim &self, const readdy::time_step_type steps, const double timeStep) {
+            .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);
             }, "n_steps"_a, "time_step"_a);

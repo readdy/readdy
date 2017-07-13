@@ -52,13 +52,13 @@ using entry_type = data_t::Entry;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kernel, double timeStep)
+CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kernel, scalar timeStep)
         : super(timeStep), kernel(kernel) {
 
 }
 
 void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin,
-                const CPUKernel *const kernel, double dt, bool approximateRate, event_promise_t &events,
+                const CPUKernel *const kernel, scalar dt, bool approximateRate, event_promise_t &events,
                 std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();

@@ -58,7 +58,7 @@ long CPUGillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
 }
 
 CPUGillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex,
-                                           double maxReactionRadius,
+                                           scalar maxReactionRadius,
                                            unsigned int longestAxis)
         : id(id), lowerLeftVertex(lowerLeftVertex), upperRightVertex(upperRightVertex), longestAxis(longestAxis) {
     leftBoundary = lowerLeftVertex[longestAxis];
@@ -67,7 +67,7 @@ CPUGillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVerte
     n_shells = static_cast<particle_indices_t::size_type>(
             std::floor(.5 * boxWidth / maxReactionRadius)
     );
-    shellWidth = .5 * boxWidth / static_cast<double>(n_shells);
+    shellWidth = .5 * boxWidth / static_cast<scalar>(n_shells);
     particleIndices.resize(n_shells);
 }
 
@@ -98,12 +98,12 @@ void CPUGillespieParallel::perform() {
     }
 }
 
-CPUGillespieParallel::CPUGillespieParallel(kernel_t *const kernel, double timeStep)
+CPUGillespieParallel::CPUGillespieParallel(kernel_t *const kernel, scalar timeStep)
         : super(timeStep), kernel(kernel), boxes({}) {}
 
 void CPUGillespieParallel::setupBoxes() {
     if (boxes.empty()) {
-        double maxReactionRadius = 0.0;
+        scalar maxReactionRadius = 0.0;
         for (auto &&e : kernel->getKernelContext().reactions().order2_flat()) {
             maxReactionRadius = std::max(maxReactionRadius, e->getEductDistance());
         }
@@ -196,7 +196,7 @@ void CPUGillespieParallel::handleBoxReactions() {
         const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
         const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
         std::set<data_t::index_t> problematic{};
-        double localAlpha = 0.0;
+        scalar localAlpha = 0.0;
         std::vector<event_t> localEvents{};
         // step 1: find all problematic particles (ie the ones, that have (also transitively)
         // a reaction with a particle in another box)
@@ -283,7 +283,7 @@ void CPUGillespieParallel::handleBoxReactions() {
         const auto &d2 = ctx.getDistSquaredFun();
         auto neighbor_list = stateModel.getNeighborList();
         std::vector<event_t> evilEvents{};
-        double alpha = 0;
+        scalar alpha = 0;
         long n_local_problematic = 0;
         for (auto &&update : updates_promises) {
             auto local_problematic = std::move(update.get_future().get());
@@ -430,11 +430,11 @@ void CPUGillespieParallel::findProblematicParticles(
 
 }
 
-double CPUGillespieParallel::getMaxReactionRadius() const {
+scalar CPUGillespieParallel::getMaxReactionRadius() const {
     return maxReactionRadius;
 }
 
-double CPUGillespieParallel::getBoxWidth() const {
+scalar CPUGillespieParallel::getBoxWidth() const {
     return boxWidth;
 }
 

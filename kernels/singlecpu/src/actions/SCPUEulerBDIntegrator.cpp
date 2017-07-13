@@ -36,7 +36,7 @@ namespace kernel {
 namespace scpu {
 namespace actions {
 
-SCPUEulerBDIntegrator::SCPUEulerBDIntegrator(SCPUKernel *kernel, double timeStep)
+SCPUEulerBDIntegrator::SCPUEulerBDIntegrator(SCPUKernel *kernel, scalar timeStep)
         : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {}
 
 void SCPUEulerBDIntegrator::perform() {
@@ -47,7 +47,7 @@ void SCPUEulerBDIntegrator::perform() {
     const auto pd = stateModel.getParticleData();
     for(auto& entry : *pd) {
         if(!entry.is_deactivated()) {
-            const double D = context.particle_types().diffusion_constant_of(entry.type);
+            const scalar D = context.particle_types().diffusion_constant_of(entry.type);
             const auto randomDisplacement = std::sqrt(2. * D * timeStep) * (readdy::model::rnd::normal3());
             entry.pos += randomDisplacement;
             const auto deterministicDisplacement = entry.force * timeStep * D / kbt;

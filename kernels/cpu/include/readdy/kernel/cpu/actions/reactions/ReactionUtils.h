@@ -55,7 +55,7 @@ using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::r
 using reaction_counts_t = std::pair<reaction_counts_order1_map, reaction_counts_order2_map>;
 
 template<bool approximated>
-bool performReactionEvent(const double rate, const double timeStep) {
+bool performReactionEvent(const readdy::scalar rate, const readdy::scalar timeStep) {
     if (approximated) {
         return readdy::model::rnd::uniform_real() < rate * timeStep;
     } else {
@@ -64,18 +64,18 @@ bool performReactionEvent(const double rate, const double timeStep) {
 }
 
 
-inline bool shouldPerformEvent(const double rate, const double timestep, bool approximated) {
+inline bool shouldPerformEvent(const readdy::scalar rate, const readdy::scalar timestep, bool approximated) {
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel *const kernel, double timeStep,
+        CPUKernel *const kernel, readdy::scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts);
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
-                  const data_t &data, double &alpha, std::vector<event_t> &events,
+                  const data_t &data, readdy::scalar &alpha, std::vector<event_t> &events,
                   const readdy::model::KernelContext::dist_squared_fun& d2) {
     for (const auto index : particles) {
         auto& entry = data.entry_at(index);

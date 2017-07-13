@@ -88,7 +88,7 @@ void exportIO(py::module &io) {
             .def("write_float", [](file_t &self, const std::string &name, const py::array_t<float> &arr) {
                 self.write(name, std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
-            .def("write_double", [](file_t &self, const std::string &name, const py::array_t<double> &arr) {
+            .def("write_double", [](file_t &self, const std::string &name, const py::array_t<readdy::scalar> &arr) {
                 self.write(name, std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_string", [](file_t &self, const std::string &name, const std::string &data) {
@@ -112,7 +112,7 @@ void exportIO(py::module &io) {
             .def("write_float", [](group_t &self, const std::string &name, const py::array_t<float> &arr) {
                 self.write(name, std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
-            .def("write_double", [](group_t &self, const std::string &name, const py::array_t<double> &arr) {
+            .def("write_double", [](group_t &self, const std::string &name, const py::array_t<readdy::scalar> &arr) {
                 self.write(name, std::vector<io::h5::dims_t>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_string", [](group_t &self, const std::string &name, const std::string &data) {
@@ -127,6 +127,6 @@ void exportIO(py::module &io) {
     //exportDataSet<int>(io, "int"); /* DataSet_int */
     //exportDataSet<long>(io, "long"); /* DataSet_long */
     //exportDataSet<float>(io, "float"); /* DataSet_float */
-    //exportDataSet<double>(io, "double"); /* DataSet_double */
+    //exportDataSet<readdy::scalar>(io, "readdy::scalar"); /* readdy::scalar */
 
 }
