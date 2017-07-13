@@ -41,6 +41,7 @@
 #include <tuple>
 #include <vector>
 #include <algorithm>
+#include <functional>
 #include <readdy/common/macros.h>
 #include "index_sequence.h"
 
