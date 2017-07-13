@@ -186,6 +186,15 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
 
     #####################################
     #                                   #
+    # setup submodules                  #
+    #                                   #
+    #####################################
+
+    MESSAGE(STATUS "Initializing and updating submodules")
+    EXECUTE_PROCESS(COMMAND git submodule update --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+    #####################################
+    #                                   #
     # setup testing                     #
     #                                   #
     #####################################
