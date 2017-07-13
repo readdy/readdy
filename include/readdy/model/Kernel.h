@@ -180,24 +180,24 @@ public:
     // todo registerConversion -> creates and register with context
     std::unique_ptr<reactions::Reaction<1>>
     createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                             const double rate) const;
+                             const scalar rate) const;
 
     std::unique_ptr<reactions::Reaction<2>>
     createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                            const std::string &to, const double rate, const double eductDistance) const;
+                            const std::string &to, const scalar rate, const scalar eductDistance) const;
 
     std::unique_ptr<reactions::Reaction<1>>
     createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
-                          const std::string &to2, const double rate, const double productDistance,
-                          const double weight1 = 0.5, const double weight2 = 0.5) const;
+                          const std::string &to2, const scalar rate, const scalar productDistance,
+                          const scalar weight1 = 0.5, const scalar weight2 = 0.5) const;
 
     std::unique_ptr<reactions::Reaction<2>>
     createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                         const std::string &to, const double rate, const double eductDistance,
-                         const double weight1 = 0.5, const double weight2 = 0.5) const;
+                         const std::string &to, const scalar rate, const scalar eductDistance,
+                         const scalar weight1 = 0.5, const scalar weight2 = 0.5) const;
 
     std::unique_ptr<reactions::Reaction<1>>
-    createDecayReaction(const std::string &name, const std::string &type, const double rate) const;
+    createDecayReaction(const std::string &name, const std::string &type, const scalar rate) const;
 
     /*
      * 

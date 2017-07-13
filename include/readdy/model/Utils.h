@@ -37,8 +37,8 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(util)
 
-double getRecommendedTimeStep(unsigned int N, KernelContext&);
-double getMaximumDisplacement(KernelContext&, const double);
+scalar getRecommendedTimeStep(unsigned int N, KernelContext&);
+scalar getMaximumDisplacement(KernelContext&, const scalar timeStep);
 
 NAMESPACE_END(util)
 NAMESPACE_END(model)

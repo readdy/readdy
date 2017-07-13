@@ -53,7 +53,7 @@ public:
     EvaluatePotentialAction(const KernelContext *const context) : TopologyPotentialAction(context) {}
     virtual ~EvaluatePotentialAction() = default;
 
-    virtual double perform() = 0;
+    virtual scalar perform() = 0;
 };
 
 NAMESPACE_END(pot)

@@ -48,8 +48,8 @@ struct RadialDistribution::Impl {
 };
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
-                                       std::vector<double> binBorders, std::vector<unsigned int> typeCountFrom,
-                                       std::vector<unsigned int> typeCountTo, double particleToDensity)
+                                       std::vector<scalar> binBorders, std::vector<unsigned int> typeCountFrom,
+                                       std::vector<unsigned int> typeCountTo, scalar particleToDensity)
         : Observable(kernel, stride), typeCountFrom(typeCountFrom), typeCountTo(typeCountTo),
           particleToDensity(particleToDensity), pimpl(std::make_unique<Impl>()) {
     setBinBorders(binBorders);
@@ -104,16 +104,16 @@ void RadialDistribution::evaluate() {
     }
 }
 
-const std::vector<double> &RadialDistribution::getBinBorders() const {
+const std::vector<scalar> &RadialDistribution::getBinBorders() const {
     return binBorders;
 }
 
-void RadialDistribution::setBinBorders(const std::vector<double> &binBorders) {
+void RadialDistribution::setBinBorders(const std::vector<scalar> &binBorders) {
     if (binBorders.size() > 1) {
         RadialDistribution::binBorders = binBorders;
         auto nCenters = binBorders.size() - 1;
-        result = std::make_pair(std::vector<double>(nCenters), std::vector<double>(nCenters));
-        counts = std::vector<double>(nCenters);
+        result = std::make_pair(std::vector<scalar>(nCenters), std::vector<scalar>(nCenters));
+        counts = std::vector<scalar>(nCenters);
         auto &binCenters = std::get<0>(result);
         auto it_begin = binBorders.begin();
         auto it_begin_next = it_begin + 1;
@@ -130,9 +130,9 @@ void RadialDistribution::setBinBorders(const std::vector<double> &binBorders) {
 }
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
-                                       std::vector<double> binBorders,
+                                       std::vector<scalar> binBorders,
                                        const std::vector<std::string> &typeCountFrom,
-                                       const std::vector<std::string> &typeCountTo, double particleToDensity)
+                                       const std::vector<std::string> &typeCountTo, scalar particleToDensity)
         : RadialDistribution(kernel, stride, binBorders,
                              _internal::util::transformTypes2(typeCountFrom, kernel->getKernelContext()),
                              _internal::util::transformTypes2(typeCountTo, kernel->getKernelContext()),
@@ -148,7 +148,7 @@ void RadialDistribution::initializeDataSet(io::File &file, const std::string &da
         auto group = file.createGroup(path);
         log::debug("created group with path {}", path);
         group.write("bin_centers", centers);
-        auto dataSet = std::make_unique<Impl::writer_t>(group.createDataSet<double>("distribution", fs, dims));
+        auto dataSet = std::make_unique<Impl::writer_t>(group.createDataSet<scalar>("distribution", fs, dims));
         pimpl->writerRadialDistribution = std::move(dataSet);
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }

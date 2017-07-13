@@ -43,25 +43,25 @@ public:
 protected:
     readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
 
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override;
+    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(scalar timeStep) const override;
 
     readdy::model::actions::CalculateForces *createCalculateForces() const override;
 
     readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation, double) const override;
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation, scalar) const override;
 
     readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
 
     readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(double timeStep) const override;
+    createUncontrolledApproximation(scalar timeStep) const override;
 
-    readdy::model::actions::reactions::Gillespie *createGillespie(double timeStep) const override;
+    readdy::model::actions::reactions::Gillespie *createGillespie(scalar timeStep) const override;
 
-    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(double timeStep) const override;
+    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(scalar timeStep) const override;
 
-    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override;
+    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(scalar timeStep) const override;
 
-    virtual readdy::model::actions::top::EvaluateTopologyReactions *createEvaluateTopologyReactions(double timeStep) const override;
+    virtual readdy::model::actions::top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const override;
 
 private:
     SCPUKernel *const kernel;

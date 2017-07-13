@@ -57,7 +57,7 @@ public:
         return order;
     }
 
-    virtual double getMaximalForce(double kbt) const noexcept = 0;
+    virtual scalar getMaximalForce(scalar kbt) const noexcept = 0;
 
     virtual std::string describe() const = 0;
 

@@ -41,7 +41,7 @@ class SCPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList
 
 public:
     SCPUUpdateNeighborList(SCPUKernel *const kernel,
-                           readdy::model::actions::UpdateNeighborList::Operation op = Operation::create, double = -1);
+                           readdy::model::actions::UpdateNeighborList::Operation op = Operation::create, scalar = -1);
 
     virtual void perform() override;
 

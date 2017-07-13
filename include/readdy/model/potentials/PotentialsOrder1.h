@@ -44,28 +44,28 @@ NAMESPACE_BEGIN(potentials)
 class Cube : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Cube(const std::string& particleType, double forceConstant, const Vec3& origin, const Vec3& extent,
+    Cube(const std::string& particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent,
                   bool considerParticleRadius = true);
 
     const Vec3 &getOrigin() const;
 
     const Vec3 &getExtent() const;
 
-    double getForceConstant() const;
+    scalar getForceConstant() const;
 
     bool isConsiderParticleRadius() const;
 
-    double getParticleRadius() const;
+    scalar getParticleRadius() const;
 
-    virtual double getRelevantLengthScale() const noexcept override;
+    virtual scalar getRelevantLengthScale() const noexcept override;
 
-    virtual double getMaximalForce(double kbt) const noexcept override;
+    virtual scalar getMaximalForce(scalar kbt) const noexcept override;
 
-    double calculateEnergy(const Vec3 &position) const override;
+    scalar calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
-    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const override;
 
     std::string describe() const override;
 
@@ -75,26 +75,26 @@ protected:
     void configureForType(const ParticleTypeRegistry *const registry, const particle_type_type type) override;
 
     const Vec3 origin, extent, min, max;
-    const double forceConstant;
+    const scalar forceConstant;
     const bool considerParticleRadius;
-    double particleRadius;
+    scalar particleRadius;
 };
 
 // @todo modify this, so that you can choose whether the sphere keeps particles in or out
 class SphereIn : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphereIn(const std::string& particleType, double forceConstant, const Vec3& origin, double radius);
+    SphereIn(const std::string& particleType, scalar forceConstant, const Vec3& origin, scalar radius);
 
-    virtual double getRelevantLengthScale() const noexcept override;
+    virtual scalar getRelevantLengthScale() const noexcept override;
 
-    virtual double getMaximalForce(double kbt) const noexcept override;
+    virtual scalar getMaximalForce(scalar kbt) const noexcept override;
 
-    double calculateEnergy(const Vec3 &position) const override;
+    scalar calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
-    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const override;
 
     std::string describe() const override;
 
@@ -104,23 +104,23 @@ protected:
     void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
 
     const Vec3 origin;
-    const double radius, forceConstant;
+    const scalar radius, forceConstant;
 };
 
 class SphereOut : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphereOut(const std::string& particleType, double forceConstant, const Vec3& origin, double radius);
+    SphereOut(const std::string& particleType, scalar forceConstant, const Vec3& origin, scalar radius);
 
-    virtual double getRelevantLengthScale() const noexcept override;
+    virtual scalar getRelevantLengthScale() const noexcept override;
 
-    virtual double getMaximalForce(double kbt) const noexcept override;
+    virtual scalar getMaximalForce(scalar kbt) const noexcept override;
 
-    double calculateEnergy(const Vec3 &position) const override;
+    scalar calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
-    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const override;
 
     std::string describe() const override;
 protected:
@@ -129,7 +129,7 @@ protected:
     void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
 
     const Vec3 origin;
-    const double radius, forceConstant;
+    const scalar radius, forceConstant;
 };
 
 /**

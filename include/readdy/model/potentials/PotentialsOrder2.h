@@ -44,36 +44,36 @@ NAMESPACE_BEGIN(potentials)
 class HarmonicRepulsion : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    HarmonicRepulsion(const std::string &type1, const std::string &type2, double forceConstant);
+    HarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant);
 
-    double getSumOfParticleRadii() const;
+    scalar getSumOfParticleRadii() const;
 
-    double getSumOfParticleRadiiSquared() const;
+    scalar getSumOfParticleRadiiSquared() const;
 
     std::string describe() const override;
 
-    double getForceConstant() const;
+    scalar getForceConstant() const;
 
-    virtual double getMaximalForce(double kbt) const noexcept override;
+    virtual scalar getMaximalForce(scalar kbt) const noexcept override;
 
-    double calculateEnergy(const Vec3 &x_ij) const override;
+    scalar calculateEnergy(const Vec3 &x_ij) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
 
-    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
 
-    double getCutoffRadius() const override;
+    scalar getCutoffRadius() const override;
 
-    double getCutoffRadiusSquared() const override;
+    scalar getCutoffRadiusSquared() const override;
 
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
     void configureForTypes(const ParticleTypeRegistry *const ctx, particle_type_type type1, particle_type_type type2) override;
 
-    double sumOfParticleRadii;
-    double sumOfParticleRadiiSquared;
-    const double forceConstant;
+    scalar sumOfParticleRadii;
+    scalar sumOfParticleRadiiSquared;
+    const scalar forceConstant;
 };
 
 class WeakInteractionPiecewiseHarmonic : public PotentialOrder2 {
@@ -83,31 +83,31 @@ public:
 
     class Configuration {
     public:
-        Configuration(const double desiredParticleDistance, const double depthAtDesiredDistance,
-                      const double noInteractionDistance);
+        Configuration(const scalar desiredParticleDistance, const scalar depthAtDesiredDistance,
+                      const scalar noInteractionDistance);
 
         friend std::ostream &operator<<(std::ostream &os, const Configuration &configuration);
 
     private:
         friend class WeakInteractionPiecewiseHarmonic;
 
-        const double desiredParticleDistance, depthAtDesiredDistance, noInteractionDistance, noInteractionDistanceSquared;
+        const scalar desiredParticleDistance, depthAtDesiredDistance, noInteractionDistance, noInteractionDistanceSquared;
     };
 
     WeakInteractionPiecewiseHarmonic(const std::string &particleType1, const std::string &particleType2,
-                                     const double forceConstant, const Configuration &config);
+                                     const scalar forceConstant, const Configuration &config);
 
-    virtual double getMaximalForce(double kbt) const noexcept override;
+    virtual scalar getMaximalForce(scalar kbt) const noexcept override;
 
-    double calculateEnergy(const Vec3 &x_ij) const override;
+    scalar calculateEnergy(const Vec3 &x_ij) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
 
-    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+    void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
 
-    double getCutoffRadius() const override;
+    scalar getCutoffRadius() const override;
 
-    double getCutoffRadiusSquared() const override;
+    scalar getCutoffRadiusSquared() const override;
 
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
@@ -115,7 +115,7 @@ protected:
     void configureForTypes(const ParticleTypeRegistry *const ctx, particle_type_type type1, particle_type_type type2) override;
 
     const Configuration conf;
-    const double forceConstant;
+    const scalar forceConstant;
 };
 
 /**
@@ -147,74 +147,74 @@ public:
      * @param sigma the distance at which the inter-particle potential is zero
      */
     LennardJones(const std::string &particleType1, const std::string &particleType2,
-                 unsigned int m, unsigned int n, double cutoffDistance,
-                 bool shift, double epsilon, double sigma);
+                 unsigned int m, unsigned int n, scalar cutoffDistance,
+                 bool shift, scalar epsilon, scalar sigma);
 
     std::string describe() const override;
 
     virtual ~LennardJones();
 
-    virtual double calculateEnergy(const Vec3 &x_ij) const override;
+    virtual scalar calculateEnergy(const Vec3 &x_ij) const override;
 
     virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+    virtual void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
 
-    virtual double getCutoffRadius() const override;
+    virtual scalar getCutoffRadius() const override;
 
-    virtual double getCutoffRadiusSquared() const override;
+    virtual scalar getCutoffRadiusSquared() const override;
 
-    double getMaximalForce(double kbt) const noexcept override;
+    scalar getMaximalForce(scalar kbt) const noexcept override;
 
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
-    double energy(double r) const;
+    scalar energy(scalar r) const;
 
     virtual void configureForTypes(const ParticleTypeRegistry *const context, particle_type_type type1, particle_type_type type2) override;
 
-    double m, n;
-    double cutoffDistance, cutoffDistanceSquared;
+    scalar m, n;
+    scalar cutoffDistance, cutoffDistanceSquared;
     bool shift; // V_LJ_trunc = V_LJ(r) - V_LJ(r_cutoff)
-    double epsilon; // depth
-    double sigma;
-    double k;
+    scalar epsilon; // depth
+    scalar sigma;
+    scalar k;
 };
 
 class ScreenedElectrostatics : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
-                           double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent, double cutoff);
+    ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, scalar electrostaticStrength,
+                           scalar inverseScreeningDepth, scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent, scalar cutoff);
 
     virtual ~ScreenedElectrostatics();
 
-    virtual double calculateEnergy(const Vec3 &x_ij) const override;
+    virtual scalar calculateEnergy(const Vec3 &x_ij) const override;
 
     virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const override;
+    virtual void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const override;
 
-    virtual double getCutoffRadius() const override;
+    virtual scalar getCutoffRadius() const override;
 
     std::string describe() const override;
 
-    virtual double getCutoffRadiusSquared() const override;
+    virtual scalar getCutoffRadiusSquared() const override;
 
-    double getMaximalForce(double kbt) const noexcept override;
+    scalar getMaximalForce(scalar kbt) const noexcept override;
 
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
     virtual void configureForTypes(const ParticleTypeRegistry *const context, particle_type_type type1, particle_type_type type2) override;
 
-    double electrostaticStrength;
-    double inverseScreeningDepth;
-    double repulsionStrength;
-    double repulsionDistance;
-    double exponent;
-    double cutoff;
-    double cutoffSquared;
+    scalar electrostaticStrength;
+    scalar inverseScreeningDepth;
+    scalar repulsionStrength;
+    scalar repulsionDistance;
+    scalar exponent;
+    scalar cutoff;
+    scalar cutoffSquared;
 };
 
 template<typename T>

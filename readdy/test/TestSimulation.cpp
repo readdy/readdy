@@ -29,10 +29,10 @@ namespace {
 
 struct MSDAggregator {
 
-    double msd = 0;
+    readdy::scalar msd = 0;
     long T = 0;
     std::vector<readdy::model::Vec3> initialPositions;
-    std::shared_ptr<double> result = std::make_shared<double>(0);
+    std::shared_ptr<readdy::scalar> result = std::make_shared<readdy::scalar>(0);
 
     void operator()(readdy::model::observables::Positions::result_t positions) {
         auto it_init = initialPositions.begin();
@@ -82,18 +82,18 @@ TEST_F(TestSimulation, TestMeanSquaredDisplacement) {
     simulation.setKernel("SingleCPU");
     simulation.setBoxSize(10, 10, 10);
     unsigned int n_particles = 103;
-    double diffusionConstant = 1;
+    readdy::scalar diffusionConstant = 1;
     simulation.registerParticleType("type", diffusionConstant, .1);
     for (auto _ = 0; _ < n_particles; ++_) {
         simulation.addParticle("type", 0, 0, 0);
     }
-    double timestep = 1;
+    readdy::scalar timestep = 1;
     MSDAggregator aggregator;
     aggregator.initialPositions = simulation.getAllParticlePositions();
     simulation.registerObservable<readdy::model::observables::Positions>(aggregator, 1);
     simulation.run(100, timestep);
     auto positions = simulation.getAllParticlePositions();
-    double msd = 0;
+    readdy::scalar msd = 0;
     for (auto &&position : positions) {
         msd += position * position;
     }
@@ -107,12 +107,12 @@ TEST_F(TestSimulation, TestObservables) {
     simulation.setKernel("SingleCPU");
     simulation.setBoxSize(10, 10, 10);
     unsigned int n_particles = 103;
-    double diffusionConstant = 1;
+    readdy::scalar diffusionConstant = 1;
     simulation.registerParticleType("type", diffusionConstant, .1);
     for (auto _ = 0; _ < n_particles; ++_) {
         simulation.addParticle("type", 0, 0, 0);
     }
-    double timestep = 1;
+    readdy::scalar timestep = 1;
 
     int n_callbacks = 0;
     simulation.registerObservable<readdy::model::observables::Positions>(

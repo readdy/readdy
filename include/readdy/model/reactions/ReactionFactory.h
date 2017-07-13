@@ -56,25 +56,25 @@ public:
 protected:
     using p_type = readdy::model::Particle::type_type;
     virtual Conversion *createConversion(const std::string &name, p_type from, p_type to,
-                                         const double rate) const {
+                                         const scalar rate) const {
         return new Conversion(name, from, to, rate);
     };
 
     virtual Enzymatic *createEnzymatic(const std::string &name, p_type catalyst, p_type from,
-                                       p_type to, const double rate,
-                                       const double eductDistance) const {
+                                       p_type to, const scalar rate,
+                                       const scalar eductDistance) const {
         return new Enzymatic(name, catalyst, from, to, rate, eductDistance);
     };
 
     virtual Fission *createFission(const std::string &name, p_type from, p_type to1,
-                                   p_type to2, const double rate, const double productDistance,
-                                   const double weight1 = 0.5, const double weight2 = 0.5) const {
+                                   p_type to2, const scalar rate, const scalar productDistance,
+                                   const scalar weight1 = 0.5, const scalar weight2 = 0.5) const {
         return new Fission(name, from, to1, to2, rate, productDistance, weight1, weight2);
     };
 
     virtual Fusion *createFusion(const std::string &name, p_type from1, p_type from2,
-                                 p_type to, const double rate, const double eductDistance,
-                                 const double weight1 = 0.5, const double weight2 = 0.5) const {
+                                 p_type to, const scalar rate, const scalar eductDistance,
+                                 const scalar weight1 = 0.5, const scalar weight2 = 0.5) const {
         return new Fusion(name, from1, from2, to, rate, eductDistance, weight1, weight2);
     };
 

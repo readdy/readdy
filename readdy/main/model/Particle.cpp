@@ -45,7 +45,7 @@ bool Particle::operator!=(const Particle &rhs) const {
     return !(*this == rhs);
 }
 
-Particle::Particle(double x, double y, double z, type_type type)
+Particle::Particle(scalar  x, scalar  y, scalar  z, type_type type)
         : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type), flavor(FLAVOR_NORMAL) {}
 
 const Vec3 &Particle::getPos() const {
@@ -87,7 +87,7 @@ Particle::flavor_t Particle::getFlavor() const {
 }
 
 
-TopologyParticle::TopologyParticle(double x, double y, double z, Particle::type_type type) : Particle(x, y, z, type) {
+TopologyParticle::TopologyParticle(scalar  x, scalar  y, scalar  z, Particle::type_type type) : Particle(x, y, z, type) {
     flavor = FLAVOR_TOPOLOGY;
 }
 

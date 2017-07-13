@@ -41,7 +41,7 @@ namespace reactions {
 class SCPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
 
 public:
-    SCPUUncontrolledApproximation(SCPUKernel *const kernel, double timeStep);
+    SCPUUncontrolledApproximation(SCPUKernel *const kernel, scalar timeStep);
 
     virtual void perform() override;
 
@@ -66,11 +66,11 @@ struct Event {
     index_type idx1, idx2;
     reaction_index_type reactionIdx;
     particletype_t t1, t2;
-    double reactionRate;
-    double cumulativeRate;
+    scalar reactionRate;
+    scalar cumulativeRate;
 
-    Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, double reactionRate,
-          double cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2);
+    Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
+          scalar cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2);
 
     friend std::ostream &operator<<(std::ostream &, const Event &);
 
@@ -80,7 +80,7 @@ class SCPUGillespie : public readdy::model::actions::reactions::Gillespie {
     using reaction_idx_t = Event::index_type;
 public:
 
-    SCPUGillespie(SCPUKernel *const kernel, double timeStep)
+    SCPUGillespie(SCPUKernel *const kernel, scalar timeStep)
             : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
 
     virtual void perform() override;

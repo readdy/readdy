@@ -40,7 +40,7 @@ class Enzymatic : public Reaction<2> {
 
 public:
     Enzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from, particle_type_type to,
-              const double rate, const double eductDistance) :
+              const scalar rate, const scalar eductDistance) :
             Reaction(name, rate, eductDistance, 0, 2) {
         educts = {from, catalyst};
         products = {to, catalyst};

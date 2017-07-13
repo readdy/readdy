@@ -68,9 +68,9 @@ public:
 
     Vec3 cross(const Vec3&) const;
 
-    double norm() const;
+    scalar norm() const;
 
-    double normSquared() const;
+    scalar normSquared() const;
 
     value_t operator[](const unsigned int i) const;
 

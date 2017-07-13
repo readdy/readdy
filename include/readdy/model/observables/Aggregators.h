@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
 class MeanSquaredDisplacement
-        : public Combiner<std::pair<std::vector<time_step_type>, std::vector<double>>, Particles> {
+        : public Combiner<std::pair<std::vector<time_step_type>, std::vector<scalar>>, Particles> {
 public:
     MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount,
                             Particles *particlesObservable);

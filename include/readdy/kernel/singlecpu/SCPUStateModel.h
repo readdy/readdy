@@ -75,9 +75,9 @@ public:
 
     virtual particle_type_type getParticleType(const std::size_t index) const override;
 
-    virtual double getEnergy() const override;
+    virtual scalar getEnergy() const override;
 
-    virtual void increaseEnergy(double increase);
+    virtual void increaseEnergy(scalar increase);
 
     SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *const );
 

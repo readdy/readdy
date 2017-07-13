@@ -45,17 +45,17 @@ enum class AngleType { HARMONIC };
 enum class TorsionType { COS_DIHEDRAL };
 
 struct Bond {
-    double forceConstant, length;
+    scalar forceConstant, length;
     BondType type = BondType::HARMONIC;
 };
 
 struct Angle {
-    double forceConstant, equilibriumAngle;
+    scalar forceConstant, equilibriumAngle;
     AngleType type = AngleType::HARMONIC;
 };
 
 struct TorsionAngle {
-    double forceConstant, multiplicity, phi_0;
+    scalar forceConstant, multiplicity, phi_0;
     TorsionType type = TorsionType::COS_DIHEDRAL;
 };
 

@@ -126,12 +126,12 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
         }
     }
     // handcalculated expectations
-    const double energy03 = 4.205;
-    const double energy05 = 3.125;
-    const double energy13 = 2.4063226755104354;
-    const double energy15 = 2.1148056603830194;
-    const double energy23 = 3.4833346173608031;
-    const double energy25 = 3.4833346173608031;
+    const readdy::scalar energy03 = 4.205;
+    const readdy::scalar energy05 = 3.125;
+    const readdy::scalar energy13 = 2.4063226755104354;
+    const readdy::scalar energy15 = 2.1148056603830194;
+    const readdy::scalar energy23 = 3.4833346173608031;
+    const readdy::scalar energy25 = 3.4833346173608031;
     const m::Vec3 force03(0, 0, -2.9);
     const m::Vec3 force05(-2.5, 0, 0);
     const m::Vec3 force13(0, 2.1768336301410027, -0.27210420376762534);
@@ -173,7 +173,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
         ++idx;
     }
 
-    const double totalEnergy = energy03 + energy05 + energy13 + energy15 + energy23 + energy25;
+    const readdy::scalar totalEnergy = energy03 + energy05 + energy13 + energy15 + energy23 + energy25;
     EXPECT_DOUBLE_EQ(stateModel.getEnergy(), totalEnergy);
 }
 

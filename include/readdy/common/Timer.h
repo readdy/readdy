@@ -34,6 +34,7 @@
 #include <chrono>
 
 #include "logging.h"
+#include "common.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
@@ -62,10 +63,10 @@ public:
      * returns the elapsed seconds
      * @return the elapsed seconds
      */
-    double getSeconds() {
+    scalar getSeconds() {
         std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
         long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-        return (double) 1e-6 * (double) elapsed;
+        return (scalar) 1e-6 * (scalar) elapsed;
     }
 
 private :

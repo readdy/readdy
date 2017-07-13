@@ -56,11 +56,11 @@ protected:
     using particle_type_type = readdy::model::Particle::type_type;
 public:
 
-    using rnd_normal = std::function<Vec3(const double, const double)>;
+    using rnd_normal = std::function<Vec3(const scalar, const scalar)>;
     // static constexpr unsigned int n_educts = N_EDUCTS;
 
-    Reaction(const std::string &name, const double rate, const double eductDistance,
-             const double productDistance, const unsigned int n_products) :
+    Reaction(const std::string &name, const scalar rate, const scalar eductDistance,
+             const scalar productDistance, const unsigned int n_products) :
             name(name),
             id(counter++),
             rate(rate),
@@ -81,7 +81,7 @@ public:
         return id;
     }
 
-    const double getRate() const {
+    const scalar getRate() const {
         return rate;
     }
 
@@ -93,15 +93,15 @@ public:
         return _n_products;
     }
 
-    const double getEductDistance() const {
+    const scalar getEductDistance() const {
         return eductDistance;
     }
 
-    const double getEductDistanceSquared() const {
+    const scalar getEductDistanceSquared() const {
         return eductDistanceSquared;
     }
 
-    const double getProductDistance() const {
+    const scalar getProductDistance() const {
         return productDistance;
     }
 
@@ -137,11 +137,11 @@ public:
               eductDistanceSquared(rhs.eductDistanceSquared) {
     }
 
-    const double getWeight1() const {
+    const scalar getWeight1() const {
         return weight1;
     }
 
-    const double getWeight2() const {
+    const scalar getWeight2() const {
         return weight2;
     }
 
@@ -153,11 +153,11 @@ protected:
     std::array<particle_type_type, 2> products;
     const std::string name;
     const short id;
-    const double rate;
-    const double eductDistance, eductDistanceSquared;
-    const double productDistance;
+    const scalar rate;
+    const scalar eductDistance, eductDistanceSquared;
+    const scalar productDistance;
 
-    double weight1 = .5, weight2 = .5;
+    scalar weight1 = .5, weight2 = .5;
 };
 
 NAMESPACE_END(reactions)

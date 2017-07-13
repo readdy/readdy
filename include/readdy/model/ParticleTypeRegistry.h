@@ -40,12 +40,12 @@ NAMESPACE_BEGIN(model)
 
 struct ParticleTypeInfo {
     std::string name;
-    double diffusionConstant;
-    double radius;
+    scalar diffusionConstant;
+    scalar radius;
     readdy::model::Particle::flavor_t flavor;
     particle_type_type typeId;
 
-    ParticleTypeInfo(const std::string &name, const double diffusionConstant, const double radius,
+    ParticleTypeInfo(const std::string &name, const scalar diffusionConstant, const scalar radius,
                      const Particle::flavor_t flavor, const Particle::type_type typeId);
 };
 
@@ -66,20 +66,20 @@ public:
 
     particle_type_type id_of(const std::string &name) const;
 
-    void add(const std::string &name, const double diffusionConst, const double radius,
+    void add(const std::string &name, const scalar diffusionConst, const scalar radius,
              const readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
     const ParticleTypeInfo &info_of(const std::string &name) const;
 
     const ParticleTypeInfo &info_of(const Particle::type_type type) const;
 
-    double diffusion_constant_of(const std::string &particleType) const;
+    scalar diffusion_constant_of(const std::string &particleType) const;
 
-    double diffusion_constant_of(const particle_type_type particleType) const;
+    scalar diffusion_constant_of(const particle_type_type particleType) const;
 
-    double radius_of(const std::string &type) const;
+    scalar radius_of(const std::string &type) const;
 
-    double radius_of(const particle_type_type type) const;
+    scalar radius_of(const particle_type_type type) const;
 
     const std::size_t &n_types() const;
 

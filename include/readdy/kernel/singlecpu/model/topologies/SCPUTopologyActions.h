@@ -56,7 +56,7 @@ public:
                                        const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-    virtual double perform() override {
+    virtual scalar perform() override {
         readdy::model::Vec3::value_t energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
@@ -83,7 +83,7 @@ public:
                                         const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
-    virtual double perform() override {
+    virtual scalar perform() override {
         readdy::model::Vec3::value_t energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
@@ -113,7 +113,7 @@ public:
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
-    virtual double perform() override {
+    virtual scalar perform() override {
         readdy::model::Vec3::value_t energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();

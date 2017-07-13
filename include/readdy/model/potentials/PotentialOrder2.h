@@ -48,15 +48,15 @@ public:
     PotentialOrder2(const std::string& particleType1, const std::string& particleType2)
             : Potential(2), particleType1(particleType1), particleType2(particleType2) {}
 
-    virtual double calculateEnergy(const Vec3 &x_ij) const = 0;
+    virtual scalar calculateEnergy(const Vec3 &x_ij) const = 0;
 
     virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const = 0;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const = 0;
+    virtual void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const = 0;
 
-    virtual double getCutoffRadius() const = 0;
+    virtual scalar getCutoffRadius() const = 0;
 
-    virtual double getCutoffRadiusSquared() const = 0;
+    virtual scalar getCutoffRadiusSquared() const = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const PotentialOrder2 &potential) {
         os << potential.describe();

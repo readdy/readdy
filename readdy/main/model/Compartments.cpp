@@ -40,7 +40,7 @@ namespace compartments {
 short Compartment::counter = 0;
 
 Sphere::Sphere(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &origin,
-               const double radius, const bool largerOrLess)
+               const scalar radius, const bool largerOrLess)
         : Compartment(conversions, getCompartmentTypeName<Sphere>(), uniqueName), radius(radius), radiusSquared(radius * radius),
           largerOrLess(largerOrLess), origin(origin) {}
 
@@ -55,7 +55,7 @@ const bool Sphere::isContained(const Vec3 &position) const {
 }
 
 Plane::Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
-             const double distance, const bool largerOrLess)
+             const scalar distance, const bool largerOrLess)
         : Compartment(conversions, getCompartmentTypeName<Plane>(), uniqueName), normalCoefficients(normalCoefficients), distanceFromOrigin(distance),
           largerOrLess(largerOrLess) {
     const auto normSquared = normalCoefficients * normalCoefficients;
@@ -66,7 +66,7 @@ Plane::Plane(const std::unordered_map<particleType_t, particleType_t> &conversio
 }
 
 const bool Plane::isContained(const Vec3 &position) const {
-    const double distanceFromPlane = position * normalCoefficients - distanceFromOrigin;
+    const scalar distanceFromPlane = position * normalCoefficients - distanceFromOrigin;
     if (largerOrLess) {
         return distanceFromPlane > 0;
     } else {

@@ -47,13 +47,13 @@ protected:
 public:
     PotentialOrder1(const std::string& particleType) : Potential(1), particleType(particleType) {}
 
-    virtual double calculateEnergy(const Vec3 &position) const = 0;
+    virtual scalar calculateEnergy(const Vec3 &position) const = 0;
 
     virtual void calculateForce(Vec3 &force, const Vec3 &position) const = 0;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const = 0;
+    virtual void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const = 0;
 
-    virtual double getRelevantLengthScale() const noexcept = 0;
+    virtual scalar getRelevantLengthScale() const noexcept = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const PotentialOrder1 &potential) {
         os << potential.describe();

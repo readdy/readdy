@@ -62,7 +62,7 @@ public:
     }
 
     virtual HistogramAlongAxis *
-    createHistogramAlongAxis(unsigned int stride, std::vector<double> binBorders,
+    createHistogramAlongAxis(unsigned int stride, std::vector<scalar> binBorders,
                              std::vector<std::string> typesToCount, unsigned int axis) const {
         throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
@@ -83,9 +83,9 @@ public:
     }
 
     virtual RadialDistribution *
-    createRadialDistribution(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
+    createRadialDistribution(unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
                              std::vector<std::string> typeCountTo,
-                             double particleDensity) const {
+                             scalar particleDensity) const {
         throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 

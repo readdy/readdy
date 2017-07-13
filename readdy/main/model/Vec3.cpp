@@ -132,11 +132,11 @@ Vec3 Vec3::cross(const Vec3 &other) const {
     };
 }
 
-double Vec3::norm() const {
+scalar Vec3::norm() const {
     return std::sqrt(normSquared());
 }
 
-double Vec3::normSquared() const {
+scalar Vec3::normSquared() const {
     return data[0]*data[0] + data[1]*data[1] + data[2]*data[2];
 }
 

@@ -41,9 +41,8 @@ class Fusion : public Reaction<2> {
     using super = Reaction<2>;
 public:
     Fusion(const std::string &name, particle_type_type from1, particle_type_type from2, particle_type_type to,
-           const double rate, const double eductDistance, const double weight1 = 0.5,
-           const double weight2 = 0.5) :
-            Reaction(name, rate, eductDistance, 0, 1){
+           const scalar rate, const scalar eductDistance, const scalar weight1 = 0.5,
+           const scalar weight2 = 0.5) : Reaction(name, rate, eductDistance, 0, 1){
         super::weight1 = weight1;
         super::weight2 = weight2;
         educts = {from1, from2};

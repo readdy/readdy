@@ -70,7 +70,7 @@ Vec3 getMaxExtent(const Vec3 &origin, const Vec3 &extent) {
     return result;
 }
 
-Cube::Cube(const std::string &particleType, double forceConstant, const Vec3 &origin,
+Cube::Cube(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                              const Vec3 &extent, bool considerParticleRadius)
         : super(particleType), origin(origin), extent(extent), forceConstant(forceConstant),
           considerParticleRadius(considerParticleRadius), min(getMinExtent(origin, extent)),
@@ -80,17 +80,17 @@ const Vec3 &Cube::getOrigin() const { return origin; }
 
 const Vec3 &Cube::getExtent() const { return extent; }
 
-double Cube::getForceConstant() const { return forceConstant; }
+scalar Cube::getForceConstant() const { return forceConstant; }
 
 bool Cube::isConsiderParticleRadius() const { return considerParticleRadius; }
 
-double Cube::getParticleRadius() const { return particleRadius; }
+scalar Cube::getParticleRadius() const { return particleRadius; }
 
-double Cube::getMaximalForce(double) const noexcept {
+scalar Cube::getMaximalForce(scalar) const noexcept {
     return 0;
 }
 
-double Cube::getRelevantLengthScale() const noexcept {
+scalar Cube::getRelevantLengthScale() const noexcept {
     return std::min(extent[0], std::min(extent[1], extent[2]));
 }
 
@@ -98,11 +98,11 @@ void Cube::configureForType(const ParticleTypeRegistry *const registry, const pa
     particleRadius = registry->radius_of(type);
 }
 
-double Cube::calculateEnergy(const Vec3 &position) const {
+scalar Cube::calculateEnergy(const Vec3 &position) const {
     auto r = particleRadius;
     if (!isConsiderParticleRadius()) r = 0;
 
-    double energy = 0;
+    scalar energy = 0;
 
     for (auto i = 0; i < 3; ++i) {
         if (position[i] - r < min[i] || position[i] + r > max[i]) {
@@ -131,7 +131,7 @@ void Cube::calculateForce(Vec3 &force, const Vec3 &position) const {
     }
 }
 
-void Cube::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+void Cube::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const {
     energy += calculateEnergy(position);
     calculateForce(force, position);
 }
@@ -148,24 +148,24 @@ std::string Cube::describe() const {
  * Sphere Potentials
  */
 
-double SphereIn::getRelevantLengthScale() const noexcept {
+scalar SphereIn::getRelevantLengthScale() const noexcept {
     return radius;
 }
 
-double SphereIn::getMaximalForce(double) const noexcept {
+scalar SphereIn::getMaximalForce(scalar) const noexcept {
     return 0;
 }
 
-SphereIn::SphereIn(const std::string &particleType, double f, const Vec3 &origin, double radius)
+SphereIn::SphereIn(const std::string &particleType, scalar f, const Vec3 &origin, scalar radius)
         : super(particleType), origin(origin), radius(radius), forceConstant(f) {}
 
 void SphereIn::configureForType(const ParticleTypeRegistry *const, const particle_type_type) {}
 
-double SphereIn::calculateEnergy(const Vec3 &position) const {
+scalar SphereIn::calculateEnergy(const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = difference.norm();
-    double distanceFromSphere = distanceFromOrigin - radius;
-    double energy = 0.;
+    scalar distanceFromOrigin = difference.norm();
+    scalar distanceFromSphere = distanceFromOrigin - radius;
+    scalar energy = 0.;
     if (distanceFromSphere > 0) {
         energy = 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
     }
@@ -174,17 +174,17 @@ double SphereIn::calculateEnergy(const Vec3 &position) const {
 
 void SphereIn::calculateForce(Vec3 &force, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = difference.norm();
-    double distanceFromSphere = distanceFromOrigin - radius;
+    scalar distanceFromOrigin = difference.norm();
+    scalar distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere > 0) {
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
     }
 }
 
-void SphereIn::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+void SphereIn::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = difference.norm();
-    double distanceFromSphere = distanceFromOrigin - radius;
+    scalar distanceFromOrigin = difference.norm();
+    scalar distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere > 0) {
         energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
@@ -198,7 +198,7 @@ std::string SphereIn::describe() const {
     return ss.str();
 }
 
-SphereOut::SphereOut(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius)
+SphereOut::SphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
         : super(particleType), forceConstant(forceConstant), origin(origin), radius(radius) {}
 
 void SphereOut::configureForType(const ParticleTypeRegistry *const, const PotentialOrder1::particle_type_type) {}
@@ -210,19 +210,19 @@ std::string SphereOut::describe() const {
     return ss.str();
 }
 
-double SphereOut::getRelevantLengthScale() const noexcept  {
+scalar SphereOut::getRelevantLengthScale() const noexcept  {
     return radius;
 }
 
-double SphereOut::getMaximalForce(double kbt) const noexcept {
+scalar SphereOut::getMaximalForce(scalar kbt) const noexcept {
     return 0;
 }
 
-double SphereOut::calculateEnergy(const Vec3 &position) const {
+scalar SphereOut::calculateEnergy(const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = difference.norm();
-    double distanceFromSphere = distanceFromOrigin - radius;
-    double energy = 0.;
+    scalar distanceFromOrigin = difference.norm();
+    scalar distanceFromSphere = distanceFromOrigin - radius;
+    scalar energy = 0.;
     if (distanceFromSphere < 0) {
         energy = 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
     }
@@ -231,17 +231,17 @@ double SphereOut::calculateEnergy(const Vec3 &position) const {
 
 void SphereOut::calculateForce(Vec3 &force, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = difference.norm();
-    double distanceFromSphere = distanceFromOrigin - radius;
+    scalar distanceFromOrigin = difference.norm();
+    scalar distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere < 0) {
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
     }
 }
 
-void SphereOut::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+void SphereOut::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = difference.norm();
-    double distanceFromSphere = distanceFromOrigin - radius;
+    scalar distanceFromOrigin = difference.norm();
+    scalar distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere < 0) {
         energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
@@ -342,22 +342,22 @@ std::string SphericalBarrier::describe() const {
  * Harmonic repulsion
  */
 
-HarmonicRepulsion::HarmonicRepulsion(const std::string &type1, const std::string &type2, double forceConstant)
+HarmonicRepulsion::HarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant)
         : super(type1, type2), forceConstant(forceConstant), sumOfParticleRadii(-1), sumOfParticleRadiiSquared(-1) {}
 
-double HarmonicRepulsion::getSumOfParticleRadii() const {
+scalar HarmonicRepulsion::getSumOfParticleRadii() const {
     return sumOfParticleRadii;
 }
 
-double HarmonicRepulsion::getSumOfParticleRadiiSquared() const {
+scalar HarmonicRepulsion::getSumOfParticleRadiiSquared() const {
     return sumOfParticleRadiiSquared;
 }
 
-double HarmonicRepulsion::getForceConstant() const {
+scalar HarmonicRepulsion::getForceConstant() const {
     return forceConstant;
 }
 
-double HarmonicRepulsion::getMaximalForce(double) const noexcept {
+scalar HarmonicRepulsion::getMaximalForce(scalar) const noexcept {
     return forceConstant * getCutoffRadius();
 }
 
@@ -369,7 +369,7 @@ void HarmonicRepulsion::configureForTypes(const ParticleTypeRegistry *const regi
     sumOfParticleRadiiSquared = sumOfParticleRadii * sumOfParticleRadii;
 }
 
-double HarmonicRepulsion::calculateEnergy(const Vec3 &x_ij) const {
+scalar HarmonicRepulsion::calculateEnergy(const Vec3 &x_ij) const {
     auto distanceSquared = x_ij * x_ij;
     if (distanceSquared < getSumOfParticleRadiiSquared()) {
         distanceSquared = std::sqrt(distanceSquared);
@@ -391,7 +391,7 @@ void HarmonicRepulsion::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
     }
 }
 
-void HarmonicRepulsion::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
+void HarmonicRepulsion::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &x_ij) const {
     auto squared = x_ij * x_ij;
     if (squared < getSumOfParticleRadiiSquared() && squared > 0) {
         squared = std::sqrt(squared);
@@ -402,11 +402,11 @@ void HarmonicRepulsion::calculateForceAndEnergy(Vec3 &force, double &energy, con
     }
 }
 
-double HarmonicRepulsion::getCutoffRadius() const {
+scalar HarmonicRepulsion::getCutoffRadius() const {
     return sumOfParticleRadii;
 }
 
-double HarmonicRepulsion::getCutoffRadiusSquared() const {
+scalar HarmonicRepulsion::getCutoffRadiusSquared() const {
     return sumOfParticleRadiiSquared;
 }
 
@@ -421,9 +421,9 @@ std::string HarmonicRepulsion::describe() const {
  * Weak interaction piecewise harmonic
  */
 
-double WeakInteractionPiecewiseHarmonic::getMaximalForce(double) const noexcept {
-    double fMax1 = forceConstant * conf.desiredParticleDistance;
-    double fMax2 = 2 * conf.depthAtDesiredDistance *
+scalar WeakInteractionPiecewiseHarmonic::getMaximalForce(scalar) const noexcept {
+    scalar fMax1 = forceConstant * conf.desiredParticleDistance;
+    scalar fMax2 = 2 * conf.depthAtDesiredDistance *
                    (conf.noInteractionDistance - conf.desiredParticleDistance);
     return std::max(fMax1, fMax2);
 }
@@ -434,7 +434,7 @@ void WeakInteractionPiecewiseHarmonic::configureForTypes(const ParticleTypeRegis
 
 WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const std::string &particleType1,
                                                                    const std::string &particleType2,
-                                                                   const double forceConstant,
+                                                                   const scalar forceConstant,
                                                                    const Configuration &config)
         : super(particleType1, particleType2), forceConstant(forceConstant), conf(config) {}
 
@@ -444,7 +444,7 @@ std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmoni
     return os;
 }
 
-double WeakInteractionPiecewiseHarmonic::calculateEnergy(const Vec3 &x_ij) const {
+scalar WeakInteractionPiecewiseHarmonic::calculateEnergy(const Vec3 &x_ij) const {
     const auto dist = std::sqrt(x_ij * x_ij);
     const auto len_part2 = conf.noInteractionDistance - conf.desiredParticleDistance;
     if (dist < conf.desiredParticleDistance) {
@@ -471,7 +471,7 @@ double WeakInteractionPiecewiseHarmonic::calculateEnergy(const Vec3 &x_ij) const
 void WeakInteractionPiecewiseHarmonic::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
     const auto dist = std::sqrt(x_ij * x_ij);
     const auto len_part2 = conf.noInteractionDistance - conf.desiredParticleDistance;
-    double factor = 0;
+    scalar  factor = 0;
     if (dist < conf.desiredParticleDistance) {
         // repulsive as we are closer than the desired distance
         factor = -1 * forceConstant * (conf.desiredParticleDistance - dist);
@@ -495,16 +495,16 @@ void WeakInteractionPiecewiseHarmonic::calculateForce(Vec3 &force, const Vec3 &x
     }
 }
 
-void WeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
+void WeakInteractionPiecewiseHarmonic::calculateForceAndEnergy(Vec3 &force, scalar  &energy, const Vec3 &x_ij) const {
     energy += calculateEnergy(x_ij);
     calculateForce(force, x_ij);
 }
 
-double WeakInteractionPiecewiseHarmonic::getCutoffRadius() const {
+scalar  WeakInteractionPiecewiseHarmonic::getCutoffRadius() const {
     return conf.noInteractionDistance;
 }
 
-double WeakInteractionPiecewiseHarmonic::getCutoffRadiusSquared() const {
+scalar  WeakInteractionPiecewiseHarmonic::getCutoffRadiusSquared() const {
     return conf.noInteractionDistanceSquared;
 }
 
@@ -516,16 +516,16 @@ std::string WeakInteractionPiecewiseHarmonic::describe() const {
     return ss.str();
 }
 
-WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const double desiredParticleDistance,
-                                                               const double depthAtDesiredDistance,
-                                                               const double noInteractionDistance)
+WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const scalar  desiredParticleDistance,
+                                                               const scalar  depthAtDesiredDistance,
+                                                               const scalar  noInteractionDistance)
         : desiredParticleDistance(desiredParticleDistance), depthAtDesiredDistance(depthAtDesiredDistance),
           noInteractionDistance(noInteractionDistance),
           noInteractionDistanceSquared(noInteractionDistance * noInteractionDistance) {}
 
 LennardJones::LennardJones(const std::string &particleType1, const std::string &particleType2,
-                           unsigned int m, unsigned int n, double cutoffDistance,
-                           bool shift, double epsilon, double sigma)
+                           unsigned int m, unsigned int n, scalar  cutoffDistance,
+                           bool shift, scalar  epsilon, scalar  sigma)
         : super(particleType1, particleType2), m(m), n(n),
           cutoffDistance(cutoffDistance), shift(shift), epsilon(epsilon), sigma(sigma),
           cutoffDistanceSquared(cutoffDistance * cutoffDistance) {
@@ -533,9 +533,9 @@ LennardJones::LennardJones(const std::string &particleType1, const std::string &
         throw std::invalid_argument("When constructing the LJ potential, the first exponent m=" + std::to_string(m) +
                                     " was not greater than the second exponent n=" + std::to_string(n) + "!");
     }
-    double dm = static_cast<double>(m);
-    double dn = static_cast<double>(n);
-    double r_min = sigma * std::pow(dn / dm, 1. / (dn - dm));
+    scalar  dm = static_cast<scalar >(m);
+    scalar  dn = static_cast<scalar >(n);
+    scalar  r_min = sigma * std::pow(dn / dm, 1. / (dn - dm));
     k = -epsilon / (std::pow(sigma / r_min, dm) - std::pow(sigma / r_min, dn));
 }
 
@@ -545,7 +545,7 @@ LennardJones::configureForTypes(const ParticleTypeRegistry *const context, parti
 
 }
 
-double LennardJones::calculateEnergy(const Vec3 &x_ij) const {
+scalar  LennardJones::calculateEnergy(const Vec3 &x_ij) const {
     const auto r = x_ij.norm();
     if (r > cutoffDistance) return 0;
     else return shift ? energy(r) - energy(cutoffDistance) : energy(r);
@@ -559,24 +559,24 @@ void LennardJones::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
     }
 }
 
-void LennardJones::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
+void LennardJones::calculateForceAndEnergy(Vec3 &force, scalar  &energy, const Vec3 &x_ij) const {
     energy += calculateEnergy(x_ij);
     calculateForce(force, x_ij);
 }
 
-double LennardJones::getCutoffRadius() const {
+scalar  LennardJones::getCutoffRadius() const {
     return cutoffDistance;
 }
 
-double LennardJones::getCutoffRadiusSquared() const {
+scalar  LennardJones::getCutoffRadiusSquared() const {
     return cutoffDistanceSquared;
 }
 
-double LennardJones::energy(double r) const {
+scalar  LennardJones::energy(scalar  r) const {
     return k * (std::pow(sigma / r, m) - std::pow(sigma / r, n));
 }
 
-double LennardJones::getMaximalForce(double kbt) const noexcept {
+scalar  LennardJones::getMaximalForce(scalar  kbt) const noexcept {
     return 0;
 }
 
@@ -592,9 +592,9 @@ LennardJones::~LennardJones() = default;
 
 
 ScreenedElectrostatics::ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2,
-                                               double electrostaticStrength, double inverseScreeningDepth,
-                                               double repulsionStrength, double repulsionDistance, unsigned int exponent,
-                                               double cutoff)
+                                               scalar  electrostaticStrength, scalar  inverseScreeningDepth,
+                                               scalar  repulsionStrength, scalar  repulsionDistance, unsigned int exponent,
+                                               scalar  cutoff)
         : super(particleType1, particleType2), electrostaticStrength(electrostaticStrength), inverseScreeningDepth(inverseScreeningDepth),
           repulsionStrength(repulsionStrength), repulsionDistance(repulsionDistance), exponent(exponent), cutoff(cutoff),
           cutoffSquared(cutoff * cutoff) {
@@ -618,15 +618,15 @@ ScreenedElectrostatics::configureForTypes(const ParticleTypeRegistry *const cont
 
 }
 
-double ScreenedElectrostatics::getMaximalForce(double kbt) const noexcept {
+scalar  ScreenedElectrostatics::getMaximalForce(scalar  kbt) const noexcept {
     return 0;
 }
 
-double ScreenedElectrostatics::getCutoffRadius() const {
+scalar  ScreenedElectrostatics::getCutoffRadius() const {
     return cutoff;
 }
 
-double ScreenedElectrostatics::getCutoffRadiusSquared() const {
+scalar  ScreenedElectrostatics::getCutoffRadiusSquared() const {
     return cutoffSquared;
 }
 
@@ -640,22 +640,22 @@ std::string ScreenedElectrostatics::describe() const {
     return ss.str();
 }
 
-double ScreenedElectrostatics::calculateEnergy(const Vec3 &x_ij) const {
-    const double distance = x_ij.norm();
-    double result = electrostaticStrength * std::exp(-inverseScreeningDepth * distance) / distance;
+scalar  ScreenedElectrostatics::calculateEnergy(const Vec3 &x_ij) const {
+    const scalar  distance = x_ij.norm();
+    scalar  result = electrostaticStrength * std::exp(-inverseScreeningDepth * distance) / distance;
     result += repulsionStrength * std::pow(repulsionDistance / distance, exponent);
     return result;
 }
 
 void ScreenedElectrostatics::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
-    const double distance = x_ij.norm();
-    double forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
+    const scalar  distance = x_ij.norm();
+    scalar  forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
     forceFactor *= (inverseScreeningDepth / distance + 1. / std::pow(distance, 2));
     forceFactor += repulsionStrength * exponent / repulsionDistance * std::pow( repulsionDistance / distance, exponent + 1);
     force += forceFactor * (- 1. * x_ij / distance);
 }
 
-void ScreenedElectrostatics::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &x_ij) const {
+void ScreenedElectrostatics::calculateForceAndEnergy(Vec3 &force, scalar  &energy, const Vec3 &x_ij) const {
     calculateForce(force, x_ij);
     energy += calculateEnergy(x_ij);
 }

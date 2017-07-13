@@ -48,9 +48,9 @@ struct ReactionInfo {
     short id {-1}; // global unique reaction id
     std::size_t n_educts {0};
     std::size_t n_products {0};
-    double rate {0};
-    double educt_distance {0};
-    double product_distance {0};
+    scalar rate {0};
+    scalar educt_distance {0};
+    scalar product_distance {0};
     std::array<particle_type_type, 2> educt_types {{0, 0}};
     std::array<particle_type_type, 2> product_types {{0, 0}};
 };
@@ -86,7 +86,7 @@ void writeReactionInformation(io::Group &group, const KernelContext &context);
 struct ParticleTypeInfo {
     const char* name;
     std::size_t type_id;
-    double diffusion_constant;
+    scalar diffusion_constant;
 };
 
 class ParticleTypeInfoMemoryType : public readdy::io::NativeCompoundType {

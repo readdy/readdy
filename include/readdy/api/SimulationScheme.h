@@ -201,12 +201,12 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &withSkinSize(double skin = -1) {
+    SchemeConfigurator &withSkinSize(scalar skin = -1) {
         skinSize = skin;
         return *this;
     }
 
-    virtual std::unique_ptr<SchemeType> configure(double timeStep) {
+    virtual std::unique_ptr<SchemeType> configure(scalar timeStep) {
         using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
         using default_reactions_t = readdy::model::actions::reactions::Gillespie;
         using calculate_forces_t = readdy::model::actions::CalculateForces;
@@ -239,7 +239,7 @@ public:
         return ptr;
     }
 
-    void configureAndRun(const time_step_type steps, double timeStep) {
+    void configureAndRun(const time_step_type steps, scalar timeStep) {
         configure(timeStep)->run(steps);
     }
 
@@ -248,7 +248,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     std::unique_ptr<SchemeType> scheme = nullptr;
-    double skinSize = -1;
+    scalar skinSize = -1;
 };
 
 class AdvancedScheme : public SimulationScheme {
@@ -370,12 +370,12 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &withSkinSize(double skin = -1) {
+    SchemeConfigurator &withSkinSize(scalar skin = -1) {
         skinSize = skin;
         return *this;
     }
 
-    std::unique_ptr<AdvancedScheme> configure(double timeStep) {
+    std::unique_ptr<AdvancedScheme> configure(scalar timeStep) {
         using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
         using default_reactions_t = readdy::model::actions::reactions::Gillespie;
         using calculate_forces_t = readdy::model::actions::CalculateForces;
@@ -411,7 +411,7 @@ public:
         return ptr;
     }
 
-    void configureAndRun(const time_step_type steps, double timeStep) {
+    void configureAndRun(const time_step_type steps, scalar timeStep) {
         configure(timeStep)->run(steps);
     }
 
@@ -421,7 +421,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     bool includeCompartmentsSet = false;
-    double skinSize = -1;
+    scalar skinSize = -1;
 
 };
 

@@ -69,7 +69,7 @@ protected:
 
 class EulerBDIntegrator : public TimeStepDependentAction {
 public:
-    EulerBDIntegrator(double timeStep);
+    EulerBDIntegrator(scalar timeStep);
 };
 
 class CalculateForces : public Action {
@@ -83,14 +83,14 @@ public:
         create, clear
     };
 
-    UpdateNeighborList(Operation operation = Operation::create, double skinSize = -1);
+    UpdateNeighborList(Operation operation = Operation::create, scalar skinSize = -1);
 
     virtual bool supportsSkin() const = 0;
 
 
 protected:
     const Operation operation;
-    const double skinSize;
+    const scalar skinSize;
 };
 
 NAMESPACE_BEGIN(reactions)
@@ -104,7 +104,7 @@ public:
     using reaction_22 = std::function<void(const model::Particle &, const model::Particle &, model::Particle &,
                                            model::Particle &)>;
 
-    UncontrolledApproximation(double timeStep);
+    UncontrolledApproximation(scalar timeStep);
 
     virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) = 0;
 
@@ -118,16 +118,16 @@ public:
 
 class Gillespie : public TimeStepDependentAction {
 public:
-    Gillespie(double timeStep);
+    Gillespie(scalar timeStep);
 };
 
 class GillespieParallel : public TimeStepDependentAction {
 public:
-    GillespieParallel(double timeStep);
+    GillespieParallel(scalar timeStep);
 };
 
 struct NextSubvolumes : public TimeStepDependentAction {
-    NextSubvolumes(double timeStep);
+    NextSubvolumes(scalar timeStep);
 };
 
 NAMESPACE_END(reactions)
@@ -136,7 +136,7 @@ NAMESPACE_BEGIN(top)
 
 class EvaluateTopologyReactions : public TimeStepDependentAction {
 public:
-    EvaluateTopologyReactions(double timeStep);
+    EvaluateTopologyReactions(scalar timeStep);
 };
 
 NAMESPACE_END(top)

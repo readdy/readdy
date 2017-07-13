@@ -40,19 +40,19 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class RadialDistribution : public Observable<std::pair<std::vector<double>, std::vector<double>>> {
+class RadialDistribution : public Observable<std::pair<std::vector<scalar>, std::vector<scalar>>> {
 public:
-    RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
+    RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<scalar> binBorders,
                        std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo,
-                       double particleToDensity);
+                       scalar particleToDensity);
 
-    RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
+    RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<scalar> binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
-                       double particleToDensity);
+                       scalar particleToDensity);
 
     virtual ~RadialDistribution();
 
-    const std::vector<double> &getBinBorders() const;
+    const std::vector<scalar> &getBinBorders() const;
 
     void evaluate() override;
 
@@ -60,7 +60,7 @@ public:
 
 protected:
 
-    void setBinBorders(const std::vector<double> &binBorders);
+    void setBinBorders(const std::vector<scalar> &binBorders);
 
     void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
@@ -68,10 +68,10 @@ protected:
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;
-    std::vector<double> binBorders;
-    std::vector<double> counts;
+    std::vector<scalar> binBorders;
+    std::vector<scalar> counts;
     std::vector<unsigned int> typeCountFrom, typeCountTo;
-    double particleToDensity;
+    scalar particleToDensity;
 };
 
 NAMESPACE_END(observables)

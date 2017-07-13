@@ -39,15 +39,15 @@ namespace readdy {
 namespace model {
 namespace util {
 
-double getMaximumDisplacement(KernelContext& context, const double timeStep) {
+scalar  getMaximumDisplacement(KernelContext& context, const scalar  timeStep) {
     context.configure();
 
-    double kbt = context.getKBT();
+    scalar  kbt = context.getKBT();
 
-    double maximum_displacement = 0;
+    scalar  maximum_displacement = 0;
     for (auto &&pI : context.particle_types().types_flat()) {
-        double D = context.particle_types().diffusion_constant_of(pI);
-        double fMax = 0;
+        scalar  D = context.particle_types().diffusion_constant_of(pI);
+        scalar  fMax = 0;
 
         for (auto &&pJ : context.particle_types().types_flat()) {
 
@@ -58,20 +58,20 @@ double getMaximumDisplacement(KernelContext& context, const double timeStep) {
             }
         }
         // todo magic number?
-        double local_maximum_displacement = std::sqrt(2 * D * timeStep) + D * kbt * fMax * timeStep;
+        scalar  local_maximum_displacement = std::sqrt(2 * D * timeStep) + D * kbt * fMax * timeStep;
         maximum_displacement = std::max(local_maximum_displacement, maximum_displacement);
     }
 
     return maximum_displacement;
 }
 
-double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
-    double tau_R = 0;
+scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
+    scalar  tau_R = 0;
 
     context.configure();
 
-    double kbt = context.getKBT();
-    double kReactionMax = 0;
+    scalar  kbt = context.getKBT();
+    scalar  kReactionMax = 0;
 
     for (auto &&reactionO1 : context.reactions().order1_flat()) {
         kReactionMax = std::max(kReactionMax, reactionO1->getRate());
@@ -80,14 +80,14 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
         kReactionMax = std::max(kReactionMax, reactionO2->getRate());
     }
 
-    double tDMin = 0;
-    std::unordered_map<unsigned int, double> fMaxes;
+    scalar  tDMin = 0;
+    std::unordered_map<unsigned int, scalar > fMaxes;
     for (auto &&pI : context.particle_types().types_flat()) {
-        double D = context.particle_types().diffusion_constant_of(pI);
-        double tD = 0;
-        double xi = 0; // 1/(beta*Fmax)
-        double fMax = 0;
-        double rMin = std::numeric_limits<double>::max();
+        scalar  D = context.particle_types().diffusion_constant_of(pI);
+        scalar  tD = 0;
+        scalar  xi = 0; // 1/(beta*Fmax)
+        scalar  fMax = 0;
+        scalar  rMin = std::numeric_limits<scalar >::max();
 
         for (auto &&reaction : context.reactions().order1_by_type(pI)) {
             if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
@@ -122,7 +122,7 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
                 }
             }
         }
-        double rho = rMin / 2;
+        scalar  rho = rMin / 2;
         if (fMax > 0) {
             xi = 1. / (context.getKBT() * fMax);
             tD = (xi * xi / D) * (1 + rho / xi - std::sqrt(1 + 2 * rho / xi));
@@ -140,18 +140,18 @@ double getRecommendedTimeStep(unsigned int N, KernelContext& context) {
 
     log::debug("Maximal displacement for particle types per time step (stochastic + deterministic): ");
     for (auto &&pI : context.particle_types().types_flat()) {
-        double D = context.particle_types().diffusion_constant_of(pI);
-        double xmax = std::sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
+        scalar  D = context.particle_types().diffusion_constant_of(pI);
+        scalar  xmax = std::sqrt(2 * D * tDMin) + D * kbt * fMaxes[pI] * tDMin;
         log::debug("\t - {}: {} + {} = {}" , context.particle_types().name_of(pI), std::sqrt(2 * D * tDMin),
                               D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 
     if (kReactionMax > 0) tau_R = 1. / kReactionMax;
 
-    double tau = std::max(tau_R, tDMin);
+    scalar  tau = std::max(tau_R, tDMin);
     if (tau_R > 0) tau = std::min(tau_R, tau);
     if (tDMin > 0) tau = std::min(tDMin, tau);
-    tau /= (double) N;
+    tau /= (scalar ) N;
     log::debug("Estimated time step: {}", tau);
     return tau;
 }

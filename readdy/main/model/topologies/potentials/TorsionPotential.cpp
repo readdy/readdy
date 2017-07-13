@@ -51,7 +51,7 @@ const CosineDihedralPotential::dihedrals_t &CosineDihedralPotential::getDihedral
     return dihedrals;
 }
 
-double CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
+scalar  CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                                                 const dihedral_t &dihedral) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm = x_jk.norm();
@@ -62,9 +62,9 @@ double CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_
     const auto n_norm = n.norm();
     auto m_n_norm = m_norm * n_norm;
     m_n_norm = m_n_norm < SMALL ? SMALL : m_n_norm;
-    const double sin_theta = (m.cross(n) * x_jk) / (m_n_norm * x_jk_norm);
-    const double cos_theta = m * n / m_n_norm;
-    const double dih = -std::atan2(sin_theta, cos_theta);
+    const scalar sin_theta = (m.cross(n) * x_jk) / (m_n_norm * x_jk_norm);
+    const scalar  cos_theta = m * n / m_n_norm;
+    const scalar  dih = -std::atan2(sin_theta, cos_theta);
     return dihedral.forceConstant * (1 + std::cos(dihedral.multiplicity * dih - dihedral.phi_0));
 }
 
@@ -164,8 +164,8 @@ CosineDihedralPotential::createForceAndEnergyAction(const TopologyActionFactory 
     return factory->createCalculateCosineDihedralPotential(this);
 }
 
-DihedralConfiguration::DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant,
-                                             double multiplicity, double equilibriumAngle)
+DihedralConfiguration::DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, scalar  forceConstant,
+                                             scalar  multiplicity, scalar  equilibriumAngle)
         : idx1(idx1), idx2(idx2), idx3(idx3), idx4(idx4), forceConstant(forceConstant),
           phi_0(equilibriumAngle), multiplicity(multiplicity) {
     if (equilibriumAngle > readdy::util::numeric::pi() || equilibriumAngle < -readdy::util::numeric::pi()) {

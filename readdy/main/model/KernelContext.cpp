@@ -40,8 +40,8 @@ using particle_t = readdy::model::Particle;
 
 struct KernelContext::Impl {
 
-    double kBT = 1;
-    std::array<double, 3> box_size{{1, 1, 1}};
+    scalar kBT = 1;
+    std::array<scalar, 3> box_size{{1, 1, 1}};
     std::array<bool, 3> periodic_boundary{{true, true, true}};
 
     std::function<Vec3(Vec3)> pbc = [](Vec3 in) {
@@ -52,8 +52,8 @@ struct KernelContext::Impl {
     std::function<Vec3(const Vec3 &, const Vec3 &)> diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
         return readdy::model::shortestDifference<true, true, true>(lhs, rhs, 1., 1., 1.);
     };
-    std::function<double(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs,
-                                                                    const Vec3 &rhs) -> double {
+    std::function<scalar(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs,
+                                                                    const Vec3 &rhs) -> scalar {
         const auto dv = diffFun(lhs, rhs);
         return dv * dv;
     };
@@ -174,15 +174,15 @@ struct KernelContext::Impl {
 };
 
 
-double KernelContext::getKBT() const {
+scalar KernelContext::getKBT() const {
     return (*pimpl).kBT;
 }
 
-void KernelContext::setKBT(double kBT) {
+void KernelContext::setKBT(scalar kBT) {
     (*pimpl).kBT = kBT;
 }
 
-void KernelContext::setBoxSize(double dx, double dy, double dz) {
+void KernelContext::setBoxSize(scalar dx, scalar dy, scalar dz) {
     (*pimpl).box_size = {dx, dy, dz};
     pimpl->updateDistAndFixPositionFun();
 }
@@ -197,7 +197,7 @@ KernelContext::KernelContext()
           potentialRegistry_(std::cref(particleTypeRegistry_)),
           reactionRegistry_(std::cref(particleTypeRegistry_)) {}
 
-std::array<double, 3> &KernelContext::getBoxSize() const {
+std::array<scalar, 3> &KernelContext::getBoxSize() const {
     return pimpl->box_size;
 }
 

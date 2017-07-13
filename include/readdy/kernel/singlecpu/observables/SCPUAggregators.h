@@ -67,7 +67,7 @@ public:
             numberOfParticles.push_back(initialPositions.size());
             return;
         }
-        double msd = 0;
+        scalar msd = 0;
         unsigned long currentNumberParticles = 0;
         auto posIt = positions.begin();
         auto idsIt = ids.begin();
@@ -80,7 +80,7 @@ public:
             }
         }
         if (currentNumberParticles > 0) {
-            msd /= static_cast<double>(currentNumberParticles);
+            msd /= static_cast<scalar>(currentNumberParticles);
         };
         resultMsd.push_back(msd);
         numberOfParticles.push_back(currentNumberParticles);

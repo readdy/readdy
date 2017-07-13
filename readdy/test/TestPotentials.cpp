@@ -54,7 +54,7 @@ void setupParticles(readdy::model::Kernel &kernel) {
     for (auto i = 0; i < nParticlesB; ++i) kernel.addParticle("B", readdy::model::rnd::normal3());
 }
 
-void run(readdy::model::Kernel &kernel, double timeStep) {
+void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
     unsigned int nSteps = 200;
     auto &&integrator = kernel.createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
     auto &&nl = kernel.createAction<readdy::model::actions::UpdateNeighborList>();
@@ -69,7 +69,7 @@ void run(readdy::model::Kernel &kernel, double timeStep) {
 
 TEST_P(TestPotentials, TestParticlesStayInBox) {
     kernel->getKernelContext().setBoxSize(5, 5, 5);
-    const double timeStep = .005;
+    const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
 
@@ -102,7 +102,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 
 TEST_P(TestPotentials, TestParticleStayInSphere) {
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    const double timeStep = .005;
+    const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
 
@@ -112,13 +112,13 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
         kernel->registerPotential<readdy::model::potentials::SphereIn>(t, 20, origin, 3);
     }
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
-    const double maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
-    const double maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
+    const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
+    const readdy::scalar maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
     ppObs->setCallback([maxDistFromOriginSquared](readdy::model::observables::Positions::result_t currentResult) {
         readdy::model::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {
-            const double distanceFromOriginSquared = v * v;
+            const readdy::scalar distanceFromOriginSquared = v * v;
             allWithinBounds &= distanceFromOriginSquared < maxDistFromOriginSquared;
             avg += v;
         }
@@ -189,11 +189,11 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     // distance of particles is 2.56515106768
     auto id0 = kernel->addParticle("A", {0, 0, 0});
     auto id1 = kernel->addParticle("A", {1.2, 1.5, -1.7});
-    double electrostaticStrength = -1.;
-    double screeningDepth = 1.;
-    double repulsionStrength = 1.;
-    double sigma = 1.;
-    double cutoff = 8.;
+    readdy::scalar electrostaticStrength = -1.;
+    readdy::scalar screeningDepth = 1.;
+    readdy::scalar repulsionStrength = 1.;
+    readdy::scalar sigma = 1.;
+    readdy::scalar cutoff = 8.;
     unsigned int exponent = 6;
     kernel->registerPotential<readdy::model::potentials::ScreenedElectrostatics>("A", "A", electrostaticStrength, 1. / screeningDepth,
                                                                                  repulsionStrength, sigma, exponent, cutoff);
@@ -241,8 +241,8 @@ TEST_P(TestPotentials, SphericalMembrane) {
     // add two particles, one outside, one inside the sphere
     auto id0 = kernel->addParticle("A", {2., 1., 1.});
     auto id1 = kernel->addParticle("A", {4., 3., -3.});
-    double forceConstant = 1.;
-    double radius = 3.;
+    readdy::scalar forceConstant = 1.;
+    readdy::scalar radius = 3.;
     readdy::model::Vec3 origin = {1.,0.,0.};
     kernel->registerPotential<readdy::model::potentials::SphereOut>("A", forceConstant, origin, radius);
     kernel->registerPotential<readdy::model::potentials::SphereIn>("A", forceConstant, origin, radius);

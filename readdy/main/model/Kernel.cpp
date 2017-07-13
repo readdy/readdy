@@ -110,7 +110,7 @@ unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                                 const double rate) const {
+                                 const scalar rate) const {
     const auto typeFrom = getTypeIdRequireNormalFlavor(from);
     const auto typeTo = getTypeIdRequireNormalFlavor(to);
     return getReactionFactory().createReaction<reactions::Conversion>(name, typeFrom, typeTo, rate);
@@ -118,8 +118,8 @@ Kernel::createConversionReaction(const std::string &name, const std::string &fro
 
 std::unique_ptr<reactions::Reaction<2>>
 Kernel::createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                             const std::string &to, const double rate, const double eductDistance,
-                             const double weight1, const double weight2) const {
+                             const std::string &to, const scalar rate, const scalar eductDistance,
+                             const scalar weight1, const scalar weight2) const {
     return getReactionFactory().createReaction<reactions::Fusion>(name, getTypeIdRequireNormalFlavor(from1),
                                                                   getTypeIdRequireNormalFlavor(from2),
                                                                   getTypeIdRequireNormalFlavor(to), rate, eductDistance,
@@ -128,7 +128,7 @@ Kernel::createFusionReaction(const std::string &name, const std::string &from1, 
 
 std::unique_ptr<reactions::Reaction<2>>
 Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                                const std::string &to, const double rate, const double eductDistance) const {
+                                const std::string &to, const scalar rate, const scalar eductDistance) const {
     return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeIdRequireNormalFlavor(catalyst),
                                                                      getTypeIdRequireNormalFlavor(from),
                                                                      getTypeIdRequireNormalFlavor(to), rate,
@@ -137,8 +137,8 @@ Kernel::createEnzymaticReaction(const std::string &name, const std::string &cata
 
 std::unique_ptr<reactions::Reaction<1>>
 Kernel::createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
-                              const std::string &to2, const double rate, const double productDistance,
-                              const double weight1, const double weight2) const {
+                              const std::string &to2, const scalar rate, const scalar productDistance,
+                              const scalar weight1, const scalar weight2) const {
     return getReactionFactory().createReaction<reactions::Fission>(name, getTypeIdRequireNormalFlavor(from),
                                                                    getTypeIdRequireNormalFlavor(to1),
                                                                    getTypeIdRequireNormalFlavor(to2), rate,
@@ -147,7 +147,7 @@ Kernel::createFissionReaction(const std::string &name, const std::string &from, 
 }
 
 std::unique_ptr<reactions::Reaction<1>>
-Kernel::createDecayReaction(const std::string &name, const std::string &type, const double rate) const {
+Kernel::createDecayReaction(const std::string &name, const std::string &type, const scalar rate) const {
     return getReactionFactory().createReaction<reactions::Decay>(name, getTypeIdRequireNormalFlavor(type), rate);
 }
 

@@ -58,8 +58,8 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     using n_particles_obs = readdy::model::observables::NParticles;
 
-    auto stdRand = [](double lower = 0.0, double upper = 1.0) -> double {
-        return static_cast <double> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
+    auto stdRand = [](readdy::scalar lower = 0.0, readdy::scalar upper = 1.0) -> readdy::scalar {
+        return static_cast <readdy::scalar> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
     };
 
     kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
@@ -120,8 +120,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->getKernelContext().setBoxSize(20, 20, 20);
 
-    const double weightF = 0.;
-    const double weightA = 1.;
+    const readdy::scalar weightF = 0.;
+    const readdy::scalar weightA = 1.;
     kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
     kernel->registerReaction<readdy::model::reactions::Fission>("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
@@ -174,8 +174,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->getKernelContext().setBoxSize(10, 10, 10);
 
-    const double weightF = 0.;
-    const double weightA = 1.;
+    const readdy::scalar weightF = 0.;
+    const readdy::scalar weightA = 1.;
     kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", .1, 2.0, weightF, weightA);
 
     auto n3 = readdy::model::rnd::normal3<>;

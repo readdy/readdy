@@ -41,14 +41,14 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(rnd)
 
-template<typename RealType=double, typename Generator = std::default_random_engine>
+template<typename RealType=scalar, typename Generator = std::default_random_engine>
 RealType normal(const RealType mean = 0.0, const RealType variance = 1.0) {
     static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
     std::normal_distribution<RealType> distribution(mean, variance);
     return distribution(generator);
 }
 
-template<typename RealType=double, typename Generator = std::default_random_engine>
+template<typename RealType=scalar, typename Generator = std::default_random_engine>
 RealType uniform_real(const RealType a = 0.0, const RealType b = 1.0) {
     static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
     std::uniform_real_distribution<RealType> distribution(a, b);
@@ -62,7 +62,7 @@ IntType uniform_int(const IntType a, const IntType b) {
     return distribution(generator);
 }
 
-template<typename RealType=double, typename Generator = std::default_random_engine>
+template<typename RealType=scalar, typename Generator = std::default_random_engine>
 RealType exponential(RealType lambda = 1.0) {
     static thread_local Generator generator(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
     std::exponential_distribution<RealType> distribution(lambda);
@@ -70,10 +70,10 @@ RealType exponential(RealType lambda = 1.0) {
 }
 
 template<typename Generator = std::default_random_engine>
-Vec3 normal3(const double mean = 0.0, const double variance = 1.0) {
-    return {normal<double, Generator>(mean, variance),
-            normal<double, Generator>(mean, variance),
-            normal<double, Generator>(mean, variance)};
+Vec3 normal3(const scalar mean = 0.0, const scalar variance = 1.0) {
+    return {normal<scalar, Generator>(mean, variance),
+            normal<scalar, Generator>(mean, variance),
+            normal<scalar, Generator>(mean, variance)};
 }
 
 template<typename Iter, typename Gen = std::default_random_engine>
