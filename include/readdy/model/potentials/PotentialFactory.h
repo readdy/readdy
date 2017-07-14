@@ -52,8 +52,9 @@ public:
     }
 
     std::vector<std::string> getAvailablePotentials() const {
-        return {getPotentialName<Cube>(), getPotentialName<SphereIn>(),
-                getPotentialName<HarmonicRepulsion>(), getPotentialName<WeakInteractionPiecewiseHarmonic>()};
+        return {getPotentialName<Cube>(), getPotentialName<SphereIn>(), getPotentialName<SphereOut>(), getPotentialName<SphericalBarrier>(),
+                getPotentialName<HarmonicRepulsion>(), getPotentialName<WeakInteractionPiecewiseHarmonic>(), getPotentialName<LennardJones>(),
+                getPotentialName<ScreenedElectrostatics>()};
     }
 
     virtual Cube *
@@ -102,9 +103,13 @@ public:
         return new SphereOut(particleType, forceConstant, origin, radius);
     }
 
-    virtual SphereIn *createSphereIn(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius) const {
+    SphereIn *createSphereIn(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius) const {
         return new SphereIn(particleType, forceConstant, origin, radius);
     };
+
+    SphericalBarrier *createSphericalBarrier(const std::string &particleType, const Vec3 &origin, double radius, double height, double width) const {
+        return new SphericalBarrier(particleType, origin, radius, height, width);
+    }
 
 protected:
     template<typename T, typename... Args>
@@ -123,6 +128,8 @@ READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, Cube)
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SphereIn)
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SphereOut)
+
+READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, SphericalBarrier)
 
 READDY_CREATE_FACTORY_DISPATCHER(PotentialFactory, HarmonicRepulsion)
 

@@ -132,6 +132,37 @@ protected:
     const double radius, forceConstant;
 };
 
+/**
+ * A potential that forms a concentric barrier at a certain radius around a given origin. It is given a height (in terms of energy)
+ * and a width. Note that the height can also be negative, then this potential acts as a 'sticky' sphere. The potential consists
+ * of harmonic snippets, such that the energy landscape is continuous and differentiable, the force is only continuous and not differentiable.
+ */
+class SphericalBarrier : public PotentialOrder1 {
+    using super = PotentialOrder1;
+public:
+    SphericalBarrier(const std::string &particleType, const Vec3 &origin, double radius, double height, double width);
+
+    virtual double getRelevantLengthScale() const noexcept override;
+
+    virtual double getMaximalForce(double kbt) const noexcept override;
+
+    double calculateEnergy(const Vec3 &position) const override;
+
+    void calculateForce(Vec3 &force, const Vec3 &position) const override;
+
+    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+
+    std::string describe() const override;
+
+protected:
+    friend class readdy::model::potentials::PotentialRegistry;
+
+    void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
+
+    const Vec3 origin;
+    const double radius, height, width, r1, r2, r3, r4, effectiveForceConstant;
+};
+
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<Cube, T>::value>::type * = 0) {
     return "Cube";
@@ -143,6 +174,10 @@ const std::string getPotentialName(typename std::enable_if<std::is_base_of<Spher
 template <typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphereOut, T>::value>::type* = 0) {
     return "SphereOut";
+}
+template <typename T>
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphericalBarrier, T>::value>::type * = 0) {
+    return "SphericalBarrier";
 }
 
 NAMESPACE_END(potentials)

@@ -163,7 +163,7 @@ void SphereIn::configureForType(const ParticleTypeRegistry *const, const particl
 
 double SphereIn::calculateEnergy(const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromOrigin = difference.norm();
     double distanceFromSphere = distanceFromOrigin - radius;
     double energy = 0.;
     if (distanceFromSphere > 0) {
@@ -174,7 +174,7 @@ double SphereIn::calculateEnergy(const Vec3 &position) const {
 
 void SphereIn::calculateForce(Vec3 &force, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromOrigin = difference.norm();
     double distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere > 0) {
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
@@ -183,7 +183,7 @@ void SphereIn::calculateForce(Vec3 &force, const Vec3 &position) const {
 
 void SphereIn::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromOrigin = difference.norm();
     double distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere > 0) {
         energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
@@ -220,7 +220,7 @@ double SphereOut::getMaximalForce(double kbt) const noexcept {
 
 double SphereOut::calculateEnergy(const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromOrigin = difference.norm();
     double distanceFromSphere = distanceFromOrigin - radius;
     double energy = 0.;
     if (distanceFromSphere < 0) {
@@ -231,7 +231,7 @@ double SphereOut::calculateEnergy(const Vec3 &position) const {
 
 void SphereOut::calculateForce(Vec3 &force, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromOrigin = difference.norm();
     double distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere < 0) {
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
@@ -240,12 +240,96 @@ void SphereOut::calculateForce(Vec3 &force, const Vec3 &position) const {
 
 void SphereOut::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
     auto difference = position - origin;
-    double distanceFromOrigin = sqrt(difference * difference);
+    double distanceFromOrigin = difference.norm();
     double distanceFromSphere = distanceFromOrigin - radius;
     if (distanceFromSphere < 0) {
         energy += 0.5 * forceConstant * distanceFromSphere * distanceFromSphere;
         force += -1 * forceConstant * distanceFromSphere * difference / distanceFromOrigin;
     }
+}
+
+SphericalBarrier::SphericalBarrier(const std::string &particleType, const Vec3 &origin, double radius, double height, double width)
+        : super(particleType), origin(origin), radius(radius), height(height), width(width), r1(radius - width), r2(radius - width / 2.),
+          r3(radius + width / 2.), r4(radius + width), effectiveForceConstant(4. * height / width / width) {
+    if (width > radius) {
+        throw std::invalid_argument("SphericalBarrier must have a radius larger than its width");
+    }
+}
+
+double SphericalBarrier::getRelevantLengthScale() const noexcept {
+    return width;
+}
+
+double SphericalBarrier::getMaximalForce(double kbt) const noexcept {
+    return 2. * height / width;
+}
+
+double SphericalBarrier::calculateEnergy(const Vec3 &position) const {
+    const auto difference = position - origin;
+    const double distance = difference.norm();
+    if (distance < r1) {
+        return 0.;
+    } else if (r4 <= distance) {
+        return 0.;
+    } else if (r1 <= distance && distance < r2) {
+        return 0.5 * effectiveForceConstant * std::pow(distance - radius + width, 2.);
+    } else if (r2 <= distance && distance < r3) {
+        return height - 0.5 * effectiveForceConstant * std::pow(distance - radius, 2.);
+    } else if (r3 <= distance && distance < r4) {
+        return 0.5 * effectiveForceConstant * std::pow(distance - radius - width, 2.);
+    } else {
+        throw std::runtime_error("Thou shalt not pass");
+    }
+}
+
+void SphericalBarrier::calculateForce(Vec3 &force, const Vec3 &position) const {
+    const auto difference = position - origin;
+    const double distance = difference.norm();
+    if (distance < r1) {
+        // nothing happens
+    } else if (r4 <= distance) {
+        // nothing happens
+    } else if (r1 <= distance && distance < r2) {
+        force += - effectiveForceConstant * (distance - radius + width) * difference / distance;
+    } else if (r2 <= distance && distance < r3) {
+        force += effectiveForceConstant * (distance - radius) * difference / distance;
+    } else if (r3 <= distance && distance < r4) {
+        force += - effectiveForceConstant * (distance - radius - width) * difference / distance;
+    } else {
+        throw std::runtime_error("Not gonna happen");
+    }
+}
+
+void SphericalBarrier::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+    const auto difference = position - origin;
+    const double distance = difference.norm();
+    if (distance < r1) {
+        // nothing happens
+    } else if (r4 <= distance) {
+        // nothing happens
+    } else if (r1 <= distance && distance < r2) {
+        force += - effectiveForceConstant * (distance - radius + width) * difference / distance;
+        energy += 0.5 * effectiveForceConstant * std::pow(distance - radius + width, 2.);
+    } else if (r2 <= distance && distance < r3) {
+        force += effectiveForceConstant * (distance - radius) * difference / distance;
+        energy += height - 0.5 * effectiveForceConstant * std::pow(distance - radius, 2.);
+    } else if (r3 <= distance && distance < r4) {
+        force += - effectiveForceConstant * (distance - radius - width) * difference / distance;
+        energy += 0.5 * effectiveForceConstant * std::pow(distance - radius - width, 2.);
+    } else {
+        throw std::runtime_error("Not gonna happen");
+    }
+}
+
+void SphericalBarrier::configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) {
+
+}
+
+std::string SphericalBarrier::describe() const {
+    std::ostringstream ss;
+    ss << getPotentialName<SphericalBarrier>() << "[type: " << particleType << ", origin: " << origin
+       << ", radius: " << radius << ", height(energy): " << height << ", width: " << width << "]";
+    return ss.str();
 }
 
 /////////////////////////////////////////////////////////////////////////////
