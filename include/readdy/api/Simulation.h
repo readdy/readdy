@@ -231,7 +231,7 @@ public:
      * @todo add a considerParticleRadius parameter
      */
     const short
-    registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
+    registerSphereInPotential(const std::string &particleType, double forceConstant, const readdy::model::Vec3 &origin,
                               double radius);
 
     /**
@@ -245,7 +245,7 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphereOutPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
+    registerSphereOutPotential(const std::string &particleType, double forceConstant, const readdy::model::Vec3 &origin,
                                double radius);
 
     /**
@@ -260,7 +260,7 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphericalBarrier(std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width);
+    registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width);
 
     //----------------------
     // Order 2 potentials

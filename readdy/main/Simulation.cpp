@@ -177,7 +177,7 @@ Simulation::registerBoxPotential(const std::string &particleType, double forceCo
 }
 
 const short
-Simulation::registerSphereInPotential(std::string particleType, double forceConstant, const readdy::model::Vec3 &origin,
+Simulation::registerSphereInPotential(const std::string &particleType, double forceConstant, const readdy::model::Vec3 &origin,
                                       double radius) {
     using potential_t = readdy::model::potentials::SphereIn;
     ensureKernelSelected();
@@ -185,7 +185,7 @@ Simulation::registerSphereInPotential(std::string particleType, double forceCons
 }
 
 const short
-Simulation::registerSphereOutPotential(std::string particleType, double forceConstant,
+Simulation::registerSphereOutPotential(const std::string &particleType, double forceConstant,
                                        const readdy::model::Vec3 &origin, double radius) {
     using potential_t = readdy::model::potentials::SphereOut;
     ensureKernelSelected();
@@ -193,7 +193,7 @@ Simulation::registerSphereOutPotential(std::string particleType, double forceCon
 }
 
 const short
-Simulation::registerSphericalBarrier(std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width) {
+Simulation::registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width) {
     using potential_t = readdy::model::potentials::SphericalBarrier;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, origin, radius, height, width);
