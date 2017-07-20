@@ -49,6 +49,9 @@ SET(READDY_GENERATE_DOCUMENTATION_TARGET_ONLY OFF CACHE BOOL "If set to true, th
 # log configuration variables of interest
 SET(READDY_LOG_CMAKE_CONFIGURATION OFF CACHE BOOL "If turned on, the status of relevant cmake variables is logged at configuration time.")
 
+# include examples
+SET(READDY_BUILD_EXAMPLES OFF CACHE BOOL "Whether to build example targets")
+
 #####################################
 #                                   #
 # Advanced cache variables          #
@@ -308,6 +311,15 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
         ADD_TEST(NAME readdy-tests COMMAND runUnitTests)
         ADD_SUBDIRECTORY(kernels/singlecpu/test)
     ENDIF ()
+
+    #####################################
+    #                                   #
+    # readdy examples                   #
+    #                                   #
+    #####################################
+    if (READDY_BUILD_EXAMPLES)
+        ADD_SUBDIRECTORY(readdy/examples)
+    endif()
 
     #####################################
     #                                   #
