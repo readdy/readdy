@@ -80,8 +80,8 @@ TEST_P(TestCompartments, TwoCompartments) {
     kernel->registerCompartment<m::compartments::Plane>(conversionsXNeg, "XNeg", m::Vec3(-1,0,0), 0, true);
 
     for (auto i = 0; i < 100; ++i) {
-        kernel->addParticle("A", readdy::model::rnd::normal3());
-        kernel->addParticle("B", readdy::model::rnd::normal3());
+        kernel->addParticle("A", readdy::model::rnd::normal3<readdy::scalar>());
+        kernel->addParticle("B", readdy::model::rnd::normal3<readdy::scalar>());
     }
 
     comp->perform();

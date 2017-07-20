@@ -48,7 +48,7 @@ void SCPUEulerBDIntegrator::perform() {
     for(auto& entry : *pd) {
         if(!entry.is_deactivated()) {
             const scalar D = context.particle_types().diffusion_constant_of(entry.type);
-            const auto randomDisplacement = std::sqrt(2. * D * timeStep) * (readdy::model::rnd::normal3());
+            const auto randomDisplacement = std::sqrt(2. * D * timeStep) * (readdy::model::rnd::normal3<readdy::scalar>());
             entry.pos += randomDisplacement;
             const auto deterministicDisplacement = entry.force * timeStep * D / kbt;
             entry.pos += deterministicDisplacement;

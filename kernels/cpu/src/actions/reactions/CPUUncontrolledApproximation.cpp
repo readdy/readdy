@@ -57,7 +57,7 @@ CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kern
 
 }
 
-void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin,
+void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin,
                 const CPUKernel *const kernel, scalar dt, bool approximateRate, event_promise_t &events,
                 std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
@@ -76,10 +76,9 @@ void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_i
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
-                        eventsUpdate.push_back(
-                                {1, (*it_reactions)->getNProducts(), index, index, rate, 0,
+                        eventsUpdate.emplace_back(1, (*it_reactions)->getNProducts(), index, index, rate, 0,
                                  static_cast<event_t::reaction_index_type>(it_reactions - reactions.begin()),
-                                 entry.type, 0});
+                                 entry.type, 0);
                     }
                 }
             }
@@ -98,9 +97,8 @@ void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_i
                             && shouldPerformEvent(rate, dt, approximateRate)) {
                             const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                                   reactions.begin());
-                            eventsUpdate.push_back(
-                                    {2, react->getNProducts(), index, idx_neighbor, rate, 0, reaction_index,
-                                     entry.type, neighbor.type});
+                            eventsUpdate.emplace_back(2, react->getNProducts(), index, idx_neighbor, rate, 0,
+                                                      reaction_index, entry.type, neighbor.type);
                         }
                     }
                 }

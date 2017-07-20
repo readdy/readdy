@@ -28,12 +28,7 @@
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 
-#include <readdy/common/logging.h>
 #include <readdy/common/numeric.h>
-#include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/model/topologies/graph/Graph.h>
-#include <readdy/model/topologies/potentials/TorsionPotential.h>
-#include <readdy/plugin/KernelProvider.h>
 
 class TestTopologyGraphs : public KernelTest {};
 
@@ -365,11 +360,14 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
-    EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 2.5871244540347655);
+    if(readdy::single_precision) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+    } else {
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+    }
     readdy::model::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
     readdy::model::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
     readdy::model::Vec3 force_x_k{-5.45394396, 0.42776031, 0.71293385};
-
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
@@ -411,7 +409,11 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
-    EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 1.8221921916437787);
+    if(readdy::single_precision) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+    } else {
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+    }
     readdy::model::Vec3 force_x_i{0., 1.70762994, 0.};
     readdy::model::Vec3 force_x_j{0., -1.70762994, 0.};
     readdy::model::Vec3 force_x_k{0.51228898, -0.17076299, 0.};

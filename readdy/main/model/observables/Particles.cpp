@@ -67,7 +67,7 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
         }
         {
             pimpl->dataSetPositions = std::make_unique<io::VLENDataSet>(
-                    group.createVLENDataSet("positions", fs, dims, io::NativeArrayDataSetType<Vec3::value_t, 3>(), io::STDArrayDataSetType<Vec3::value_t, 3>()));
+                    group.createVLENDataSet("positions", fs, dims, io::NativeArrayDataSetType<scalar, 3>(), io::STDArrayDataSetType<scalar, 3>()));
         }
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }

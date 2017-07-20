@@ -75,14 +75,14 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
     const scalar  inv_norm_product = 1/norm_product;
 
     scalar  cos_theta = inv_norm_product * scalarProduct;
-    cos_theta = readdy::util::numeric::clamp(cos_theta, -1., 1.);
+    cos_theta = readdy::util::numeric::clamp(cos_theta, static_cast<scalar>(-1.), static_cast<scalar>(1.));
 
     // avoid too large values of r
-    scalar  r = std::sqrt(1.0 - cos_theta * cos_theta);
+    scalar  r = std::sqrt(static_cast<scalar>(1.0) - cos_theta * cos_theta);
     if(r < SMALL) r = SMALL;
-    r = 1./r;
+    r = static_cast<scalar>(1.)/r;
 
-    const scalar  c = 2. * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
+    const scalar  c = static_cast<scalar>(2.) * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
 
     const Vec3 force_i = c * cos_theta * (1/norm_ji_2) * x_ji - c * inv_norm_product * x_jk;
     const Vec3 force_k = -c * inv_norm_product * x_ji + c * cos_theta  * (1/norm_jk_2) * x_jk;

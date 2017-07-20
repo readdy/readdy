@@ -36,10 +36,10 @@
 namespace {
 
 using vec_t = readdy::model::Vec3;
-namespace log = readdy::log;
 
-    TEST(Vec3, SizeOfVec3) {
-        vec_t vec(0,0,0);
-        EXPECT_EQ(8*3, sizeof(vec)) << "a vector should have exactly 24 bytes";
-    }
+TEST(Vec3, SizeOfVec3) {
+    vec_t vec(0,0,0);
+    EXPECT_EQ(sizeof(readdy::scalar)*3, sizeof(vec)) << "a vector should have exactly 24 bytes";
+}
+
 }

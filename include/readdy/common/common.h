@@ -35,7 +35,11 @@
 #include "logging.h"
 
 NAMESPACE_BEGIN(readdy)
-using scalar = double;
+using scalar = float;
 using time_step_type = unsigned long;
 using particle_type_type = unsigned short;
+
+constexpr bool single_precision = std::is_same<scalar, float>::value;
+constexpr bool double_precision = std::is_same<scalar, double>::value;
+
 NAMESPACE_END(readdy)

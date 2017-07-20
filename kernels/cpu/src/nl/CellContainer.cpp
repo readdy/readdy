@@ -464,8 +464,8 @@ CellContainer::execute_for_each_sub_cell(const std::function<void(const CellCont
 }
 
 void CellContainer::update_root_size() {
-    _root_size = _context.getBoxSize();
-    _size = _context.getBoxSize();
+    _root_size = vec3(_context.getBoxSize());
+    _size = vec3(_context.getBoxSize());
 }
 
 CellContainer::~CellContainer() = default;

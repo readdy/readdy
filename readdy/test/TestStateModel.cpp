@@ -62,10 +62,22 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     // check results
     obs->evaluate();
     auto forcesIt = obs->getResult().begin();
-    EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
+    if(readdy::double_precision) {
+        EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
+    } else {
+        EXPECT_FVEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
+    }
     ++forcesIt;
-    EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
-    EXPECT_DOUBLE_EQ(stateModel.getEnergy(), 0.02);
+    if(readdy::double_precision) {
+        EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
+    } else {
+        EXPECT_FVEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
+    }
+    if(readdy::double_precision) {
+        EXPECT_DOUBLE_EQ(stateModel.getEnergy(), 0.02);
+    } else {
+        EXPECT_NEAR(stateModel.getEnergy(), 0.02, 1e-8);
+    }
 }
 
 TEST_P(TestStateModel, CalculateForcesRepulsion) {
@@ -153,19 +165,45 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     std::size_t idx = 0;
     for(const auto& particle : particles) {
         if(particle.getId() == ids.at(0)) {
-            EXPECT_VEC3_EQ(forces.at(idx), force03 + force05) << "force on particle 0 = force03 + force05";
+            if(readdy::double_precision) {
+                EXPECT_VEC3_EQ(forces.at(idx), force03 + force05) << "force on particle 0 = force03 + force05";
+            } else {
+                EXPECT_FVEC3_EQ(forces.at(idx), force03 + force05) << "force on particle 0 = force03 + force05";
+            }
         } else if(particle.getId() == ids.at(1)) {
-            EXPECT_VEC3_EQ(forces.at(idx), force13 + force15) << "force on particle 1 = force13 + force15";
+            if(readdy::double_precision) {
+                EXPECT_VEC3_EQ(forces.at(idx), force13 + force15) << "force on particle 1 = force13 + force15";
+            } else {
+                EXPECT_FVEC3_EQ(forces.at(idx), force13 + force15) << "force on particle 1 = force13 + force15";
+            }
         } else if(particle.getId() == ids.at(2)) {
-            EXPECT_VEC3_EQ(forces.at(idx), force23 + force25) << "force on particle 2 = force23 + force25";
+            if(readdy::double_precision) {
+                EXPECT_VEC3_EQ(forces.at(idx), force23 + force25) << "force on particle 2 = force23 + force25";
+            } else {
+                EXPECT_FVEC3_EQ(forces.at(idx), force23 + force25) << "force on particle 2 = force23 + force25";
+            }
         } else if(particle.getId() == ids.at(3)) {
-            EXPECT_VEC3_EQ(forces.at(idx), (-1. * force03) - force13 - force23)
-                                << "force on particle 3 = - force03 - force13 - force23";
+            if(readdy::double_precision) {
+                EXPECT_VEC3_EQ(forces.at(idx), (-1. * force03) - force13 - force23)
+                                    << "force on particle 3 = - force03 - force13 - force23";
+            } else {
+                EXPECT_FVEC3_EQ(forces.at(idx), (-1. * force03) - force13 - force23)
+                                    << "force on particle 3 = - force03 - force13 - force23";
+            }
         } else if(particle.getId() == ids.at(4)) {
-            EXPECT_VEC3_EQ(forces.at(idx), m::Vec3(0, 0, 0)) << "force on particle 4 = 0";
+            if(readdy::double_precision) {
+                EXPECT_VEC3_EQ(forces.at(idx), m::Vec3(0, 0, 0)) << "force on particle 4 = 0";
+            } else {
+                EXPECT_FVEC3_EQ(forces.at(idx), m::Vec3(0, 0, 0)) << "force on particle 4 = 0";
+            }
         } else if(particle.getId() == ids.at(5)) {
-            EXPECT_VEC3_EQ(forces.at(idx), (-1. * force05) - force15 - force25)
-                                << "force on particle 5 = - force05 - force15 - force25";
+            if(readdy::double_precision) {
+                EXPECT_VEC3_EQ(forces.at(idx), (-1. * force05) - force15 - force25)
+                                    << "force on particle 5 = - force05 - force15 - force25";
+            } else {
+                EXPECT_FVEC3_EQ(forces.at(idx), (-1. * force05) - force15 - force25)
+                                    << "force on particle 5 = - force05 - force15 - force25";
+            }
         } else {
             readdy::log::error("Got an unexpected particle id: {}", particle.getId());
             FAIL() << "Got an unexpected particle id: " << particle.getId();
@@ -174,7 +212,11 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     }
 
     const readdy::scalar totalEnergy = energy03 + energy05 + energy13 + energy15 + energy23 + energy25;
-    EXPECT_DOUBLE_EQ(stateModel.getEnergy(), totalEnergy);
+    if(readdy::single_precision) {
+        EXPECT_FLOAT_EQ(stateModel.getEnergy(), totalEnergy);
+    } else {
+        EXPECT_DOUBLE_EQ(stateModel.getEnergy(), totalEnergy);
+    }
 }
 
 TEST_P(TestStateModel, CalculateForcesNoForces) {

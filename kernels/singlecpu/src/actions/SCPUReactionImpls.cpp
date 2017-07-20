@@ -289,7 +289,7 @@ data_t::update_t handleEventsGillespie(
             const std::size_t nEvents = events.size();
             while (nDeactivated < nEvents) {
                 const auto alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-                const auto x = readdy::model::rnd::uniform_real(0., alpha);
+                const auto x = readdy::model::rnd::uniform_real(static_cast<scalar>(0.), alpha);
                 const auto eventIt = std::lower_bound(
                         events.begin(), events.end() - nDeactivated, x,
                         [](const event_t &elem1, scalar elem2) {

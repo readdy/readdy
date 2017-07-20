@@ -71,9 +71,9 @@ struct CPUNextSubvolumes::GridCell {
     scalar timestamp;
     ReactionEvent nextEvent{};
 
-    GridCell(const cell_index_t i, const cell_index_t j, const cell_index_t k, const cell_index_t id,
+    GridCell(const cell_index_t i_, const cell_index_t j_, const cell_index_t k_, const cell_index_t id_,
              const unsigned long nTypes)
-            : i(i), j(j), k(k), id(id), neighbors(27), particles({}), cellRate(0), typeCounts(nTypes), timestamp(0) {
+            : i(i_), j(j_), k(k_), id(id_), neighbors(27), particles({}), cellRate(0), typeCounts(nTypes), timestamp(0) {
     }
 
     void addNeighbor(GridCell const *const cell) {
@@ -352,7 +352,7 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
     cell.timestamp = rnd::exponential(cell.cellRate);
     // select next event
     {
-        const auto x = rnd::uniform_real(0., events.back().cumulativeRate);
+        const auto x = rnd::uniform_real(static_cast<scalar>(0.), events.back().cumulativeRate);
         const auto eventIt = std::lower_bound(
                 events.begin(), events.end(), x, [](const ReactionEvent &elem1, scalar elem2) {
                     return elem1.cumulativeRate < elem2;

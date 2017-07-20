@@ -409,7 +409,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
 
     context.configure();
 
-    auto n3 = readdy::model::rnd::normal3<>;
+    auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     for (std::size_t i = 0; i < 500; ++i) {
         kernel->addParticle("A", pbc(n3(0, 10)));
     }
@@ -437,17 +437,20 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
     context.setBoxSize(1, 1, 1);
     context.particle_types().add("A", 1.0, 1.0);
 
-    for (scalar x = -.5; x < .5; x += .1) {
-        for (scalar y = -.5; y < .5; y += .1) {
-            for (scalar z = -.5; z < .5; z += .1) {
+    std::size_t i = 0;
+    for (auto x = static_cast<scalar>(-.5); x < static_cast<scalar>(.5); x += static_cast<scalar>(.1)) {
+        for (auto y = static_cast<scalar>(-.5); y < static_cast<scalar>(.5); y += static_cast<scalar>(.1)) {
+            for (auto z = static_cast<scalar>(-.5); z < static_cast<scalar>(.5); z += static_cast<scalar>(.1)) {
                 kernel->addParticle("A", {x, y, z});
+                ++i;
             }
         }
     }
     auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    ASSERT_EQ(data.size(), i);
     data.hilbert_sort(.01);
     ASSERT_EQ(data.getNDeactivated(), 0);
-    ASSERT_EQ(data.size(), 10 * 10 * 10);
+    ASSERT_EQ(data.size(), i);
 
     /**
      * Can be plotted by
@@ -508,9 +511,9 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     context.particle_types().add("A", 1.0, 1.0);
 
     for (int i = 0; i < 50; ++i) {
-        kernel->addParticle("A", {model::rnd::uniform_real(-.5, .5),
-                                  model::rnd::uniform_real(-.5, .5),
-                                  model::rnd::uniform_real(-.5, .5)});
+        kernel->addParticle("A", {static_cast<readdy::scalar>(model::rnd::uniform_real(-.5, .5)),
+                                  static_cast<readdy::scalar>(model::rnd::uniform_real(-.5, .5)),
+                                  static_cast<readdy::scalar>(model::rnd::uniform_real(-.5, .5))});
     }
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .1);
     context.configure(false);
@@ -553,9 +556,9 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
 
     auto cutoff = 1.5;
     for (int i = 0; i < 100; ++i) {
-        kernel->addParticle("A", {model::rnd::uniform_real(-14., 14.),
-                                  model::rnd::uniform_real(-14., 14.),
-                                  model::rnd::uniform_real(-14., 14.)});
+        kernel->addParticle("A", {static_cast<readdy::scalar>(model::rnd::uniform_real(-14., 14.)),
+                                  static_cast<readdy::scalar>(model::rnd::uniform_real(-14., 14.)),
+                                  static_cast<readdy::scalar>(model::rnd::uniform_real(-14., 14.))});
     }
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", cutoff, cutoff);
     context.configure(false);
@@ -626,15 +629,15 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->getKernelContext().setBoxSize(100, 10, 10);
 
-    const readdy::scalar weightF = 0.;
-    const readdy::scalar weightA = 1.;
+    const readdy::scalar weightF = static_cast<readdy::scalar>(0.);
+    const readdy::scalar weightA = static_cast<readdy::scalar>(1.);
     kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "A", "F", "F", .1, 2.0, weightF, weightA);
     //kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F2", "V", "V", "V", .1, 2.0, weightF, weightA);
 
-    auto n3 = readdy::model::rnd::normal3<>;
+    auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     // 120 F particles
     for (std::size_t i = 0; i < 100; ++i) {
-        kernel->addParticle("F", n3(0., 1.));
+        kernel->addParticle("F", n3(.0, 1.));
         kernel->addParticle("A", n3(0., 1.));
     }
 
@@ -668,7 +671,7 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
     context.setPeriodicBoundary(true, true, true);
     context.setBoxSize(100, 10, 10);
 
-    auto n3 = readdy::model::rnd::normal3<>;
+    auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     // 120 F particles
     for (std::size_t i = 0; i < 100; ++i) {
         kernel->addParticle("F", n3(0., 1.));

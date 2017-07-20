@@ -36,6 +36,7 @@
 #include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
 #include <readdy/kernel/cpu/actions/reactions/NextSubvolumesReactionScheduler.h>
+#include <readdy/testing/Utils.h>
 
 namespace reac = readdy::kernel::cpu::actions::reactions;
 
@@ -107,7 +108,11 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         EXPECT_TRUE(decayedEntries.size() == 2 && (decayedEntries.at(0) == 1 || decayedEntries.at(1) == 1));
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         EXPECT_EQ(data.entry_at(0).type, fusion->getTo());
-        EXPECT_EQ(readdy::model::Vec3(.4, 0, 0), data.pos(0));
+        if(readdy::single_precision) {
+            EXPECT_FVEC3_EQ(readdy::model::Vec3(.4, 0, 0), data.pos(0));
+        } else {
+            EXPECT_FVEC3_EQ(readdy::model::Vec3(.4, 0, 0), data.pos(0));
+        }
     }
 
     // fission
@@ -133,7 +138,11 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         auto p_12_nondirect = data.pos(1) - data.pos(0);
         EXPECT_EQ(p_12_nondirect, p_12);
         auto distance = std::sqrt(p_12 * p_12);
-        EXPECT_DOUBLE_EQ(productDistance, distance);
+        if(readdy::single_precision) {
+            EXPECT_FLOAT_EQ(productDistance, distance);
+        } else {
+            EXPECT_DOUBLE_EQ(productDistance, distance);
+        }
     }
 
     // enzymatic 1
@@ -244,6 +253,9 @@ TEST(CPUTestReactions, TestDecay) {
 }
 
 TEST(CPUTestReactions, TestGillespieParallel) {
+
+    using namespace readdy;
+
     using particle_t = readdy::model::Particle;
     using vec_t = readdy::model::Vec3;
     using fusion_t = readdy::model::reactions::Fusion;
@@ -256,9 +268,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->getKernelContext().setBoxSize(10, 10, 30);
     kernel->getKernelContext().setPeriodicBoundary(true, true, false);
 
-    kernel->getKernelContext().particle_types().add("A", .25, 1.);
-    kernel->getKernelContext().particle_types().add("B", .25, 1.);
-    kernel->getKernelContext().particle_types().add("C", .25, 1.);
+    kernel->getKernelContext().particle_types().add("A", .25, static_cast<const readdy::scalar>(1.));
+    kernel->getKernelContext().particle_types().add("B", .25, static_cast<const readdy::scalar>(1.));
+    kernel->getKernelContext().particle_types().add("C", .25, static_cast<const readdy::scalar>(1.));
     readdy::scalar reactionRadius = 1.0;
     kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, reactionRadius);
     kernel->registerReaction<fusion_t>("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(),
@@ -272,19 +284,19 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     // this particle goes right into the middle, i.e., into the halo region
     kernel->getKernelStateModel().addParticle({0, 0, 0, typeA});            // 0
     // these particles go left and right of this particle into the boxes as problematic ones
-    kernel->getKernelStateModel().addParticle({0, 0, -.7, typeA});          // 1
-    kernel->getKernelStateModel().addParticle({0, 0, .7, typeC});           // 2
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-.7), typeA});          // 1
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(.7), typeC});           // 2
     // these particles are far enough away from the halo region but still conflict (transitively) with the 1st layer
-    kernel->getKernelStateModel().addParticle({0, 0, -1.6, typeC});         // 3
-    kernel->getKernelStateModel().addParticle({0, 0, 1.6, typeA});          // 4
-    kernel->getKernelStateModel().addParticle({0, 0, 1.7, typeA});          // 5
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-1.6), typeC});         // 3
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(1.6), typeA});          // 4
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(1.7), typeA});          // 5
     // this particle are conflicting but should not appear as their reaction rate is 0
-    kernel->getKernelStateModel().addParticle({0, 0, -1.7, typeB});         // 6
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-1.7), typeB});         // 6
     // these particles are well inside the boxes and should not be considered problematic
-    kernel->getKernelStateModel().addParticle({0, 0, -5, typeA});           // 7
-    kernel->getKernelStateModel().addParticle({0, 0, -5.5, typeA});         // 8
-    kernel->getKernelStateModel().addParticle({0, 0, 5, typeA});            // 9
-    kernel->getKernelStateModel().addParticle({0, 0, 5.5, typeA});          // 10
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar >(-5), typeA});           // 7
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-5.5), typeA});         // 8
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(5), typeA});            // 9
+    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(5.5), typeA});          // 10
 
     kernel->getKernelContext().configure();
     // a box width in z direction of 12 should divide into two boxes of 5x5x6
@@ -320,25 +332,25 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         const auto particles = kernel->getKernelStateModel().getParticles();
         for (auto p : particles) readdy::log::debug("particle {}", p);
         EXPECT_EQ(7, particles.size());
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeB && p.getPos() == vec_t(0, 0, -1.7);
         }) != particles.end()) << "Particle with type B should not interact with the others and thus stay where it is";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeC && p.getPos() == vec_t(0, 0, .7);
         }) != particles.end()) << "The particle of type C is -very- unlikely to react, thus it should stay where it is";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeC && p.getPos() == vec_t(0, 0, -1.6);
         }) != particles.end()) << "The particle of type C is -very- unlikely to react, thus it should stay where it is";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, -5.25);
         }) != particles.end()) << "This particle should be placed between the particles 7 and 8 (see above).";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, -.35);
         }) != particles.end()) << "This particle should be placed between the particles 1 and 0 (see above).";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, 1.65);
         }) != particles.end()) << "This particle should be placed between the particles 4 and 5 (see above).";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) {
+        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, 5.25);
         }) != particles.end()) << "This particle should be placed between the particles 9 and 10 (see above).";
     }

@@ -112,7 +112,7 @@ void SCPUEvaluateTopologyReactions::perform() {
             while (end != events.begin()) {
                 const auto cumulative_rate = (end - 1)->cumulative_rate;
 
-                const auto x = readdy::model::rnd::uniform_real(0., cumulative_rate);
+                const auto x = readdy::model::rnd::uniform_real(static_cast<scalar>(0.), cumulative_rate);
 
                 const auto eventIt = std::lower_bound(
                         events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {

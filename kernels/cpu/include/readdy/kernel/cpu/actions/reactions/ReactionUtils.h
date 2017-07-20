@@ -57,9 +57,9 @@ using reaction_counts_t = std::pair<reaction_counts_order1_map, reaction_counts_
 template<bool approximated>
 bool performReactionEvent(const readdy::scalar rate, const readdy::scalar timeStep) {
     if (approximated) {
-        return readdy::model::rnd::uniform_real() < rate * timeStep;
+        return readdy::model::rnd::uniform_real<scalar>() < rate * timeStep;
     } else {
-        return readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * timeStep);
+        return readdy::model::rnd::uniform_real<scalar>() < 1 - std::exp(-rate * timeStep);
     }
 }
 
@@ -168,11 +168,11 @@ void performReaction(data_t& data, const readdy::model::KernelContext& context, 
             break;
         }
         case reaction_type::Fission: {
-            auto n3 = readdy::model::rnd::normal3(0, 1);
+            auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
             readdy::model::Particle p (entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
-            newEntries.push_back({p});
+            newEntries.emplace_back(p);
 
             entry1.type = reaction->getProducts()[0];
             entry1.id = readdy::model::Particle::nextId();

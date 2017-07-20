@@ -509,7 +509,7 @@ void scaleNumbersAndBoxsize(const std::string &kernelName) {
 }
 
 template<typename Scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
-void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
+void scaleNumbersAndSkin(const std::string &kernelName, bool reducedNumbers) {
     readdy::log::debug("using reduced numbers: {}", reducedNumbers);
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
     std::vector<readdy::scalar> numbers;

@@ -69,7 +69,7 @@ RealType exponential(RealType lambda = 1.0) {
     return distribution(generator);
 }
 
-template<typename Generator = std::default_random_engine>
+template<typename scalar, typename Generator = std::default_random_engine>
 Vec3 normal3(const scalar mean = 0.0, const scalar variance = 1.0) {
     return {normal<scalar, Generator>(mean, variance),
             normal<scalar, Generator>(mean, variance),

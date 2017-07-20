@@ -120,18 +120,18 @@ TEST_P(TestReactions, FusionFissionWeights) {
     kernel->getKernelContext().setPeriodicBoundary(true, true, true);
     kernel->getKernelContext().setBoxSize(20, 20, 20);
 
-    const readdy::scalar weightF = 0.;
-    const readdy::scalar weightA = 1.;
+    const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
+    const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
     kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
     kernel->registerReaction<readdy::model::reactions::Fission>("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
     std::set<readdy::model::Vec3, Vec3ProjectedLess> fPositions;
-    auto n3 = readdy::model::rnd::normal3<>;
+    auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     for (std::size_t i = 0; i < 15; ++i) {
-        auto fPos = n3(0., 0.8);
+        auto fPos = n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.8));
         fPositions.emplace(fPos);
         kernel->addParticle("F", fPos);
-        kernel->addParticle("A", n3(0., 1.));
+        kernel->addParticle("A", n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(1.)));
     }
 
     auto obs = kernel->createObservable<readdy::model::observables::Positions>(1, std::vector<std::string>({"F"}));
@@ -145,7 +145,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
                 auto itPos = fPositions.begin();
                 auto itCheck = checklist.begin();
                 while (itPos != fPositions.end()) {
-                    EXPECT_VEC3_NEAR(*itPos, *itCheck, 1e-8);
+                    EXPECT_VEC3_NEAR(*itPos, *itCheck, readdy::double_precision ? 1e-8 : 1e-6);
                     ++itPos;
                     ++itCheck;
                 }

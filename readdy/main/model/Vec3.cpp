@@ -30,7 +30,7 @@
  */
 
 #include <readdy/model/Vec3.h>
-#include <assert.h>
+#include <cassert>
 #include <ostream>
 #include <cmath>
 
@@ -43,30 +43,30 @@ Vec3 &Vec3::operator+=(const Vec3 &rhs) {
     return *this;
 }
 
-Vec3 &Vec3::operator*=(const value_t a) {
+Vec3 &Vec3::operator*=(const scalar a) {
     x *= a;
     y *= a;
     z *= a;
     return *this;
 }
 
-Vec3 &Vec3::operator/=(const value_t a) {
+Vec3 &Vec3::operator/=(const scalar a) {
     x /= a;
     y /= a;
     z /= a;
     return *this;
 }
 
-Vec3::Vec3(const std::array<value_t, 3> &xyz) : data(xyz) {}
+Vec3::Vec3(const std::array<scalar, 3> &xyz) : data(xyz) {}
 
-Vec3::Vec3(value_t x, value_t y, value_t z) : x(x), y(y), z(z) {}
+Vec3::Vec3(scalar x, scalar y, scalar z) : x(x), y(y), z(z) {}
 
-Vec3::value_t Vec3::operator[](const unsigned int i) const {
+readdy::scalar Vec3::operator[](const unsigned int i) const {
     assert(0 <= i && i < 3);
     return data[i];
 }
 
-Vec3::value_t &Vec3::operator[](const unsigned int i) {
+readdy::scalar &Vec3::operator[](const unsigned int i) {
     assert(0 <= i && i < 3);
     return data[i];
 }
@@ -103,15 +103,15 @@ Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs) {
     return {lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2]};
 }
 
-Vec3 operator+(const Vec3 &lhs, const Vec3::value_t rhs) {
+Vec3 operator+(const Vec3 &lhs, const readdy::scalar rhs) {
     return {lhs[0] + rhs, lhs[1] + rhs, lhs[2] + rhs};
 }
 
-Vec3 operator-(const Vec3 &lhs, const Vec3::value_t rhs) {
+Vec3 operator-(const Vec3 &lhs, const readdy::scalar rhs) {
     return lhs + (-1 * rhs);
 }
 
-Vec3 operator/(const Vec3 &lhs, const Vec3::value_t rhs) {
+Vec3 operator/(const Vec3 &lhs, const readdy::scalar rhs) {
     return {lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs};
 }
 
@@ -141,9 +141,9 @@ scalar Vec3::normSquared() const {
 }
 
 Vec3 &Vec3::invertElementWise() {
-    data[0] = 1./data[0];
-    data[1] = 1./data[1];
-    data[2] = 1./data[2];
+    data[0] = static_cast<scalar>(1.)/data[0];
+    data[1] = static_cast<scalar>(1.)/data[1];
+    data[2] = static_cast<scalar>(1.)/data[2];
     return *this;
 }
 

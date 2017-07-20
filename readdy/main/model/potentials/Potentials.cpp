@@ -248,7 +248,7 @@ void SphereOut::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 
     }
 }
 
-SphericalBarrier::SphericalBarrier(const std::string &particleType, const Vec3 &origin, double radius, double height, double width)
+SphericalBarrier::SphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width)
         : super(particleType), origin(origin), radius(radius), height(height), width(width), r1(radius - width), r2(radius - width / 2.),
           r3(radius + width / 2.), r4(radius + width), effectiveForceConstant(4. * height / width / width) {
     if (width > radius) {
@@ -256,15 +256,15 @@ SphericalBarrier::SphericalBarrier(const std::string &particleType, const Vec3 &
     }
 }
 
-double SphericalBarrier::getRelevantLengthScale() const noexcept {
+readdy::scalar SphericalBarrier::getRelevantLengthScale() const noexcept {
     return width;
 }
 
-double SphericalBarrier::getMaximalForce(double kbt) const noexcept {
+readdy::scalar SphericalBarrier::getMaximalForce(readdy::scalar kbt) const noexcept {
     return 2. * height / width;
 }
 
-double SphericalBarrier::calculateEnergy(const Vec3 &position) const {
+readdy::scalar SphericalBarrier::calculateEnergy(const Vec3 &position) const {
     const auto difference = position - origin;
     const double distance = difference.norm();
     if (distance < r1) {
@@ -300,7 +300,7 @@ void SphericalBarrier::calculateForce(Vec3 &force, const Vec3 &position) const {
     }
 }
 
-void SphericalBarrier::calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const {
+void SphericalBarrier::calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &position) const {
     const auto difference = position - origin;
     const double distance = difference.norm();
     if (distance < r1) {

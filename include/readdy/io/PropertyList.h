@@ -84,7 +84,7 @@ public:
         H5Pset_layout(hid(), H5D_CHUNKED);
     }
 
-    void set_chunk(const std::vector<h5::dims_t> chunk_dims) {
+    void set_chunk(const std::vector<h5::dims_t> &chunk_dims) {
         H5Pset_chunk(hid(), static_cast<int>(chunk_dims.size()), chunk_dims.data());
     }
 

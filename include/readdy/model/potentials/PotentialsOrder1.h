@@ -140,17 +140,17 @@ protected:
 class SphericalBarrier : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphericalBarrier(const std::string &particleType, const Vec3 &origin, double radius, double height, double width);
+    SphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width);
 
-    virtual double getRelevantLengthScale() const noexcept override;
+    virtual readdy::scalar getRelevantLengthScale() const noexcept override;
 
-    virtual double getMaximalForce(double kbt) const noexcept override;
+    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override;
 
-    double calculateEnergy(const Vec3 &position) const override;
+    readdy::scalar calculateEnergy(const Vec3 &position) const override;
 
     void calculateForce(Vec3 &force, const Vec3 &position) const override;
 
-    void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const override;
+    void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &position) const override;
 
     std::string describe() const override;
 
@@ -160,7 +160,7 @@ protected:
     void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
 
     const Vec3 origin;
-    const double radius, height, width, r1, r2, r3, r4, effectiveForceConstant;
+    const readdy::scalar radius, height, width, r1, r2, r3, r4, effectiveForceConstant;
 };
 
 template<typename T>
