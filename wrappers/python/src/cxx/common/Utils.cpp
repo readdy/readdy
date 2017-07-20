@@ -23,20 +23,26 @@
 /**
  * << detailed description >>
  *
- * @file TestIO.cpp
+ * @file Utils.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 25.05.17
+ * @date 20.07.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+#include <spdlog/fmt/ostr.h>
+#include <readdy/io/File.h>
+
 #include <readdy/model/observables/io/TrajectoryEntry.h>
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/IOUtils.h>
 #include <fstream>
-#include "gtest/gtest.h"
-#include "readdy/readdy.h"
 
-namespace {
+namespace py = pybind11;
+using rvp = py::return_value_policy;
 struct RAIIFS {
     explicit RAIIFS(const std::string &fname) : fs() {
         fs.open(fname, std::fstream::out | std::fstream::trunc);
@@ -184,25 +190,11 @@ private:
     std::string _h5name, _out, _trajName;
 };
 
-TEST(TestIO, ReadTrajectory) {
 
-    /*using namespace readdy;
-    readdy::io::blosc_compression::initialize();
-    io::File f("/home/mho/Dropbox/phd/presentations/summer seminar 17/readdy/out.h5", io::File::Action::OPEN, io::File::Flag::READ_ONLY);
-    auto& rootGroup = f.getRootGroup();
-    auto config = rootGroup.subgroup("readdy/config");
-    std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
-    config.read("particle_types", types, readdy::model::ioutils::ParticleTypeInfoMemoryType(), readdy::model::ioutils::ParticleTypeInfoFileType());
 
-    for(const auto& info : types) {
-        readdy::log::warn("foo: {}", info.name);
-        readdy::log::warn("foo: {}", info.diffusion_constant);
-        readdy::log::warn("foo: {}", info.type_id);
-    }*/
-    readdy::log::console()->set_level(spdlog::level::debug);
-    XYZConverter converter{"/home/mho/Dropbox/phd/presentations/summer seminar 17/readdy/out.h5", "", "out.xyz"};
-    converter.convert();
-
-}
-
+void exportUtils(py::module& m) {
+    using namespace pybind11::literals;
+    py::class_<XYZConverter>(m, "XYZConverter")
+            .def(py::init<std::string, std::string, std::string>(), "h5file"_a, "trajname"_a, "outfile"_a)
+            .def("convert", &XYZConverter::convert);
 }

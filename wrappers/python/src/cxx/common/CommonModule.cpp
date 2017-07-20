@@ -41,6 +41,8 @@ namespace py = pybind11;
 
 void exportIO(py::module &);
 
+void exportUtils(py::module& m);
+
 void exportCommon(py::module& common) {
     common.def("set_logging_level", [](const std::string &level) -> void {
         readdy::log::console()->set_level([&level] {
@@ -70,6 +72,10 @@ void exportCommon(py::module& common) {
     {
         py::module io = common.def_submodule("io", "ReaDDy IO module");
         exportIO(io);
+    }
+    {
+        py::module util = common.def_submodule("util", "ReaDDy util module");
+        exportUtils(util);
     }
 
     py::class_<readdy::model::Vec3>(common, "Vec")
