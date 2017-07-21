@@ -19,3 +19,15 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
+
+# load kernels automagically
+import readdy.util.platform_utils as putils
+from .readdybinding.api import *
+from .readdybinding.common import *
+from .readdybinding.common.io import *
+from .readdybinding.common.util import *
+
+register_blosc_hdf5_plugin()
+
+kernel_provider = KernelProvider.get()
+kernel_provider.load_from_dir(putils.get_readdy_plugin_dir())
