@@ -188,7 +188,7 @@ TEST(TestIO, ReadTrajectory) {
 
     /*using namespace readdy;
     readdy::io::blosc_compression::initialize();
-    io::File f("/home/mho/Dropbox/phd/presentations/summer seminar 17/readdy/out.h5", io::File::Action::OPEN, io::File::Flag::READ_ONLY);
+    io::File f("", io::File::Action::OPEN, io::File::Flag::READ_ONLY);
     auto& rootGroup = f.getRootGroup();
     auto config = rootGroup.subgroup("readdy/config");
     std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
@@ -200,8 +200,7 @@ TEST(TestIO, ReadTrajectory) {
         readdy::log::warn("foo: {}", info.type_id);
     }*/
     readdy::log::console()->set_level(spdlog::level::debug);
-    XYZConverter converter{"/home/mho/Dropbox/phd/presentations/summer seminar 17/readdy/out.h5", "", "out.xyz"};
-    converter.convert();
+
 
 }
 

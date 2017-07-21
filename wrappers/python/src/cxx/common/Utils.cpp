@@ -43,25 +43,6 @@
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
-struct RAIIFS {
-    explicit RAIIFS(const std::string &fname) : fs() {
-        fs.open(fname, std::fstream::out | std::fstream::trunc);
-    }
-
-    RAIIFS(const RAIIFS &) = delete;
-
-    RAIIFS &operator=(const RAIIFS &) = delete;
-
-    RAIIFS(RAIIFS &&) = delete;
-
-    RAIIFS &operator=(RAIIFS &&) = delete;
-
-    ~RAIIFS() {
-        fs.close();
-    }
-
-    std::fstream fs;
-};
 
 class XYZConverter {
 public:
@@ -148,8 +129,9 @@ public:
         readdy::log::debug("writing to xyz (n timesteps {})", limits.size() / 2);
 
         {
-            RAIIFS fshandle{_out};
-            auto &fs = fshandle.fs;
+            std::fstream fs;
+            fs.exceptions(std::fstream::failbit);
+            fs.open(_out, std::fstream::out | std::fstream::trunc);
 
             std::vector<std::size_t> currentCounts(types.size());
             std::vector<std::string> xyzPerType(types.size());
