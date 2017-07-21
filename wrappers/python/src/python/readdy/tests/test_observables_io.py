@@ -33,6 +33,7 @@ import shutil
 import h5py
 import readdy._internal.readdybinding.common as common
 import readdy._internal.readdybinding.common.io as io
+import readdy._internal.readdybinding.common.util as ioutil
 from readdy._internal.readdybinding.api import Simulation
 from readdy._internal.readdybinding.api import KernelProvider
 from readdy.util import platform_utils

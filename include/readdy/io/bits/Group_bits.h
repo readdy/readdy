@@ -142,16 +142,16 @@ inline void Group::read(const std::string& ds_name, std::vector<T> &array, DataS
     const auto dims = memorySpace.dims();
     std::size_t required_length = 1;
     for(const auto dim : dims) {
-        log::error("dim len = {}", dim);
+        log::trace("dim len = {}", dim);
         required_length *= dim;
     }
-    log::error("required length = {}", required_length);
+    log::trace("required length = {}", required_length);
     array.resize(required_length);
 
     auto result = H5Dread(hid, memoryType.hid(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
 
     if(result < 0) {
-        log::error("Failed reading result!");
+        log::trace("Failed reading result!");
         H5Eprint(H5Eget_current_stack(), stderr);
     }
 
