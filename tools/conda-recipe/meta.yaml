@@ -1,6 +1,7 @@
 package:
   name: readdy
-  version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
+  # version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
+  version: 'dev'
 source:
   path: ../..
 
@@ -8,7 +9,6 @@ build:
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
   {% if environ.get('GIT_DESCRIBE_NUMBER', '0') == '0' %}string: py{{ environ.get('PY_VER').replace('.', '') }}_0
   {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
-
   script_env:
     - CXX
     - CC
