@@ -22,7 +22,12 @@
 
 # load kernels automagically
 import readdy.util.platform_utils as putils
-from .readdybinding import api
+from .readdybinding.api import *
+from .readdybinding.common import *
+from .readdybinding.common.io import *
+from .readdybinding.common.util import *
 
-kernel_provider = api.KernelProvider.get()
+register_blosc_hdf5_plugin()
+
+kernel_provider = KernelProvider.get()
 kernel_provider.load_from_dir(putils.get_readdy_plugin_dir())
