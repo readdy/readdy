@@ -19,3 +19,10 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
+
+# load kernels automagically
+import readdy.util.platform_utils as putils
+from .readdybinding import api
+
+kernel_provider = api.KernelProvider.get()
+kernel_provider.load_from_dir(putils.get_readdy_plugin_dir())
