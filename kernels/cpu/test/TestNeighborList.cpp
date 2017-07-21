@@ -708,6 +708,67 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
         conf.configureAndRun(100, .01);
     }
 }
+/*
+TEST(TestAdaptiveNeighborList, TestDiffusionBenchmark) {
+    std::size_t n_timesteps = 1000;
+    readdy::scalar timestep = .1;
+
+    readdy::scalar box_length = 450.;
+    int n_particles = 1000;
+    readdy::scalar diffusion_coefficient = 1.;
+    readdy::scalar particle_radius = 1.25;
+    readdy::scalar force_constant = 100.;
+
+
+    std::unique_ptr<readdy::kernel::cpu::CPUKernel> kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
+
+    // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
+    auto& context = kernel->getKernelContext();
+    context.particle_types().add("A", diffusion_coefficient, particle_radius);
+    context.setPeriodicBoundary(true, true, true);
+    context.setBoxSize(box_length, box_length, box_length);
+
+    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("A", "A", force_constant);
+
+    for(auto _ : readdy::util::range<int>(0, n_particles)) {
+        kernel->addParticle("A", readdy::model::Vec3(
+                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
+                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
+                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length));
+    }
+
+    auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1);
+    obs->setCallback(
+            [&](const readdy::model::observables::NParticles::result_t &result) {
+                bool wrong_i_j = false, wrong_j_i = false;
+                auto d2 = context.getDistSquaredFun();
+                const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
+                const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
+                std::size_t i = 0;
+                for(auto it_i = data.begin(); it_i != data.end(); ++it_i, ++i) {
+                    std::size_t j = 0;
+                    for(auto it_j = data.begin(); it_j != data.end(); ++it_j, ++j) {
+                        if(it_i != it_j && std::sqrt(d2(it_i->position(), it_j->position())) < 2. * particle_radius) {
+                            auto neigh_i = neighbor_list->neighbors_of(i);
+                            auto neigh_j = neighbor_list->neighbors_of(j);
+                            if(std::find(neigh_i.begin(), neigh_i.end(), j) == neigh_i.end()) {
+                                wrong_i_j = true;
+                            }
+                            if(std::find(neigh_j.begin(), neigh_j.end(), i) == neigh_j.end()) {
+                                wrong_j_i = true;
+                            }
+                        }
+                    }
+                }
+                EXPECT_FALSE(wrong_i_j || wrong_j_i);
+            }
+    );
+    auto connection = kernel->connectObservable(obs.get());
+
+    auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
+    conf.withSkinSize(1.);
+    conf.configureAndRun(n_timesteps, timestep);
+}*/
 
 
 }
