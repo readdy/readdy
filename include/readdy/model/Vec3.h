@@ -129,42 +129,42 @@ inline Vec3 applyPBC(const Vec3 &in, readdy::scalar dx, readdy::scalar dy, readd
 
 template<>
 inline Vec3 applyPBC<true, false, false> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
-    return {in[0] - floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1], in[2]};
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1], in[2]};
 }
 
 template<>
 inline Vec3 applyPBC<false, true, false> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
-    return {in[0], in[1] - floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
+    return {in[0], in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
 }
 
 template<>
 inline Vec3 applyPBC<false, false, true> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
-    return {in[0], in[1], in[2] - floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
+    return {in[0], in[1], in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>
 inline Vec3 applyPBC<true, true, false> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
-    return {in[0] - floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
-            in[1] - floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
+            in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
 }
 
 template<>
 inline Vec3 applyPBC<true, false, true> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
-    return {in[0] - floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1],
-            in[2] - floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1],
+            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>
 inline Vec3 applyPBC<false, true, true> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
-    return {in[0], in[1] - floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
-            in[2] - floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
+    return {in[0], in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
+            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>
 inline Vec3 applyPBC<true, true, true> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
-    return {in[0] - floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
-            in[1] - floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
-            in[2] - floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
+            in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
+            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>

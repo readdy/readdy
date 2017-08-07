@@ -79,7 +79,7 @@ TEST(NeighborList, Naive) {
 TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three cells along the periodic axis
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(3.6, 2, 2);
+    ctx.setBoxSize(3.7, 2, 2);
     ctx.setPeriodicBoundary(true, false, false);
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes();

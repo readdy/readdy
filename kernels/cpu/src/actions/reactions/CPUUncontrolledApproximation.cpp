@@ -30,6 +30,7 @@
  */
 
 #include <future>
+#include <random>
 
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/Event.h>
@@ -179,7 +180,7 @@ void CPUUncontrolledApproximation::perform() {
     }
 
     // shuffle reactions
-    std::random_shuffle(events.begin(), events.end());
+    std::shuffle(events.begin(), events.end(), std::mt19937(std::random_device()()));
 
     // execute reactions
     {

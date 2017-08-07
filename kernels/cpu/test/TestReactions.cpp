@@ -37,6 +37,7 @@
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
 #include <readdy/kernel/cpu/actions/reactions/NextSubvolumesReactionScheduler.h>
 #include <readdy/testing/Utils.h>
+#include <readdy/testing/FloatingPoints.h>
 
 namespace reac = readdy::kernel::cpu::actions::reactions;
 
@@ -347,9 +348,12 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, -.35);
         }) != particles.end()) << "This particle should be placed between the particles 1 and 0 (see above).";
-        EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
-            return p.getType() == typeA && p.getPos() == vec_t(0, 0, 1.65);
-        }) != particles.end()) << "This particle should be placed between the particles 4 and 5 (see above).";
+        auto it = std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
+            auto fpa = readdy::fp::FloatingPoint<readdy::scalar>(1.65);
+            auto fpb = readdy::fp::FloatingPoint<readdy::scalar>(p.getPos().z);
+            return p.getType() == typeA && fpa.AlmostEquals(fpb);
+        });
+        EXPECT_TRUE(it != particles.end()) << "This particle should be placed between the particles 4 and 5 (see above).";
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, 5.25);
         }) != particles.end()) << "This particle should be placed between the particles 9 and 10 (see above).";
