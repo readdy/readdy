@@ -61,12 +61,22 @@ public:
     /**
      * The move constructor: A simulation object is supposed to be moveable.
      */
-    Simulation(Simulation &&rhs);
+    Simulation(Simulation &&rhs) noexcept;
 
     /**
      * The move assign.
      */
-    Simulation &operator=(Simulation &&rhs);
+    Simulation &operator=(Simulation &&rhs) noexcept;
+
+    /**
+     * Copy constructor, deleted.
+     */
+    Simulation(const Simulation &) = delete;
+
+    /**
+     * Copy assign, deleted
+     */
+    Simulation &operator=(const Simulation) = delete;
 
     /**
      * Method that returns the temperature the simulation is supposed to run at.
@@ -94,7 +104,7 @@ public:
     readdy::model::top::GraphTopology *addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
                                                    const std::vector<std::string> &labels = {});
 
-    std::vector<const readdy::model::top::GraphTopology*> currentTopologies() const;
+    std::vector<const readdy::model::top::GraphTopology *> currentTopologies() const;
 
     std::vector<model::Particle> getParticlesForTopology(const model::top::GraphTopology &topology) const;
 
@@ -128,7 +138,7 @@ public:
      * Allows to set an expected maximal number of particles in order to avoid reallocations.
      * @param n expected number of particles
      */
-    void setExpectedMaxNParticles(const std::size_t n);
+    void setExpectedMaxNParticles(std::size_t n);
 
     /**
      * Registers a predefined observable with the kernel. A list of available observables can be obtained by
@@ -171,7 +181,7 @@ public:
      * Removes an observable by uuid.
      * @param uuid the uuid of the observable to be removed.
      */
-    void deregisterObservable(const ObservableHandle::id_t uuid);
+    void deregisterObservable(ObservableHandle::id_t uuid);
 
     void deregisterObservable(const ObservableHandle &uuid);
 
@@ -189,7 +199,7 @@ public:
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      */
     particle_t::type_type
-    registerParticleType(const std::string &name, const scalar diffusionCoefficient, const scalar radius,
+    registerParticleType(const std::string &name, scalar diffusionCoefficient, scalar radius,
                          readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
     /**
@@ -197,7 +207,7 @@ public:
      * @param id the id of this potential
      * @todo test this thoroughly and see if the context can handle it with its internal maps
      */
-    void deregisterPotential(const short id);
+    void deregisterPotential(short id);
 
     //----------------------
     // Order 1 potentials
@@ -260,7 +270,8 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width);
+    registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, double radius,
+                             double height, double width);
 
     //----------------------
     // Order 2 potentials
@@ -405,7 +416,7 @@ public:
      * @todo implement removal of reactions
      */
     const short registerConversionReaction(const std::string &name, const std::string &from,
-                                           const std::string &to, const scalar rate);
+                                           const std::string &to, scalar rate);
 
     /**
      * Method to register an enzymatic reaction "A+C->B+C".
@@ -420,7 +431,7 @@ public:
      */
     const short registerEnzymaticReaction(const std::string &name, const std::string &catalyst,
                                           const std::string &from, const std::string &to,
-                                          const scalar rate, const scalar eductDistance);
+                                          scalar rate, scalar eductDistance);
 
     /**
      * Method to register a fission reaction "A->B+C".
@@ -437,8 +448,8 @@ public:
      */
     const short registerFissionReaction(const std::string &name, const std::string &from,
                                         const std::string &to1, const std::string &to2,
-                                        const scalar rate, const scalar productDistance,
-                                        const scalar weight1 = 0.5, const scalar weight2 = 0.5);
+                                        scalar rate, scalar productDistance,
+                                        scalar weight1 = 0.5, scalar weight2 = 0.5);
 
     /**
      * Method to register a fusion reaction "A+B->C".
@@ -455,8 +466,8 @@ public:
      */
     const short registerFusionReaction(const std::string &name, const std::string &from1,
                                        const std::string &from2, const std::string &to,
-                                       const scalar rate, const scalar eductDistance,
-                                       const scalar weight1 = 0.5, const scalar weight2 = 0.5);
+                                       scalar rate, scalar eductDistance,
+                                       scalar weight1 = 0.5, scalar weight2 = 0.5);
 
     /**
      * Method to register a decay reaction.
@@ -467,17 +478,17 @@ public:
      * @todo implement removal of reactions
      */
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
-                                      const scalar rate);
+                                      scalar rate);
 
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
                               const std::string &name, const model::Vec3 &origin,
-                              const scalar radius, const bool largerOrLess);
+                              scalar radius, bool largerOrLess);
 
     const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
                                          const std::string &name,
-                                         const model::Vec3 &normalCoefficients, const scalar distanceFromPlane,
-                                         const bool largerOrLess);
+                                         const model::Vec3 &normalCoefficients, scalar distanceFromPlane,
+                                         bool largerOrLess);
 
     void
     configureTopologyBondPotential(const std::string &type1, const std::string &type2, scalar forceConstant,
@@ -491,12 +502,16 @@ public:
                                            const std::string &type4, scalar forceConstant, unsigned int multiplicity,
                                            scalar phi_0, api::TorsionType type = api::TorsionType::COS_DIHEDRAL);
 
-    virtual void run(const time_step_type steps, const scalar timeStep);
+    virtual void run(time_step_type steps, scalar timeStep);
 
     scalar getRecommendedTimeStep(unsigned int N) const;
 
     template<typename SchemeType=readdy::api::ReaDDyScheme>
     readdy::api::SchemeConfigurator<SchemeType> runScheme(bool useDefaults = true);
+
+    bool singlePrecision() const;
+
+    bool doublePrecision() const;
 
 private:
     struct Impl;
@@ -509,7 +524,7 @@ private:
 
 class NoKernelSelectedException : public std::runtime_error {
 public:
-    NoKernelSelectedException(const std::string &__arg);
+    explicit NoKernelSelectedException(const std::string &__arg);
 };
 
 NAMESPACE_END(readdy)

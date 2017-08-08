@@ -83,7 +83,7 @@ class TestIOUtils(unittest.TestCase):
         mylabel = get_item("mylabel", reactions_o1)
         np.testing.assert_equal(mylabel["n_educts"], 1)
         np.testing.assert_equal(mylabel["n_products"], 1)
-        np.testing.assert_equal(mylabel["rate"], 0.00001)
+        np.testing.assert_allclose(mylabel["rate"], 0.00001)
         np.testing.assert_equal(mylabel["educt_types"][0], p_types["A"])
         np.testing.assert_equal(mylabel["product_types"][0], p_types["B"])
         atob = get_item("A->B", reactions_o1)
@@ -99,8 +99,8 @@ class TestIOUtils(unittest.TestCase):
         fusion = get_item("B+C->A", reactions_o2)
         np.testing.assert_equal(fusion["n_educts"], 2)
         np.testing.assert_equal(fusion["n_products"], 1)
-        np.testing.assert_equal(fusion["rate"], 0.4)
-        np.testing.assert_equal(fusion["educt_distance"], 0.2)
+        np.testing.assert_allclose(fusion["rate"], 0.4)
+        np.testing.assert_allclose(fusion["educt_distance"], 0.2)
         correct_educts = (fusion["educt_types"][0] == p_types["B"] and fusion["educt_types"][1] == p_types["C"])
         correct_educts = correct_educts or (fusion["educt_types"][1] == p_types["B"] and fusion["educt_types"][0] == p_types["C"])
         np.testing.assert_(correct_educts)
@@ -109,3 +109,6 @@ class TestIOUtils(unittest.TestCase):
     def test_reaction_info_all(self):
         reactions_all = ioutils.get_reactions(self.fname)
         np.testing.assert_equal(len(reactions_all), 3)
+
+if __name__ == '__main__':
+    unittest.main()

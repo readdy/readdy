@@ -243,6 +243,14 @@ public:
 
     virtual void finalize();
 
+    bool singlePrecision() const noexcept {
+        return readdy::single_precision;
+    }
+
+    bool doublePrecision() const noexcept {
+        return readdy::double_precision;
+    }
+
 protected:
 
     unsigned int getTypeIdRequireNormalFlavor(const std::string &) const;

@@ -183,8 +183,14 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::model::Vec3 forceOnParticle0 {0, 0, static_cast<readdy::scalar>(-123.45679012)};
     readdy::model::Vec3 forceOnParticle1 {0, 0, static_cast<readdy::scalar>(123.45679012)};
-    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
+
+    if(kernel->singlePrecision()) {
+        EXPECT_FVEC3_EQ(collectedForces[id0Idx], forceOnParticle0);
+        EXPECT_FVEC3_EQ(collectedForces[id1Idx], forceOnParticle1);
+    } else {
+        EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
+        EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
+    }
 }
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
@@ -195,11 +201,11 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     // distance of particles is 2.56515106768
     auto id0 = kernel->addParticle("A", {0, 0, 0});
     auto id1 = kernel->addParticle("A", {1.2, 1.5, -1.7});
-    readdy::scalar electrostaticStrength = static_cast<readdy::scalar>(-1.);
-    readdy::scalar screeningDepth = static_cast<readdy::scalar>(1.);
-    readdy::scalar repulsionStrength = static_cast<readdy::scalar>(1.);
-    readdy::scalar sigma = static_cast<readdy::scalar>(1.);
-    readdy::scalar cutoff = static_cast<readdy::scalar>(8.);
+    auto electrostaticStrength = static_cast<readdy::scalar>(-1.);
+    auto screeningDepth = static_cast<readdy::scalar>(1.);
+    auto repulsionStrength = static_cast<readdy::scalar>(1.);
+    auto sigma = static_cast<readdy::scalar>(1.);
+    auto cutoff = static_cast<readdy::scalar>(8.);
     unsigned int exponent = 6;
     kernel->registerPotential<readdy::model::potentials::ScreenedElectrostatics>("A", "A", electrostaticStrength, 1. / screeningDepth,
                                                                                  repulsionStrength, sigma, exponent, cutoff);

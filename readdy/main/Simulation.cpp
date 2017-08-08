@@ -237,9 +237,9 @@ std::vector<std::string> Simulation::getAvailableObservables() {
     return {"hallo"};
 }
 
-Simulation &Simulation::operator=(Simulation &&rhs) = default;
+Simulation &Simulation::operator=(Simulation &&rhs) noexcept = default;
 
-Simulation::Simulation(Simulation &&rhs) = default;
+Simulation::Simulation(Simulation &&rhs) noexcept = default;
 
 Simulation::~Simulation() {
     log::trace("destroying simulation");
@@ -406,6 +406,16 @@ std::vector<const readdy::model::top::GraphTopology *> Simulation::currentTopolo
 std::vector<model::Particle> Simulation::getParticlesForTopology(const model::top::GraphTopology &topology) const {
     ensureKernelSelected();
     return getSelectedKernel()->getKernelStateModel().getParticlesForTopology(topology);
+}
+
+bool Simulation::singlePrecision() const {
+    ensureKernelSelected();
+    return pimpl->kernel->singlePrecision();
+}
+
+bool Simulation::doublePrecision() const {
+    ensureKernelSelected();
+    return pimpl->kernel->doublePrecision();
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
