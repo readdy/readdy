@@ -36,9 +36,9 @@ class SCPUKernel;
 namespace actions {
 class SCPUActionFactory : public readdy::model::actions::ActionFactory {
 public:
-    SCPUActionFactory(SCPUKernel *const kernel);
+    explicit SCPUActionFactory(SCPUKernel* kernel);
 
-    virtual std::vector<std::string> getAvailableActions() const override;
+    std::vector<std::string> getAvailableActions() const override;
 
 protected:
     readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
@@ -48,7 +48,7 @@ protected:
     readdy::model::actions::CalculateForces *createCalculateForces() const override;
 
     readdy::model::actions::UpdateNeighborList *
-    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation, scalar) const override;
+    createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation /*unused*/, scalar /*skinSize*/) const override;
 
     readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override;
 
@@ -61,7 +61,7 @@ protected:
 
     readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(scalar timeStep) const override;
 
-    virtual readdy::model::actions::top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const override;
+    readdy::model::actions::top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const override;
 
 private:
     SCPUKernel *const kernel;

@@ -43,7 +43,7 @@ NAMESPACE_BEGIN(ioutils)
 void writeSimulationSetup(io::Group &group, const KernelContext &context);
 
 struct ReactionInfo {
-    const char* name;
+    const char* name {""};
     std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
     short id {-1}; // global unique reaction id
     std::size_t n_educts {0};

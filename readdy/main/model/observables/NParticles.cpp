@@ -49,7 +49,7 @@ NParticles::NParticles(Kernel *const kernel, unsigned int stride,
 
 NParticles::NParticles(Kernel *const kernel, unsigned int stride,
                        std::vector<unsigned int> typesToCount)
-        : Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {
+        : Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {
 }
 
 NParticles::~NParticles() = default;

@@ -45,11 +45,16 @@ namespace reactions {
 class CPUGillespieParallel : public readdy::model::actions::reactions::GillespieParallel {
     using super = readdy::model::actions::reactions::GillespieParallel;
 public:
-    CPUGillespieParallel(kernel_t *const kernel, readdy::scalar timeStep);
+    CPUGillespieParallel(cpu_kernel* kernel, readdy::scalar timeStep);
 
-    ~CPUGillespieParallel();
+    ~CPUGillespieParallel() override;
 
-    virtual void perform() override;
+    CPUGillespieParallel(const CPUGillespieParallel&) = delete;
+    CPUGillespieParallel& operator=(const CPUGillespieParallel&) = delete;
+    CPUGillespieParallel(CPUGillespieParallel&&) = delete;
+    CPUGillespieParallel& operator=(CPUGillespieParallel&&) = delete;
+
+    void perform() override;
 
     void clear();
 
@@ -66,7 +71,7 @@ public:
     void setApproximateRate(bool approximateRate);
 
 protected:
-    kernel_t *const kernel;
+    cpu_kernel *const kernel;
     readdy::scalar maxReactionRadius = 0.0;
     readdy::scalar boxWidth = 0.0;
     unsigned int longestAxis;

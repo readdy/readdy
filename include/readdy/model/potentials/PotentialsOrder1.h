@@ -101,7 +101,7 @@ public:
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
+    void configureForType(const ParticleTypeRegistry * ctx, particle_type_type type) override;
 
     const Vec3 origin;
     const scalar radius, forceConstant;
@@ -126,7 +126,7 @@ public:
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
+    void configureForType(const ParticleTypeRegistry *ctx, particle_type_type type) override;
 
     const Vec3 origin;
     const scalar radius, forceConstant;
@@ -157,7 +157,7 @@ public:
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
-    void configureForType(const ParticleTypeRegistry *const ctx, const particle_type_type type) override;
+    void configureForType(const ParticleTypeRegistry * ctx, particle_type_type type) override;
 
     const Vec3 origin;
     const readdy::scalar radius, height, width, r1, r2, r3, r4, effectiveForceConstant;

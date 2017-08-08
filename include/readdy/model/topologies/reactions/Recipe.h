@@ -57,7 +57,7 @@ public:
     using label_vertex = graph_t::label;
     using topology_t = GraphTopology;
 
-    Recipe(topology_t &topology);
+    explicit Recipe(topology_t &topology);
 
     Recipe(Recipe &&) = default;
 
@@ -66,6 +66,8 @@ public:
     Recipe(const Recipe &) = default;
 
     Recipe &operator=(const Recipe &) = default;
+
+    ~Recipe() = default;
 
     Recipe &changeParticleType(const vertex_ref &ref, const particle_type_type &to);
 

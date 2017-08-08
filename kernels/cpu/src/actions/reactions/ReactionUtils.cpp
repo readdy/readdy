@@ -77,33 +77,33 @@ data_t::update_t handleEventsGillespie(
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
                             auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
-                            if(maybeRecords) {
+                            if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
                                 performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                                 fixPos(record.where);
-                                maybeRecords->push_back(std::move(record));
+                                maybeRecords->push_back(record);
                             } else {
                                 performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                             }
-                            if(maybeCounts) {
+                            if(maybeCounts != nullptr) {
                                 auto &countsOrder1 = std::get<0>(*maybeCounts);
                                 countsOrder1.at(event.t1).at(event.reactionIdx)++;
                             }
                         } else {
                             auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
-                            if(maybeRecords) {
+                            if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
                                 performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 &record);
                                 fixPos(record.where);
-                                maybeRecords->push_back(std::move(record));
+                                maybeRecords->push_back(record);
                             } else {
                                 performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 nullptr);
                             }
-                            if(maybeCounts) {
+                            if(maybeCounts != nullptr) {
                                 auto &countsOrder2 = std::get<1>(*maybeCounts);
                                 countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
                             }

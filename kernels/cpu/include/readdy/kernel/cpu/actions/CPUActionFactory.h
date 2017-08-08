@@ -39,7 +39,7 @@ namespace actions {
 class CPUActionFactory : public readdy::model::actions::ActionFactory {
     CPUKernel *const kernel;
 public:
-    CPUActionFactory(CPUKernel *const kernel);
+    explicit CPUActionFactory(CPUKernel* kernel);
 
 protected:
     readdy::model::actions::AddParticles *createAddParticles(const std::vector<readdy::model::Particle> &particles) const override;
@@ -62,7 +62,7 @@ protected:
 
     readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(readdy::scalar timeStep) const override;
 
-    virtual readdy::model::actions::top::EvaluateTopologyReactions *
+    readdy::model::actions::top::EvaluateTopologyReactions *
     createEvaluateTopologyReactions(readdy::scalar timeStep) const override;
 };
 

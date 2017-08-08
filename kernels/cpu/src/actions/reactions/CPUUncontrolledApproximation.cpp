@@ -42,8 +42,6 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-namespace thd = readdy::util::thread;
-
 using event_t = Event;
 using data_t = neighbor_list::data_t;
 using data_iter_t = data_t::const_iterator;
@@ -199,7 +197,7 @@ void CPUUncontrolledApproximation::perform() {
                         record.reactionIndex = event.reactionIdx;
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
-                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
@@ -219,7 +217,7 @@ void CPUUncontrolledApproximation::perform() {
                         record.reactionIndex = event.reactionIdx;
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
-                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }

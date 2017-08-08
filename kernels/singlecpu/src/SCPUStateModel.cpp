@@ -237,9 +237,9 @@ particle_type_type SCPUStateModel::getParticleType(const std::size_t index) cons
     return getParticleData()->entry_at(index).type;
 }
 
-SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) = default;
+SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;
 
-SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) = default;
+SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) noexcept = default;
 
 SCPUStateModel::~SCPUStateModel() = default;
 

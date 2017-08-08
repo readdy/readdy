@@ -47,19 +47,19 @@ namespace top = readdy::model::top;
 class SCPUTopologyActionFactory : public top::TopologyActionFactory {
     const SCPUKernel *const kernel;
 public:
-    SCPUTopologyActionFactory(const SCPUKernel *const kernel);
+    explicit SCPUTopologyActionFactory(const SCPUKernel* kernel);
 
-    virtual std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const harmonic_bond *const) const override;
+    std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
+    createCalculateHarmonicBondPotential(const harmonic_bond * potential) const override;
 
-    virtual std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
-    createCalculateHarmonicAnglePotential(const harmonic_angle *const potential) const override;
+    std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
+    createCalculateHarmonicAnglePotential(const harmonic_angle* potential) const override;
 
-    virtual std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
-    createCalculateCosineDihedralPotential(const cos_dihedral *const potential) const override;
+    std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
+    createCalculateCosineDihedralPotential(const cos_dihedral* potential) const override;
 
-    virtual operation_ref createChangeParticleType(top::GraphTopology *const topology, const vertex_t &v,
-                                                   const particle_type_type &type_to) const override;
+    operation_ref createChangeParticleType(top::GraphTopology* topology, const vertex_t &v,
+                                           const particle_type_type &type_to) const override;
 };
 
 NAMESPACE_END(top)

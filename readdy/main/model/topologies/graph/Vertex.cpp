@@ -48,27 +48,24 @@ VertexRef::VertexRef(Graph *const graph, const Vertex::label_t &label) : graph(g
 }
 
 Vertex &VertexRef::operator*() {
-    if(!graph) {
+    if(graph == nullptr) {
         return it.operator*();
-    } else {
-        return graph->namedVertex(label);
     }
+    return graph->namedVertex(label);
 }
 
 Vertex *VertexRef::operator->() {
-    if(!graph) {
+    if(graph == nullptr) {
         return it.operator->();
-    } else {
-        return graph->vertexLabelMapping().at(label).operator->();
     }
+    return graph->vertexLabelMapping().at(label).operator->();
 }
 
 Vertex::vertex_ptr& VertexRef::data() {
-    if(!graph) {
+    if(graph == nullptr) {
         return it;
-    } else {
-        return graph->vertexLabelMapping().at(label).data();
     }
+    return graph->vertexLabelMapping().at(label).data();
 }
 
 bool VertexRef::operator==(const VertexRef &rhs) const {
@@ -76,11 +73,10 @@ bool VertexRef::operator==(const VertexRef &rhs) const {
 }
 
 const Vertex::vertex_ptr &VertexRef::data() const {
-    if(!graph) {
+    if(graph == nullptr) {
         return it;
-    } else {
-        return graph->vertexLabelMapping().at(label).data();
     }
+    return graph->vertexLabelMapping().at(label).data();
 }
 
 bool VertexRef::operator!=(const VertexRef &rhs) const {
@@ -88,24 +84,21 @@ bool VertexRef::operator!=(const VertexRef &rhs) const {
 }
 
 const Vertex *VertexRef::operator->() const {
-    if(!graph) {
+    if(graph == nullptr) {
         return it.operator->();
-    } else {
-        const auto& ref = graph->vertexLabelMapping().at(label);
-        return ref.operator->();
     }
+    return graph->vertexLabelMapping().at(label).operator->();
 }
 
 const Vertex &VertexRef::operator*() const {
-    if(!graph) {
+    if(graph == nullptr) {
         return it.operator*();
-    } else {
-        return graph->namedVertex(label);
     }
+    return graph->namedVertex(label);
 }
 
 std::ostream &operator<<(std::ostream &os, const VertexRef &vertex) {
-    if(vertex.graph) {
+    if(vertex.graph != nullptr) {
          os << "Vertex(label=" << vertex.label <<")";
     } else {
         os << *vertex;
@@ -122,28 +115,25 @@ bool VertexCRef::operator!=(const VertexCRef &rhs) const {
 }
 
 Vertex::vertex_cptr VertexCRef::data() const {
-    if(graph) {
+    if(graph != nullptr) {
         return graph->vertexLabelMapping().at(label).data();
-    } else {
-        return it;
     }
+    return it;
 }
 
 const Vertex &VertexCRef::operator*() const {
-    if(!graph) {
+    if(graph == nullptr) {
         return it.operator*();
-    } else {
-        return graph->namedVertex(label);
     }
+    return graph->namedVertex(label);
 }
 
 const Vertex *VertexCRef::operator->() const {
-    if(!graph) {
+    if(graph == nullptr) {
         return it.operator->();
-    } else {
-        const auto& ref = graph->vertexLabelMapping().at(label);
-        return ref.operator->();
     }
+    const auto& ref = graph->vertexLabelMapping().at(label);
+    return ref.operator->();
 }
 
 
@@ -160,7 +150,7 @@ VertexCRef::VertexCRef(const Graph *const graph, const Vertex::label_t &label) :
 VertexCRef::VertexCRef(const VertexRef &ref) : VertexCRef(ref.data()) {}
 
 std::ostream &operator<<(std::ostream &os, const VertexCRef &vertex) {
-    if(vertex.graph) {
+    if(vertex.graph != nullptr) {
         os << "Vertex(label=" << vertex.label <<")";
     } else {
         os << *vertex;

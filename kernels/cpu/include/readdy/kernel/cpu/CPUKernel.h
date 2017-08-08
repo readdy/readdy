@@ -49,7 +49,12 @@ public:
 
     CPUKernel();
 
-    ~CPUKernel();
+    ~CPUKernel() override;
+
+    CPUKernel(const CPUKernel&) = delete;
+    CPUKernel& operator=(const CPUKernel&) = delete;
+    CPUKernel(CPUKernel&&) = delete;
+    CPUKernel& operator=(CPUKernel&&) = delete;
 
     // factory method
     static readdy::model::Kernel* create();
@@ -66,27 +71,27 @@ public:
 
     const readdy::util::thread::executor_base &executor() const;
 
-    virtual void initialize() override;
+    void initialize() override;
 
-    virtual void finalize() override;
+    void finalize() override;
 
 protected:
 
-    virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
+    readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
 
-    virtual CPUStateModel &getKernelStateModelInternal() const override;
+    CPUStateModel &getKernelStateModelInternal() const override;
 
-    virtual readdy::model::KernelContext &getKernelContextInternal() const override;
+    readdy::model::KernelContext &getKernelContextInternal() const override;
 
-    virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
+    readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
 
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
+    readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
 
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
+    readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
 
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
+    readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
 
-    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
+    readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

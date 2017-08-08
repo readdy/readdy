@@ -47,6 +47,11 @@ public:
     
     explicit Potential(const int order) : order(order), id(counter++) { }
 
+    Potential(const Potential&) = default;
+    Potential& operator=(const Potential&) = delete;
+    Potential(Potential&&) = default;
+    Potential& operator=(Potential&& ) = delete;
+
     virtual ~Potential() = default;
 
     const id_t getId() const {

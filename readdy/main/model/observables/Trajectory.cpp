@@ -34,8 +34,6 @@
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>
 
-namespace io = readdy::io;
-
 using particle_t = readdy::model::Particle;
 using vec_t = readdy::model::Vec3;
 namespace readdy {
@@ -58,7 +56,7 @@ void Trajectory::evaluate() {
     result.clear();
     const auto &currentInput = kernel->getKernelStateModel().getParticles();
     std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
-        result.push_back(TrajectoryEntry{p});
+        result.emplace_back(p);
     });
 }
 
@@ -125,7 +123,7 @@ void FlatTrajectory::evaluate() {
     result.clear();
     const auto &currentInput = kernel->getKernelStateModel().getParticles();
     std::for_each(currentInput.begin(), currentInput.end(), [this](const Particle &p) {
-        result.push_back(TrajectoryEntry{p});
+        result.emplace_back(p);
     });
 }
 

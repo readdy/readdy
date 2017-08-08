@@ -49,9 +49,8 @@ const bool Sphere::isContained(const Vec3 &position) const {
     const auto distanceSquared = delta * delta;
     if (largerOrLess) {
         return distanceSquared > radiusSquared;
-    } else {
-        return distanceSquared < radiusSquared;
     }
+    return distanceSquared < radiusSquared;
 }
 
 Plane::Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
@@ -69,9 +68,8 @@ const bool Plane::isContained(const Vec3 &position) const {
     const scalar distanceFromPlane = position * normalCoefficients - distanceFromOrigin;
     if (largerOrLess) {
         return distanceFromPlane > 0;
-    } else {
-        return distanceFromPlane < 0;
     }
+    return distanceFromPlane < 0;
 }
 
 }

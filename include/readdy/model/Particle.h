@@ -60,6 +60,14 @@ public:
 
     Particle(Vec3 pos, type_type type, id_type id);
 
+    Particle(const Particle&) = default;
+
+    Particle& operator=(const Particle&) = default;
+
+    Particle(Particle&&) = default;
+
+    Particle& operator=(Particle&&) = default;
+
     virtual ~Particle();
 
     const Vec3 &getPos() const;

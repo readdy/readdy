@@ -52,7 +52,7 @@ class PotentialRegistry {
 public:
     using particle_type_registry_ref = std::reference_wrapper<const ParticleTypeRegistry>;
 
-    PotentialRegistry(particle_type_registry_ref typeRegistry);
+    explicit PotentialRegistry(particle_type_registry_ref typeRegistry);
 
     PotentialRegistry(const PotentialRegistry &) = delete;
 
@@ -61,6 +61,8 @@ public:
     PotentialRegistry(PotentialRegistry &&) = delete;
 
     PotentialRegistry &operator=(PotentialRegistry &&) = delete;
+
+    ~PotentialRegistry() = default;
 
     using potentials_o1 = std::vector<PotentialOrder1 *>;
     using potentials_o2 = std::vector<PotentialOrder2 *>;
@@ -76,7 +78,7 @@ public:
 
     const Potential::id_t add(std::unique_ptr<PotentialOrder2> potential);
 
-    void remove(const Potential::id_t handle);
+    void remove(Potential::id_t handle);
 
     const potentials_o1 &potentials_of(const particle_type_type type) const;
 

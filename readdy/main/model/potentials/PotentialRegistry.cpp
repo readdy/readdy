@@ -60,33 +60,33 @@ const Potential::id_t PotentialRegistry::add_external(potentials::PotentialOrder
 }
 
 void PotentialRegistry::remove(const Potential::id_t handle) {
-    for (auto it = potentialO1RegistryInternal.begin(); it != potentialO1RegistryInternal.end(); ++it) {
-        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+    for (auto &entry : potentialO1RegistryInternal) {
+        entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                         [=](const std::unique_ptr<potentials::PotentialOrder1> &p) -> bool {
                                             return handle == p->getId();
                                         }
-        ), it->second.end());
+        ), entry.second.end());
     }
-    for (auto it = potentialO2RegistryInternal.begin(); it != potentialO2RegistryInternal.end(); ++it) {
-        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+    for (auto &entry : potentialO2RegistryInternal) {
+        entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                         [=](const std::unique_ptr<potentials::PotentialOrder2> &p) -> bool {
                                             return handle == p->getId();
                                         }
-        ), it->second.end());
+        ), entry.second.end());
     }
-    for (auto it = potentialO1RegistryExternal.begin(); it != potentialO1RegistryExternal.end(); ++it) {
-        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+    for (auto &entry : potentialO1RegistryExternal) {
+        entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                         [=](potentials::PotentialOrder1 *p) -> bool {
                                             return handle == p->getId();
                                         }
-        ), it->second.end());
+        ), entry.second.end());
     }
-    for (auto it = potentialO2RegistryExternal.begin(); it != potentialO2RegistryExternal.end(); ++it) {
-        it->second.erase(std::remove_if(it->second.begin(), it->second.end(),
+    for (auto &entry : potentialO2RegistryExternal) {
+        entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                         [=](potentials::PotentialOrder2 *p) -> bool {
                                             return handle == p->getId();
                                         }
-        ), it->second.end());
+        ), entry.second.end());
     }
 }
 

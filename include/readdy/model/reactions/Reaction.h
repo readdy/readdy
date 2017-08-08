@@ -36,6 +36,7 @@
 #pragma once
 #include <string>
 #include <ostream>
+#include <utility>
 #include <spdlog/fmt/ostr.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/RandomProvider.h>
@@ -59,15 +60,20 @@ public:
     using rnd_normal = std::function<Vec3(const scalar, const scalar)>;
     // static constexpr unsigned int n_educts = N_EDUCTS;
 
-    Reaction(const std::string &name, const scalar rate, const scalar eductDistance,
+    Reaction(std::string name, const scalar rate, const scalar eductDistance,
              const scalar productDistance, const unsigned int n_products) :
-            name(name),
+            name(std::move(name)),
             id(counter++),
             rate(rate),
             eductDistance(eductDistance),
             eductDistanceSquared(eductDistance * eductDistance),
             productDistance(productDistance),
             _n_products(n_products) {}
+
+    Reaction(const Reaction&) = default;
+    Reaction& operator=(const Reaction&) = default;
+    Reaction(Reaction&&) = default;
+    Reaction& operator=(Reaction&&) = default;
 
     virtual ~Reaction() = default;
 
@@ -130,13 +136,6 @@ public:
         return products;
     }
 
-    Reaction(const Reaction &rhs)
-            : _n_educts(rhs._n_educts), _n_products(rhs._n_products), educts(rhs.educts),
-              products(rhs.products), name(rhs.name), id(rhs.id), rate(rhs.rate),
-              eductDistance(rhs.eductDistance), productDistance(rhs.productDistance),
-              eductDistanceSquared(rhs.eductDistanceSquared) {
-    }
-
     const scalar getWeight1() const {
         return weight1;
     }
@@ -150,7 +149,7 @@ protected:
     const unsigned int _n_educts = N_EDUCTS;
     const unsigned int _n_products;
     std::array<particle_type_type, N_EDUCTS> educts;
-    std::array<particle_type_type, 2> products;
+    std::array<particle_type_type, 2> products {{0, 0}};
     const std::string name;
     const short id;
     const scalar rate;

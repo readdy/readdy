@@ -51,7 +51,7 @@ Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::strin
                  _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
-        : Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
+        : Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {}
 
 Forces::Forces(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride), typesToCount({}),
                                                             pimpl(std::make_unique<Impl>()) {}

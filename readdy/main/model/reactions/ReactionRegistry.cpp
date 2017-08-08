@@ -119,7 +119,6 @@ void ReactionRegistry::debug_output() const {
         for(const auto& entry : one_educt_registry) {
             for(const auto& reaction : entry.second) {
                 log::debug("     * reaction {}", *reaction);
-
             }
         }
     }

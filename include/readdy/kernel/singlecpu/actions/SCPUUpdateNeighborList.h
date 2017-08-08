@@ -40,10 +40,10 @@ namespace actions {
 class SCPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
 
 public:
-    SCPUUpdateNeighborList(SCPUKernel *const kernel,
+    explicit SCPUUpdateNeighborList(SCPUKernel* kernel,
                            readdy::model::actions::UpdateNeighborList::Operation op = Operation::create, scalar = -1);
 
-    virtual void perform() override;
+    void perform() override;
 
     bool supportsSkin() const override;
 

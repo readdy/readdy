@@ -110,7 +110,7 @@ private:
      */
     void fill_verlet_list();
 
-    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell, const bool reset_displacement);
+    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell, bool reset_displacement);
 
     void handle_dirty_cells();
 

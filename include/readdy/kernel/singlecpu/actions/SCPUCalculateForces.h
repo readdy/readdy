@@ -38,9 +38,9 @@ namespace scpu {
 namespace actions {
 class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
 public:
-    SCPUCalculateForces(SCPUKernel *kernel);
+    explicit SCPUCalculateForces(SCPUKernel *kernel);
 
-    virtual void perform() override;
+    void perform() override;
 
 private:
     SCPUKernel *kernel;

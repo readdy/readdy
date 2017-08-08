@@ -43,11 +43,11 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-using kernel_t = readdy::kernel::cpu::CPUKernel;
+using cpu_kernel = readdy::kernel::cpu::CPUKernel;
 using vec_t = readdy::model::Vec3;
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
 using reaction_type = readdy::model::reactions::ReactionType;
-using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
+using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().getKernelContext())>::type;
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
 using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
@@ -69,7 +69,7 @@ inline bool shouldPerformEvent(const readdy::scalar rate, const readdy::scalar t
 }
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel *const kernel, readdy::scalar timeStep,
+        CPUKernel* kernel, readdy::scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts);
 

@@ -29,9 +29,6 @@
 #include <readdy/model/observables/io/Trajectory.h>
 #include <readdy/io/File.h>
 
-namespace rmr = readdy::model::reactions;
-namespace rmp = readdy::model::actions;
-
 namespace readdy {
 scalar Simulation::getKBT() const {
     ensureKernelSelected();
@@ -81,7 +78,7 @@ void Simulation::run(const time_step_type steps, const scalar timeStep) {
 
 void Simulation::setKernel(const std::string &kernel) {
     if (isKernelSelected()) {
-        log::debug("replacing kernel \"{}\" with \"{}\"", pimpl->kernel->getName(), kernel);
+        log::debug(R"(replacing kernel "{}" with "{}")", pimpl->kernel->getName(), kernel);
     }
     pimpl->kernel = readdy::plugin::KernelProvider::getInstance().create(kernel);
 }
@@ -249,7 +246,6 @@ const short
 Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                        const scalar rate) {
     ensureKernelSelected();
-    namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createConversionReaction(name, from, to, rate);
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
@@ -259,7 +255,6 @@ Simulation::registerEnzymaticReaction(const std::string &name, const std::string
                                       const std::string &to, const scalar rate,
                                       const scalar eductDistance) {
     ensureKernelSelected();
-    namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
@@ -353,9 +348,8 @@ Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &part
             top->graph().setVertexLabel(it_vertices, *it_labels);
         }
         return top;
-    } else {
-        throw std::logic_error("the selected kernel does not support topologies!");
     }
+    throw std::logic_error("the selected kernel does not support topologies!");
 }
 
 void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {

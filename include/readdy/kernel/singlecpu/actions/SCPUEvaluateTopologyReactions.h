@@ -43,9 +43,9 @@ namespace top {
 
 class SCPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
 public:
-    SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, scalar timeStep);
+    SCPUEvaluateTopologyReactions(SCPUKernel* kernel, scalar timeStep);
 
-    virtual void perform() override;
+    void perform() override;
 
 private:
     SCPUKernel *const kernel;

@@ -51,7 +51,7 @@ struct HistogramAlongAxis::Impl {
 HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
                                        std::vector<scalar> binBorders, std::set<unsigned int> typesToCount,
                                        unsigned int axis)
-        : Observable(kernel, stride), binBorders(binBorders), typesToCount(typesToCount), axis(axis),
+        : Observable(kernel, stride), binBorders(binBorders), typesToCount(std::move(typesToCount)), axis(axis),
           pimpl(std::make_unique<Impl>()) {
     auto nCenters = binBorders.size() - 1;
     result = std::vector<scalar>(nCenters);
@@ -62,7 +62,7 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
                                        std::vector<scalar> binBorders,
                                        std::vector<std::string> typesToCount,
                                        unsigned int axis)
-        : HistogramAlongAxis(kernel, stride, binBorders,
+        : HistogramAlongAxis(kernel, stride, std::move(binBorders),
                              _internal::util::transformTypes(typesToCount, kernel->getKernelContext()),
                              axis) {
 

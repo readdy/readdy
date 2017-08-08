@@ -102,7 +102,7 @@ public:
                                    .build()) {
     }
 
-    virtual io::h5::handle_t hid() const override {
+    io::h5::handle_t hid() const override {
         return compoundType.hid();
     }
 };

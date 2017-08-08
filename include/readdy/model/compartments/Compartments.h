@@ -58,7 +58,7 @@ public:
     Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
           const scalar distance, const bool largerOrLess);
 
-    virtual const bool isContained(const Vec3 &position) const override;
+    const bool isContained(const Vec3 &position) const override;
 
 protected:
     const Vec3 normalCoefficients;

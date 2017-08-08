@@ -50,9 +50,17 @@ public:
     using edge = graph_t::edge;
     using vertex = graph_t::vertex_ref;
 
-    TopologyReactionAction(GraphTopology *const topology);
+    explicit TopologyReactionAction(GraphTopology *topology);
 
     virtual ~TopologyReactionAction() = default;
+
+    TopologyReactionAction(const TopologyReactionAction&) = default;
+
+    TopologyReactionAction& operator=(const TopologyReactionAction&) = delete;
+
+    TopologyReactionAction(TopologyReactionAction&&) = default;
+
+    TopologyReactionAction& operator=(TopologyReactionAction&&) = delete;
 
     virtual void execute() = 0;
 
@@ -65,7 +73,7 @@ protected:
 class ChangeParticleType : public TopologyReactionAction {
 public:
 
-    ChangeParticleType(GraphTopology *const topology, const vertex &v, const particle_type_type &type_to);
+    ChangeParticleType(GraphTopology *topology, const vertex &v, const particle_type_type &type_to);
 
 protected:
     vertex _vertex;
@@ -74,7 +82,7 @@ protected:
 
 class AddEdge : public TopologyReactionAction {
 public:
-    AddEdge(GraphTopology *const topology, const edge &edge);
+    AddEdge(GraphTopology *topology, const edge &edge);
 
     void execute() override;
 
@@ -86,7 +94,7 @@ private:
 
 class RemoveEdge : public TopologyReactionAction {
 public:
-    RemoveEdge(GraphTopology *const topology, const edge &edge);
+    RemoveEdge(GraphTopology *topology, const edge &edge);
 
     void execute() override;
 

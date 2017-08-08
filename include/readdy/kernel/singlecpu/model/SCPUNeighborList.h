@@ -101,7 +101,7 @@ protected:
 };
 
 struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
-    virtual void create(const SCPUParticleData &data) override;
+    void create(const SCPUParticleData &data) override;
 
     // ctor and dtor
     SCPUNaiveNeighborList();
@@ -109,9 +109,9 @@ struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
     ~SCPUNaiveNeighborList();
 
     // move
-    SCPUNaiveNeighborList(SCPUNaiveNeighborList &&rhs);
+    SCPUNaiveNeighborList(SCPUNaiveNeighborList &&rhs) noexcept;
 
-    SCPUNaiveNeighborList &operator=(SCPUNaiveNeighborList &&rhs);
+    SCPUNaiveNeighborList &operator=(SCPUNaiveNeighborList &&rhs) noexcept;
 
     // copy
     SCPUNaiveNeighborList(const SCPUNaiveNeighborList &rhs) = delete;
@@ -150,10 +150,9 @@ class READDY_API SCPUNotThatNaiveNeighborList : public SCPUNeighborListContainer
     using super = readdy::kernel::scpu::model::SCPUNeighborListContainer<container>;
     using context_t = readdy::model::KernelContext;
 public:
-    SCPUNotThatNaiveNeighborList(const context_t *const context) : ctx(context) {
-    }
+    explicit SCPUNotThatNaiveNeighborList(const context_t *const context) : ctx(context) {}
 
-    virtual void create(const SCPUParticleData &data) override {
+    void create(const SCPUParticleData &data) override {
         setupBoxes();
         fillBoxes(data);
     }
@@ -227,8 +226,8 @@ public:
             super::pairs->clear();
 
             unsigned long idx = 0;
-            const auto shift = readdy::model::Vec3(.5 * simBoxSize[0], .5 * simBoxSize[1],
-                                                   .5 * simBoxSize[2]);
+            const auto shift = readdy::model::Vec3(c_::half * simBoxSize[0], c_::half * simBoxSize[1],
+                                                   c_::half * simBoxSize[2]);
             for(const auto& entry : data) {
                 if(!entry.is_deactivated()) {
                     const auto pos_shifted = entry.position() + shift;
@@ -285,7 +284,7 @@ protected:
 };
 
 struct READDY_API SCPUNeighborList : public SCPUNotThatNaiveNeighborList<std::vector<ParticleIndexPair>> {
-    SCPUNeighborList(const readdy::model::KernelContext *const ctx)
+    explicit SCPUNeighborList(const readdy::model::KernelContext *const ctx)
             : SCPUNotThatNaiveNeighborList(ctx) {}
 };
 

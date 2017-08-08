@@ -70,27 +70,27 @@ public:
     /**
      * Constructs a kernel with a given name.
      */
-    Kernel(const std::string &name);
+    explicit Kernel(const std::string &name);
 
     /**
      * The kernel destructor.
      */
-    virtual ~Kernel();
+    ~Kernel() override;
 
     Kernel(const Kernel &rhs) = delete;
 
     Kernel &operator=(const Kernel &rhs) = delete;
 
-    Kernel(Kernel &&rhs);
+    Kernel(Kernel &&rhs) noexcept;
 
-    Kernel &operator=(Kernel &&rhs);
+    Kernel &operator=(Kernel &&rhs) noexcept;
 
     /**
      * This method returns the name of the kernel.
      *
      * @return The name
      */
-    virtual const std::string &getName() const override;
+    const std::string &getName() const override;
 
     template<typename ActionType, typename... Args>
     std::unique_ptr<ActionType> createAction(Args &&... args) const {
@@ -112,7 +112,7 @@ public:
      *
      * @return A connection object that, once deleted, releases the connection of the observable.
      */
-    virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *const observable);
+    virtual readdy::signals::scoped_connection connectObservable(observables::ObservableBase *observable);
 
     /**
      * Evaluates all observables.
@@ -180,24 +180,24 @@ public:
     // todo registerConversion -> creates and register with context
     std::unique_ptr<reactions::Reaction<1>>
     createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                             const scalar rate) const;
+                             scalar rate) const;
 
     std::unique_ptr<reactions::Reaction<2>>
     createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                            const std::string &to, const scalar rate, const scalar eductDistance) const;
+                            const std::string &to, scalar rate, scalar eductDistance) const;
 
     std::unique_ptr<reactions::Reaction<1>>
     createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
-                          const std::string &to2, const scalar rate, const scalar productDistance,
-                          const scalar weight1 = 0.5, const scalar weight2 = 0.5) const;
+                          const std::string &to2, scalar rate, scalar productDistance,
+                          scalar weight1 = 0.5, scalar weight2 = 0.5) const;
 
     std::unique_ptr<reactions::Reaction<2>>
     createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                         const std::string &to, const scalar rate, const scalar eductDistance,
-                         const scalar weight1 = 0.5, const scalar weight2 = 0.5) const;
+                         const std::string &to, scalar rate, scalar eductDistance,
+                         scalar weight1 = 0.5, scalar weight2 = 0.5) const;
 
     std::unique_ptr<reactions::Reaction<1>>
-    createDecayReaction(const std::string &name, const std::string &type, const scalar rate) const;
+    createDecayReaction(const std::string &name, const std::string &type, scalar rate) const;
 
     /*
      * 
@@ -237,7 +237,7 @@ public:
 
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
 
-    void expected_n_particles(const std::size_t n);
+    void expected_n_particles(std::size_t n);
 
     virtual void initialize();
 

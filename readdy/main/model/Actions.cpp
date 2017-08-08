@@ -58,7 +58,7 @@ AddParticles::AddParticles(Kernel *const kernel, const Particle &particle)
         : AddParticles(kernel, std::vector<Particle>{particle}) {}
 
 void AddParticles::perform() {
-    if(kernel) {
+    if(kernel != nullptr) {
         kernel->getKernelStateModel().addParticles(particles);
     } else {
         log::critical("Tried to perform {} without providing a valid kernel!", getActionName<AddParticles>());

@@ -53,7 +53,7 @@ Config::Config() {
 #endif
 
     const char *env = std::getenv("READDY_N_CORES");
-    if (env) {
+    if (env != nullptr) {
         m_nThreads = static_cast<n_threads_t>(std::stol(env));
         log::debug("Using {} threads (set by environment variable READDY_N_CORES)", m_nThreads);
     }

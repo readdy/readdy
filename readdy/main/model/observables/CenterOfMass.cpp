@@ -75,7 +75,7 @@ CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
 }
 
 CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType)
-        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()), particleTypes() {
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {
     for (auto &&pt : particleType) {
         particleTypes.emplace(kernel->getKernelContext().particle_types().id_of(pt));
     }

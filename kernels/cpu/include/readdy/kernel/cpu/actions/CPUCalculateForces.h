@@ -41,9 +41,9 @@ class CPUCalculateForces : public readdy::model::actions::CalculateForces {
 
 public:
 
-    CPUCalculateForces(CPUKernel *const kernel) : kernel(kernel) {}
+    explicit CPUCalculateForces(CPUKernel* kernel) : kernel(kernel) {}
 
-    virtual void perform() override {
+    void perform() override {
         kernel->getKernelStateModel().calculateForces();
     }
 

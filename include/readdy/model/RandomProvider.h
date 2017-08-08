@@ -33,7 +33,7 @@
 #pragma once
 #include <memory>
 #include <random>
-#include <time.h>
+#include <ctime>
 #include <thread>
 #include "Vec3.h"
 

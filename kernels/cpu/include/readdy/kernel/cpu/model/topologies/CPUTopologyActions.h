@@ -54,7 +54,7 @@ public:
                                       const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-    virtual readdy::scalar perform() override {
+    readdy::scalar perform() override {
         scalar energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
@@ -82,7 +82,7 @@ public:
                                        const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
-    virtual readdy::scalar perform() override {
+    readdy::scalar perform() override {
         scalar energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
@@ -111,7 +111,7 @@ public:
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
-    virtual readdy::scalar perform() override {
+    readdy::scalar perform() override {
         scalar energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
@@ -140,13 +140,13 @@ public:
     CPUChangeParticleType(CPUParticleData *const data, top::GraphTopology *const topology, const vertex &v,
                           const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
-    virtual void execute() override {
+    void execute() override {
         const auto idx = topology->getParticles().at(_vertex->particleIndex);
         _vertex->setParticleType(previous_type);
         std::swap(data->entry_at(idx).type, previous_type);
     }
 
-    virtual void undo() override {
+    void undo() override {
         execute();
     }
 

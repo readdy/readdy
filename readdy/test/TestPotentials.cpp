@@ -174,7 +174,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    if(readdy::single_precision) {
+    if(kernel->singlePrecision()) {
         EXPECT_NEAR(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
     } else {
         EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.925925925926));
@@ -185,8 +185,8 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     readdy::model::Vec3 forceOnParticle1 {0, 0, static_cast<readdy::scalar>(123.45679012)};
 
     if(kernel->singlePrecision()) {
-        EXPECT_FVEC3_EQ(collectedForces[id0Idx], forceOnParticle0);
-        EXPECT_FVEC3_EQ(collectedForces[id1Idx], forceOnParticle1);
+        EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-4);
+        EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-4);
     } else {
         EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
         EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
@@ -236,10 +236,10 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    if(readdy::double_precision) {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
-    } else {
+    if(kernel->singlePrecision()) {
         EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
+    } else {
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
     }
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
@@ -345,8 +345,8 @@ TEST_P(TestPotentials, SphericalBarrier) {
                                          static_cast<readdy::scalar>(0.)};
     readdy::model::Vec3 forceOnParticle1{static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.),
                                          static_cast<readdy::scalar>(0.)};
-    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, readdy::double_precision ? 1e-8 : 1e-5);
-    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, readdy::double_precision ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, kernel->doublePrecision() ? 1e-8 : 1e-5);
 }
 
 INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,

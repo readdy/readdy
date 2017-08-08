@@ -37,7 +37,6 @@ namespace cpu {
 namespace actions {
 
 namespace rnd = readdy::model::rnd;
-namespace thd = readdy::util::thread;
 
 void CPUEulerBDIntegrator::perform() {
     auto& pd = *kernel->getCPUKernelStateModel().getParticleData();
@@ -51,7 +50,7 @@ void CPUEulerBDIntegrator::perform() {
     auto worker = [&context, &pd, dt](std::size_t id, iter_t entry_begin, iter_t entry_end)  {
         const auto &fixPos = context.getFixPositionFun();
         const auto kbt = context.getKBT();
-        for (iter_t it = entry_begin; it != entry_end; ++it) {
+        for (auto it = entry_begin; it != entry_end; ++it) {
             if(!it->is_deactivated()) {
                 const scalar D = context.particle_types().diffusion_constant_of(it->type);
                 const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);

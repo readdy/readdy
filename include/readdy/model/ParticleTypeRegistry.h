@@ -45,8 +45,8 @@ struct ParticleTypeInfo {
     readdy::model::Particle::flavor_t flavor;
     particle_type_type typeId;
 
-    ParticleTypeInfo(const std::string &name, const scalar diffusionConstant, const scalar radius,
-                     const Particle::flavor_t flavor, const Particle::type_type typeId);
+    ParticleTypeInfo(const std::string &name, scalar diffusionConstant, scalar radius,
+                     Particle::flavor_t flavor, Particle::type_type typeId);
 };
 
 class ParticleTypeRegistry {
@@ -64,22 +64,24 @@ public:
 
     ParticleTypeRegistry &operator=(ParticleTypeRegistry &&) = delete;
 
+    ~ParticleTypeRegistry() = default;
+
     particle_type_type id_of(const std::string &name) const;
 
-    void add(const std::string &name, const scalar diffusionConst, const scalar radius,
-             const readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
+    void add(const std::string &name, scalar diffusionConst, scalar radius,
+             readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
     const ParticleTypeInfo &info_of(const std::string &name) const;
 
-    const ParticleTypeInfo &info_of(const Particle::type_type type) const;
+    const ParticleTypeInfo &info_of(Particle::type_type type) const;
 
     scalar diffusion_constant_of(const std::string &particleType) const;
 
-    scalar diffusion_constant_of(const particle_type_type particleType) const;
+    scalar diffusion_constant_of(particle_type_type particleType) const;
 
     scalar radius_of(const std::string &type) const;
 
-    scalar radius_of(const particle_type_type type) const;
+    scalar radius_of(particle_type_type type) const;
 
     const std::size_t &n_types() const;
 
@@ -92,8 +94,8 @@ public:
 private:
     std::size_t n_types_ = 0;
     particle_type_type type_counter_ = 0;
-    type_mapping_t type_mapping_;
-    std::unordered_map<particle_type_type, ParticleTypeInfo> particle_info_;
+    type_mapping_t type_mapping_ {};
+    std::unordered_map<particle_type_type, ParticleTypeInfo> particle_info_ {};
 
 };
 

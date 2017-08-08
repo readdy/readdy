@@ -37,6 +37,8 @@
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
+#include <utility>
+
 namespace readdy {
 namespace model {
 namespace observables {
@@ -50,7 +52,7 @@ struct RadialDistribution::Impl {
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
                                        std::vector<scalar> binBorders, std::vector<unsigned int> typeCountFrom,
                                        std::vector<unsigned int> typeCountTo, scalar particleToDensity)
-        : Observable(kernel, stride), typeCountFrom(typeCountFrom), typeCountTo(typeCountTo),
+        : Observable(kernel, stride), typeCountFrom(std::move(typeCountFrom)), typeCountTo(std::move(typeCountTo)),
           particleToDensity(particleToDensity), pimpl(std::make_unique<Impl>()) {
     setBinBorders(binBorders);
 }

@@ -42,36 +42,36 @@ namespace observables {
 class CPUObservableFactory : public readdy::model::observables::ObservableFactory {
 
 public:
-    CPUObservableFactory(CPUKernel *const kernel);
+    CPUObservableFactory(CPUKernel* kernel);
 
-    virtual readdy::model::observables::NParticles *
+    readdy::model::observables::NParticles *
     createNParticles(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
-    virtual readdy::model::observables::HistogramAlongAxis *
+    readdy::model::observables::HistogramAlongAxis *
     createHistogramAlongAxis(unsigned int stride,
                              std::vector<readdy::scalar> binBorders, std::vector<std::string> typesToCount,
                              unsigned int axis) const override;
 
-    virtual readdy::model::observables::Forces *
+    readdy::model::observables::Forces *
     createForces(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
-    virtual readdy::model::observables::Positions *
+    readdy::model::observables::Positions *
     createPositions(unsigned int stride, std::vector<std::string> typesToCount = {}) const override;
 
-    virtual readdy::model::observables::RadialDistribution *
+    readdy::model::observables::RadialDistribution *
     createRadialDistribution(unsigned int stride, std::vector<readdy::scalar> binBorders, std::vector<std::string> typeCountFrom,
                              std::vector<std::string> typeCountTo, readdy::scalar particleToDensity) const override;
 
-    virtual readdy::model::observables::Particles *
+    readdy::model::observables::Particles *
     createParticles(unsigned int stride) const override;
 
-    virtual readdy::model::observables::MeanSquaredDisplacement *
+    readdy::model::observables::MeanSquaredDisplacement *
     createMeanSquaredDisplacement(unsigned int stride, std::vector<std::string> typesToCount,
                                   readdy::model::observables::Particles *particlesObservable) const override;
 
-    virtual readdy::model::observables::Reactions *createReactions(unsigned int stride) const override;
+    readdy::model::observables::Reactions *createReactions(unsigned int stride) const override;
 
-    virtual readdy::model::observables::ReactionCounts *createReactionCounts(unsigned int stride) const override;
+    readdy::model::observables::ReactionCounts *createReactionCounts(unsigned int stride) const override;
 
 private:
     CPUKernel *const kernel;

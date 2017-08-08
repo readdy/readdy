@@ -60,7 +60,11 @@ public:
     using dihedral_t = DihedralConfiguration;
     using dihedrals_t = std::vector<dihedral_t>;
 
-    CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
+    CosineDihedralPotential(Topology *topology, const dihedrals_t &dihedrals);
+    CosineDihedralPotential(const CosineDihedralPotential&) = default;
+    CosineDihedralPotential& operator=(const CosineDihedralPotential&) = default;
+    CosineDihedralPotential(CosineDihedralPotential&&) = default;
+    CosineDihedralPotential& operator=(CosineDihedralPotential&&) = default;
     virtual ~CosineDihedralPotential() = default;
 
     const dihedrals_t &getDihedrals() const;

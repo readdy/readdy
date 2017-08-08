@@ -45,7 +45,12 @@ NAMESPACE_BEGIN(actions)
 
 class Action {
 public:
-    Action() {}
+    Action() = default;
+
+    Action(const Action&) = default;
+    Action& operator=(const Action&) = default;
+    Action(Action&&) = default;
+    Action& operator=(Action&&) = default;
 
     virtual ~Action() = default;
 
@@ -54,9 +59,14 @@ public:
 
 class TimeStepDependentAction : public Action {
 public:
-    TimeStepDependentAction(scalar timeStep) : timeStep(timeStep) {}
+    explicit TimeStepDependentAction(scalar timeStep) : timeStep(timeStep) {}
 
-    virtual ~TimeStepDependentAction() = default;
+    TimeStepDependentAction(const TimeStepDependentAction&) = default;
+    TimeStepDependentAction&operator=(const TimeStepDependentAction&) = default;
+    TimeStepDependentAction(TimeStepDependentAction&&) = default;
+    TimeStepDependentAction& operator=(TimeStepDependentAction&&) = default;
+
+    ~TimeStepDependentAction() override = default;
 
     scalar getTimeStep() const {
         return timeStep;

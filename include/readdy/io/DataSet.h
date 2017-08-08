@@ -44,15 +44,20 @@ enum DataSetCompression {
 
 class DataSetHandle : public ObjectHandle {
 public:
-    DataSetHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
-
+    explicit DataSetHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
+    
+    DataSetHandle(const DataSetHandle&) = default;
+    DataSetHandle& operator=(const DataSetHandle&) = default;
+    DataSetHandle(DataSetHandle&&) = default;
+    DataSetHandle& operator=(DataSetHandle&&) = default;
+    
     ~DataSetHandle() {
         if (_handle >= 0) {
             close();
         }
     }
-
-    virtual void close() override {
+    
+    void close() override {
         if (H5Dclose(_handle) < 0) {
             log::error("error on closing data set {}!", _handle);
             H5Eprint(H5Eget_current_stack(), stderr);

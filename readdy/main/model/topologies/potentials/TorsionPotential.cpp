@@ -55,13 +55,13 @@ scalar  CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x
                                                 const dihedral_t &dihedral) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm = x_jk.norm();
-    x_jk_norm = x_jk_norm < SMALL ? SMALL : x_jk_norm;
+    x_jk_norm = static_cast<scalar>(x_jk_norm < SMALL ? SMALL : x_jk_norm);
     const auto m = x_ji.cross(x_kj);
     const auto m_norm = m.norm();
     const auto n = x_kl.cross(x_jk);
     const auto n_norm = n.norm();
     auto m_n_norm = m_norm * n_norm;
-    m_n_norm = m_n_norm < SMALL ? SMALL : m_n_norm;
+    m_n_norm = static_cast<scalar>(m_n_norm < SMALL ? SMALL : m_n_norm);
     const scalar sin_theta = (m.cross(n) * x_jk) / (m_n_norm * x_jk_norm);
     const scalar  cos_theta = m * n / m_n_norm;
     const scalar  dih = -std::atan2(sin_theta, cos_theta);
@@ -74,18 +74,18 @@ CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f
                                         const dihedral_t &dih) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm_squared = x_jk.normSquared();
-    x_jk_norm_squared = x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared;
+    x_jk_norm_squared = static_cast<scalar>(x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared);
     const auto x_jk_norm = std::sqrt(x_jk_norm_squared);
     const auto m = x_ji.cross(x_kj);
     auto m_norm_squared = m.normSquared();
-    m_norm_squared = m_norm_squared < SMALL ? SMALL : m_norm_squared;
+    m_norm_squared = static_cast<scalar>(m_norm_squared < SMALL ? SMALL : m_norm_squared);
     const auto m_norm = std::sqrt(m_norm_squared);
     const auto n = x_kl.cross(x_jk);
     auto n_norm_squared = n.normSquared();
-    n_norm_squared = n_norm_squared < SMALL ? SMALL : n_norm_squared;
+    n_norm_squared = static_cast<scalar>(n_norm_squared < SMALL ? SMALL : n_norm_squared);
     const auto n_norm = std::sqrt(n_norm_squared);
     auto n_m_norm = m_norm * n_norm;
-    n_m_norm < SMALL ? SMALL : n_m_norm;
+    n_m_norm = static_cast<scalar>(n_m_norm < SMALL ? SMALL : n_m_norm);
     const auto m_x_n = m.cross(n);
     const auto n_m = n*m;
     const auto cos_phi = n_m / n_m_norm;

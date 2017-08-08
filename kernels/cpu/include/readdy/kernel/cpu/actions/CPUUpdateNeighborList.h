@@ -46,7 +46,7 @@ public:
 
     CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, readdy::scalar skin) : super(op, skin), kernel(kernel) {}
 
-    virtual void perform() override {
+    void perform() override {
         if(firstRun) {
             if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->skin() = skinSize;
             firstRun = false;

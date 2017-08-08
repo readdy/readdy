@@ -43,17 +43,17 @@ NAMESPACE_BEGIN(observables)
 
 struct TrajectoryEntry {
 
-    TrajectoryEntry() {}
+    TrajectoryEntry() = default;
 
-    TrajectoryEntry(const readdy::model::Particle &p)
+    explicit TrajectoryEntry(const readdy::model::Particle &p)
             : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(p.getFlavor()) {}
 
-    readdy::model::Particle::type_type typeId;
-    readdy::model::Particle::id_type id;
-    readdy::model::Particle::flavor_t flavor;
+    readdy::model::Particle::type_type typeId {0};
+    readdy::model::Particle::id_type id {0};
+    readdy::model::Particle::flavor_t flavor {0};
     readdy::model::Particle::pos_type pos;
 
-    friend std::ostream &operator<<(std::ostream &, const TrajectoryEntry &);
+    friend std::ostream &operator<<(std::ostream & /*os*/, const TrajectoryEntry & /*p*/);
 };
 
 inline std::ostream &operator<<(std::ostream &os, const TrajectoryEntry &p) {

@@ -44,7 +44,12 @@ NAMESPACE_BEGIN(io)
 
 class READDY_API GroupHandle : public ObjectHandle {
 public:
-    GroupHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
+    explicit GroupHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
+
+    GroupHandle(const GroupHandle&) = default;
+    GroupHandle& operator=(const GroupHandle&) = default;
+    GroupHandle(GroupHandle&&) = default;
+    GroupHandle& operator=(GroupHandle&&) = default;
 
     ~GroupHandle() {
         if (_handle >= 0) {
@@ -52,7 +57,7 @@ public:
         }
     }
 
-    virtual void close() override {
+    void close() override {
         if (H5Gclose(_handle) < 0) {
             log::error("error on closing group!");
             H5Eprint(H5Eget_current_stack(), stderr);

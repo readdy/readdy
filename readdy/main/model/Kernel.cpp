@@ -29,7 +29,6 @@
 
 #include <readdy/common/make_unique.h>
 #include <readdy/model/Kernel.h>
-#include <atomic>
 
 namespace readdy {
 namespace model {
@@ -98,14 +97,12 @@ unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const
         const auto &info = getKernelContext().particle_types().info_of(findIt->second);
         if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
             return findIt->second;
-        } else {
-            log::critical("particle type {} had no \"normal\" flavor", name);
-            throw std::invalid_argument("particle type " + name + " had no \"normal\" flavor");
         }
-    } else {
-        log::critical("did not find type id for {}", name);
-        throw std::invalid_argument("did not find type id for " + name);
+        log::critical("particle type {} had no \"normal\" flavor", name);
+        throw std::invalid_argument("particle type " + name + " had no \"normal\" flavor");
     }
+    log::critical("did not find type id for {}", name);
+    throw std::invalid_argument("did not find type id for " + name);
 }
 
 std::unique_ptr<reactions::Reaction<1>>
@@ -238,8 +235,8 @@ void Kernel::initialize() {
 void Kernel::finalize() {
 }
 
-Kernel &Kernel::operator=(Kernel &&rhs) = default;
+Kernel &Kernel::operator=(Kernel &&rhs) noexcept = default;
 
-Kernel::Kernel(Kernel &&rhs) = default;
+Kernel::Kernel(Kernel &&rhs) noexcept = default;
 }
 }

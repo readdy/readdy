@@ -63,7 +63,7 @@ void CPUEvaluateTopologyReactions::perform() {
         std::stringstream ss;
         for(const auto& top : topologies) {
             if(!top->isDeactivated()) {
-                const void * address = static_cast<const void*>(top.get());
+                const auto * address = static_cast<const void*>(top.get());
                 std::stringstream ss2;
                 ss2 << address;
                 std::string name = ss2.str();
@@ -89,14 +89,14 @@ void CPUEvaluateTopologyReactions::perform() {
                     std::size_t reaction_idx = 0;
                     for (const auto &reaction : topRef->registeredReactions()) {
 
-                        TREvent event;
+                        TREvent event{};
                         event.own_rate = std::get<1>(reaction);
                         event.cumulative_rate = event.own_rate + current_cumulative_rate;
                         current_cumulative_rate = event.cumulative_rate;
                         event.topology_idx = topology_idx;
                         event.reaction_idx = reaction_idx;
 
-                        events.push_back(std::move(event));
+                        events.push_back(event);
 
                         ++reaction_idx;
                     }

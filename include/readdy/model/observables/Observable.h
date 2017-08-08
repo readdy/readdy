@@ -80,7 +80,7 @@ public:
      * @param kernel the kernel
      * @param stride the stride
      */
-    ObservableBase(readdy::model::Kernel *const kernel, unsigned int stride = 1)
+    explicit ObservableBase(readdy::model::Kernel *const kernel, unsigned int stride = 1)
             : stride(stride), kernel(kernel) {};
 
     /**
@@ -99,12 +99,15 @@ public:
         return t_current;
     }
 
+    ObservableBase(const ObservableBase&) = delete;
+    ObservableBase& operator=(const ObservableBase&) = delete;
+    ObservableBase(ObservableBase&&) = default;
+    ObservableBase& operator=(ObservableBase&&) = delete;
+
     /**
      * The destructor.
      */
-    virtual ~ObservableBase() {
-        log::trace("destroying observable base");
-    };
+    virtual ~ObservableBase() = default;
 
     /**
      * Method that will trigger a callback with the current results if shouldExecuteCallback() is true.
@@ -245,7 +248,7 @@ public:
      * is true.
      * @param t the time step
      */
-    virtual void callback(time_step_type t) override {
+    void callback(time_step_type t) override {
         if (shouldExecuteCallback(t)) {
             ObservableBase::callback(t);
             externalCallback(result);
@@ -260,7 +263,7 @@ protected:
     /**
      * the callback function
      */
-    callback_function externalCallback = [](const Result) {};
+    callback_function externalCallback = [](const Result /*unused*/) {};
 };
 
 /**
@@ -288,7 +291,7 @@ public:
      * for each of its parents.
      * @param t the current time
      */
-    virtual void callback(time_step_type t) override {
+    void callback(time_step_type t) override {
         if (ObservableBase::shouldExecuteCallback(t)) {
             readdy::util::for_each_in_tuple(parentObservables, CallbackFunctor(ObservableBase::t_current));
             ObservableBase::callback(t);
@@ -339,7 +342,7 @@ private:
          * The current time step
          * @param currentTimeStep current time
          */
-        CallbackFunctor(time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
+        explicit CallbackFunctor(time_step_type currentTimeStep) : currentTimeStep(currentTimeStep) {}
 
         /**
          * Calling the parent observable's callback function with #currentTimeStep.

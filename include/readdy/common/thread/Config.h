@@ -68,7 +68,7 @@ struct Config {
     /**
      * Set the number of threads to be used
      */
-    void setNThreads(const n_threads_t);
+    void setNThreads(n_threads_t n);
 
     void setMode(ThreadMode mode);
 

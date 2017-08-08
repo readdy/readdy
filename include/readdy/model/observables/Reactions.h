@@ -45,18 +45,23 @@ class Reactions : public Observable<std::vector<reactions::ReactionRecord>> {
     using super = Observable<std::vector<reactions::ReactionRecord>>;
 
 public:
-    Reactions(Kernel *const kernel, unsigned int stride);
+    Reactions(Kernel* kernel, unsigned int stride);
+
+    Reactions(const Reactions&) = delete;
+    Reactions& operator=(const Reactions&) = delete;
+    Reactions(Reactions&&) = default;
+    Reactions& operator=(Reactions&&) = delete;
 
     virtual ~Reactions();
 
-    virtual void flush() override;
+    void flush() override;
 
 protected:
-    virtual void initialize(Kernel *const kernel) override;
+    void initialize(Kernel* kernel) override;
 
-    virtual void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
-    virtual void append() override;
+    void append() override;
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

@@ -45,15 +45,15 @@ void SCPUNaiveNeighborList::create(const SCPUParticleData &data) {
     }
 }
 
-SCPUNaiveNeighborList &SCPUNaiveNeighborList::operator=(
-        SCPUNaiveNeighborList &&rhs) = default;
+SCPUNaiveNeighborList &SCPUNaiveNeighborList::operator= (
+        SCPUNaiveNeighborList &&rhs) noexcept = default;
 
 
 SCPUNaiveNeighborList::SCPUNaiveNeighborList() = default;
 
 SCPUNaiveNeighborList::~SCPUNaiveNeighborList() = default;
 
-SCPUNaiveNeighborList::SCPUNaiveNeighborList(SCPUNaiveNeighborList &&rhs) = default;
+SCPUNaiveNeighborList::SCPUNaiveNeighborList(SCPUNaiveNeighborList &&rhs) noexcept = default;
 }
 }
 }

@@ -56,7 +56,11 @@ public:
     using bond_t = BondConfiguration;
     using bonds_t = std::vector<bond_t>;
 
-    BondedPotential(Topology *const topology, const bonds_t &bonds);
+    BondedPotential(Topology *topology, const bonds_t &bonds);
+    BondedPotential(const BondedPotential&) = default;
+    BondedPotential& operator=(const BondedPotential&) = delete;
+    BondedPotential(BondedPotential&&) = default;
+    BondedPotential& operator=(BondedPotential&&) = delete;
     virtual ~BondedPotential() = default;
 
     const bonds_t &getBonds() const;
@@ -68,8 +72,13 @@ protected:
 class HarmonicBondPotential : public BondedPotential {
 public:
 
-    HarmonicBondPotential(Topology *const topology, const bonds_t &bonds);
-    virtual ~HarmonicBondPotential() = default;
+    HarmonicBondPotential(Topology *topology, const bonds_t &bonds);
+    HarmonicBondPotential(const HarmonicBondPotential&) = default;
+    HarmonicBondPotential& operator=(const HarmonicBondPotential&) = delete;
+    HarmonicBondPotential(HarmonicBondPotential&&) = default;
+    HarmonicBondPotential& operator=(HarmonicBondPotential&&) = delete;
+
+    ~HarmonicBondPotential() override = default;
 
     scalar calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
 

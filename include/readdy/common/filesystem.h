@@ -88,11 +88,11 @@ public:
     /**
      * move constructor
      */
-    dir_iterator(dir_iterator&&);
+    dir_iterator(dir_iterator&&) noexcept;
     /**
      * move assign
      */
-    dir_iterator& operator=(dir_iterator&&);
+    dir_iterator& operator=(dir_iterator&&) noexcept;
 
 private:
     struct Impl;

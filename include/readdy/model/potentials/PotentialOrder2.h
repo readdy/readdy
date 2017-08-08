@@ -66,7 +66,7 @@ public:
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
-    virtual void configureForTypes(const ParticleTypeRegistry* const, particle_type_type type1, particle_type_type type2) = 0;
+    virtual void configureForTypes(const ParticleTypeRegistry*, particle_type_type type1, particle_type_type type2) = 0;
 
     const std::string particleType1, particleType2;
 };

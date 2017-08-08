@@ -33,7 +33,7 @@
 #pragma once
 
 #include <thread>
-#include <readdy/common/macros.h>
+#include "../macros.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
@@ -55,7 +55,7 @@ public:
      * Joins the thread if it is not null and joinable
      */
     ~ThreadGuard() {
-        if (t && t->joinable()) t->join();
+        if ((t != nullptr) && t->joinable()) t->join();
     }
 
     /**
@@ -72,7 +72,7 @@ public:
      * Moves another ThreadGuard object into this one, setting the other's thread pointer to null in the process.
      * @param tg the other ThreadGuard object.
      */
-    ThreadGuard(ThreadGuard &&tg) : t(std::move(tg.t)) {
+    ThreadGuard(ThreadGuard &&tg) noexcept : t(tg.t) {
         tg.t = nullptr;
     };
 
@@ -81,8 +81,8 @@ public:
      * @param tg the other ThreadGuard object
      * @return myself
      */
-    ThreadGuard &operator=(ThreadGuard &&tg) {
-        t = std::move(tg.t);
+    ThreadGuard &operator=(ThreadGuard &&tg) noexcept {
+        t = tg.t;
         tg.t = nullptr;
         return *this;
     }

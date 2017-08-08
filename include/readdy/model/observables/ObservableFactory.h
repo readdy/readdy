@@ -48,7 +48,7 @@ NAMESPACE_BEGIN(observables)
 
 class ObservableFactory {
 public:
-    ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
+    explicit ObservableFactory(Kernel *const kernel) : kernel(kernel) {};
 
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> create(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
@@ -61,24 +61,26 @@ public:
                 ObservableFactory::get_dispatcher<R, Args...>::impl(this, stride, std::forward<Args>(args)...));
     }
 
-    virtual HistogramAlongAxis *
-    createHistogramAlongAxis(unsigned int stride, std::vector<scalar> binBorders,
+    virtual HistogramAlongAxis* createHistogramAlongAxis(unsigned int stride, std::vector<scalar> binBorders,
                              std::vector<std::string> typesToCount, unsigned int axis) const {
         throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
-    virtual NParticles *
-    createNParticles(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
+    NParticles* createNParticles(unsigned int stride) const { return createNParticles(stride, {}); }
+
+    virtual NParticles* createNParticles(unsigned int stride, std::vector<std::string> typesToCount) const {
         throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
-    virtual Forces *
-    createForces(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
+    Forces* createForces(unsigned int stride) const { return createForces(stride, {}); }
+
+    virtual Forces* createForces(unsigned int stride, std::vector<std::string> typesToCount) const {
         throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 
-    virtual Positions *
-    createPositions(unsigned int stride, std::vector<std::string> typesToCount = {}) const {
+    Positions* createPositions(unsigned int stride) const { return createPositions(stride, {}); }
+
+    virtual Positions* createPositions(unsigned int stride, std::vector<std::string> typesToCount) const {
         throw std::runtime_error("should be overridden if a kernel supports this observable");
     }
 

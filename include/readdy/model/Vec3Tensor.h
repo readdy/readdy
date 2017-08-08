@@ -43,11 +43,9 @@ template<std::size_t N>
 class Vec3Tensor {
     static_assert(N > 0, "we need more than one vec3");
 public:
-    Vec3Tensor(const std::array<Vec3, N>& cols) : cols(cols) {
-    }
+    explicit Vec3Tensor(const std::array<Vec3, N>& cols) : cols(cols) {}
 
-    Vec3Tensor(std::array<Vec3, N>&& cols) : cols(std::move(cols)) {
-    }
+    explicit Vec3Tensor(std::array<Vec3, N>&& cols) : cols(std::move(cols)) {}
 
     Vec3& at(std::size_t i) {
         assert(i < N);

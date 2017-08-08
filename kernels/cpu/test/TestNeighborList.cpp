@@ -42,7 +42,6 @@
 
 
 namespace cpu = readdy::kernel::cpu;
-namespace cpum = cpu::model;
 namespace m = readdy::model;
 
 namespace {
@@ -681,7 +680,7 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
     obs->setCallback(
             [&](const readdy::model::observables::NParticles::result_t &result) {
                 bool wrong_i_j = false, wrong_j_i = false;
-                auto d2 = context.getDistSquaredFun();
+                const auto &d2 = context.getDistSquaredFun();
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
                 const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
                 std::size_t i = 0;

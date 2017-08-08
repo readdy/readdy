@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(reactions)
 class Decay : public Reaction<1> {
 
 public:
-    Decay(const std::string &name, unsigned int typeFrom, const scalar rate) : Reaction(name, rate, 0, 0, 0) {
+    Decay(const std::string &name, particle_type_type typeFrom, const scalar rate) : Reaction(name, rate, 0, 0, 0) {
         educts[0] = typeFrom;
     }
 

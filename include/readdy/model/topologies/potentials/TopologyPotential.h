@@ -43,13 +43,18 @@ NAMESPACE_BEGIN(pot)
 
 class TopologyPotential {
 public:
-    TopologyPotential(Topology *const topology);
+    explicit TopologyPotential(Topology *topology);
+
+    TopologyPotential(const TopologyPotential&) = default;
+    TopologyPotential& operator=(const TopologyPotential&) = delete;
+    TopologyPotential(TopologyPotential&&) = default;
+    TopologyPotential& operator=(TopologyPotential&&) = delete;
 
     virtual ~TopologyPotential() = default;
 
     Topology *const getTopology() const;
 
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*const) = 0;
+    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*) = 0;
 
 protected:
     Topology *const topology;

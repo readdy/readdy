@@ -52,7 +52,7 @@ public:
 
     ParticlesList() = default;
 
-    ParticlesList(ParticlesList &&rhs) : _particles_mutex() {
+    ParticlesList(ParticlesList &&rhs) {
         particles_lock rhs_lock(rhs._particles_mutex);
         _particles = std::move(rhs._particles);
     }

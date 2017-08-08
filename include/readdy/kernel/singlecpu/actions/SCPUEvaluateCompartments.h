@@ -41,9 +41,9 @@ namespace actions {
 
 class SCPUEvaluateCompartments : public readdy::model::actions::EvaluateCompartments {
 public:
-    SCPUEvaluateCompartments(SCPUKernel *const kernel);
+    explicit SCPUEvaluateCompartments(SCPUKernel* kernel);
 
-    virtual void perform() override;
+    void perform() override;
 
 protected:
     SCPUKernel *const kernel;

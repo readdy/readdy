@@ -64,6 +64,7 @@ public:
     using cos_dihedral = TopologyActionFactory::cos_dihedral;
 
     Topology(particles_t &&particles);
+
     Topology(const particles_t &particles);
 
     Topology(const Topology &) = delete;

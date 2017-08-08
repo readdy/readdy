@@ -164,12 +164,11 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
                     auto subTopologies = topology.connectedComponents();
                     assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
                     return std::move(subTopologies);
-                } else {
-                    // if valid, update force field
-                    topology.configure();
-                    // and update reaction rates
-                    topology.updateReactionRates();
                 }
+                // if valid, update force field
+                topology.configure();
+                // and update reaction rates
+                topology.updateReactionRates();
             }
         }
     }

@@ -73,11 +73,14 @@ public:
     std::unique_ptr<TimeStepDependentAction> createReactionScheduler(const std::string& name, scalar timeStep) {
         if(name == getActionName<reactions::Gillespie>()) {
             return std::unique_ptr<TimeStepDependentAction>(createGillespie(timeStep));
-        } else if(name == getActionName<reactions::GillespieParallel>()) {
+        }
+        if(name == getActionName<reactions::GillespieParallel>()) {
             return std::unique_ptr<TimeStepDependentAction>(createGillespieParallel(timeStep));
-        } else if(name == getActionName<reactions::NextSubvolumes>()) {
+        }
+        if(name == getActionName<reactions::NextSubvolumes>()) {
             return std::unique_ptr<TimeStepDependentAction>(createNextSubvolumes(timeStep));
-        } else if(name == getActionName<reactions::UncontrolledApproximation>()) {
+        }
+        if(name == getActionName<reactions::UncontrolledApproximation>()) {
             return std::unique_ptr<TimeStepDependentAction>(createUncontrolledApproximation(timeStep));
         }
         log::critical("Requested reaction scheduler \"{}\" is not available, returning nullptr", name);

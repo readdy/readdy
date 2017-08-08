@@ -31,6 +31,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+#include "../macros.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
@@ -44,7 +45,7 @@ public:
     /**
      * constructs a new notification barrier
      */
-    explicit notification_barrier() { }
+    explicit notification_barrier() = default;
 
     /**
      * waste time until ready() was called

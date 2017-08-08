@@ -124,10 +124,10 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
         }
         scalar  rho = rMin / 2;
         if (fMax > 0) {
-            xi = 1. / (context.getKBT() * fMax);
+            xi = static_cast<scalar>(1. / (context.getKBT() * fMax));
             tD = (xi * xi / D) * (1 + rho / xi - std::sqrt(1 + 2 * rho / xi));
         } else if (D > 0) {
-            tD = .5 * rho * rho / D;
+            tD = static_cast<scalar>(.5 * rho * rho / D);
         }
         fMaxes.emplace(pI, fMax);
         log::trace(" tau for {}: {} ( xi = {}, rho = {})", context.particle_types().name_of(pI), tD, xi, rho);
@@ -146,7 +146,7 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
                               D * kbt * fMaxes[pI] * tDMin, xmax);
     }
 
-    if (kReactionMax > 0) tau_R = 1. / kReactionMax;
+    if (kReactionMax > 0) tau_R = static_cast<scalar>(1. / kReactionMax);
 
     scalar  tau = std::max(tau_R, tDMin);
     if (tau_R > 0) tau = std::min(tau_R, tau);

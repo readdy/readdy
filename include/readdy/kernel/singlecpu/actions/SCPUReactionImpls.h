@@ -41,17 +41,17 @@ namespace reactions {
 class SCPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
 
 public:
-    SCPUUncontrolledApproximation(SCPUKernel *const kernel, scalar timeStep);
+    SCPUUncontrolledApproximation(SCPUKernel* kernel, scalar timeStep);
 
-    virtual void perform() override;
+    void perform() override;
 
-    virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override;
+    void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override;
 
-    virtual void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override;
+    void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override;
 
-    virtual void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override;
+    void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override;
 
-    virtual void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) override;
+    void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) override;
 
 protected:
     SCPUKernel *const kernel;
@@ -83,7 +83,7 @@ public:
     SCPUGillespie(SCPUKernel *const kernel, scalar timeStep)
             : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
 
-    virtual void perform() override;
+    void perform() override;
 
 protected:
     SCPUKernel *const kernel;

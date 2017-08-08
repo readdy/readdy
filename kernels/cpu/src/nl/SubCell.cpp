@@ -131,7 +131,7 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
                                                       my_global_center.y + j * _size.y,
                                                       my_global_center.z + k * _size.z});
                         auto cell = my_root->sub_cell_for_position(shifted_pos, _level);
-                        if (cell && cell != this) {
+                        if (cell != nullptr && cell != this) {
                             _neighbors.push_back(cell);
                         }
                     }
@@ -181,9 +181,8 @@ ParticlesList::particle_indices SubCell::collect_contained_particles() const {
                           std::make_move_iterator(sub_particles.end()));
         }
         return result;
-    } else {
-        return _particles_list.data();
     }
+    return _particles_list.data();
 }
 
 const bool SubCell::neighbor_dirty() const {
@@ -226,9 +225,9 @@ void SubCell::unset_dirty() const {
     _dirty_flag.unset();
 }
 
-detail::DirtyFlag::DirtyFlag(detail::DirtyFlag &&rhs) : _is_dirty(rhs._is_dirty.load()) {}
+detail::DirtyFlag::DirtyFlag(detail::DirtyFlag &&rhs) noexcept : _is_dirty(rhs._is_dirty.load()) {}
 
-detail::DirtyFlag &detail::DirtyFlag::operator=(detail::DirtyFlag &&rhs) {
+detail::DirtyFlag &detail::DirtyFlag::operator=(detail::DirtyFlag &&rhs) noexcept {
     _is_dirty = rhs.get();
     return *this;
 }

@@ -99,7 +99,7 @@ void writeParticleTypeInformation(readdy::io::Group &group, const KernelContext 
                               context.particle_types().diffusion_constant_of(p_type.first)};
         type_info_vec.push_back(info);
     }
-    if (type_info_vec.size() > 0) {
+    if (!type_info_vec.empty()) {
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
         std::vector<readdy::io::h5::dims_t> extent = {type_info_vec.size()};
         auto dset = group.createDataSet("particle_types", extent, dims, ParticleTypeInfoMemoryType(),

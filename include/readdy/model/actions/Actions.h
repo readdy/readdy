@@ -57,8 +57,8 @@ NAMESPACE_BEGIN(actions)
 class AddParticles : public Action {
 
 public:
-    AddParticles(Kernel *const kernel, const std::vector<Particle> &particles);
-    AddParticles(Kernel *const kernel, const Particle& particle);
+    AddParticles(Kernel *kernel, const std::vector<Particle> &particles);
+    AddParticles(Kernel *kernel, const Particle& particle);
 
     void perform() override;
 
@@ -69,7 +69,7 @@ protected:
 
 class EulerBDIntegrator : public TimeStepDependentAction {
 public:
-    EulerBDIntegrator(scalar timeStep);
+    explicit EulerBDIntegrator(scalar timeStep);
 };
 
 class CalculateForces : public Action {
@@ -83,7 +83,7 @@ public:
         create, clear
     };
 
-    UpdateNeighborList(Operation operation = Operation::create, scalar skinSize = -1);
+    explicit UpdateNeighborList(Operation operation = Operation::create, scalar skinSize = -1);
 
     virtual bool supportsSkin() const = 0;
 
@@ -104,7 +104,7 @@ public:
     using reaction_22 = std::function<void(const model::Particle &, const model::Particle &, model::Particle &,
                                            model::Particle &)>;
 
-    UncontrolledApproximation(scalar timeStep);
+    explicit UncontrolledApproximation(scalar timeStep);
 
     virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) = 0;
 
@@ -118,16 +118,16 @@ public:
 
 class Gillespie : public TimeStepDependentAction {
 public:
-    Gillespie(scalar timeStep);
+    explicit Gillespie(scalar timeStep);
 };
 
 class GillespieParallel : public TimeStepDependentAction {
 public:
-    GillespieParallel(scalar timeStep);
+    explicit GillespieParallel(scalar timeStep);
 };
 
 struct NextSubvolumes : public TimeStepDependentAction {
-    NextSubvolumes(scalar timeStep);
+    explicit NextSubvolumes(scalar timeStep);
 };
 
 NAMESPACE_END(reactions)
@@ -136,14 +136,14 @@ NAMESPACE_BEGIN(top)
 
 class EvaluateTopologyReactions : public TimeStepDependentAction {
 public:
-    EvaluateTopologyReactions(scalar timeStep);
+    explicit EvaluateTopologyReactions(scalar timeStep);
 };
 
 NAMESPACE_END(top)
 
 class EvaluateCompartments : public Action {
 public:
-    EvaluateCompartments() : Action() {}
+    explicit EvaluateCompartments() : Action() {}
 };
 
 template<typename T>

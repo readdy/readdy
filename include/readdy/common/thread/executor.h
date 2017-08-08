@@ -70,7 +70,7 @@ template<typename executor_tag = readdy::util::thread::executor_type::pool>
 class executor : public executor_base {
 public:
 
-    executor(ctpl::thread_pool *pool = nullptr) : pool(pool) {
+    explicit executor(ctpl::thread_pool *pool = nullptr) : pool(pool) {
         if (is_mode_pool() && pool == nullptr) {
             log::critical("selected execution type pool but did not pass a valid pool pointer to the executor!");
             throw std::invalid_argument(
@@ -105,10 +105,10 @@ public:
     };
 
 private:
-    mutable ctpl::thread_pool *pool;
-    mutable std::mutex mutex;
+    mutable ctpl::thread_pool *pool {nullptr};
+    mutable std::mutex mutex {};
 
-    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::std_async) const {
+    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::std_async /*unused*/) const {
         std::vector<scoped_async> threads;
         threads.reserve(executables.size());
 
@@ -118,7 +118,7 @@ private:
         }
     }
 
-    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::std_thread) const {
+    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::std_thread /*unused*/) const {
         std::vector<scoped_thread> threads;
         threads.reserve(executables.size());
 
@@ -128,7 +128,7 @@ private:
         }
     }
 
-    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::pool) const {
+    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::pool /*unused*/) const {
         using fut_t = joining_future<void>;
 
         std::unique_lock<std::mutex> lock(this->mutex);

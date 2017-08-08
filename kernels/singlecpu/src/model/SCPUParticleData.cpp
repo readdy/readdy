@@ -83,9 +83,9 @@ void SCPUParticleData::addParticles(const std::vector<SCPUParticleData::particle
         if(!blanks.empty()) {
             const auto idx = blanks.back();
             blanks.pop_back();
-            entries.at(idx) = {p};
+            entries.at(idx) = Entry{p};
         } else {
-            entries.push_back({p});
+            entries.emplace_back(p);
         }
     }
 }
@@ -98,11 +98,11 @@ SCPUParticleData::addTopologyParticles(const std::vector<SCPUParticleData::top_p
         if(!blanks.empty()) {
             const auto idx = blanks.back();
             blanks.pop_back();
-            entries.at(idx) = {p};
+            entries.at(idx) = Entry{p};
             indices.push_back(idx);
         } else {
             indices.push_back(entries.size());
-            entries.push_back({p});
+            entries.emplace_back(p);
         }
     }
     return indices;
@@ -184,10 +184,9 @@ SCPUParticleData::index_t SCPUParticleData::addEntry(Entry &&entry) {
         blanks.pop_back();
         entries.at(idx) = std::move(entry);
         return idx;
-    } else {
-        entries.push_back(std::move(entry));
-        return entries.size()-1;
     }
+    entries.push_back(std::move(entry));
+    return entries.size()-1;
 }
 
 void SCPUParticleData::removeEntry(SCPUParticleData::index_t idx) {

@@ -38,7 +38,7 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(util)
 
 scalar getRecommendedTimeStep(unsigned int N, KernelContext&);
-scalar getMaximumDisplacement(KernelContext&, const scalar timeStep);
+scalar getMaximumDisplacement(KernelContext&, scalar timeStep);
 
 NAMESPACE_END(util)
 NAMESPACE_END(model)

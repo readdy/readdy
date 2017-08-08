@@ -65,7 +65,11 @@ public:
     using angle_t = AngleConfiguration;
     using angles_t = std::vector<AngleConfiguration>;
 
-    HarmonicAnglePotential(Topology *const topology, const angles_t &angles);
+    HarmonicAnglePotential(Topology *topology, const angles_t &angles);
+    HarmonicAnglePotential(const HarmonicAnglePotential&) = default;
+    HarmonicAnglePotential& operator=(const HarmonicAnglePotential&) = delete;
+    HarmonicAnglePotential(HarmonicAnglePotential&&) = default;
+    HarmonicAnglePotential& operator=(HarmonicAnglePotential&&) = delete;
 
     virtual ~HarmonicAnglePotential() = default;
 

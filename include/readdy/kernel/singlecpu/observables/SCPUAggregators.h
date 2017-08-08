@@ -48,7 +48,7 @@ public:
                             readdy::model::observables::Particles *particlesObservable)
             : readdy::model::observables::MeanSquaredDisplacement(kernel, stride, typesToCount, particlesObservable), kernel(kernel) {};
 
-    virtual void evaluate() override {
+    void evaluate() override {
         const auto &currentInput = std::get<0>(parentObservables)->getResult();
         const auto &types = std::get<0>(currentInput);
         const auto &ids = std::get<1>(currentInput);

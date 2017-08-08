@@ -21,7 +21,6 @@
 
 
 #include <readdy/model/Particle.h>
-#include <ostream>
 
 /**
  * << detailed description >>
@@ -57,14 +56,14 @@ const Particle::id_type Particle::getId() const {
 }
 
 Particle::Particle(Vec3 pos, type_type type, id_type id)
-        : pos(pos), type(std::move(type)), id(id), flavor(FLAVOR_NORMAL) {}
+        : pos(pos), type(type), id(id), flavor(FLAVOR_NORMAL) {}
 
 Vec3 &Particle::getPos() {
     return pos;
 }
 
 Particle::Particle(Vec3 pos, type_type type)
-        : pos(pos), type(std::move(type)), id(std::atomic_fetch_add<id_type>(&id_counter, 1)), flavor(FLAVOR_NORMAL) {}
+        : pos(pos), type(type), id(std::atomic_fetch_add<id_type>(&id_counter, 1)), flavor(FLAVOR_NORMAL) {}
 
 
 Particle::~Particle() = default;

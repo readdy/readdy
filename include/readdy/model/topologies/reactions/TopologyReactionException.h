@@ -42,7 +42,7 @@ NAMESPACE_BEGIN(reactions)
 
 class TopologyReactionException : public std::runtime_error {
 public:
-    TopologyReactionException(const std::string &message) : runtime_error(message) {}
+    explicit TopologyReactionException(const std::string &message) : runtime_error(message) {}
 };
 
 NAMESPACE_END(reactions)

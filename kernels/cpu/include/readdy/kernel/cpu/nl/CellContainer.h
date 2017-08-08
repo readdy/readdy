@@ -103,9 +103,9 @@ public:
 
     const cell_index &contiguous_index() const;
 
-    virtual void insert_particle(const particle_index index, bool mark_dirty=false) const;
+    virtual void insert_particle(particle_index index, bool mark_dirty=false) const;
 
-    virtual void insert_particle(const particle_index index, bool mark_dirty=false);
+    virtual void insert_particle(particle_index index, bool mark_dirty=false);
 
     virtual void clear();
 
@@ -137,8 +137,8 @@ public:
 
     const sub_cell *const leaf_cell_for_position(const vec3 &pos) const;
 
-    sub_cell *const sub_cell_for_position(const vec3 &pos, const level_t level);
-    const sub_cell *const sub_cell_for_position(const vec3 &pos, const level_t level) const;
+    sub_cell *const sub_cell_for_position(const vec3 &pos, level_t level);
+    const sub_cell *const sub_cell_for_position(const vec3 &pos, level_t level) const;
 
     /**
      * Recursively update displacements by calling update_displacements on the sub cells which in turn do this to their
@@ -157,7 +157,7 @@ public:
      * @param max_displacement
      * @return true if everything is alright, false if the displacement of a particle was larger than cutoff + skin
      */
-    bool update_sub_cell_displacements_and_mark_dirty(const scalar max_cutoff, const scalar skin);
+    bool update_sub_cell_displacements_and_mark_dirty(scalar max_cutoff, scalar skin);
 
     void update_dirty_cells();
 
@@ -165,7 +165,7 @@ public:
      * sets up subcells with an edge size of >= desired_cell_width
      * @param desired_cell_width
      */
-    virtual void subdivide(const scalar desired_cell_width);
+    virtual void subdivide(scalar desired_cell_width);
 
     virtual void refine_uniformly();
 

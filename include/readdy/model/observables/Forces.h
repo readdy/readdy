@@ -43,11 +43,16 @@ NAMESPACE_BEGIN(observables)
 class Forces : public Observable<std::vector<readdy::model::Vec3>> {
 
 public:
-    Forces(Kernel *const kernel, unsigned int stride);
+    Forces(Kernel* kernel, unsigned int stride);
 
-    Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
+    Forces(Kernel* kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
-    Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+    Forces(Kernel* kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+
+    Forces(const Forces&) = delete;
+    Forces& operator=(const Forces&) = delete;
+    Forces(Forces&&) = default;
+    Forces& operator=(Forces&&) = delete;
 
     virtual ~Forces();
 

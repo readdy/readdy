@@ -49,11 +49,16 @@ public:
     using reaction_counts_order1_map = typename std::tuple_element<0, result_t>::type;
     using reaction_counts_order2_map = typename std::tuple_element<1, result_t>::type;
 
-    ReactionCounts(Kernel *const kernel, unsigned int stride);
+    ReactionCounts(Kernel* kernel, unsigned int stride);
+
+    ReactionCounts(const ReactionCounts&) = delete;
+    ReactionCounts& operator=(const ReactionCounts&) = delete;
+    ReactionCounts(ReactionCounts&&) = default;
+    ReactionCounts& operator=(ReactionCounts&&) = delete;
 
     virtual ~ReactionCounts();
 
-    virtual void flush() override;
+    void flush() override;
 
     /*
      * Initialize the maps corresponding to first and second order reaction counts. If they were not used before, that means creating key-value pairs in
@@ -65,11 +70,11 @@ public:
                      const readdy::model::KernelContext &ctx);
 
 protected:
-    virtual void initialize(Kernel *const kernel) override;
+    void initialize(Kernel* kernel) override;
 
-    virtual void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
-    virtual void append() override;
+    void append() override;
 
     void assignCountsToResult(const result_t &from, result_t &to);
 

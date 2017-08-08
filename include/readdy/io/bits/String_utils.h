@@ -58,7 +58,7 @@ public:
         // Select the file position, 1 record at position 'pos'
         hsize_t count[] = {1};
         hsize_t offset[] = {m_pos++};
-        H5Sselect_hyperslab(m_dataspace, H5S_SELECT_SET, offset, NULL, count, NULL);
+        H5Sselect_hyperslab(m_dataspace, H5S_SELECT_SET, offset, nullptr, count, nullptr);
 
         const char *s = v.c_str();
         H5Dwrite(m_dataset, m_datatype, m_memspace, m_dataspace, H5P_DEFAULT, &s);
@@ -67,10 +67,10 @@ public:
 
 inline void writeVector(hid_t group, const std::string& dsName, std::vector<std::string> const &v) {
     hsize_t dims[] = {v.size()};
-    hid_t dataspace = H5Screate_simple(sizeof(dims) / sizeof(*dims), dims, NULL);
+    hid_t dataspace = H5Screate_simple(sizeof(dims) / sizeof(*dims), dims, nullptr);
 
     dims[0] = 1;
-    hid_t memspace = H5Screate_simple(sizeof(dims) / sizeof(*dims), dims, NULL);
+    hid_t memspace = H5Screate_simple(sizeof(dims) / sizeof(*dims), dims, nullptr);
 
     hid_t datatype = H5Tcopy(H5T_C_S1);
     H5Tset_size(datatype, H5T_VARIABLE);
@@ -81,7 +81,7 @@ inline void writeVector(hid_t group, const std::string& dsName, std::vector<std:
     // Select the "memory" to be written out - just 1 record.
     hsize_t offset[] = {0};
     hsize_t count[] = {1};
-    H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offset, NULL, count, NULL);
+    H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offset, nullptr, count, nullptr);
 
     std::for_each(v.begin(), v.end(), WriteString(dataset, datatype, dataspace, memspace));
 

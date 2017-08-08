@@ -29,7 +29,7 @@
  * @date 14.10.16
  */
 
-#include <stdio.h>
+#include <cstdio>
 
 #ifdef WINDOWS
 #include <direct.h>
@@ -115,9 +115,9 @@ std::string dir_iterator::next() {
     return std::string(file.path);
 }
 
-dir_iterator::dir_iterator(dir_iterator && rhs) = default;
+dir_iterator::dir_iterator(dir_iterator && rhs) noexcept = default;
 
-dir_iterator &dir_iterator::operator=(dir_iterator && rhs) = default;
+dir_iterator &dir_iterator::operator=(dir_iterator && rhs) noexcept = default;
 
 std::string dir_iterator::base_name() const {
     const std::string path{pimpl->dir->path};

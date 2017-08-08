@@ -67,13 +67,13 @@ public:
 
     using evaluate_topology_reactions = model::actions::top::EvaluateTopologyReactions;
 
-    SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
+    explicit SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
 
     virtual void run(const continue_fun_t &fun) = 0;
 
     void run(const time_step_type steps) {
         // show every 1% of the simulation
-        const std::size_t progressOutputStride = static_cast<std::size_t>(steps / 100);
+        const auto progressOutputStride = static_cast<std::size_t>(steps / 100);
         auto defaultContinueCriterion = [this, steps, progressOutputStride](const time_step_type current) {
             if (progressOutputStride > 0 && (current - start) % progressOutputStride == 0) {
                 log::debug("Simulation progress: {} / {} steps", (current - start), steps);
@@ -102,11 +102,11 @@ protected:
 
 class ReaDDyScheme : public SimulationScheme {
 public:
-    ReaDDyScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
+    explicit ReaDDyScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
 
     using SimulationScheme::run;
 
-    virtual void run(const continue_fun_t &continueFun) override {
+    void run(const continue_fun_t &continueFun) override {
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
@@ -140,8 +140,8 @@ class SchemeConfigurator {
     static_assert(std::is_base_of<SimulationScheme, SchemeType>::value, "SchemeType must inherit from readdy::api::SimulationScheme");
 public:
 
-    SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<SchemeType>(kernel)),
-                                                                               useDefaults(useDefaults) {}
+    explicit SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true)
+            : scheme(std::make_unique<SchemeType>(kernel)), useDefaults(useDefaults) {}
 
     SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
         scheme->integrator = std::move(integrator);
@@ -253,11 +253,11 @@ protected:
 
 class AdvancedScheme : public SimulationScheme {
 public:
-    AdvancedScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
+    explicit AdvancedScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
 
     using SimulationScheme::run;
 
-    virtual void run(const continue_fun_t &fun) override {
+    void run(const continue_fun_t &fun) override {
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
@@ -299,8 +299,8 @@ protected:
 template<>
 class SchemeConfigurator<AdvancedScheme> {
 public:
-    SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true) : scheme(std::make_unique<AdvancedScheme>(kernel)),
-                                                                               useDefaults(useDefaults) {}
+    explicit SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true)
+            : scheme(std::make_unique<AdvancedScheme>(kernel)), useDefaults(useDefaults) {}
 
     SchemeConfigurator &includeCompartments(bool include = true) {
         if (include) {
@@ -324,8 +324,9 @@ public:
     }
 
     SchemeConfigurator &withIntegrator(const std::string &integratorName) {
-        scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
-        return *this;;
+        scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName,
+                                                                                 static_cast<scalar>(0.));
+        return *this;
     }
 
     template<typename ReactionSchedulerType>
@@ -345,7 +346,8 @@ public:
     }
 
     SchemeConfigurator &withReactionScheduler(const std::string &name) {
-        scheme->reactionScheduler = scheme->kernel->getActionFactory().createReactionScheduler(name, 0.);
+        scheme->reactionScheduler = scheme->kernel->getActionFactory()
+                .createReactionScheduler(name, static_cast<scalar>(0.));
         return *this;
     }
 

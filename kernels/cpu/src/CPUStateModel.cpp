@@ -160,8 +160,8 @@ void CPUStateModel::calculateForces() {
         {
             const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
             const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
-            entries_it it_data_end = pimpl->data().end();
-            entries_it it_data = pimpl->data().begin();
+            auto it_data_end = pimpl->data().end();
+            auto it_data = pimpl->data().begin();
             auto it_nl = pimpl->neighborList->begin();
             auto it_tops = pimpl->topologies.cbegin();
             const thd::barrier barrier{config->nThreads()};

@@ -41,12 +41,12 @@ NAMESPACE_BEGIN(observables)
 
 class ObservableWrapper : public ObservableBase {
 public:
-    ObservableWrapper(Kernel *const kernel,
+    ObservableWrapper(Kernel *kernel,
                       const observables::observable_type &observable, unsigned int stride = 1);
 
     void operator()(time_step_type t);
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
     void flush() override;
 
