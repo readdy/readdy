@@ -365,6 +365,11 @@ public:
         return *this;
     }
 
+    SchemeConfigurator &writeConfigToFile(io::File& file) {
+        scheme->configGroup = std::make_unique<io::Group>(file.createGroup("readdy/config"));
+        return *this;
+    }
+
     SchemeConfigurator &withSkinSize(double skin = -1) {
         skinSize = skin;
         return *this;
