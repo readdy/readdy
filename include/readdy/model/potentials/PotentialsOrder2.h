@@ -215,7 +215,7 @@ public:
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 
-    virtual void configureForTypes(const ParticleTypeRegistry* context, particle_type_type type1, particle_type_type type2) override;
+    void configureForTypes(const ParticleTypeRegistry* context, particle_type_type type1, particle_type_type type2) override;
 
     scalar electrostaticStrength;
     scalar inverseScreeningDepth;

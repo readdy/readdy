@@ -174,11 +174,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    if(kernel->singlePrecision()) {
-        EXPECT_NEAR(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
-    } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.925925925926));
-    }
+    EXPECT_NEAR(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
     auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::model::Vec3 forceOnParticle0 {0, 0, static_cast<readdy::scalar>(-123.45679012)};
@@ -239,7 +235,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     if(kernel->singlePrecision()) {
         EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
     }
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();

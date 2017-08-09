@@ -107,7 +107,7 @@ public:
         return new SphereIn(particleType, forceConstant, origin, radius);
     };
 
-    SphericalBarrier *createSphericalBarrier(const std::string &particleType, const Vec3 &origin, double radius, double height, double width) const {
+    SphericalBarrier *createSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width) const {
         return new SphericalBarrier(particleType, origin, radius, height, width);
     }
 

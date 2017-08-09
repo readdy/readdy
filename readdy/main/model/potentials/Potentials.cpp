@@ -288,7 +288,7 @@ readdy::scalar SphericalBarrier::calculateEnergy(const Vec3 &position) const {
 
 void SphericalBarrier::calculateForce(Vec3 &force, const Vec3 &position) const {
     const auto difference = position - origin;
-    const double distance = difference.norm();
+    const auto distance = difference.norm();
     if (distance < r1) {
         // nothing happens
     } else if (r4 <= distance) {
@@ -306,7 +306,7 @@ void SphericalBarrier::calculateForce(Vec3 &force, const Vec3 &position) const {
 
 void SphericalBarrier::calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy, const Vec3 &position) const {
     const auto difference = position - origin;
-    const double distance = difference.norm();
+    const auto distance = difference.norm();
     if (distance < r1) {
         // nothing happens
     } else if (r4 <= distance) {
@@ -564,19 +564,19 @@ void LennardJones::calculateForceAndEnergy(Vec3 &force, scalar  &energy, const V
     calculateForce(force, x_ij);
 }
 
-scalar  LennardJones::getCutoffRadius() const {
+scalar LennardJones::getCutoffRadius() const {
     return cutoffDistance;
 }
 
-scalar  LennardJones::getCutoffRadiusSquared() const {
+scalar LennardJones::getCutoffRadiusSquared() const {
     return cutoffDistanceSquared;
 }
 
-scalar  LennardJones::energy(scalar  r) const {
+scalar LennardJones::energy(scalar  r) const {
     return k * (std::pow(sigma / r, m) - std::pow(sigma / r, n));
 }
 
-scalar  LennardJones::getMaximalForce(scalar  kbt) const noexcept {
+scalar LennardJones::getMaximalForce(scalar /*kbt*/) const noexcept {
     return 0;
 }
 
@@ -618,15 +618,15 @@ ScreenedElectrostatics::configureForTypes(const ParticleTypeRegistry *const /*co
 
 }
 
-scalar  ScreenedElectrostatics::getMaximalForce(scalar  kbt) const noexcept {
+scalar ScreenedElectrostatics::getMaximalForce(scalar /*kbt*/) const noexcept {
     return 0;
 }
 
-scalar  ScreenedElectrostatics::getCutoffRadius() const {
+scalar ScreenedElectrostatics::getCutoffRadius() const {
     return cutoff;
 }
 
-scalar  ScreenedElectrostatics::getCutoffRadiusSquared() const {
+scalar ScreenedElectrostatics::getCutoffRadiusSquared() const {
     return cutoffSquared;
 }
 
@@ -648,11 +648,11 @@ scalar  ScreenedElectrostatics::calculateEnergy(const Vec3 &x_ij) const {
 }
 
 void ScreenedElectrostatics::calculateForce(Vec3 &force, const Vec3 &x_ij) const {
-    const scalar  distance = x_ij.norm();
-    scalar  forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
-    forceFactor *= (inverseScreeningDepth / distance + 1. / std::pow(distance, 2));
-    forceFactor += repulsionStrength * exponent / repulsionDistance * std::pow( repulsionDistance / distance, exponent + 1);
-    force += forceFactor * (- 1. * x_ij / distance);
+    auto distance = x_ij.norm();
+    auto forceFactor = electrostaticStrength * std::exp(-inverseScreeningDepth * distance);
+    forceFactor *= (inverseScreeningDepth / distance + c_::one / std::pow(distance, c_::two));
+    forceFactor += repulsionStrength * exponent / repulsionDistance * std::pow( repulsionDistance / distance, exponent + c_::one);
+    force += forceFactor * (- c_::one * x_ij / distance);
 }
 
 void ScreenedElectrostatics::calculateForceAndEnergy(Vec3 &force, scalar  &energy, const Vec3 &x_ij) const {

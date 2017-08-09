@@ -190,7 +190,7 @@ Simulation::registerSphereOutPotential(const std::string &particleType, scalar f
 }
 
 const short
-Simulation::registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width) {
+Simulation::registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, scalar radius, scalar height, scalar width) {
     using potential_t = readdy::model::potentials::SphericalBarrier;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, origin, radius, height, width);
