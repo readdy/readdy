@@ -58,56 +58,56 @@ public:
     }
 
     virtual Cube *
-    createCube(const std::string &particleType, double forceConstant, const Vec3 &origin, const Vec3 &extent, bool considerParticleRadius) const {
+    createCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent, bool considerParticleRadius) const {
         return new Cube(particleType, forceConstant, origin, extent, considerParticleRadius);
     };
 
-    Cube *createCube(const std::string &particleType, double forceConstant, const Vec3 &origin, const Vec3 &extent) const {
+    Cube *createCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent) const {
         return createCube(particleType, forceConstant, origin, extent, true);
     }
 
     virtual HarmonicRepulsion *
-    createHarmonicRepulsion(const std::string &type1, const std::string &type2, double forceConstant) const {
+    createHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant) const {
         return new HarmonicRepulsion(type1, type2, forceConstant);
     };
 
     virtual WeakInteractionPiecewiseHarmonic *
     createWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
-                                           const double forceConstant,
+                                           const scalar forceConstant,
                                            const WeakInteractionPiecewiseHarmonic::Configuration &config) const {
         return new WeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, config);
     };
 
     WeakInteractionPiecewiseHarmonic *
     createWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
-                                           const double forceConstant, const double desiredDist,
-                                           const double depth,
-                                           const double cutoff) const {
+                                           const scalar forceConstant, const scalar desiredDist,
+                                           const scalar depth,
+                                           const scalar cutoff) const {
         using config = WeakInteractionPiecewiseHarmonic::Configuration;
         return createWeakInteractionPiecewiseHarmonic(type1, type2, forceConstant, config{desiredDist, depth, cutoff});
     };
 
-    LennardJones* createLennardJones(const std::string& type1, const std::string& type2, unsigned int m, unsigned int n, double cutoff, bool shift, double epsilon, double sigma) const {
+    LennardJones* createLennardJones(const std::string& type1, const std::string& type2, unsigned int m, unsigned int n, scalar cutoff, bool shift, scalar epsilon, scalar sigma) const {
         return new LennardJones(type1, type2, m, n, cutoff, shift, epsilon, sigma);
     }
 
     ScreenedElectrostatics *
-    createScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, double electrostaticStrength,
-                                 double inverseScreeningDepth, double repulsionStrength, double repulsionDistance, unsigned int exponent,
-                                 double cutoff) const {
+    createScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, scalar electrostaticStrength,
+                                 scalar inverseScreeningDepth, scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
+                                 scalar cutoff) const {
         return new ScreenedElectrostatics(particleType1, particleType2, electrostaticStrength,
                                           inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
     };
 
-    SphereOut *createSphereOut(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius) const {
+    SphereOut *createSphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) const {
         return new SphereOut(particleType, forceConstant, origin, radius);
     }
 
-    SphereIn *createSphereIn(const std::string &particleType, double forceConstant, const Vec3 &origin, double radius) const {
+    virtual SphereIn *createSphereIn(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius) const {
         return new SphereIn(particleType, forceConstant, origin, radius);
     };
 
-    SphericalBarrier *createSphericalBarrier(const std::string &particleType, const Vec3 &origin, double radius, double height, double width) const {
+    SphericalBarrier *createSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width) const {
         return new SphericalBarrier(particleType, origin, radius, height, width);
     }
 

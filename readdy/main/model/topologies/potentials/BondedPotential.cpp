@@ -65,7 +65,7 @@ HarmonicBondPotential::HarmonicBondPotential(Topology *const topology, const bon
     }
 }
 
-double HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const BondConfiguration &bond) const {
+scalar HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const BondConfiguration &bond) const {
     const auto norm = std::sqrt(x_ij * x_ij);
     return bond.forceConstant * (norm - bond.length) * (norm - bond.length);
 }
@@ -81,7 +81,7 @@ HarmonicBondPotential::createForceAndEnergyAction(const TopologyActionFactory *c
     return factory->createCalculateHarmonicBondPotential(this);
 }
 
-BondConfiguration::BondConfiguration(std::size_t idx1, std::size_t idx2, double forceConstant, double length)
+BondConfiguration::BondConfiguration(std::size_t idx1, std::size_t idx2, scalar forceConstant, scalar length)
         : idx1(idx1), idx2(idx2), length(length), forceConstant(forceConstant) {}
 }
 }

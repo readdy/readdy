@@ -62,7 +62,7 @@ public:
     /*
      * Convenience stuff
      */
-    std::unique_ptr<TimeStepDependentAction> createIntegrator(const std::string& name, double timeStep) {
+    std::unique_ptr<TimeStepDependentAction> createIntegrator(const std::string& name, scalar timeStep) {
         if(name == getActionName<EulerBDIntegrator>()) {
             return std::unique_ptr<TimeStepDependentAction>(createEulerBDIntegrator(timeStep));
         }
@@ -70,14 +70,17 @@ public:
         return nullptr;
     }
 
-    std::unique_ptr<TimeStepDependentAction> createReactionScheduler(const std::string& name, double timeStep) {
+    std::unique_ptr<TimeStepDependentAction> createReactionScheduler(const std::string& name, scalar timeStep) {
         if(name == getActionName<reactions::Gillespie>()) {
             return std::unique_ptr<TimeStepDependentAction>(createGillespie(timeStep));
-        } else if(name == getActionName<reactions::GillespieParallel>()) {
+        }
+        if(name == getActionName<reactions::GillespieParallel>()) {
             return std::unique_ptr<TimeStepDependentAction>(createGillespieParallel(timeStep));
-        } else if(name == getActionName<reactions::NextSubvolumes>()) {
+        }
+        if(name == getActionName<reactions::NextSubvolumes>()) {
             return std::unique_ptr<TimeStepDependentAction>(createNextSubvolumes(timeStep));
-        } else if(name == getActionName<reactions::UncontrolledApproximation>()) {
+        }
+        if(name == getActionName<reactions::UncontrolledApproximation>()) {
             return std::unique_ptr<TimeStepDependentAction>(createUncontrolledApproximation(timeStep));
         }
         log::critical("Requested reaction scheduler \"{}\" is not available, returning nullptr", name);
@@ -91,11 +94,11 @@ protected:
         return createAddParticles(std::vector<Particle>{particle});
     };
 
-    virtual EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const = 0;
+    virtual EulerBDIntegrator *createEulerBDIntegrator(scalar timeStep) const = 0;
 
     virtual CalculateForces *createCalculateForces() const = 0;
 
-    virtual UpdateNeighborList *createUpdateNeighborList(UpdateNeighborList::Operation, double skinSize) const = 0;
+    virtual UpdateNeighborList *createUpdateNeighborList(UpdateNeighborList::Operation, scalar skinSize) const = 0;
     UpdateNeighborList *createUpdateNeighborList(UpdateNeighborList::Operation op) const {
         return createUpdateNeighborList(op, -1);
     };
@@ -105,15 +108,15 @@ protected:
 
     virtual EvaluateCompartments *createEvaluateCompartments() const = 0;
 
-    virtual reactions::UncontrolledApproximation *createUncontrolledApproximation(double timeStep) const = 0;
+    virtual reactions::UncontrolledApproximation *createUncontrolledApproximation(scalar timeStep) const = 0;
 
-    virtual reactions::Gillespie *createGillespie(double timeStep) const = 0;
+    virtual reactions::Gillespie *createGillespie(scalar timeStep) const = 0;
 
-    virtual reactions::GillespieParallel *createGillespieParallel(double timeStep) const = 0;
+    virtual reactions::GillespieParallel *createGillespieParallel(scalar timeStep) const = 0;
 
-    virtual reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const = 0;
+    virtual reactions::NextSubvolumes *createNextSubvolumes(scalar timeStep) const = 0;
 
-    virtual top::EvaluateTopologyReactions *createEvaluateTopologyReactions(double timeStep) const = 0;
+    virtual top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const = 0;
 
     template<typename T, typename... Args>
     struct get_dispatcher;

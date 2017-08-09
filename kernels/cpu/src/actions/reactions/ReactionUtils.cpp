@@ -38,7 +38,7 @@ namespace actions {
 namespace reactions {
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel *const kernel, double timeStep, bool filterEventsInAdvance, bool approximateRate,
+        CPUKernel *const kernel, scalar timeStep, bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
     const auto& fixPos = kernel->getKernelContext().getFixPositionFun();
@@ -57,10 +57,10 @@ data_t::update_t handleEventsGillespie(
             const std::size_t nEvents = events.size();
             while (nDeactivated < nEvents) {
                 const auto alpha = (*(events.end() - nDeactivated - 1)).cumulativeRate;
-                const auto x = readdy::model::rnd::uniform_real(0., alpha);
+                const auto x = readdy::model::rnd::uniform_real<scalar>(static_cast<scalar>(0.), alpha);
                 const auto eventIt = std::lower_bound(
                         events.begin(), events.end() - nDeactivated, x,
-                        [](const event_t &elem1, double elem2) {
+                        [](const event_t &elem1, scalar elem2) {
                             return elem1.cumulativeRate < elem2;
                         }
                 );
@@ -77,33 +77,33 @@ data_t::update_t handleEventsGillespie(
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
                             auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
-                            if(maybeRecords) {
+                            if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
                                 performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                                 fixPos(record.where);
-                                maybeRecords->push_back(std::move(record));
+                                maybeRecords->push_back(record);
                             } else {
                                 performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                             }
-                            if(maybeCounts) {
+                            if(maybeCounts != nullptr) {
                                 auto &countsOrder1 = std::get<0>(*maybeCounts);
                                 countsOrder1.at(event.t1).at(event.reactionIdx)++;
                             }
                         } else {
                             auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
-                            if(maybeRecords) {
+                            if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
                                 performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 &record);
                                 fixPos(record.where);
-                                maybeRecords->push_back(std::move(record));
+                                maybeRecords->push_back(record);
                             } else {
                                 performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 nullptr);
                             }
-                            if(maybeCounts) {
+                            if(maybeCounts != nullptr) {
                                 auto &countsOrder2 = std::get<1>(*maybeCounts);
                                 countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
                             }
@@ -114,7 +114,7 @@ data_t::update_t handleEventsGillespie(
                      */
                     {
                         auto _it = events.begin();
-                        double cumsum = 0.0;
+                        scalar cumsum = 0.0;
                         const auto idx1 = event.idx1;
                         if (event.nEducts == 1) {
                             while (_it < events.end() - nDeactivated) {

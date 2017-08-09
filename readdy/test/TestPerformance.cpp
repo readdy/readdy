@@ -85,7 +85,7 @@ const std::string BOXLENGTHS_FACTOR = "boxlengths";
  */
 class PerformanceScenario {
 public:
-    PerformanceScenario(const std::string &kernelName, double timeStep, double skin) :
+    PerformanceScenario(const std::string &kernelName, readdy::scalar timeStep, readdy::scalar skin) :
             kernel(readdy::plugin::KernelProvider::getInstance().create(kernelName)), timeStep(timeStep),
             clearNeighborList(kernel->createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear)) {
         neighborList = kernel->createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skin);
@@ -102,33 +102,33 @@ public:
         hasPerformed = true;
     };
 
-    double getTimeForces() const {
+    readdy::scalar getTimeForces() const {
         if (hasPerformed) return timeForces;
         else throw std::runtime_error("scenario has not performed yet");
     }
 
-    double getTimeIntegrator() const {
+    readdy::scalar getTimeIntegrator() const {
         if (hasPerformed) return timeIntegrator;
         else throw std::runtime_error("scenario has not performed yet");
     }
 
-    double getTimeNeighborlist() const {
+    readdy::scalar getTimeNeighborlist() const {
         if (hasPerformed) return timeNeighborList;
         else throw std::runtime_error("scenario has not performed yet");
     }
 
-    double getTimeReactions() const {
+    readdy::scalar getTimeReactions() const {
         if (hasPerformed) return timeReactions;
         else throw std::runtime_error("scenario has not performed yet");
     }
 
-    double getParticleNumber() const { return particleNumber; }
+    readdy::scalar getParticleNumber() const { return particleNumber; }
 
-    double getSystemSize() const { return systemSize; }
+    readdy::scalar getSystemSize() const { return systemSize; }
 
-    double getRelativeDisplacement() const { return relativeDisplacement; }
+    readdy::scalar getRelativeDisplacement() const { return relativeDisplacement; }
 
-    double getReactivity() const { return reactivity; }
+    readdy::scalar getReactivity() const { return reactivity; }
 
 protected:
     /**
@@ -140,7 +140,7 @@ protected:
      * @return computation time per timestep for {forces, integrator, neighborlist, reactions}
      */
     template<typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
-    std::array<double, 4>
+    std::array<readdy::scalar, 4>
     runPerformanceTest(readdy::time_step_type steps, const bool verbose = false) {
         auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
         auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
@@ -148,7 +148,7 @@ protected:
         kernel->getKernelContext().configure(verbose);
 
         using timer = readdy::util::Timer;
-        double timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0;
+        readdy::scalar timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0;
         neighborList->perform();
         {
             timer c("forces", verbose);
@@ -200,16 +200,16 @@ protected:
             std::cout << "Average time for handling reactions: " << timeReactions << std::endl;
             std::cout << "--------------------------------------------------------------" << std::endl;
         }
-        const std::array<double, 4> result = {timeForces, timeIntegrator, timeNeighborList, timeReactions};
+        const std::array<readdy::scalar, 4> result = {timeForces, timeIntegrator, timeNeighborList, timeReactions};
         return result;
     }
 
     /** This is where the actual system gets set up: define reactions/potentials, add particles ... */
     virtual void configure() = 0;
 
-    double timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0; // main result
-    double particleNumber = 0, systemSize = 0, relativeDisplacement = 0, reactivity = 0;
-    double timeStep;
+    readdy::scalar timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0; // main result
+    readdy::scalar particleNumber = 0, systemSize = 0, relativeDisplacement = 0, reactivity = 0;
+    readdy::scalar timeStep;
 
 protected:
     // the (N,L,S,R) observables defined above
@@ -233,7 +233,7 @@ class ReactiveUniformHomogeneous : public PerformanceScenario {
 public:
     static const std::string name;
 
-    ReactiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
+    ReactiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, readdy::scalar> &factors)
             : PerformanceScenario(kernelName, .1,
                                   factors.find(SKIN_FACTOR) != factors.end() ? 4.5 * factors.at(SKIN_FACTOR) : -1) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
@@ -263,7 +263,7 @@ public:
         {
             particles.reserve(2 * numberA + numberC);
             auto uniform = [this]() {
-                return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
+                return readdy::model::rnd::uniform_real<readdy::scalar, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
             };
             const auto &typeMapping = ctx.particle_types().type_mapping();
             const auto typeA = typeMapping.at("A");
@@ -285,11 +285,11 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5;
-    std::map<std::string, double> radii{{"A", 1.5},
+    readdy::scalar boxLength = 100., rateOn = 1e-3, rateOff = 5e-5;
+    std::map<std::string, readdy::scalar> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
-    std::map<std::string, double> diffusionConstants{{"A", .14},
+    std::map<std::string, readdy::scalar> diffusionConstants{{"A", .14},
                                                      {"B", .07},
                                                      {"C", .06}};
 };
@@ -303,7 +303,7 @@ class ReactiveCollisiveUniformHomogeneous : public PerformanceScenario {
 public:
     static const std::string name;
 
-    ReactiveCollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
+    ReactiveCollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, readdy::scalar> &factors)
             : PerformanceScenario(kernelName, .1,
                                   factors.find(SKIN_FACTOR) != factors.end() ? 4.5 * factors.at(SKIN_FACTOR) : -1) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
@@ -341,7 +341,7 @@ public:
         {
             particles.reserve(2 * numberA + numberC);
             auto uniform = [this]() {
-                return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
+                return readdy::model::rnd::uniform_real<readdy::scalar, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
             };
             const auto &typeMapping = ctx.particle_types().type_mapping();
             const auto typeA = typeMapping.at("A");
@@ -363,11 +363,11 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, forceConstant = 10.;
-    std::map<std::string, double> radii{{"A", 1.5},
+    readdy::scalar boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, forceConstant = 10.;
+    std::map<std::string, readdy::scalar> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
-    std::map<std::string, double> diffusionConstants{{"A", .14},
+    std::map<std::string, readdy::scalar> diffusionConstants{{"A", .14},
                                                      {"B", .07},
                                                      {"C", .06}};
 };
@@ -378,7 +378,7 @@ class CollisiveUniformHomogeneous : public PerformanceScenario {
 public:
     static const std::string name;
 
-    CollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, double> &factors)
+    CollisiveUniformHomogeneous(const std::string &kernelName, const std::map<std::string, readdy::scalar> &factors)
             : PerformanceScenario(kernelName, .1,
                                   factors.find(SKIN_FACTOR) != factors.end() ? 4.5 * factors.at(SKIN_FACTOR) : -1) {
         numberA = static_cast<unsigned long>(numberA * factors.at(NUMBERS_FACTOR));
@@ -413,7 +413,7 @@ public:
         {
             particles.reserve(2 * numberA + numberC);
             auto uniform = [this]() {
-                return readdy::model::rnd::uniform_real<double, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
+                return readdy::model::rnd::uniform_real<readdy::scalar, std::mt19937>(-0.5 * boxLength, 0.5 * boxLength);
             };
             const auto &typeMapping = ctx.particle_types().type_mapping();
             const auto typeA = typeMapping.at("A");
@@ -435,11 +435,11 @@ public:
 
 private:
     unsigned long numberA = 500, numberC = 1800;
-    double boxLength = 100., forceConstant = 10.;
-    std::map<std::string, double> radii{{"A", 1.5},
+    readdy::scalar boxLength = 100., forceConstant = 10.;
+    std::map<std::string, readdy::scalar> radii{{"A", 1.5},
                                         {"B", 3},
                                         {"C", 3.12}};
-    std::map<std::string, double> diffusionConstants{{"A", .14},
+    std::map<std::string, readdy::scalar> diffusionConstants{{"A", .14},
                                                      {"B", .07},
                                                      {"C", .06}};
 };
@@ -449,9 +449,9 @@ const std::string CollisiveUniformHomogeneous::name = "CollisiveUniformHomogeneo
 template<typename scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
 void scaleNumbersAndBoxsize(const std::string &kernelName) {
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
-    const std::vector<double> numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
+    const std::vector<readdy::scalar> numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
                                          3., 4., 5., 6., 7.};
-    std::vector<double> boxLengths(numbers.size());
+    std::vector<readdy::scalar> boxLengths(numbers.size());
     {
         auto x = 0;
         std::generate(boxLengths.begin(), boxLengths.end(), [&numbers, &x] { return std::cbrt(numbers[x++]); });
@@ -460,18 +460,18 @@ void scaleNumbersAndBoxsize(const std::string &kernelName) {
     const auto boxLengthsSize = boxLengths.size();
 
     // results are performance times and the (N,L,S,R) observables
-    double timeForces[numbersSize][boxLengthsSize];
-    double timeIntegrator[numbersSize][boxLengthsSize];
-    double timeNeighborList[numbersSize][boxLengthsSize];
-    double timeReactions[numbersSize][boxLengthsSize];
-    double particleNumber[numbersSize][boxLengthsSize];
-    double systemSize[numbersSize][boxLengthsSize];
-    double relativeDisplacement[numbersSize][boxLengthsSize];
-    double reactivity[numbersSize][boxLengthsSize];
+    readdy::scalar timeForces[numbersSize][boxLengthsSize];
+    readdy::scalar timeIntegrator[numbersSize][boxLengthsSize];
+    readdy::scalar timeNeighborList[numbersSize][boxLengthsSize];
+    readdy::scalar timeReactions[numbersSize][boxLengthsSize];
+    readdy::scalar particleNumber[numbersSize][boxLengthsSize];
+    readdy::scalar systemSize[numbersSize][boxLengthsSize];
+    readdy::scalar relativeDisplacement[numbersSize][boxLengthsSize];
+    readdy::scalar reactivity[numbersSize][boxLengthsSize];
 
     for (auto n = 0; n < numbers.size(); ++n) {
         for (auto l = 0; l < boxLengths.size(); ++l) {
-            std::map<std::string, double> factors;
+            std::map<std::string, readdy::scalar> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[n]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, boxLengths[l]));
             scenario_t scenario(kernelName, factors);
@@ -509,10 +509,10 @@ void scaleNumbersAndBoxsize(const std::string &kernelName) {
 }
 
 template<typename Scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
-void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
+void scaleNumbersAndSkin(const std::string &kernelName, bool reducedNumbers) {
     readdy::log::debug("using reduced numbers: {}", reducedNumbers);
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
-    std::vector<double> numbers;
+    std::vector<readdy::scalar> numbers;
     if (reducedNumbers) {
         numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
                    3., 4., 5., 6., 7., 8., 9.,
@@ -522,7 +522,7 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
                    3., 4., 5., 6., 7., 8., 9.,
                    10., 12., 15., 20., 40., 60, 80, 100};
     }
-    std::vector<double> skinSizes;
+    std::vector<readdy::scalar> skinSizes;
     if (readdy::plugin::KernelProvider::getInstance().create(
             kernelName)->createAction<readdy::model::actions::UpdateNeighborList>()->supportsSkin()) {
         skinSizes = {.0, .1, .2, .3, .4, .5, 1, 2, 3, 4, 5, 10};
@@ -534,21 +534,21 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
     const auto skinSizesSize = skinSizes.size();
 
     // results are performance times and the (N,L,S,R) observables
-    double timeForces[numbersSize][skinSizesSize];
-    double timeIntegrator[numbersSize][skinSizesSize];
-    double timeNeighborList[numbersSize][skinSizesSize];
-    double timeReactions[numbersSize][skinSizesSize];
-    double particleNumber[numbersSize][skinSizesSize];
-    double systemSize[numbersSize][skinSizesSize];
-    double relativeDisplacement[numbersSize][skinSizesSize];
-    double reactivity[numbersSize][skinSizesSize];
+    readdy::scalar timeForces[numbersSize][skinSizesSize];
+    readdy::scalar timeIntegrator[numbersSize][skinSizesSize];
+    readdy::scalar timeNeighborList[numbersSize][skinSizesSize];
+    readdy::scalar timeReactions[numbersSize][skinSizesSize];
+    readdy::scalar particleNumber[numbersSize][skinSizesSize];
+    readdy::scalar systemSize[numbersSize][skinSizesSize];
+    readdy::scalar relativeDisplacement[numbersSize][skinSizesSize];
+    readdy::scalar reactivity[numbersSize][skinSizesSize];
 
     readdy::log::console()->set_level(spdlog::level::warn);
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
             readdy::log::error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j,
                                           skinSizesSize, skinSizes[j]);
-            std::map<std::string, double> factors;
+            std::map<std::string, readdy::scalar> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
             factors.emplace(std::make_pair(SKIN_FACTOR, skinSizes[j]));
@@ -591,26 +591,26 @@ void scaleNumbersAndSkin(const std::string kernelName, bool reducedNumbers) {
 /*template<typename Scenario_t, typename ReactionScheduler=readdy::model::actions::reactions::Gillespie>
 void scaleNumbersAndSkin_tmp(const std::string kernelName, bool reducedNumbers) {
     readdy::log::debug("using reduced numbers: {}", reducedNumbers);
-    std::vector<double> numbers = {80};
-    std::vector<double> skinSizes = {1.0};
+    std::vector<readdy::scalar> numbers = {80};
+    std::vector<readdy::scalar> skinSizes = {1.0};
 
     const auto numbersSize = numbers.size();
     const auto skinSizesSize = skinSizes.size();
 
     // results are performance times and the (N,L,S,R) observables
-    double timeForces[numbersSize][skinSizesSize];
-    double timeIntegrator[numbersSize][skinSizesSize];
-    double timeNeighborList[numbersSize][skinSizesSize];
-    double timeReactions[numbersSize][skinSizesSize];
-    double particleNumber[numbersSize][skinSizesSize];
-    double systemSize[numbersSize][skinSizesSize];
-    double relativeDisplacement[numbersSize][skinSizesSize];
-    double reactivity[numbersSize][skinSizesSize];
+    readdy::scalar timeForces[numbersSize][skinSizesSize];
+    readdy::scalar timeIntegrator[numbersSize][skinSizesSize];
+    readdy::scalar timeNeighborList[numbersSize][skinSizesSize];
+    readdy::scalar timeReactions[numbersSize][skinSizesSize];
+    readdy::scalar particleNumber[numbersSize][skinSizesSize];
+    readdy::scalar systemSize[numbersSize][skinSizesSize];
+    readdy::scalar relativeDisplacement[numbersSize][skinSizesSize];
+    readdy::scalar reactivity[numbersSize][skinSizesSize];
 
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
             readdy::log::error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j, skinSizesSize, skinSizes[j]);
-            std::map<std::string, double> factors;
+            std::map<std::string, readdy::scalar> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
             factors.emplace(std::make_pair(SKIN_FACTOR, skinSizes[j]));

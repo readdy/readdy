@@ -127,6 +127,6 @@ void exportIO(py::module &io) {
     //exportDataSet<int>(io, "int"); /* DataSet_int */
     //exportDataSet<long>(io, "long"); /* DataSet_long */
     //exportDataSet<float>(io, "float"); /* DataSet_float */
-    //exportDataSet<double>(io, "double"); /* DataSet_double */
+    //exportDataSet<readdy::scalar>(io, "readdy::scalar"); /* readdy::scalar */
 
 }

@@ -43,11 +43,9 @@ template<std::size_t N>
 class Vec3Tensor {
     static_assert(N > 0, "we need more than one vec3");
 public:
-    Vec3Tensor(const std::array<Vec3, N>& cols) : cols(cols) {
-    }
+    explicit Vec3Tensor(const std::array<Vec3, N>& cols) : cols(cols) {}
 
-    Vec3Tensor(std::array<Vec3, N>&& cols) : cols(std::move(cols)) {
-    }
+    explicit Vec3Tensor(std::array<Vec3, N>&& cols) : cols(std::move(cols)) {}
 
     Vec3& at(std::size_t i) {
         assert(i < N);
@@ -88,14 +86,14 @@ public:
         return copy;
     }
 
-    Vec3Tensor<N>& operator*(const Vec3::value_t& rhs) {
+    Vec3Tensor<N>& operator*(const scalar& rhs) {
         for(auto& v : cols) {
             v *= rhs;
         }
         return *this;
     }
 
-    Vec3Tensor<N> operator*(const Vec3::value_t& rhs) const {
+    Vec3Tensor<N> operator*(const scalar& rhs) const {
         Vec3Tensor<N> copy {*this};
         copy = copy * rhs;
         return copy;
@@ -117,7 +115,7 @@ private:
 };
 
 template<std::size_t N>
-Vec3Tensor<N>& operator*(const Vec3::value_t scalar, Vec3Tensor<N>& tensor) {
+Vec3Tensor<N>& operator*(const scalar scalar, Vec3Tensor<N>& tensor) {
     return tensor * scalar;
 }
 

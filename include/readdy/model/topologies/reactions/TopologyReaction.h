@@ -78,7 +78,7 @@ public:
 
     TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
 
-    TopologyReaction(const reaction_function &reaction_function, const double &rate);
+    TopologyReaction(const reaction_function &reaction_function, const scalar &rate);
 
     TopologyReaction(const TopologyReaction&) = default;
 
@@ -90,7 +90,7 @@ public:
 
     ~TopologyReaction() = default;
 
-    double rate(const GraphTopology &topology) const;
+    scalar rate(const GraphTopology &topology) const;
 
     reaction_recipe operations(GraphTopology &topology) const;
 

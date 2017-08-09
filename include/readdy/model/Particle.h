@@ -54,11 +54,19 @@ public:
     static constexpr flavor_t FLAVOR_TOPOLOGY = 1;
     static constexpr flavor_t FLAVOR_MEMBRANE = 2;
 
-    Particle(double x, double y, double z, type_type type);
+    Particle(scalar x, scalar y, scalar z, type_type type);
 
     Particle(Vec3 pos, type_type type);
 
     Particle(Vec3 pos, type_type type, id_type id);
+
+    Particle(const Particle&) = default;
+
+    Particle& operator=(const Particle&) = default;
+
+    Particle(Particle&&) = default;
+
+    Particle& operator=(Particle&&) = default;
 
     virtual ~Particle();
 
@@ -92,7 +100,7 @@ protected:
 class TopologyParticle : public Particle {
     using super = Particle;
 public:
-    TopologyParticle(double x, double y, double z, type_type type);
+    TopologyParticle(scalar x, scalar y, scalar z, type_type type);
 
     TopologyParticle(Vec3 pos, type_type type);
 

@@ -45,20 +45,6 @@ namespace model {
 // Entry Impl
 //
 
-CPUParticleData::Entry::Entry(CPUParticleData::Entry &&rhs)
-        : pos(std::move(rhs.pos)), force(std::move(rhs.force)), type(std::move(rhs.type)), id(std::move(rhs.id)),
-          deactivated(std::move(rhs.deactivated)), displacement(std::move(rhs.displacement)){ }
-
-CPUParticleData::Entry &CPUParticleData::Entry::operator=(CPUParticleData::Entry &&rhs) {
-    pos = std::move(rhs.pos);
-    force = std::move(rhs.force);
-    type = std::move(rhs.type);
-    id = std::move(rhs.id);
-    displacement = std::move(rhs.displacement);
-    deactivated = std::move(rhs.deactivated);
-    return *this;
-}
-
 const CPUParticleData::particle_type::pos_type &CPUParticleData::Entry::position() const {
     return pos;
 }
@@ -73,8 +59,8 @@ bool CPUParticleData::Entry::is_deactivated() const {
 
 
 CPUParticleData::CPUParticleData(readdy::model::KernelContext*const context, const readdy::util::thread::Config &_config)
-        : blanks(std::vector<index_t>()), entries(), neighbors(), reorderSignal(std::make_unique<reorder_signal_t>()),
-          _config(_config), context(context) {}
+        : blanks(std::vector<index_t>()), reorderSignal(std::make_unique<reorder_signal_t>()), _config(_config),
+          context(context) {}
 
 std::size_t CPUParticleData::size() const {
     return entries.size();
@@ -99,10 +85,10 @@ void CPUParticleData::addParticles(const std::vector<CPUParticleData::particle_t
         if(!blanks.empty()) {
             const auto idx = blanks.back();
             blanks.pop_back();
-            entries.at(idx) = {p};
+            entries.at(idx) = Entry(p);
         } else {
-            entries.push_back({p});
-            neighbors.push_back({});
+            entries.emplace_back(p);
+            neighbors.emplace_back();
         }
     }
 }
@@ -154,11 +140,11 @@ CPUParticleData::index_t CPUParticleData::addEntry(CPUParticleData::Entry &&entr
         entries.at(idx) = std::move(entry);
         neighbors.at(idx).clear();
         return idx;
-    } else {
-        entries.push_back(std::move(entry));
-        neighbors.push_back({});
-        return entries.size()-1;
     }
+
+    entries.push_back(std::move(entry));
+    neighbors.emplace_back();
+    return entries.size()-1;
 }
 
 void CPUParticleData::removeEntry(index_t idx) {
@@ -290,11 +276,11 @@ CPUParticleData::addTopologyParticles(const std::vector<CPUParticleData::top_par
         if(!blanks.empty()) {
             const auto idx = blanks.back();
             blanks.pop_back();
-            entries.at(idx) = {p};
+            entries.at(idx) = Entry(p);
             indices.push_back(idx);
         } else {
-            entries.push_back({p});
-            neighbors.push_back({});
+            entries.emplace_back(p);
+            neighbors.emplace_back();
             indices.push_back(entries.size()-1);
         }
     }

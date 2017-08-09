@@ -71,8 +71,11 @@ void info(Args &&... args) {
 
 class Level {
 public:
-    Level(spdlog::level::level_enum newLevel);
-
+    explicit Level(spdlog::level::level_enum newLevel);
+    Level(const Level&) = default;
+    Level& operator=(const Level&) = default;
+    Level(Level&&) = default;
+    Level& operator=(Level&&) = default;
     ~Level();
 
 private:

@@ -46,12 +46,12 @@ using kernel_t = readdy::kernel::scpu::SCPUKernel;
 struct NeighborListTest : ::testing::Test {
 
     std::unique_ptr<kernel_t> kernel;
-    unsigned int typeIdA;
+    readdy::particle_type_type typeIdA;
 
     NeighborListTest() : kernel(std::make_unique<kernel_t>()) {
         readdy::model::KernelContext &ctx = kernel->getKernelContext();
         ctx.particle_types().add("A", 1.0, 1.);
-        double eductDistance = 1.2;
+        readdy::scalar eductDistance = 1.2;
         kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", 0., eductDistance);
         ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0, 0));
         typeIdA = ctx.particle_types().id_of("A");
@@ -63,7 +63,7 @@ TEST(NeighborList, Naive) {
     unsigned int n_particles = 20;
     scpum::SCPUParticleData data;
     for (unsigned int i = 0; i < n_particles; ++i) {
-        data.addParticle({(double) i, (double) i, (double) i, 5});
+        data.addParticle({(readdy::scalar) i, (readdy::scalar) i, (readdy::scalar) i, 5});
     }
     scpum::SCPUNaiveNeighborList list;
     list.create(data);
@@ -79,7 +79,7 @@ TEST(NeighborList, Naive) {
 TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three cells along the periodic axis
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(3.6, 2, 2);
+    ctx.setBoxSize(3.7, 2, 2);
     ctx.setPeriodicBoundary(true, false, false);
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes();

@@ -29,17 +29,14 @@
 #include <readdy/model/observables/io/Trajectory.h>
 #include <readdy/io/File.h>
 
-namespace rmr = readdy::model::reactions;
-namespace rmp = readdy::model::actions;
-
 namespace readdy {
-double Simulation::getKBT() const {
+scalar Simulation::getKBT() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().getKBT();
 
 }
 
-void Simulation::setKBT(double kBT) {
+void Simulation::setKBT(scalar kBT) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().setKBT(kBT);
 
@@ -68,7 +65,7 @@ std::array<bool, 3> Simulation::getPeriodicBoundary() const {
     return pimpl->kernel->getKernelContext().getPeriodicBoundary();
 }
 
-void Simulation::run(const time_step_type steps, const double timeStep) {
+void Simulation::run(const time_step_type steps, const scalar timeStep) {
     ensureKernelSelected();
     {
         log::debug("available actions: ");
@@ -81,7 +78,7 @@ void Simulation::run(const time_step_type steps, const double timeStep) {
 
 void Simulation::setKernel(const std::string &kernel) {
     if (isKernelSelected()) {
-        log::debug("replacing kernel \"{}\" with \"{}\"", pimpl->kernel->getName(), kernel);
+        log::debug(R"(replacing kernel "{}" with "{}")", pimpl->kernel->getName(), kernel);
     }
     pimpl->kernel = readdy::plugin::KernelProvider::getInstance().create(kernel);
 }
@@ -95,7 +92,7 @@ const std::string &Simulation::getSelectedKernelType() const {
     return pimpl->kernel->getName();
 }
 
-void Simulation::addParticle(const std::string &type, double x, double y, double z) {
+void Simulation::addParticle(const std::string &type, scalar x, scalar y, scalar z) {
     ensureKernelSelected();
     const auto &&s = getBoxSize();
     if (fabs(x) <= .5 * s[0] && fabs(y) <= .5 * s[1] && fabs(z) <= .5 * s[2]) {
@@ -108,7 +105,7 @@ void Simulation::addParticle(const std::string &type, double x, double y, double
 }
 
 Simulation::particle_t::type_type
-Simulation::registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius,
+Simulation::registerParticleType(const std::string &name, const scalar diffusionCoefficient, const scalar radius,
                                  readdy::model::Particle::flavor_t flavor) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->getKernelContext();
@@ -127,7 +124,7 @@ void Simulation::deregisterPotential(const short uuid) {
 
 const short
 Simulation::registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
-                                               double forceConstant) {
+                                               scalar forceConstant) {
     using potential_t = readdy::model::potentials::HarmonicRepulsion;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant);
@@ -135,9 +132,9 @@ Simulation::registerHarmonicRepulsionPotential(const std::string &particleTypeA,
 
 const short
 Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string &particleTypeA,
-                                                              const std::string &particleTypeB, double forceConstant,
-                                                              double desiredParticleDistance, double depth,
-                                                              double noInteractionDistance) {
+                                                              const std::string &particleTypeB, scalar forceConstant,
+                                                              scalar desiredParticleDistance, scalar depth,
+                                                              scalar noInteractionDistance) {
     using potential_t = readdy::model::potentials::WeakInteractionPiecewiseHarmonic;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant,
@@ -146,7 +143,7 @@ Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string 
 
 const short
 Simulation::registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m,
-                                          unsigned int n, double cutoff, bool shift, double epsilon, double sigma) {
+                                          unsigned int n, scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
     using potential_t = readdy::model::potentials::LennardJones;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(type1, type2, m, n, cutoff, shift, epsilon, sigma);
@@ -155,10 +152,10 @@ Simulation::registerLennardJonesPotential(const std::string &type1, const std::s
 
 const short
 Simulation::registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2,
-                                                    double electrostaticStrength,
-                                                    double inverseScreeningDepth, double repulsionStrength,
-                                                    double repulsionDistance,
-                                                    unsigned int exponent, double cutoff) {
+                                                    scalar electrostaticStrength,
+                                                    scalar inverseScreeningDepth, scalar repulsionStrength,
+                                                    scalar repulsionDistance,
+                                                    unsigned int exponent, scalar cutoff) {
     using potential_t = readdy::model::potentials::ScreenedElectrostatics;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType1, particleType2, electrostaticStrength,
@@ -167,7 +164,7 @@ Simulation::registerScreenedElectrostaticsPotential(const std::string &particleT
 }
 
 const short
-Simulation::registerBoxPotential(const std::string &particleType, double forceConstant,
+Simulation::registerBoxPotential(const std::string &particleType, scalar forceConstant,
                                  const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                                  bool considerParticleRadius) {
     using potential_t = readdy::model::potentials::Cube;
@@ -177,23 +174,23 @@ Simulation::registerBoxPotential(const std::string &particleType, double forceCo
 }
 
 const short
-Simulation::registerSphereInPotential(const std::string &particleType, double forceConstant, const readdy::model::Vec3 &origin,
-                                      double radius) {
+Simulation::registerSphereInPotential(const std::string &particleType, scalar forceConstant, const readdy::model::Vec3 &origin,
+                                      scalar radius) {
     using potential_t = readdy::model::potentials::SphereIn;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
 
 const short
-Simulation::registerSphereOutPotential(const std::string &particleType, double forceConstant,
-                                       const readdy::model::Vec3 &origin, double radius) {
+Simulation::registerSphereOutPotential(const std::string &particleType, scalar forceConstant,
+                                       const readdy::model::Vec3 &origin, scalar radius) {
     using potential_t = readdy::model::potentials::SphereOut;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
 
 const short
-Simulation::registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width) {
+Simulation::registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, scalar radius, scalar height, scalar width) {
     using potential_t = readdy::model::potentials::SphericalBarrier;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, origin, radius, height, width);
@@ -205,7 +202,7 @@ void Simulation::ensureKernelSelected() const {
     }
 }
 
-void Simulation::setBoxSize(double dx, double dy, double dz) {
+void Simulation::setBoxSize(scalar dx, scalar dy, scalar dz) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
 }
@@ -237,9 +234,9 @@ std::vector<std::string> Simulation::getAvailableObservables() {
     return {"hallo"};
 }
 
-Simulation &Simulation::operator=(Simulation &&rhs) = default;
+Simulation &Simulation::operator=(Simulation &&rhs) noexcept = default;
 
-Simulation::Simulation(Simulation &&rhs) = default;
+Simulation::Simulation(Simulation &&rhs) noexcept = default;
 
 Simulation::~Simulation() {
     log::trace("destroying simulation");
@@ -247,19 +244,17 @@ Simulation::~Simulation() {
 
 const short
 Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                                       const double rate) {
+                                       const scalar rate) {
     ensureKernelSelected();
-    namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createConversionReaction(name, from, to, rate);
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
 const short
 Simulation::registerEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                                      const std::string &to, const double rate,
-                                      const double eductDistance) {
+                                      const std::string &to, const scalar rate,
+                                      const scalar eductDistance) {
     ensureKernelSelected();
-    namespace rmr = readdy::model::reactions;
     auto reaction = pimpl->kernel->createEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
@@ -267,8 +262,8 @@ Simulation::registerEnzymaticReaction(const std::string &name, const std::string
 const short
 Simulation::registerFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                                     const std::string &to2,
-                                    const double rate, const double productDistance, const double weight1,
-                                    const double weight2) {
+                                    const scalar rate, const scalar productDistance, const scalar weight1,
+                                    const scalar weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFissionReaction(name, from, to1, to2, rate, productDistance, weight1, weight2);
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
@@ -276,15 +271,15 @@ Simulation::registerFissionReaction(const std::string &name, const std::string &
 
 const short
 Simulation::registerFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                                   const std::string &to, const double rate,
-                                   const double eductDistance, const double weight1, const double weight2) {
+                                   const std::string &to, const scalar rate,
+                                   const scalar eductDistance, const scalar weight1, const scalar weight2) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
 const short
-Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const double rate) {
+Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const scalar rate) {
     ensureKernelSelected();
     auto reaction = pimpl->kernel->createDecayReaction(name, particleType, rate);
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
@@ -302,7 +297,7 @@ std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string ty
     return positions;
 }
 
-double Simulation::getRecommendedTimeStep(unsigned int N) const {
+scalar Simulation::getRecommendedTimeStep(unsigned int N) const {
     return readdy::model::util::getRecommendedTimeStep(N, pimpl->kernel->getKernelContext());
 }
 
@@ -312,7 +307,7 @@ readdy::model::Kernel *const Simulation::getSelectedKernel() const {
 
 const short Simulation::registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
                                                   const std::string &name,
-                                                  const model::Vec3 &origin, const double radius,
+                                                  const model::Vec3 &origin, const scalar radius,
                                                   const bool largerOrLess) {
     ensureKernelSelected();
     return getSelectedKernel()->registerCompartment<model::compartments::Sphere>(conversionsMap, name, origin, radius,
@@ -321,7 +316,7 @@ const short Simulation::registerCompartmentSphere(const std::unordered_map<std::
 
 const short Simulation::registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
                                                  const std::string &name,
-                                                 const model::Vec3 &normalCoefficients, const double distanceFromPlane,
+                                                 const model::Vec3 &normalCoefficients, const scalar distanceFromPlane,
                                                  const bool largerOrLess) {
     ensureKernelSelected();
     return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name,
@@ -353,9 +348,8 @@ Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &part
             top->graph().setVertexLabel(it_vertices, *it_labels);
         }
         return top;
-    } else {
-        throw std::logic_error("the selected kernel does not support topologies!");
     }
+    throw std::logic_error("the selected kernel does not support topologies!");
 }
 
 void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
@@ -369,15 +363,15 @@ void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrd
 }
 
 void
-Simulation::configureTopologyBondPotential(const std::string &type1, const std::string &type2, double forceConstant,
-                                           double length, api::BondType type) {
+Simulation::configureTopologyBondPotential(const std::string &type1, const std::string &type2, scalar forceConstant,
+                                           scalar length, api::BondType type) {
     ensureKernelSelected();
     getSelectedKernel()->getKernelContext().configureTopologyBondPotential(type1, type2, {forceConstant, length, type});
 }
 
 void Simulation::configureTopologyAnglePotential(const std::string &type1, const std::string &type2,
-                                                 const std::string &type3, double forceConstant,
-                                                 double equilibriumAngle, api::AngleType type) {
+                                                 const std::string &type3, scalar forceConstant,
+                                                 scalar equilibriumAngle, api::AngleType type) {
     ensureKernelSelected();
     getSelectedKernel()->getKernelContext().configureTopologyAnglePotential(type1, type2, type3,
                                                                             {forceConstant, equilibriumAngle, type});
@@ -385,11 +379,11 @@ void Simulation::configureTopologyAnglePotential(const std::string &type1, const
 
 void Simulation::configureTopologyTorsionPotential(const std::string &type1, const std::string &type2,
                                                    const std::string &type3, const std::string &type4,
-                                                   double forceConstant, unsigned int multiplicity, double phi_0,
+                                                   scalar forceConstant, unsigned int multiplicity, scalar phi_0,
                                                    api::TorsionType type) {
     ensureKernelSelected();
     getSelectedKernel()->getKernelContext().configureTopologyTorsionPotential(
-            type1, type2, type3, type4, {forceConstant, static_cast<double>(multiplicity), phi_0, type}
+            type1, type2, type3, type4, {forceConstant, static_cast<scalar>(multiplicity), phi_0, type}
     );
 }
 
@@ -406,6 +400,16 @@ std::vector<const readdy::model::top::GraphTopology *> Simulation::currentTopolo
 std::vector<model::Particle> Simulation::getParticlesForTopology(const model::top::GraphTopology &topology) const {
     ensureKernelSelected();
     return getSelectedKernel()->getKernelStateModel().getParticlesForTopology(topology);
+}
+
+bool Simulation::singlePrecision() const {
+    ensureKernelSelected();
+    return pimpl->kernel->singlePrecision();
+}
+
+bool Simulation::doublePrecision() const {
+    ensureKernelSelected();
+    return pimpl->kernel->doublePrecision();
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}

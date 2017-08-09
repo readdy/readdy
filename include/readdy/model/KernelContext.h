@@ -64,7 +64,7 @@ NAMESPACE_BEGIN(model)
 
 class UnknownParticleType : public std::runtime_error {
 public:
-    UnknownParticleType(const std::string &__arg) : runtime_error(__arg) {}
+    explicit UnknownParticleType(const std::string &__arg) : runtime_error(__arg) {}
 };
 
 class KernelContext {
@@ -75,19 +75,19 @@ public:
     using compartment_registry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
-    using pbc_fun = std::function<Vec3(Vec3)>;
-    using dist_squared_fun = std::function<double(const Vec3 &, const Vec3 &)>;
+    using pbc_fun = std::function<Vec3(const Vec3 &)>;
+    using dist_squared_fun = std::function<scalar(const Vec3 &, const Vec3 &)>;
     using shortest_dist_fun = std::function<Vec3(const Vec3 &, const Vec3 &)>;
 
-    double getKBT() const;
+    scalar getKBT() const;
 
-    void setKBT(double kBT);
+    void setKBT(scalar kBT);
 
-    std::array<double, 3> &getBoxSize() const;
+    Vec3::data_t &getBoxSize() const;
 
     std::tuple<readdy::model::Vec3, readdy::model::Vec3> getBoxBoundingVertices() const;
 
-    void setBoxSize(double dx, double dy, double dz);
+    void setBoxSize(scalar dx, scalar dy, scalar dz);
 
     const std::array<bool, 3> &getPeriodicBoundary() const;
 

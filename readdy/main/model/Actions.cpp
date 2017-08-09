@@ -37,19 +37,19 @@ namespace model {
 namespace actions {
 
 
-UpdateNeighborList::UpdateNeighborList(UpdateNeighborList::Operation operation, double skinSize)
+UpdateNeighborList::UpdateNeighborList(UpdateNeighborList::Operation operation, scalar skinSize)
         : operation(operation), skinSize(skinSize) {
 }
 
-EulerBDIntegrator::EulerBDIntegrator(double timeStep) : TimeStepDependentAction(timeStep) {}
+EulerBDIntegrator::EulerBDIntegrator(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-reactions::UncontrolledApproximation::UncontrolledApproximation(double timeStep) : TimeStepDependentAction(timeStep) {}
+reactions::UncontrolledApproximation::UncontrolledApproximation(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-reactions::Gillespie::Gillespie(double timeStep) : TimeStepDependentAction(timeStep) {}
+reactions::Gillespie::Gillespie(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-reactions::GillespieParallel::GillespieParallel(double timeStep) : TimeStepDependentAction(timeStep) {}
+reactions::GillespieParallel::GillespieParallel(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-reactions::NextSubvolumes::NextSubvolumes(double timeStep) : TimeStepDependentAction(timeStep) {}
+reactions::NextSubvolumes::NextSubvolumes(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
 AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
         : particles(particles), kernel(kernel) {}
@@ -58,7 +58,7 @@ AddParticles::AddParticles(Kernel *const kernel, const Particle &particle)
         : AddParticles(kernel, std::vector<Particle>{particle}) {}
 
 void AddParticles::perform() {
-    if(kernel) {
+    if(kernel != nullptr) {
         kernel->getKernelStateModel().addParticles(particles);
     } else {
         log::critical("Tried to perform {} without providing a valid kernel!", getActionName<AddParticles>());
@@ -67,7 +67,7 @@ void AddParticles::perform() {
 
 CalculateForces::CalculateForces() : Action() {}
 
-top::EvaluateTopologyReactions::EvaluateTopologyReactions(double timeStep) : TimeStepDependentAction(timeStep) {}
+top::EvaluateTopologyReactions::EvaluateTopologyReactions(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
 }
 }

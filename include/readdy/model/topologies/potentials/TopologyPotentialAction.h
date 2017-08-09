@@ -41,7 +41,11 @@ NAMESPACE_BEGIN(pot)
 
 class TopologyPotentialAction {
 public:
-    TopologyPotentialAction(const KernelContext *const context) : context(context) {}
+    explicit TopologyPotentialAction(const KernelContext *const context) : context(context) {}
+    TopologyPotentialAction(const TopologyPotentialAction&) = default;
+    TopologyPotentialAction& operator=(const TopologyPotentialAction&) = delete;
+    TopologyPotentialAction(TopologyPotentialAction&&) = default;
+    TopologyPotentialAction& operator=(TopologyPotentialAction&&) = delete;
     virtual ~TopologyPotentialAction() = default;
 
 protected:
@@ -50,10 +54,15 @@ protected:
 
 class EvaluatePotentialAction : public TopologyPotentialAction {
 public:
-    EvaluatePotentialAction(const KernelContext *const context) : TopologyPotentialAction(context) {}
-    virtual ~EvaluatePotentialAction() = default;
+    explicit EvaluatePotentialAction(const KernelContext *const context) : TopologyPotentialAction(context) {}
+    EvaluatePotentialAction(const EvaluatePotentialAction&) = default;
+    EvaluatePotentialAction& operator=(const EvaluatePotentialAction&) = delete;
+    EvaluatePotentialAction(EvaluatePotentialAction&&) = default;
+    EvaluatePotentialAction& operator=(EvaluatePotentialAction&&) = delete;
 
-    virtual double perform() = 0;
+    ~EvaluatePotentialAction() override = default;
+
+    virtual scalar perform() = 0;
 };
 
 NAMESPACE_END(pot)

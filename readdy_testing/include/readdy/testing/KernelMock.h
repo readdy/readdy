@@ -39,7 +39,7 @@ namespace readdy {
 namespace testing {
 
 class FakeActionFactory : public readdy::model::actions::ActionFactory {
-    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(double timeStep) const override {
+    readdy::model::actions::EulerBDIntegrator *createEulerBDIntegrator(readdy::scalar timeStep) const override {
         return nullptr;
     }
 
@@ -49,26 +49,26 @@ class FakeActionFactory : public readdy::model::actions::ActionFactory {
 
     readdy::model::actions::UpdateNeighborList *
     createUpdateNeighborList(readdy::model::actions::UpdateNeighborList::Operation operation,
-                             double skinSize) const override { return nullptr; }
+                             readdy::scalar skinSize) const override { return nullptr; }
 
     readdy::model::actions::EvaluateCompartments *createEvaluateCompartments() const override {
         return nullptr;
     }
 
     readdy::model::actions::reactions::UncontrolledApproximation *
-    createUncontrolledApproximation(double timeStep) const override {
+    createUncontrolledApproximation(readdy::scalar timeStep) const override {
         return nullptr;
     }
 
-    readdy::model::actions::reactions::Gillespie *createGillespie(double timeStep) const override {
+    readdy::model::actions::reactions::Gillespie *createGillespie(readdy::scalar timeStep) const override {
         return nullptr;
     }
 
-    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(double timeStep) const override {
+    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(readdy::scalar timeStep) const override {
         return nullptr;
     }
 
-    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(double timeStep) const override {
+    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(readdy::scalar timeStep) const override {
         return nullptr;
     }
 };

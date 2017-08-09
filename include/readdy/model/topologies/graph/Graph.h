@@ -96,7 +96,7 @@ public:
 
     bool containsEdge(const cedge& edge) const;
 
-    bool containsEdge(const vertex_cref v1, const vertex_cref v2) const;
+    bool containsEdge(vertex_cref v1, vertex_cref v2) const;
 
     bool containsEdge(const label_edge& edge) const;
 
@@ -160,7 +160,7 @@ public:
     std::vector<Graph> connectedComponentsDestructive();
 
 private:
-    vertex_list _vertices;
+    vertex_list _vertices {};
     vertex_label_mapping _vertex_label_mapping{};
 
     void removeNeighborsEdges(vertex_ref vertex);

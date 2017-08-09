@@ -39,7 +39,7 @@ namespace scpu {
 struct SCPUStateModel::Impl {
     using reaction_counts_order1_map = SCPUStateModel::reaction_counts_order1_map;
     using reaction_counts_order2_map = SCPUStateModel::reaction_counts_order2_map;
-    double currentEnergy = 0;
+    scalar currentEnergy = 0;
     std::unique_ptr<model::SCPUParticleData> particleData;
     std::unique_ptr<model::SCPUNeighborList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory;
@@ -87,11 +87,11 @@ void readdy::kernel::scpu::SCPUStateModel::removeParticle(const readdy::model::P
     pimpl->particleData->removeParticle(p);
 }
 
-double readdy::kernel::scpu::SCPUStateModel::getEnergy() const {
+scalar readdy::kernel::scpu::SCPUStateModel::getEnergy() const {
     return pimpl->currentEnergy;
 }
 
-void readdy::kernel::scpu::SCPUStateModel::increaseEnergy(double increase) {
+void readdy::kernel::scpu::SCPUStateModel::increaseEnergy(scalar increase) {
     pimpl->currentEnergy += increase;
 }
 
@@ -237,9 +237,9 @@ particle_type_type SCPUStateModel::getParticleType(const std::size_t index) cons
     return getParticleData()->entry_at(index).type;
 }
 
-SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) = default;
+SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;
 
-SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) = default;
+SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) noexcept = default;
 
 SCPUStateModel::~SCPUStateModel() = default;
 

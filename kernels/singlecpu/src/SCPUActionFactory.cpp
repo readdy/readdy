@@ -41,7 +41,7 @@ namespace scpu {
 namespace actions {
 SCPUActionFactory::SCPUActionFactory(SCPUKernel *const kernel) : kernel(kernel) {}
 
-core_actions::EulerBDIntegrator *SCPUActionFactory::createEulerBDIntegrator(double timeStep) const {
+core_actions::EulerBDIntegrator *SCPUActionFactory::createEulerBDIntegrator(scalar timeStep) const {
     return new SCPUEulerBDIntegrator(kernel, timeStep);
 }
 
@@ -50,7 +50,7 @@ core_actions::CalculateForces *SCPUActionFactory::createCalculateForces() const 
 }
 
 core_actions::UpdateNeighborList *
-SCPUActionFactory::createUpdateNeighborList(core_actions::UpdateNeighborList::Operation op, double skinSize) const {
+SCPUActionFactory::createUpdateNeighborList(core_actions::UpdateNeighborList::Operation op, scalar skinSize) const {
     return new SCPUUpdateNeighborList(kernel, op, skinSize);
 }
 
@@ -59,21 +59,21 @@ core_actions::EvaluateCompartments *SCPUActionFactory::createEvaluateCompartment
 }
 
 core_actions::reactions::UncontrolledApproximation *
-SCPUActionFactory::createUncontrolledApproximation(double timeStep) const {
+SCPUActionFactory::createUncontrolledApproximation(scalar timeStep) const {
     return new reactions::SCPUUncontrolledApproximation(kernel, timeStep);
 }
 
-core_actions::reactions::Gillespie *SCPUActionFactory::createGillespie(double timeStep) const {
+core_actions::reactions::Gillespie *SCPUActionFactory::createGillespie(scalar timeStep) const {
     return new reactions::SCPUGillespie(kernel, timeStep);
 }
 
-core_actions::reactions::GillespieParallel *SCPUActionFactory::createGillespieParallel(double) const {
+core_actions::reactions::GillespieParallel *SCPUActionFactory::createGillespieParallel(scalar /*timeStep*/) const {
     log::critical("SingleCPU kernel does not support the \"{}\" action",
                   core_actions::getActionName<core_actions::reactions::GillespieParallel>());
     return nullptr;
 }
 
-core_actions::reactions::NextSubvolumes *SCPUActionFactory::createNextSubvolumes(double) const {
+core_actions::reactions::NextSubvolumes *SCPUActionFactory::createNextSubvolumes(scalar /*timeStep*/) const {
     log::critical("SingleCPU kernel does not support the \"{}\" action",
                   core_actions::getActionName<core_actions::reactions::NextSubvolumes>());
     return nullptr;
@@ -85,7 +85,7 @@ SCPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle>
 }
 
 readdy::model::actions::top::EvaluateTopologyReactions *
-SCPUActionFactory::createEvaluateTopologyReactions(double timeStep) const {
+SCPUActionFactory::createEvaluateTopologyReactions(scalar timeStep) const {
     return new actions::top::SCPUEvaluateTopologyReactions(kernel, timeStep);
 }
 

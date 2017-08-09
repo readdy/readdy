@@ -61,24 +61,34 @@ public:
     /**
      * The move constructor: A simulation object is supposed to be moveable.
      */
-    Simulation(Simulation &&rhs);
+    Simulation(Simulation &&rhs) noexcept;
 
     /**
      * The move assign.
      */
-    Simulation &operator=(Simulation &&rhs);
+    Simulation &operator=(Simulation &&rhs) noexcept;
+
+    /**
+     * Copy constructor, deleted.
+     */
+    Simulation(const Simulation &) = delete;
+
+    /**
+     * Copy assign, deleted
+     */
+    Simulation &operator=(const Simulation) = delete;
 
     /**
      * Method that returns the temperature the simulation is supposed to run at.
      * @return the temperature.
      */
-    double getKBT() const;
+    scalar getKBT() const;
 
     /**
      * Method to set the temperature of the system.
      * @param kBT the temperature.
      */
-    void setKBT(double kBT);
+    void setKBT(scalar kBT);
 
     /**
      * Method to get the current box size.
@@ -94,7 +104,7 @@ public:
     readdy::model::top::GraphTopology *addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
                                                    const std::vector<std::string> &labels = {});
 
-    std::vector<const readdy::model::top::GraphTopology*> currentTopologies() const;
+    std::vector<const readdy::model::top::GraphTopology *> currentTopologies() const;
 
     std::vector<model::Particle> getParticlesForTopology(const model::top::GraphTopology &topology) const;
 
@@ -104,7 +114,7 @@ public:
      * @param dy length of the y-axis
      * @param dz length of the z-axis
      */
-    void setBoxSize(double dx, double dy, double dz);
+    void setBoxSize(scalar dx, scalar dy, scalar dz);
 
     /**
      * Method to set the box size.
@@ -128,7 +138,7 @@ public:
      * Allows to set an expected maximal number of particles in order to avoid reallocations.
      * @param n expected number of particles
      */
-    void setExpectedMaxNParticles(const std::size_t n);
+    void setExpectedMaxNParticles(std::size_t n);
 
     /**
      * Registers a predefined observable with the kernel. A list of available observables can be obtained by
@@ -171,7 +181,7 @@ public:
      * Removes an observable by uuid.
      * @param uuid the uuid of the observable to be removed.
      */
-    void deregisterObservable(const ObservableHandle::id_t uuid);
+    void deregisterObservable(ObservableHandle::id_t uuid);
 
     void deregisterObservable(const ObservableHandle &uuid);
 
@@ -189,7 +199,7 @@ public:
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      */
     particle_t::type_type
-    registerParticleType(const std::string &name, const double diffusionCoefficient, const double radius,
+    registerParticleType(const std::string &name, scalar diffusionCoefficient, scalar radius,
                          readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
 
     /**
@@ -197,7 +207,7 @@ public:
      * @param id the id of this potential
      * @todo test this thoroughly and see if the context can handle it with its internal maps
      */
-    void deregisterPotential(const short id);
+    void deregisterPotential(short id);
 
     //----------------------
     // Order 1 potentials
@@ -215,7 +225,7 @@ public:
      *        when calculating force and energy or not
      * @return a uuid with which the potential can be removed
      */
-    const short registerBoxPotential(const std::string &particleType, double forceConstant,
+    const short registerBoxPotential(const std::string &particleType, scalar forceConstant,
                                      const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                                      bool considerParticleRadius);
 
@@ -231,8 +241,8 @@ public:
      * @todo add a considerParticleRadius parameter
      */
     const short
-    registerSphereInPotential(const std::string &particleType, double forceConstant, const readdy::model::Vec3 &origin,
-                              double radius);
+    registerSphereInPotential(const std::string &particleType, scalar forceConstant, const readdy::model::Vec3 &origin,
+                              scalar radius);
 
     /**
      * Register a sphere potential, which is used to confine particles outside a spherical volume. The energy function
@@ -245,13 +255,13 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphereOutPotential(const std::string &particleType, double forceConstant, const readdy::model::Vec3 &origin,
-                               double radius);
+    registerSphereOutPotential(const std::string &particleType, scalar forceConstant, const readdy::model::Vec3 &origin,
+                               scalar radius);
 
     /**
      * Register a spherical barrier potential. For positive height it represents a concentric barrier around the point origin
      * with a certain radius. The potential consists of multiple harmonic snippets.
-     * 
+     *
      * @param particleType the particle type for which the potential should take effect
      * @param origin the center of the sphere
      * @param radius the radius of the sphere
@@ -260,7 +270,8 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, double radius, double height, double width);
+    registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, scalar radius,
+                             scalar height, scalar width);
 
     //----------------------
     // Order 2 potentials
@@ -274,7 +285,7 @@ public:
      * @todo document this more thoroughly
      */
     const short registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
-                                                   double forceConstant);
+                                                   scalar forceConstant);
 
     /**
      * Register a weak interaction piecewise harmonic potential.
@@ -289,8 +300,8 @@ public:
      * @todo document this more thoroughly, maybe make it available as a method of only two-three of the four: forceConstant, desiredDistance, depth, noInteractionDistance?
      */
     const short registerWeakInteractionPiecewiseHarmonicPotential(
-            const std::string &particleTypeA, const std::string &particleTypeB, double forceConstant,
-            double desiredParticleDistance, double depth, double noInteractionDistance);
+            const std::string &particleTypeA, const std::string &particleTypeB, scalar forceConstant,
+            scalar desiredParticleDistance, scalar depth, scalar noInteractionDistance);
 
     /**
     * Constructs a Lennard-Jones-type potential between two particle types A and B (where possibly A = B) of the form
@@ -316,7 +327,7 @@ public:
     */
     const short
     registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
-                                  double cutoff, bool shift, double epsilon, double sigma);
+                                  scalar cutoff, bool shift, scalar epsilon, scalar sigma);
 
     /**
      * Constructs a potential that describes screened electrostatics with a hard-core repulsion between two
@@ -341,10 +352,10 @@ public:
      */
     const short
     registerScreenedElectrostaticsPotential(const std::string &particleType1, const std::string &particleType2,
-                                            double electrostaticStrength,
-                                            double inverseScreeningDepth, double repulsionStrength,
-                                            double repulsionDistance, unsigned int exponent,
-                                            double cutoff);
+                                            scalar electrostaticStrength,
+                                            scalar inverseScreeningDepth, scalar repulsionStrength,
+                                            scalar repulsionDistance, unsigned int exponent,
+                                            scalar cutoff);
 
     void registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr);
 
@@ -367,7 +378,7 @@ public:
      * @param z the z coordinate
      * @param type the type of the particle
      */
-    void addParticle(const std::string &type, double x, double y, double z);
+    void addParticle(const std::string &type, scalar x, scalar y, scalar z);
 
     /**
      * Method that gives access to all the positions of all the particles in the system.
@@ -405,7 +416,7 @@ public:
      * @todo implement removal of reactions
      */
     const short registerConversionReaction(const std::string &name, const std::string &from,
-                                           const std::string &to, const double rate);
+                                           const std::string &to, scalar rate);
 
     /**
      * Method to register an enzymatic reaction "A+C->B+C".
@@ -420,7 +431,7 @@ public:
      */
     const short registerEnzymaticReaction(const std::string &name, const std::string &catalyst,
                                           const std::string &from, const std::string &to,
-                                          const double rate, const double eductDistance);
+                                          scalar rate, scalar eductDistance);
 
     /**
      * Method to register a fission reaction "A->B+C".
@@ -437,8 +448,8 @@ public:
      */
     const short registerFissionReaction(const std::string &name, const std::string &from,
                                         const std::string &to1, const std::string &to2,
-                                        const double rate, const double productDistance,
-                                        const double weight1 = 0.5, const double weight2 = 0.5);
+                                        scalar rate, scalar productDistance,
+                                        scalar weight1 = 0.5, scalar weight2 = 0.5);
 
     /**
      * Method to register a fusion reaction "A+B->C".
@@ -455,8 +466,8 @@ public:
      */
     const short registerFusionReaction(const std::string &name, const std::string &from1,
                                        const std::string &from2, const std::string &to,
-                                       const double rate, const double eductDistance,
-                                       const double weight1 = 0.5, const double weight2 = 0.5);
+                                       scalar rate, scalar eductDistance,
+                                       scalar weight1 = 0.5, scalar weight2 = 0.5);
 
     /**
      * Method to register a decay reaction.
@@ -467,36 +478,40 @@ public:
      * @todo implement removal of reactions
      */
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
-                                      const double rate);
+                                      scalar rate);
 
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
                               const std::string &name, const model::Vec3 &origin,
-                              const double radius, const bool largerOrLess);
+                              scalar radius, bool largerOrLess);
 
     const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
                                          const std::string &name,
-                                         const model::Vec3 &normalCoefficients, const double distanceFromPlane,
-                                         const bool largerOrLess);
+                                         const model::Vec3 &normalCoefficients, scalar distanceFromPlane,
+                                         bool largerOrLess);
 
     void
-    configureTopologyBondPotential(const std::string &type1, const std::string &type2, double forceConstant,
-                                   double length, api::BondType type = api::BondType::HARMONIC);
+    configureTopologyBondPotential(const std::string &type1, const std::string &type2, scalar forceConstant,
+                                   scalar length, api::BondType type = api::BondType::HARMONIC);
 
     void configureTopologyAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
-                                         double forceConstant, double equilibriumAngle,
+                                         scalar forceConstant, scalar equilibriumAngle,
                                          api::AngleType type = api::AngleType::HARMONIC);
 
     void configureTopologyTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
-                                           const std::string &type4, double forceConstant, unsigned int multiplicity,
-                                           double phi_0, api::TorsionType type = api::TorsionType::COS_DIHEDRAL);
+                                           const std::string &type4, scalar forceConstant, unsigned int multiplicity,
+                                           scalar phi_0, api::TorsionType type = api::TorsionType::COS_DIHEDRAL);
 
-    virtual void run(const time_step_type steps, const double timeStep);
+    virtual void run(time_step_type steps, scalar timeStep);
 
-    double getRecommendedTimeStep(unsigned int N) const;
+    scalar getRecommendedTimeStep(unsigned int N) const;
 
     template<typename SchemeType=readdy::api::ReaDDyScheme>
     readdy::api::SchemeConfigurator<SchemeType> runScheme(bool useDefaults = true);
+
+    bool singlePrecision() const;
+
+    bool doublePrecision() const;
 
 private:
     struct Impl;
@@ -509,7 +524,7 @@ private:
 
 class NoKernelSelectedException : public std::runtime_error {
 public:
-    NoKernelSelectedException(const std::string &__arg);
+    explicit NoKernelSelectedException(const std::string &__arg);
 };
 
 NAMESPACE_END(readdy)

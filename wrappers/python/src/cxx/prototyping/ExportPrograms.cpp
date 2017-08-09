@@ -65,7 +65,7 @@ void exportPrograms(py::module &proto) {
                 std::unique_ptr<action_t> action = self.createAction<add_particle_t>(p);
                 return action.release();
             }, rvp::take_ownership)
-            .def("create_euler_integrator", [](const prog_factory_t& self, double dt) {
+            .def("create_euler_integrator", [](const prog_factory_t& self, readdy::scalar dt) {
                 std::unique_ptr<action_t> action = self.createAction<readdy::model::actions::EulerBDIntegrator>(dt);
                 return action.release();
             }, rvp::take_ownership)
@@ -77,7 +77,7 @@ void exportPrograms(py::module &proto) {
                 std::unique_ptr<action_t> action = self.createAction<readdy::model::actions::UpdateNeighborList>();
                 return action.release();
             }, rvp::take_ownership)
-            .def("create_reactions_uncontrolled_approximation", [](const prog_factory_t & self, double dt) {
+            .def("create_reactions_uncontrolled_approximation", [](const prog_factory_t & self, readdy::scalar dt) {
                 std::unique_ptr<action_t> action = self.createAction<readdy::model::actions::reactions::UncontrolledApproximation>(dt);
                 return action.release();
             }, rvp::take_ownership);
@@ -94,7 +94,7 @@ void exportPrograms(py::module &proto) {
 
     py::class_<readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegratorBase", program);
     py::class_<euler_integrator_t, readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegrator")
-            .def(py::init<scpu_kernel_t *, double>())
+            .def(py::init<scpu_kernel_t *, readdy::scalar>())
             .def("perform", &euler_integrator_t::perform);
 
     py::class_<readdy::model::actions::CalculateForces>(proto, "CalculateForcesBase", program)
@@ -117,7 +117,7 @@ void exportPrograms(py::module &proto) {
 
     py::class_<readdy::model::actions::reactions::UncontrolledApproximation>(proto, "UncontrolledApproxBase", program);
     py::class_<reactions_u_a_t, readdy::model::actions::reactions::UncontrolledApproximation>(proto, "ReactionsUncontrolledApproximation")
-            .def(py::init<scpu_kernel_t *, double>())
+            .def(py::init<scpu_kernel_t *, readdy::scalar>())
             .def("perform", &reactions_u_a_t::perform)
             .def("register_reaction_scheme_11", &reactions_u_a_t::registerReactionScheme_11)
             .def("register_reaction_scheme_12", &reactions_u_a_t::registerReactionScheme_12)

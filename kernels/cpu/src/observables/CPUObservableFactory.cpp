@@ -49,7 +49,7 @@ CPUObservableFactory::createNParticles(unsigned int stride, std::vector<std::str
 }
 
 readdy::model::observables::HistogramAlongAxis *
-CPUObservableFactory::createHistogramAlongAxis(unsigned int stride, std::vector<double> binBorders,
+CPUObservableFactory::createHistogramAlongAxis(unsigned int stride, std::vector<scalar> binBorders,
                                                std::vector<std::string> typesToCount,
                                                unsigned int axis) const {
     return new CPUHistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis);
@@ -66,8 +66,8 @@ CPUObservableFactory::createPositions(unsigned int stride, std::vector<std::stri
 }
 
 readdy::model::observables::RadialDistribution *
-CPUObservableFactory::createRadialDistribution(unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
-                                               std::vector<std::string> typeCountTo, double particleToDensity) const {
+CPUObservableFactory::createRadialDistribution(unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
+                                               std::vector<std::string> typeCountTo, scalar particleToDensity) const {
     return new readdy::kernel::scpu::observables::SCPURadialDistribution<CPUKernel>(kernel, stride, binBorders, typeCountFrom, typeCountTo,
                                                                                                particleToDensity);
 }

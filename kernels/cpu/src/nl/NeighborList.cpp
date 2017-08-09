@@ -132,10 +132,10 @@ void NeighborList::fill_container() {
         const auto data_begin = _data.cbegin();
         auto worker = [=](std::size_t, model::CPUParticleData::const_iterator begin,
                           model::CPUParticleData::const_iterator end, const CellContainer &container) {
-            CellContainer::particle_index i = (CellContainer::particle_index) std::distance(data_begin, begin);
+            auto i = std::distance(data_begin, begin);
             for (auto it = begin; it != end; ++it, ++i) {
                 if (!it->is_deactivated()) {
-                    container.insert_particle(i);
+                    container.insert_particle(static_cast<const CellContainer::particle_index>(i));
                 }
             }
         };
@@ -270,7 +270,7 @@ void NeighborList::updateData(data_t::update_t &&update) {
     const auto& decayed_particles = std::get<1>(update);
     for(const auto p_idx : decayed_particles) {
         const auto sub_cell = _cell_container.leaf_cell_for_position(_data.pos(p_idx));
-        if (sub_cell) {
+        if (sub_cell != nullptr) {
             const auto& particles = sub_cell->particles();
             if(particles.erase_if_found(p_idx)) {
                 sub_cell->super_cell()->set_dirty();

@@ -67,7 +67,7 @@ public:
     using update_t = std::pair<entries_update_t, std::vector<index_t>>;
     using vec3 = readdy::model::Vec3;
     using force_t = vec3;
-    using displacement_t = double;
+    using displacement_t = readdy::scalar;
     using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
 
     using iterator = decltype(std::declval<entries_t>().begin());
@@ -80,17 +80,17 @@ public:
      * Particle data entry with padding such that it fits exactly into 64 bytes.
      */
     struct Entry {
-        Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
+        explicit Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
                                                deactivated(false), displacement(0), id(particle.getId()) {
         }
         Entry(particle_type::pos_type pos, particle_type_type type, particle_type::id_type id)
-                : pos(std::move(pos)), type(std::move(type)), id(std::move(id)), deactivated(false),
-                  force(), displacement(0) {}
+                : pos(pos), type(type), id(id), deactivated(false), displacement(0) {}
 
         Entry(const Entry&) = delete;
         Entry& operator=(const Entry&) = delete;
-        Entry(Entry&&);
-        Entry& operator=(Entry&&);
+        Entry(Entry&&) noexcept = default;
+        Entry& operator=(Entry&&) noexcept = default;
+        ~Entry() = default;
 
         bool is_deactivated() const;
         const particle_type::pos_type &position() const;
@@ -98,20 +98,17 @@ public:
         force_t force; // 3*8 = 24 bytes
         displacement_t displacement; // 24 + 8 = 32 bytes
 
-    private:
         friend class readdy::kernel::cpu::model::CPUParticleData;
         friend class CPUNeighborList;
 
         particle_type::pos_type pos; // 32 + 3*8 = 56 bytes
-    public:
         particle_type::id_type id; // 56 + 8 = 64
         particle_type::type_type type; // 56 + 4 = 60 bytes
-    private:
         bool deactivated; // 60 + 1 = 61 bytes
-        char padding[3] {0,0,0}; // 61 + 3 = 64 bytes
+        //char padding[3] {0,0,0}; // 61 + 3 = 64 bytes
     };
     // ctor / dtor
-    CPUParticleData(readdy::model::KernelContext *const context, const readdy::util::thread::Config &_config);
+    CPUParticleData(readdy::model::KernelContext *context, const readdy::util::thread::Config &_config);
 
     ~CPUParticleData();
 
@@ -142,7 +139,7 @@ public:
      */
     std::array<unsigned long long, 3> project(vec3 value, scalar grid_width) const;
 
-    void hilbert_sort(const scalar grid_width);
+    void hilbert_sort(scalar grid_width);
 
     index_t addEntry(Entry &&entry);
 
@@ -150,17 +147,17 @@ public:
 
     std::vector<entries_t::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
 
-    readdy::model::Particle getParticle(const index_t index) const;
+    readdy::model::Particle getParticle(index_t index) const;
 
     readdy::model::Particle toParticle(const Entry& e) const;
 
     void removeParticle(const particle_type &particle);
 
-    void removeParticle(const index_t index);
+    void removeParticle(index_t index);
 
     void removeEntry(index_t entry);
 
-    index_t getIndexForId(const particle_type::id_type) const;
+    index_t getIndexForId(particle_type::id_type) const;
 
     iterator begin();
     iterator end();

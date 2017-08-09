@@ -51,7 +51,7 @@ std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
 }
 
 std::ostream& operator<<(std::ostream& os, const ReactionRecord& record) {
-    ReactionType type = ReactionType(record.type);
+    auto type = ReactionType(record.type);
     os << "ReactionRecord[type: " << type;
     switch (type) {
         case ReactionType::Decay:{

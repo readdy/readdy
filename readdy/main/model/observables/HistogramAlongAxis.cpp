@@ -49,20 +49,20 @@ struct HistogramAlongAxis::Impl {
 };
 
 HistogramAlongAxis::HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
-                                       std::vector<double> binBorders, std::set<unsigned int> typesToCount,
+                                       std::vector<scalar> binBorders, std::set<unsigned int> typesToCount,
                                        unsigned int axis)
-        : Observable(kernel, stride), binBorders(binBorders), typesToCount(typesToCount), axis(axis),
+        : Observable(kernel, stride), binBorders(binBorders), typesToCount(std::move(typesToCount)), axis(axis),
           pimpl(std::make_unique<Impl>()) {
     auto nCenters = binBorders.size() - 1;
-    result = std::vector<double>(nCenters);
+    result = std::vector<scalar>(nCenters);
 }
 
 
 HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride,
-                                       std::vector<double> binBorders,
+                                       std::vector<scalar> binBorders,
                                        std::vector<std::string> typesToCount,
                                        unsigned int axis)
-        : HistogramAlongAxis(kernel, stride, binBorders,
+        : HistogramAlongAxis(kernel, stride, std::move(binBorders),
                              _internal::util::transformTypes(typesToCount, kernel->getKernelContext()),
                              axis) {
 
@@ -75,7 +75,7 @@ void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &da
         std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
         auto group = file.createGroup(path);
-        auto dataSet = std::make_unique<io::DataSet>(group.createDataSet<double>("data", fs, dims));
+        auto dataSet = std::make_unique<io::DataSet>(group.createDataSet<scalar>("data", fs, dims));
         pimpl->dataSet = std::move(dataSet);
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }

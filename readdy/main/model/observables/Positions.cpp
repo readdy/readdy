@@ -53,7 +53,7 @@ Positions::Positions(Kernel *const kernel, unsigned int stride,
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
                      std::vector<unsigned int> typesToCount) :
-        Observable(kernel, stride), typesToCount(typesToCount), pimpl(std::make_unique<Impl>()) {}
+        Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {}
 
 void Positions::append() {
     std::vector<Vec3> podVec(result.begin(), result.end());

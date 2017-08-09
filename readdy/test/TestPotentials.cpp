@@ -43,18 +43,18 @@ class TestPotentials : public KernelTest {
 };
 
 void setupParticles(readdy::model::Kernel &kernel) {
-    kernel.getKernelContext().particle_types().add("A", 1., 0.1);
-    kernel.getKernelContext().particle_types().add("B", 0.1, 0.01);
+    kernel.getKernelContext().particle_types().add("A", static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.1));
+    kernel.getKernelContext().particle_types().add("B", static_cast<readdy::scalar>(0.1), static_cast<readdy::scalar>(0.01));
     kernel.getKernelContext().setPeriodicBoundary(false, false, false);
     const unsigned int nParticlesA = 10;
     const unsigned int nParticlesB = 10;
 
     // add particles close to origin but not all exactly on 0,0,0
-    for (auto i = 0; i < nParticlesA; ++i) kernel.addParticle("A", readdy::model::rnd::normal3());
-    for (auto i = 0; i < nParticlesB; ++i) kernel.addParticle("B", readdy::model::rnd::normal3());
+    for (auto i = 0; i < nParticlesA; ++i) kernel.addParticle("A", readdy::model::rnd::normal3<readdy::scalar>());
+    for (auto i = 0; i < nParticlesB; ++i) kernel.addParticle("B", readdy::model::rnd::normal3<readdy::scalar>());
 }
 
-void run(readdy::model::Kernel &kernel, double timeStep) {
+void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
     unsigned int nSteps = 200;
     auto &&integrator = kernel.createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
     auto &&nl = kernel.createAction<readdy::model::actions::UpdateNeighborList>();
@@ -69,7 +69,7 @@ void run(readdy::model::Kernel &kernel, double timeStep) {
 
 TEST_P(TestPotentials, TestParticlesStayInBox) {
     kernel->getKernelContext().setBoxSize(5, 5, 5);
-    const double timeStep = .005;
+    const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
 
@@ -84,7 +84,9 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
-    readdy::model::Vec3 lowerBound{-2.5, -2.5, -2.5}, upperBound{2.5, 2.5, 2.5};
+    readdy::model::Vec3 lowerBound{static_cast<readdy::scalar>(-2.5), static_cast<readdy::scalar>(-2.5),
+                                   static_cast<readdy::scalar>(-2.5)},
+            upperBound{2.5, 2.5, 2.5};
     ppObs->setCallback([lowerBound, upperBound](readdy::model::observables::Positions::result_t currentResult) {
         readdy::model::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
@@ -102,7 +104,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 
 TEST_P(TestPotentials, TestParticleStayInSphere) {
     kernel->getKernelContext().setBoxSize(10, 10, 10);
-    const double timeStep = .005;
+    const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
 
@@ -112,13 +114,13 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
         kernel->registerPotential<readdy::model::potentials::SphereIn>(t, 20, origin, 3);
     }
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
-    const double maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
-    const double maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
+    const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
+    const readdy::scalar maxDistFromOriginSquared = maxDistFromOrigin * maxDistFromOrigin;
     ppObs->setCallback([maxDistFromOriginSquared](readdy::model::observables::Positions::result_t currentResult) {
         readdy::model::Vec3 avg{0, 0, 0};
         bool allWithinBounds = true;
         for (auto &&v : currentResult) {
-            const double distanceFromOriginSquared = v * v;
+            const readdy::scalar distanceFromOriginSquared = v * v;
             allWithinBounds &= distanceFromOriginSquared < maxDistFromOriginSquared;
             avg += v;
         }
@@ -172,13 +174,19 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 0.925925925926);
-    ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
-    ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
-    readdy::model::Vec3 forceOnParticle0 {0, 0, -123.45679012};
-    readdy::model::Vec3 forceOnParticle1 {0, 0, 123.45679012};
-    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
-    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
+    EXPECT_NEAR(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
+    auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
+    auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
+    readdy::model::Vec3 forceOnParticle0 {0, 0, static_cast<readdy::scalar>(-123.45679012)};
+    readdy::model::Vec3 forceOnParticle1 {0, 0, static_cast<readdy::scalar>(123.45679012)};
+
+    if(kernel->singlePrecision()) {
+        EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-4);
+        EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-4);
+    } else {
+        EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
+        EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
+    }
 }
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
@@ -189,11 +197,11 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     // distance of particles is 2.56515106768
     auto id0 = kernel->addParticle("A", {0, 0, 0});
     auto id1 = kernel->addParticle("A", {1.2, 1.5, -1.7});
-    double electrostaticStrength = -1.;
-    double screeningDepth = 1.;
-    double repulsionStrength = 1.;
-    double sigma = 1.;
-    double cutoff = 8.;
+    auto electrostaticStrength = static_cast<readdy::scalar>(-1.);
+    auto screeningDepth = static_cast<readdy::scalar>(1.);
+    auto repulsionStrength = static_cast<readdy::scalar>(1.);
+    auto sigma = static_cast<readdy::scalar>(1.);
+    auto cutoff = static_cast<readdy::scalar>(8.);
     unsigned int exponent = 6;
     kernel->registerPotential<readdy::model::potentials::ScreenedElectrostatics>("A", "A", electrostaticStrength, 1. / screeningDepth,
                                                                                  repulsionStrength, sigma, exponent, cutoff);
@@ -224,11 +232,16 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), -0.0264715664281);
+    if(kernel->singlePrecision()) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
+    } else {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
+    }
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
-    readdy::model::Vec3 forceOnParticle0{0.01565262, 0.01956577, -0.02217454};
-    readdy::model::Vec3 forceOnParticle1{-0.01565262, -0.01956577, 0.02217454};
+    readdy::model::Vec3 forceOnParticle0{0.01565262, 0.01956577, static_cast<readdy::scalar>(-0.02217454)};
+    readdy::model::Vec3 forceOnParticle1{static_cast<readdy::scalar>(-0.01565262),
+                                         static_cast<readdy::scalar>(-0.01956577), 0.02217454};
     EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-8);
     EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-8);
 }
@@ -241,9 +254,10 @@ TEST_P(TestPotentials, SphericalMembrane) {
     // add two particles, one outside, one inside the sphere
     auto id0 = kernel->addParticle("A", {2., 1., 1.});
     auto id1 = kernel->addParticle("A", {4., 3., -3.});
-    double forceConstant = 1.;
-    double radius = 3.;
-    readdy::model::Vec3 origin = {1.,0.,0.};
+    auto forceConstant = static_cast<readdy::scalar>(1.);
+    auto radius = static_cast<readdy::scalar>(3.);
+    readdy::model::Vec3 origin = {static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.),
+                                  static_cast<readdy::scalar>(0.)};
     kernel->registerPotential<readdy::model::potentials::SphereOut>("A", forceConstant, origin, radius);
     kernel->registerPotential<readdy::model::potentials::SphereIn>("A", forceConstant, origin, radius);
     // record ids to get data-structure-indexes of the two particles later on
@@ -276,10 +290,14 @@ TEST_P(TestPotentials, SphericalMembrane) {
     ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 0.803847577293 + 2.41154273188);
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
-    readdy::model::Vec3 forceOnParticle0{0.73205081, 0.73205081, 0.73205081};
-    readdy::model::Vec3 forceOnParticle1{-1.26794919, -1.26794919, 1.26794919};
-    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-8);
-    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-8);
+    readdy::model::Vec3 forceOnParticle0{static_cast<readdy::scalar>(0.73205081),
+                                         static_cast<readdy::scalar>(0.73205081),
+                                         static_cast<readdy::scalar>(0.73205081)};
+    readdy::model::Vec3 forceOnParticle1{static_cast<readdy::scalar>(-1.26794919),
+                                         static_cast<readdy::scalar>(-1.26794919),
+                                         static_cast<readdy::scalar>(1.26794919)};
+    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-6);
+    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-6);
 }
 
 TEST_P(TestPotentials, SphericalBarrier) {
@@ -319,10 +337,12 @@ TEST_P(TestPotentials, SphericalBarrier) {
     ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 1.51432015278);
     auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
-    readdy::model::Vec3 forceOnParticle0{9.2539372, 0.84126702, 0.};
-    readdy::model::Vec3 forceOnParticle1{0., 0., 0.};
-    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, 1e-8);
-    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, 1e-8);
+    readdy::model::Vec3 forceOnParticle0{static_cast<readdy::scalar>(9.2539372), static_cast<readdy::scalar>(0.84126702),
+                                         static_cast<readdy::scalar>(0.)};
+    readdy::model::Vec3 forceOnParticle1{static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.),
+                                         static_cast<readdy::scalar>(0.)};
+    EXPECT_VEC3_NEAR(collectedForces[id0Idx], forceOnParticle0, kernel->doublePrecision() ? 1e-8 : 1e-5);
+    EXPECT_VEC3_NEAR(collectedForces[id1Idx], forceOnParticle1, kernel->doublePrecision() ? 1e-8 : 1e-5);
 }
 
 INSTANTIATE_TEST_CASE_P(TestPotentials, TestPotentials,

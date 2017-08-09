@@ -39,6 +39,7 @@
 
 // use this to check floating point equality of readdy's Vec3 object
 #define EXPECT_VEC3_EQ(u, v) EXPECT_DOUBLE_EQ((u)[0], (v)[0]); EXPECT_DOUBLE_EQ((u)[1], (v)[1]); EXPECT_DOUBLE_EQ((u)[2], (v)[2])
+#define EXPECT_FVEC3_EQ(u, v) EXPECT_FLOAT_EQ((u)[0], (v)[0]); EXPECT_FLOAT_EQ((u)[1], (v)[1]); EXPECT_FLOAT_EQ((u)[2], (v)[2])
 #define EXPECT_VEC3_NEAR(u, v, abs_error) EXPECT_NEAR((u)[0], (v)[0], abs_error); EXPECT_NEAR((u)[1], (v)[1], abs_error); EXPECT_NEAR((u)[2], (v)[2], abs_error)
 
 namespace readdy {
@@ -59,13 +60,13 @@ inline std::string getPluginsDirectory() {
     const char *env = nullptr;
     for (auto &&key : envs) {
         env = std::getenv(key.c_str());
-        if (env) {
+        if (env != nullptr) {
             log::trace("Using env-variable for plugin dir prefix {}={}", key, env);
             break;
         }
     }
     std::string pluginDir = "readdy/readdy_plugins";
-    if (env) {
+    if (env != nullptr) {
         auto _env = std::string(env);
         if (!util::str::has_suffix(_env, "/")) {
             _env = _env.append("/");

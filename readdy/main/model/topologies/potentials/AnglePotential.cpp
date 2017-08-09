@@ -54,35 +54,35 @@ const HarmonicAnglePotential::angles_t &HarmonicAnglePotential::getAngles() cons
     return angles;
 }
 
-double HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
+scalar  HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
                                                const angle_t &angle) const {
-    const double scalarProduct = x_ij * x_kj;
-    const double norm_ij = std::sqrt(x_ij * x_ij);
-    const double norm_kj = std::sqrt(x_kj * x_kj);
-    const double theta_ijk = std::acos(scalarProduct / (norm_ij * norm_kj));
+    const scalar  scalarProduct = x_ij * x_kj;
+    const scalar  norm_ij = std::sqrt(x_ij * x_ij);
+    const scalar  norm_kj = std::sqrt(x_kj * x_kj);
+    const scalar  theta_ijk = std::acos(scalarProduct / (norm_ij * norm_kj));
     return angle.forceConstant * (theta_ijk - angle.equilibriumAngle) * (theta_ijk - angle.equilibriumAngle);
 }
 
 void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk,
                                             const angle_t &angle) const {
-    const double scalarProduct = x_ji * x_jk;
-    const double norm_ji_2 = x_ji * x_ji;
-    const double norm_ji = std::sqrt(norm_ji_2);
-    const double norm_jk_2 = x_jk * x_jk;
-    const double norm_jk = std::sqrt(norm_jk_2);
-    double norm_product = norm_ji * norm_jk;
+    const scalar  scalarProduct = x_ji * x_jk;
+    const scalar  norm_ji_2 = x_ji * x_ji;
+    const scalar  norm_ji = std::sqrt(norm_ji_2);
+    const scalar  norm_jk_2 = x_jk * x_jk;
+    const scalar  norm_jk = std::sqrt(norm_jk_2);
+    scalar  norm_product = norm_ji * norm_jk;
     if(norm_product < SMALL) norm_product = SMALL;
-    const double inv_norm_product = 1/norm_product;
+    const scalar  inv_norm_product = 1/norm_product;
 
-    double cos_theta = inv_norm_product * scalarProduct;
-    cos_theta = readdy::util::numeric::clamp(cos_theta, -1., 1.);
+    scalar  cos_theta = inv_norm_product * scalarProduct;
+    cos_theta = readdy::util::numeric::clamp(cos_theta, static_cast<scalar>(-1.), static_cast<scalar>(1.));
 
     // avoid too large values of r
-    double r = std::sqrt(1.0 - cos_theta * cos_theta);
+    scalar  r = std::sqrt(static_cast<scalar>(1.0) - cos_theta * cos_theta);
     if(r < SMALL) r = SMALL;
-    r = 1./r;
+    r = static_cast<scalar>(1.)/r;
 
-    const double c = 2. * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
+    const scalar  c = static_cast<scalar>(2.) * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
 
     const Vec3 force_i = c * cos_theta * (1/norm_ji_2) * x_ji - c * inv_norm_product * x_jk;
     const Vec3 force_k = -c * inv_norm_product * x_ji + c * cos_theta  * (1/norm_jk_2) * x_jk;
@@ -92,7 +92,7 @@ void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, con
     f_k += force_k;
 }
 
-AngleConfiguration::AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double theta_0)
+AngleConfiguration::AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, scalar  forceConstant, scalar  theta_0)
         : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
 }
 }

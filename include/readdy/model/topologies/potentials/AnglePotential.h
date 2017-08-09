@@ -53,10 +53,10 @@ public:
 
 struct AngleConfiguration {
 
-    AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, double forceConstant, double equilibriumAngle);
+    AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, scalar forceConstant, scalar equilibriumAngle);
 
     const std::size_t idx1, idx2, idx3;
-    const double equilibriumAngle, forceConstant;
+    const scalar equilibriumAngle, forceConstant;
 };
 
 
@@ -65,7 +65,11 @@ public:
     using angle_t = AngleConfiguration;
     using angles_t = std::vector<AngleConfiguration>;
 
-    HarmonicAnglePotential(Topology *const topology, const angles_t &angles);
+    HarmonicAnglePotential(Topology *topology, const angles_t &angles);
+    HarmonicAnglePotential(const HarmonicAnglePotential&) = default;
+    HarmonicAnglePotential& operator=(const HarmonicAnglePotential&) = delete;
+    HarmonicAnglePotential(HarmonicAnglePotential&&) = default;
+    HarmonicAnglePotential& operator=(HarmonicAnglePotential&&) = delete;
 
     virtual ~HarmonicAnglePotential() = default;
 
@@ -74,7 +78,7 @@ public:
 
     const angles_t &getAngles() const;
 
-    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
+    scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
 
     void
     calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;

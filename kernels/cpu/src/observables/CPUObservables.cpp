@@ -42,8 +42,6 @@ namespace kernel {
 namespace cpu {
 namespace observables {
 
-namespace thd = readdy::util::thread;
-
 CPUPositions::CPUPositions(CPUKernel *const kernel, unsigned int stride,
                            const std::vector<std::string> &typesToCount) :
         readdy::model::observables::Positions(kernel, stride, typesToCount), kernel(kernel) {}
@@ -65,7 +63,7 @@ void CPUPositions::evaluate() {
 }
 
 CPUHistogramAlongAxis::CPUHistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
-                                             const std::vector<double> &binBorders,
+                                             const std::vector<scalar> &binBorders,
                                              const std::vector<std::string> &typesToCount, unsigned int axis)
         : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
           kernel(kernel) {
@@ -89,7 +87,7 @@ void CPUHistogramAlongAxis::evaluate() {
         result_t resultUpdate;
         resultUpdate.resize(resultSize);
 
-        for (Iter it = from; it != to; ++it) {
+        for (auto it = from; it != to; ++it) {
             if (!it->is_deactivated() && typesToCount.find(it->type) != typesToCount.end()) {
                 auto upperBound = std::upper_bound(binBorders.begin(), binBorders.end(), it->position()[axis]);
                 if (upperBound != binBorders.end()) {
@@ -114,7 +112,7 @@ void CPUHistogramAlongAxis::evaluate() {
 
         const auto& executor = kernel->executor();
 
-        Iter workIter = data->cbegin();
+        auto workIter = data->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             updates.push_back(promises.at(i).get_future());
             executables.push_back(executor.pack(worker, workIter, workIter + grainSize, std::ref(promises.at(i))));
@@ -139,7 +137,7 @@ void CPUHistogramAlongAxis::evaluate() {
 
 
 CPUNParticles::CPUNParticles(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
-        : readdy::model::observables::NParticles(kernel, stride, typesToCount),
+        : readdy::model::observables::NParticles(kernel, stride, std::move(typesToCount)),
           kernel(kernel) {}
 
 void CPUNParticles::evaluate() {
@@ -162,7 +160,7 @@ void CPUNParticles::evaluate() {
 }
 
 CPUForces::CPUForces(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount) :
-        readdy::model::observables::Forces(kernel, stride, typesToCount),
+        readdy::model::observables::Forces(kernel, stride, std::move(typesToCount)),
         kernel(kernel) {}
 
 void CPUForces::evaluate() {

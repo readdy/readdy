@@ -45,7 +45,7 @@ class TestObservables : public KernelTest {
 TEST_P(TestObservables, TestParticlePositions) {
     const unsigned int n_particles = 100;
     kernel->getKernelContext().particle_types().add("type", 1., 1.);
-    const double timeStep = 1.0;
+    const readdy::scalar  timeStep = 1.0;
     const auto particleTypeId = kernel->getKernelContext().particle_types().id_of("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->getKernelStateModel().addParticles(particles);

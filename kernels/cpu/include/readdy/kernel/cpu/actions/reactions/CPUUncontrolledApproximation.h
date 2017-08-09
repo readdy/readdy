@@ -41,24 +41,24 @@ namespace reactions {
 class CPUUncontrolledApproximation : public readdy::model::actions::reactions::UncontrolledApproximation {
     using super = readdy::model::actions::reactions::UncontrolledApproximation;
 public:
-    CPUUncontrolledApproximation(CPUKernel *const kernel, double timeStep);
+    CPUUncontrolledApproximation(CPUKernel* kernel, readdy::scalar timeStep);
 
-    virtual void perform() override;
+    void perform() override;
 
-    virtual void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override {
+    void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override {
         throw std::runtime_error("not supported for cpu kernel thus far");
     }
 
-    virtual void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override {
+    void registerReactionScheme_12(const std::string &reactionName, reaction_12 fun) override {
         throw std::runtime_error("not supported for cpu kernel thus far");
     }
 
-    virtual void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override {
+    void registerReactionScheme_21(const std::string &reactionName, reaction_21 fun) override {
         throw std::runtime_error("not supported for cpu kernel thus far");
 
     }
 
-    virtual void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) override {
+    void registerReactionScheme_22(const std::string &reactionName, reaction_22 fun) override {
         throw std::runtime_error("not supported for cpu kernel thus far");
     }
 

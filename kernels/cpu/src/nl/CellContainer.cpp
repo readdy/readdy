@@ -102,11 +102,11 @@ CellContainer::sub_cell *const CellContainer::sub_cell_for_position(const CellCo
 }
 
 const CellContainer::sub_cell *const CellContainer::sub_cell_for_position(const CellContainer::vec3 &pos) const {
-    const cell_index i = static_cast<const cell_index>(floor(
+    const auto i = static_cast<const cell_index>(floor(
             (pos.x + .5 * _root_size.x - _offset.x) / _sub_cell_size.x));
-    const cell_index j = static_cast<const cell_index>(floor(
+    const auto j = static_cast<const cell_index>(floor(
             (pos.y + .5 * _root_size.y - _offset.y) / _sub_cell_size.y));
-    const cell_index k = static_cast<const cell_index>(floor(
+    const auto k = static_cast<const cell_index>(floor(
             (pos.z + .5 * _root_size.z - _offset.z) / _sub_cell_size.z));
     return sub_cell_for_grid_index(std::tie(i, j, k));
 }
@@ -128,11 +128,10 @@ CellContainer::sub_cell_for_grid_index(const CellContainer::grid_index &index) c
     const auto cix = get_contiguous_index(i, j, k, _n_sub_cells[1], _n_sub_cells[2]);
     if (cix < _sub_cells.size()) {
         return &_sub_cells.at(static_cast<cell_index>(cix));
-    } else {
-        log::critical("CPUNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
-                              "only {} cells.", i, j, k, cix, _sub_cells.size());
-        throw std::runtime_error("tried to get cell index that was too large");
     }
+    log::critical("CPUNeighborList::getCell(const): Requested cell ({},{},{})={}, but there are "
+                              "only {} cells.", i, j, k, cix, _sub_cells.size());
+    throw std::runtime_error("tried to get cell index that was too large");
 }
 
 void CellContainer::update_displacements() {
@@ -153,7 +152,7 @@ void CellContainer::update_displacements() {
 void CellContainer::subdivide(const scalar desired_cell_width) {
     for (std::uint8_t i = 0; i < 3; ++i) {
         _n_sub_cells[i] = std::max(static_cast<cell_index>(1),
-                                   static_cast<cell_index>(floor(_size[i] / desired_cell_width)));
+                                   static_cast<cell_index>(std::floor(_size[i] / desired_cell_width)));
         _sub_cell_size[i] = _size[i] / static_cast<scalar>(_n_sub_cells[i]);
     }
     log::debug("resulting cell size = {}", _sub_cell_size);
@@ -193,13 +192,13 @@ const CellContainer::level_t CellContainer::level() const {
 
 const CellContainer *const CellContainer::root() const {
     auto root = this;
-    while (root->_super_cell) root = root->_super_cell;
+    while (root->_super_cell != nullptr) root = root->_super_cell;
     return root;
 }
 
 CellContainer *const CellContainer::root() {
     auto root = this;
-    while (root->_super_cell) root = root->_super_cell;
+    while (root->_super_cell != nullptr) root = root->_super_cell;
     return root;
 }
 
@@ -223,7 +222,7 @@ CellContainer::sub_cell *const CellContainer::leaf_cell_for_position(const CellC
 
 const CellContainer::sub_cell *const CellContainer::leaf_cell_for_position(const CellContainer::vec3 &pos) const {
     auto cell = sub_cell_for_position(pos);
-    if (cell) {
+    if (cell != nullptr) {
         while (!cell->is_leaf()) cell = cell->sub_cell_for_position(pos);
     }
     return cell;
@@ -239,7 +238,7 @@ const CellContainer::sub_cell *const
 CellContainer::sub_cell_for_position(const vec3 &pos, const level_t level) const {
     if (level == 0) throw std::invalid_argument("level needs to be larger 0");
     auto cell = sub_cell_for_position(pos);
-    if (cell) {
+    if (cell != nullptr) {
         while (cell->level() != level) cell = cell->sub_cell_for_position(pos);
     }
     return cell;
@@ -464,8 +463,8 @@ CellContainer::execute_for_each_sub_cell(const std::function<void(const CellCont
 }
 
 void CellContainer::update_root_size() {
-    _root_size = _context.getBoxSize();
-    _size = _context.getBoxSize();
+    _root_size = vec3(_context.getBoxSize());
+    _size = vec3(_context.getBoxSize());
 }
 
 CellContainer::~CellContainer() = default;

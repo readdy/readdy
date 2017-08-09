@@ -27,8 +27,11 @@
  */
 
 #include <readdy/model/observables/Aggregators.h>
+
+#include <utility>
+
 #include <readdy/model/Kernel.h>
-#include <readdy/model/_internal/Util.h>
+
 
 namespace readdy {
 namespace model {
@@ -43,7 +46,7 @@ MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned 
 MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride,
                                                  std::vector<unsigned int> typesToCount,
                                                  Particles *particlesObservable)
-        : Combiner(kernel, stride, particlesObservable), typesToCount(typesToCount) {}
+        : Combiner(kernel, stride, particlesObservable), typesToCount(std::move(typesToCount)) {}
 
 }
 }

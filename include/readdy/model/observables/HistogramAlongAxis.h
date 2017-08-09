@@ -39,14 +39,14 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class HistogramAlongAxis : public Observable<std::vector<double>> {
+class HistogramAlongAxis : public Observable<std::vector<scalar>> {
 
 public:
     HistogramAlongAxis(readdy::model::Kernel *const kernel, unsigned int stride,
-                       std::vector<double> binBorders, std::set<unsigned int> typesToCount,
+                       std::vector<scalar> binBorders, std::set<unsigned int> typesToCount,
                        unsigned int axis);
 
-    HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<double> binBorders,
+    HistogramAlongAxis(Kernel *const kernel, unsigned int stride, std::vector<scalar> binBorders,
                        std::vector<std::string> typesToCount, unsigned int axis);
 
     void flush() override;
@@ -61,7 +61,7 @@ protected:
 
     void append() override;
 
-    std::vector<double> binBorders;
+    std::vector<scalar> binBorders;
     std::set<unsigned int> typesToCount;
 
     unsigned int axis;

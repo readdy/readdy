@@ -41,15 +41,20 @@ NAMESPACE_BEGIN(io)
 
 class DataSpaceHandle : public ObjectHandle {
 public:
-    DataSpaceHandle(h5::handle_t hid) : ObjectHandle(hid) {}
-
+    explicit DataSpaceHandle(h5::handle_t hid) : ObjectHandle(hid) {}
+    
+    DataSpaceHandle(const DataSpaceHandle&) = default;
+    DataSpaceHandle& operator=(const DataSpaceHandle&) = default;
+    DataSpaceHandle(DataSpaceHandle&&) = default;
+    DataSpaceHandle& operator=(DataSpaceHandle&&) = default;
+    
     ~DataSpaceHandle() {
         if (_handle >= 0) {
             close();
         }
     }
 
-    virtual void close() override {
+    void close() override {
         if (H5Sclose(_handle) < 0) {
             log::error("failed to close data space {}!", _handle);
             H5Eprint(H5Eget_current_stack(), stderr);

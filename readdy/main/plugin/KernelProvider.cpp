@@ -60,13 +60,13 @@ KernelProvider::KernelProvider() : pimpl(std::make_unique<Impl>()){
 const std::string KernelProvider::getDefaultKernelDirectory() {
     auto &&dir = getenv("READDY_PLUGIN_DIR");
     static std::string defaultDir;
-    if (dir == NULL) {
+    if (dir == nullptr) {
         if (utl::isWindows()) {
             dir = getenv("PROGRAMFILES");
-            if (dir == NULL) {
-                defaultDir = "C:\\\\Program Files\\ReaDDy\\readdy\\readdy_plugins";
+            if (dir == nullptr) {
+                defaultDir = R"(C:\\Program Files\ReaDDy\readdy\readdy_plugins)";
             } else {
-                defaultDir = std::string(dir).append("\\ReaDDy\\readdy\\readdy_plugins");
+                defaultDir = std::string(dir).append(R"(\ReaDDy\readdy\readdy_plugins)");
             }
         } else {
             defaultDir = "/usr/local/readdy/readdy/readdy_plugins";
@@ -117,16 +117,16 @@ const std::string readdy::plugin::KernelProvider::loadKernelName(const std::stri
     auto it = pimpl->libs.find(sharedLib);
     if(it != pimpl->libs.end() && !it->second.expired()) {
         return it->second.lock()->load<const char *()>("name")();
+    }
+
+    dll::shared_library lib {sharedLib, RTLD_LAZY | RTLD_GLOBAL};
+    if(!lib.has_symbol("name")) {
+        throw std::invalid_argument("library " + sharedLib + " had no \"name\" symbol");
     } else {
-        dll::shared_library lib {sharedLib, RTLD_LAZY | RTLD_GLOBAL};
-        if(!lib.has_symbol("name")) {
-            throw std::invalid_argument("library " + sharedLib + " had no \"name\" symbol");
-        } else {
-            if(!lib.has_symbol("createKernel")) {
-                throw std::invalid_argument("library " + sharedLib + " had no \"createKernel\" symbol");
-            }
-            return lib.load<const char*()>("name")();
+        if(!lib.has_symbol("createKernel")) {
+            throw std::invalid_argument("library " + sharedLib + " had no \"createKernel\" symbol");
         }
+        return lib.load<const char*()>("name")();
     }
 }
 
@@ -140,21 +140,21 @@ void KernelProvider::add(const std::string &sharedLib) {
             // load the kernel
             readdy::model::Kernel* kernel = libPtr->load<readdy::model::Kernel*()>("createKernel")();
             log::debug("loaded kernel with name {}", kernel->getName());
-            return kernel_ptr(kernel, {libPtr});
-        } else {
-            auto lib = std::make_shared<readdy::util::dll::shared_library>(sharedLib, RTLD_LAZY | RTLD_GLOBAL);
-            pimpl->libs[sharedLib] = lib;
-            // load the kernel
-            readdy::model::Kernel* kernel = lib->load<readdy::model::Kernel*()>("createKernel")();
-            log::debug("loaded kernel with name {}", kernel->getName());
-            return kernel_ptr(kernel, {lib});
+            return kernel_ptr(kernel, KernelDeleter{libPtr});
         }
+
+        auto lib = std::make_shared<readdy::util::dll::shared_library>(sharedLib, RTLD_LAZY | RTLD_GLOBAL);
+        pimpl->libs[sharedLib] = lib;
+        // load the kernel
+        readdy::model::Kernel* kernel = lib->load<readdy::model::Kernel*()>("createKernel")();
+        log::debug("loaded kernel with name {}", kernel->getName());
+        return kernel_ptr(kernel, KernelDeleter{lib});
     }));
 }
 
 void KernelProvider::add(const std::string &name, const std::function<readdy::model::Kernel *()> &creator) {
     pimpl->factory.emplace(std::make_pair(name, [creator]() {
-        return kernel_ptr(creator(), {});
+        return kernel_ptr(creator(), KernelDeleter{});
     }));
 }
 

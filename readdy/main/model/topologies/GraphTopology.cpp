@@ -33,8 +33,6 @@
 #include <sstream>
 
 #include <readdy/model/Kernel.h>
-#include <readdy/model/topologies/GraphTopology.h>
-
 
 namespace readdy {
 namespace model {
@@ -42,7 +40,7 @@ namespace top {
 
 GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::vector<particle_type_type> &types,
                              const api::PotentialConfiguration& config)
-        : Topology(particles), config(config), graph_() {
+        : Topology(particles), config(config) {
     assert(types.size() == particles.size());
     std::size_t i = 0;
     for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
@@ -61,8 +59,8 @@ GraphTopology::GraphTopology(Topology::particles_t &&particles, graph::Graph &&g
     }
     std::size_t idx = 0;
     auto &vertices = GraphTopology::graph().vertices();
-    for (auto it = vertices.begin(); it != vertices.end(); ++it) {
-        it->particleIndex = idx++;
+    for (auto &vertex : vertices) {
+        vertex.particleIndex = idx++;
     }
 }
 
@@ -181,7 +179,7 @@ void GraphTopology::updateReactionRates() {
         for(const auto& r : reactions_) {
             ss << std::get<1>(r) << " + ";
         }
-        const void * address = static_cast<const void*>(this);
+        const auto * address = static_cast<const void*>(this);
         std::stringstream ss2;
         ss2 << address;
         std::string name = ss2.str();
@@ -189,11 +187,11 @@ void GraphTopology::updateReactionRates() {
 }
 
 void GraphTopology::addReaction(const reactions::TopologyReaction &reaction) {
-    reactions_.push_back(std::make_tuple(reaction, 0));
+    reactions_.emplace_back(std::make_tuple(reaction, 0));
 }
 
 void GraphTopology::addReaction(reactions::TopologyReaction &&reaction) {
-    reactions_.push_back(std::make_tuple(std::move(reaction), 0));
+    reactions_.emplace_back(std::make_tuple(std::move(reaction), 0));
 }
 
 const GraphTopology::topology_reactions &GraphTopology::registeredReactions() const {
@@ -210,11 +208,11 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
     std::vector<particles_t> subGraphsParticles;
     {
         subGraphsParticles.reserve(subGraphs.size());
-        for (auto itGraph = subGraphs.begin(); itGraph != subGraphs.end(); ++itGraph) {
+        for (auto &subGraph : subGraphs) {
             subGraphsParticles.emplace_back();
             auto &subParticles = subGraphsParticles.back();
-            subParticles.reserve(itGraph->vertices().size());
-            for (auto &vertex : itGraph->vertices()) {
+            subParticles.reserve(subGraph.vertices().size());
+            for (auto &vertex : subGraph.vertices()) {
                 subParticles.emplace_back(particles.at(vertex.particleIndex));
                 vertex.particleIndex = subParticles.size() - 1;
             }
@@ -230,7 +228,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
                 components.emplace_back(std::move(*it_particles), std::move(*it_graphs), config);
                 for(const auto& reaction : reactions_) {
-                    components.back().addReaction(std::move(std::get<0>(reaction)));
+                    components.back().addReaction(std::get<0>(reaction));
                 }
             }
         }

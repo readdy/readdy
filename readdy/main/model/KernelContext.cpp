@@ -40,25 +40,35 @@ using particle_t = readdy::model::Particle;
 
 struct KernelContext::Impl {
 
-    double kBT = 1;
-    std::array<double, 3> box_size{{1, 1, 1}};
+    scalar kBT = 1;
+    std::array<scalar, 3> box_size{{1, 1, 1}};
     std::array<bool, 3> periodic_boundary{{true, true, true}};
 
-    std::function<Vec3(Vec3)> pbc = [](Vec3 in) {
-        return readdy::model::applyPBC<false, false, false>(std::forward<Vec3>(in), 1, 1, 1);
+    std::function<Vec3(const Vec3 &)> pbc = [](const Vec3 &in) {
+        return readdy::model::applyPBC<false, false, false>(in, 1, 1, 1);
     };
     std::function<void(Vec3 &)> fixPositionFun = [](
-            Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, 1., 1., 1.); };
+            Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, static_cast<const scalar>(1.),
+                                                                              static_cast<const scalar>(1.),
+                                                                              static_cast<const scalar>(1.)); };
     std::function<Vec3(const Vec3 &, const Vec3 &)> diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-        return readdy::model::shortestDifference<true, true, true>(lhs, rhs, 1., 1., 1.);
+        return readdy::model::shortestDifference<true, true, true>(lhs, rhs, static_cast<const scalar>(1.),
+                                                                   static_cast<const scalar>(1.),
+                                                                   static_cast<const scalar>(1.));
     };
-    std::function<double(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs,
-                                                                    const Vec3 &rhs) -> double {
+    std::function<scalar(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs,
+                                                                    const Vec3 &rhs) -> scalar {
         const auto dv = diffFun(lhs, rhs);
         return dv * dv;
     };
 
+    Impl() = default;
     ~Impl() = default;
+
+    Impl(const Impl&) = delete;
+    Impl(Impl&&) = delete;
+    Impl& operator=(const Impl&) = delete;
+    Impl& operator=(Impl&&) = delete;
 
     void updateDistAndFixPositionFun() {
         if (periodic_boundary[0]) {
@@ -72,8 +82,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<true, true, true>(vec, box_size[0], box_size[1],
                                                                      box_size[2]);
                     };
-                    pbc = [=](Vec3 in) {
-                        return applyPBC<true, true, true>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<true, true, true>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 } else {
                     diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
@@ -84,8 +94,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<true, true, false>(vec, box_size[0], box_size[1],
                                                                       box_size[2]);
                     };
-                    pbc = [=](Vec3 in) {
-                        return applyPBC<true, true, false>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<true, true, false>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 }
             } else {
@@ -98,8 +108,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<true, false, true>(vec, box_size[0], box_size[1],
                                                                       box_size[2]);
                     };
-                    pbc = [=](Vec3 in) {
-                        return applyPBC<true, false, true>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<true, false, true>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 } else {
                     diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
@@ -110,8 +120,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<true, false, false>(vec, box_size[0], box_size[1],
                                                                        box_size[2]);
                     };
-                    pbc = [=](Vec3 in) {
-                        return applyPBC<true, false, false>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<true, false, false>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 }
             }
@@ -126,8 +136,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<false, true, true>(vec, box_size[0], box_size[1],
                                                                       box_size[2]);
                     };
-                    pbc = [=](Vec3 in) {
-                        return applyPBC<false, true, true>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<false, true, true>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 } else {
                     diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
@@ -138,8 +148,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<false, true, false>(vec, box_size[0], box_size[1],
                                                                        box_size[2]);
                     };
-                    pbc = [=](Vec3 in) {
-                        return applyPBC<false, true, false>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<false, true, false>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 }
             } else {
@@ -152,8 +162,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<false, false, true>(vec, box_size[0], box_size[1],
                                                                        box_size[2]);
                     };
-                    pbc = [=](Vec3 in) {
-                        return applyPBC<false, false, true>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<false, false, true>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 } else {
                     diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
@@ -164,8 +174,8 @@ struct KernelContext::Impl {
                         readdy::model::fixPosition<false, false, false>(vec, box_size[0], box_size[1],
                                                                         box_size[2]);
                     };
-                    pbc = [=](Vec3&& in) {
-                        return applyPBC<false, false, false>(std::move(in), box_size[0], box_size[1], box_size[2]);
+                    pbc = [=](const Vec3 &in) {
+                        return applyPBC<false, false, false>(in, box_size[0], box_size[1], box_size[2]);
                     };
                 }
             }
@@ -174,15 +184,15 @@ struct KernelContext::Impl {
 };
 
 
-double KernelContext::getKBT() const {
+scalar KernelContext::getKBT() const {
     return (*pimpl).kBT;
 }
 
-void KernelContext::setKBT(double kBT) {
+void KernelContext::setKBT(scalar kBT) {
     (*pimpl).kBT = kBT;
 }
 
-void KernelContext::setBoxSize(double dx, double dy, double dz) {
+void KernelContext::setBoxSize(scalar dx, scalar dy, scalar dz) {
     (*pimpl).box_size = {dx, dy, dz};
     pimpl->updateDistAndFixPositionFun();
 }
@@ -197,7 +207,7 @@ KernelContext::KernelContext()
           potentialRegistry_(std::cref(particleTypeRegistry_)),
           reactionRegistry_(std::cref(particleTypeRegistry_)) {}
 
-std::array<double, 3> &KernelContext::getBoxSize() const {
+Vec3::data_t &KernelContext::getBoxSize() const {
     return pimpl->box_size;
 }
 
@@ -241,9 +251,11 @@ void KernelContext::configure(bool debugOutput) {
 
 std::tuple<readdy::model::Vec3, readdy::model::Vec3> KernelContext::getBoxBoundingVertices() const {
     const auto &boxSize = getBoxSize();
-    readdy::model::Vec3 lowerLeft{-0.5 * boxSize[0], -0.5 * boxSize[1], -0.5 * boxSize[2]};
+    readdy::model::Vec3 lowerLeft{static_cast<scalar>(-0.5) * boxSize[0],
+                                  static_cast<scalar>(-0.5) * boxSize[1],
+                                  static_cast<scalar>(-0.5) * boxSize[2]};
     readdy::model::Vec3 upperRight = lowerLeft + readdy::model::Vec3(boxSize);
-    return std::make_tuple(std::move(lowerLeft), std::move(upperRight));
+    return std::make_tuple(lowerLeft, upperRight);
 }
 
 const KernelContext::compartment_registry &KernelContext::getCompartments() const {

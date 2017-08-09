@@ -32,13 +32,14 @@
 #pragma once
 
 #include <type_traits>
-#include "macros.h"
+
+#include "common.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 NAMESPACE_BEGIN(numeric)
 
-inline constexpr double pi() { return 3.141592653589793238462643383279502884e+00; }
+inline constexpr scalar pi() { return 3.141592653589793238462643383279502884e+00; }
 
 template<typename T, typename D, typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<D>::value, int>::type = 0>
 inline typename std::make_unsigned<T>::type positive_modulo(T i, D n) {

@@ -53,46 +53,50 @@ public:
 
     using topologies_t = readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>>;
 
-    virtual void updateNeighborList() override;
+    void updateNeighborList() override;
 
-    virtual void clearNeighborList() override;
+    void clearNeighborList() override;
 
-    virtual void calculateForces() override;
+    void calculateForces() override;
 
-    virtual void addParticle(const readdy::model::Particle &p) override;
+    void addParticle(const readdy::model::Particle &p) override;
 
-    virtual void addParticles(const std::vector<readdy::model::Particle> &p) override;
+    void addParticles(const std::vector<readdy::model::Particle> &p) override;
 
-    virtual void removeParticle(const readdy::model::Particle &p) override;
+    void removeParticle(const readdy::model::Particle &p) override;
 
-    virtual void removeAllParticles() override;
+    void removeAllParticles() override;
 
-    virtual readdy::model::top::GraphTopology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
+    readdy::model::top::GraphTopology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
 
-    virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
+    const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
-    virtual readdy::model::Particle getParticleForIndex(const std::size_t index) const override;
+    readdy::model::Particle getParticleForIndex(std::size_t index) const override;
 
-    virtual particle_type_type getParticleType(const std::size_t index) const override;
+    particle_type_type getParticleType(std::size_t index) const override;
 
-    virtual double getEnergy() const override;
+    scalar getEnergy() const override;
 
-    virtual void increaseEnergy(double increase);
+    virtual void increaseEnergy(scalar increase);
 
-    SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *const );
+    SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *);
 
-    ~SCPUStateModel();
+    ~SCPUStateModel() override;
 
     // move
-    SCPUStateModel(SCPUStateModel &&rhs);
+    SCPUStateModel(SCPUStateModel &&rhs) noexcept;
 
-    SCPUStateModel &operator=(SCPUStateModel &&rhs);
+    SCPUStateModel &operator=(SCPUStateModel &&rhs) noexcept;
+
+    SCPUStateModel(const SCPUStateModel&) = delete;
+
+    SCPUStateModel& operator=(const SCPUStateModel&) = delete;
 
     virtual readdy::kernel::scpu::model::SCPUParticleData *getParticleData() const;
 
     virtual const model::SCPUNeighborList *getNeighborList() const;
 
-    virtual const std::vector<readdy::model::Particle> getParticles() const override;
+    const std::vector<readdy::model::Particle> getParticles() const override;
 
     std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords();
 
@@ -102,13 +106,13 @@ public:
 
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
-    virtual void expected_n_particles(const std::size_t n) override;
+    void expected_n_particles(std::size_t n) override;
 
     const topologies_t &topologies() const;
 
     topologies_t &topologies();
 
-    virtual std::vector<readdy::model::top::GraphTopology const*> getTopologies() const override;
+    std::vector<readdy::model::top::GraphTopology const*> getTopologies() const override;
 
 private:
     struct Impl;

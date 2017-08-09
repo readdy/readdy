@@ -34,6 +34,7 @@
 
 #include <ostream>
 #include <list>
+#include <utility>
 #include <vector>
 #include <algorithm>
 #include <readdy/common/common.h>
@@ -68,8 +69,8 @@ public:
      * constructs a vertex to a graph
      * @param particleIndex the particle index this vertex belongs to
      */
-    Vertex(std::size_t particleIndex, particle_type_type particleType, const std::string &label = "")
-            : particleIndex(particleIndex), _label(label), visited(false), particleType_(particleType) {}
+    Vertex(std::size_t particleIndex, particle_type_type particleType, std::string label = "")
+            : particleIndex(particleIndex), _label(std::move(label)), particleType_(particleType) {}
 
     Vertex(const Vertex &) = delete;
 
@@ -94,7 +95,7 @@ public:
     /**
      * particle index in the topology this vertex belongs to
      */
-    std::size_t particleIndex;
+    std::size_t particleIndex {0};
 
     bool operator==(const Vertex &rhs) const {
         return particleIndex == rhs.particleIndex;
@@ -146,7 +147,7 @@ public:
     /**
      * flag if this vertex has been visited (for BFS/DFS)
      */
-    bool visited;
+    bool visited {false};
 
 private:
     friend class readdy::model::top::graph::Graph;
@@ -156,7 +157,7 @@ private:
      */
     std::vector<vertex_ptr> neighbors_{};
 
-    particle_type_type particleType_;
+    particle_type_type particleType_ {0};
     label_t _label{""};
 };
 
@@ -172,7 +173,7 @@ public:
 
     VertexRef(Vertex::vertex_ptr it);
 
-    VertexRef(Graph *const graph, const Vertex::label_t &label);
+    VertexRef(Graph *graph, const Vertex::label_t &label);
 
     VertexRef(VertexRef &&) = default;
 
@@ -216,7 +217,7 @@ public:
 
     VertexCRef(Vertex::vertex_ptr it);
 
-    VertexCRef(const Graph *const graph, const Vertex::label_t &label);
+    VertexCRef(const Graph *graph, const Vertex::label_t &label);
 
     VertexCRef(const VertexRef &ref);
 

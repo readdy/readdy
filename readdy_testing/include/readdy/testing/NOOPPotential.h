@@ -39,18 +39,18 @@ namespace readdy {
 namespace testing {
 struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
     NOOPPotentialOrder2(const std::string &particleType1, const std::string &particleType2,
-                        double cutoff = 0, double force = 0, double energy = 0)
+                        readdy::scalar cutoff = 0, readdy::scalar force = 0, readdy::scalar energy = 0)
             : PotentialOrder2(particleType1, particleType2), cutoff(cutoff), force(force), energy(energy) {}
 
     std::string describe() const override {
         return "NOOPPotential with types " + particleType1 + ", " + particleType2;
     }
 
-    virtual double getCutoffRadius() const override {
+    virtual readdy::scalar getCutoffRadius() const override {
         return cutoff;
     }
 
-    virtual double calculateEnergy(const readdy::model::Vec3 &x_ij) const override {
+    virtual readdy::scalar calculateEnergy(const readdy::model::Vec3 &x_ij) const override {
         return energy;
     }
 
@@ -60,19 +60,19 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
         force[2] = NOOPPotentialOrder2::force;
     }
 
-    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, double &energy,
+    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, readdy::scalar &energy,
                                          const readdy::model::Vec3 &x_ij) const override {
         energy = NOOPPotentialOrder2::calculateEnergy(x_ij);
         NOOPPotentialOrder2::calculateForce(force, x_ij);
     }
 
-    virtual double getMaximalForce(double kbt) const noexcept override { return force; }
+    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override { return force; }
 
-    virtual double getCutoffRadiusSquared() const override {
+    virtual readdy::scalar getCutoffRadiusSquared() const override {
         return getCutoffRadius() * getCutoffRadius();
     }
 
-    double cutoff, force, energy;
+    readdy::scalar cutoff, force, energy;
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
 

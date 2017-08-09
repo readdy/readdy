@@ -36,7 +36,7 @@ namespace readdy {
 namespace model {
 
 
-ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const double diffusionConstant, const double radius,
+ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar  diffusionConstant, const scalar  radius,
                                    const Particle::flavor_t flavor, const Particle::type_type typeId)
         : name(name), diffusionConstant(diffusionConstant), radius(radius), flavor(flavor), typeId(typeId) {}
 
@@ -68,24 +68,24 @@ std::vector<particle_type_type> ParticleTypeRegistry::types_flat() const {
     return v;
 }
 
-double ParticleTypeRegistry::radius_of(const particle_type_type type) const {
+scalar  ParticleTypeRegistry::radius_of(const particle_type_type type) const {
     return particle_info_.at(type).radius;
 }
 
-double ParticleTypeRegistry::radius_of(const std::string &type) const {
+scalar  ParticleTypeRegistry::radius_of(const std::string &type) const {
     return radius_of(id_of(type));
 }
 
-double ParticleTypeRegistry::diffusion_constant_of(const particle_type_type particleType) const {
+scalar  ParticleTypeRegistry::diffusion_constant_of(const particle_type_type particleType) const {
     return particle_info_.at(particleType).diffusionConstant;
 }
 
-double ParticleTypeRegistry::diffusion_constant_of(const std::string &particleType) const {
+scalar  ParticleTypeRegistry::diffusion_constant_of(const std::string &particleType) const {
     return diffusion_constant_of(id_of(particleType));
 }
 
 void
-ParticleTypeRegistry::add(const std::string &name, const double diffusionConst, const double radius,
+ParticleTypeRegistry::add(const std::string &name, const scalar  diffusionConst, const scalar  radius,
                           const Particle::flavor_t flavor) {
     particle_type_type t_id = type_counter_++;
     type_mapping_.emplace(name, t_id);

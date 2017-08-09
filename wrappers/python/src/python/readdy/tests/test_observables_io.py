@@ -317,7 +317,7 @@ class TestObservablesIO(unittest.TestCase):
             order_1_reactions = data["registered_reactions/order1_reactions"]
 
             mylabel_reaction = get_item("mylabel", order_1_reactions)
-            np.testing.assert_equal(mylabel_reaction["rate"], .00001)
+            np.testing.assert_allclose(mylabel_reaction["rate"], .00001)
             np.testing.assert_equal(mylabel_reaction["n_educts"], 1)
             np.testing.assert_equal(mylabel_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
@@ -349,7 +349,7 @@ class TestObservablesIO(unittest.TestCase):
                     np.testing.assert_equal(record["reaction_index"], 1)
                 elif record["reaction_type"] == 1:
                     # fusion
-                    np.testing.assert_equal(record["position"], np.array([1.05, 1.0, 1.0]))
+                    np.testing.assert_allclose(record["position"], np.array([1.05, 1.0, 1.0]))
                     np.testing.assert_equal(record["reaction_index"], 0)
 
         common.set_logging_level("warn")

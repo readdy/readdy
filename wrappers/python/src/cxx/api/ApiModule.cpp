@@ -79,14 +79,16 @@ void exportApi(py::module &api) {
     py::enum_<readdy::api::AngleType>(api, "AngleType").value("HARMONIC", readdy::api::AngleType::HARMONIC);
     py::enum_<readdy::api::TorsionType>(api, "TorsionType").value("COS_DIHEDRAL", readdy::api::TorsionType::COS_DIHEDRAL);
 
-    py::class_ <sim> simulation(api, "Simulation");
+    py::class_<sim> simulation(api, "Simulation");
     simulation.def(py::init<>())
             .def_property("kbt", &sim::getKBT, &sim::setKBT)
             .def_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)
+            .def_property_readonly("single_precision", &sim::singlePrecision)
+            .def_property_readonly("double_precision", &sim::doublePrecision)
             .def("set_expected_max_n_particles", &sim::setExpectedMaxNParticles, "n"_a)
             .def("register_particle_type",
-                 [](sim &self, const std::string &name, double diffusionCoefficient, double radius,
+                 [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient, readdy::scalar radius,
                     ParticleTypeFlavor flavor) {
                      readdy::model::Particle::flavor_t f = [=] {
                          switch (flavor) {
@@ -167,7 +169,7 @@ void exportApi(py::module &api) {
                      );
                  }, "defaults"_a
             )
-            .def("run", [](sim &self, const readdy::time_step_type steps, const double timeStep) {
+            .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);
             }, "n_steps"_a, "time_step"_a);

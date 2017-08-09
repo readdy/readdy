@@ -43,7 +43,12 @@ NAMESPACE_BEGIN(observables)
 class Particles
         : public Observable<std::tuple<std::vector<readdy::model::Particle::type_type>, std::vector<readdy::model::Particle::id_type>, std::vector<Vec3>>> {
 public:
-    Particles(Kernel *const kernel, unsigned int stride = 1);
+    explicit Particles(Kernel* kernel, unsigned int stride = 1);
+
+    Particles(const Particles&) = delete;
+    Particles& operator=(const Particles&) = delete;
+    Particles(Particles&&) = default;
+    Particles& operator=(Particles&&) = delete;
 
     virtual ~Particles();
 

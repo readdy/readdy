@@ -45,7 +45,7 @@ public:
     SCPUPositions(SCPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {}) :
             readdy::model::observables::Positions(kernel, stride, typesToCount), kernel(kernel) {}
 
-    virtual void evaluate() override {
+    void evaluate() override {
         result.clear();
         auto& stateModel = kernel->getSCPUKernelStateModel();
         const auto &pd = stateModel.getParticleData();
@@ -74,7 +74,7 @@ public:
     SCPUParticles(SCPUKernel *const kernel, unsigned int stride)
             : readdy::model::observables::Particles(kernel, stride), kernel(kernel) {};
 
-    virtual void evaluate() override {
+    void evaluate() override {
         auto &resultTypes = std::get<0>(result);
         auto &resultIds = std::get<1>(result);
         auto &resultPositions = std::get<2>(result);
@@ -101,7 +101,7 @@ class SCPUHistogramAlongAxis : public readdy::model::observables::HistogramAlong
 
 public:
     SCPUHistogramAlongAxis(SCPUKernel *const kernel, unsigned int stride,
-                           const std::vector<double> &binBorders,
+                           const std::vector<scalar> &binBorders,
                            const std::vector<std::string> &typesToCount,
                            unsigned int axis)
             : readdy::model::observables::HistogramAlongAxis(kernel, stride, binBorders, typesToCount, axis),
@@ -109,7 +109,7 @@ public:
         size = result.size();
     }
 
-    virtual void evaluate() override {
+    void evaluate() override {
         std::fill(result.begin(), result.end(), 0);
 
         const auto &model = kernel->getSCPUKernelStateModel();
@@ -143,7 +143,7 @@ public:
             readdy::model::observables::NParticles(kernel, stride, typesToCount),
             singleCPUKernel(kernel) {}
 
-    virtual void evaluate() override {
+    void evaluate() override {
         std::vector<unsigned long> resultVec = {};
         const auto &pd = singleCPUKernel->getSCPUKernelStateModel().getParticleData();
 
@@ -179,9 +179,13 @@ public:
             readdy::model::observables::Forces(kernel, stride, typesToCount),
             kernel(kernel) {}
 
-    virtual ~SCPUForces() {}
+    ~SCPUForces() override = default;
+    SCPUForces(const SCPUForces&) = default;
+    SCPUForces& operator=(const SCPUForces&) = default;
+    SCPUForces(SCPUForces&&) = default;
+    SCPUForces& operator=(SCPUForces&&) = default;
 
-    virtual void evaluate() override {
+    void evaluate() override {
         result.clear();
         const auto &pd = kernel->getSCPUKernelStateModel().getParticleData();
 
@@ -219,9 +223,9 @@ public:
     SCPUReactions(SCPUKernel *const kernel, unsigned int stride)
             : Reactions(kernel, stride), kernel(kernel) {}
 
-    virtual ~SCPUReactions() = default;
+    ~SCPUReactions() override = default;
 
-    virtual void evaluate() override {
+    void evaluate() override {
         const auto& model = kernel->getSCPUKernelStateModel();
         const auto& records = model.reactionRecords();
         result.clear();
@@ -237,9 +241,9 @@ class SCPUReactionCounts : public readdy::model::observables::ReactionCounts {
 public:
     SCPUReactionCounts(SCPUKernel *const kernel, unsigned int stride) : ReactionCounts(kernel, stride), kernel(kernel) {}
 
-    virtual ~SCPUReactionCounts() = default;
+    ~SCPUReactionCounts() override = default;
 
-    virtual void evaluate() override {
+    void evaluate() override {
         readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->getKernelContext());
         assignCountsToResult(kernel->getSCPUKernelStateModel().reactionCounts(), result);
     }
@@ -251,12 +255,12 @@ private:
 template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
 class SCPURadialDistribution : public readdy::model::observables::RadialDistribution {
 public:
-    SCPURadialDistribution(kernel_t *const kernel, unsigned int stride, std::vector<double> binBorders, std::vector<std::string> typeCountFrom,
-                                 std::vector<std::string> typeCountTo, double particleToDensity) :
+    SCPURadialDistribution(kernel_t *const kernel, unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
+                                 std::vector<std::string> typeCountTo, scalar particleToDensity) :
             readdy::model::observables::RadialDistribution(kernel, stride, binBorders, typeCountFrom,
                                                            typeCountTo, particleToDensity), kernel(kernel) {}
 
-    virtual void evaluate() override {
+    void evaluate() override {
         if (binBorders.size() > 1) {
             std::fill(counts.begin(), counts.end(), 0);
             const auto particles = kernel->getKernelStateModel().getParticles();
@@ -296,7 +300,9 @@ public:
                     const auto upperRadius = binBorders[idx + 1];
                     *it_distribution =
                             (*it_counts) /
-                            (4 / 3 * util::numeric::pi() * (std::pow(upperRadius, 3) - std::pow(lowerRadius, 3)) * nFromParticles * particleToDensity);
+                            (c_::four / c_::three * util::numeric::pi() * (std::pow(upperRadius, c_::three)
+                                                                           - std::pow(lowerRadius, c_::three))
+                             * nFromParticles * particleToDensity);
                     ++it_distribution;
                     ++it_centers;
                 }

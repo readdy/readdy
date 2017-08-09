@@ -43,13 +43,18 @@ NAMESPACE_BEGIN(observables)
 class CenterOfMass : public Observable<readdy::model::Vec3> {
 
 public:
-    CenterOfMass(Kernel *const kernel, unsigned int stride, unsigned int particleType);
+    CenterOfMass(Kernel* kernel, unsigned int stride, unsigned int particleType);
 
-    CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<unsigned int> &particleTypes);
+    CenterOfMass(Kernel* kernel, unsigned int stride, const std::vector<unsigned int> &particleTypes);
 
-    CenterOfMass(Kernel *const kernel, unsigned int stride, const std::string &particleType);
+    CenterOfMass(Kernel* kernel, unsigned int stride, const std::string &particleType);
 
-    CenterOfMass(Kernel *const kernel, unsigned int stride, const std::vector<std::string> &particleType);
+    CenterOfMass(Kernel* kernel, unsigned int stride, const std::vector<std::string> &particleType);
+
+    CenterOfMass(const CenterOfMass&) = delete;
+    CenterOfMass& operator=(const CenterOfMass&) = delete;
+    CenterOfMass(CenterOfMass&&) = default;
+    CenterOfMass& operator=(CenterOfMass&&) = delete;
 
     virtual ~CenterOfMass();
 

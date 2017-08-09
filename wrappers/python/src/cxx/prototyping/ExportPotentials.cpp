@@ -50,9 +50,9 @@ public:
         return "User defined potential order 1 for type " + particleType;
     }
 
-    virtual double calculateEnergy(const rdy_vec &position) const override {
+    virtual readdy::scalar calculateEnergy(const rdy_vec &position) const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "calculate_energy", calculateEnergy, position);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "calculate_energy", calculateEnergy, position);
     }
 
     virtual rdy_vec calculateForceInternal(const rdy_vec &pos) const {
@@ -64,19 +64,19 @@ public:
         force += calculateForceInternal(position);
     }
 
-    virtual void calculateForceAndEnergy(rdy_vec &force, double &energy, const rdy_vec &position) const override {
+    virtual void calculateForceAndEnergy(rdy_vec &force, readdy::scalar &energy, const rdy_vec &position) const override {
         calculateForce(force, position);
         energy += calculateEnergy(position);
     }
 
-    virtual double getRelevantLengthScale() const noexcept override {
+    virtual readdy::scalar getRelevantLengthScale() const noexcept override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_relevant_length_scale", getRelevantLengthScale,);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_relevant_length_scale", getRelevantLengthScale,);
     }
 
-    virtual double getMaximalForce(double kbt) const noexcept override {
+    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
     }
 
 protected:
@@ -96,14 +96,14 @@ public:
         return "User defined potential for types " + particleType1 + " and " + particleType2;
     }
 
-    virtual double getMaximalForce(double kbt) const noexcept override {
+    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "get_maximal_force", getMaximalForce, kbt);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_maximal_force", getMaximalForce, kbt);
     }
 
-    virtual double calculateEnergy(const rdy_vec &x_ij) const override {
+    virtual readdy::scalar calculateEnergy(const rdy_vec &x_ij) const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "calculate_energy", calculateEnergy, x_ij);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "calculate_energy", calculateEnergy, x_ij);
     }
 
     virtual rdy_vec calculateForceInternal(const rdy_vec &pos) const {
@@ -115,19 +115,19 @@ public:
         force += calculateForceInternal(x_ij);
     }
 
-    virtual void calculateForceAndEnergy(rdy_vec &force, double &energy, const rdy_vec &x_ij) const override {
+    virtual void calculateForceAndEnergy(rdy_vec &force, readdy::scalar &energy, const rdy_vec &x_ij) const override {
         calculateForce(force, x_ij);
         energy += calculateEnergy(x_ij);
     }
 
-    virtual double getCutoffRadiusSquared() const override {
+    virtual readdy::scalar getCutoffRadiusSquared() const override {
         const auto cutoff = getCutoffRadius();
         return cutoff * cutoff;
     }
 
-    virtual double getCutoffRadius() const override {
+    virtual readdy::scalar getCutoffRadius() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(double, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
     }
 
 protected:
@@ -166,19 +166,19 @@ void exportPotentials(py::module &proto) {
 
     py::class_<rdy_pot_factory>(proto, "PotentialFactory")
             .def("create_cube_potential",
-                 [](rdy_pot_factory &self, const std::string &particleType, double forceConstant,
+                 [](rdy_pot_factory &self, const std::string &particleType, readdy::scalar forceConstant,
                     const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
                     bool considerParticleRadius) {
                      return self.createPotential<pot::Cube>(particleType, forceConstant, origin, extent,
                                                                      considerParticleRadius).release();
                  }, rvp::take_ownership)
             .def("create_harmonic_repulsion",
-                 [](rdy_pot_factory &self, const std::string &type1, const std::string &type2, double forceConstant) {
+                 [](rdy_pot_factory &self, const std::string &type1, const std::string &type2, readdy::scalar forceConstant) {
                      return self.createPotential<pot::HarmonicRepulsion>(type1, type2, forceConstant).release();
                  }, rvp::take_ownership)
             .def("create_weak_interaction",
                  [](rdy_pot_factory &self, const std::string &type1, const std::string &type2,
-                    const double forceConstant, const double desiredDist, const double depth, const double cutoff) {
+                    const readdy::scalar forceConstant, const readdy::scalar desiredDist, const readdy::scalar depth, const readdy::scalar cutoff) {
                      return self.createPotential<pot::WeakInteractionPiecewiseHarmonic>(
                              type1, type2, forceConstant, desiredDist, depth, cutoff
                      ).release();

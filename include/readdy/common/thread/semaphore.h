@@ -31,6 +31,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include "../macros.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)

@@ -43,7 +43,12 @@ NAMESPACE_BEGIN(io)
 class DataTypeHandle : public ObjectHandle {
 public:
 
-    DataTypeHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+    explicit DataTypeHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+
+    DataTypeHandle(const DataTypeHandle&) = default;
+    DataTypeHandle& operator=(const DataTypeHandle&) = default;
+    DataTypeHandle(DataTypeHandle&&) = default;
+    DataTypeHandle& operator=(DataTypeHandle&&) = default;
 
     virtual ~DataTypeHandle() {
         if(_handle >= 0) {
@@ -51,7 +56,7 @@ public:
         }
     }
 
-    virtual void close() override {
+    void close() override {
         if(H5Tclose(_handle) < 0) {
             log::error("error on closing data set type");
             H5Eprint (H5Eget_current_stack(), stderr);
@@ -61,12 +66,12 @@ public:
 
 class READDY_API DataSetType : public Object {
 public:
-    DataSetType(h5::handle_t handle) : Object(std::make_shared<DataTypeHandle>(handle)) {}
+    explicit DataSetType(h5::handle_t handle) : Object(std::make_shared<DataTypeHandle>(handle)) {}
 };
 
 class READDY_API VLENDataSetType : public DataSetType{
 public:
-    VLENDataSetType(const DataSetType &other) : DataSetType(H5Tvlen_create(other.hid())) {}
+    explicit VLENDataSetType(const DataSetType &other) : DataSetType(H5Tvlen_create(other.hid())) {}
 };
 
 template<typename T>
@@ -116,12 +121,12 @@ private:
 class NativeCompoundTypeBuilder;
 class READDY_API NativeCompoundType : public DataSetType {
     friend class readdy::io::NativeCompoundTypeBuilder;
-    NativeCompoundType(h5::data_set_type_t tid);
+    explicit NativeCompoundType(h5::data_set_type_t tid);
 };
 
 class NativeCompoundTypeBuilder {
 public:
-    NativeCompoundTypeBuilder(std::size_t size);
+    explicit NativeCompoundTypeBuilder(std::size_t size);
     NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset, h5::data_set_type_t type);
     template<typename T>
     NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset);
@@ -138,7 +143,7 @@ private:
 
 class READDY_API STDCompoundType : public DataSetType {
 public:
-    STDCompoundType(const NativeCompoundType& nativeType);
+    explicit STDCompoundType(const NativeCompoundType& nativeType);
 };
 
 NAMESPACE_END(io)

@@ -49,12 +49,12 @@ public:
 protected:
     virtual Plane *
     createPlane(const std::unordered_map<particleType_t, particleType_t> &convMap, const std::string &uniqueName, const Vec3 &coefficients,
-                const double distance, const bool largerOrLess) const {
+                const scalar distance, const bool largerOrLess) const {
         return new Plane(convMap, uniqueName, coefficients, distance, largerOrLess);
     }
 
     virtual Sphere *createSphere(const std::unordered_map<particleType_t, particleType_t> &convMap, const std::string &uniqueName, const Vec3 &origin,
-                                 const double radius, const bool largerOrLess) const {
+                                 const scalar radius, const bool largerOrLess) const {
         return new Sphere(convMap, uniqueName, origin, radius, largerOrLess);
     }
 

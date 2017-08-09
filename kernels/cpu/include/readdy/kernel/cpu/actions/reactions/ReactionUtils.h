@@ -43,11 +43,11 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-using kernel_t = readdy::kernel::cpu::CPUKernel;
+using cpu_kernel = readdy::kernel::cpu::CPUKernel;
 using vec_t = readdy::model::Vec3;
 using data_t = readdy::kernel::cpu::model::CPUParticleData;
 using reaction_type = readdy::model::reactions::ReactionType;
-using ctx_t = std::remove_const<decltype(std::declval<kernel_t>().getKernelContext())>::type;
+using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().getKernelContext())>::type;
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
 using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
@@ -55,27 +55,27 @@ using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::r
 using reaction_counts_t = std::pair<reaction_counts_order1_map, reaction_counts_order2_map>;
 
 template<bool approximated>
-bool performReactionEvent(const double rate, const double timeStep) {
+bool performReactionEvent(const readdy::scalar rate, const readdy::scalar timeStep) {
     if (approximated) {
-        return readdy::model::rnd::uniform_real() < rate * timeStep;
+        return readdy::model::rnd::uniform_real<scalar>() < rate * timeStep;
     } else {
-        return readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * timeStep);
+        return readdy::model::rnd::uniform_real<scalar>() < 1 - std::exp(-rate * timeStep);
     }
 }
 
 
-inline bool shouldPerformEvent(const double rate, const double timestep, bool approximated) {
+inline bool shouldPerformEvent(const readdy::scalar rate, const readdy::scalar timestep, bool approximated) {
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
 data_t::update_t handleEventsGillespie(
-        CPUKernel *const kernel, double timeStep,
+        CPUKernel* kernel, readdy::scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts);
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
-                  const data_t &data, double &alpha, std::vector<event_t> &events,
+                  const data_t &data, readdy::scalar &alpha, std::vector<event_t> &events,
                   const readdy::model::KernelContext::dist_squared_fun& d2) {
     for (const auto index : particles) {
         auto& entry = data.entry_at(index);
@@ -168,11 +168,11 @@ void performReaction(data_t& data, const readdy::model::KernelContext& context, 
             break;
         }
         case reaction_type::Fission: {
-            auto n3 = readdy::model::rnd::normal3(0, 1);
+            auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
             readdy::model::Particle p (entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
-            newEntries.push_back({p});
+            newEntries.emplace_back(p);
 
             entry1.type = reaction->getProducts()[0];
             entry1.id = readdy::model::Particle::nextId();

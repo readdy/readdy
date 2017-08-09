@@ -31,6 +31,7 @@
  */
 
 #pragma once
+
 #include <readdy/model/Kernel.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -46,10 +47,11 @@ class KernelDeleter {
 public:
     // internal kernel
     KernelDeleter();
-    // external kernel
-    KernelDeleter(const std::shared_ptr<readdy::util::dll::shared_library>& libPtr);
 
-    void operator()(readdy::model::Kernel*);
+    // external kernel
+    explicit KernelDeleter(const std::shared_ptr<readdy::util::dll::shared_library> &libPtr);
+
+    void operator()(readdy::model::Kernel *);
 };
 
 /**
@@ -82,6 +84,17 @@ protected:
 public:
 
     using kernel_ptr = std::unique_ptr<readdy::model::Kernel, KernelDeleter>;
+
+    // prevent that copies can be created
+    KernelProvider(KernelProvider const &) = delete;
+
+    // prevent that copies can be created
+    KernelProvider &operator=(KernelProvider const &) = delete;
+
+    KernelProvider(KernelProvider &&) = delete;
+
+    KernelProvider &operator=(KernelProvider &&) = delete;
+
 
     /**
      * Method that returns the singleton KernelProvider.
@@ -133,13 +146,6 @@ public:
 
 private:
     const std::string loadKernelName(const std::string &sharedLib);
-
-
-    // prevent that copies can be created
-    KernelProvider(KernelProvider const &) = delete;
-
-    // prevent that copies can be created
-    void operator=(KernelProvider const &) = delete;
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

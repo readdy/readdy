@@ -199,7 +199,7 @@ void exportTopologies(py::module &m) {
     {
         py::class_<bonded_potential, topology_potential>(m, "BondedPotential");
         py::class_<harmonic_bond::bond_t>(m, "HarmonicBondPotentialBond")
-                .def(py::init<std::size_t, std::size_t, double, double>(), "index1"_a, "index2"_a, "force_constant"_a, "length"_a)
+                .def(py::init<std::size_t, std::size_t, readdy::scalar, readdy::scalar>(), "index1"_a, "index2"_a, "force_constant"_a, "length"_a)
                 .def_readonly("idx1", &harmonic_bond::bond_t::idx1)
                 .def_readonly("idx2", &harmonic_bond::bond_t::idx2)
                 .def_readonly("length", &harmonic_bond::bond_t::length)
@@ -216,7 +216,7 @@ void exportTopologies(py::module &m) {
     {
         py::class_<angle_potential, topology_potential>(m, "AnglePotential");
         py::class_<harmonic_angle::angle_t>(m, "HarmonicAnglePotentialAngle")
-                .def(py::init<std::size_t, std::size_t, std::size_t, double, double>(),
+                .def(py::init<std::size_t, std::size_t, std::size_t, readdy::scalar, readdy::scalar>(),
                      "index1"_a, "index2"_a, "index3"_a, "force_constant"_a, "equilibrium_angle"_a)
                 .def_readonly("idx1", &harmonic_angle::angle_t::idx1)
                 .def_readonly("idx2", &harmonic_angle::angle_t::idx2)
@@ -236,7 +236,7 @@ void exportTopologies(py::module &m) {
     {
         py::class_<torsion_potential, topology_potential>(m, "TorsionPotential");
         py::class_<cosine_dihedral::dihedral_t>(m, "CosineDihedralPotentialDihedral")
-                .def(py::init<std::size_t, std::size_t, std::size_t, std::size_t, double, double, double>(),
+                .def(py::init<std::size_t, std::size_t, std::size_t, std::size_t, readdy::scalar, readdy::scalar, readdy::scalar>(),
                      "index1"_a, "index2"_a, "index3"_a, "index4"_a, "force_constant"_a, "multiplicity"_a,
                      "equilibrium_angle"_a)
                 .def_readonly("idx1", &cosine_dihedral::dihedral_t::idx1)

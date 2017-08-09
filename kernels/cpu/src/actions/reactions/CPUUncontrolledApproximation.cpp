@@ -30,6 +30,7 @@
  */
 
 #include <future>
+#include <random>
 
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/Event.h>
@@ -41,8 +42,6 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-namespace thd = readdy::util::thread;
-
 using event_t = Event;
 using data_t = neighbor_list::data_t;
 using data_iter_t = data_t::const_iterator;
@@ -52,13 +51,13 @@ using entry_type = data_t::Entry;
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
 
-CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kernel, double timeStep)
+CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kernel, scalar timeStep)
         : super(timeStep), kernel(kernel) {
 
 }
 
-void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin,
-                const CPUKernel *const kernel, double dt, bool approximateRate, event_promise_t &events,
+void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin,
+                const CPUKernel *const kernel, scalar dt, bool approximateRate, event_promise_t &events,
                 std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
@@ -76,10 +75,9 @@ void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_i
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
-                        eventsUpdate.push_back(
-                                {1, (*it_reactions)->getNProducts(), index, index, rate, 0,
+                        eventsUpdate.emplace_back(1, (*it_reactions)->getNProducts(), index, index, rate, 0,
                                  static_cast<event_t::reaction_index_type>(it_reactions - reactions.begin()),
-                                 entry.type, 0});
+                                 entry.type, 0);
                     }
                 }
             }
@@ -98,9 +96,8 @@ void findEvents(std::size_t, data_iter_t begin, data_iter_t end, neighbor_list_i
                             && shouldPerformEvent(rate, dt, approximateRate)) {
                             const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                                   reactions.begin());
-                            eventsUpdate.push_back(
-                                    {2, react->getNProducts(), index, idx_neighbor, rate, 0, reaction_index,
-                                     entry.type, neighbor.type});
+                            eventsUpdate.emplace_back(2, react->getNProducts(), index, idx_neighbor, rate, 0,
+                                                      reaction_index, entry.type, neighbor.type);
                         }
                     }
                 }
@@ -181,7 +178,7 @@ void CPUUncontrolledApproximation::perform() {
     }
 
     // shuffle reactions
-    std::random_shuffle(events.begin(), events.end());
+    std::shuffle(events.begin(), events.end(), std::mt19937(std::random_device()()));
 
     // execute reactions
     {
@@ -200,7 +197,7 @@ void CPUUncontrolledApproximation::perform() {
                         record.reactionIndex = event.reactionIdx;
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
-                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
@@ -220,7 +217,7 @@ void CPUUncontrolledApproximation::perform() {
                         record.reactionIndex = event.reactionIdx;
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
-                        kernel->getCPUKernelStateModel().reactionRecords().push_back(std::move(record));
+                        kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
                     } else {
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }

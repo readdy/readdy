@@ -65,7 +65,7 @@ public:
      * moves another scoped_thread into this
      * @param rhs the other scoped_thread
      */
-    scoped_thread(scoped_thread &&rhs) {
+    scoped_thread(scoped_thread &&rhs) noexcept {
         t = std::move(rhs.t);
     }
 
@@ -74,7 +74,7 @@ public:
      * @param rhs the other scoped_thread
      * @return myself
      */
-    scoped_thread &operator=(scoped_thread &&rhs) {
+    scoped_thread &operator=(scoped_thread &&rhs) noexcept {
         t = std::move(rhs.t);
         return *this;
     }

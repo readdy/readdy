@@ -46,7 +46,7 @@ TopologyReaction::TopologyReaction(const reaction_function& reaction_function, c
         , _rate_function(rate_function) { }
 
 
-double TopologyReaction::rate(const GraphTopology &topology) const {
+scalar  TopologyReaction::rate(const GraphTopology &topology) const {
     return _rate_function(topology);
 }
 
@@ -86,7 +86,7 @@ void TopologyReaction::create_child_topologies_after_reaction() {
     mode_.create_children();
 }
 
-TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const double &rate)
+TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const scalar  &rate)
         : TopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
 
 std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) {
@@ -164,12 +164,11 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
                     auto subTopologies = topology.connectedComponents();
                     assert(subTopologies.size() > 1 && "This should be at least 2 as the graph is not connected.");
                     return std::move(subTopologies);
-                } else {
-                    // if valid, update force field
-                    topology.configure();
-                    // and update reaction rates
-                    topology.updateReactionRates();
                 }
+                // if valid, update force field
+                topology.configure();
+                // and update reaction rates
+                topology.updateReactionRates();
             }
         }
     }

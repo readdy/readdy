@@ -41,6 +41,17 @@ NAMESPACE_BEGIN(model)
 
 class KernelStateModel {
 public:
+
+    KernelStateModel() = default;
+
+    KernelStateModel(const KernelStateModel&) = delete;
+
+    KernelStateModel&operator=(const KernelStateModel&) = delete;
+
+    KernelStateModel(KernelStateModel&&) = default;
+
+    KernelStateModel& operator=(KernelStateModel&&) = default;
+
     virtual ~KernelStateModel() = default;
 
     // const accessor methods
@@ -48,9 +59,9 @@ public:
 
     virtual const std::vector<Particle> getParticles() const = 0;
 
-    virtual Particle getParticleForIndex(const std::size_t index) const = 0;
+    virtual Particle getParticleForIndex(std::size_t index) const = 0;
 
-    virtual particle_type_type getParticleType(const std::size_t index) const = 0;
+    virtual particle_type_type getParticleType(std::size_t index) const = 0;
 
     virtual void updateNeighborList() = 0;
 
@@ -72,9 +83,9 @@ public:
 
     virtual void removeAllParticles() = 0;
 
-    virtual double getEnergy() const = 0;
+    virtual scalar getEnergy() const = 0;
 
-    virtual void expected_n_particles(const std::size_t n) = 0;
+    virtual void expected_n_particles(std::size_t n) = 0;
 };
 
 NAMESPACE_END(model)

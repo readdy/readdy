@@ -43,10 +43,11 @@ namespace detail {
 class DirtyFlag {
 public:
     DirtyFlag() = default;
-    DirtyFlag(DirtyFlag&&);
-    DirtyFlag& operator=(DirtyFlag&&);
+    DirtyFlag(DirtyFlag&&) noexcept;
+    DirtyFlag& operator=(DirtyFlag&&) noexcept;
     DirtyFlag(const DirtyFlag&) = delete;
     DirtyFlag& operator=(const DirtyFlag&) = delete;
+    ~DirtyFlag() = default;
 
     void set() const;
 
@@ -64,35 +65,43 @@ class SubCell : public CellContainer {
 public:
     using particle_ref = int;
 
-    SubCell(CellContainer *const super_cell, const vec3 &offset);
+    SubCell(CellContainer* super_cell, const vec3 &offset);
 
     SubCell(SubCell&& rhs) = default;
 
+    SubCell& operator=(SubCell&&) = default;
+
+    SubCell(const SubCell&) = delete;
+
+    SubCell& operator=(const SubCell&) = delete;
+
+    ~SubCell() override = default;
+
     const bool is_leaf() const;
 
-    virtual void update_displacements() override;
+    void update_displacements() override;
 
-    virtual void subdivide(const scalar desired_cell_width) override;
+    void subdivide(scalar desired_cell_width) override;
 
-    virtual void reset_max_displacements() override;
+    void reset_max_displacements() override;
 
-    virtual void refine_uniformly() override;
+    void refine_uniformly() override;
 
-    void setup_uniform_neighbors(const std::uint8_t radius);
+    void setup_uniform_neighbors(std::uint8_t radius);
 
-    virtual void insert_particle(const particle_index index, bool mark_dirty=false) const override;
+    void insert_particle(particle_index index, bool mark_dirty=false) const override;
 
-    virtual void insert_particle(const particle_index index, bool mark_dirty=false) override;
+    void insert_particle(particle_index index, bool mark_dirty=false) override;
 
-    virtual void clear() override;
+    void clear() override;
 
     const ParticlesList& particles() const;
 
     const bool is_dirty() const;
 
-    virtual void set_dirty() const override;
+    void set_dirty() const override;
 
-    virtual void unset_dirty() const override;
+    void unset_dirty() const override;
 
     const bool neighbor_dirty() const;
 

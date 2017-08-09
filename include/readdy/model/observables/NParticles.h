@@ -43,11 +43,16 @@ NAMESPACE_BEGIN(observables)
 class NParticles : public Observable<std::vector<unsigned long>> {
 
 public:
-    NParticles(Kernel *const kernel, unsigned int stride);
+    NParticles(Kernel* kernel, unsigned int stride);
 
-    NParticles(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
+    NParticles(Kernel* kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
-    NParticles(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+    NParticles(Kernel* kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+
+    NParticles(const NParticles&) = delete;
+    NParticles& operator=(const NParticles&) = delete;
+    NParticles(NParticles&&) = default;
+    NParticles& operator=(NParticles&&) = delete;
 
     void flush() override;
 

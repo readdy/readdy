@@ -48,7 +48,7 @@ public:
                             readdy::model::observables::Particles *particlesObservable)
             : readdy::model::observables::MeanSquaredDisplacement(kernel, stride, typesToCount, particlesObservable), kernel(kernel) {};
 
-    virtual void evaluate() override {
+    void evaluate() override {
         const auto &currentInput = std::get<0>(parentObservables)->getResult();
         const auto &types = std::get<0>(currentInput);
         const auto &ids = std::get<1>(currentInput);
@@ -67,7 +67,7 @@ public:
             numberOfParticles.push_back(initialPositions.size());
             return;
         }
-        double msd = 0;
+        scalar msd = 0;
         unsigned long currentNumberParticles = 0;
         auto posIt = positions.begin();
         auto idsIt = ids.begin();
@@ -80,7 +80,7 @@ public:
             }
         }
         if (currentNumberParticles > 0) {
-            msd /= static_cast<double>(currentNumberParticles);
+            msd /= static_cast<scalar>(currentNumberParticles);
         };
         resultMsd.push_back(msd);
         numberOfParticles.push_back(currentNumberParticles);

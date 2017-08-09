@@ -48,11 +48,11 @@ public:
 };
 
 struct DihedralConfiguration {
-    DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, double forceConstant, double multiplicity,
-             double equilibriumAngle);
+    DihedralConfiguration(size_t idx1, size_t idx2, size_t idx3, size_t idx4, scalar forceConstant, scalar multiplicity,
+             scalar equilibriumAngle);
 
     std::size_t idx1, idx2, idx3, idx4;
-    double forceConstant, multiplicity, phi_0;
+    scalar forceConstant, multiplicity, phi_0;
 };
 
 class CosineDihedralPotential : public TorsionPotential {
@@ -60,12 +60,16 @@ public:
     using dihedral_t = DihedralConfiguration;
     using dihedrals_t = std::vector<dihedral_t>;
 
-    CosineDihedralPotential(Topology *const topology, const dihedrals_t &dihedrals);
+    CosineDihedralPotential(Topology *topology, const dihedrals_t &dihedrals);
+    CosineDihedralPotential(const CosineDihedralPotential&) = default;
+    CosineDihedralPotential& operator=(const CosineDihedralPotential&) = default;
+    CosineDihedralPotential(CosineDihedralPotential&&) = default;
+    CosineDihedralPotential& operator=(CosineDihedralPotential&&) = default;
     virtual ~CosineDihedralPotential() = default;
 
     const dihedrals_t &getDihedrals() const;
 
-    double calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_t &) const;
+    scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_t &) const;
 
     void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
                         const dihedral_t &) const;

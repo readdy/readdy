@@ -41,14 +41,14 @@ NAMESPACE_BEGIN(compartments)
 class Sphere : public Compartment {
 public:
     Sphere(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &origin,
-           const double radius, const bool largerOrLess);
+           const scalar radius, const bool largerOrLess);
 
     virtual const bool isContained(const Vec3 &position) const override;
 
 protected:
     const Vec3 origin;
-    const double radius;
-    const double radiusSquared;
+    const scalar radius;
+    const scalar radiusSquared;
     const bool largerOrLess;
 };
 
@@ -56,13 +56,13 @@ protected:
 class Plane : public Compartment {
 public:
     Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
-          const double distance, const bool largerOrLess);
+          const scalar distance, const bool largerOrLess);
 
-    virtual const bool isContained(const Vec3 &position) const override;
+    const bool isContained(const Vec3 &position) const override;
 
 protected:
     const Vec3 normalCoefficients;
-    const double distanceFromOrigin;
+    const scalar distanceFromOrigin;
     const bool largerOrLess;
 };
 

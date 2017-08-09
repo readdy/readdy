@@ -21,7 +21,6 @@
 
 
 #include <readdy/model/Particle.h>
-#include <ostream>
 
 /**
  * << detailed description >>
@@ -45,7 +44,7 @@ bool Particle::operator!=(const Particle &rhs) const {
     return !(*this == rhs);
 }
 
-Particle::Particle(double x, double y, double z, type_type type)
+Particle::Particle(scalar  x, scalar  y, scalar  z, type_type type)
         : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type), flavor(FLAVOR_NORMAL) {}
 
 const Vec3 &Particle::getPos() const {
@@ -57,14 +56,14 @@ const Particle::id_type Particle::getId() const {
 }
 
 Particle::Particle(Vec3 pos, type_type type, id_type id)
-        : pos(pos), type(std::move(type)), id(id), flavor(FLAVOR_NORMAL) {}
+        : pos(pos), type(type), id(id), flavor(FLAVOR_NORMAL) {}
 
 Vec3 &Particle::getPos() {
     return pos;
 }
 
 Particle::Particle(Vec3 pos, type_type type)
-        : pos(pos), type(std::move(type)), id(std::atomic_fetch_add<id_type>(&id_counter, 1)), flavor(FLAVOR_NORMAL) {}
+        : pos(pos), type(type), id(std::atomic_fetch_add<id_type>(&id_counter, 1)), flavor(FLAVOR_NORMAL) {}
 
 
 Particle::~Particle() = default;
@@ -87,7 +86,7 @@ Particle::flavor_t Particle::getFlavor() const {
 }
 
 
-TopologyParticle::TopologyParticle(double x, double y, double z, Particle::type_type type) : Particle(x, y, z, type) {
+TopologyParticle::TopologyParticle(scalar  x, scalar  y, scalar  z, Particle::type_type type) : Particle(x, y, z, type) {
     flavor = FLAVOR_TOPOLOGY;
 }
 

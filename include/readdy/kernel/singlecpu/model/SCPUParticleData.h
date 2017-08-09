@@ -46,18 +46,21 @@ struct Entry {
     using entries_t = std::vector<Entry>;
     using particle_type = readdy::model::Particle;
     using force_t = particle_type::pos_type;
-    using displacement_t = force_t::value_t;
+    using displacement_t = scalar;
 
-    Entry(const particle_type &particle) : pos(particle.getPos()), force(force_t()), type(particle.getType()),
-                                           deactivated(false), displacement(0), id(particle.getId()) {}
+    explicit Entry(const particle_type &particle)
+            : pos(particle.getPos()), force(force_t()), type(particle.getType()), deactivated(false),
+              displacement(0), id(particle.getId()) {}
 
     Entry(const Entry &) = delete;
 
     Entry &operator=(const Entry &) = delete;
 
-    Entry(Entry &&) = default;
+    Entry(Entry &&) noexcept = default;
 
-    Entry &operator=(Entry &&) = default;
+    Entry &operator=(Entry &&) noexcept = default;
+
+    ~Entry() = default;
 
     bool is_deactivated() const;
 
@@ -86,7 +89,7 @@ public:
     using particle_type = readdy::model::Particle;
     using top_particle_type = readdy::model::TopologyParticle;
     using force_t = particle_type::pos_type;
-    using displacement_t = force_t::value_t;
+    using displacement_t = scalar;
     using iterator = entries_t::iterator;
     using const_iterator = entries_t::const_iterator;
     using update_t = std::pair<entries_update_t, std::vector<index_t>>;
@@ -96,8 +99,9 @@ public:
     SCPUParticleData& operator=(const SCPUParticleData&) = delete;
     SCPUParticleData(SCPUParticleData&&) = default;
     SCPUParticleData& operator=(SCPUParticleData&&) = default;
+    ~SCPUParticleData() = default;
 
-    readdy::model::Particle getParticle(const index_t index) const;
+    readdy::model::Particle getParticle(index_t index) const;
 
     readdy::model::Particle toParticle(const Entry &e) const;
 
@@ -109,7 +113,7 @@ public:
 
     void removeParticle(const particle_type &particle);
 
-    void removeParticle(const size_t index);
+    void removeParticle(size_t index);
 
     iterator begin();
 

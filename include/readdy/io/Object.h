@@ -40,8 +40,11 @@ NAMESPACE_BEGIN(io)
 
 class ObjectHandle {
 public:
-    ObjectHandle(h5::handle_t handle) : _handle(handle) {};
-
+    explicit ObjectHandle(h5::handle_t handle) : _handle(handle) {};
+    ObjectHandle(const ObjectHandle&) = default;
+    ObjectHandle& operator=(const ObjectHandle&) = default;
+    ObjectHandle(ObjectHandle&&) = default;
+    ObjectHandle& operator=(ObjectHandle&&) = default;
     virtual ~ObjectHandle() = default;
 
     virtual void close() = 0;
@@ -60,10 +63,14 @@ protected:
 
 class Object {
 public:
-    Object(std::shared_ptr<ObjectHandle> &&handle) : handle(std::move(handle)) {}
+    explicit Object(std::shared_ptr<ObjectHandle> &&handle) : handle(std::move(handle)) {}
 
-    virtual ~Object() {
-    }
+    Object(const Object&) = default;
+    Object& operator=(const Object&) = default;
+    Object(Object&&) = default;
+    Object& operator=(Object&&) = default;
+
+    virtual ~Object() = default;
 
     virtual h5::handle_t hid() const {
         if(!handle) {

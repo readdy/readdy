@@ -40,9 +40,9 @@ namespace util {
 
 std::string to_gexf(graph::Graph& graph) {
     std::ostringstream ss;
-    ss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-    ss << "<gexf xmlns=\"http://www.gexf.net/1.2draft\" version=\"1.2\">";
-    ss << "<graph mode=\"static\" defaultedgetype=\"undirected\">";
+    ss << R"(<?xml version="1.0" encoding="UTF-8"?>)";
+    ss << R"(<gexf xmlns="http://www.gexf.net/1.2draft" version="1.2">)";
+    ss << R"(<graph mode="static" defaultedgetype="undirected">)";
     {
         ss << "<nodes>";
         std::size_t id = 0;

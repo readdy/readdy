@@ -55,28 +55,33 @@ public:
 
     using topologies_t = readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>>;
 
-    CPUStateModel(readdy::model::KernelContext *const context, readdy::util::thread::Config const *const config,
-                  readdy::model::top::TopologyActionFactory const *const taf);
+    CPUStateModel(readdy::model::KernelContext* context, readdy::util::thread::Config const* config,
+                  readdy::model::top::TopologyActionFactory const* taf);
 
-    ~CPUStateModel();
+    ~CPUStateModel() override;
 
-    virtual const std::vector<readdy::model::Vec3> getParticlePositions() const override;
+    CPUStateModel(const CPUStateModel&) = delete;
+    CPUStateModel& operator=(const CPUStateModel&) = delete;
+    CPUStateModel(CPUStateModel&&) = delete;
+    CPUStateModel& operator=(CPUStateModel&&) = delete;
 
-    virtual const std::vector<particle_t> getParticles() const override;
+    const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 
-    virtual void updateNeighborList() override;
+    const std::vector<particle_t> getParticles() const override;
 
-    virtual void calculateForces() override;
+    void updateNeighborList() override;
 
-    virtual void addParticle(const particle_t &p) override;
+    void calculateForces() override;
 
-    virtual void addParticles(const std::vector<particle_t> &p) override;
+    void addParticle(const particle_t &p) override;
 
-    virtual void removeParticle(const particle_t &p) override;
+    void addParticles(const std::vector<particle_t> &p) override;
 
-    virtual void removeAllParticles() override;
+    void removeParticle(const particle_t &p) override;
 
-    virtual double getEnergy() const override;
+    void removeAllParticles() override;
+
+    readdy::scalar getEnergy() const override;
 
     data_t const *const getParticleData() const;
 
@@ -86,11 +91,11 @@ public:
 
     neighbor_list *const getNeighborList();
 
-    virtual void expected_n_particles(const std::size_t n) override;
+    void expected_n_particles(std::size_t n) override;
 
-    virtual void clearNeighborList() override;
+    void clearNeighborList() override;
 
-    virtual readdy::model::top::GraphTopology *const
+    readdy::model::top::GraphTopology *const
     addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
 
     std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords();
@@ -101,9 +106,9 @@ public:
 
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
-    virtual particle_t getParticleForIndex(const std::size_t index) const override;
+    particle_t getParticleForIndex(std::size_t index) const override;
 
-    virtual particle_type_type getParticleType(const std::size_t index) const override;
+    particle_type_type getParticleType(std::size_t index) const override;
 
     const topologies_t &topologies() const;
 

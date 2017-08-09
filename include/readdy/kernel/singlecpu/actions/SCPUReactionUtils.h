@@ -86,12 +86,12 @@ void performReaction(
             break;
         }
         case reaction_type::Fission: {
-            auto n3 = readdy::model::rnd::normal3(0, 1);
+            auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
             readdy::model::Particle p(entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3,
                                       reaction->getProducts()[1]);
-            newEntries.push_back({p});
+            newEntries.emplace_back(p);
 
             entry1.type = reaction->getProducts()[0];
             entry1.pos += reaction->getWeight1() * reaction->getProductDistance() * n3;

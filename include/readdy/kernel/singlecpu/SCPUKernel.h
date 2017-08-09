@@ -40,39 +40,39 @@ public:
 
     SCPUKernel();
 
-    ~SCPUKernel();
+    ~SCPUKernel() override;
 
     // move
-    SCPUKernel(SCPUKernel &&rhs);
+    SCPUKernel(SCPUKernel &&rhs) noexcept;
 
-    SCPUKernel &operator=(SCPUKernel &&rhs);
+    SCPUKernel &operator=(SCPUKernel &&rhs) noexcept;
 
     // factory method
     static std::unique_ptr<SCPUKernel> create();
 
-    virtual std::vector<std::string> getAvailablePotentials() const override;
+    std::vector<std::string> getAvailablePotentials() const override;
 
     const SCPUStateModel &getSCPUKernelStateModel() const;
     SCPUStateModel &getSCPUKernelStateModel();
 
-    virtual void initialize() override;
+    void initialize() override;
 
 protected:
-    virtual SCPUStateModel &getKernelStateModelInternal() const override;
+    SCPUStateModel &getKernelStateModelInternal() const override;
 
-    virtual readdy::model::KernelContext &getKernelContextInternal() const override;
+    readdy::model::KernelContext &getKernelContextInternal() const override;
 
-    virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
+    readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
 
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
+    readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
 
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
+    readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
 
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
+    readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
 
-    virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
+    readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
 
-    virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
+    readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
 
 private:
 

@@ -92,16 +92,16 @@ static void writeCountsToDataSets(const ReactionCounts::result_t &counts, data_s
         const auto &countsMap = std::get<0>(counts);
         for (const auto &entry : countsMap) {
             auto &dataSet = dSetOrder1.at(entry.first);
-            const auto &counts = entry.second;
-            dataSet.append({1, counts.size()}, counts.data());
+            const auto &current_counts = entry.second;
+            dataSet.append({1, current_counts.size()}, current_counts.data());
         }
     }
     {
         const auto &countsMap = std::get<1>(counts);
         for (const auto &entry : countsMap) {
             auto &dataSet = dSetOrder2.at(entry.first);
-            const auto &counts = entry.second;
-            dataSet.append({1, counts.size()}, counts.data());
+            const auto &current_counts = entry.second;
+            dataSet.append({1, current_counts.size()}, current_counts.data());
         }
     }
 }

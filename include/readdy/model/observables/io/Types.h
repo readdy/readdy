@@ -62,7 +62,7 @@ public:
         using entry_t = Vec3;
         hid_t entryTypeMemory = H5Tcreate(H5T_COMPOUND, sizeof(entry_t));
         // init vec pod
-        readdy::io::NativeDataSetType<entry_t::value_t> posType{};
+        readdy::io::NativeDataSetType<scalar> posType{};
         H5Tinsert(entryTypeMemory, "x", HOFFSET(entry_t, x), posType.hid());
         H5Tinsert(entryTypeMemory, "y", HOFFSET(entry_t, y), posType.hid());
         H5Tinsert(entryTypeMemory, "z", HOFFSET(entry_t, z), posType.hid());
@@ -96,13 +96,13 @@ public:
                                    .insert<decltype(std::declval<entry_t>().type)>("reaction_type", offsetof(entry_t, type))
                                    .insertStdArray<decltype(std::declval<entry_t>().educts)>("educts", offsetof(entry_t, educts))
                                    .insertStdArray<decltype(std::declval<entry_t>().products)>("products", offsetof(entry_t, products))
-                                   .insertArray<Vec3::value_t, 3>("position", offsetof(entry_t, where))
+                                   .insertArray<scalar, 3>("position", offsetof(entry_t, where))
                                    .insertStdArray<decltype(std::declval<entry_t>().types_from)>("types_from", offsetof(entry_t, types_from))
                                    .insert<decltype(std::declval<entry_t>().reactionIndex)>("reaction_index", offsetof(entry_t, reactionIndex))
                                    .build()) {
     }
 
-    virtual io::h5::handle_t hid() const override {
+    io::h5::handle_t hid() const override {
         return compoundType.hid();
     }
 };
@@ -126,7 +126,7 @@ class TrajectoryEntryMemoryType : public readdy::io::NativeCompoundType {
                 .insert<decltype(std::declval<entry_t>().id)>("id", offsetof(entry_t, id))
                 .insert<decltype(std::declval<entry_t>().typeId)>("typeId", offsetof(entry_t, typeId))
                 .insert<decltype(std::declval<entry_t>().flavor)>("flavor", offsetof(entry_t, flavor))
-                .insertArray<Vec3::value_t, 3>("pos", offsetof(entry_t, pos))
+                .insertArray<scalar, 3>("pos", offsetof(entry_t, pos))
                 .build();
         return type;
     }

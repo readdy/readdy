@@ -45,19 +45,19 @@ namespace top = readdy::model::top;
 class CPUTopologyActionFactory : public readdy::model::top::TopologyActionFactory {
     CPUKernel *const kernel;
 public:
-    CPUTopologyActionFactory(CPUKernel *const kernel);
+    explicit CPUTopologyActionFactory(CPUKernel* kernel);
 
-    virtual std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
-    createCalculateHarmonicBondPotential(const harmonic_bond *const) const override;
+    std::unique_ptr<top::pot::CalculateHarmonicBondPotential>
+    createCalculateHarmonicBondPotential(const harmonic_bond* potential) const override;
 
-    virtual std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
-    createCalculateHarmonicAnglePotential(const harmonic_angle *const potential) const override;
+    std::unique_ptr<top::pot::CalculateHarmonicAnglePotential>
+    createCalculateHarmonicAnglePotential(const harmonic_angle *potential) const override;
 
-    virtual std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
-    createCalculateCosineDihedralPotential(const cos_dihedral *const potential) const override;
+    std::unique_ptr<top::pot::CalculateCosineDihedralPotential>
+    createCalculateCosineDihedralPotential(const cos_dihedral *potential) const override;
 
-    virtual operation_ref
-    createChangeParticleType(top::GraphTopology *const topology, const vertex_t &v,
+    operation_ref
+    createChangeParticleType(top::GraphTopology* topology, const vertex_t &v,
                              const particle_type_type &type_to) const override;
 };
 

@@ -38,11 +38,11 @@ namespace scpu {
 namespace actions {
 namespace top {
 
-SCPUEvaluateTopologyReactions::SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, double timeStep)
+SCPUEvaluateTopologyReactions::SCPUEvaluateTopologyReactions(SCPUKernel *const kernel, scalar timeStep)
         : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
 
 template<bool approximated>
-bool performReactionEvent(const double rate, const double timeStep) {
+bool performReactionEvent(const scalar rate, const scalar timeStep) {
     if (approximated) {
         return readdy::model::rnd::uniform_real() < rate * timeStep;
     } else {
@@ -50,7 +50,7 @@ bool performReactionEvent(const double rate, const double timeStep) {
     }
 }
 
-bool shouldPerformEvent(const double rate, const double timeStep, bool approximated) {
+bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approximated) {
     return approximated ? performReactionEvent<true>(rate, timeStep) : performReactionEvent<false>(rate, timeStep);
 }
 
@@ -112,7 +112,7 @@ void SCPUEvaluateTopologyReactions::perform() {
             while (end != events.begin()) {
                 const auto cumulative_rate = (end - 1)->cumulative_rate;
 
-                const auto x = readdy::model::rnd::uniform_real(0., cumulative_rate);
+                const auto x = readdy::model::rnd::uniform_real(static_cast<scalar>(0.), cumulative_rate);
 
                 const auto eventIt = std::lower_bound(
                         events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {

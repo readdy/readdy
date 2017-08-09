@@ -41,9 +41,9 @@ void CPUEvaluateCompartments::perform() {
     const auto &compartments = ctx.getCompartments();
     for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {
         if(!e.is_deactivated()) {
-            for (auto i = 0; i < compartments.size(); ++i) {
-                if (compartments[i]->isContained(e.position())) {
-                    const auto &conversions = compartments[i]->getConversions();
+            for (const auto &compartment : compartments) {
+                if (compartment->isContained(e.position())) {
+                    const auto &conversions = compartment->getConversions();
                     const auto convIt = conversions.find(e.type);
                     if (convIt != conversions.end()) {
                         e.type = (*convIt).second;

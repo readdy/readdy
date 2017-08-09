@@ -150,7 +150,11 @@ TEST_P(TestTopologies, AnglePotential) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
-    EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 2.4674011002723395);
+    if(readdy::single_precision) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.4674011002723395));
+    } else {
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.4674011002723395));
+    }
     readdy::model::Vec3 force_x_i{0, 3.14159265, 0};
     readdy::model::Vec3 force_x_j{3.14159265, -3.14159265, 0};
     readdy::model::Vec3 force_x_k{-3.14159265, 0., 0.};
@@ -187,7 +191,11 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
-    EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 2.5871244540347655);
+    if(readdy::single_precision) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+    } else {
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+    }
     readdy::model::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
     readdy::model::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
     readdy::model::Vec3 force_x_k{-5.45394396, 0.42776031, 0.71293385};
@@ -242,7 +250,11 @@ TEST_P(TestTopologies, DihedralPotential) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
-    EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 0.044370223263673791);
+    if(readdy::single_precision) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.044370223263673791));
+    } else {
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.044370223263673791));
+    }
     readdy::model::Vec3 force_x_i{0., -0.88371125, 0.};
     readdy::model::Vec3 force_x_j{0., 0.88371125, 0.};
     readdy::model::Vec3 force_x_k{-0.08749616, 0.87496163, 0.};
@@ -281,7 +293,11 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
-    EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), 1.8221921916437787);
+    if(readdy::single_precision) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+    } else {
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+    }
     readdy::model::Vec3 force_x_i{0., 1.70762994, 0.};
     readdy::model::Vec3 force_x_j{0., -1.70762994, 0.};
     readdy::model::Vec3 force_x_k{0.51228898, -0.17076299, 0.};

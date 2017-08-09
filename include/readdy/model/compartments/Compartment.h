@@ -34,6 +34,7 @@
 #include <readdy/model/Vec3.h>
 #include <readdy/model/Particle.h>
 #include <unordered_map>
+#include <utility>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -44,8 +45,10 @@ public:
     using id_t = short;
     using particleType_t = readdy::model::Particle::type_type;
 
-    Compartment(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &typeName, const std::string &uniqueName)
-            : typeName(typeName), uniqueName(uniqueName), conversions(conversions), id(counter++) {}
+    Compartment(std::unordered_map<particleType_t, particleType_t> conversions, std::string typeName,
+                std::string uniqueName)
+            : typeName(std::move(typeName)), uniqueName(std::move(uniqueName)),
+              conversions(std::move(conversions)), id(counter++) {}
 
     virtual const bool isContained(const Vec3 &position) const = 0;
 

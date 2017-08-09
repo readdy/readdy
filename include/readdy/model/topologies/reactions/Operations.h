@@ -71,7 +71,7 @@ private:
 
 class AddEdge : public Operation {
 public:
-    AddEdge(const edge &edge);
+    explicit AddEdge(const edge &edge);
 
     virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
 
@@ -81,7 +81,7 @@ private:
 
 class RemoveEdge : public Operation {
 public:
-    RemoveEdge(const edge &edge);
+    explicit RemoveEdge(const edge &edge);
 
     virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
 

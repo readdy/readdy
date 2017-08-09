@@ -35,6 +35,8 @@
 #pragma once
 #include <readdy/model/potentials/Potential.h>
 
+#include <utility>
+
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 class ParticleTypeRegistry;
@@ -45,15 +47,15 @@ class PotentialOrder1 : public Potential {
 protected:
     using particle_type_type = readdy::model::Particle::type_type;
 public:
-    PotentialOrder1(const std::string& particleType) : Potential(1), particleType(particleType) {}
+    explicit PotentialOrder1(std::string particleType) : Potential(1), particleType(std::move(particleType)) {}
 
-    virtual double calculateEnergy(const Vec3 &position) const = 0;
+    virtual scalar calculateEnergy(const Vec3 &position) const = 0;
 
     virtual void calculateForce(Vec3 &force, const Vec3 &position) const = 0;
 
-    virtual void calculateForceAndEnergy(Vec3 &force, double &energy, const Vec3 &position) const = 0;
+    virtual void calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const = 0;
 
-    virtual double getRelevantLengthScale() const noexcept = 0;
+    virtual scalar getRelevantLengthScale() const noexcept = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const PotentialOrder1 &potential) {
         os << potential.describe();
@@ -62,7 +64,7 @@ public:
 
 protected:
     friend class readdy::model::potentials::PotentialRegistry;
-    virtual void configureForType(const ParticleTypeRegistry* const, const particle_type_type type) = 0;
+    virtual void configureForType(const ParticleTypeRegistry* registry, particle_type_type type) = 0;
 
     const std::string particleType;
 

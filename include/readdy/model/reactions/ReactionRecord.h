@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
 struct ReactionRecord {
-    int type; // int corresponding to the enum readdy::model::reactions::ReactionType
+    int type {0}; // int corresponding to the enum readdy::model::reactions::ReactionType
     std::array<Particle::id_type, 2> educts {{0, 0}};
     std::array<Particle::id_type, 2> products {{0, 0}};
     std::array<Particle::type_type, 2> types_from {{0, 0}};

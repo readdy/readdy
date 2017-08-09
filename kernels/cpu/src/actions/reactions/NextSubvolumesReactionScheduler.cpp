@@ -46,10 +46,10 @@ struct CPUNextSubvolumes::ReactionEvent {
     int order;
     unsigned int type1, type2;
     std::size_t reactionIndex;
-    double reactionRate;
-    double cumulativeRate;
+    scalar reactionRate;
+    scalar cumulativeRate;
 
-    explicit ReactionEvent(const int order, const size_t reactionIndex, const double reactionRate, unsigned int t1,
+    explicit ReactionEvent(const int order, const size_t reactionIndex, const scalar reactionRate, unsigned int t1,
                            unsigned int t2)
             : order(order), reactionIndex(reactionIndex), reactionRate(reactionRate), type1(t1), type2(t2) {}
 
@@ -67,13 +67,13 @@ struct CPUNextSubvolumes::GridCell {
     std::vector<const GridCell *> neighbors;
     std::unordered_map<particle_type::type_type, std::vector<particle_index>> particles;
     std::vector<unsigned long> typeCounts;
-    double cellRate;
-    double timestamp;
+    scalar cellRate;
+    scalar timestamp;
     ReactionEvent nextEvent{};
 
-    GridCell(const cell_index_t i, const cell_index_t j, const cell_index_t k, const cell_index_t id,
+    GridCell(const cell_index_t i_, const cell_index_t j_, const cell_index_t k_, const cell_index_t id_,
              const unsigned long nTypes)
-            : i(i), j(j), k(k), id(id), neighbors(27), particles({}), cellRate(0), typeCounts(nTypes), timestamp(0) {
+            : i(i_), j(j_), k(k_), id(id_), neighbors(27), particles({}), cellRate(0), typeCounts(nTypes), timestamp(0) {
     }
 
     void addNeighbor(GridCell const *const cell) {
@@ -89,7 +89,7 @@ void CPUNextSubvolumes::perform() {
     evaluateReactions();
 }
 
-CPUNextSubvolumes::CPUNextSubvolumes(const CPUKernel *const kernel, double timeStep)
+CPUNextSubvolumes::CPUNextSubvolumes(const CPUKernel *const kernel, scalar timeStep)
         : super(timeStep), kernel(kernel), cells({}), nCells({}), cellSize(), eventQueue({}) {}
 
 void CPUNextSubvolumes::setUpGrid() {
@@ -247,8 +247,8 @@ void CPUNextSubvolumes::evaluateReactions() {
     }
 }
 
-double CPUNextSubvolumes::getMaxReactionRadius() const {
-    double maxReactionRadius = 0.0;
+scalar CPUNextSubvolumes::getMaxReactionRadius() const {
+    scalar maxReactionRadius = 0.0;
     for (auto &&e : kernel->getKernelContext().reactions().order2_flat()) {
         maxReactionRadius = std::max(maxReactionRadius, e->getEductDistance());
     }
@@ -337,7 +337,7 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
                             return acc + neighborCell->typeCounts[typeB];
                         }
                 );
-                const auto rateUpdate = .5 * static_cast<double>(cell.typeCounts[typeA] * neighborSum);
+                const auto rateUpdate = .5 * static_cast<scalar>(cell.typeCounts[typeA] * neighborSum);
                 if (rateUpdate > 0) {
                     auto evt = ReactionEvent(1, reactionIdx, rateUpdate, typeA, typeB);
                     cell.cellRate += rateUpdate;
@@ -352,9 +352,9 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
     cell.timestamp = rnd::exponential(cell.cellRate);
     // select next event
     {
-        const auto x = rnd::uniform_real(0., events.back().cumulativeRate);
+        const auto x = rnd::uniform_real(static_cast<scalar>(0.), events.back().cumulativeRate);
         const auto eventIt = std::lower_bound(
-                events.begin(), events.end(), x, [](const ReactionEvent &elem1, double elem2) {
+                events.begin(), events.end(), x, [](const ReactionEvent &elem1, scalar elem2) {
                     return elem1.cumulativeRate < elem2;
                 }
         );

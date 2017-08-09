@@ -33,7 +33,7 @@
 #pragma once
 
 #include <memory>
-#include <readdy/common/macros.h>
+#include <readdy/common/common.h>
 
 #if READDY_OSX
 #include <string>
@@ -45,7 +45,12 @@ NAMESPACE_BEGIN(actions)
 
 class Action {
 public:
-    Action() {}
+    Action() = default;
+
+    Action(const Action&) = default;
+    Action& operator=(const Action&) = default;
+    Action(Action&&) = default;
+    Action& operator=(Action&&) = default;
 
     virtual ~Action() = default;
 
@@ -54,20 +59,25 @@ public:
 
 class TimeStepDependentAction : public Action {
 public:
-    TimeStepDependentAction(double timeStep) : timeStep(timeStep) {}
+    explicit TimeStepDependentAction(scalar timeStep) : timeStep(timeStep) {}
 
-    virtual ~TimeStepDependentAction() = default;
+    TimeStepDependentAction(const TimeStepDependentAction&) = default;
+    TimeStepDependentAction&operator=(const TimeStepDependentAction&) = default;
+    TimeStepDependentAction(TimeStepDependentAction&&) = default;
+    TimeStepDependentAction& operator=(TimeStepDependentAction&&) = default;
 
-    double getTimeStep() const {
+    ~TimeStepDependentAction() override = default;
+
+    scalar getTimeStep() const {
         return timeStep;
     }
 
-    void setTimeStep(double timeStep) {
+    void setTimeStep(scalar timeStep) {
         TimeStepDependentAction::timeStep = timeStep;
     }
 
 protected:
-    double timeStep;
+    scalar timeStep;
 };
 
 NAMESPACE_END(actions)

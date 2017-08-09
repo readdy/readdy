@@ -50,7 +50,7 @@ class ReactionRegistry {
 
 public:
 
-    ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
+    explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
     ReactionRegistry(const ReactionRegistry &) = delete;
 
@@ -59,6 +59,8 @@ public:
     ReactionRegistry(ReactionRegistry &&) = delete;
 
     ReactionRegistry &operator=(ReactionRegistry &&) = delete;
+
+    ~ReactionRegistry() = default;
 
     using reaction_o1_registry = std::unordered_map<particle_t::type_type, std::vector<reactions::Reaction<1> *>>;
     using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;

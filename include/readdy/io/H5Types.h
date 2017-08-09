@@ -33,7 +33,6 @@
 
 #include <hdf5.h>
 #include <readdy/common/macros.h>
-#include "Handle.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)

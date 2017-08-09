@@ -40,9 +40,9 @@ namespace actions {
 class CPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 
 public:
-    CPUEulerBDIntegrator(CPUKernel *kernel, double timeStep);
+    CPUEulerBDIntegrator(CPUKernel *kernel, readdy::scalar timeStep);
 
-    virtual void perform() override;
+    void perform() override;
 
 private:
     CPUKernel *kernel;

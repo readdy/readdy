@@ -47,13 +47,18 @@ void activate(hid_t plist, unsigned int* cd_values);
 
 class PropertyListHandle : public ObjectHandle {
 public:
-    PropertyListHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+    explicit PropertyListHandle(h5::handle_t handle) : ObjectHandle(handle) {}
 
-    virtual ~PropertyListHandle() override {
+    PropertyListHandle(const PropertyListHandle&) = default;
+    PropertyListHandle& operator=(const PropertyListHandle&) = default;
+    PropertyListHandle(PropertyListHandle&&) = default;
+    PropertyListHandle& operator=(PropertyListHandle&&) = default;
+
+    ~PropertyListHandle() override {
         if(_handle >= 0) close();
     }
 
-    virtual void close() override {
+    void close() override {
         if(H5Pclose(_handle) < 0) {
             log::error("error on closing property list");
             H5Eprint(H5Eget_current_stack(), stderr);
@@ -64,7 +69,7 @@ public:
 class PropertyList : public Object {
 
 protected:
-    PropertyList(h5::handle_t cls_id) : Object(std::make_shared<PropertyListHandle>(cls_id)) {}
+    explicit PropertyList(h5::handle_t cls_id) : Object(std::make_shared<PropertyListHandle>(cls_id)) {}
 
 };
 
@@ -84,7 +89,7 @@ public:
         H5Pset_layout(hid(), H5D_CHUNKED);
     }
 
-    void set_chunk(const std::vector<h5::dims_t> chunk_dims) {
+    void set_chunk(const std::vector<h5::dims_t> &chunk_dims) {
         H5Pset_chunk(hid(), static_cast<int>(chunk_dims.size()), chunk_dims.data());
     }
 

@@ -119,9 +119,9 @@ void SCPUKernel::initialize() {
     }
 }
 
-SCPUKernel &SCPUKernel::operator=(SCPUKernel &&rhs) = default;
+SCPUKernel &SCPUKernel::operator=(SCPUKernel &&rhs) noexcept = default;
 
-SCPUKernel::SCPUKernel(SCPUKernel &&rhs) = default;
+SCPUKernel::SCPUKernel(SCPUKernel &&rhs) noexcept = default;
 
 }
 }

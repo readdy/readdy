@@ -46,9 +46,9 @@ class joining_future {
 public:
     explicit joining_future(std::future<T> &&f) : _future(std::move(f)) {}
 
-    joining_future(joining_future &&) = default;
+    joining_future(joining_future &&) noexcept = default;
 
-    joining_future &operator=(joining_future &&) = default;
+    joining_future &operator=(joining_future &&) noexcept = default;
 
     joining_future(const joining_future &) = delete;
 

@@ -31,7 +31,7 @@
 
 #pragma once
 #include <array>
-#include <math.h>
+#include <cmath>
 #include <readdy/common/common.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -40,41 +40,36 @@ NAMESPACE_BEGIN(model)
 struct READDY_API Vec3 {
 public:
 
-    using value_t = scalar;
-    using data_t = std::array<value_t, 3>;
+    using data_t = std::array<scalar, 3>;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
     union {
-        struct { value_t x, y, z; };
+        struct { scalar x, y, z; };
         data_t data;
     };
-#pragma GCC diagnostic pop
-
 
     Vec3();
 
-    Vec3(value_t x, value_t y, value_t z);
+    Vec3(scalar x, scalar y, scalar z);
 
-    Vec3(const data_t &xyz);
+    explicit Vec3(const data_t &xyz);
 
     Vec3 &operator+=(const Vec3 &rhs);
 
     Vec3 &operator-=(const Vec3 &rhs);
 
-    Vec3 &operator*=(const value_t a);
+    Vec3 &operator*=(scalar a);
 
-    Vec3 &operator/=(const value_t a);
+    Vec3 &operator/=(scalar a);
 
     Vec3 cross(const Vec3&) const;
 
-    double norm() const;
+    scalar norm() const;
 
-    double normSquared() const;
+    scalar normSquared() const;
 
-    value_t operator[](const unsigned int i) const;
+    scalar operator[](unsigned int i) const;
 
-    value_t &operator[](const unsigned int i);
+    scalar &operator[](unsigned int i);
 
     Vec3& invertElementWise();
 
@@ -86,13 +81,13 @@ public:
 
     friend Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs);
 
-    friend Vec3 operator+(const Vec3 &lhs, const value_t rhs);
+    friend Vec3 operator+(const Vec3 &lhs, scalar rhs);
 
     friend Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
 
-    friend Vec3 operator-(const Vec3 &lhs, const value_t rhs);
+    friend Vec3 operator-(const Vec3 &lhs, scalar rhs);
 
-    friend Vec3 operator/(const Vec3 &lhs, const value_t rhs);
+    friend Vec3 operator/(const Vec3 &lhs, scalar rhs);
 
     friend bool operator>=(const Vec3 &lhs, const Vec3 &rhs);
 
@@ -104,20 +99,20 @@ public:
 
 };
 
-inline Vec3::value_t operator*(const Vec3 &lhs, const Vec3 &rhs) {
+inline readdy::scalar operator*(const Vec3 &lhs, const Vec3 &rhs) {
     return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
 }
 
-inline Vec3 operator*(const Vec3 &lhs, const Vec3::value_t rhs) {
-    return Vec3(rhs * lhs[0], rhs * lhs[1], rhs * lhs[2]);
+inline Vec3 operator*(const Vec3 &lhs, const readdy::scalar rhs) {
+    return {rhs * lhs[0], rhs * lhs[1], rhs * lhs[2]};
 }
 
-inline Vec3 operator*(const Vec3::value_t rhs, const Vec3 &lhs) {
+inline Vec3 operator*(const readdy::scalar rhs, const Vec3 &lhs) {
     return lhs * rhs;
 }
 
 template<bool PX, bool PY, bool PZ>
-inline void fixPosition(Vec3 &vec, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+inline void fixPosition(Vec3 &vec, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
     if (PX) {
         vec[0] -= floor((vec[0] + .5 * dx) / dx) * dx;
     }
@@ -130,53 +125,57 @@ inline void fixPosition(Vec3 &vec, const Vec3::value_t dx, const Vec3::value_t d
 }
 
 template<bool PX, bool PY, bool PZ>
-inline Vec3 applyPBC(Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz);
+inline Vec3 applyPBC(const Vec3 &in, readdy::scalar dx, readdy::scalar dy, readdy::scalar dz);
 
 template<>
-inline Vec3 applyPBC<true, false, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
-    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1], in[2]};
+inline Vec3 applyPBC<true, false, false> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar /*unused*/, const readdy::scalar /*unused*/) {
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1], in[2]};
 }
 
 template<>
-inline Vec3 applyPBC<false, true, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
-    return {in[0], in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2]};
+inline Vec3 applyPBC<false, true, false> (const Vec3 &in, const readdy::scalar /*unused*/, const readdy::scalar dy, const readdy::scalar /*unused*/) {
+    return {in[0], in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
 }
 
 template<>
-inline Vec3 applyPBC<false, false, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
-    return {in[0], in[1], in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+inline Vec3 applyPBC<false, false, true> (const Vec3 &in, const readdy::scalar /*unused*/, const readdy::scalar /*unused*/, const readdy::scalar dz) {
+    return {in[0], in[1], in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>
-inline Vec3 applyPBC<true, true, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
-    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2]};
+inline Vec3 applyPBC<true, true, false> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar /*unused*/) {
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
+            in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy, in[2]};
 }
 
 template<>
-inline Vec3 applyPBC<true, false, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
-    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx, in[1], in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+inline Vec3 applyPBC<true, false, true> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar /*unused*/, const readdy::scalar dz) {
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx, in[1],
+            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>
-inline Vec3 applyPBC<false, true, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
-    return {in[0], in[1] - floor((in[1] + .5 * dy) / dy) * dy, in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+inline Vec3 applyPBC<false, true, true> (const Vec3 &in, const readdy::scalar /*unused*/, const readdy::scalar dy, const readdy::scalar dz) {
+    return {in[0], in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
+            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>
-inline Vec3 applyPBC<true, true, true> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
-    return {in[0] - floor((in[0] + .5 * dx) / dx) * dx,
-            in[1] - floor((in[1] + .5 * dy) / dy) * dy,
-            in[2] - floor((in[2] + .5 * dz) / dz) * dz};
+inline Vec3 applyPBC<true, true, true> (const Vec3 &in, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
+    return {in[0] - std::floor((in[0] + static_cast<scalar>(.5) * dx) / dx) * dx,
+            in[1] - std::floor((in[1] + static_cast<scalar>(.5) * dy) / dy) * dy,
+            in[2] - std::floor((in[2] + static_cast<scalar>(.5) * dz) / dz) * dz};
 }
 
 template<>
-inline Vec3 applyPBC<false, false, false> (Vec3 in, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+inline Vec3 applyPBC<false, false, false> (const Vec3 &in, const readdy::scalar /*unused*/,
+                                           const readdy::scalar /*unused*/, const readdy::scalar /*unused*/) {
     return in;
 }
 
 template<bool PX, bool PY, bool PZ>
-inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Vec3::value_t dx, const Vec3::value_t dy,
-                               const Vec3::value_t dz) {
+inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const readdy::scalar dx, const readdy::scalar dy,
+                               const readdy::scalar dz) {
     auto dv = rhs - lhs;
     if (PX) {
         if (dv[0] > dx * .5) dv[0] -= dx;
@@ -194,8 +193,8 @@ inline Vec3 shortestDifference(const Vec3 &lhs, const Vec3 &rhs, const Vec3::val
 }
 
 template<bool PX, bool PY, bool PZ>
-inline Vec3::value_t
-distSquared(const Vec3 &lhs, const Vec3 &rhs, const Vec3::value_t dx, const Vec3::value_t dy, const Vec3::value_t dz) {
+inline readdy::scalar
+distSquared(const Vec3 &lhs, const Vec3 &rhs, const readdy::scalar dx, const readdy::scalar dy, const readdy::scalar dz) {
     auto dv = shortestDifference<PX, PY, PZ>(lhs, rhs, dx, dy, dz);
     return dv * dv;
 }

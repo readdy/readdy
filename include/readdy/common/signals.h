@@ -108,10 +108,9 @@ public:
 
     scoped_connection &operator=(const scoped_connection &) = delete;
 
-    scoped_connection(scoped_connection &&rhs) : conn(std::move(rhs.conn)) {
-    }
+    scoped_connection(scoped_connection &&rhs) noexcept : conn(std::move(rhs.conn)) {}
 
-    scoped_connection &operator=(scoped_connection &&rhs) {
+    scoped_connection &operator=(scoped_connection &&rhs) noexcept {
         conn = std::move(rhs.conn);
         return *this;
     }

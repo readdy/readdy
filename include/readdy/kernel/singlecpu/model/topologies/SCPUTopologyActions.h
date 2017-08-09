@@ -56,8 +56,8 @@ public:
                                        const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
-    virtual double perform() override {
-        readdy::model::Vec3::value_t energy = 0;
+    scalar perform() override {
+        scalar energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
         for (const auto &bond : potential->getBonds()) {
@@ -83,8 +83,8 @@ public:
                                         const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
-    virtual double perform() override {
-        readdy::model::Vec3::value_t energy = 0;
+    scalar perform() override {
+        scalar energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
 
@@ -113,8 +113,8 @@ public:
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
 
-    virtual double perform() override {
-        readdy::model::Vec3::value_t energy = 0;
+    scalar perform() override {
+        scalar energy = 0;
         const auto &particleIndices = potential->getTopology()->getParticles();
         const auto &d = context->getShortestDifferenceFun();
 
@@ -142,13 +142,13 @@ public:
     SCPUChangeParticleType(SCPUParticleData *const data, top::GraphTopology *const topology, const vertex &v,
                            const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
-    virtual void execute() override {
+    void execute() override {
         const auto idx = topology->getParticles().at(_vertex->particleIndex);
         _vertex->setParticleType(previous_type);
         std::swap(data->entry_at(idx).type, previous_type);
     }
 
-    virtual void undo() override {
+    void undo() override {
         execute();
     }
 

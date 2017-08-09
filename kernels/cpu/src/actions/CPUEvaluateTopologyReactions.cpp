@@ -39,11 +39,11 @@ namespace actions {
 namespace top {
 
 
-CPUEvaluateTopologyReactions::CPUEvaluateTopologyReactions(CPUKernel *const kernel, double timeStep)
+CPUEvaluateTopologyReactions::CPUEvaluateTopologyReactions(CPUKernel *const kernel, scalar timeStep)
         : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
 
 template<bool approximated>
-bool performReactionEvent(const double rate, const double timeStep) {
+bool performReactionEvent(const scalar rate, const scalar timeStep) {
     if (approximated) {
         return readdy::model::rnd::uniform_real() < rate * timeStep;
     } else {
@@ -51,7 +51,7 @@ bool performReactionEvent(const double rate, const double timeStep) {
     }
 }
 
-bool shouldPerformEvent(const double rate, const double timestep, bool approximated) {
+bool shouldPerformEvent(const scalar rate, const scalar timestep, bool approximated) {
     return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
 }
 
@@ -63,7 +63,7 @@ void CPUEvaluateTopologyReactions::perform() {
         std::stringstream ss;
         for(const auto& top : topologies) {
             if(!top->isDeactivated()) {
-                const void * address = static_cast<const void*>(top.get());
+                const auto * address = static_cast<const void*>(top.get());
                 std::stringstream ss2;
                 ss2 << address;
                 std::string name = ss2.str();
@@ -89,14 +89,14 @@ void CPUEvaluateTopologyReactions::perform() {
                     std::size_t reaction_idx = 0;
                     for (const auto &reaction : topRef->registeredReactions()) {
 
-                        TREvent event;
+                        TREvent event{};
                         event.own_rate = std::get<1>(reaction);
                         event.cumulative_rate = event.own_rate + current_cumulative_rate;
                         current_cumulative_rate = event.cumulative_rate;
                         event.topology_idx = topology_idx;
                         event.reaction_idx = reaction_idx;
 
-                        events.push_back(std::move(event));
+                        events.push_back(event);
 
                         ++reaction_idx;
                     }
@@ -113,7 +113,7 @@ void CPUEvaluateTopologyReactions::perform() {
             while (end != events.begin()) {
                 const auto cumulative_rate = (end - 1)->cumulative_rate;
 
-                const auto x = readdy::model::rnd::uniform_real(0., cumulative_rate);
+                const auto x = readdy::model::rnd::uniform_real(static_cast<scalar>(0.), cumulative_rate);
 
                 const auto eventIt = std::lower_bound(
                         events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {

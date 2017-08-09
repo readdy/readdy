@@ -38,4 +38,17 @@ NAMESPACE_BEGIN(readdy)
 using scalar = double;
 using time_step_type = unsigned long;
 using particle_type_type = unsigned short;
+
+constexpr bool single_precision = std::is_same<scalar, float>::value;
+constexpr bool double_precision = std::is_same<scalar, double>::value;
+
+NAMESPACE_BEGIN(c_)
+constexpr scalar one = static_cast<scalar>(1.0);
+constexpr scalar two = static_cast<scalar>(2.0);
+constexpr scalar three = static_cast<scalar>(3.0);
+constexpr scalar four = static_cast<scalar>(4.0);
+constexpr scalar five = static_cast<scalar>(5.0);
+constexpr scalar half = static_cast<scalar>(.5);
+NAMESPACE_END(c_)
+
 NAMESPACE_END(readdy)

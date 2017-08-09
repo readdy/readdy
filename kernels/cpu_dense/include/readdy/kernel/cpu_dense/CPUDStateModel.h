@@ -67,7 +67,7 @@ public:
 
     virtual void removeAllParticles() override;
 
-    virtual double getEnergy() const override;
+    virtual readdy::scalar getEnergy() const override;
 
     data_t *const getParticleData() const;
 

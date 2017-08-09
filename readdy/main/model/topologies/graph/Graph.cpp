@@ -120,9 +120,8 @@ const Vertex &Graph::vertexForParticleIndex(std::size_t particleIndex) const {
     });
     if (it != _vertices.end()) {
         return *it;
-    } else {
-        throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
     }
+    throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
 }
 
 void Graph::setVertexLabel(vertex_ref vertex, const std::string &label) {
@@ -203,7 +202,7 @@ Graph::vertex_ref Graph::lastVertex() {
 bool Graph::isConnected() {
     std::for_each(_vertices.begin(), _vertices.end(), [](Vertex &v) { v.visited = false; });
     std::vector<vertex_ref> unvisited;
-    unvisited.push_back(_vertices.begin());
+    unvisited.emplace_back(_vertices.begin());
     std::size_t n_visited = 0;
     while(!unvisited.empty()) {
         auto vertex = unvisited.back();
@@ -213,7 +212,7 @@ bool Graph::isConnected() {
             ++n_visited;
             for (auto neighbor : vertex->neighbors()) {
                 if (!neighbor->visited) {
-                    unvisited.push_back(neighbor);
+                    unvisited.emplace_back(neighbor);
                 }
             }
         }
@@ -360,7 +359,7 @@ std::vector<Graph> Graph::connectedComponentsDestructive() {
                         }
                         for (auto neighbor : vertex->neighbors()) {
                             if (!neighbor->visited) {
-                                unvisitedInComponent.push_back(neighbor);
+                                unvisitedInComponent.emplace_back(neighbor);
                             }
                         }
                     }

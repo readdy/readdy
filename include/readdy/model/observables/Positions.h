@@ -46,13 +46,18 @@ class KernelContext;
 class Positions : public Observable<std::vector<Vec3>> {
 public:
 
-    Positions(Kernel *const kernel, unsigned int stride = 1);
+    explicit Positions(Kernel* kernel, unsigned int stride = 1);
 
     void flush() override;
 
-    Positions(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount);
+    Positions(Kernel* kernel, unsigned int stride, std::vector<std::string> typesToCount);
 
-    Positions(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+    Positions(Kernel* kernel, unsigned int stride, std::vector<unsigned int> typesToCount);
+
+    Positions(const Positions&) = delete;
+    Positions& operator=(const Positions&) = delete;
+    Positions(Positions&&) = default;
+    Positions& operator=(Positions&&) = delete;
 
     virtual ~Positions();
 

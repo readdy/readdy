@@ -44,10 +44,10 @@ NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(pot)
 
 struct BondConfiguration {
-    BondConfiguration(std::size_t idx1, std::size_t idx2, double forceConstant, double length);
+    BondConfiguration(std::size_t idx1, std::size_t idx2, scalar forceConstant, scalar length);
 
     std::size_t idx1, idx2;
-    double length, forceConstant;
+    scalar length, forceConstant;
 };
 
 
@@ -56,7 +56,11 @@ public:
     using bond_t = BondConfiguration;
     using bonds_t = std::vector<bond_t>;
 
-    BondedPotential(Topology *const topology, const bonds_t &bonds);
+    BondedPotential(Topology *topology, const bonds_t &bonds);
+    BondedPotential(const BondedPotential&) = default;
+    BondedPotential& operator=(const BondedPotential&) = delete;
+    BondedPotential(BondedPotential&&) = default;
+    BondedPotential& operator=(BondedPotential&&) = delete;
     virtual ~BondedPotential() = default;
 
     const bonds_t &getBonds() const;
@@ -68,10 +72,15 @@ protected:
 class HarmonicBondPotential : public BondedPotential {
 public:
 
-    HarmonicBondPotential(Topology *const topology, const bonds_t &bonds);
-    virtual ~HarmonicBondPotential() = default;
+    HarmonicBondPotential(Topology *topology, const bonds_t &bonds);
+    HarmonicBondPotential(const HarmonicBondPotential&) = default;
+    HarmonicBondPotential& operator=(const HarmonicBondPotential&) = delete;
+    HarmonicBondPotential(HarmonicBondPotential&&) = default;
+    HarmonicBondPotential& operator=(HarmonicBondPotential&&) = delete;
 
-    double calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
+    ~HarmonicBondPotential() override = default;
+
+    scalar calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
 
     void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_t &bond) const;
 

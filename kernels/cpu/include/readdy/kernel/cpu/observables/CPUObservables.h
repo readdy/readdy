@@ -41,9 +41,9 @@ namespace observables {
 
 class CPUPositions : public readdy::model::observables::Positions {
 public:
-    CPUPositions(CPUKernel *const kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
+    CPUPositions(CPUKernel* kernel, unsigned int stride, const std::vector<std::string> &typesToCount = {});
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 protected:
     CPUKernel *const kernel;
@@ -51,9 +51,9 @@ protected:
 
 class CPUParticles : public readdy::model::observables::Particles {
 public:
-    CPUParticles(CPUKernel *const kernel, unsigned int stride);
+    CPUParticles(CPUKernel* kernel, unsigned int stride);
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 protected:
     CPUKernel *const kernel;
@@ -62,12 +62,12 @@ protected:
 class CPUHistogramAlongAxis : public readdy::model::observables::HistogramAlongAxis {
 
 public:
-    CPUHistogramAlongAxis(CPUKernel *const kernel, unsigned int stride,
-                       const std::vector<double> &binBorders,
+    CPUHistogramAlongAxis(CPUKernel* kernel, unsigned int stride,
+                       const std::vector<scalar> &binBorders,
                        const std::vector<std::string> &typesToCount,
                        unsigned int axis);
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 protected:
     CPUKernel *const kernel;
@@ -77,10 +77,10 @@ protected:
 class CPUNParticles : public readdy::model::observables::NParticles {
 public:
 
-    CPUNParticles(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
+    CPUNParticles(CPUKernel* kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
 
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 protected:
     CPUKernel *const kernel;
@@ -88,11 +88,11 @@ protected:
 
 class CPUForces : public readdy::model::observables::Forces {
 public:
-    CPUForces(CPUKernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
+    CPUForces(CPUKernel* kernel, unsigned int stride, std::vector<std::string> typesToCount = {});
 
-    virtual ~CPUForces() {}
+    ~CPUForces() override = default;
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 
 protected:
@@ -101,20 +101,19 @@ protected:
 
 class CPUReactions : public readdy::model::observables::Reactions {
 public:
-    CPUReactions(CPUKernel *const kernel, unsigned int stride);
+    CPUReactions(CPUKernel* kernel, unsigned int stride);
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 protected:
     CPUKernel *const kernel;
-
 };
 
 class CPUReactionCounts : public readdy::model::observables::ReactionCounts {
 public:
-    CPUReactionCounts(CPUKernel *const kernel, unsigned int stride);
+    CPUReactionCounts(CPUKernel* kernel, unsigned int stride);
 
-    virtual void evaluate() override;
+    void evaluate() override;
 
 protected:
     CPUKernel *const kernel;

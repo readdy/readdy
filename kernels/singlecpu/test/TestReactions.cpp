@@ -47,7 +47,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
 
-    double timeStep = 1.0;
+    readdy::scalar timeStep = 1.0;
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     using update_nl = readdy::model::actions::UpdateNeighborList;
