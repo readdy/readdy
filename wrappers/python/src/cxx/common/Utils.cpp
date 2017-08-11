@@ -33,18 +33,90 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include <spdlog/fmt/ostr.h>
-#include <readdy/io/File.h>
 
+#include <fstream>
+
+#include <spdlog/fmt/ostr.h>
+
+#include <readdy/io/File.h>
 #include <readdy/model/observables/io/TrajectoryEntry.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/IOUtils.h>
-#include <fstream>
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
 
 using radiusmap = std::map<std::string, readdy::scalar>;
+
+py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &trajName) {
+    readdy::log::debug(R"(converting "{}" to readdy viewer format)", h5name);
+
+    readdy::io::File f(h5name, readdy::io::File::Action::OPEN, readdy::io::File::Flag::READ_ONLY);
+    auto &rootGroup = f.getRootGroup();
+
+    // get particle types from config
+    std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
+    {
+        auto config = rootGroup.subgroup("readdy/config");
+        config.read("particle_types", types, readdy::model::ioutils::ParticleTypeInfoMemoryType(),
+                    readdy::model::ioutils::ParticleTypeInfoFileType());
+    }
+
+    auto traj = rootGroup.subgroup("readdy/trajectory/" + trajName);
+
+    // limits
+    std::vector<std::size_t> limits;
+    traj.read("limits", limits, readdy::io::STDDataSetType<std::size_t>(), readdy::io::NativeDataSetType<std::size_t>());
+
+    // records
+    std::vector<readdy::model::observables::TrajectoryEntry> entries;
+    readdy::model::observables::util::TrajectoryEntryMemoryType memoryType;
+    readdy::model::observables::util::TrajectoryEntryFileType fileType;
+    traj.read("records", entries, memoryType, fileType);
+
+    auto n_frames = limits.size()/2;
+    readdy::log::debug("got n frames: {}", n_frames);
+
+    // map from type name to max number of particles in traj
+    std::size_t max_n_particles_per_frame = 0;
+    std::vector<std::size_t> shape_nppf {n_frames};
+    py::array_t<std::size_t, py::array::c_style> n_particles_per_frame (shape_nppf);
+    {
+        auto ptr = n_particles_per_frame.mutable_data(0);
+
+        for (std::size_t i = 0; i < limits.size(); i += 2) {
+            auto len = limits[i + 1] - limits[i];
+            ptr[i/2] = len;
+            max_n_particles_per_frame = std::max(max_n_particles_per_frame, len);
+        }
+    }
+    readdy::log::debug("got max n particles: {}", max_n_particles_per_frame);
+
+    py::array_t<double, py::array::c_style> positions_arr {std::vector<std::size_t>{n_frames, max_n_particles_per_frame, 3}};
+    py::array_t<std::size_t, py::array::c_style> types_arr {std::vector<std::size_t>{n_frames, max_n_particles_per_frame}};
+    py::array_t<std::size_t, py::array::c_style> ids_arr {std::vector<std::size_t>{n_frames, max_n_particles_per_frame}};
+
+    auto positions_ptr = positions_arr.mutable_unchecked();
+    auto types_ptr = types_arr.mutable_unchecked();
+    auto ids_ptr = ids_arr.mutable_unchecked();
+
+    for (std::size_t i = 0; i < limits.size(); i += 2) {
+        auto frame = i/2;
+        auto begin = limits[i];
+        auto end = limits[i+1];
+
+        std::size_t p = 0;
+        for (auto it = entries.begin() + begin; it != entries.begin() + end; ++it, ++p) {
+            positions_ptr(frame, p, 0) = it->pos.x;
+            positions_ptr(frame, p, 1) = it->pos.y;
+            positions_ptr(frame, p, 2) = it->pos.z;
+            types_ptr(frame, p) = it->typeId;
+            ids_ptr(frame, p) = it->id;
+        }
+    }
+
+    return py::make_tuple(n_particles_per_frame, positions_arr, types_arr, ids_arr);
+}
 
 void
 convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true, bool tclRuler = false,
@@ -204,4 +276,5 @@ void exportUtils(py::module &m) {
     using namespace pybind11::literals;
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
+    m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a);
 }
