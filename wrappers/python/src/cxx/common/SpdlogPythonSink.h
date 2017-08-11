@@ -23,37 +23,40 @@
 /**
  * << detailed description >>
  *
- * @file logging.cpp
+ * @file SpdlogPythonSink.h
  * @brief << brief description >>
- * @author chrisfrö
  * @author clonker
- * @date 27.03.17
+ * @date 11.08.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/common/logging.h>
+#pragma once
+
+#include <pybind11/pybind11.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/sink.h>
+#include <iostream>
 
 namespace readdy {
-namespace log {
+namespace rpy {
 
-std::shared_ptr<spdlog::logger> console() {
-    auto logger = spdlog::get("console");
-    if (!logger) {
-        spdlog::set_sync_mode();
-        logger = spdlog::stdout_color_mt("console");
-        logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+class pysink : public spdlog::sinks::base_sink<std::mutex> {
+
+public:
+    void flush() override {
+        using namespace pybind11::literals;
+        pybind11::gil_scoped_acquire gil;
+        auto tup = pybind11::make_tuple("flush", true);
+        pybind11::print("", *tup, "end"_a = "");
     }
-    return logger;
-}
 
-Level::Level(spdlog::level::level_enum newLevel) : oldLevel(console()->level()) {
-    console()->set_level(newLevel);
-}
-
-Level::~Level() {
-    console()->set_level(oldLevel);
-}
-
+protected:
+    void _sink_it(const spdlog::details::log_msg &msg) override {
+        using namespace pybind11::literals;
+        pybind11::gil_scoped_acquire gil;
+        pybind11::print(msg.formatted.str(), "end"_a = "");
+    }
+};
 
 }
 }

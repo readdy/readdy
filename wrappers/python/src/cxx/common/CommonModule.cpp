@@ -29,8 +29,8 @@
 #include <pybind11/stl_bind.h>
 
 #include <readdy/model/Vec3.h>
-
 #include <readdy/io/io.h>
+#include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
 
@@ -44,28 +44,46 @@ void exportIO(py::module &);
 void exportUtils(py::module& m);
 
 void exportCommon(py::module& common) {
-    common.def("set_logging_level", [](const std::string &level) -> void {
-        readdy::log::console()->set_level([&level] {
+    using namespace pybind11::literals;
+    common.def("set_logging_level", [](const std::string &level, bool python_console_out) -> void {
+        spdlog::drop("console");
+        spdlog::set_sync_mode();
+        std::vector<spdlog::sink_ptr> sinks;
+        auto sink_stdout = std::make_shared<spdlog::sinks::ansicolor_sink>(spdlog::sinks::stdout_sink_mt::instance());
+        sinks.push_back(sink_stdout);
+        if(python_console_out) {
+            auto sink_pysink = std::make_shared<readdy::rpy::pysink>();
+            sinks.push_back(sink_pysink);
+        }
+        auto logger =  spdlog::create("console", std::begin(sinks), std::end(sinks));
+        logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+        logger->set_level([&level] {
             if (level == "trace") {
                 return spdlog::level::trace;
-            } else if (level == "debug") {
+            }
+            if (level == "debug") {
                 return spdlog::level::debug;
-            } else if (level == "info") {
+            }
+            if (level == "info") {
                 return spdlog::level::info;
-            } else if (level == "warn") {
+            }
+            if (level == "warn") {
                 return spdlog::level::warn;
-            } else if (level == "err" || level == "error") {
+            }
+            if (level == "err" || level == "error") {
                 return spdlog::level::err;
-            } else if (level == "critical") {
+            }
+            if (level == "critical") {
                 return spdlog::level::critical;
-            } else if (level == "off") {
+            }
+            if (level == "off") {
                 return spdlog::level::off;
             }
             readdy::log::warn("Did not select a valid logging level, setting to debug!");
             return spdlog::level::debug;
         }());
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
-                       "\"err\", \"error\", \"critical\", \"off\".");
+                       "\"err\", \"error\", \"critical\", \"off\".", "level"_a, "python_console_out"_a = true);
     common.def("register_blosc_hdf5_plugin", []() -> void {
         readdy::io::blosc_compression::initialize();
     });

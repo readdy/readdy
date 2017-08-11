@@ -38,7 +38,7 @@
 
 
 template<typename SchemeType>
-void exportSchemeApi(pybind11::module &module, std::string schemeName) {
+void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
     namespace py = pybind11;
     using namespace py::literals;
     using conf = readdy::api::SchemeConfigurator<SchemeType>;
@@ -77,7 +77,7 @@ void exportSchemeApi(pybind11::module &module, std::string schemeName) {
 }
 
 template<>
-void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, std::string schemeName) {
+void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, const std::string &schemeName) {
     namespace py = pybind11;
     using namespace py::literals;
     using scheme_t = readdy::api::AdvancedScheme;
@@ -89,8 +89,7 @@ void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, std:
             }, "n_steps"_a)
             .def("run_with_criterion", [](scheme_t& self, pybind11::object continuingCriterion) {
                 py::gil_scoped_release release;
-                auto pyFun = readdy::rpy::PyFunction<bool(const readdy::time_step_type current)>(continuingCriterion);
-                self.run(std::move(pyFun));
+                self.run(readdy::rpy::PyFunction<bool(const readdy::time_step_type current)>(continuingCriterion));
             }, "continue_criterion"_a);
     std::string configuratorName =  schemeName + "Configurator";
     py::class_<conf>(module, configuratorName.c_str())
