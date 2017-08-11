@@ -45,6 +45,10 @@ using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
 
+void registerPotentialOrder2(sim &self, pot2 *potential) {
+    self.registerPotentialOrder2(potential);
+}
+
 // thin wrappers
 void setBoxSize(sim &self, const vec &size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
 
@@ -102,8 +106,7 @@ void exportApi(py::module &api) {
             }, "type"_a, "pos"_a)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
-            .def("register_potential_order_1", &sim::registerPotentialOrder1, "potential"_a)
-            .def("register_potential_order_2", &sim::registerPotentialOrder2, "potential"_a)
+            .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)
             .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential,
                  "type_a"_a, "type_b"_a, "force_constant"_a)
             .def("register_potential_piecewise_weak_interaction",
