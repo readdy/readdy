@@ -46,11 +46,6 @@ using kern = readdy::model::Kernel;
 void exportTopologies(py::module &);
 
 // thin wrappers
-
-void registerPotentialOrder2(sim &self, pot2 *potential) {
-    self.registerPotentialOrder2(potential);
-}
-
 void setBoxSize(sim &self, const vec &size) { /* explicitly choose void(vec) signature */ self.setBoxSize(size); }
 
 std::string getSelectedKernelType(sim &self) { /* discard const reference */ return self.getSelectedKernelType(); }
@@ -107,7 +102,8 @@ void exportApi(py::module &api) {
             }, "type"_a, "pos"_a)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
-            .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)
+            .def("register_potential_order_1", &sim::registerPotentialOrder1, "potential"_a)
+            .def("register_potential_order_2", &sim::registerPotentialOrder2, "potential"_a)
             .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential,
                  "type_a"_a, "type_b"_a, "force_constant"_a)
             .def("register_potential_piecewise_weak_interaction",
@@ -161,13 +157,13 @@ void exportApi(py::module &api) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)
                      );
-                 }, "defaults"_a
+                 }, "defaults"_a = true
             )
             .def("run_scheme_advanced", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::AdvancedScheme>>(
                              self.runScheme<readdy::api::AdvancedScheme>(defaults)
                      );
-                 }, "defaults"_a
+                 }, "defaults"_a = true
             )
             .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep) {
                 py::gil_scoped_release release;

@@ -76,7 +76,7 @@ public:
         const auto progressOutputStride = static_cast<std::size_t>(steps / 100);
         auto defaultContinueCriterion = [this, steps, progressOutputStride](const time_step_type current) {
             if (progressOutputStride > 0 && (current - start) % progressOutputStride == 0) {
-                log::debug("Simulation progress: {} / {} steps", (current - start), steps);
+                log::info("Simulation progress: {} / {} steps", (current - start), steps);
             }
             return current < start + steps;
         };
@@ -131,7 +131,7 @@ public:
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
         kernel->finalize();
-        log::debug("Simulation completed");
+        log::info("Simulation completed");
     }
 };
 
@@ -285,7 +285,7 @@ public:
         if (clearNeighborList) clearNeighborList->perform();
         start = t;
         kernel->finalize();
-        log::debug("Simulation completed");
+        log::info("Simulation completed");
     }
 
 protected:

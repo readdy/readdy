@@ -27,6 +27,7 @@ set(SOURCE_FILES
         ReaddyBinding.cpp
         common/CommonModule.cpp
         common/ExportIO.cpp
+        common/SpdlogPythonSink.h
         common/Utils.cpp
         api/ExportObservables.h
         api/ExportSchemeApi.h
