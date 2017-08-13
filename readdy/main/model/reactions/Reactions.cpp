@@ -36,9 +36,6 @@ namespace readdy {
 namespace model {
 namespace reactions {
 
-template<> short Reaction<1>::counter = 0;
-template<> short Reaction<2>::counter = 0;
-
 std::ostream& operator<<(std::ostream& os, const ReactionType& reactionType) {
     switch (reactionType) {
         case ReactionType::Decay: os << "Decay"; break;
