@@ -159,6 +159,8 @@ protected:
     scalar weight1 = .5, weight2 = .5;
 };
 
+template<unsigned int N> short Reaction<N>::counter = 0;
+
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)
