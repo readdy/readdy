@@ -62,12 +62,12 @@ void CPUEvaluateTopologyReactions::perform() {
     if(!topologies.empty()) {
         std::stringstream ss;
         for(const auto& top : topologies) {
-            if(!top->isDeactivated()) {
-                const auto * address = static_cast<const void*>(top.get());
+            if(!top.isDeactivated()) {
+                const auto * address = static_cast<const void*>(&top);
                 std::stringstream ss2;
                 ss2 << address;
                 std::string name = ss2.str();
-                ss << ", " << name << "(" << top->getNParticles() <<")";
+                ss << ", " << name << "(" << top.getNParticles() <<")";
             }
         }
         struct TREvent {
