@@ -136,7 +136,7 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
                     // check if all particle types are topology flavored
                     const auto &types = kernel->getKernelContext().particle_types();
                     for (const auto &v : topology.graph().vertices()) {
-                        if (types.info_of(v.particleType()).flavor != Particle::FLAVOR_TOPOLOGY) {
+                        if (types.info_of(v.particleType()).flavor != particleflavor::TOPOLOGY) {
                             log::warn("The topology contained particles that were not topology flavored.");
                             valid = false;
                         }

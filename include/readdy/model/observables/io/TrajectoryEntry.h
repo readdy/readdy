@@ -36,6 +36,7 @@
 #include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/Vec3.h>
+#include <readdy/model/ParticleTypeRegistry.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -45,12 +46,12 @@ struct TrajectoryEntry {
 
     TrajectoryEntry() = default;
 
-    explicit TrajectoryEntry(const readdy::model::Particle &p)
-            : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(p.getFlavor()) {}
+    explicit TrajectoryEntry(const readdy::model::Particle &p, const readdy::model::ParticleTypeRegistry& ptr)
+            : typeId(p.getType()), id(p.getId()), pos(p.getPos()), flavor(ptr.info_of(p.getType()).flavor) {}
 
     readdy::model::Particle::type_type typeId {0};
     readdy::model::Particle::id_type id {0};
-    readdy::model::Particle::flavor_t flavor {0};
+    readdy::model::particle_flavor_t flavor {0};
     readdy::model::Particle::pos_type pos;
 
     friend std::ostream &operator<<(std::ostream & /*os*/, const TrajectoryEntry & /*p*/);

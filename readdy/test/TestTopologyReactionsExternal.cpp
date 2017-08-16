@@ -36,13 +36,13 @@
 
 class TestTopologyReactionsExternal : public KernelTest {
 protected:
-    virtual void SetUp() override {
+    void SetUp() override {
         auto &ctx = kernel->getKernelContext();
-        ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::Particle::FLAVOR_TOPOLOGY);
-        ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::Particle::FLAVOR_TOPOLOGY);
-        ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, readdy::model::Particle::FLAVOR_TOPOLOGY);
-        ctx.particle_types().add("A", 1.0, 1.0, readdy::model::Particle::FLAVOR_NORMAL);
-        ctx.particle_types().add("B", 1.0, 1.0, readdy::model::Particle::FLAVOR_NORMAL);
+        ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particle_types().add("A", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
+        ctx.particle_types().add("B", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
 
         ctx.configureTopologyBondPotential("Topology A", "Topology A", {10, 10});
         ctx.configureTopologyBondPotential("Topology A", "Topology B", {10, 10});
@@ -71,6 +71,18 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
 
     auto particles_beforehand = kernel->getKernelStateModel().getParticles();
 
+    {
+        std::size_t nNormalFlavor{0};
+        for (const auto &p : particles_beforehand) {
+            if (ctx.particle_types().info_of(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
+                ++nNormalFlavor;
+            }
+        }
+        ASSERT_EQ(nNormalFlavor, 1);
+    }
+
+    auto nl = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>();
+    nl->perform();
     auto action = kernel->getActionFactory().createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1.0);
     action->perform();
 
@@ -80,13 +92,13 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     bool found {false};
     std::size_t nNormalFlavor {0};
     for(const auto& p : particles) {
-        if(p.getFlavor() == readdy::model::Particle::FLAVOR_NORMAL) {
+        if(ctx.particle_types().info_of(p.getType()).flavor == readdy::model::particleflavor::NORMAL) {
             ++nNormalFlavor;
             found |= p.getType() == ctx.particle_types().id_of("B");
         }
     }
-    ASSERT_TRUE(found) << "The A particle should have been converted to a B particle";
     ASSERT_EQ(nNormalFlavor, 1);
+    ASSERT_TRUE(found) << "The A particle should have been converted to a B particle";
 }
 
 TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticle) {

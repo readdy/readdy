@@ -48,11 +48,6 @@ public:
     using id_type = unsigned long;
     using pos_type = Vec3;
     using type_type = particle_type_type;
-    using flavor_t = std::uint8_t;
-
-    static constexpr flavor_t FLAVOR_NORMAL = 0;
-    static constexpr flavor_t FLAVOR_TOPOLOGY = 1;
-    static constexpr flavor_t FLAVOR_MEMBRANE = 2;
 
     Particle(scalar x, scalar y, scalar z, type_type type);
 
@@ -74,8 +69,6 @@ public:
 
     Vec3 &getPos();
 
-    flavor_t getFlavor() const;
-
     const type_type &getType() const;
 
     const id_type getId() const;
@@ -92,20 +85,13 @@ protected:
     Vec3 pos;
     type_type type;
     id_type id;
-    flavor_t flavor;
 
     static std::atomic<id_type> id_counter;
 };
 
 class TopologyParticle : public Particle {
-    using super = Particle;
 public:
-    TopologyParticle(scalar x, scalar y, scalar z, type_type type);
-
-    TopologyParticle(Vec3 pos, type_type type);
-
-    TopologyParticle(Vec3 pos, type_type type, id_type id);
-
+    using Particle::Particle;
 };
 
 NAMESPACE_END(model)

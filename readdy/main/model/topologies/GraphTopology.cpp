@@ -252,7 +252,7 @@ const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
         const auto particle_type = k.getKernelStateModel().getParticleType(particles.front());
         const auto& info = k.getKernelContext().particle_types().info_of(particle_type);
-        return info.flavor != Particle::FLAVOR_TOPOLOGY;
+        return info.flavor != particleflavor::NORMAL;
     }
     return false;
 }

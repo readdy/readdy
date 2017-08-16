@@ -104,7 +104,7 @@ particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name)
     auto findIt = getKernelContext().particle_types().type_mapping().find(name);
     if (findIt != getKernelContext().particle_types().type_mapping().end()) {
         const auto &info = getKernelContext().particle_types().info_of(findIt->second);
-        if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
+        if (info.flavor == particleflavor::NORMAL) {
             return findIt->second;
         }
         log::critical("particle type {} had no \"normal\" flavor", name);
@@ -226,7 +226,11 @@ readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactor
 }
 
 TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-    return TopologyParticle(pos, getKernelContext().particle_types().id_of(type));
+    const auto& info = getKernelContext().particle_types().info_of(type);
+    if(info.flavor != particleflavor::TOPOLOGY) {
+        throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
+    }
+    return TopologyParticle(pos, info.typeId);
 }
 
 bool Kernel::supportsTopologies() const {

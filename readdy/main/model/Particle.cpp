@@ -45,7 +45,7 @@ bool Particle::operator!=(const Particle &rhs) const {
 }
 
 Particle::Particle(scalar  x, scalar  y, scalar  z, type_type type)
-        : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type), flavor(FLAVOR_NORMAL) {}
+        : id(std::atomic_fetch_add<unsigned long>(&id_counter, 1L)), pos(x, y, z), type(type) {}
 
 const Vec3 &Particle::getPos() const {
     return pos;
@@ -56,14 +56,14 @@ const Particle::id_type Particle::getId() const {
 }
 
 Particle::Particle(Vec3 pos, type_type type, id_type id)
-        : pos(pos), type(type), id(id), flavor(FLAVOR_NORMAL) {}
+        : pos(pos), type(type), id(id) {}
 
 Vec3 &Particle::getPos() {
     return pos;
 }
 
 Particle::Particle(Vec3 pos, type_type type)
-        : pos(pos), type(type), id(std::atomic_fetch_add<id_type>(&id_counter, 1)), flavor(FLAVOR_NORMAL) {}
+        : pos(pos), type(type), id(std::atomic_fetch_add<id_type>(&id_counter, 1)) {}
 
 
 Particle::~Particle() = default;
@@ -81,21 +81,5 @@ Particle::id_type Particle::nextId() {
     return std::atomic_fetch_add<id_type>(&id_counter, 1);
 }
 
-Particle::flavor_t Particle::getFlavor() const {
-    return flavor;
-}
-
-
-TopologyParticle::TopologyParticle(scalar  x, scalar  y, scalar  z, Particle::type_type type) : Particle(x, y, z, type) {
-    flavor = FLAVOR_TOPOLOGY;
-}
-
-TopologyParticle::TopologyParticle(Vec3 pos, Particle::type_type type) : Particle(pos, type) {
-    flavor = FLAVOR_TOPOLOGY;
-}
-
-TopologyParticle::TopologyParticle(Vec3 pos, Particle::type_type type, Particle::id_type id) : Particle(pos, type, id) {
-    flavor = FLAVOR_TOPOLOGY;
-}
 }
 }

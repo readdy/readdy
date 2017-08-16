@@ -116,7 +116,7 @@ public:
 
     const readdy::model::top::GraphTopology *getTopologyForParticle() const override;
 
-    readdy::model::top::GraphTopology *getTopologyForParticle() override;
+    virtual readdy::model::top::GraphTopology *getTopologyForParticle() override;
 
 private:
     struct Impl;

@@ -37,7 +37,7 @@ namespace model {
 
 
 ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar  diffusionConstant, const scalar  radius,
-                                   const Particle::flavor_t flavor, const Particle::type_type typeId)
+                                   const particle_flavor_t flavor, const Particle::type_type typeId)
         : name(name), diffusionConstant(diffusionConstant), radius(radius), flavor(flavor), typeId(typeId) {}
 
 
@@ -86,7 +86,7 @@ scalar  ParticleTypeRegistry::diffusion_constant_of(const std::string &particleT
 
 void
 ParticleTypeRegistry::add(const std::string &name, const scalar  diffusionConst, const scalar  radius,
-                          const Particle::flavor_t flavor) {
+                          const particle_flavor_t flavor) {
     particle_type_type t_id = type_counter_++;
     type_mapping_.emplace(name, t_id);
     particle_info_.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, radius, flavor, t_id}));

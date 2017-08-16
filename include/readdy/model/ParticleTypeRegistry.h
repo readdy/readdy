@@ -38,15 +38,22 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
+using particle_flavor_t = std::uint8_t;
+NAMESPACE_BEGIN(particleflavor)
+static constexpr particle_flavor_t NORMAL = 0;
+static constexpr particle_flavor_t TOPOLOGY = 1;
+static constexpr particle_flavor_t MEMBRANE = 2;
+NAMESPACE_END(particleflavor)
+
 struct ParticleTypeInfo {
     std::string name;
     scalar diffusionConstant;
     scalar radius;
-    readdy::model::Particle::flavor_t flavor;
+    particle_flavor_t flavor;
     particle_type_type typeId;
 
     ParticleTypeInfo(const std::string &name, scalar diffusionConstant, scalar radius,
-                     Particle::flavor_t flavor, Particle::type_type typeId);
+                     particle_flavor_t flavor, Particle::type_type typeId);
 };
 
 class ParticleTypeRegistry {
@@ -69,7 +76,7 @@ public:
     particle_type_type id_of(const std::string &name) const;
 
     void add(const std::string &name, scalar diffusionConst, scalar radius,
-             readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
+             particle_flavor_t flavor = particleflavor::NORMAL);
 
     const ParticleTypeInfo &info_of(const std::string &name) const;
 
