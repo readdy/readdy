@@ -41,20 +41,20 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(reactions)
 
-class TopologyFusionReaction {
+class ExternalTopologyReaction {
 public:
-    TopologyFusionReaction(const std::string &name, const util::particle_type_pair &types,
-                           const util::particle_type_pair &types_to, const scalar rate, const scalar radius);
+    ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
+                             const util::particle_type_pair &types_to, scalar rate, scalar radius);
 
-    ~TopologyFusionReaction() = default;
+    ~ExternalTopologyReaction() = default;
 
-    TopologyFusionReaction(const TopologyFusionReaction &) = default;
+    ExternalTopologyReaction(const ExternalTopologyReaction &) = default;
 
-    TopologyFusionReaction &operator=(const TopologyFusionReaction &) = default;
+    ExternalTopologyReaction &operator=(const ExternalTopologyReaction &) = default;
 
-    TopologyFusionReaction(TopologyFusionReaction &&) = default;
+    ExternalTopologyReaction(ExternalTopologyReaction &&) = default;
 
-    TopologyFusionReaction &operator=(TopologyFusionReaction &&) = default;
+    ExternalTopologyReaction &operator=(ExternalTopologyReaction &&) = default;
 
     const std::string &name() const;
 

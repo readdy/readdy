@@ -61,7 +61,7 @@ protected:
 
 };
 
-static readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel) {
+readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel) {
     auto &ctx = kernel->getKernelContext();
     topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};

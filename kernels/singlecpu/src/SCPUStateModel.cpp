@@ -239,6 +239,14 @@ particle_type_type SCPUStateModel::getParticleType(const std::size_t index) cons
     return getParticleData()->entry_at(index).type;
 }
 
+const readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle() const {
+    return nullptr;
+}
+
+readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle() {
+    return nullptr;
+}
+
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;
 
 SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) noexcept = default;

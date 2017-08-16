@@ -79,6 +79,10 @@ public:
 
     virtual std::vector<top::GraphTopology const*> getTopologies() const = 0;
 
+    virtual top::GraphTopology const* getTopologyForParticle() const = 0;
+
+    virtual top::GraphTopology* getTopologyForParticle() = 0;
+
     virtual void removeParticle(const Particle &p) = 0;
 
     virtual void removeAllParticles() = 0;

@@ -116,6 +116,10 @@ public:
 
     virtual std::vector<readdy::model::top::GraphTopology const *> getTopologies() const override;
 
+    const readdy::model::top::GraphTopology *getTopologyForParticle() const override;
+
+    readdy::model::top::GraphTopology *getTopologyForParticle() override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;

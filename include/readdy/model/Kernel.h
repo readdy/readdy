@@ -253,7 +253,9 @@ public:
 
 protected:
 
-    unsigned int getTypeIdRequireNormalFlavor(const std::string &) const;
+    particle_type_type getTypeId(const std::string& name) const;
+
+    particle_type_type getTypeIdRequireNormalFlavor(const std::string &) const;
 
     virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const = 0;
 

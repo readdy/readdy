@@ -63,7 +63,7 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/Recipe.cpp
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/Operations.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/TopologyReaction.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/TopologyReactionActions.cpp")
-LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/TopologyFusionReaction.cpp")
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/ExternalTopologyReaction.cpp")
 
 # observables
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Trajectory.cpp")

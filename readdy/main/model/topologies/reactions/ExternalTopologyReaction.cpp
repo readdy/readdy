@@ -30,51 +30,51 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/reactions/TopologyFusionReaction.h>
+#include <readdy/model/topologies/reactions/ExternalTopologyReaction.h>
 
 namespace readdy {
 namespace model {
 namespace top {
 namespace reactions {
 
-TopologyFusionReaction::TopologyFusionReaction(const std::string &name, const util::particle_type_pair &types,
+ExternalTopologyReaction::ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
                                                const util::particle_type_pair &types_to, const scalar rate,
                                                const scalar radius)
         : _name(name), _types(types), _types_to(types_to), _rate(rate), _radius(radius) {}
 
-const std::string &TopologyFusionReaction::name() const {
+const std::string &ExternalTopologyReaction::name() const {
     return _name;
 }
 
-const particle_type_type TopologyFusionReaction::type1() const {
+const particle_type_type ExternalTopologyReaction::type1() const {
     return std::get<0>(_types);
 }
 
-const particle_type_type TopologyFusionReaction::type2() const {
+const particle_type_type ExternalTopologyReaction::type2() const {
     return std::get<1>(_types);
 }
 
-const scalar TopologyFusionReaction::rate() const {
+const scalar ExternalTopologyReaction::rate() const {
     return _rate;
 }
 
-const scalar TopologyFusionReaction::radius() const {
+const scalar ExternalTopologyReaction::radius() const {
     return _radius;
 }
 
-const util::particle_type_pair &TopologyFusionReaction::types() const {
+const util::particle_type_pair &ExternalTopologyReaction::types() const {
     return _types;
 }
 
-const particle_type_type TopologyFusionReaction::type_to1() const {
+const particle_type_type ExternalTopologyReaction::type_to1() const {
     return std::get<0>(_types_to);
 }
 
-const particle_type_type TopologyFusionReaction::type_to2() const {
+const particle_type_type ExternalTopologyReaction::type_to2() const {
     return std::get<1>(_types_to);
 }
 
-const util::particle_type_pair &TopologyFusionReaction::types_to() const {
+const util::particle_type_pair &ExternalTopologyReaction::types_to() const {
     return _types_to;
 }
 

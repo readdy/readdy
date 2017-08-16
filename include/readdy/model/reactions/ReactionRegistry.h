@@ -35,7 +35,7 @@
 #include <readdy/common/common.h>
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/ParticleTypeRegistry.h>
-#include <readdy/model/topologies/reactions/TopologyFusionReaction.h>
+#include <readdy/model/topologies/reactions/ExternalTopologyReaction.h>
 #include "Reaction.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -49,7 +49,7 @@ class ReactionRegistry {
     using reaction_o1_registry_internal = std::unordered_map<particle_t::type_type, rea_ptr_vec1>;
     using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec2>;
 
-    using topology_reaction = top::reactions::TopologyFusionReaction;
+    using topology_reaction = top::reactions::ExternalTopologyReaction;
     using topology_reaction_registry = util::particle_type_pair_unordered_map<topology_reaction>;
 
 public:
@@ -130,7 +130,7 @@ public:
     const short add_external(reactions::Reaction<2> *r);
 
     void add_topology_reaction(const std::string& name, const util::particle_type_pair& types,
-                               const util::particle_type_pair& types_to, const scalar rate, const scalar radius);
+                               const util::particle_type_pair& types_to, scalar rate, scalar radius);
 
     void configure();
 

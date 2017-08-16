@@ -91,7 +91,16 @@ readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, co
     return particle.getId();
 }
 
-unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
+particle_type_type Kernel::getTypeId(const std::string &name) const {
+    auto findIt = getKernelContext().particle_types().type_mapping().find(name);
+    if (findIt != getKernelContext().particle_types().type_mapping().end()) {
+        return findIt->second;
+    }
+    log::critical("did not find type id for {}", name);
+    throw std::invalid_argument("did not find type id for " + name);
+}
+
+particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
     auto findIt = getKernelContext().particle_types().type_mapping().find(name);
     if (findIt != getKernelContext().particle_types().type_mapping().end()) {
         const auto &info = getKernelContext().particle_types().info_of(findIt->second);
@@ -126,7 +135,7 @@ Kernel::createFusionReaction(const std::string &name, const std::string &from1, 
 std::unique_ptr<reactions::Reaction<2>>
 Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                                 const std::string &to, const scalar rate, const scalar eductDistance) const {
-    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeIdRequireNormalFlavor(catalyst),
+    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeId(catalyst),
                                                                      getTypeIdRequireNormalFlavor(from),
                                                                      getTypeIdRequireNormalFlavor(to), rate,
                                                                      eductDistance);
