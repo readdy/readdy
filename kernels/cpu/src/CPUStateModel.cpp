@@ -364,11 +364,11 @@ particle_type_type CPUStateModel::getParticleType(const std::size_t index) const
     return pimpl->cdata().entry_at(index).type;
 }
 
-const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle() const {
+const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_t particle) const {
     return nullptr;
 }
 
-readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle() {
+readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_t particle) {
     return nullptr;
 }
 

@@ -103,7 +103,19 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
 
 TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticle) {
     // todo check if normal-flavor particle returns nullptr
-    
+    using namespace readdy;
+    auto &ctx = kernel->getKernelContext();
+    model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
+    auto toplogy = kernel->getKernelStateModel().addTopology({x_0});
+    kernel->getKernelStateModel().addParticle(
+            model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("A"))
+    );
+
+    for(auto particle : toplogy->getParticles()) {
+        auto returned_top = kernel->getKernelStateModel().getTopologyForParticle(particle);
+        ASSERT_EQ(toplogy, returned_top);
+    }
+
     // todo assert that (also after topology fission) a topology particle points to its respective topology
 }
 

@@ -98,9 +98,6 @@ public:
         force_t force; // 3*8 = 24 bytes
         displacement_t displacement; // 24 + 8 = 32 bytes
 
-        friend class readdy::kernel::cpu::model::CPUParticleData;
-        friend class CPUNeighborList;
-
         particle_type::pos_type pos; // 32 + 3*8 = 56 bytes
         particle_type::id_type id; // 56 + 8 = 64
         particle_type::type_type type; // 56 + 4 = 60 bytes

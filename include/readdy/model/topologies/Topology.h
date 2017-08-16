@@ -53,6 +53,7 @@ NAMESPACE_BEGIN(top)
 class Topology {
 public:
     using particles_t = std::vector<std::size_t>;
+    using particle_t = particles_t::size_type;
 
     using bonded_potential = pot::BondedPotential;
     using harmonic_bond = TopologyActionFactory::harmonic_bond;
