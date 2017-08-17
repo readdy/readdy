@@ -82,6 +82,42 @@ void exportCommon(py::module& common) {
             readdy::log::warn("Did not select a valid logging level, setting to debug!");
             return spdlog::level::debug;
         }());
+
+        if(python_console_out) {
+            // update python loggers level
+            py::gil_scoped_acquire gil;
+            auto logging_module = pybind11::module::import("logging");
+            auto args = py::dict("format"_a="%(message)s");
+            switch(logger->level()) {
+                case spdlog::level::trace:{
+                    /* fall through */
+                }
+                case spdlog::level::debug: {
+                    args["level"] = "DEBUG";
+                    break;
+                }
+                case spdlog::level::info: {
+                    args["level"] = "INFO";
+                    break;
+                }
+                case spdlog::level::warn: {
+                    args["level"] = "WARNING";
+                    break;
+                }
+                case spdlog::level::err: {
+                    args["level"] = "ERROR";
+                    break;
+                }
+                case spdlog::level::critical: {
+                    /* fall through */
+                }
+                case spdlog::level::off: {
+                    args["level"] = "CRITICAL";
+                    break;
+                }
+            }
+            logging_module.attr("basicConfig")(**args);
+        }
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
                        "\"err\", \"error\", \"critical\", \"off\".", "level"_a, "python_console_out"_a = true);
     common.def("register_blosc_hdf5_plugin", []() -> void {

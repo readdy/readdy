@@ -33,6 +33,7 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+#include <pybind11/eval.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/sink.h>
 #include <iostream>
@@ -43,18 +44,50 @@ namespace rpy {
 class pysink : public spdlog::sinks::base_sink<std::mutex> {
 
 public:
-    void flush() override {
-        using namespace pybind11::literals;
-        pybind11::gil_scoped_acquire gil;
-        auto tup = pybind11::make_tuple("flush", true);
-        pybind11::print("", *tup, "end"_a = "");
-    }
+    void flush() override { /* no op */ }
 
 protected:
     void _sink_it(const spdlog::details::log_msg &msg) override {
-        using namespace pybind11::literals;
-        pybind11::gil_scoped_acquire gil;
-        pybind11::print(msg.formatted.str(), "end"_a = "");
+        if(should_log(msg.level)) {
+
+            auto message = msg.formatted.str();
+            {
+                // remove newline
+                message.pop_back();
+            }
+
+            pybind11::gil_scoped_acquire gil;
+
+            auto logging_module = pybind11::module::import("logging");
+            std::string py_level;
+            switch (msg.level) {
+                case spdlog::level::trace: {
+                    /* fall through */
+                }
+                case spdlog::level::debug: {
+                    logging_module.attr("debug")(message);
+                    break;
+                }
+                case spdlog::level::info: {
+                    logging_module.attr("info")(message);
+                    break;
+                }
+                case spdlog::level::warn: {
+                    logging_module.attr("warning")(message);
+                    break;
+                }
+                case spdlog::level::err: {
+                    logging_module.attr("error")(message);
+                    break;
+                }
+                case spdlog::level::critical: {
+                    logging_module.attr("critical")(message);
+                    break;
+                }
+                case spdlog::level::off:
+                    break;
+            }
+        }
     }
 };
 
