@@ -124,7 +124,7 @@ struct CPUStateModel::Impl {
     bool initial_neighbor_list_setup {true};
     scalar currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
-    readdy::util::index_persistent_vector<readdy::model::top::GraphTopology> topologies{};
+    topologies_t topologies{};
     top_action_factory const *const topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
@@ -198,7 +198,7 @@ void CPUStateModel::calculateForces() {
     }
 
     for (auto t_it = pimpl->topologies.cbegin(); t_it != pimpl->topologies.cend(); ++t_it) {
-        const auto &top = *t_it;
+        const auto &top = **t_it;
         if (!top.isDeactivated()) {
             for (const auto &bondedPot : top.getBondedPotentials()) {
                 auto action = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory);
@@ -272,10 +272,9 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
     pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             pimpl->data().registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : pimpl->topologies) {
-                    if(!top.isDeactivated()) top.permuteIndices(indices);
+                    if(!top->isDeactivated()) top->permuteIndices(indices);
                 }
             }));
-
 }
 
 CPUStateModel::data_t const *const CPUStateModel::getParticleData() const {
@@ -310,8 +309,10 @@ CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &p
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    auto it = pimpl->topologies.emplace_back(std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()));
-    return &*it;
+    auto it = pimpl->topologies.push_back(
+            std::make_unique<topology_t>(std::move(ids), std::move(types), pimpl->context->topology_potentials())
+    );
+    return it->get();
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() {
@@ -353,8 +354,8 @@ std::vector<readdy::model::top::GraphTopology const*> CPUStateModel::getTopologi
     std::vector<readdy::model::top::GraphTopology const*> result;
     result.reserve(pimpl->topologies.size() - pimpl->topologies.n_deactivated());
     for(const auto& top : pimpl->topologies) {
-        if(!top.isDeactivated()) {
-            result.push_back(&top);
+        if(!top->isDeactivated()) {
+            result.push_back(top.get());
         }
     }
     return result;

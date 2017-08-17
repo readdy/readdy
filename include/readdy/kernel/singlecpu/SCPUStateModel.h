@@ -51,7 +51,8 @@ class SCPUStateModel : public readdy::model::KernelStateModel {
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 public:
 
-    using topologies_t = readdy::util::index_persistent_vector<readdy::model::top::GraphTopology>;
+    using topology = readdy::model::top::GraphTopology;
+    using topologies_vec = readdy::util::index_persistent_vector<std::unique_ptr<topology>>;
 
     void updateNeighborList() override;
 
@@ -108,9 +109,9 @@ public:
 
     void expected_n_particles(std::size_t n) override;
 
-    const topologies_t &topologies() const;
+    const topologies_vec &topologies() const;
 
-    topologies_t &topologies();
+    topologies_vec &topologies();
 
     std::vector<readdy::model::top::GraphTopology const*> getTopologies() const override;
 
@@ -122,7 +123,7 @@ private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    topologies_t _topologies;
+    topologies_vec _topologies;
 };
 
 }

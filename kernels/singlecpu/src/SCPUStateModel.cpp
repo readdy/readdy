@@ -147,18 +147,18 @@ void SCPUStateModel::calculateForces() {
     // update forces and energy for topologies
     {
         for ( auto &topology : _topologies) {
-            if(!topology.isDeactivated()) {
+            if(!topology->isDeactivated()) {
                 // calculate bonded potentials
-                for (const auto &bondedPot : topology.getBondedPotentials()) {
-                    auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(&topology);
+                for (const auto &bondedPot : topology->getBondedPotentials()) {
+                    auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(topology.get());
                     pimpl->currentEnergy += energy;
                 }
-                for (const auto &anglePot : topology.getAnglePotentials()) {
-                    auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(&topology);
+                for (const auto &anglePot : topology->getAnglePotentials()) {
+                    auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(topology.get());
                     pimpl->currentEnergy += energy;
                 }
-                for (const auto &torsionPot : topology.getTorsionPotentials()) {
-                    auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(&topology);
+                for (const auto &torsionPot : topology->getTorsionPotentials()) {
+                    auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(topology.get());
                     pimpl->currentEnergy += energy;
                 }
             }
@@ -181,12 +181,14 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    auto it = _topologies.emplace_back(std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()));
+    auto it = _topologies.emplace_back(
+            std::make_unique<topology>(std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
+    );
     const auto idx = std::distance(topologies().begin(), it);
-    for(const auto p : it->getParticles()) {
+    for(const auto p : (*it)->getParticles()) {
         pimpl->particleData.entry_at(p).topology_index = idx;
     }
-    return &*it;
+    return it->get();
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::reactionRecords() {
@@ -215,11 +217,11 @@ void SCPUStateModel::expected_n_particles(const std::size_t n) {
     }
 }
 
-const SCPUStateModel::topologies_t &SCPUStateModel::topologies() const {
+const SCPUStateModel::topologies_vec &SCPUStateModel::topologies() const {
     return _topologies;
 }
 
-SCPUStateModel::topologies_t &SCPUStateModel::topologies() {
+SCPUStateModel::topologies_vec &SCPUStateModel::topologies() {
     return _topologies;
 }
 
@@ -227,8 +229,8 @@ std::vector<readdy::model::top::GraphTopology const *> SCPUStateModel::getTopolo
     std::vector<readdy::model::top::GraphTopology const*> result;
     result.reserve(_topologies.size() - _topologies.n_deactivated());
     for(const auto& top : _topologies) {
-        if(!top.isDeactivated()) {
-            result.push_back(&top);
+        if(!top->isDeactivated()) {
+            result.push_back(top.get());
         }
     }
     return result;
@@ -242,7 +244,7 @@ const readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(
     const auto& entry = pimpl->particleData.entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
-            return &_topologies.at(static_cast<topologies_t::size_type>(entry.topology_index));
+            return _topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
         }
         log::trace("requested particle {} of type {} had no assigned topology", particle, entry.type);
         return nullptr;
@@ -254,7 +256,7 @@ readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy
     const auto& entry = pimpl->particleData.entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
-            return &_topologies.at(static_cast<topologies_t::size_type>(entry.topology_index));
+            return _topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
         }
         log::trace("requested particle {} of type {} had no assigned topology", particle, entry.type);
         return nullptr;

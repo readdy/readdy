@@ -56,7 +56,6 @@ namespace {
 
 TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     using namespace readdy;
-    // todo place particle close to topology as catalyst
     auto &ctx = kernel->getKernelContext();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
     kernel->getKernelStateModel().addTopology({x_0});

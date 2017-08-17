@@ -59,7 +59,6 @@ void SCPUEvaluateTopologyReactions::perform() {
     auto &topologies = kernel->getSCPUKernelStateModel().topologies();
 
     if(!topologies.empty()) {
-        std::stringstream ss;
         struct TREvent {
             rate_t cumulative_rate;
             rate_t own_rate;
@@ -68,25 +67,24 @@ void SCPUEvaluateTopologyReactions::perform() {
         };
 
         std::vector<TREvent> events;
-
         {
             rate_t current_cumulative_rate = 0;
             std::size_t topology_idx = 0;
             for (auto &top : topologies) {
 
-                if (!top.isDeactivated()) {
+                if (!top->isDeactivated()) {
 
                     std::size_t reaction_idx = 0;
-                    for (const auto &reaction : top.registeredReactions()) {
+                    for (const auto &reaction : top->registeredReactions()) {
 
-                        TREvent event;
+                        TREvent event {};
                         event.own_rate = std::get<1>(reaction);
                         event.cumulative_rate = event.own_rate + current_cumulative_rate;
                         current_cumulative_rate = event.cumulative_rate;
                         event.topology_idx = topology_idx;
                         event.reaction_idx = reaction_idx;
 
-                        events.push_back(std::move(event));
+                        events.push_back(event);
 
                         ++reaction_idx;
                     }
@@ -118,7 +116,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                         log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt)+1, events.size(), eventIt->own_rate);
                         // perform the event!
                         auto &topology = topologies.at(event.topology_idx);
-                        if (topology.isDeactivated()) {
+                        if (topology->isDeactivated()) {
                             log::critical("deactivated topology with idx {}", event.topology_idx);
                             for (auto it = events.begin(); it != end; ++it) {
                                 log::warn(" -> event {}, {}, {}, {}", it->topology_idx, it->reaction_idx, it->own_rate,
@@ -129,21 +127,21 @@ void SCPUEvaluateTopologyReactions::perform() {
                                           it->own_rate, it->cumulative_rate);
                             }
                         }
-                        assert(!topology.isDeactivated());
-                        auto &reaction = topology.registeredReactions().at(event.reaction_idx);
-                        auto result = std::get<0>(reaction).execute(topology, kernel);
+                        assert(!topology->isDeactivated());
+                        auto &reaction = topology->registeredReactions().at(event.reaction_idx);
+                        auto result = std::get<0>(reaction).execute(*topology, kernel);
                         if (!result.empty()) {
                             // we had a topology fission, so we need to actually remove the current topology from the
                             // data structure
                             topologies.erase(topologies.begin() + event.topology_idx);
                             //log::error("erased topology with index {}", event.topology_idx);
-                            assert(topology.isDeactivated());
+                            assert(topology->isDeactivated());
                             std::move(result.begin(), result.end(), std::back_inserter(new_topologies));
                         } else {
-                            if (topology.isNormalParticle(*kernel)) {
+                            if (topology->isNormalParticle(*kernel)) {
                                 topologies.erase(topologies.begin() + event.topology_idx);
                                 //log::error("erased topology with index {}", event.topology_idx);
-                                assert(topology.isDeactivated());
+                                assert(topology->isDeactivated());
                             }
                         }
 
@@ -201,7 +199,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                     if (!top.isNormalParticle(*kernel)) {
                         top.updateReactionRates();
                         top.configure();
-                        topologies.push_back(std::move(top));
+                        topologies.push_back(std::make_unique<SCPUStateModel::topology>(std::move(top)));
                     }
                 }
             }
