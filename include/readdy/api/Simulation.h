@@ -200,7 +200,7 @@ public:
      */
     particle_t::type_type
     registerParticleType(const std::string &name, scalar diffusionCoefficient, scalar radius,
-                         readdy::model::Particle::flavor_t flavor = readdy::model::Particle::FLAVOR_NORMAL);
+                         readdy::model::particle_flavor_t flavor = readdy::model::particleflavor::NORMAL);
 
     /**
      * A method that allows to remove a certain potential type.

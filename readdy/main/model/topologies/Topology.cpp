@@ -65,22 +65,22 @@ const std::vector<std::unique_ptr<pot::TorsionPotential>> &Topology::getTorsionP
 }
 
 void Topology::addAnglePotential(std::unique_ptr<pot::AnglePotential> &&pot) {
-    if (pot->getTopology() != this) {
-        throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
-    }
     anglePotentials.push_back(std::move(pot));
 }
 
 void Topology::addTorsionPotential(std::unique_ptr<pot::TorsionPotential> &&pot) {
-    if (pot->getTopology() != this) {
-        throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
-    }
     torsionPotentials.push_back(std::move(pot));
 }
 
 void Topology::addBondedPotential(std::unique_ptr<pot::BondedPotential> &&pot) {
-    if (pot->getTopology() != this) {
-        throw std::invalid_argument("the topology associated with the argument did not correspond to the actual one");
+    const auto n = getNParticles();
+    for(const auto& bond : pot->getBonds()) {
+        if (bond.idx1 >= n) {
+            throw std::invalid_argument("the first particle (" + std::to_string(bond.idx1) + ") was out of bounds!");
+        }
+        if (bond.idx2 >= n) {
+            throw std::invalid_argument("the second particle (" + std::to_string(bond.idx2) + ") was out of bounds!");
+        }
     }
     bondedPotentials.push_back(std::move(pot));
 }

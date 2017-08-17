@@ -63,7 +63,7 @@ void CPUEvaluateTopologyReactions::perform() {
         std::stringstream ss;
         for(const auto& top : topologies) {
             if(!top->isDeactivated()) {
-                const auto * address = static_cast<const void*>(top.get());
+                const auto * address = static_cast<const void*>(&top);
                 std::stringstream ss2;
                 ss2 << address;
                 std::string name = ss2.str();
@@ -82,12 +82,12 @@ void CPUEvaluateTopologyReactions::perform() {
         {
             rate_t current_cumulative_rate = 0;
             std::size_t topology_idx = 0;
-            for (auto &topRef : topologies) {
+            for (auto &top : topologies) {
 
-                if (!topRef->isDeactivated()) {
+                if (!top->isDeactivated()) {
 
                     std::size_t reaction_idx = 0;
-                    for (const auto &reaction : topRef->registeredReactions()) {
+                    for (const auto &reaction : top->registeredReactions()) {
 
                         TREvent event{};
                         event.own_rate = std::get<1>(reaction);
@@ -113,7 +113,7 @@ void CPUEvaluateTopologyReactions::perform() {
             while (end != events.begin()) {
                 const auto cumulative_rate = (end - 1)->cumulative_rate;
 
-                const auto x = readdy::model::rnd::uniform_real(static_cast<scalar>(0.), cumulative_rate);
+                const auto x = readdy::model::rnd::uniform_real(c_::zero, cumulative_rate);
 
                 const auto eventIt = std::lower_bound(
                         events.begin(), end, x, [](const TREvent &elem1, const rate_t elem2) {
@@ -209,10 +209,9 @@ void CPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     // if we have a single particle that is not of flavor topology, ignore!
                     if (!top.isNormalParticle(*kernel)) {
-                        auto new_top = std::make_unique<readdy::model::top::GraphTopology>(std::move(top));
-                        auto it = topologies.push_back(std::move(new_top));
-                        (*it)->updateReactionRates();
-                        (*it)->configure();
+                        auto it = topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(top)));
+                        it->get()->updateReactionRates();
+                        it->get()->configure();
                     }
                 }
             }

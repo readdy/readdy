@@ -59,16 +59,6 @@ void SCPUEvaluateTopologyReactions::perform() {
     auto &topologies = kernel->getSCPUKernelStateModel().topologies();
 
     if(!topologies.empty()) {
-        std::stringstream ss;
-        for(const auto& top : topologies) {
-            if(!top->isDeactivated()) {
-                const void * address = static_cast<const void*>(top.get());
-                std::stringstream ss2;
-                ss2 << address;
-                std::string name = ss2.str();
-                ss << ", " << name << "(" << top->getNParticles() <<")";
-            }
-        }
         struct TREvent {
             rate_t cumulative_rate;
             rate_t own_rate;
@@ -77,25 +67,24 @@ void SCPUEvaluateTopologyReactions::perform() {
         };
 
         std::vector<TREvent> events;
-
         {
             rate_t current_cumulative_rate = 0;
             std::size_t topology_idx = 0;
-            for (auto &topRef : topologies) {
+            for (auto &top : topologies) {
 
-                if (!topRef->isDeactivated()) {
+                if (!top->isDeactivated()) {
 
                     std::size_t reaction_idx = 0;
-                    for (const auto &reaction : topRef->registeredReactions()) {
+                    for (const auto &reaction : top->registeredReactions()) {
 
-                        TREvent event;
+                        TREvent event {};
                         event.own_rate = std::get<1>(reaction);
                         event.cumulative_rate = event.own_rate + current_cumulative_rate;
                         current_cumulative_rate = event.cumulative_rate;
                         event.topology_idx = topology_idx;
                         event.reaction_idx = reaction_idx;
 
-                        events.push_back(std::move(event));
+                        events.push_back(event);
 
                         ++reaction_idx;
                     }
@@ -208,10 +197,9 @@ void SCPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     // if we have a single particle that is not of flavor topology, ignore!
                     if (!top.isNormalParticle(*kernel)) {
-                        auto new_top = std::make_unique<readdy::model::top::GraphTopology>(std::move(top));
-                        auto it = topologies.push_back(std::move(new_top));
-                        (*it)->updateReactionRates();
-                        (*it)->configure();
+                        top.updateReactionRates();
+                        top.configure();
+                        topologies.push_back(std::make_unique<SCPUStateModel::topology>(std::move(top)));
                     }
                 }
             }

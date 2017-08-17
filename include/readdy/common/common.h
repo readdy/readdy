@@ -43,6 +43,7 @@ constexpr bool single_precision = std::is_same<scalar, float>::value;
 constexpr bool double_precision = std::is_same<scalar, double>::value;
 
 NAMESPACE_BEGIN(c_)
+constexpr scalar zero = static_cast<scalar>(0.0);
 constexpr scalar one = static_cast<scalar>(1.0);
 constexpr scalar two = static_cast<scalar>(2.0);
 constexpr scalar three = static_cast<scalar>(3.0);

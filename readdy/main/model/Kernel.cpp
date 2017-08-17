@@ -91,11 +91,20 @@ readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, co
     return particle.getId();
 }
 
-unsigned int Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
+particle_type_type Kernel::getTypeId(const std::string &name) const {
+    auto findIt = getKernelContext().particle_types().type_mapping().find(name);
+    if (findIt != getKernelContext().particle_types().type_mapping().end()) {
+        return findIt->second;
+    }
+    log::critical("did not find type id for {}", name);
+    throw std::invalid_argument("did not find type id for " + name);
+}
+
+particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
     auto findIt = getKernelContext().particle_types().type_mapping().find(name);
     if (findIt != getKernelContext().particle_types().type_mapping().end()) {
         const auto &info = getKernelContext().particle_types().info_of(findIt->second);
-        if (info.flavor == readdy::model::Particle::FLAVOR_NORMAL) {
+        if (info.flavor == particleflavor::NORMAL) {
             return findIt->second;
         }
         log::critical("particle type {} had no \"normal\" flavor", name);
@@ -126,7 +135,7 @@ Kernel::createFusionReaction(const std::string &name, const std::string &from1, 
 std::unique_ptr<reactions::Reaction<2>>
 Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                                 const std::string &to, const scalar rate, const scalar eductDistance) const {
-    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeIdRequireNormalFlavor(catalyst),
+    return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeId(catalyst),
                                                                      getTypeIdRequireNormalFlavor(from),
                                                                      getTypeIdRequireNormalFlavor(to), rate,
                                                                      eductDistance);
@@ -217,7 +226,11 @@ readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactor
 }
 
 TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-    return TopologyParticle(pos, getKernelContext().particle_types().id_of(type));
+    const auto& info = getKernelContext().particle_types().info_of(type);
+    if(info.flavor != particleflavor::TOPOLOGY) {
+        throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
+    }
+    return TopologyParticle(pos, info.typeId);
 }
 
 bool Kernel::supportsTopologies() const {

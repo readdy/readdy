@@ -40,10 +40,10 @@ namespace model {
 namespace top {
 namespace pot {
 
-AnglePotential::AnglePotential(Topology *const topology) : TopologyPotential(topology) {}
+AnglePotential::AnglePotential() : TopologyPotential() {}
 
-HarmonicAnglePotential::HarmonicAnglePotential(Topology *const topology, const angles_t &angles)
-        : AnglePotential(topology), angles(angles) {}
+HarmonicAnglePotential::HarmonicAnglePotential(const angles_t &angles)
+        : AnglePotential(), angles(angles) {}
 
 std::unique_ptr<EvaluatePotentialAction>
 HarmonicAnglePotential::createForceAndEnergyAction(const TopologyActionFactory *const factory) {

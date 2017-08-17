@@ -112,7 +112,7 @@ public:
 
 protected:
     graph_t graph_;
-    const api::PotentialConfiguration &config;
+    std::reference_wrapper<const api::PotentialConfiguration> config;
     topology_reactions reactions_;
     rate_t _cumulativeRate;
     bool deactivated {false};

@@ -47,6 +47,7 @@ struct Entry {
     using particle_type = readdy::model::Particle;
     using force_t = particle_type::pos_type;
     using displacement_t = scalar;
+    using topology_index_t = std::ptrdiff_t;
 
     explicit Entry(const particle_type &particle)
             : pos(particle.getPos()), force(force_t()), type(particle.getType()), deactivated(false),
@@ -69,14 +70,9 @@ struct Entry {
     force_t force;
     displacement_t displacement;
     particle_type::pos_type pos;
-
-private:
-    friend class readdy::kernel::scpu::model::SCPUParticleData;
-
-public:
+    topology_index_t topology_index {-1};
     particle_type::id_type id;
     particle_type::type_type type;
-private:
     bool deactivated;
 };
 

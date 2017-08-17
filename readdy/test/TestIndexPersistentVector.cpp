@@ -41,6 +41,9 @@ struct Element {
     int val;
     bool deactivated;
 
+    Element() = default;
+    Element(int val, bool deactivated) : val(val), deactivated(deactivated) {}
+
     void deactivate() {
         deactivated = true;
     }
@@ -113,10 +116,11 @@ TEST(TestIndexPersistentVector, ReclaimIndex) {
     ASSERT_EQ(vec.size(), 2);
     ASSERT_EQ(vec.n_deactivated(), 1);
 
-    vec.push_back({-1, false});
+    vec.emplace_back(-1, false);
     ASSERT_EQ(vec.size(), 2);
     ASSERT_EQ(vec.n_deactivated(), 0);
     ASSERT_EQ(vec.begin()->val, -1);
+    ASSERT_EQ(vec.begin()->deactivated, false);
 
     for(const auto& x : vec) {
         ASSERT_FALSE(x.deactivated);

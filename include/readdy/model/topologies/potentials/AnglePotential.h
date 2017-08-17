@@ -46,7 +46,7 @@ class AnglePotential : public TopologyPotential {
 public:
     using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
 
-    AnglePotential(Topology *const topology);
+    AnglePotential();
 
     virtual ~AnglePotential() = default;
 };
@@ -65,7 +65,7 @@ public:
     using angle_t = AngleConfiguration;
     using angles_t = std::vector<AngleConfiguration>;
 
-    HarmonicAnglePotential(Topology *topology, const angles_t &angles);
+    explicit HarmonicAnglePotential(const angles_t &angles);
     HarmonicAnglePotential(const HarmonicAnglePotential&) = default;
     HarmonicAnglePotential& operator=(const HarmonicAnglePotential&) = delete;
     HarmonicAnglePotential(HarmonicAnglePotential&&) = default;

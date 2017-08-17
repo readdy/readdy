@@ -51,12 +51,12 @@
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionFactory.h>
+#include <readdy/model/reactions/ReactionRegistry.h>
 #include <readdy/model/compartments/Compartment.h>
 #include "Vec3.h"
 #include "ParticleTypeRegistry.h"
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/api/PotentialConfiguration.h>
-#include <readdy/model/reactions/ReactionRegistry.h>
 #include <readdy/model/potentials/PotentialRegistry.h>
 
 NAMESPACE_BEGIN(readdy)

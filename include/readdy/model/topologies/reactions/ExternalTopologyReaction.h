@@ -23,73 +23,66 @@
 /**
  * << detailed description >>
  *
- * @file Bond.h
+ * @file TopologyFusionReaction.h
  * @brief << brief description >>
  * @author clonker
- * @date 26.01.17
+ * @date 23.06.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
-#include <cstddef>
-#include <tuple>
-#include <vector>
-#include <string>
-#include <readdy/model/Vec3.h>
-#include "TopologyPotential.h"
+
+#include <readdy/common/macros.h>
+#include <readdy/common/common.h>
+#include <readdy/common/ParticleTypeTuple.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(pot)
+NAMESPACE_BEGIN(reactions)
 
-struct BondConfiguration {
-    BondConfiguration(std::size_t idx1, std::size_t idx2, scalar forceConstant, scalar length);
-
-    std::size_t idx1, idx2;
-    scalar length, forceConstant;
-};
-
-
-class BondedPotential : public TopologyPotential {
+class ExternalTopologyReaction {
 public:
-    using bond_t = BondConfiguration;
-    using bonds_t = std::vector<bond_t>;
+    ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
+                             const util::particle_type_pair &types_to, scalar rate, scalar radius);
 
-    explicit BondedPotential(const bonds_t &bonds);
-    BondedPotential(const BondedPotential&) = default;
-    BondedPotential& operator=(const BondedPotential&) = delete;
-    BondedPotential(BondedPotential&&) = default;
-    BondedPotential& operator=(BondedPotential&&) = delete;
-    virtual ~BondedPotential() = default;
+    ~ExternalTopologyReaction() = default;
 
-    const bonds_t &getBonds() const;
-protected:
-    bonds_t bonds;
+    ExternalTopologyReaction(const ExternalTopologyReaction &) = default;
+
+    ExternalTopologyReaction &operator=(const ExternalTopologyReaction &) = default;
+
+    ExternalTopologyReaction(ExternalTopologyReaction &&) = default;
+
+    ExternalTopologyReaction &operator=(ExternalTopologyReaction &&) = default;
+
+    const std::string &name() const;
+
+    const particle_type_type type1() const;
+
+    const particle_type_type type2() const;
+
+    const util::particle_type_pair &types() const;
+
+    const particle_type_type type_to1() const;
+
+    const particle_type_type type_to2() const;
+
+    const util::particle_type_pair &types_to() const;
+
+    const scalar rate() const;
+
+    const scalar radius() const;
+
+private:
+    std::string _name;
+    util::particle_type_pair _types;
+    util::particle_type_pair _types_to;
+    scalar _rate;
+    scalar _radius;
 };
 
-
-class HarmonicBondPotential : public BondedPotential {
-public:
-
-    explicit HarmonicBondPotential(const bonds_t &bonds);
-    HarmonicBondPotential(const HarmonicBondPotential&) = default;
-    HarmonicBondPotential& operator=(const HarmonicBondPotential&) = delete;
-    HarmonicBondPotential(HarmonicBondPotential&&) = default;
-    HarmonicBondPotential& operator=(HarmonicBondPotential&&) = delete;
-
-    ~HarmonicBondPotential() override = default;
-
-    scalar calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
-
-    void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_t &bond) const;
-
-    virtual std::unique_ptr<EvaluatePotentialAction>
-    createForceAndEnergyAction(const TopologyActionFactory *const) override;
-
-};
-
-NAMESPACE_END(pot)
+NAMESPACE_END(reactions)
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

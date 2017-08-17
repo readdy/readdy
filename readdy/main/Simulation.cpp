@@ -106,7 +106,7 @@ void Simulation::addParticle(const std::string &type, scalar x, scalar y, scalar
 
 Simulation::particle_t::type_type
 Simulation::registerParticleType(const std::string &name, const scalar diffusionCoefficient, const scalar radius,
-                                 readdy::model::Particle::flavor_t flavor) {
+                                 readdy::model::particle_flavor_t flavor) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->getKernelContext();
     context.particle_types().add(name, diffusionCoefficient, radius, flavor);

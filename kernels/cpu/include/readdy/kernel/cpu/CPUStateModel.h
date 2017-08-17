@@ -53,7 +53,8 @@ public:
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 
-    using topologies_t = readdy::util::index_persistent_vector<std::unique_ptr<readdy::model::top::GraphTopology>>;
+    using topology = readdy::model::top::GraphTopology;
+    using topologies_vec = readdy::util::index_persistent_vector<std::unique_ptr<topology>>;
 
     CPUStateModel(readdy::model::KernelContext* context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);
@@ -110,11 +111,15 @@ public:
 
     particle_type_type getParticleType(std::size_t index) const override;
 
-    const topologies_t &topologies() const;
+    const topologies_vec &topologies() const;
 
-    topologies_t &topologies();
+    topologies_vec &topologies();
 
-    virtual std::vector<readdy::model::top::GraphTopology const *> getTopologies() const override;
+    std::vector<readdy::model::top::GraphTopology const *> getTopologies() const override;
+
+    const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_t particle) const override;
+
+    readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_t particle) override;
 
 private:
     struct Impl;

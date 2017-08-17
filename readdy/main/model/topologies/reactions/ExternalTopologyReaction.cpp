@@ -23,39 +23,63 @@
 /**
  * << detailed description >>
  *
- * @file TopologyPotential.h
+ * @file TopologyFusionReaction.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 27.01.17
+ * @date 23.06.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
-#include <readdy/common/macros.h>
-#include <readdy/model/topologies/potentials/TopologyPotentialAction.h>
+#include <readdy/model/topologies/reactions/ExternalTopologyReaction.h>
 
-NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(model)
-NAMESPACE_BEGIN(top)
-class Topology;
-class TopologyActionFactory;
-NAMESPACE_BEGIN(pot)
+namespace readdy {
+namespace model {
+namespace top {
+namespace reactions {
 
-class TopologyPotential {
-public:
-    explicit TopologyPotential();
+ExternalTopologyReaction::ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
+                                               const util::particle_type_pair &types_to, const scalar rate,
+                                               const scalar radius)
+        : _name(name), _types(types), _types_to(types_to), _rate(rate), _radius(radius) {}
 
-    TopologyPotential(const TopologyPotential&) = default;
-    TopologyPotential& operator=(const TopologyPotential&) = delete;
-    TopologyPotential(TopologyPotential&&) = default;
-    TopologyPotential& operator=(TopologyPotential&&) = delete;
+const std::string &ExternalTopologyReaction::name() const {
+    return _name;
+}
 
-    virtual ~TopologyPotential() = default;
+const particle_type_type ExternalTopologyReaction::type1() const {
+    return std::get<0>(_types);
+}
 
-    virtual std::unique_ptr<EvaluatePotentialAction> createForceAndEnergyAction(const TopologyActionFactory*) = 0;
-};
+const particle_type_type ExternalTopologyReaction::type2() const {
+    return std::get<1>(_types);
+}
 
-NAMESPACE_END(pot)
-NAMESPACE_END(top)
-NAMESPACE_END(model)
-NAMESPACE_END(readdy)
+const scalar ExternalTopologyReaction::rate() const {
+    return _rate;
+}
+
+const scalar ExternalTopologyReaction::radius() const {
+    return _radius;
+}
+
+const util::particle_type_pair &ExternalTopologyReaction::types() const {
+    return _types;
+}
+
+const particle_type_type ExternalTopologyReaction::type_to1() const {
+    return std::get<0>(_types_to);
+}
+
+const particle_type_type ExternalTopologyReaction::type_to2() const {
+    return std::get<1>(_types_to);
+}
+
+const util::particle_type_pair &ExternalTopologyReaction::types_to() const {
+    return _types_to;
+}
+
+
+}
+}
+}
+}

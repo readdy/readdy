@@ -46,10 +46,10 @@ protected:
     virtual void SetUp() override {
         if (kernel->supportsTopologies()) {
             auto &ctx = kernel->getKernelContext();
-            ctx.particle_types().add("Topology A", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
-            ctx.particle_types().add("Topology B", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
-            ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, particle_t::FLAVOR_TOPOLOGY);
-            ctx.particle_types().add("A", 1.0, 1.0, particle_t::FLAVOR_NORMAL);
+            ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particle_types().add("A", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
 
             ctx.configureTopologyBondPotential("Topology A", "Topology A", {10, 10});
             ctx.configureTopologyBondPotential("Topology A", "Topology B", {10, 10});
@@ -61,7 +61,7 @@ protected:
 
 };
 
-static readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel) {
+readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel) {
     auto &ctx = kernel->getKernelContext();
     topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};
@@ -357,9 +357,9 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
             auto& vertices = top.graph().vertices();
-            int current_n_vertices = (int) vertices.size();
+            auto current_n_vertices = vertices.size();
             if(current_n_vertices > 1) {
-                auto edge = readdy::model::rnd::uniform_int<>(0, current_n_vertices-2);
+                auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices-2));
                 auto it1 = vertices.begin();
                 auto it2 = ++vertices.begin();
                 for(int i = 0; i < edge; ++i) {
@@ -443,9 +443,9 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
             auto& vertices = top.graph().vertices();
-            int current_n_vertices = (int) vertices.size();
+            auto current_n_vertices = vertices.size();
             if(current_n_vertices > 1) {
-                auto edge = readdy::model::rnd::uniform_int<>(0, current_n_vertices-2);
+                auto edge = readdy::model::rnd::uniform_int<>(0, static_cast<int>(current_n_vertices - 2));
                 auto it1 = vertices.begin();
                 auto it2 = ++vertices.begin();
                 for(int i = 0; i < edge; ++i) {
