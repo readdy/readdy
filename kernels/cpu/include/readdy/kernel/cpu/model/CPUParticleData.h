@@ -69,6 +69,7 @@ public:
     using force_t = vec3;
     using displacement_t = readdy::scalar;
     using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;
+    using topology_index_t = std::ptrdiff_t;
 
     using iterator = decltype(std::declval<entries_t>().begin());
     using const_iterator = decltype(std::declval<entries_t>().cbegin());
@@ -99,6 +100,7 @@ public:
         displacement_t displacement; // 24 + 8 = 32 bytes
 
         particle_type::pos_type pos; // 32 + 3*8 = 56 bytes
+        topology_index_t topology_index {-1};
         particle_type::id_type id; // 56 + 8 = 64
         particle_type::type_type type; // 56 + 4 = 60 bytes
         bool deactivated; // 60 + 1 = 61 bytes
