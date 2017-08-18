@@ -81,7 +81,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
     auto obs = kernel->createObservable<n_particles_obs>(1, std::vector<std::string>({"A", "B", "AB"}));
     auto conn = kernel->connectObservable(obs.get());
-    obs->setCallback([&n_A, &n_B](const n_particles_obs::result_t &result) {
+    obs->setCallback([&n_A, &n_B](const n_particles_obs::result_type &result) {
         if (result.size() == 2) {
             EXPECT_EQ(n_A, result[0] + result[2])
                                 << "Expected #(A)+#(AB)==" << n_A << ", but #(A)=" << result[0] << ", #(AB)="
@@ -136,7 +136,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     auto obs = kernel->createObservable<readdy::model::observables::Positions>(1, std::vector<std::string>({"F"}));
     obs->setCallback(
-            [&fPositions](const readdy::model::observables::Positions::result_t &result) {
+            [&fPositions](const readdy::model::observables::Positions::result_type &result) {
                 std::set<readdy::model::Vec3, Vec3ProjectedLess> checklist;
                 for (const auto &pos : result) {
                     checklist.emplace(pos);
@@ -186,7 +186,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1, std::vector<std::string>({"F"}));
     obs->setCallback(
-            [](const readdy::model::observables::NParticles::result_t &result) {
+            [](const readdy::model::observables::NParticles::result_type &result) {
                 EXPECT_EQ(result[0], 200);
                 log::error("::: {}", result[0]);
             }

@@ -46,7 +46,7 @@ NAMESPACE_BEGIN(readdy)
  * context and are given to the kernel when run() is called.
  */
 class Simulation {
-    using particle_t = readdy::model::Particle;
+    using particle = readdy::model::Particle;
 public:
     /**
      * The default constructor. Currently only instantiates the pimpl.
@@ -159,7 +159,7 @@ public:
      * @return a uuid with which the observable is associated
      */
     template<typename T, typename... Args>
-    ObservableHandle registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
+    ObservableHandle registerObservable(const std::function<void(typename T::result_type)> &callbackFun,
                                         unsigned int stride, Args... args);
 
     /**
@@ -181,7 +181,7 @@ public:
      * Removes an observable by uuid.
      * @param uuid the uuid of the observable to be removed.
      */
-    void deregisterObservable(ObservableHandle::id_t uuid);
+    void deregisterObservable(ObservableHandle::observable_id uuid);
 
     void deregisterObservable(const ObservableHandle &uuid);
 
@@ -198,9 +198,9 @@ public:
      * @param diffusionCoefficient the diffusion coefficient
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      */
-    particle_t::type_type
+    particle::type_type
     registerParticleType(const std::string &name, scalar diffusionCoefficient, scalar radius,
-                         readdy::model::particle_flavor_t flavor = readdy::model::particleflavor::NORMAL);
+                         readdy::model::particle_flavor flavor = readdy::model::particleflavor::NORMAL);
 
     /**
      * A method that allows to remove a certain potential type.

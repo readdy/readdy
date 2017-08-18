@@ -49,15 +49,15 @@ class Recipe {
 public:
 
     using reaction_operations = std::vector<op::Operation::Ref>;
-    using graph_t = actions::TopologyReactionAction::graph_t;
-    using vertex_ref = graph_t::vertex_ref;
-    using vertex_cref = graph_t::vertex_cref;
-    using edge = graph_t::edge;
-    using label_edge = graph_t::label_edge;
-    using label_vertex = graph_t::label;
-    using topology_t = GraphTopology;
+    using topology_graph = actions::TopologyReactionAction::topology_graph;
+    using vertex_ref = topology_graph::vertex_ref;
+    using vertex_cref = topology_graph::vertex_cref;
+    using edge = topology_graph::edge;
+    using label_edge = topology_graph::label_edge;
+    using label_vertex = topology_graph::label;
+    using graph_topology = GraphTopology;
 
-    explicit Recipe(topology_t &topology);
+    explicit Recipe(graph_topology &topology);
 
     Recipe(Recipe &&) = default;
 
@@ -93,12 +93,12 @@ public:
 
     const reaction_operations &steps() const;
 
-    topology_t &topology();
+    graph_topology &topology();
 
-    const topology_t &topology() const;
+    const graph_topology &topology() const;
 
 private:
-    std::reference_wrapper<topology_t> _topology;
+    std::reference_wrapper<graph_topology> _topology;
     reaction_operations _steps;
 };
 

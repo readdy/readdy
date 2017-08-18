@@ -40,7 +40,7 @@ namespace graph {
 
 VertexRef::VertexRef(Vertex::vertex_ptr it) : it(it), graph(nullptr) {}
 
-VertexRef::VertexRef(Graph *const graph, const Vertex::label_t &label) : graph(graph), label(label) {
+VertexRef::VertexRef(Graph *const graph, const Vertex::label_type &label) : graph(graph), label(label) {
     if(graph->vertexLabelMapping().find(label) == graph->vertexLabelMapping().end()) {
         throw std::invalid_argument("tried creating a vertex ref with label \"" +
                                             label + "\" which was not contained in the graph vertex label mapping");
@@ -143,7 +143,7 @@ VertexCRef::VertexCRef(Vertex::vertex_cptr it) : it(it), graph(nullptr){
 
 VertexCRef::VertexCRef(Vertex::vertex_ptr it) : it(it), graph(nullptr) {}
 
-VertexCRef::VertexCRef(const Graph *const graph, const Vertex::label_t &label) : graph(graph), label(label) {
+VertexCRef::VertexCRef(const Graph *const graph, const Vertex::label_type &label) : graph(graph), label(label) {
 
 }
 
@@ -160,11 +160,11 @@ std::ostream &operator<<(std::ostream &os, const VertexCRef &vertex) {
 
 VertexRef::VertexRef() = default;
 
-const Vertex::label_t &Vertex::label() const {
+const Vertex::label_type &Vertex::label() const {
     return _label;
 }
 
-Vertex::label_t &Vertex::label() {
+Vertex::label_type &Vertex::label() {
     return _label;
 }
 }

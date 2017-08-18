@@ -47,7 +47,7 @@ void activate(hid_t plist, unsigned int* cd_values);
 
 class PropertyListHandle : public ObjectHandle {
 public:
-    explicit PropertyListHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+    explicit PropertyListHandle(h5::h5_handle handle) : ObjectHandle(handle) {}
 
     PropertyListHandle(const PropertyListHandle&) = default;
     PropertyListHandle& operator=(const PropertyListHandle&) = default;
@@ -69,7 +69,7 @@ public:
 class PropertyList : public Object {
 
 protected:
-    explicit PropertyList(h5::handle_t cls_id) : Object(std::make_shared<PropertyListHandle>(cls_id)) {}
+    explicit PropertyList(h5::h5_handle cls_id) : Object(std::make_shared<PropertyListHandle>(cls_id)) {}
 
 };
 
@@ -89,7 +89,7 @@ public:
         H5Pset_layout(hid(), H5D_CHUNKED);
     }
 
-    void set_chunk(const std::vector<h5::dims_t> &chunk_dims) {
+    void set_chunk(const std::vector<h5::h5_dims> &chunk_dims) {
         H5Pset_chunk(hid(), static_cast<int>(chunk_dims.size()), chunk_dims.data());
     }
 

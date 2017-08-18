@@ -134,7 +134,7 @@ inline STDArrayDataSetType<T, len>::STDArrayDataSetType() : DataSetType(-1) {
     handle->set(H5Tarray_create(stdType.hid(), 1, dim));
 }
 
-inline NativeCompoundType::NativeCompoundType(h5::data_set_type_t tid) : DataSetType(tid){}
+inline NativeCompoundType::NativeCompoundType(h5::h5_data_set_type tid) : DataSetType(tid){}
 
 inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size) {
     tid = H5Tcreate(H5T_COMPOUND, size);
@@ -145,7 +145,7 @@ inline NativeCompoundType NativeCompoundTypeBuilder::build() {
 }
 
 inline NativeCompoundTypeBuilder& NativeCompoundTypeBuilder::insert(const std::string &name, std::size_t offset,
-                                                 h5::data_set_type_t type) {
+                                                 h5::h5_data_set_type type) {
     if (H5Tinsert(tid, name.c_str(), offset, type) < 0) {
         H5Eprint(H5Eget_current_stack(), stderr);
         throw std::runtime_error(

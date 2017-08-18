@@ -38,28 +38,28 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
-using particle_flavor_t = std::uint8_t;
+using particle_flavor = std::uint8_t;
 NAMESPACE_BEGIN(particleflavor)
-static constexpr particle_flavor_t NORMAL = 0;
-static constexpr particle_flavor_t TOPOLOGY = 1;
-static constexpr particle_flavor_t MEMBRANE = 2;
+static constexpr particle_flavor NORMAL = 0;
+static constexpr particle_flavor TOPOLOGY = 1;
+static constexpr particle_flavor MEMBRANE = 2;
 NAMESPACE_END(particleflavor)
 
 struct ParticleTypeInfo {
     std::string name;
     scalar diffusionConstant;
     scalar radius;
-    particle_flavor_t flavor;
+    particle_flavor flavor;
     particle_type_type typeId;
 
     ParticleTypeInfo(const std::string &name, scalar diffusionConstant, scalar radius,
-                     particle_flavor_t flavor, Particle::type_type typeId);
+                     particle_flavor flavor, Particle::type_type typeId);
 };
 
 class ParticleTypeRegistry {
 public:
 
-    using type_mapping_t = std::unordered_map<std::string, particle_type_type>;
+    using type_map = std::unordered_map<std::string, particle_type_type>;
 
     ParticleTypeRegistry() = default;
 
@@ -76,7 +76,7 @@ public:
     particle_type_type id_of(const std::string &name) const;
 
     void add(const std::string &name, scalar diffusionConst, scalar radius,
-             particle_flavor_t flavor = particleflavor::NORMAL);
+             particle_flavor flavor = particleflavor::NORMAL);
 
     const ParticleTypeInfo &info_of(const std::string &name) const;
 
@@ -96,12 +96,12 @@ public:
 
     std::string name_of(particle_type_type id) const;
 
-    const type_mapping_t &type_mapping() const;
+    const type_map &type_mapping() const;
 
 private:
     std::size_t n_types_ = 0;
     particle_type_type type_counter_ = 0;
-    type_mapping_t type_mapping_ {};
+    type_map type_mapping_ {};
     std::unordered_map<particle_type_type, ParticleTypeInfo> particle_info_ {};
 
 };

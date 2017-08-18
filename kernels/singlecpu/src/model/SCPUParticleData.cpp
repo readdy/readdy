@@ -62,7 +62,7 @@ SCPUParticleData::const_iterator SCPUParticleData::end() const {
     return entries.end();
 }
 
-readdy::model::Particle SCPUParticleData::getParticle(const index_t index) const {
+readdy::model::Particle SCPUParticleData::getParticle(const entry_index index) const {
     const auto& entry = *(entries.begin() + index);
     if(entry.deactivated) {
         log::error("Requested deactivated particle at index {}!", index);
@@ -90,9 +90,9 @@ void SCPUParticleData::addParticles(const std::vector<SCPUParticleData::particle
     }
 }
 
-std::vector<SCPUParticleData::entries_t::size_type>
+std::vector<SCPUParticleData::entries_vec::size_type>
 SCPUParticleData::addTopologyParticles(const std::vector<SCPUParticleData::top_particle_type> &particles) {
-    std::vector<entries_t::size_type> indices;
+    std::vector<entries_vec::size_type> indices;
     indices.reserve(particles.size());
     for(const auto& p : particles) {
         if(!blanks.empty()) {
@@ -132,19 +132,19 @@ void SCPUParticleData::removeParticle(const size_t index) {
     }
 }
 
-Entry &SCPUParticleData::entry_at(SCPUParticleData::index_t idx) {
+Entry &SCPUParticleData::entry_at(SCPUParticleData::entry_index idx) {
     return entries.at(idx);
 }
 
-const Entry &SCPUParticleData::entry_at(SCPUParticleData::index_t idx) const {
+const Entry &SCPUParticleData::entry_at(SCPUParticleData::entry_index idx) const {
     return entries.at(idx);
 }
 
-const Entry &SCPUParticleData::centry_at(SCPUParticleData::index_t idx) const {
+const Entry &SCPUParticleData::centry_at(SCPUParticleData::entry_index idx) const {
     return entries.at(idx);
 }
 
-SCPUParticleData::index_t SCPUParticleData::size() const {
+SCPUParticleData::entry_index SCPUParticleData::size() const {
     return entries.size();
 }
 
@@ -153,8 +153,8 @@ void SCPUParticleData::clear() {
     blanks.clear();
 }
 
-std::vector<SCPUParticleData::index_t> SCPUParticleData::update(SCPUParticleData::update_t &&update_data) {
-    std::vector<index_t> result;
+std::vector<SCPUParticleData::entry_index> SCPUParticleData::update(SCPUParticleData::entries_update &&update_data) {
+    std::vector<entry_index> result;
 
     auto &&newEntries = std::move(std::get<0>(update_data));
     auto &&removedEntries = std::move(std::get<1>(update_data));
@@ -178,7 +178,7 @@ std::vector<SCPUParticleData::index_t> SCPUParticleData::update(SCPUParticleData
     return result;
 }
 
-SCPUParticleData::index_t SCPUParticleData::addEntry(Entry &&entry) {
+SCPUParticleData::entry_index SCPUParticleData::addEntry(Entry &&entry) {
     if(!blanks.empty()) {
         const auto idx = blanks.back();
         blanks.pop_back();
@@ -189,7 +189,7 @@ SCPUParticleData::index_t SCPUParticleData::addEntry(Entry &&entry) {
     return entries.size()-1;
 }
 
-void SCPUParticleData::removeEntry(SCPUParticleData::index_t idx) {
+void SCPUParticleData::removeEntry(SCPUParticleData::entry_index idx) {
     auto &entry = entries.at(idx);
     if(!entry.is_deactivated()) {
         entry.deactivated = true;
@@ -197,7 +197,7 @@ void SCPUParticleData::removeEntry(SCPUParticleData::index_t idx) {
     }
 }
 
-SCPUParticleData::index_t SCPUParticleData::n_deactivated() const {
+SCPUParticleData::entry_index SCPUParticleData::n_deactivated() const {
     return blanks.size();
 }
 

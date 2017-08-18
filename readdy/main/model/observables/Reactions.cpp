@@ -60,8 +60,8 @@ void Reactions::flush() {
 
 void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->writer) {
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
         pimpl->group = std::make_unique<io::Group>(
                 file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
         {

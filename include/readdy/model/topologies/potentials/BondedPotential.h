@@ -53,26 +53,26 @@ struct BondConfiguration {
 
 class BondedPotential : public TopologyPotential {
 public:
-    using bond_t = BondConfiguration;
-    using bonds_t = std::vector<bond_t>;
+    using bond_configuration = BondConfiguration;
+    using bond_configurations = std::vector<bond_configuration>;
 
-    explicit BondedPotential(const bonds_t &bonds);
+    explicit BondedPotential(const bond_configurations &bonds);
     BondedPotential(const BondedPotential&) = default;
     BondedPotential& operator=(const BondedPotential&) = delete;
     BondedPotential(BondedPotential&&) = default;
     BondedPotential& operator=(BondedPotential&&) = delete;
     virtual ~BondedPotential() = default;
 
-    const bonds_t &getBonds() const;
+    const bond_configurations &getBonds() const;
 protected:
-    bonds_t bonds;
+    bond_configurations bonds;
 };
 
 
 class HarmonicBondPotential : public BondedPotential {
 public:
 
-    explicit HarmonicBondPotential(const bonds_t &bonds);
+    explicit HarmonicBondPotential(const bond_configurations &bonds);
     HarmonicBondPotential(const HarmonicBondPotential&) = default;
     HarmonicBondPotential& operator=(const HarmonicBondPotential&) = delete;
     HarmonicBondPotential(HarmonicBondPotential&&) = default;
@@ -80,9 +80,9 @@ public:
 
     ~HarmonicBondPotential() override = default;
 
-    scalar calculateEnergy(const Vec3 &x_ij, const bond_t &bond) const;
+    scalar calculateEnergy(const Vec3 &x_ij, const bond_configuration &bond) const;
 
-    void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_t &bond) const;
+    void calculateForce(Vec3 &force, const Vec3 &x_ij, const bond_configuration &bond) const;
 
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const) override;

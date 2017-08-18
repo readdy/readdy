@@ -97,7 +97,7 @@ unsigned long CPUKernel::getNThreads() const {
     return pimpl->config->nThreads();
 }
 
-void CPUKernel::setNThreads(readdy::util::thread::Config::n_threads_t n) {
+void CPUKernel::setNThreads(readdy::util::thread::Config::n_threads_type n) {
     pimpl->config->setNThreads(n);
 }
 

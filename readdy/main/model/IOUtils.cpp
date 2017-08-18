@@ -59,8 +59,8 @@ void writeReactionInformation(readdy::io::Group &group, const KernelContext &con
                 order1_info.push_back(info);
             }
         }
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        std::vector<readdy::io::h5::dims_t> extent = {n_reactions};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> extent = {n_reactions};
         auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, ReactionInfoMemoryType(),
                                                            ReactionInfoFileType(), io::DataSetCompression::none);
         order1_reaction_dset.append(extent, order1_info.data());
@@ -83,8 +83,8 @@ void writeReactionInformation(readdy::io::Group &group, const KernelContext &con
                 order2_info.push_back(info);
             }
         }
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        std::vector<readdy::io::h5::dims_t> extent = {n_reactions};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> extent = {n_reactions};
         auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, ReactionInfoMemoryType(),
                                                            ReactionInfoFileType(), io::DataSetCompression::none);
         order2_reaction_dset.append(extent, order2_info.data());
@@ -100,8 +100,8 @@ void writeParticleTypeInformation(readdy::io::Group &group, const KernelContext 
         type_info_vec.push_back(info);
     }
     if (!type_info_vec.empty()) {
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        std::vector<readdy::io::h5::dims_t> extent = {type_info_vec.size()};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> extent = {type_info_vec.size()};
         auto dset = group.createDataSet("particle_types", extent, dims, ParticleTypeInfoMemoryType(),
                                         ParticleTypeInfoFileType(), io::DataSetCompression::none);
         dset.append(extent, type_info_vec.data());

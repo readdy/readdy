@@ -41,10 +41,10 @@ namespace pot {
  * Super class
  */
 
-BondedPotential::BondedPotential(const bonds_t &bonds)
+BondedPotential::BondedPotential(const bond_configurations &bonds)
         : TopologyPotential(), bonds(bonds) {}
 
-const BondedPotential::bonds_t &BondedPotential::getBonds() const {
+const BondedPotential::bond_configurations &BondedPotential::getBonds() const {
     return bonds;
 }
 
@@ -52,7 +52,7 @@ const BondedPotential::bonds_t &BondedPotential::getBonds() const {
  * Harmonic bond
  */
 
-HarmonicBondPotential::HarmonicBondPotential(const bonds_t &bonds)
+HarmonicBondPotential::HarmonicBondPotential(const bond_configurations &bonds)
         : BondedPotential(bonds) {}
 
 scalar HarmonicBondPotential::calculateEnergy(const Vec3 &x_ij, const BondConfiguration &bond) const {

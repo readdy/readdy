@@ -50,7 +50,7 @@ public:
     using vertex_list = std::list<Vertex>;
     using vertex_ref = VertexRef;
     using vertex_cref = VertexCRef;
-    using label = Vertex::label_t;
+    using label = Vertex::label_type;
     using label_edge = std::tuple<label, label>;
 
     using edge = std::tuple<vertex_ref, vertex_ref>;

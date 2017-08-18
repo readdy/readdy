@@ -89,7 +89,7 @@ inline File::File(const std::string &path, const File::Action &action, const std
     for (const auto &f : flags) {
         flag = flag | getFlagValue(f);
     }
-    h5::handle_t val = 0;
+    h5::h5_handle val = 0;
     switch (action) {
         case Action::CREATE: {
             val = H5Fcreate(path.c_str(), flag, H5P_DEFAULT, H5P_DEFAULT);

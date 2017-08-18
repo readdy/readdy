@@ -144,8 +144,8 @@ RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride
 void RadialDistribution::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->writerRadialDistribution) {
         auto &centers = std::get<0>(result);
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride, centers.size()};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, centers.size()};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride, centers.size()};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, centers.size()};
         const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
         auto group = file.createGroup(path);
         log::debug("created group with path {}", path);

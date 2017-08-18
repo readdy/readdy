@@ -40,18 +40,18 @@ NAMESPACE_BEGIN(model)
 struct READDY_API Vec3 {
 public:
 
-    using data_t = std::array<scalar, 3>;
+    using data_arr = std::array<scalar, 3>;
 
     union {
         struct { scalar x, y, z; };
-        data_t data;
+        data_arr data;
     };
 
     Vec3();
 
     Vec3(scalar x, scalar y, scalar z);
 
-    explicit Vec3(const data_t &xyz);
+    explicit Vec3(const data_arr &xyz);
 
     Vec3 &operator+=(const Vec3 &rhs);
 

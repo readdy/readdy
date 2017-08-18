@@ -52,8 +52,8 @@ NAMESPACE_BEGIN(top)
  */
 class Topology {
 public:
-    using particles_t = std::vector<std::size_t>;
-    using particle_t = particles_t::size_type;
+    using particle_indices = std::vector<std::size_t>;
+    using particle_index = particle_indices::value_type;
 
     using bonded_potential = pot::BondedPotential;
     using harmonic_bond = TopologyActionFactory::harmonic_bond;
@@ -64,9 +64,9 @@ public:
     using torsion_potential = pot::TorsionPotential;
     using cos_dihedral = TopologyActionFactory::cos_dihedral;
 
-    Topology(particles_t &&particles);
+    Topology(particle_indices &&particles);
 
-    Topology(const particles_t &particles);
+    Topology(const particle_indices &particles);
 
     Topology(const Topology &) = delete;
 
@@ -78,11 +78,11 @@ public:
 
     virtual ~Topology();
 
-    particles_t::size_type getNParticles() const;
+    particle_indices::size_type getNParticles() const;
 
-    const particles_t &getParticles() const;
+    const particle_indices &getParticles() const;
 
-    particles_t &getParticles();
+    particle_indices &getParticles();
 
     const std::vector<std::unique_ptr<bonded_potential>> &getBondedPotentials() const;
 
@@ -114,7 +114,7 @@ public:
     virtual void permuteIndices(const std::vector<std::size_t> &permutation);
 
 protected:
-    particles_t particles;
+    particle_indices particles;
     std::vector<std::unique_ptr<bonded_potential>> bondedPotentials;
     std::vector<std::unique_ptr<angle_potential>> anglePotentials;
     std::vector<std::unique_ptr<torsion_potential>> torsionPotentials;

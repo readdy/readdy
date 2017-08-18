@@ -65,8 +65,8 @@ NParticles::NParticles(Kernel *const kernel, unsigned int stride)
 void NParticles::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->ds) {
         const auto size = typesToCount.empty() ? 1 : typesToCount.size();
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride, size};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         pimpl->ds = std::make_unique<io::DataSet>(group.createDataSet<std::size_t>("data", fs, dims));
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);

@@ -70,15 +70,15 @@ public:
     using potential_o1_registry = std::unordered_map<particle_type_type, potentials_o1>;
     using potential_o2_registry = util::particle_type_pair_unordered_map<potentials_o2>;
 
-    const Potential::id_t add_external(potentials::PotentialOrder1 *potential);
+    const Potential::id add_external(potentials::PotentialOrder1 *potential);
 
-    const Potential::id_t add_external(potentials::PotentialOrder2 *potential);
+    const Potential::id add_external(potentials::PotentialOrder2 *potential);
 
-    const Potential::id_t add(std::unique_ptr<PotentialOrder1> potential);
+    const Potential::id add(std::unique_ptr<PotentialOrder1> potential);
 
-    const Potential::id_t add(std::unique_ptr<PotentialOrder2> potential);
+    const Potential::id add(std::unique_ptr<PotentialOrder2> potential);
 
-    void remove(Potential::id_t handle);
+    void remove(Potential::id handle);
 
     const potentials_o1 &potentials_of(const particle_type_type type) const;
 

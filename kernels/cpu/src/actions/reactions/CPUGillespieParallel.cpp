@@ -240,9 +240,9 @@ void CPUGillespieParallel::handleBoxReactions() {
     };
 
 
-    /*std::vector<std::future<std::set<data_t::index_t>>> updates;
-    std::vector<std::future<data_t::update_t>> newParticles;
-    std::vector<std::future<std::vector<record_t>>> records;
+    /*std::vector<std::future<std::set<scpu_data::entry_index>>> updates;
+    std::vector<std::future<scpu_data::entries_update>> newParticles;
+    std::vector<std::future<std::vector<reaction_record>>> records;
     std::vector<std::future<reaction_counts_t>> counts;*/
     auto &stateModel = kernel->getCPUKernelStateModel();
     std::vector<std::promise<std::set<data_t::index_t>>> updates_promises(kernel->getNThreads());

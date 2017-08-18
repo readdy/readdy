@@ -39,20 +39,20 @@ NAMESPACE_BEGIN(readdy)
 class ObservableHandle {
 
 public:
-    using id_t = unsigned long;
+    using observable_id = std::size_t;
 
     ObservableHandle();
 
-    ObservableHandle(id_t id, model::observables::ObservableBase *observable);
+    ObservableHandle(observable_id id, model::observables::ObservableBase *observable);
 
     void enableWriteToFile(readdy::io::File &file, const std::string &dataSetName, unsigned int flushStride);
 
-    id_t getId() const;
+    observable_id getId() const;
 
     void flush();
 
 private:
-    id_t id;
+    observable_id id;
     readdy::model::observables::ObservableBase *const observable;
 };
 

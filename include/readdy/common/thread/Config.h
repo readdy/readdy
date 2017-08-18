@@ -50,7 +50,7 @@ struct Config {
     /**
      * return type of std::thread::hardware_concurrency()
      */
-    using n_threads_t = decltype(std::thread::hardware_concurrency());
+    using n_threads_type = decltype(std::thread::hardware_concurrency());
 
     /**
      * constructs a new config (should only be performed by the kernels)
@@ -63,19 +63,19 @@ struct Config {
      *  - 4 * hardware_concurrency() otherwise
      * @return the number of threads
      */
-    n_threads_t nThreads() const;
+    n_threads_type nThreads() const;
 
     /**
      * Set the number of threads to be used
      */
-    void setNThreads(n_threads_t n);
+    void setNThreads(n_threads_type n);
 
     void setMode(ThreadMode mode);
 
     const executor_base *const executor() const;
 
 private:
-    n_threads_t m_nThreads;
+    n_threads_type m_nThreads;
     ThreadMode _mode{ThreadMode::std_thread};
     std::unique_ptr<executor_base> _executor;
     std::unique_ptr<ctpl::thread_pool> pool;

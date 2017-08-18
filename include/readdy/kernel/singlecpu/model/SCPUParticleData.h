@@ -43,14 +43,14 @@ namespace model {
 class SCPUParticleData;
 
 struct Entry {
-    using entries_t = std::vector<Entry>;
+    using entries_vector = std::vector<Entry>;
     using particle_type = readdy::model::Particle;
-    using force_t = particle_type::pos_type;
-    using displacement_t = scalar;
-    using topology_index_t = std::ptrdiff_t;
+    using force_type = particle_type::pos_type;
+    using displacement_type = scalar;
+    using topology_index_type = std::ptrdiff_t;
 
     explicit Entry(const particle_type &particle)
-            : pos(particle.getPos()), force(force_t()), type(particle.getType()), deactivated(false),
+            : pos(particle.getPos()), force(force_type()), type(particle.getType()), deactivated(false),
               displacement(0), id(particle.getId()) {}
 
     Entry(const Entry &) = delete;
@@ -67,10 +67,10 @@ struct Entry {
 
     const particle_type::pos_type &position() const;
 
-    force_t force;
-    displacement_t displacement;
+    force_type force;
+    displacement_type displacement;
     particle_type::pos_type pos;
-    topology_index_t topology_index {-1};
+    topology_index_type topology_index {-1};
     particle_type::id_type id;
     particle_type::type_type type;
     bool deactivated;
@@ -79,16 +79,16 @@ struct Entry {
 class SCPUParticleData {
 public:
 
-    using entries_t = std::vector<Entry>;
-    using index_t = entries_t::size_type;
-    using entries_update_t = std::vector<Entry>;
+    using entries_vec = std::vector<Entry>;
+    using entry_index = entries_vec::size_type;
+    using new_entries = std::vector<Entry>;
     using particle_type = readdy::model::Particle;
     using top_particle_type = readdy::model::TopologyParticle;
-    using force_t = particle_type::pos_type;
-    using displacement_t = scalar;
-    using iterator = entries_t::iterator;
-    using const_iterator = entries_t::const_iterator;
-    using update_t = std::pair<entries_update_t, std::vector<index_t>>;
+    using force = particle_type::pos_type;
+    using displacement = scalar;
+    using iterator = entries_vec::iterator;
+    using const_iterator = entries_vec::const_iterator;
+    using entries_update = std::pair<new_entries, std::vector<entry_index>>;
 
     SCPUParticleData() = default;
     SCPUParticleData(const SCPUParticleData&) = delete;
@@ -97,7 +97,7 @@ public:
     SCPUParticleData& operator=(SCPUParticleData&&) = default;
     ~SCPUParticleData() = default;
 
-    readdy::model::Particle getParticle(index_t index) const;
+    readdy::model::Particle getParticle(entry_index index) const;
 
     readdy::model::Particle toParticle(const Entry &e) const;
 
@@ -105,7 +105,7 @@ public:
 
     void addParticles(const std::vector<particle_type> &particles);
 
-    std::vector<entries_t::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
+    std::vector<entries_vec::size_type> addTopologyParticles(const std::vector<top_particle_type> &particles);
 
     void removeParticle(const particle_type &particle);
 
@@ -123,30 +123,30 @@ public:
 
     const_iterator end() const;
 
-    Entry &entry_at(index_t);
+    Entry &entry_at(entry_index);
 
-    index_t size() const;
+    entry_index size() const;
 
-    index_t n_deactivated() const;
+    entry_index n_deactivated() const;
 
     void reserve(std::size_t n);
 
     void clear();
 
-    const Entry &entry_at(index_t) const;
+    const Entry &entry_at(entry_index) const;
 
-    const Entry &centry_at(index_t) const;
+    const Entry &centry_at(entry_index) const;
 
-    index_t addEntry(Entry &&entry);
+    entry_index addEntry(Entry &&entry);
 
-    void removeEntry(index_t entry);
+    void removeEntry(entry_index entry);
 
-    std::vector<index_t> update(update_t&&);
+    std::vector<entry_index> update(entries_update&&);
 
 protected:
 
-    entries_t entries;
-    std::vector<index_t> blanks;
+    entries_vec entries;
+    std::vector<entry_index> blanks;
 
 };
 

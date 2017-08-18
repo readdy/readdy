@@ -71,8 +71,8 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
 void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
         const auto size = result.size();
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride, size};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride, size};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
         const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
         auto group = file.createGroup(path);
         auto dataSet = std::make_unique<io::DataSet>(group.createDataSet<scalar>("data", fs, dims));

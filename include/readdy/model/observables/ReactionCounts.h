@@ -46,8 +46,8 @@ class ReactionCounts : public Observable<std::pair<
         std::unordered_map<readdy::util::particle_type_pair, std::vector<std::size_t>, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>
 >> {
 public:
-    using reaction_counts_order1_map = typename std::tuple_element<0, result_t>::type;
-    using reaction_counts_order2_map = typename std::tuple_element<1, result_t>::type;
+    using reaction_counts_order1_map = typename std::tuple_element<0, result_type>::type;
+    using reaction_counts_order2_map = typename std::tuple_element<1, result_type>::type;
 
     ReactionCounts(Kernel* kernel, unsigned int stride);
 
@@ -76,7 +76,7 @@ protected:
 
     void append() override;
 
-    void assignCountsToResult(const result_t &from, result_t &to);
+    void assignCountsToResult(const result_type &from, result_type &to);
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

@@ -37,11 +37,11 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-inline DataSpace::DataSpace(h5::handle_t handle) : Object(std::make_shared<DataSpaceHandle>(handle)) {}
+inline DataSpace::DataSpace(h5::h5_handle handle) : Object(std::make_shared<DataSpaceHandle>(handle)) {}
 
-inline DataSpace::DataSpace(const std::vector<h5::dims_t> &dims, const std::vector<h5::dims_t> &maxDims)
+inline DataSpace::DataSpace(const std::vector<h5::h5_dims> &dims, const std::vector<h5::h5_dims> &maxDims)
         : Object(std::make_shared<DataSpaceHandle>(-1)) {
-    h5::handle_t hid;
+    h5::h5_handle hid;
     if (maxDims.empty()) {
         hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
     } else {
@@ -64,7 +64,7 @@ inline std::size_t DataSpace::ndim() const {
     return static_cast<std::size_t>(n);
 }
 
-inline std::vector<h5::dims_t> DataSpace::dims() const {
+inline std::vector<h5::h5_dims> DataSpace::dims() const {
     std::vector<hsize_t> result;
     result.resize(ndim());
     if (H5Sget_simple_extent_dims(hid(), result.data(), nullptr) < 0) {
@@ -74,8 +74,8 @@ inline std::vector<h5::dims_t> DataSpace::dims() const {
     return result;
 }
 
-inline std::vector<h5::dims_t> DataSpace::max_dims() const {
-    std::vector<h5::dims_t> result;
+inline std::vector<h5::h5_dims> DataSpace::max_dims() const {
+    std::vector<h5::h5_dims> result;
     result.resize(ndim());
     if (H5Sget_simple_extent_dims(hid(), nullptr, result.data()) < 0) {
         log::error("failed to get dims!");

@@ -42,7 +42,7 @@ void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleB
     using promise_new_particles_t = std::promise<data_t::entries_t>;
     /*
 
-    auto worker = [this](SlicedBox &box, ctx_t ctx, data_t* data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
+    auto worker = [this](SlicedBox &box, context ctx, scpu_data* data, nl_t nl, promise_t update, promise_new_particles_t newParticles) {
 
         scalar localAlpha = 0.0;
         std::vector<event_t> localEvents{};
@@ -56,7 +56,7 @@ void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleB
     };
 
     std::vector<std::future<std::set<event_t>>> updates;
-    std::vector<std::future<data_t::entries_t>> newParticles;
+    std::vector<std::future<scpu_data::entries_vec>> newParticles;
     {
         //readdy::util::Timer t ("\t run threads");
         std::vector<util::scoped_thread> threads;
@@ -95,11 +95,11 @@ void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleB
             auto particles = future.get();
             // reposition particles to respect the periodic b.c.
             std::for_each(particles.begin(), particles.end(),
-                          [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
+                          [&fixPos](scpu_data::Entry &p) { fixPos(p.pos); });
             kernel->getKernelStateModel().getParticleData()->addEntries(particles);
         }
         std::for_each(newProblemParticles.begin(), newProblemParticles.end(),
-                      [&fixPos](data_t::Entry &p) { fixPos(p.pos); });
+                      [&fixPos](scpu_data::Entry &p) { fixPos(p.pos); });
         kernel->getKernelStateModel().getParticleData()->addEntries(newProblemParticles);
     }*/
 }

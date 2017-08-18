@@ -34,7 +34,7 @@ struct MSDAggregator {
     std::vector<readdy::model::Vec3> initialPositions;
     std::shared_ptr<readdy::scalar> result = std::make_shared<readdy::scalar>(0);
 
-    void operator()(readdy::model::observables::Positions::result_t positions) {
+    void operator()(readdy::model::observables::Positions::result_type positions) {
         auto it_init = initialPositions.begin();
         auto it_pos = positions.begin();
         while (it_pos != positions.end()) {
@@ -116,7 +116,7 @@ TEST_F(TestSimulation, TestObservables) {
 
     int n_callbacks = 0;
     simulation.registerObservable<readdy::model::observables::Positions>(
-            [&n_callbacks](const readdy::model::observables::Positions::result_t &result) -> void {
+            [&n_callbacks](const readdy::model::observables::Positions::result_type &result) -> void {
                 ++n_callbacks;
                 EXPECT_EQ(103, result.size());
             }, 1);

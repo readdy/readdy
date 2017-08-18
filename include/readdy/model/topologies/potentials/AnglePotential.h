@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(pot)
 
 class AnglePotential : public TopologyPotential {
 public:
-    using angles_t = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
+    using angles = std::vector<std::tuple<std::size_t, std::size_t, std::size_t>>;
 
     AnglePotential();
 
@@ -62,10 +62,10 @@ struct AngleConfiguration {
 
 class HarmonicAnglePotential : public AnglePotential {
 public:
-    using angle_t = AngleConfiguration;
-    using angles_t = std::vector<AngleConfiguration>;
+    using angle = AngleConfiguration;
+    using angle_configurations = std::vector<AngleConfiguration>;
 
-    explicit HarmonicAnglePotential(const angles_t &angles);
+    explicit HarmonicAnglePotential(const angle_configurations &angles);
     HarmonicAnglePotential(const HarmonicAnglePotential&) = default;
     HarmonicAnglePotential& operator=(const HarmonicAnglePotential&) = delete;
     HarmonicAnglePotential(HarmonicAnglePotential&&) = default;
@@ -76,15 +76,15 @@ public:
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
 
-    const angles_t &getAngles() const;
+    const angle_configurations &getAngles() const;
 
-    scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
+    scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_jk, const angle &angle) const;
 
     void
-    calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk, const angle_t &angle) const;
+    calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk, const angle &angle) const;
 
 protected:
-    angles_t angles;
+    angle_configurations angles;
 };
 
 NAMESPACE_END(pot)

@@ -42,19 +42,19 @@ NAMESPACE_BEGIN(actions)
 
 class TopologyReactionActionFactory {
 public:
-    using graph_t = TopologyReactionAction::graph_t;
+    using topology_graph = TopologyReactionAction::topology_graph;
     using operation_ref = std::unique_ptr<TopologyReactionAction>;
-    using vertex_t = graph_t::vertex_ref;
-    using edge_t = TopologyReactionAction::edge;
+    using vertex = topology_graph::vertex_ref;
+    using edge = TopologyReactionAction::edge;
 
-    virtual operation_ref createChangeParticleType(GraphTopology *const topology, const vertex_t &v,
+    virtual operation_ref createChangeParticleType(GraphTopology *const topology, const vertex &v,
                                                   const particle_type_type &type_to) const = 0;
 
-    operation_ref createAddEdge(GraphTopology *const topology, const edge_t &edge) const {
+    operation_ref createAddEdge(GraphTopology *const topology, const edge &edge) const {
         return std::make_unique<AddEdge>(topology, edge);
     };
 
-    operation_ref createRemoveEdge(GraphTopology *const topology, const edge_t &edge) const {
+    operation_ref createRemoveEdge(GraphTopology *const topology, const edge &edge) const {
         return std::make_unique<RemoveEdge>(topology, edge);
     };
 

@@ -226,7 +226,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
-    pp_obs->setCallback([](const readdy::model::observables::Positions::result_t &t) {
+    pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
         /* ignore */
     });
     auto connection = kernel->connectObservable(pp_obs.get());

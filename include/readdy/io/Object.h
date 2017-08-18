@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(io)
 
 class ObjectHandle {
 public:
-    explicit ObjectHandle(h5::handle_t handle) : _handle(handle) {};
+    explicit ObjectHandle(h5::h5_handle handle) : _handle(handle) {};
     ObjectHandle(const ObjectHandle&) = default;
     ObjectHandle& operator=(const ObjectHandle&) = default;
     ObjectHandle(ObjectHandle&&) = default;
@@ -49,16 +49,16 @@ public:
 
     virtual void close() = 0;
 
-    h5::handle_t operator*() const {
+    h5::h5_handle operator*() const {
         return _handle;
     }
 
-    void set(h5::handle_t handle) {
+    void set(h5::h5_handle handle) {
         _handle = handle;
     }
 
 protected:
-    h5::handle_t _handle;
+    h5::h5_handle _handle;
 };
 
 class Object {
@@ -72,7 +72,7 @@ public:
 
     virtual ~Object() = default;
 
-    virtual h5::handle_t hid() const {
+    virtual h5::h5_handle hid() const {
         if(!handle) {
             log::critical("this should not happen");
         }

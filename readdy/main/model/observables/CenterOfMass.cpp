@@ -84,8 +84,8 @@ CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride, const std:
 
 void CenterOfMass::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->ds) {
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         auto dataSet = std::make_unique<io::DataSet>(
                 group.createDataSet("data", fs, dims, util::Vec3MemoryType(), util::Vec3FileType()));

@@ -51,7 +51,7 @@ struct TrajectoryEntry {
 
     readdy::model::Particle::type_type typeId {0};
     readdy::model::Particle::id_type id {0};
-    readdy::model::particle_flavor_t flavor {0};
+    readdy::model::particle_flavor flavor {0};
     readdy::model::Particle::pos_type pos;
 
     friend std::ostream &operator<<(std::ostream & /*os*/, const TrajectoryEntry & /*p*/);

@@ -42,7 +42,7 @@ namespace pot {
 
 AnglePotential::AnglePotential() : TopologyPotential() {}
 
-HarmonicAnglePotential::HarmonicAnglePotential(const angles_t &angles)
+HarmonicAnglePotential::HarmonicAnglePotential(const angle_configurations &angles)
         : AnglePotential(), angles(angles) {}
 
 std::unique_ptr<EvaluatePotentialAction>
@@ -50,12 +50,12 @@ HarmonicAnglePotential::createForceAndEnergyAction(const TopologyActionFactory *
     return factory->createCalculateHarmonicAnglePotential(this);
 }
 
-const HarmonicAnglePotential::angles_t &HarmonicAnglePotential::getAngles() const {
+const HarmonicAnglePotential::angle_configurations &HarmonicAnglePotential::getAngles() const {
     return angles;
 }
 
 scalar  HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
-                                               const angle_t &angle) const {
+                                               const angle &angle) const {
     const scalar  scalarProduct = x_ij * x_kj;
     const scalar  norm_ij = std::sqrt(x_ij * x_ij);
     const scalar  norm_kj = std::sqrt(x_kj * x_kj);
@@ -64,7 +64,7 @@ scalar  HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_
 }
 
 void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk,
-                                            const angle_t &angle) const {
+                                            const angle &angle) const {
     const scalar  scalarProduct = x_ji * x_jk;
     const scalar  norm_ji_2 = x_ji * x_ji;
     const scalar  norm_ji = std::sqrt(norm_ji_2);

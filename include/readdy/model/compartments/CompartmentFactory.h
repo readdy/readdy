@@ -39,21 +39,19 @@ NAMESPACE_BEGIN(compartments)
 
 class CompartmentFactory {
 public:
-    using particleType_t = readdy::model::Particle::type_type;
-
     template<typename T, typename... Args>
-    std::unique_ptr<T> createCompartment(const std::unordered_map<particleType_t, particleType_t> &convMap, Args &&... args) const {
+    std::unique_ptr<T> createCompartment(const Compartment::conversion_map &convMap, Args &&... args) const {
         return std::unique_ptr<T>(get_dispatcher<T, Args...>::impl(this, convMap, std::forward<Args>(args)...));
     }
 
 protected:
     virtual Plane *
-    createPlane(const std::unordered_map<particleType_t, particleType_t> &convMap, const std::string &uniqueName, const Vec3 &coefficients,
+    createPlane(const Compartment::conversion_map &convMap, const std::string &uniqueName, const Vec3 &coefficients,
                 const scalar distance, const bool largerOrLess) const {
         return new Plane(convMap, uniqueName, coefficients, distance, largerOrLess);
     }
 
-    virtual Sphere *createSphere(const std::unordered_map<particleType_t, particleType_t> &convMap, const std::string &uniqueName, const Vec3 &origin,
+    virtual Sphere *createSphere(const Compartment::conversion_map &convMap, const std::string &uniqueName, const Vec3 &origin,
                                  const scalar radius, const bool largerOrLess) const {
         return new Sphere(convMap, uniqueName, origin, radius, largerOrLess);
     }
@@ -64,7 +62,7 @@ protected:
     // default dispatcher only invokes normal constructor
     template<typename T, typename... Args>
     struct get_dispatcher {
-        static T *impl(const CompartmentFactory *self, const std::unordered_map<particleType_t, particleType_t> &convMap, Args &&... args) {
+        static T *impl(const CompartmentFactory *self, const Compartment::conversion_map &convMap, Args &&... args) {
             return new T(convMap, std::forward<Args>(args)...);
         };
     };

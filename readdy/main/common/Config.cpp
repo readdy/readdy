@@ -54,17 +54,17 @@ Config::Config() {
 
     const char *env = std::getenv("READDY_N_CORES");
     if (env != nullptr) {
-        m_nThreads = static_cast<n_threads_t>(std::stol(env));
+        m_nThreads = static_cast<n_threads_type>(std::stol(env));
         log::debug("Using {} threads (set by environment variable READDY_N_CORES)", m_nThreads);
     }
     update();
 }
 
-Config::n_threads_t Config::nThreads() const {
+Config::n_threads_type Config::nThreads() const {
     return m_nThreads;
 }
 
-void Config::setNThreads(const Config::n_threads_t n) {
+void Config::setNThreads(const Config::n_threads_type n) {
     m_nThreads = n;
     update();
 }

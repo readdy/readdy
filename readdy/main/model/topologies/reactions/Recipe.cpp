@@ -98,11 +98,11 @@ Recipe &Recipe::removeEdge(const std::string &label1, const std::string &label2)
     return removeEdge(std::tie(label1, label2));
 }
 
-Recipe::topology_t &Recipe::topology() {
+Recipe::graph_topology &Recipe::topology() {
     return _topology;
 }
 
-const Recipe::topology_t &Recipe::topology() const {
+const Recipe::graph_topology &Recipe::topology() const {
     return _topology;
 }
 

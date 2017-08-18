@@ -216,7 +216,7 @@ public:
     /**
      * result type
      */
-    typedef Result result_t;
+    typedef Result result_type;
 
     /**
      * Constructs an observable belonging to a kernel with a certain stride, default initializing the result.
@@ -231,7 +231,7 @@ public:
      * Will return the observable's current result (i.e., the state of it's last evaluation).
      * @return the result
      */
-    const result_t &getResult() {
+    const result_type &getResult() {
         return result;
     }
 
@@ -271,11 +271,11 @@ protected:
  * One should take care, that the parent observables strides fit with the stride of this observable or take into
  * account, that some values might be outdated.
  *
- * @tparam Res_t the result type, see readdy::model::observables::Observable.
- * @tparam ParentObs_t the parent observables which will be evaluated before this observable gets evaluated
+ * @tparam RESULT the result type, see readdy::model::observables::Observable.
+ * @tparam PARENT_OBS the parent observables which will be evaluated before this observable gets evaluated
  */
-template<typename Res_t, typename... ParentObs_t>
-class Combiner : public Observable<Res_t> {
+template<typename RESULT, typename... PARENT_OBS>
+class Combiner : public Observable<RESULT> {
 public:
     /**
      * Constructs a combiner observable.
@@ -283,8 +283,8 @@ public:
      * @param stride a stride
      * @param parents the parent observables
      */
-    Combiner(Kernel *const kernel, unsigned int stride, ParentObs_t *... parents)
-            : Observable<Res_t>(kernel, stride), parentObservables(std::forward<ParentObs_t *>(parents)...) {}
+    Combiner(Kernel *const kernel, unsigned int stride, PARENT_OBS *... parents)
+            : Observable<RESULT>(kernel, stride), parentObservables(std::forward<PARENT_OBS *>(parents)...) {}
 
     /**
      * If ObservableBase#shouldExecuteCallback() is true, this will call the Observable#callback() function
@@ -327,7 +327,7 @@ protected:
     /**
      * The parent observables, stored in a tuple
      */
-    std::tuple<ParentObs_t *...> parentObservables;
+    std::tuple<PARENT_OBS *...> parentObservables;
 private:
     /**
      * Callback functor, which will call a parent observable's callback function.

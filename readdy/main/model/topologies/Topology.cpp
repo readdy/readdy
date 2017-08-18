@@ -37,18 +37,18 @@ namespace model {
 namespace top {
 readdy::model::top::Topology::~Topology() = default;
 
-Topology::Topology(Topology::particles_t &&p) : particles(std::move(p)) { }
-Topology::Topology(const Topology::particles_t &p) : particles(p) { }
+Topology::Topology(Topology::particle_indices &&p) : particles(std::move(p)) { }
+Topology::Topology(const Topology::particle_indices &p) : particles(p) { }
 
-Topology::particles_t::size_type Topology::getNParticles() const {
+Topology::particle_indices::size_type Topology::getNParticles() const {
     return particles.size();
 }
 
-const Topology::particles_t &Topology::getParticles() const {
+const Topology::particle_indices &Topology::getParticles() const {
     return particles;
 }
 
-Topology::particles_t &Topology::getParticles() {
+Topology::particle_indices &Topology::getParticles() {
     return particles;
 }
 

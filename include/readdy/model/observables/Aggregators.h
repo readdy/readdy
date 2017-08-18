@@ -56,14 +56,14 @@ protected:
 
 template<typename ParentObs>
 class Trivial
-        : public Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_t>>, ParentObs> {
+        : public Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_type>>, ParentObs> {
 
     static_assert(
-            std::is_base_of<readdy::model::observables::Observable<typename ParentObs::result_t>, ParentObs>::value,
+            std::is_base_of<readdy::model::observables::Observable<typename ParentObs::result_type>, ParentObs>::value,
             "ParentObs must extend readdy::model::observables::Observable");
 public:
     Trivial(Kernel *const kernel, unsigned int stride, ParentObs *parentObs)
-            : Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_t>>, ParentObs>(
+            : Combiner<std::pair<std::vector<time_step_type>, std::vector<typename ParentObs::result_type>>, ParentObs>(
             kernel, stride,
             parentObs) {}
 

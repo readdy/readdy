@@ -58,7 +58,7 @@ public:
     using vertex_ptr = std::list<Vertex>::iterator;
     using vertex_cptr = std::list<Vertex>::const_iterator;
 
-    using label_t = std::string;
+    using label_type = std::string;
 
     /**
      * default constructor
@@ -88,9 +88,9 @@ public:
     /**
      * vertex' name, can be left empty and is then ignored
      */
-    const label_t &label() const;
+    const label_type &label() const;
 
-    label_t &label();
+    label_type &label();
 
     /**
      * particle index in the topology this vertex belongs to
@@ -158,7 +158,7 @@ private:
     std::vector<vertex_ptr> neighbors_{};
 
     particle_type_type particleType_ {0};
-    label_t _label{""};
+    label_type _label{""};
 };
 
 class VertexRef;
@@ -173,7 +173,7 @@ public:
 
     VertexRef(Vertex::vertex_ptr it);
 
-    VertexRef(Graph *graph, const Vertex::label_t &label);
+    VertexRef(Graph *graph, const Vertex::label_type &label);
 
     VertexRef(VertexRef &&) = default;
 
@@ -203,7 +203,7 @@ public:
 
 private:
     Vertex::vertex_ptr it;
-    Vertex::label_t label;
+    Vertex::label_type label;
     Graph *graph;
 };
 
@@ -217,7 +217,7 @@ public:
 
     VertexCRef(Vertex::vertex_ptr it);
 
-    VertexCRef(const Graph *graph, const Vertex::label_t &label);
+    VertexCRef(const Graph *graph, const Vertex::label_type &label);
 
     VertexCRef(const VertexRef &ref);
 
@@ -243,7 +243,7 @@ public:
 
 private:
     Vertex::vertex_cptr it;
-    Vertex::label_t label;
+    Vertex::label_type label;
     const Graph *graph;
 };
 
