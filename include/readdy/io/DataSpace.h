@@ -41,7 +41,7 @@ NAMESPACE_BEGIN(io)
 
 class DataSpaceHandle : public ObjectHandle {
 public:
-    explicit DataSpaceHandle(h5::handle_t hid) : ObjectHandle(hid) {}
+    explicit DataSpaceHandle(h5::h5_handle hid) : ObjectHandle(hid) {}
     
     DataSpaceHandle(const DataSpaceHandle&) = default;
     DataSpaceHandle& operator=(const DataSpaceHandle&) = default;
@@ -64,15 +64,15 @@ public:
 
 class DataSpace : public Object {
 public:
-    explicit DataSpace(h5::handle_t handle);
+    explicit DataSpace(h5::h5_handle handle);
 
-    explicit DataSpace(const std::vector<h5::dims_t> &dims, const std::vector<h5::dims_t> &maxDims = {});
+    explicit DataSpace(const std::vector<h5::h5_dims> &dims, const std::vector<h5::h5_dims> &maxDims = {});
 
     std::size_t ndim() const;
 
-    std::vector<h5::dims_t> dims() const;
+    std::vector<h5::h5_dims> dims() const;
 
-    std::vector<h5::dims_t> max_dims() const;
+    std::vector<h5::h5_dims> max_dims() const;
 };
 
 NAMESPACE_END(io)

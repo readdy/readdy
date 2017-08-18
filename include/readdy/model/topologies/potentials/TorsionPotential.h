@@ -57,28 +57,28 @@ struct DihedralConfiguration {
 
 class CosineDihedralPotential : public TorsionPotential {
 public:
-    using dihedral_t = DihedralConfiguration;
-    using dihedrals_t = std::vector<dihedral_t>;
+    using dihedral_configuration = DihedralConfiguration;
+    using dihedral_configurations = std::vector<dihedral_configuration>;
 
-    explicit CosineDihedralPotential(const dihedrals_t &dihedrals);
+    explicit CosineDihedralPotential(const dihedral_configurations &dihedrals);
     CosineDihedralPotential(const CosineDihedralPotential&) = default;
     CosineDihedralPotential& operator=(const CosineDihedralPotential&) = default;
     CosineDihedralPotential(CosineDihedralPotential&&) = default;
     CosineDihedralPotential& operator=(CosineDihedralPotential&&) = default;
     virtual ~CosineDihedralPotential() = default;
 
-    const dihedrals_t &getDihedrals() const;
+    const dihedral_configurations &getDihedrals() const;
 
-    scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_t &) const;
+    scalar calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl, const dihedral_configuration &) const;
 
     void calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
-                        const dihedral_t &) const;
+                        const dihedral_configuration &) const;
 
     virtual std::unique_ptr<EvaluatePotentialAction>
     createForceAndEnergyAction(const TopologyActionFactory *const factory) override;
 
 protected:
-    dihedrals_t dihedrals;
+    dihedral_configurations dihedrals;
 };
 
 NAMESPACE_END(pot)

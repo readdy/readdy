@@ -252,10 +252,10 @@ private:
     SCPUKernel* const kernel;
 };
 
-template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
+template<typename KERNEL=readdy::kernel::scpu::SCPUKernel>
 class SCPURadialDistribution : public readdy::model::observables::RadialDistribution {
 public:
-    SCPURadialDistribution(kernel_t *const kernel, unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
+    SCPURadialDistribution(KERNEL *const kernel, unsigned int stride, std::vector<scalar> binBorders, std::vector<std::string> typeCountFrom,
                                  std::vector<std::string> typeCountTo, scalar particleToDensity) :
             readdy::model::observables::RadialDistribution(kernel, stride, binBorders, typeCountFrom,
                                                            typeCountTo, particleToDensity), kernel(kernel) {}
@@ -311,7 +311,7 @@ public:
     }
 
 protected:
-    kernel_t *const kernel;
+    KERNEL *const kernel;
 };
 
 }

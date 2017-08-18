@@ -256,7 +256,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
         topology->addReaction(reaction);
     }
     topology->updateReactionRates();
-    model::top::Topology::particles_t particles;
+    model::top::Topology::particle_indices particles;
     {
         std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
     }
@@ -307,7 +307,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
         topology->addReaction(reaction);
     }
     topology->updateReactionRates();
-    model::top::Topology::particles_t particles;
+    model::top::Topology::particle_indices particles;
     {
         std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
     }

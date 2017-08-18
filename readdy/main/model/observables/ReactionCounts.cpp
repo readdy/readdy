@@ -86,7 +86,7 @@ void ReactionCounts::initializeDataSet(io::File &file, const std::string &dataSe
     }
 }
 
-static void writeCountsToDataSets(const ReactionCounts::result_t &counts, data_set_order1_map &dSetOrder1,
+static void writeCountsToDataSets(const ReactionCounts::result_type &counts, data_set_order1_map &dSetOrder1,
                                   data_set_order2_map &dSetOrder2) {
     {
         const auto &countsMap = std::get<0>(counts);
@@ -106,7 +106,7 @@ static void writeCountsToDataSets(const ReactionCounts::result_t &counts, data_s
     }
 }
 
-void ReactionCounts::assignCountsToResult(const ReactionCounts::result_t &from, ReactionCounts::result_t &to) {
+void ReactionCounts::assignCountsToResult(const ReactionCounts::result_type &from, ReactionCounts::result_type &to) {
     {
         const auto &fromMap = std::get<0>(from);
         auto &toMap = std::get<0>(to);
@@ -137,8 +137,8 @@ void ReactionCounts::append() {
                 const auto &pType = entry.second;
                 const auto numberOrder1Reactions = ctx.reactions().order1_by_type(pType).size();
                 if (numberOrder1Reactions > 0) {
-                    std::vector<readdy::io::h5::dims_t> chunkSize = {pimpl->flushStride, numberOrder1Reactions};
-                    std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, numberOrder1Reactions};
+                    std::vector<readdy::io::h5::h5_dims> chunkSize = {pimpl->flushStride, numberOrder1Reactions};
+                    std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, numberOrder1Reactions};
                     pimpl->ds_order1.emplace(std::piecewise_construct, std::forward_as_tuple(pType),
                                              std::forward_as_tuple(
                                                      order1Subgroup.createDataSet<std::size_t>(
@@ -155,8 +155,8 @@ void ReactionCounts::append() {
                     if (pType2 < pType1) continue;
                     const auto numberOrder2Reactions = ctx.reactions().order2_by_type(pType1, pType2).size();
                     if (numberOrder2Reactions > 0) {
-                        std::vector<readdy::io::h5::dims_t> chunkSize = {pimpl->flushStride, numberOrder2Reactions};
-                        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS,
+                        std::vector<readdy::io::h5::h5_dims> chunkSize = {pimpl->flushStride, numberOrder2Reactions};
+                        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS,
                                                                     numberOrder2Reactions};
                         pimpl->ds_order2.emplace(std::piecewise_construct,
                                                  std::forward_as_tuple(std::tie(pType1, pType2)),

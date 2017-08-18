@@ -36,17 +36,17 @@ namespace scpu {
 namespace actions {
 namespace reactions {
 
-using model_t = readdy::kernel::scpu::SCPUStateModel;
-using data_t = readdy::kernel::scpu::model::SCPUParticleData;
+using scpu_model = readdy::kernel::scpu::SCPUStateModel;
+using scpu_data = readdy::kernel::scpu::model::SCPUParticleData;
 using reaction_type = readdy::model::reactions::ReactionType;
-using ctx_t = readdy::model::KernelContext;
-using fix_pos = ctx_t::fix_pos_fun;
-using record_t = readdy::model::reactions::ReactionRecord;
+using context = readdy::model::KernelContext;
+using fix_pos = context::fix_pos_fun;
+using reaction_record = readdy::model::reactions::ReactionRecord;
 
 template<typename Reaction>
 void performReaction(
-        data_t &data, data_t::index_t idx1, data_t::index_t idx2, data_t::entries_update_t &newEntries,
-        std::vector<data_t::index_t> &decayedEntries, Reaction *reaction, const fix_pos &fixPos, record_t* record) {
+        scpu_data &data, scpu_data::entry_index idx1, scpu_data::entry_index idx2, scpu_data::new_entries &newEntries,
+        std::vector<scpu_data::entry_index> &decayedEntries, Reaction *reaction, const fix_pos &fixPos, reaction_record* record) {
     auto& entry1 = data.entry_at(idx1);
     auto& entry2 = data.entry_at(idx2);
     if(record) {

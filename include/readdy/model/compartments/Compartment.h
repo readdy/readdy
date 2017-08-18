@@ -42,17 +42,17 @@ NAMESPACE_BEGIN(compartments)
 
 class Compartment {
 public:
-    using id_t = short;
-    using particleType_t = readdy::model::Particle::type_type;
+    using id = short;
+    using conversion_map = std::unordered_map<particle_type_type, particle_type_type>;
 
-    Compartment(std::unordered_map<particleType_t, particleType_t> conversions, std::string typeName,
+    Compartment(conversion_map conversions, std::string typeName,
                 std::string uniqueName)
             : typeName(std::move(typeName)), uniqueName(std::move(uniqueName)),
-              conversions(std::move(conversions)), id(counter++) {}
+              conversions(std::move(conversions)), _id(counter++) {}
 
     virtual const bool isContained(const Vec3 &position) const = 0;
 
-    const std::unordered_map<particleType_t, particleType_t> &getConversions() const {
+    const conversion_map &getConversions() const {
         return conversions;
     }
 
@@ -65,16 +65,16 @@ public:
     }
 
     const short getId() const {
-        return id;
+        return _id;
     }
 
 protected:
-    static id_t counter;
+    static id counter;
 
     const std::string typeName;
     const std::string uniqueName;
-    const id_t id;
-    const std::unordered_map<particleType_t, particleType_t> conversions;
+    const id _id;
+    const conversion_map conversions;
 };
 
 NAMESPACE_END(compartments)

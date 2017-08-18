@@ -148,9 +148,9 @@ struct READDY_API Box {
 template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
 class READDY_API SCPUNotThatNaiveNeighborList : public SCPUNeighborListContainer<container> {
     using super = readdy::kernel::scpu::model::SCPUNeighborListContainer<container>;
-    using context_t = readdy::model::KernelContext;
+    using context = readdy::model::KernelContext;
 public:
-    explicit SCPUNotThatNaiveNeighborList(const context_t *const context) : ctx(context) {}
+    explicit SCPUNotThatNaiveNeighborList(const context *const context) : ctx(context) {}
 
     void create(const SCPUParticleData &data) override {
         setupBoxes();
@@ -280,7 +280,7 @@ protected:
     readdy::model::Vec3 boxSize{0, 0, 0};
     scalar maxCutoff = 0;
 
-    const context_t *const ctx;
+    const context *const ctx;
 };
 
 struct READDY_API SCPUNeighborList : public SCPUNotThatNaiveNeighborList<std::vector<ParticleIndexPair>> {

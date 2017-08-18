@@ -81,7 +81,7 @@ TEST_P(TestSchemes, SimulationObject) {
 
 TEST_P(TestSchemes, CorrectNumberOfTimesteps) {
     unsigned int counter = 0;
-    auto increment = [&counter](readdy::model::observables::NParticles::result_t result) {
+    auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
         counter++;
     };
     auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
@@ -91,7 +91,7 @@ TEST_P(TestSchemes, CorrectNumberOfTimesteps) {
 
 TEST_P(TestSchemes, StoppingCriterionSimple) {
     unsigned int counter = 0;
-    auto increment = [&counter](readdy::model::observables::NParticles::result_t result) {
+    auto increment = [&counter](readdy::model::observables::NParticles::result_type result) {
         counter++;
     };
     auto obsHandle = simulation.registerObservable<readdy::model::observables::NParticles>(increment, 1);
@@ -110,7 +110,7 @@ TEST_P(TestSchemes, ComplexStoppingCriterion) {
     simulation.addParticle("A", 0, 0, 0);
     unsigned int counter = 0;
     bool doStop = false;
-    auto increment = [&counter, &doStop](readdy::model::observables::NParticles::result_t result) {
+    auto increment = [&counter, &doStop](readdy::model::observables::NParticles::result_type result) {
         counter++;
         if (result[0] >= 8) {
             doStop = true;

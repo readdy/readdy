@@ -49,11 +49,11 @@ public:
     using Ref = std::shared_ptr<Operation>;
     using factory_ref = const actions::TopologyReactionActionFactory *const;
     using topology_ref = GraphTopology *const;
-    using graph_t = actions::TopologyReactionAction::graph_t;
+    using topology_graph = actions::TopologyReactionAction::topology_graph;
     using action_ptr = std::unique_ptr<actions::TopologyReactionAction>;
 
-    using vertex_ref = graph_t::vertex_ref;
-    using edge = graph_t::edge;
+    using vertex_ref = topology_graph::vertex_ref;
+    using edge = topology_graph::edge;
 
     virtual action_ptr create_action(topology_ref topology, factory_ref factory) const = 0;
 };

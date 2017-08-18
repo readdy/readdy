@@ -61,7 +61,7 @@ public:
 
     unsigned long getNThreads() const;
 
-    void setNThreads(readdy::util::thread::Config::n_threads_t n);
+    void setNThreads(readdy::util::thread::Config::n_threads_type n);
 
     const CPUStateModel &getCPUKernelStateModel() const;
     CPUStateModel &getCPUKernelStateModel();

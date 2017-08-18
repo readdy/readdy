@@ -38,7 +38,7 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::vector<particle_type_type> &types,
+GraphTopology::GraphTopology(const Topology::particle_indices &particles, const std::vector<particle_type_type> &types,
                              const api::PotentialConfiguration& config)
         : Topology(particles), config(config) {
     assert(types.size() == particles.size());
@@ -48,7 +48,7 @@ GraphTopology::GraphTopology(const Topology::particles_t &particles, const std::
     }
 }
 
-GraphTopology::GraphTopology(Topology::particles_t &&particles, graph::Graph &&graph,
+GraphTopology::GraphTopology(Topology::particle_indices &&particles, graph::Graph &&graph,
                              const api::PotentialConfiguration& config)
         : Topology(std::move(particles)), config(config), graph_(std::move(graph)) {
     if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
@@ -83,7 +83,7 @@ void GraphTopology::configure() {
     std::unordered_map<api::AngleType, std::vector<pot::AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<pot::DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
-    graph_.findNTuples([&](const graph_t::edge &tuple) {
+    graph_.findNTuples([&](const topology_graph::edge &tuple) {
         auto v1 = std::get<0>(tuple);
         auto v2 = std::get<1>(tuple);
         auto it = config.get().pairPotentials.find(
@@ -108,7 +108,7 @@ void GraphTopology::configure() {
 
             throw std::invalid_argument(ss.str());
         }
-    }, [&](const graph_t::path_len_2 &triple) {
+    }, [&](const topology_graph::path_len_2 &triple) {
         const auto &v1 = std::get<0>(triple);
         const auto &v2 = std::get<1>(triple);
         const auto &v3 = std::get<2>(triple);
@@ -119,7 +119,7 @@ void GraphTopology::configure() {
                                               cfg.forceConstant, cfg.equilibriumAngle);
             }
         }
-    }, [&](const graph_t::path_len_3 &quadruple) {
+    }, [&](const topology_graph::path_len_3 &quadruple) {
         const auto &v1 = std::get<0>(quadruple);
         const auto &v2 = std::get<1>(quadruple);
         const auto &v3 = std::get<2>(quadruple);
@@ -205,7 +205,7 @@ GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
     auto subGraphs = graph_.connectedComponentsDestructive();
     // generate particles list for each sub graph, update sub graph's vertices to obey this new list
-    std::vector<particles_t> subGraphsParticles;
+    std::vector<particle_indices> subGraphsParticles;
     {
         subGraphsParticles.reserve(subGraphs.size());
         for (auto &subGraph : subGraphs) {
@@ -244,7 +244,7 @@ void GraphTopology::deactivate() {
     deactivated = true;
 }
 
-const GraphTopology::rate_t GraphTopology::cumulativeRate() const {
+const GraphTopology::topology_reaction_rate GraphTopology::cumulativeRate() const {
     return _cumulativeRate;
 }
 

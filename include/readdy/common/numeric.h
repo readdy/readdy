@@ -43,8 +43,8 @@ inline constexpr scalar pi() { return 3.141592653589793238462643383279502884e+00
 
 template<typename T, typename D, typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<D>::value, int>::type = 0>
 inline typename std::make_unsigned<T>::type positive_modulo(T i, D n) {
-    using return_t = typename std::make_unsigned<T>::type;
-    return static_cast<return_t>((i % n + n) % n);
+    using return_type = typename std::make_unsigned<T>::type;
+    return static_cast<return_type>((i % n + n) % n);
 }
 
 template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>

@@ -87,13 +87,13 @@ TEST_P(TestTopologies, BondedPotential) {
     topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j});
     {
-        harmonic_bond::bonds_t bonds;
+        harmonic_bond::bond_configurations bonds;
         bonds.emplace_back(0, 1, 10.0, 5.0);
         top->addBondedPotential<harmonic_bond>(bonds);
     }
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }
@@ -132,12 +132,12 @@ TEST_P(TestTopologies, AnglePotential) {
     topology_particle_t x_k{1, 1, 0, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k});
     {
-        std::vector<angle_bond::angle_t> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
+        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
     }
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }
@@ -173,12 +173,12 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k});
     {
-        std::vector<angle_bond::angle_t> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
+        std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
     }
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }
@@ -232,12 +232,12 @@ TEST_P(TestTopologies, DihedralPotential) {
     topology_particle_t x_l{1, .1, 1, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
     {
-        std::vector<dihedral_bond::dihedral_t> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
+        std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
         top->addTorsionPotential<dihedral_bond>(dihedrals);
     }
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }
@@ -275,12 +275,12 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     topology_particle_t x_l{1, 3, 1, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
     {
-        std::vector<dihedral_bond::dihedral_t> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
+        std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
         top->addTorsionPotential(std::make_unique<dihedral_bond>(dihedral));
     }
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
-    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_t &result) {
+    fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
         }

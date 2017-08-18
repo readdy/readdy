@@ -170,8 +170,8 @@ void CPUNextSubvolumes::evaluateReactions() {
                         switch (event.order) {
                             case 1: {/*
                                 // todo update neighbor list with this particle
-                                data_t::entries_update_t newParticles{};
-                                std::vector<data_t::index_t> decayedEntries {};
+                                scpu_data::new_entries newParticles{};
+                                std::vector<scpu_data::entry_index> decayedEntries {};
 
                                 auto reaction = ctx.getOrder1Reactions(event.type1)[event.reactionIndex];
                                 performReaction(*data, particle_idx, 0, newParticles, decayedEntries, reaction);

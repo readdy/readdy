@@ -369,7 +369,7 @@ particle_type_type CPUStateModel::getParticleType(const std::size_t index) const
     return pimpl->cdata().entry_at(index).type;
 }
 
-const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_t particle) const {
+const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const {
     const auto& entry = pimpl->cdata().entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
@@ -381,7 +381,7 @@ const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(r
     throw std::logic_error(fmt::format("requested particle was deactivated in getTopologyForParticle(p={})", particle));
 }
 
-readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_t particle) {
+readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_index particle) {
     const auto& entry = pimpl->data().entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {

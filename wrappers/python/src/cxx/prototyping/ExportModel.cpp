@@ -76,7 +76,7 @@ void exportModelClasses(py::module &proto) {
 
     py::class_<type_registry>(proto, "ParticleTypeRegistry")
             .def("add", [](type_registry& self, const std::string& name, readdy::scalar D, readdy::scalar r,
-                           readdy::model::particle_flavor_t flavor) {
+                           readdy::model::particle_flavor flavor) {
                 self.add(name, D, r, flavor);
             }, "name"_a, "diffusion_constant"_a, "radius"_a, "flavor"_a = 0)
             .def("diffusion_constant_of", [](const type_registry& self, const std::string& type) {

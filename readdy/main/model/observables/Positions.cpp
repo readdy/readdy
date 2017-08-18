@@ -65,8 +65,8 @@ Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(ker
 
 void Positions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->writer) {
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         auto dataSet = std::make_unique<io::VLENDataSet>(group.createVLENDataSet("data", fs, dims,
                                                                                  util::Vec3MemoryType(),

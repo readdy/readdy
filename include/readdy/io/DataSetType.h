@@ -43,7 +43,7 @@ NAMESPACE_BEGIN(io)
 class DataTypeHandle : public ObjectHandle {
 public:
 
-    explicit DataTypeHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+    explicit DataTypeHandle(h5::h5_handle handle) : ObjectHandle(handle) {}
 
     DataTypeHandle(const DataTypeHandle&) = default;
     DataTypeHandle& operator=(const DataTypeHandle&) = default;
@@ -66,7 +66,7 @@ public:
 
 class READDY_API DataSetType : public Object {
 public:
-    explicit DataSetType(h5::handle_t handle) : Object(std::make_shared<DataTypeHandle>(handle)) {}
+    explicit DataSetType(h5::h5_handle handle) : Object(std::make_shared<DataTypeHandle>(handle)) {}
 };
 
 class READDY_API VLENDataSetType : public DataSetType{
@@ -121,13 +121,13 @@ private:
 class NativeCompoundTypeBuilder;
 class READDY_API NativeCompoundType : public DataSetType {
     friend class readdy::io::NativeCompoundTypeBuilder;
-    explicit NativeCompoundType(h5::data_set_type_t tid);
+    explicit NativeCompoundType(h5::h5_data_set_type tid);
 };
 
 class NativeCompoundTypeBuilder {
 public:
     explicit NativeCompoundTypeBuilder(std::size_t size);
-    NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset, h5::data_set_type_t type);
+    NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset, h5::h5_data_set_type type);
     template<typename T>
     NativeCompoundTypeBuilder& insert(const std::string& name, std::size_t offset);
     template<typename T, unsigned int size>
@@ -138,7 +138,7 @@ public:
     NativeCompoundType build();
 
 private:
-    h5::data_set_type_t tid;
+    h5::h5_data_set_type tid;
 };
 
 class READDY_API STDCompoundType : public DataSetType {

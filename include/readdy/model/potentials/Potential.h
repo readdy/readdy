@@ -43,9 +43,9 @@ NAMESPACE_BEGIN(potentials)
 
 class Potential {
 public:
-    using id_t = short;
+    using id = short;
     
-    explicit Potential(const int order) : order(order), id(counter++) { }
+    explicit Potential(const int order) : order(order), _id(counter++) { }
 
     Potential(const Potential&) = default;
     Potential& operator=(const Potential&) = delete;
@@ -54,8 +54,8 @@ public:
 
     virtual ~Potential() = default;
 
-    const id_t getId() const {
-        return id;
+    const id getId() const {
+        return _id;
     }
 
     const int getOrder() const {
@@ -72,10 +72,10 @@ public:
     }
 
 private:
-    static id_t counter;
+    static id counter;
 
     const int order;
-    const id_t id;
+    const id _id;
 };
 
 NAMESPACE_END(potentials)

@@ -56,7 +56,7 @@ inline DataSpace DataSet::getFileSpace() const {
 
 inline DataSet::~DataSet() = default;
 
-inline DataSet::DataSet(h5::handle_t handle, const DataSetType &memoryType, const DataSetType &fileType)
+inline DataSet::DataSet(h5::h5_handle handle, const DataSetType &memoryType, const DataSetType &fileType)
         : Object(std::make_shared<DataSetHandle>(handle)), memoryType(memoryType), fileType(fileType),
           memorySpace(-1) {}
 
@@ -71,7 +71,7 @@ inline void VLENDataSet::append(std::vector<std::vector<T>> &data) {
 }
 
 template<typename T>
-inline void VLENDataSet::append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data) {
+inline void VLENDataSet::append(const std::vector<h5::h5_dims> &dims, std::vector<T> *const data) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
@@ -89,17 +89,17 @@ inline void VLENDataSet::append(const std::vector<h5::dims_t> &dims, std::vector
     } else {
         H5Sset_extent_simple(memorySpace.hid(), static_cast<int>(dims.size()), dims.data(), nullptr);
     }
-    std::vector<h5::dims_t> currentExtent;
+    std::vector<h5::h5_dims> currentExtent;
     {
         auto fs = getFileSpace();
         currentExtent = fs.dims();
     }
-    std::vector<h5::dims_t> offset;
+    std::vector<h5::h5_dims> offset;
     {
         offset.resize(dims.size());
         offset[_extensionDim] = currentExtent[_extensionDim];
     }
-    std::vector<h5::dims_t> newExtent(currentExtent.begin(), currentExtent.end());
+    std::vector<h5::h5_dims> newExtent(currentExtent.begin(), currentExtent.end());
     {
         newExtent[_extensionDim] += dims[_extensionDim];
         H5Dset_extent(hid(), newExtent.data());
@@ -142,7 +142,7 @@ inline void VLENDataSet::append(const std::vector<h5::dims_t> &dims, std::vector
 }
 
 template<typename T>
-inline void DataSet::append(const std::vector<h5::dims_t> &dims, const T *const data) {
+inline void DataSet::append(const std::vector<h5::h5_dims> &dims, const T *const data) {
     {
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
@@ -157,15 +157,15 @@ inline void DataSet::append(const std::vector<h5::dims_t> &dims, const T *const 
     } else {
         H5Sset_extent_simple(memorySpace.hid(), static_cast<int>(dims.size()), dims.data(), nullptr);
     }
-    std::vector<h5::dims_t> currentExtent;
-    std::vector<h5::dims_t> offset;
+    std::vector<h5::h5_dims> currentExtent;
+    std::vector<h5::h5_dims> offset;
     offset.resize(dims.size());
     {
         currentExtent = getFileSpace().dims();
     }
     offset[_extensionDim] = currentExtent[_extensionDim];
     {
-        std::vector<h5::dims_t> newExtent(currentExtent);
+        std::vector<h5::h5_dims> newExtent(currentExtent);
         newExtent[_extensionDim] += dims[_extensionDim];
         H5Dset_extent(hid(), newExtent.data());
     }
@@ -194,7 +194,7 @@ inline void DataSet::flush() {
     }
 }
 
-inline VLENDataSet::VLENDataSet(h5::handle_t handle, const DataSetType &memoryType, const DataSetType &fileType)
+inline VLENDataSet::VLENDataSet(h5::h5_handle handle, const DataSetType &memoryType, const DataSetType &fileType)
         : Object(std::make_shared<DataSetHandle>(handle)), memoryType(memoryType), fileType(fileType),
           memorySpace(-1) {
     if(handle < 0) {

@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(io)
 
 class READDY_API GroupHandle : public ObjectHandle {
 public:
-    explicit GroupHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
+    explicit GroupHandle(h5::h5_handle handle = -1) : ObjectHandle(handle) {}
 
     GroupHandle(const GroupHandle&) = default;
     GroupHandle& operator=(const GroupHandle&) = default;
@@ -81,7 +81,7 @@ public:
     void write(const std::string &dataSetName, const std::string &string);
 
     template<typename T>
-    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data);
+    void write(const std::string &dataSetName, const std::vector<h5::h5_dims> &dims, const T *data);
 
     Group createGroup(const std::string &path);
 
@@ -97,19 +97,19 @@ public:
 
     Group subgroup(const std::string &name);
 
-    h5::group_info_t info() const;
+    h5::h5_group_info info() const;
 
     template<typename T>
-    DataSet createDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
-                          const std::vector<h5::dims_t> &maxDims,
+    DataSet createDataSet(const std::string &name, const std::vector<h5::h5_dims> &chunkSize,
+                          const std::vector<h5::h5_dims> &maxDims,
                           DataSetCompression compression = DataSetCompression::blosc) {
         return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>(), compression);
     }
 
-    DataSet createDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
-                          const std::vector<h5::dims_t> &maxDims, const DataSetType &memoryType,
+    DataSet createDataSet(const std::string &name, const std::vector<h5::h5_dims> &chunkSize,
+                          const std::vector<h5::h5_dims> &maxDims, const DataSetType &memoryType,
                           const DataSetType &fileType, DataSetCompression compression = DataSetCompression::blosc) {
-        h5::dims_t extensionDim;
+        h5::h5_dims extensionDim;
         {
             std::stringstream result;
             std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
@@ -125,13 +125,13 @@ public:
             if (!containsUnlimited) {
                 throw std::runtime_error("needs to contain unlimited_dims in some dimension to be extensible");
             }
-            extensionDim = static_cast<h5::dims_t>(std::distance(maxDims.begin(), unlimited_it));
+            extensionDim = static_cast<h5::h5_dims>(std::distance(maxDims.begin(), unlimited_it));
             log::trace("found extension dim {}", extensionDim);
         }
-        h5::handle_t handle;
+        h5::h5_handle handle;
         {
             // set up empty data set
-            std::vector<h5::dims_t> dims(maxDims.begin(), maxDims.end());
+            std::vector<h5::h5_dims> dims(maxDims.begin(), maxDims.end());
             dims[extensionDim] = 0;
             DataSpace fileSpace(dims, maxDims);
             DataSetCreatePropertyList propertyList;
@@ -155,15 +155,15 @@ public:
     }
 
     template<typename T>
-    VLENDataSet createVLENDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
-                                  const std::vector<h5::dims_t> &maxDims) {
+    VLENDataSet createVLENDataSet(const std::string &name, const std::vector<h5::h5_dims> &chunkSize,
+                                  const std::vector<h5::h5_dims> &maxDims) {
         return createVLENDataSet(name, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>());
     }
 
-    VLENDataSet createVLENDataSet(const std::string &name, const std::vector<h5::dims_t> &chunkSize,
-                                  const std::vector<h5::dims_t> &maxDims, const DataSetType &memoryType,
+    VLENDataSet createVLENDataSet(const std::string &name, const std::vector<h5::h5_dims> &chunkSize,
+                                  const std::vector<h5::h5_dims> &maxDims, const DataSetType &memoryType,
                                   const DataSetType &fileType) {
-        h5::dims_t extensionDim;
+        h5::h5_dims extensionDim;
         {
             std::stringstream result;
             std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
@@ -179,13 +179,13 @@ public:
             if (!containsUnlimited) {
                 throw std::runtime_error("needs to contain unlimited_dims in some dimension to be extensible");
             }
-            extensionDim = static_cast<h5::dims_t>(std::distance(maxDims.begin(), unlimited_it));
+            extensionDim = static_cast<h5::h5_dims>(std::distance(maxDims.begin(), unlimited_it));
             log::trace("found extension dim {}", extensionDim);
         }
-        h5::handle_t hid;
+        h5::h5_handle hid;
         {
             // set up empty data set
-            std::vector<h5::dims_t> dims(maxDims.begin(), maxDims.end());
+            std::vector<h5::h5_dims> dims(maxDims.begin(), maxDims.end());
             dims[extensionDim] = 0;
             DataSpace fileSpace(dims, maxDims);
             DataSetCreatePropertyList propertyList;
@@ -210,7 +210,7 @@ protected:
 
     Group();
 
-    Group(h5::handle_t handle, const std::string &);
+    Group(h5::h5_handle handle, const std::string &);
 
     std::vector<std::string> sub_elements(H5O_type_t type) const;
 

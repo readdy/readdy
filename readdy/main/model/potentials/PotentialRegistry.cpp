@@ -38,7 +38,7 @@ namespace model {
 namespace potentials {
 PotentialRegistry::PotentialRegistry(particle_type_registry_ref typeRegistry) : typeRegistry(typeRegistry) {}
 
-const Potential::id_t PotentialRegistry::add_external(potentials::PotentialOrder2 *potential) {
+const Potential::id PotentialRegistry::add_external(potentials::PotentialOrder2 *potential) {
     const auto id = potential->getId();
     auto type1Id = typeRegistry.id_of(potential->particleType1);
     auto type2Id = typeRegistry.id_of(potential->particleType2);
@@ -50,7 +50,7 @@ const Potential::id_t PotentialRegistry::add_external(potentials::PotentialOrder
     return id;
 }
 
-const Potential::id_t PotentialRegistry::add_external(potentials::PotentialOrder1 *potential) {
+const Potential::id PotentialRegistry::add_external(potentials::PotentialOrder1 *potential) {
     auto typeId = typeRegistry.id_of(potential->particleType);
     if (potentialO1RegistryExternal.find(typeId) == potentialO1RegistryExternal.end()) {
         potentialO1RegistryExternal.emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
@@ -59,7 +59,7 @@ const Potential::id_t PotentialRegistry::add_external(potentials::PotentialOrder
     return potential->getId();
 }
 
-void PotentialRegistry::remove(const Potential::id_t handle) {
+void PotentialRegistry::remove(const Potential::id handle) {
     for (auto &entry : potentialO1RegistryInternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
                                         [=](const std::unique_ptr<potentials::PotentialOrder1> &p) -> bool {
@@ -180,14 +180,14 @@ void PotentialRegistry::debug_output() const {
     }
 }
 
-const Potential::id_t PotentialRegistry::add(std::unique_ptr<PotentialOrder1> potential) {
+const Potential::id PotentialRegistry::add(std::unique_ptr<PotentialOrder1> potential) {
     const auto id = potential->getId();
     auto typeId = typeRegistry.id_of(potential->particleType);
     potentialO1RegistryInternal[typeId].push_back(std::move(potential));
     return id;
 }
 
-const Potential::id_t PotentialRegistry::add(std::unique_ptr<PotentialOrder2> potential) {
+const Potential::id PotentialRegistry::add(std::unique_ptr<PotentialOrder2> potential) {
     const auto id = potential->getId();
     auto type1Id = typeRegistry.id_of(potential->particleType1);
     auto type2Id = typeRegistry.id_of(potential->particleType2);

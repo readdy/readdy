@@ -55,7 +55,7 @@ bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approxima
 }
 
 void SCPUEvaluateTopologyReactions::perform() {
-    using rate_t = readdy::model::top::GraphTopology::rate_t;
+    using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
     auto &topologies = kernel->getSCPUKernelStateModel().topologies();
 
     if(!topologies.empty()) {

@@ -70,8 +70,8 @@ Trajectory::~Trajectory() = default;
 
 void Trajectory::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(
                 std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
         auto dataSet = std::make_unique<io::VLENDataSet>(group.createVLENDataSet(
@@ -101,16 +101,16 @@ void FlatTrajectory::initializeDataSet(io::File &file, const std::string &dataSe
         auto group = file.createGroup(
                 std::string(Trajectory::TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
         {
-            std::vector<readdy::io::h5::dims_t> fs = {flushStride};
-            std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+            std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
+            std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
             auto dataSet = std::make_unique<readdy::io::DataSet>(group.createDataSet(
                     "records", fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()
             ));
             pimpl->dataSet = std::move(dataSet);
         }
         {
-            std::vector<readdy::io::h5::dims_t> fs = {flushStride, 2};
-            std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS, 2};
+            std::vector<readdy::io::h5::h5_dims> fs = {flushStride, 2};
+            std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, 2};
             auto limits = std::make_unique<readdy::io::DataSet>(group.createDataSet<std::size_t>("limits", fs, dims));
             pimpl->limits = std::move(limits);
         }

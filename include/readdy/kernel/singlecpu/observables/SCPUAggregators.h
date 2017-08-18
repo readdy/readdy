@@ -41,10 +41,10 @@ namespace observables {
  * for those particle ids. I.e. if all initial particles vanished, there is nothing to compute anymore.
  */
 
-template<typename kernel_t=readdy::kernel::scpu::SCPUKernel>
+template<typename KERNEL=readdy::kernel::scpu::SCPUKernel>
 class SCPUMeanSquaredDisplacement : public readdy::model::observables::MeanSquaredDisplacement {
 public:
-    SCPUMeanSquaredDisplacement(kernel_t *const kernel, unsigned int stride, std::vector<std::string> typesToCount,
+    SCPUMeanSquaredDisplacement(KERNEL *const kernel, unsigned int stride, std::vector<std::string> typesToCount,
                             readdy::model::observables::Particles *particlesObservable)
             : readdy::model::observables::MeanSquaredDisplacement(kernel, stride, typesToCount, particlesObservable), kernel(kernel) {};
 
@@ -89,7 +89,7 @@ public:
 protected:
     std::unordered_map<readdy::model::Particle::id_type, readdy::model::Vec3> initialPositions;
     std::vector<unsigned long> numberOfParticles;
-    kernel_t *const kernel;
+    KERNEL *const kernel;
 };
 
 }

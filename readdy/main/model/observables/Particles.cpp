@@ -54,8 +54,8 @@ void Particles::initializeDataSet(io::File &file, const std::string &dataSetName
     using particle_t = readdy::model::Particle;
     if (!pimpl->dataSetTypes) {
 
-        std::vector<readdy::io::h5::dims_t> fs = {flushStride};
-        std::vector<readdy::io::h5::dims_t> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
+        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
         {
             pimpl->dataSetTypes = std::make_unique<io::VLENDataSet>(

@@ -89,7 +89,7 @@ void exportApi(py::module &api) {
             .def("register_particle_type",
                  [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient, readdy::scalar radius,
                     ParticleTypeFlavor flavor) {
-                     readdy::model::particle_flavor_t f = [=] {
+                     readdy::model::particle_flavor f = [=] {
                          switch (flavor) {
                              case ParticleTypeFlavor::NORMAL:
                                  return readdy::model::particleflavor::NORMAL;

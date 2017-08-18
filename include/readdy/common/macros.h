@@ -77,7 +77,7 @@ struct ObservableFactory::get_dispatcher<TYPE, Args...> { \
 };
 #define READDY_CREATE_COMPARTMENT_FACTORY_DISPATCHER(TYPE) template<typename... Args> \
 struct CompartmentFactory::get_dispatcher<TYPE, Args...> { \
-    static TYPE *impl(const CompartmentFactory *self, const std::unordered_map<particleType_t, particleType_t> &convMap, Args &&... args) { \
+    static TYPE *impl(const CompartmentFactory *self, const Compartment::conversion_map &convMap, Args &&... args) { \
         return self->create##TYPE(convMap, std::forward<Args>(args)...); \
     } \
 };

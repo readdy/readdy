@@ -68,10 +68,7 @@ public:
 };
 
 class KernelContext {
-    using particle_t = readdy::model::Particle;
-
 public:
-
     using compartment_registry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
@@ -83,7 +80,7 @@ public:
 
     void setKBT(scalar kBT);
 
-    Vec3::data_t &getBoxSize() const;
+    Vec3::data_arr &getBoxSize() const;
 
     std::tuple<readdy::model::Vec3, readdy::model::Vec3> getBoxBoundingVertices() const;
 

@@ -43,10 +43,10 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
 class ReactionRegistry {
-    using particle_t = readdy::model::Particle;
+    using particle = readdy::model::Particle;
     using rea_ptr_vec1 = std::vector<std::unique_ptr<reactions::Reaction<1>>>;
     using rea_ptr_vec2 = std::vector<std::unique_ptr<reactions::Reaction<2>>>;
-    using reaction_o1_registry_internal = std::unordered_map<particle_t::type_type, rea_ptr_vec1>;
+    using reaction_o1_registry_internal = std::unordered_map<particle::type_type, rea_ptr_vec1>;
     using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec2>;
 
     using topology_reaction = top::reactions::ExternalTopologyReaction;
@@ -66,7 +66,7 @@ public:
 
     ~ReactionRegistry() = default;
 
-    using reaction_o1_registry = std::unordered_map<particle_t::type_type, std::vector<reactions::Reaction<1> *>>;
+    using reaction_o1_registry = std::unordered_map<particle::type_type, std::vector<reactions::Reaction<1> *>>;
     using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;
 
     const std::size_t &n_order1() const;
@@ -75,7 +75,7 @@ public:
 
     const reactions::Reaction<1> *const order1_by_name(const std::string &name) const;
 
-    const std::vector<reactions::Reaction<1> *> &order1_by_type(const particle_t::type_type type) const;
+    const std::vector<reactions::Reaction<1> *> &order1_by_type(const particle::type_type type) const;
 
     const std::size_t &n_order2() const;
 
@@ -85,8 +85,8 @@ public:
 
     const reactions::Reaction<2> *const order2_by_name(const std::string &name) const;
 
-    const std::vector<reactions::Reaction<2> *> &order2_by_type(const particle_t::type_type type1,
-                                                                const particle_t::type_type type2) const;
+    const std::vector<reactions::Reaction<2> *> &order2_by_type(const particle::type_type type1,
+                                                                const particle::type_type type2) const;
 
 
     const std::vector<reactions::Reaction<1> *> &order1_by_type(const std::string &type) const;

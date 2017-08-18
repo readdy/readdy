@@ -146,13 +146,13 @@ public:
     virtual std::vector<std::string> getAvailablePotentials() const;
 
     template<typename T, typename... Args>
-    potentials::Potential::id_t registerPotential(Args &&... args) {
+    potentials::Potential::id registerPotential(Args &&... args) {
         auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
         return getKernelContext().potentials().add(std::move(pot));
     }
 
     template<typename T, typename... Args>
-    compartments::Compartment::id_t
+    compartments::Compartment::id
     registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
         auto conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr, getKernelContext());
         auto comp = getCompartmentFactory().createCompartment<T>(conversionsMapInt, std::forward<Args>(args)...);

@@ -207,7 +207,7 @@ KernelContext::KernelContext()
           potentialRegistry_(std::cref(particleTypeRegistry_)),
           reactionRegistry_(std::cref(particleTypeRegistry_)) {}
 
-Vec3::data_t &KernelContext::getBoxSize() const {
+Vec3::data_arr &KernelContext::getBoxSize() const {
     return pimpl->box_size;
 }
 

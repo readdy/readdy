@@ -36,7 +36,7 @@
 
 NAMESPACE_BEGIN(readdy)
 
-inline ObservableHandle::ObservableHandle(id_t id, model::observables::ObservableBase *const observable)
+inline ObservableHandle::ObservableHandle(observable_id id, model::observables::ObservableBase *const observable)
         : id(id), observable(observable) {}
 
 void
@@ -49,7 +49,7 @@ inline ObservableHandle::enableWriteToFile(readdy::io::File &file, const std::st
     }
 }
 
-inline ObservableHandle::id_t ObservableHandle::getId() const {
+inline ObservableHandle::observable_id ObservableHandle::getId() const {
     return id;
 }
 

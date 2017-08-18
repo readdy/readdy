@@ -43,16 +43,16 @@ namespace pot {
 
 TorsionPotential::TorsionPotential() : TopologyPotential() {}
 
-CosineDihedralPotential::CosineDihedralPotential(const dihedrals_t &dihedrals)
+CosineDihedralPotential::CosineDihedralPotential(const dihedral_configurations &dihedrals)
         : TorsionPotential(), dihedrals(dihedrals) {
 }
 
-const CosineDihedralPotential::dihedrals_t &CosineDihedralPotential::getDihedrals() const {
+const CosineDihedralPotential::dihedral_configurations &CosineDihedralPotential::getDihedrals() const {
     return dihedrals;
 }
 
 scalar  CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x_kj, const Vec3 &x_kl,
-                                                const dihedral_t &dihedral) const {
+                                                const dihedral_configuration &dihedral) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm = x_jk.norm();
     x_jk_norm = static_cast<scalar>(x_jk_norm < SMALL ? SMALL : x_jk_norm);
@@ -71,7 +71,7 @@ scalar  CosineDihedralPotential::calculateEnergy(const Vec3 &x_ji, const Vec3 &x
 void
 CosineDihedralPotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, Vec3 &f_l, const Vec3 &x_ji, const Vec3 &x_kj,
                                         const Vec3 &x_kl,
-                                        const dihedral_t &dih) const {
+                                        const dihedral_configuration &dih) const {
     const auto x_jk = -1 * x_kj;
     auto x_jk_norm_squared = x_jk.normSquared();
     x_jk_norm_squared = static_cast<scalar>(x_jk_norm_squared < SMALL ? SMALL : x_jk_norm_squared);

@@ -55,12 +55,12 @@ NAMESPACE_END(executor_type)
 
 class executor_base {
 public:
-    using executable_t = std::function<void(std::size_t)>;
+    using executable = std::function<void(std::size_t)>;
 
-    virtual void execute_and_wait(std::vector<executable_t> &&executables) const = 0;
+    virtual void execute_and_wait(std::vector<executable> &&executables) const = 0;
 
     template<typename F, typename... Args>
-    executable_t pack(F &&f, Args &&... args) const {
+    executable pack(F &&f, Args &&... args) const {
         return std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Args>(args)...);
     }
 
@@ -100,15 +100,15 @@ public:
         return std::is_same<executor_tag, executor_type::std_async>::value;
     }
 
-    void execute_and_wait(std::vector<executable_t> &&executables) const {
-        execute_and_wait(std::forward<std::vector<executable_t>>(executables), executor_tag());
+    void execute_and_wait(std::vector<executable> &&executables) const {
+        execute_and_wait(std::forward<std::vector<executable>>(executables), executor_tag());
     };
 
 private:
     mutable ctpl::thread_pool *pool {nullptr};
     mutable std::mutex mutex {};
 
-    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::std_async /*unused*/) const {
+    void execute_and_wait(std::vector<executable> &&executables, executor_type::std_async /*unused*/) const {
         std::vector<scoped_async> threads;
         threads.reserve(executables.size());
 
@@ -118,7 +118,7 @@ private:
         }
     }
 
-    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::std_thread /*unused*/) const {
+    void execute_and_wait(std::vector<executable> &&executables, executor_type::std_thread /*unused*/) const {
         std::vector<scoped_thread> threads;
         threads.reserve(executables.size());
 
@@ -128,12 +128,12 @@ private:
         }
     }
 
-    void execute_and_wait(std::vector<executable_t> &&executables, executor_type::pool /*unused*/) const {
-        using fut_t = joining_future<void>;
+    void execute_and_wait(std::vector<executable> &&executables, executor_type::pool /*unused*/) const {
+        using future = joining_future<void>;
 
         std::unique_lock<std::mutex> lock(this->mutex);
 
-        std::vector<fut_t> futures;
+        std::vector<future> futures;
         futures.reserve(executables.size());
 
         for (auto &&executable : executables) {

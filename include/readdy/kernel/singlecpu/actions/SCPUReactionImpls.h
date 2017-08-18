@@ -58,26 +58,25 @@ protected:
 };
 
 struct Event {
-    using index_type = model::SCPUParticleData::index_t;
+    using index_type = model::SCPUParticleData::entry_index;
     using reaction_index_type = std::size_t;
-    using particletype_t = readdy::model::Particle::type_type;
     unsigned int nEducts;
     unsigned int nProducts;
     index_type idx1, idx2;
     reaction_index_type reactionIdx;
-    particletype_t t1, t2;
+    particle_type_type t1, t2;
     scalar reactionRate;
     scalar cumulativeRate;
 
     Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
-          scalar cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2);
+          scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2);
 
     friend std::ostream &operator<<(std::ostream &, const Event &);
 
 };
 
 class SCPUGillespie : public readdy::model::actions::reactions::Gillespie {
-    using reaction_idx_t = Event::index_type;
+    using reaction_index = Event::index_type;
 public:
 
     SCPUGillespie(SCPUKernel *const kernel, scalar timeStep)

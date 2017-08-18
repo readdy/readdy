@@ -56,7 +56,7 @@ inline ObservableHandle Simulation::registerObservable(unsigned int stride, Args
 }
 
 template<typename T, typename... Args>
-inline ObservableHandle Simulation::registerObservable(const std::function<void(typename T::result_t)> &callbackFun,
+inline ObservableHandle Simulation::registerObservable(const std::function<void(typename T::result_type)> &callbackFun,
                                              unsigned int stride, Args... args) {
     ensureKernelSelected();
     auto uuid = pimpl->counter++;

@@ -45,13 +45,13 @@ NAMESPACE_BEGIN(top)
 class GraphTopology : public Topology {
 public:
 
-    using graph_t = graph::Graph;
-    using rate_t = scalar;
-    
+    using topology_graph = graph::Graph;
+    using topology_reaction_rate = scalar;
+
     /**
      * a list of (reaction, (current) rate)
      */
-    using topology_reactions = std::vector<std::tuple<reactions::TopologyReaction, rate_t>>;
+    using topology_reactions = std::vector<std::tuple<reactions::TopologyReaction, topology_reaction_rate>>;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
@@ -60,7 +60,7 @@ public:
      * @param types particle's types
      * @param config the configuration table
      */
-    GraphTopology(const particles_t &particles, const std::vector<particle_type_type> &types,
+    GraphTopology(const particle_indices &particles, const std::vector<particle_type_type> &types,
                   const api::PotentialConfiguration &config);
 
     /**
@@ -70,7 +70,7 @@ public:
      * @param graph the already existing graph
      * @param config the configuration table
      */
-    GraphTopology(particles_t &&particles, graph_t &&graph,
+    GraphTopology(particle_indices &&particles, topology_graph &&graph,
                   const api::PotentialConfiguration &config);
 
     virtual ~GraphTopology() = default;
@@ -83,9 +83,9 @@ public:
 
     GraphTopology &operator=(const GraphTopology &) = delete;
 
-    graph_t &graph();
+    topology_graph &graph();
 
-    const graph_t &graph() const;
+    const topology_graph &graph() const;
 
     void configure();
 
@@ -108,13 +108,13 @@ public:
 
     const bool isNormalParticle(const Kernel& k) const;
 
-    const rate_t cumulativeRate() const;
+    const topology_reaction_rate cumulativeRate() const;
 
 protected:
-    graph_t graph_;
+    topology_graph graph_;
     std::reference_wrapper<const api::PotentialConfiguration> config;
     topology_reactions reactions_;
-    rate_t _cumulativeRate;
+    topology_reaction_rate _cumulativeRate;
     bool deactivated {false};
 };
 

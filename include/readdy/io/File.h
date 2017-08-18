@@ -41,7 +41,7 @@ NAMESPACE_BEGIN(io)
 
 class READDY_API FileHandle : public ObjectHandle {
 public:
-    FileHandle(h5::handle_t handle) : ObjectHandle(handle) {}
+    FileHandle(h5::h5_handle handle) : ObjectHandle(handle) {}
 
     ~FileHandle() {
         if(_handle >= 0) close();
@@ -103,7 +103,7 @@ public:
     }
 
     template<typename T>
-    void write(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const T *data) {
+    void write(const std::string &dataSetName, const std::vector<h5::h5_dims> &dims, const T *data) {
         root.write<T>(dataSetName, dims, data);
     }
 

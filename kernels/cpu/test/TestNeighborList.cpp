@@ -642,7 +642,7 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
 
     auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1, std::vector<std::string>({"F", "A"}));
     obs->setCallback(
-            [&](const readdy::model::observables::NParticles::result_t &result) {
+            [&](const readdy::model::observables::NParticles::result_type &result) {
                 EXPECT_EQ(result[0], 100);
             }
     );
@@ -678,7 +678,7 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
     }
     auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1);
     obs->setCallback(
-            [&](const readdy::model::observables::NParticles::result_t &result) {
+            [&](const readdy::model::observables::NParticles::result_type &result) {
                 bool wrong_i_j = false, wrong_j_i = false;
                 const auto &d2 = context.getDistSquaredFun();
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
@@ -741,7 +741,7 @@ TEST(TestAdaptiveNeighborList, TestDiffusionBenchmark) {
 
     auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1);
     obs->setCallback(
-            [&](const readdy::model::observables::NParticles::result_t &result) {
+            [&](const readdy::model::observables::NParticles::result_type &result) {
                 bool wrong_i_j = false, wrong_j_i = false;
                 auto d2 = context.getDistSquaredFun();
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();

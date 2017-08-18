@@ -45,10 +45,10 @@ NAMESPACE_BEGIN(actions)
 
 class TopologyReactionAction {
 public:
-    using graph_t = graph::Graph;
+    using topology_graph = graph::Graph;
 
-    using edge = graph_t::edge;
-    using vertex = graph_t::vertex_ref;
+    using edge = topology_graph::edge;
+    using vertex = topology_graph::vertex_ref;
 
     explicit TopologyReactionAction(GraphTopology *topology);
 

@@ -44,7 +44,7 @@ enum DataSetCompression {
 
 class DataSetHandle : public ObjectHandle {
 public:
-    explicit DataSetHandle(h5::handle_t handle = -1) : ObjectHandle(handle) {}
+    explicit DataSetHandle(h5::h5_handle handle = -1) : ObjectHandle(handle) {}
     
     DataSetHandle(const DataSetHandle&) = default;
     DataSetHandle& operator=(const DataSetHandle&) = default;
@@ -69,7 +69,7 @@ public:
 class READDY_API DataSet : public Object {
 public:
 
-    DataSet(h5::handle_t handle, const DataSetType &memoryType, const DataSetType &fileType);
+    DataSet(h5::h5_handle handle, const DataSetType &memoryType, const DataSetType &fileType);
 
     virtual ~DataSet();
 
@@ -85,22 +85,22 @@ public:
     void append(std::vector<T> &data);
 
     template<typename T>
-    void append(const std::vector<h5::dims_t> &dims, const T *const data);
+    void append(const std::vector<h5::h5_dims> &dims, const T *const data);
 
     void flush();
 
     DataSpace getFileSpace() const;
 
-    h5::dims_t &extensionDim() {
+    h5::h5_dims &extensionDim() {
         return _extensionDim;
     }
 
-    const h5::dims_t &extensionDim() const {
+    const h5::h5_dims &extensionDim() const {
         return _extensionDim;
     }
 
 private:
-    h5::dims_t _extensionDim;
+    h5::h5_dims _extensionDim;
     DataSpace memorySpace;
     DataSetType memoryType{-1};
     DataSetType fileType{-1};
@@ -108,7 +108,7 @@ private:
 
 class VLENDataSet : public Object {
 public:
-    VLENDataSet(h5::handle_t handle, const DataSetType &memoryType, const DataSetType &fileType);
+    VLENDataSet(h5::h5_handle handle, const DataSetType &memoryType, const DataSetType &fileType);
 
     virtual ~VLENDataSet() = default;
 
@@ -124,7 +124,7 @@ public:
     void append(std::vector<std::vector<T>> &data);
 
     template<typename T>
-    void append(const std::vector<h5::dims_t> &dims, std::vector<T> *const data);
+    void append(const std::vector<h5::h5_dims> &dims, std::vector<T> *const data);
 
     void flush() {
         if (hid() >= 0 && H5Fflush(hid(), H5F_SCOPE_LOCAL) < 0) {
@@ -142,16 +142,16 @@ public:
         return DataSpace(_hid);
     };
 
-    h5::dims_t &extensionDim() {
+    h5::h5_dims &extensionDim() {
         return _extensionDim;
     }
 
-    const h5::dims_t &extensionDim() const {
+    const h5::h5_dims &extensionDim() const {
         return _extensionDim;
     }
 
 private:
-    h5::dims_t _extensionDim;
+    h5::h5_dims _extensionDim;
     DataSpace memorySpace;
     DataSetType memoryType{-1};
     DataSetType fileType{-1};

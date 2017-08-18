@@ -43,7 +43,7 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
 
-inline Group::Group(h5::handle_t handle, const std::string &path)
+inline Group::Group(h5::h5_handle handle, const std::string &path)
         : Object(std::make_shared<GroupHandle>(handle)), path(path) {}
 
 inline Group::Group() : Group(-1, "/") {}
@@ -69,8 +69,8 @@ inline Group Group::createGroup(const std::string &path) {
     }
 }
 
-inline h5::group_info_t Group::info() const {
-    h5::group_info_t info;
+inline h5::h5_group_info Group::info() const {
+    h5::h5_group_info info;
     if(H5Gget_info(hid(), &info) < 0) {
         log::critical("Failure to get group info!");
         H5Eprint(H5Eget_current_stack(), stderr);
@@ -172,27 +172,27 @@ inline void Group::write<std::string>(const std::string &dataSetName, const std:
 }
 
 template<>
-inline void Group::write<short>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const short *data) {
+inline void Group::write<short>(const std::string &dataSetName, const std::vector<h5::h5_dims> &dims, const short *data) {
     H5LTmake_dataset_short(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
-inline void Group::write<int>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const int *data) {
+inline void Group::write<int>(const std::string &dataSetName, const std::vector<h5::h5_dims> &dims, const int *data) {
     H5LTmake_dataset_int(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
-inline void Group::write<long>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const long *data) {
+inline void Group::write<long>(const std::string &dataSetName, const std::vector<h5::h5_dims> &dims, const long *data) {
     H5LTmake_dataset_long(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
-inline void Group::write<float>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const float *data) {
+inline void Group::write<float>(const std::string &dataSetName, const std::vector<h5::h5_dims> &dims, const float *data) {
     H5LTmake_dataset_float(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 
 template<>
-inline void Group::write<double>(const std::string &dataSetName, const std::vector<h5::dims_t> &dims, const double *data) {
+inline void Group::write<double>(const std::string &dataSetName, const std::vector<h5::h5_dims> &dims, const double *data) {
     H5LTmake_dataset_double(hid(), dataSetName.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 

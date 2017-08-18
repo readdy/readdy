@@ -63,13 +63,13 @@ class SchemeConfigurator;
 
 class SimulationScheme {
 public:
-    using continue_fun_t = std::function<bool(time_step_type)>;
+    using continue_fun = std::function<bool(time_step_type)>;
 
     using evaluate_topology_reactions = model::actions::top::EvaluateTopologyReactions;
 
     explicit SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
 
-    virtual void run(const continue_fun_t &fun) = 0;
+    virtual void run(const continue_fun &fun) = 0;
 
     void run(const time_step_type steps) {
         // show every 1% of the simulation
@@ -106,7 +106,7 @@ public:
 
     using SimulationScheme::run;
 
-    void run(const continue_fun_t &continueFun) override {
+    void run(const continue_fun &continueFun) override {
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
@@ -207,29 +207,29 @@ public:
     }
 
     virtual std::unique_ptr<SchemeType> configure(scalar timeStep) {
-        using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
-        using default_reactions_t = readdy::model::actions::reactions::Gillespie;
-        using calculate_forces_t = readdy::model::actions::CalculateForces;
-        using update_neighbor_list_t = readdy::model::actions::UpdateNeighborList;
+        using default_integrator = readdy::model::actions::EulerBDIntegrator;
+        using default_reactions = readdy::model::actions::reactions::Gillespie;
+        using calculate_forces = readdy::model::actions::CalculateForces;
+        using update_neighbor_list = readdy::model::actions::UpdateNeighborList;
         if (useDefaults) {
             if (!scheme->integrator) {
-                scheme->integrator = scheme->kernel->template createAction<default_integrator_t>(timeStep);
+                scheme->integrator = scheme->kernel->template createAction<default_integrator>(timeStep);
             }
             if (!scheme->reactionScheduler) {
-                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions_t>(timeStep);
+                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions>(timeStep);
             }
             if (!evaluateObservablesSet) {
                 scheme->evaluateObservables = true;
             }
             if (!scheme->forces && !includeForcesSet) {
-                scheme->forces = scheme->kernel->template createAction<calculate_forces_t>();
+                scheme->forces = scheme->kernel->template createAction<calculate_forces>();
             }
         }
         if (scheme->forces || scheme->reactionScheduler) {
             scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skinSize);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::create, skinSize);
             scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, -1);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
@@ -257,7 +257,7 @@ public:
 
     using SimulationScheme::run;
 
-    void run(const continue_fun_t &fun) override {
+    void run(const continue_fun &fun) override {
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
@@ -378,22 +378,22 @@ public:
     }
 
     std::unique_ptr<AdvancedScheme> configure(scalar timeStep) {
-        using default_integrator_t = readdy::model::actions::EulerBDIntegrator;
-        using default_reactions_t = readdy::model::actions::reactions::Gillespie;
-        using calculate_forces_t = readdy::model::actions::CalculateForces;
-        using update_neighbor_list_t = readdy::model::actions::UpdateNeighborList;
+        using default_integrator = readdy::model::actions::EulerBDIntegrator;
+        using default_reactions = readdy::model::actions::reactions::Gillespie;
+        using calculate_forces = readdy::model::actions::CalculateForces;
+        using update_neighbor_list = readdy::model::actions::UpdateNeighborList;
         if (useDefaults) {
             if (!scheme->integrator) {
-                scheme->integrator = scheme->kernel->template createAction<default_integrator_t>(timeStep);
+                scheme->integrator = scheme->kernel->template createAction<default_integrator>(timeStep);
             }
             if (!scheme->reactionScheduler) {
-                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions_t>(timeStep);
+                scheme->reactionScheduler = scheme->kernel->template createAction<default_reactions>(timeStep);
             }
             if (!evaluateObservablesSet) {
                 scheme->evaluateObservables = true;
             }
             if (!scheme->forces && !includeForcesSet) {
-                scheme->forces = scheme->kernel->template createAction<calculate_forces_t>();
+                scheme->forces = scheme->kernel->template createAction<calculate_forces>();
             }
             if (!scheme->compartments && !includeCompartmentsSet) {
                 scheme->compartments = nullptr;
@@ -401,9 +401,9 @@ public:
         }
         if (scheme->forces || scheme->reactionScheduler) {
             scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::create, skinSize);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::create, skinSize);
             scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list_t>(update_neighbor_list_t::Operation::clear, -1);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, -1);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);

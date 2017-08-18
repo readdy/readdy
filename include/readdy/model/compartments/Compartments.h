@@ -40,7 +40,7 @@ NAMESPACE_BEGIN(compartments)
 
 class Sphere : public Compartment {
 public:
-    Sphere(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &origin,
+    Sphere(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &origin,
            const scalar radius, const bool largerOrLess);
 
     virtual const bool isContained(const Vec3 &position) const override;
@@ -55,8 +55,8 @@ protected:
 
 class Plane : public Compartment {
 public:
-    Plane(const std::unordered_map<particleType_t, particleType_t> &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
-          const scalar distance, const bool largerOrLess);
+    Plane(const Compartment::conversion_map &conversions, const std::string &uniqueName, const Vec3 &normalCoefficients,
+          scalar distance, bool largerOrLess);
 
     const bool isContained(const Vec3 &position) const override;
 

@@ -81,10 +81,10 @@ void CPUHistogramAlongAxis::evaluate() {
     const auto axis = this->axis;
     const auto data = kernel->getCPUKernelStateModel().getParticleData();
 
-    std::vector<std::future<result_t>> updates;
+    std::vector<std::future<result_type>> updates;
     updates.reserve(kernel->getNThreads());
-    auto worker = [binBorders, typesToCount, resultSize, data, axis](std::size_t, Iter from, Iter to, std::promise<result_t>& update) {
-        result_t resultUpdate;
+    auto worker = [binBorders, typesToCount, resultSize, data, axis](std::size_t, Iter from, Iter to, std::promise<result_type>& update) {
+        result_type resultUpdate;
         resultUpdate.resize(resultSize);
 
         for (auto it = from; it != to; ++it) {
@@ -107,7 +107,7 @@ void CPUHistogramAlongAxis::evaluate() {
 
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(kernel->getNThreads());
-        std::vector<std::promise<result_t>> promises;
+        std::vector<std::promise<result_type>> promises;
         promises.resize(kernel->getNThreads());
 
         const auto& executor = kernel->executor();
