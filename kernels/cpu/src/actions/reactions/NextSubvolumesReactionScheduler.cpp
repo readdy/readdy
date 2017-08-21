@@ -47,7 +47,7 @@ struct CPUNextSubvolumes::ReactionEvent {
     unsigned int type1, type2;
     std::size_t reactionIndex;
     scalar reactionRate;
-    scalar cumulativeRate;
+    scalar cumulativeRate {0};
 
     explicit ReactionEvent(const int order, const size_t reactionIndex, const scalar reactionRate, unsigned int t1,
                            unsigned int t2)

@@ -47,6 +47,7 @@ public:
 
     using topology_graph = graph::Graph;
     using topology_reaction_rate = scalar;
+    using types_vec = std::vector<particle_type_type>;
 
     /**
      * a list of (reaction, (current) rate)
@@ -60,7 +61,7 @@ public:
      * @param types particle's types
      * @param config the configuration table
      */
-    GraphTopology(const particle_indices &particles, const std::vector<particle_type_type> &types,
+    GraphTopology(const particle_indices &particles, const types_vec &types,
                   const api::PotentialConfiguration &config);
 
     /**
@@ -98,6 +99,7 @@ public:
     void addReaction(reactions::TopologyReaction &&reaction);
 
     const topology_reactions &registeredReactions() const;
+
     topology_reactions &registeredReactions();
 
     std::vector<GraphTopology> connectedComponents();
@@ -106,16 +108,19 @@ public:
 
     void deactivate();
 
-    const bool isNormalParticle(const Kernel& k) const;
+    const bool isNormalParticle(const Kernel &k) const;
 
     const topology_reaction_rate cumulativeRate() const;
+
+    void appendParticle(particle_index newParticle, particle_type_type newParticleType,
+                        particle_index counterPart);
 
 protected:
     topology_graph graph_;
     std::reference_wrapper<const api::PotentialConfiguration> config;
     topology_reactions reactions_;
     topology_reaction_rate _cumulativeRate;
-    bool deactivated {false};
+    bool deactivated{false};
 };
 
 NAMESPACE_END(top)

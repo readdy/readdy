@@ -97,12 +97,16 @@ void ReactionRegistry::configure() {
 
     one_educt_registry.clear();
     two_educts_registry.clear();
+    _topology_reaction_types.clear();
+
     coll::for_each_value(one_educt_registry_internal,
                          [&](const particle_type_type type, const reaction1ptr &ptr) {
                              (one_educt_registry)[type].push_back(ptr.get());
                          });
     coll::for_each_value(two_educts_registry_internal, [&](const pair &type, const reaction2ptr &r) {
         (two_educts_registry)[type].push_back(r.get());
+        _reaction_o2_types.emplace(std::get<0>(type));
+        _reaction_o2_types.emplace(std::get<1>(type));
     });
     coll::for_each_value(one_educt_registry_external,
                          [&](const particle_type_type type, reactions::Reaction<1> *ptr) {
@@ -110,14 +114,21 @@ void ReactionRegistry::configure() {
                          });
     coll::for_each_value(two_educts_registry_external, [&](const pair &type, reactions::Reaction<2> *r) {
         (two_educts_registry)[type].push_back(r);
+        _reaction_o2_types.emplace(std::get<0>(type));
+        _reaction_o2_types.emplace(std::get<1>(type));
     });
+
+    for(const auto& entry : _topology_reactions) {
+        _topology_reaction_types.emplace(std::get<0>(entry.first));
+        _topology_reaction_types.emplace(std::get<1>(entry.first));
+    }
 }
 
 void ReactionRegistry::debug_output() const {
     if (!one_educt_registry.empty()) {
         log::debug(" - reactions of order 1:");
         for(const auto& entry : one_educt_registry) {
-            for(const auto& reaction : entry.second) {
+            for(const auto reaction : entry.second) {
                 log::debug("     * reaction {}", *reaction);
             }
         }
@@ -125,11 +136,12 @@ void ReactionRegistry::debug_output() const {
     if (!two_educts_registry.empty()) {
         log::debug(" - reactions of order 2:");
         for(const auto& entry : two_educts_registry) {
-            for(const auto& reaction : entry.second) {
+            for(const auto reaction : entry.second) {
                 log::debug("     * reaction {}", *reaction);
             }
         }
     }
+    // todo log external topology reactions
 }
 
 const std::size_t &ReactionRegistry::n_order1() const {
@@ -176,7 +188,7 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
                 if(info1.flavor == particleflavor::TOPOLOGY && info2.flavor == particleflavor::TOPOLOGY) {
                     log::critical("Tried registering a topology-topology fusion reaction, this is not supported yet!");
                 } else {
-                    topology_reactions[types].emplace_back(name, types, types_to, rate, radius);
+                    _topology_reactions[types].emplace_back(name, types, types_to, rate, radius);
                 }
             } else {
                 throw std::invalid_argument(
@@ -202,7 +214,7 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
 }
 
 const ReactionRegistry::topology_reaction_registry &ReactionRegistry::external_topology_reactions() const {
-    return topology_reactions;
+    return _topology_reactions;
 }
 
 void ReactionRegistry::add_external_topology_reaction(const std::string &name, const std::string &typeFrom1,
@@ -211,6 +223,24 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
     add_external_topology_reaction(name, std::make_tuple(typeRegistry.id_of(typeFrom1), typeRegistry.id_of(typeFrom2)),
                                    std::make_tuple(typeRegistry.id_of(typeTo1), typeRegistry.id_of(typeTo2)),
                                    rate, radius);
+}
+
+const ReactionRegistry::topology_reactions &
+ReactionRegistry::external_top_reactions_by_type(particle_type_type t1, particle_type_type t2) const {
+
+    auto it = _topology_reactions.find(std::tie(t1, t2));
+    if(it != _topology_reactions.end()) {
+        return it->second;
+    }
+    return defaultTopologyReactions;
+}
+
+bool ReactionRegistry::is_topology_reaction_type(particle_type_type type) const {
+    return _topology_reaction_types.find(type) != _topology_reaction_types.end();
+}
+
+bool ReactionRegistry::is_reaction_order2_type(particle_type_type type) const {
+    return _reaction_o2_types.find(type) != _reaction_o2_types.end();
 }
 
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {

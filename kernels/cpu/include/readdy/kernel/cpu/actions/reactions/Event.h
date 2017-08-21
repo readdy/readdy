@@ -41,8 +41,8 @@ namespace reactions {
 struct Event {
     using index_type = model::CPUParticleData::index_t;
     using reaction_index_type = std::size_t;
-    unsigned int nEducts;
-    unsigned int nProducts;
+    std::uint8_t nEducts;
+    std::uint8_t nProducts;
     index_type idx1, idx2;
     reaction_index_type reactionIdx;
     readdy::model::Particle::type_type t1, t2;

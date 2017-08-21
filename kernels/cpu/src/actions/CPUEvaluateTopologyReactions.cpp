@@ -31,6 +31,7 @@
  */
 
 #include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
+#include <readdy/kernel/cpu/nl/NeighborList.h>
 
 namespace readdy {
 namespace kernel {
@@ -38,66 +39,51 @@ namespace cpu {
 namespace actions {
 namespace top {
 
-
 CPUEvaluateTopologyReactions::CPUEvaluateTopologyReactions(CPUKernel *const kernel, scalar timeStep)
         : EvaluateTopologyReactions(timeStep), kernel(kernel) {}
 
+/**
+ * Struct holding information about a topology reaction event.
+ * If:
+ *   - reaction_idx == -1: external topology reaction
+ *   - reaction_idx >= 0: internal (fission/conversion-type) topology reaction
+ */
+struct CPUEvaluateTopologyReactions::TREvent {
+    using index_type = model::CPUParticleData::index_t;
+
+    rate_t cumulative_rate{0};
+    rate_t own_rate{0};
+    std::size_t topology_idx{0};
+    std::size_t reaction_idx{0};
+    particle_type_type t1{0}, t2{0};
+    // idx1 is always the particle that belongs to a topology
+    index_type idx1{0}, idx2{0};
+    bool external {false};
+
+};
+
 template<bool approximated>
-bool performReactionEvent(const scalar rate, const scalar timeStep) {
-    if (approximated) {
-        return readdy::model::rnd::uniform_real() < rate * timeStep;
-    } else {
-        return readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * timeStep);
-    }
+bool performReactionEvent(scalar rate, scalar timeStep);
+
+template<>
+bool performReactionEvent<true>(const scalar rate, const scalar timeStep) {
+    return readdy::model::rnd::uniform_real() < rate * timeStep;
 }
 
-bool shouldPerformEvent(const scalar rate, const scalar timestep, bool approximated) {
-    return approximated ? performReactionEvent<true>(rate, timestep) : performReactionEvent<false>(rate, timestep);
+template<>
+bool performReactionEvent<false>(const scalar rate, const scalar timeStep) {
+    return readdy::model::rnd::uniform_real() < 1 - std::exp(-rate * timeStep);
 }
 
 void CPUEvaluateTopologyReactions::perform() {
-    using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
-
     auto &model = kernel->getCPUKernelStateModel();
     auto &topologies = model.topologies();
 
-    if(!topologies.empty()) {
-        struct TREvent {
-            rate_t cumulative_rate;
-            rate_t own_rate;
-            std::size_t topology_idx;
-            std::size_t reaction_idx;
-        };
+    if (!topologies.empty()) {
 
-        std::vector<TREvent> events;
-        {
-            rate_t current_cumulative_rate = 0;
-            std::size_t topology_idx = 0;
-            for (auto &top : topologies) {
-
-                if (!top->isDeactivated()) {
-
-                    std::size_t reaction_idx = 0;
-                    for (const auto &reaction : top->registeredReactions()) {
-
-                        TREvent event{};
-                        event.own_rate = std::get<1>(reaction);
-                        event.cumulative_rate = event.own_rate + current_cumulative_rate;
-                        current_cumulative_rate = event.cumulative_rate;
-                        event.topology_idx = topology_idx;
-                        event.reaction_idx = reaction_idx;
-
-                        events.push_back(event);
-
-                        ++reaction_idx;
-                    }
-                }
-                ++topology_idx;
-            }
-        }
+        auto events = gatherEvents();
 
         if (!events.empty()) {
-
             auto end = events.end();
 
             std::vector<readdy::model::top::GraphTopology> new_topologies;
@@ -115,8 +101,9 @@ void CPUEvaluateTopologyReactions::perform() {
                 if (eventIt != events.end()) {
                     const auto &event = *eventIt;
 
-                    if (shouldPerformEvent(event.own_rate, timeStep, true)) {
-                        log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt)+1, events.size(), eventIt->own_rate);
+                    if (performReactionEvent<true>(event.own_rate, timeStep)) {
+                        log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt) + 1,
+                                   events.size(), eventIt->own_rate);
                         // perform the event!
                         auto &topology = topologies.at(event.topology_idx);
                         if (topology->isDeactivated()) {
@@ -131,21 +118,10 @@ void CPUEvaluateTopologyReactions::perform() {
                             }
                         }
                         assert(!topology->isDeactivated());
-                        auto &reaction = topology->registeredReactions().at(event.reaction_idx);
-                        auto result = std::get<0>(reaction).execute(*topology, kernel);
-                        if (!result.empty()) {
-                            // we had a topology fission, so we need to actually remove the current topology from the
-                            // data structure
-                            topologies.erase(topologies.begin() + event.topology_idx);
-                            //log::error("erased topology with index {}", event.topology_idx);
-                            assert(topology->isDeactivated());
-                            std::move(result.begin(), result.end(), std::back_inserter(new_topologies));
+                        if(!event.external) {
+                            handleInternalReaction(topologies, new_topologies, event, topology);
                         } else {
-                            if (topology->isNormalParticle(*kernel)) {
-                                topologies.erase(topologies.begin() + event.topology_idx);
-                                //log::error("erased topology with index {}", event.topology_idx);
-                                assert(topology->isDeactivated());
-                            }
+                            handleExternalReaction(topology, event);
                         }
 
                         // loop over all other events, swap events considering this particular topology to the end
@@ -211,6 +187,139 @@ void CPUEvaluateTopologyReactions::perform() {
             }
         }
     }
+}
+
+void CPUEvaluateTopologyReactions::handleInternalReaction(CPUStateModel::topologies_vec &topologies,
+                                                          std::vector<CPUStateModel::topology> &new_topologies,
+                                                          const CPUEvaluateTopologyReactions::TREvent &event,
+                                                          CPUStateModel::topology_ref &topology) const {
+    auto &reaction = topology->registeredReactions().at(static_cast<std::size_t>(event.reaction_idx));
+    auto result = std::get<0>(reaction).execute(*topology, kernel);
+    if (!result.empty()) {
+        // we had a topology fission, so we need to actually remove the current topology from the
+        // data structure
+        topologies.erase(topologies.begin() + event.topology_idx);
+        //log::error("erased topology with index {}", event.topology_idx);
+        assert(topology->isDeactivated());
+        move(result.begin(), result.end(), back_inserter(new_topologies));
+    } else {
+        if (topology->isNormalParticle(*kernel)) {
+            topologies.erase(topologies.begin() + event.topology_idx);
+            //log::error("erased topology with index {}", event.topology_idx);
+            assert(topology->isDeactivated());
+        }
+    }
+}
+
+CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReactions::gatherEvents() {
+    topology_reaction_events events;
+    {
+        rate_t current_cumulative_rate = 0;
+        std::size_t topology_idx = 0;
+        for (auto &top : kernel->getCPUKernelStateModel().topologies()) {
+            if (!top->isDeactivated()) {
+                std::size_t reaction_idx = 0;
+                for (const auto &reaction : top->registeredReactions()) {
+                    TREvent event{};
+                    event.own_rate = std::get<1>(reaction);
+                    event.cumulative_rate = event.own_rate + current_cumulative_rate;
+                    current_cumulative_rate = event.cumulative_rate;
+                    event.topology_idx = topology_idx;
+                    event.reaction_idx = reaction_idx;
+
+                    events.push_back(event);
+                    ++reaction_idx;
+                }
+            }
+            ++topology_idx;
+        }
+
+        const auto& context = kernel->getKernelContext();
+        const auto& reaction_registry = context.reactions();
+        const auto& d2 = context.getDistSquaredFun();
+        const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
+        const auto& neighbor_list = *kernel->getCPUKernelStateModel().getNeighborList();
+
+        std::size_t index {0};
+        for(auto it = data.begin(); it != data.end(); ++it, ++index) {
+            const auto& entry = *it;
+            if(!entry.deactivated && reaction_registry.is_topology_reaction_type(entry.type)) {
+                for (auto neighbor_index : neighbor_list.neighbors_of(index)) {
+                    if (index > neighbor_index) {
+                        continue;
+                    }
+                    const auto &neighbor = data.entry_at(neighbor_index);
+                    if(!reaction_registry.is_topology_reaction_type(neighbor.type)) {
+                        continue;
+                    }
+
+                    if (!neighbor.deactivated) {
+                        const auto &reactions = reaction_registry.external_top_reactions_by_type(entry.type,
+                                                                                                 neighbor.type);
+                        const auto distSquared = d2(entry.pos, neighbor.pos);
+                        std::size_t reaction_index = 0;
+                        for (const auto &reaction : reactions) {
+                            // todo this only covers the particle<->topology case, not the topology<->topology case
+                            if (distSquared < reaction.radius() * reaction.radius()) {
+                                TREvent event{};
+                                event.own_rate = reaction.rate();
+                                event.cumulative_rate = event.own_rate + current_cumulative_rate;
+                                current_cumulative_rate = event.cumulative_rate;
+                                if(entry.topology_index >= 0 && neighbor.topology_index < 0) {
+                                    event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                    event.t1 = entry.type;
+                                    event.t2 = neighbor.type;
+                                    event.idx1 = index;
+                                    event.idx2 = neighbor_index;
+                                } else if(entry.topology_index < 0 && neighbor.topology_index >= 0) {
+                                    event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
+                                    event.t1 = neighbor.type;
+                                    event.t2 = entry.type;
+                                    event.idx1 = neighbor_index;
+                                    event.idx2 = index;
+                                } else if(entry.topology_index >= 0 && neighbor.topology_index >= 0) {
+                                    // todo this is a topology-topology fusion
+                                    log::critical("topology <-> topology fusion encountered, this should currently not happen");
+                                } else {
+                                    log::critical("got no topology for topology-fusion");
+                                }
+                                event.reaction_idx = reaction_index;
+                                event.external = true;
+
+                                events.push_back(event);
+                            }
+                            ++reaction_index;
+                        }
+                    } else {
+                        log::critical("Handling topology reactions: Deactivated entry in neighbor list!");
+                    }
+                }
+            }
+        }
+    }
+    return events;
+}
+
+void CPUEvaluateTopologyReactions::handleExternalReaction(CPUStateModel::topology_ref &topology,
+                                                          const CPUEvaluateTopologyReactions::TREvent &event) {
+    const auto& context = kernel->getKernelContext();
+    const auto& reaction_registry = context.reactions();
+    const auto& reaction = reaction_registry.external_top_reactions_by_type(event.t1, event.t2).at(event.reaction_idx);
+
+    auto& model = kernel->getCPUKernelStateModel();
+    auto& data = *model.getParticleData();
+
+    auto& entry1Type = data.entry_at(event.idx1).type;
+    auto& entry2Type = data.entry_at(event.idx2).type;
+    if(entry1Type == reaction.type1()) {
+        entry1Type = reaction.type_to1();
+        entry2Type = reaction.type_to2();
+    } else {
+        entry1Type = reaction.type_to2();
+        entry2Type = reaction.type_to1();
+    }
+
+    topology->appendParticle(event.idx2, entry2Type, event.idx1);
 }
 
 }

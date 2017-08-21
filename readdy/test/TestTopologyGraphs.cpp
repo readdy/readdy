@@ -360,7 +360,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
-    if(readdy::single_precision) {
+    if(kernel->singlePrecision()) {
         EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
     } else {
         EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
@@ -409,7 +409,7 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
-    if(readdy::single_precision) {
+    if(kernel->singlePrecision()) {
         EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
     } else {
         EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
@@ -422,6 +422,10 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
+}
+
+TEST_P(TestTopologyGraphs, TestAppendParticle) {
+    // todo
 }
 
 INSTANTIATE_TEST_CASE_P(TestTopologyGraphsCore, TestTopologyGraphs, ::testing::Values("SingleCPU", "CPU"));

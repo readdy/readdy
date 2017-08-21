@@ -108,8 +108,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
 
             // order 2
             const auto &neighbor = data.entry_at(it_nl->idx2);
-            const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
-                                                                                                 neighbor.type);
+            const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type, neighbor.type);
             if (!reactions.empty()) {
                 const auto distSquared = d2(neighbor.position(), entry.position());
                 for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
