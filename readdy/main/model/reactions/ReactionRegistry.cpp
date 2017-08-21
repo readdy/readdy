@@ -161,10 +161,32 @@ const ReactionRegistry::reaction_o2_registry &ReactionRegistry::order2() const {
     return two_educts_registry;
 }
 
-void ReactionRegistry::add_topology_reaction(const std::string &name, const util::particle_type_pair &types,
-                                             const util::particle_type_pair &types_to, const scalar rate,
-                                             const scalar radius) {
-    topology_reactions.insert(std::make_pair(types, topology_reaction(name, types, types_to, rate, radius)));
+void ReactionRegistry::add_external_topology_reaction(const std::string &name, const util::particle_type_pair &types,
+                                                      const util::particle_type_pair &types_to, scalar rate,
+                                                      scalar radius) {
+    if(rate > 0 && radius > 0) {
+        topology_reactions[types].push_back(topology_reaction(name, types, types_to, rate, radius));
+    }
+    if(rate <= 0) {
+        throw std::invalid_argument("The rate of an external topology reaction ("
+                                    + name + ") should always be positive");
+    }
+    if(radius <= 0) {
+        throw std::invalid_argument("The radius of an external topology reaction("
+                                    + name + ") should always be positive");
+    }
+}
+
+const ReactionRegistry::topology_reaction_registry &ReactionRegistry::external_topology_reactions() const {
+    return topology_reactions;
+}
+
+void ReactionRegistry::add_external_topology_reaction(const std::string &name, const std::string &typeFrom1,
+                                                      const std::string &typeFrom2, const std::string &typeTo1,
+                                                      const std::string &typeTo2, scalar rate, scalar radius) {
+    add_external_topology_reaction(name, std::make_tuple(typeRegistry.id_of(typeFrom1), typeRegistry.id_of(typeFrom2)),
+                                   std::make_tuple(typeRegistry.id_of(typeTo1), typeRegistry.id_of(typeTo2)),
+                                   rate, radius);
 }
 
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {

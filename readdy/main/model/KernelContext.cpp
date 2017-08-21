@@ -340,6 +340,26 @@ const KernelContext::pbc_fun &KernelContext::getPBCFun() const {
     return pimpl->pbc;
 }
 
+const scalar KernelContext::calculateMaxCutoff() const {
+    scalar max_cutoff {0};
+    for (const auto &entry : potentials().potentials_order2()) {
+        for (const auto &potential : entry.second) {
+            max_cutoff = std::max(max_cutoff, potential->getCutoffRadius());
+        }
+    }
+    for (const auto &entry : reactions().order2()) {
+        for (const auto &reaction : entry.second) {
+            max_cutoff = std::max(max_cutoff, reaction->getEductDistance());
+        }
+    }
+    for(const auto& entry : reactions().external_topology_reactions()) {
+        for(const auto& reaction : entry.second) {
+            max_cutoff = std::max(max_cutoff, reaction.radius());
+        }
+    }
+    return max_cutoff;
+}
+
 KernelContext::~KernelContext() = default;
 
 

@@ -49,10 +49,11 @@ class ReactionRegistry {
     using reaction_o1_registry_internal = std::unordered_map<particle::type_type, rea_ptr_vec1>;
     using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec2>;
 
-    using topology_reaction = top::reactions::ExternalTopologyReaction;
-    using topology_reaction_registry = util::particle_type_pair_unordered_map<topology_reaction>;
-
 public:
+    using topology_reaction = top::reactions::ExternalTopologyReaction;
+    using topology_reaction_registry = util::particle_type_pair_unordered_map<std::vector<topology_reaction>>;
+    using reaction_o1_registry = std::unordered_map<particle::type_type, std::vector<reactions::Reaction<1> *>>;
+    using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;
 
     explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
@@ -65,9 +66,6 @@ public:
     ReactionRegistry &operator=(ReactionRegistry &&) = delete;
 
     ~ReactionRegistry() = default;
-
-    using reaction_o1_registry = std::unordered_map<particle::type_type, std::vector<reactions::Reaction<1> *>>;
-    using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;
 
     const std::size_t &n_order1() const;
 
@@ -129,8 +127,14 @@ public:
 
     const short add_external(reactions::Reaction<2> *r);
 
-    void add_topology_reaction(const std::string& name, const util::particle_type_pair& types,
-                               const util::particle_type_pair& types_to, scalar rate, scalar radius);
+    void add_external_topology_reaction(const std::string &name, const std::string& typeFrom1,
+                                        const std::string& typeFrom2, const std::string& typeTo1,
+                                        const std::string& typeTo2, scalar rate, scalar radius);
+
+    void add_external_topology_reaction(const std::string &name, const util::particle_type_pair &types,
+                                        const util::particle_type_pair &types_to, scalar rate, scalar radius);
+
+    const topology_reaction_registry &external_topology_reactions() const;
 
     void configure();
 

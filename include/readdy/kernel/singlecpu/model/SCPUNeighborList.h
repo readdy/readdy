@@ -181,15 +181,7 @@ public:
     virtual void setupBoxes(scalar skin) {
         if (boxes.empty()) {
             const auto simBoxSize = ctx->getBoxSize();
-            scalar maxCutoff = 0;
-            for(const auto& entry : ctx->potentials().potentials_order2()) {
-                for(const auto& potential : entry.second) {
-                    maxCutoff = maxCutoff < potential->getCutoffRadius() ? potential->getCutoffRadius() : maxCutoff;
-                }
-            }
-            for (auto &&e : ctx->reactions().order2_flat()) {
-                maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
-            }
+            auto maxCutoff = ctx->calculateMaxCutoff();
             if (maxCutoff > 0) {
                 maxCutoff += skin;
                 SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;
