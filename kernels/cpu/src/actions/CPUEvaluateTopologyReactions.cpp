@@ -204,6 +204,7 @@ void CPUEvaluateTopologyReactions::handleInternalReaction(CPUStateModel::topolog
         move(result.begin(), result.end(), back_inserter(new_topologies));
     } else {
         if (topology->isNormalParticle(*kernel)) {
+            kernel->getCPUKernelStateModel().getParticleData()->entry_at(topology->getParticles().front()).topology_index = -1;
             topologies.erase(topologies.begin() + event.topology_idx);
             //log::error("erased topology with index {}", event.topology_idx);
             assert(topology->isDeactivated());
@@ -249,11 +250,12 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                         continue;
                     }
                     const auto &neighbor = data.entry_at(neighbor_index);
-                    if(!reaction_registry.is_topology_reaction_type(neighbor.type)) {
-                        continue;
-                    }
 
                     if (!neighbor.deactivated) {
+                        if(!reaction_registry.is_topology_reaction_type(neighbor.type)) {
+                            continue;
+                        }
+
                         const auto &reactions = reaction_registry.external_top_reactions_by_type(entry.type,
                                                                                                  neighbor.type);
                         const auto distSquared = d2(entry.pos, neighbor.pos);
@@ -320,6 +322,8 @@ void CPUEvaluateTopologyReactions::handleExternalReaction(CPUStateModel::topolog
     }
 
     topology->appendParticle(event.idx2, entry2Type, event.idx1);
+    topology->updateReactionRates();
+    topology->configure();
 }
 
 }

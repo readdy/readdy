@@ -259,12 +259,16 @@ const bool GraphTopology::isNormalParticle(const Kernel &k) const {
 
 void GraphTopology::appendParticle(particle_index newParticle, particle_type_type newParticleType,
                                    particle_index counterPart) {
-    particles.push_back(newParticle);
-    auto it = std::find(particles.begin(), particles.end()-1, counterPart);
+    auto it = std::find(particles.begin(), particles.end(), counterPart);
     if(it != particles.end()) {
+        auto counterPartIdx = std::distance(particles.begin(), it);
+
+        particles.push_back(newParticle);
         graph().addVertex(particles.size() - 1, newParticleType);
+
         auto newParticleIt = std::prev(graph().vertices().end());
-        auto otherParticleIt = std::next(graph().vertices().begin(), std::distance(particles.begin(), it));
+        auto otherParticleIt = std::next(graph().vertices().begin(), counterPartIdx);
+
         graph().addEdge(newParticleIt, otherParticleIt);
     } else {
         log::critical("counterPart {} was not contained in topology, this should not happen", counterPart);

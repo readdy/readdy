@@ -98,6 +98,7 @@ void ReactionRegistry::configure() {
     one_educt_registry.clear();
     two_educts_registry.clear();
     _topology_reaction_types.clear();
+    _reaction_o2_types.clear();
 
     coll::for_each_value(one_educt_registry_internal,
                          [&](const particle_type_type type, const reaction1ptr &ptr) {
