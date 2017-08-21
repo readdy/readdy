@@ -37,8 +37,8 @@ namespace readdy {
 namespace model {
 namespace reactions {
 
-const std::vector<const reactions::Reaction<1> *> ReactionRegistry::order1_flat() const {
-    auto result = std::vector<const reactions::Reaction<1> *>();
+const ReactionRegistry::reactions_o1 ReactionRegistry::order1_flat() const {
+    reaction_o1_registry::mapped_type result;
     for (const auto &mapEntry : one_educt_registry) {
         for (const auto reaction : mapEntry.second) {
             result.push_back(reaction);
@@ -47,7 +47,7 @@ const std::vector<const reactions::Reaction<1> *> ReactionRegistry::order1_flat(
     return result;
 }
 
-const reactions::Reaction<1> *const ReactionRegistry::order1_by_name(const std::string &name) const {
+const ReactionRegistry::reaction_o1 ReactionRegistry::order1_by_name(const std::string &name) const {
     for (const auto &mapEntry : one_educt_registry) {
         for (const auto &reaction : mapEntry.second) {
             if (reaction->getName() == name) return reaction;
@@ -57,8 +57,8 @@ const reactions::Reaction<1> *const ReactionRegistry::order1_by_name(const std::
     return nullptr;
 }
 
-const std::vector<const reactions::Reaction<2> *> ReactionRegistry::order2_flat() const {
-    auto result = std::vector<const reactions::Reaction<2> *>();
+const ReactionRegistry::reactions_o2 ReactionRegistry::order2_flat() const {
+    reaction_o2_registry::mapped_type result;
     for (const auto &mapEntry : two_educts_registry) {
         for (const auto reaction : mapEntry.second) {
             result.push_back(reaction);
@@ -67,11 +67,11 @@ const std::vector<const reactions::Reaction<2> *> ReactionRegistry::order2_flat(
     return result;
 }
 
-const std::vector<Reaction<1> *> &ReactionRegistry::order1_by_type(const Particle::type_type type) const {
+const ReactionRegistry::reactions_o1 &ReactionRegistry::order1_by_type(const Particle::type_type type) const {
     return util::collections::getOrDefault(one_educt_registry, type, defaultReactionsO1);
 }
 
-const reactions::Reaction<2> *const ReactionRegistry::order2_by_name(const std::string &name) const {
+const ReactionRegistry::reaction_o2 ReactionRegistry::order2_by_name(const std::string &name) const {
     for (const auto &mapEntry : two_educts_registry) {
         for (const auto &reaction : mapEntry.second) {
             if (reaction->getName() == name) return reaction;
@@ -80,10 +80,10 @@ const reactions::Reaction<2> *const ReactionRegistry::order2_by_name(const std::
     return nullptr;
 }
 
-const std::vector<Reaction<2> *> &
-ReactionRegistry::order2_by_type(const Particle::type_type type1, const Particle::type_type type2) const {
-    decltype(two_educts_registry.find(std::tie(type1, type2))) it;
-    if((it = two_educts_registry.find(std::tie(type1, type2))) != two_educts_registry.end()) {
+const ReactionRegistry::reactions_o2& ReactionRegistry::order2_by_type(const Particle::type_type type1,
+                                                                       const Particle::type_type type2) const {
+    auto it = two_educts_registry.find(std::tie(type1, type2));
+    if(it != two_educts_registry.end()) {
         return it->second;
     }
     return defaultReactionsO2;
@@ -148,12 +148,12 @@ const short ReactionRegistry::add_external(reactions::Reaction<1> *r) {
 
 ReactionRegistry::ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref) : typeRegistry(ref) {}
 
-const std::vector<Reaction<1> *> &ReactionRegistry::order1_by_type(const std::string &type) const {
+const ReactionRegistry::reactions_o1 &ReactionRegistry::order1_by_type(const std::string &type) const {
     return order1_by_type(typeRegistry.id_of(type));
 }
 
-const std::vector<Reaction<2> *> &
-ReactionRegistry::order2_by_type(const std::string &type1, const std::string &type2) const {
+const ReactionRegistry::reactions_o2& ReactionRegistry::order2_by_type(const std::string &type1,
+                                                                       const std::string &type2) const {
     return order2_by_type(typeRegistry.id_of(type1), typeRegistry.id_of(type2));
 }
 
@@ -165,7 +165,31 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
                                                       const util::particle_type_pair &types_to, scalar rate,
                                                       scalar radius) {
     if(rate > 0 && radius > 0) {
-        topology_reactions[types].push_back(topology_reaction(name, types, types_to, rate, radius));
+        auto info1 = typeRegistry.info_of(std::get<0>(types));
+        auto info2 = typeRegistry.info_of(std::get<1>(types));
+        auto infoTo1 = typeRegistry.info_of(std::get<0>(types_to));
+        auto infoTo2 = typeRegistry.info_of(std::get<1>(types_to));
+
+        if(info1.flavor == particleflavor::TOPOLOGY || info2.flavor == particleflavor::TOPOLOGY) {
+            if (infoTo1.flavor == particleflavor::TOPOLOGY && infoTo2.flavor == particleflavor::TOPOLOGY) {
+                // todo support topology-topology fusion reactions
+                if(info1.flavor == particleflavor::TOPOLOGY && info2.flavor == particleflavor::TOPOLOGY) {
+                    log::critical("Tried registering a topology-topology fusion reaction, this is not supported yet!");
+                } else {
+                    topology_reactions[types].emplace_back(name, types, types_to, rate, radius);
+                }
+            } else {
+                throw std::invalid_argument(
+                        fmt::format("One or both of the target types ({} and {}) of topology reaction {} did not have "
+                                            "the topology flavor!", infoTo1.name, infoTo2.name, name)
+                );
+            }
+        } else {
+            throw std::invalid_argument(
+                    fmt::format("At least one of the educt types ({} and {}) of topology reaction {} need "
+                                        "to be topology flavored!", info1.name, info2.name, name)
+            );
+        }
     }
     if(rate <= 0) {
         throw std::invalid_argument("The rate of an external topology reaction ("
