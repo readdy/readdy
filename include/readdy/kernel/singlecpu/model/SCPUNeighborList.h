@@ -94,14 +94,14 @@ struct READDY_API SCPUNeighborListContainer {
 
     virtual const_iter_type cend() const { return pairs->cend(); };
 
-    virtual void create(const SCPUParticleData &data) = 0;
+    virtual void create(const SCPUParticleData &data, scalar skin) = 0;
 
 protected:
     std::unique_ptr<container> pairs = std::make_unique<container>();
 };
 
 struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
-    void create(const SCPUParticleData &data) override;
+    void create(const SCPUParticleData &data, scalar skin) override;
 
     // ctor and dtor
     SCPUNaiveNeighborList();
@@ -152,8 +152,8 @@ class READDY_API SCPUNotThatNaiveNeighborList : public SCPUNeighborListContainer
 public:
     explicit SCPUNotThatNaiveNeighborList(const context *const context) : ctx(context) {}
 
-    void create(const SCPUParticleData &data) override {
-        setupBoxes();
+    void create(const SCPUParticleData &data, scalar skin) override {
+        setupBoxes(skin);
         fillBoxes(data);
     }
 
@@ -178,7 +178,7 @@ public:
         me->addNeighbor(getBox(i + 1, j + 1, k + 1));
     }
 
-    virtual void setupBoxes() {
+    virtual void setupBoxes(scalar skin) {
         if (boxes.empty()) {
             const auto simBoxSize = ctx->getBoxSize();
             scalar maxCutoff = 0;
@@ -190,11 +190,12 @@ public:
             for (auto &&e : ctx->reactions().order2_flat()) {
                 maxCutoff = maxCutoff < e->getEductDistance() ? e->getEductDistance() : maxCutoff;
             }
-            SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;
             if (maxCutoff > 0) {
+                maxCutoff += skin;
+                SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;
 
-                for (unsigned int i = 0; i < 3; ++i) {
-                    nBoxes[i] = (int) floor(simBoxSize[i] / maxCutoff);
+                for (std::uint8_t i = 0; i < 3; ++i) {
+                    nBoxes[i] = static_cast<int>(floor(simBoxSize[i] / maxCutoff));
                     if (nBoxes[i] == 0) nBoxes[i] = 1;
                     boxSize[i] = simBoxSize[i] / nBoxes[i];
                 }
@@ -278,7 +279,7 @@ protected:
     std::vector<Box> boxes{};
     std::array<int, 3> nBoxes{{0, 0, 0}};
     readdy::model::Vec3 boxSize{0, 0, 0};
-    scalar maxCutoff = 0;
+    scalar maxCutoff {0};
 
     const context *const ctx;
 };

@@ -40,7 +40,7 @@ namespace actions {
 void SCPUUpdateNeighborList::perform() {
     switch (operation) {
         case create:
-            kernel->getKernelStateModel().updateNeighborList();
+            kernel->getKernelStateModel().updateNeighborList(skinSize > 0 ? skinSize : 0);
             break;
         case clear:
             kernel->getKernelStateModel().clearNeighborList();
@@ -51,13 +51,10 @@ void SCPUUpdateNeighborList::perform() {
 SCPUUpdateNeighborList::SCPUUpdateNeighborList(SCPUKernel *const kernel, core_actions::UpdateNeighborList::Operation op,
                                                scalar skinSize)
         : UpdateNeighborList(op, skinSize), kernel(kernel){
-    if(skinSize >= 0) {
-        log::warn("Ignoring skin size for single cpu kernel, as there is no Verlet list implementation");
-    }
 }
 
 bool SCPUUpdateNeighborList::supportsSkin() const {
-    return false;
+    return true;
 }
 
 }

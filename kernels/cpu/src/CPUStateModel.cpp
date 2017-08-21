@@ -239,8 +239,9 @@ const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
     return result;
 }
 
-void CPUStateModel::updateNeighborList() {
+void CPUStateModel::updateNeighborList(scalar skin) {
     if(pimpl->initial_neighbor_list_setup) {
+        pimpl->neighborList->skin() = skin;
         pimpl->neighborList->set_up();
         pimpl->initial_neighbor_list_setup = false;
     } else {

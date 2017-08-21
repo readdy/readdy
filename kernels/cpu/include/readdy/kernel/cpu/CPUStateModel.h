@@ -70,7 +70,7 @@ public:
 
     const std::vector<particle_t> getParticles() const override;
 
-    void updateNeighborList() override;
+    void updateNeighborList(scalar skin) override;
 
     void calculateForces() override;
 

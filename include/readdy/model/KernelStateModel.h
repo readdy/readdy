@@ -63,7 +63,7 @@ public:
 
     virtual particle_type_type getParticleType(std::size_t index) const = 0;
 
-    virtual void updateNeighborList() = 0;
+    virtual void updateNeighborList(scalar skin = 0) = 0;
 
     virtual void clearNeighborList() = 0;
 

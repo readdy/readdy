@@ -110,8 +110,8 @@ const std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const 
     return result;
 }
 
-void SCPUStateModel::updateNeighborList() {
-    pimpl->neighborList->create(pimpl->particleData);
+void SCPUStateModel::updateNeighborList(scalar skin) {
+    pimpl->neighborList->create(pimpl->particleData, skin);
 }
 
 void SCPUStateModel::calculateForces() {

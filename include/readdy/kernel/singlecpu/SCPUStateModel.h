@@ -54,7 +54,7 @@ public:
     using topology = readdy::model::top::GraphTopology;
     using topologies_vec = readdy::util::index_persistent_vector<std::unique_ptr<topology>>;
 
-    void updateNeighborList() override;
+    void updateNeighborList(scalar skin) override;
 
     void clearNeighborList() override;
 
