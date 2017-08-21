@@ -264,6 +264,16 @@ readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy
     throw std::logic_error(fmt::format("requested particle was deactivated in getTopologyForParticle(p={})", particle));
 }
 
+void SCPUStateModel::insert_topology(SCPUStateModel::topology &&top) {
+    auto it = _topologies.push_back(std::make_unique<topology>(std::move(top)));
+    auto idx = std::distance(_topologies.begin(), it);
+    const auto& particles = it->get()->getParticles();
+    auto& data = pimpl->particleData;
+    std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
+        data.entry_at(p).topology_index = idx;
+    });
+}
+
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;
 
 SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) noexcept = default;

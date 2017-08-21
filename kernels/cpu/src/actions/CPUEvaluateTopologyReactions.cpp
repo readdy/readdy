@@ -57,19 +57,11 @@ bool shouldPerformEvent(const scalar rate, const scalar timestep, bool approxima
 
 void CPUEvaluateTopologyReactions::perform() {
     using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
-    auto &topologies = kernel->getCPUKernelStateModel().topologies();
+
+    auto &model = kernel->getCPUKernelStateModel();
+    auto &topologies = model.topologies();
 
     if(!topologies.empty()) {
-        std::stringstream ss;
-        for(const auto& top : topologies) {
-            if(!top->isDeactivated()) {
-                const auto * address = static_cast<const void*>(&top);
-                std::stringstream ss2;
-                ss2 << address;
-                std::string name = ss2.str();
-                ss << ", " << name << "(" << top->getNParticles() <<")";
-            }
-        }
         struct TREvent {
             rate_t cumulative_rate;
             rate_t own_rate;
@@ -78,7 +70,6 @@ void CPUEvaluateTopologyReactions::perform() {
         };
 
         std::vector<TREvent> events;
-
         {
             rate_t current_cumulative_rate = 0;
             std::size_t topology_idx = 0;
@@ -207,11 +198,14 @@ void CPUEvaluateTopologyReactions::perform() {
 
             if (!new_topologies.empty()) {
                 for (auto &&top : new_topologies) {
-                    // if we have a single particle that is not of flavor topology, ignore!
                     if (!top.isNormalParticle(*kernel)) {
-                        auto it = topologies.push_back(std::make_unique<readdy::model::top::GraphTopology>(std::move(top)));
-                        it->get()->updateReactionRates();
-                        it->get()->configure();
+                        // we have a new topology here, update data accordingly.
+                        top.updateReactionRates();
+                        top.configure();
+                        model.insert_topology(std::move(top));
+                    } else {
+                        // if we have a single particle that is not of flavor topology, remove from topology structure!
+                        model.getParticleData()->entry_at(top.getParticles().front()).topology_index = -1;
                     }
                 }
             }

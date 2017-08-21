@@ -513,13 +513,14 @@ public:
 
     bool doublePrecision() const;
 
+    readdy::model::Kernel *const getSelectedKernel() const;
+
 private:
     struct Impl;
     std::unique_ptr<readdy::Simulation::Impl> pimpl;
 
     void ensureKernelSelected() const;
 
-    readdy::model::Kernel *const getSelectedKernel() const;
 };
 
 class NoKernelSelectedException : public std::runtime_error {

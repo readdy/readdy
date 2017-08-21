@@ -42,7 +42,7 @@ ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar  diffus
 
 
 const ParticleTypeInfo &ParticleTypeRegistry::info_of(const std::string &name) const {
-    return info_of(type_mapping_.at(name));
+    return info_of(_id_of(name));
 }
 
 const ParticleTypeInfo &ParticleTypeRegistry::info_of(const Particle::type_type type) const {
@@ -85,7 +85,7 @@ scalar  ParticleTypeRegistry::diffusion_constant_of(const std::string &particleT
 }
 
 void
-ParticleTypeRegistry::add(const std::string &name, const scalar  diffusionConst, const scalar  radius,
+ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const scalar radius,
                           const particle_flavor flavor) {
     particle_type_type t_id = type_counter_++;
     type_mapping_.emplace(name, t_id);
@@ -94,11 +94,21 @@ ParticleTypeRegistry::add(const std::string &name, const scalar  diffusionConst,
 }
 
 particle_type_type ParticleTypeRegistry::id_of(const std::string &name) const {
-    return type_mapping_.at(name);
+    return _id_of(name);
 }
 
 const std::size_t &ParticleTypeRegistry::n_types() const {
     return n_types_;
+}
+
+particle_type_type ParticleTypeRegistry::_id_of(const std::string &name) const {
+    auto it = type_mapping_.find(name);
+    if(it == type_mapping_.end()) {
+        throw std::invalid_argument(
+                fmt::format("Could not find type \"{}\", did you forget to register it before accessing it?", name)
+        );
+    }
+    return it->second;
 }
 }
 }

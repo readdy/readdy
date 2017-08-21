@@ -33,6 +33,7 @@
 #include <gtest/gtest.h>
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
+#include <readdy/api/Simulation.h>
 
 class TestTopologyReactionsExternal : public KernelTest {
 protected:
@@ -101,7 +102,7 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
 }
 
 TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticle) {
-    // todo check if normal-flavor particle returns nullptr
+    // check that getTopologyForParticle does what it is supposed to do
     using namespace readdy;
     auto &ctx = kernel->getKernelContext();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
@@ -114,8 +115,68 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticle) {
         auto returned_top = kernel->getKernelStateModel().getTopologyForParticle(particle);
         ASSERT_EQ(toplogy, returned_top);
     }
+}
 
-    // todo assert that (also after topology fission) a topology particle points to its respective topology
+TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
+    // check that the particles that are contained in (active) topologies point to their respective topologies, also
+    // and especially after topology split reactions
+    using namespace readdy;
+    Simulation sim;
+    sim.setKernel(kernel->getName());
+    sim.setPeriodicBoundary({{true, true, true}});
+    sim.setBoxSize(100, 100, 100);
+    auto topAId = sim.registerParticleType("Topology A", 10., 10., model::particleflavor::TOPOLOGY);
+    auto aId = sim.registerParticleType("A", 10., 10.);
+    sim.configureTopologyBondPotential("Topology A", "Topology A", 10, 1);
+
+    std::vector<model::TopologyParticle> topologyParticles;
+    {
+        topologyParticles.reserve(90);
+        for (int i = 0; i < 90; ++i) {
+            topologyParticles.emplace_back(-49. + i, c_::zero, c_::zero, topAId);
+        }
+    }
+    auto toplogy = sim.addTopology(topologyParticles);
+    {
+        auto& graph = toplogy->graph();
+        auto it1 = graph.vertices().begin();
+        auto it2 = std::next(graph.vertices().begin(), 1);
+        while(it2 != graph.vertices().end()) {
+            graph.addEdge(it1, it2);
+            std::advance(it1, 1);
+            std::advance(it2, 1);
+        }
+    }
+
+    model::top::reactions::TopologyReaction r {[aId](model::top::GraphTopology& top) {
+        model::top::reactions::Recipe recipe (top);
+        if(top.getNParticles() > 1) {
+            auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.getNParticles() - 2));
+            auto it1 = top.graph().vertices().begin();
+            auto it2 = std::next(it1, 1);
+            if(rnd > 0) {
+                std::advance(it1, rnd);
+                std::advance(it2, rnd);
+            }
+            recipe.removeEdge(it1, it2);
+        } else {
+            recipe.changeParticleType(top.graph().vertices().begin(), aId);
+        }
+        return recipe;
+    }, .7};
+
+    toplogy->addReaction(std::move(r));
+
+    sim.runScheme<api::ReaDDyScheme>(true).evaluateTopologyReactions().configureAndRun(35, 1.);
+
+    log::debug("got n topologies: {}", sim.currentTopologies().size());
+    const auto kernel = sim.getSelectedKernel();
+    for(auto top : sim.currentTopologies()) {
+        for(const auto p : top->getParticles()) {
+            ASSERT_EQ(kernel->getKernelStateModel().getTopologyForParticle(p), top);
+        }
+    }
+
 }
 
 INSTANTIATE_TEST_CASE_P(Kernels, TestTopologyReactionsExternal,

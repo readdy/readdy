@@ -56,9 +56,10 @@ bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approxima
 
 void SCPUEvaluateTopologyReactions::perform() {
     using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
-    auto &topologies = kernel->getSCPUKernelStateModel().topologies();
+    auto &model = kernel->getSCPUKernelStateModel();
+    auto &topologies = model.topologies();
 
-    if(!topologies.empty()) {
+    if (!topologies.empty()) {
         struct TREvent {
             rate_t cumulative_rate;
             rate_t own_rate;
@@ -77,7 +78,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                     std::size_t reaction_idx = 0;
                     for (const auto &reaction : top->registeredReactions()) {
 
-                        TREvent event {};
+                        TREvent event{};
                         event.own_rate = std::get<1>(reaction);
                         event.cumulative_rate = event.own_rate + current_cumulative_rate;
                         current_cumulative_rate = event.cumulative_rate;
@@ -113,7 +114,8 @@ void SCPUEvaluateTopologyReactions::perform() {
                     const auto &event = *eventIt;
 
                     if (shouldPerformEvent(event.own_rate, timeStep, true)) {
-                        log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt)+1, events.size(), eventIt->own_rate);
+                        log::trace("picked event {} / {} with rate {}", std::distance(events.begin(), eventIt) + 1,
+                                   events.size(), eventIt->own_rate);
                         // perform the event!
                         auto &topology = topologies.at(event.topology_idx);
                         if (topology->isDeactivated()) {
@@ -195,11 +197,14 @@ void SCPUEvaluateTopologyReactions::perform() {
 
             if (!new_topologies.empty()) {
                 for (auto &&top : new_topologies) {
-                    // if we have a single particle that is not of flavor topology, ignore!
                     if (!top.isNormalParticle(*kernel)) {
+                        // we have a new topology here, update data accordingly.
                         top.updateReactionRates();
                         top.configure();
-                        topologies.push_back(std::make_unique<SCPUStateModel::topology>(std::move(top)));
+                        model.insert_topology(std::move(top));
+                    } else {
+                        // if we have a single particle that is not of flavor topology, remove from topology structure!
+                        model.getParticleData()->entry_at(top.getParticles().front()).topology_index = -1;
                     }
                 }
             }

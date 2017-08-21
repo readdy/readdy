@@ -302,6 +302,7 @@ scalar Simulation::getRecommendedTimeStep(unsigned int N) const {
 }
 
 readdy::model::Kernel *const Simulation::getSelectedKernel() const {
+    ensureKernelSelected();
     return pimpl->kernel.get();
 }
 
