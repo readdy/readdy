@@ -424,8 +424,29 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
 }
 
-TEST_P(TestTopologyGraphs, TestAppendParticle) {
-    // todo
+TEST(TestTopologyGraphs, TestAppendParticle) {
+    using namespace readdy;
+    api::PotentialConfiguration potentialConfiguration;
+    potentialConfiguration.pairPotentials[std::make_tuple(0, 0)].emplace_back();
+    potentialConfiguration.pairPotentials[std::make_tuple(0, 1)].emplace_back();
+    model::top::GraphTopology gt {{10, 1, 200}, {0, 0, 0}, potentialConfiguration};
+    {
+        auto it = gt.graph().vertices().begin();
+        auto it2 = ++gt.graph().vertices().begin();
+        gt.graph().addEdge(it, it2);
+        gt.graph().addEdge(++it, ++it2);
+    }
+    gt.configure();
+    gt.appendParticle(13, 1, 1);
+    gt.configure();
+
+    auto it = std::find_if(gt.graph().vertices().begin(), gt.graph().vertices().end(), [](const model::top::graph::Vertex &v) -> bool {
+        return v.particleIndex == 3;
+    });
+    EXPECT_TRUE(it != gt.graph().vertices().end());
+    EXPECT_EQ(it->particleType(), 1);
+    auto v2 = std::next(gt.graph().vertices().begin());
+    EXPECT_TRUE(gt.graph().containsEdge(it, v2));
 }
 
 INSTANTIATE_TEST_CASE_P(TestTopologyGraphsCore, TestTopologyGraphs, ::testing::Values("SingleCPU", "CPU"));
