@@ -413,6 +413,14 @@ bool Simulation::doublePrecision() const {
     return pimpl->kernel->doublePrecision();
 }
 
+void Simulation::registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
+                                                  const std::string &typeFrom2, const std::string &typeTo1,
+                                                  const std::string &typeTo2, scalar rate, scalar radius) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().reactions()
+            .add_external_topology_reaction(name, typeFrom1, typeFrom2, typeTo1, typeTo2, rate, radius);
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }

@@ -142,7 +142,18 @@ void ReactionRegistry::debug_output() const {
             }
         }
     }
-    // todo log external topology reactions
+    if(!_topology_reactions.empty()) {
+        log::debug(" - external topology reactions:");
+        for(const auto& entry : _topology_reactions) {
+            for(const auto& reaction : entry.second) {
+                auto d = fmt::format("ExternalTopologyReaction( ({}, {}) -> ({}, {}) , radius={}, rate={}",
+                                     typeRegistry.name_of(reaction.type1()), typeRegistry.name_of(reaction.type2()),
+                                     typeRegistry.name_of(reaction.type_to1()),
+                                     typeRegistry.name_of(reaction.type_to2()), reaction.radius(), reaction.rate());
+                log::debug("     * reaction {}", d);
+            }
+        }
+    }
 }
 
 const std::size_t &ReactionRegistry::n_order1() const {
@@ -189,7 +200,18 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
                 if(info1.flavor == particleflavor::TOPOLOGY && info2.flavor == particleflavor::TOPOLOGY) {
                     log::critical("Tried registering a topology-topology fusion reaction, this is not supported yet!");
                 } else {
-                    _topology_reactions[types].emplace_back(name, types, types_to, rate, radius);
+                    using tr_entry = topology_reaction_registry::value_type;
+                    auto it = std::find_if(_topology_reactions.begin(), _topology_reactions.end(), [&name](const tr_entry &e) -> bool {
+                        return std::find_if(e.second.begin(), e.second.end(), [&name](const topology_reaction& tr) {
+                            return tr.name() == name;
+                        }) != e.second.end();
+                    });
+                    if(it == _topology_reactions.end()) {
+                        _topology_reactions[types].emplace_back(name, types, types_to, rate, radius);
+                    } else {
+                        throw std::invalid_argument("An external topology reaction with the same name was already "
+                                                            "registered!");
+                    }
                 }
             } else {
                 throw std::invalid_argument(
