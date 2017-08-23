@@ -265,51 +265,55 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
             ++topology_idx;
         }
 
+
         const auto &context = kernel->getKernelContext();
-        const auto &reaction_registry = context.reactions();
-        const auto &d2 = context.getDistSquaredFun();
-        const auto &data = *kernel->getSCPUKernelStateModel().getParticleData();
-        const auto &nl = *kernel->getSCPUKernelStateModel().getNeighborList();
+        if (!context.reactions().external_topology_reactions().empty()) {
+            const auto &reaction_registry = context.reactions();
+            const auto &d2 = context.getDistSquaredFun();
+            const auto &data = *kernel->getSCPUKernelStateModel().getParticleData();
+            const auto &nl = *kernel->getSCPUKernelStateModel().getNeighborList();
 
-        for (auto pair : nl) {
-            auto &entry = data.entry_at(pair.idx1);
-            auto &neighbor = data.entry_at(pair.idx2);
-            if (!entry.deactivated && !neighbor.deactivated) {
-                const auto &reactions = reaction_registry.external_top_reactions_by_type(entry.type,
-                                                                                         neighbor.type);
-                const auto distSquared = d2(entry.pos, neighbor.pos);
-                std::size_t reaction_index = 0;
-                for (const auto &reaction : reactions) {
-                    // todo this only covers the particle<->topology case, not the topology<->topology case
-                    if (distSquared < reaction.radius() * reaction.radius()) {
-                        TREvent event{};
-                        event.own_rate = reaction.rate();
-                        event.cumulative_rate = event.own_rate + current_cumulative_rate;
-                        current_cumulative_rate = event.cumulative_rate;
-                        if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
-                            event.topology_idx = static_cast<std::size_t>(entry.topology_index);
-                            event.t1 = entry.type;
-                            event.t2 = neighbor.type;
-                            event.idx1 = pair.idx1;
-                            event.idx2 = pair.idx2;
-                        } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
-                            event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
-                            event.t1 = neighbor.type;
-                            event.t2 = entry.type;
-                            event.idx1 = pair.idx2;
-                            event.idx2 = pair.idx1;
-                        } else if (entry.topology_index >= 0 && neighbor.topology_index >= 0) {
-                            // todo this is a topology-topology fusion
-                            log::critical("topology <-> topology fusion encountered, this should currently not happen");
-                        } else {
-                            log::critical("got no topology for topology-fusion");
+            for (auto pair : nl) {
+                auto &entry = data.entry_at(pair.idx1);
+                auto &neighbor = data.entry_at(pair.idx2);
+                if (!entry.deactivated && !neighbor.deactivated) {
+                    const auto &reactions = reaction_registry.external_top_reactions_by_type(entry.type,
+                                                                                             neighbor.type);
+                    const auto distSquared = d2(entry.pos, neighbor.pos);
+                    std::size_t reaction_index = 0;
+                    for (const auto &reaction : reactions) {
+                        // todo this only covers the particle<->topology case, not the topology<->topology case
+                        if (distSquared < reaction.radius() * reaction.radius()) {
+                            TREvent event{};
+                            event.own_rate = reaction.rate();
+                            event.cumulative_rate = event.own_rate + current_cumulative_rate;
+                            current_cumulative_rate = event.cumulative_rate;
+                            if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
+                                event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                event.t1 = entry.type;
+                                event.t2 = neighbor.type;
+                                event.idx1 = pair.idx1;
+                                event.idx2 = pair.idx2;
+                            } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
+                                event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
+                                event.t1 = neighbor.type;
+                                event.t2 = entry.type;
+                                event.idx1 = pair.idx2;
+                                event.idx2 = pair.idx1;
+                            } else if (entry.topology_index >= 0 && neighbor.topology_index >= 0) {
+                                // todo this is a topology-topology fusion
+                                log::critical(
+                                        "topology <-> topology fusion encountered, this should currently not happen");
+                            } else {
+                                log::critical("got no topology for topology-fusion");
+                            }
+                            event.reaction_idx = reaction_index;
+                            event.external = true;
+
+                            events.push_back(event);
                         }
-                        event.reaction_idx = reaction_index;
-                        event.external = true;
-
-                        events.push_back(event);
+                        ++reaction_index;
                     }
-                    ++reaction_index;
                 }
             }
         }
