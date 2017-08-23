@@ -118,7 +118,7 @@ public:
 
     void insert_topology(topology&& top);
 
-    std::vector<readdy::model::top::GraphTopology const *> getTopologies() const override;
+    std::vector<readdy::model::top::GraphTopology *> getTopologies() override;
 
     const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;
 

@@ -228,6 +228,7 @@ const KernelContext::shortest_dist_fun &KernelContext::getShortestDifferenceFun(
 }
 
 void KernelContext::configure(bool debugOutput) {
+    particleTypeRegistry_.configure();
     potentialRegistry_.configure();
     reactionRegistry_.configure();
 
@@ -243,6 +244,7 @@ void KernelContext::configure(bool debugOutput) {
                    getPeriodicBoundary()[2]);
         log::debug(" - box size = ({}, {}, {})", getBoxSize()[0], getBoxSize()[1], getBoxSize()[2]);
 
+        particleTypeRegistry_.debug_output();
         potentialRegistry_.debug_output();
         reactionRegistry_.debug_output();
     }

@@ -157,7 +157,7 @@ void exportApi(py::module &api) {
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
             .def("add_topology", &sim::addTopology, rvp::reference, "particles"_a, "labels"_a = std::vector<std::string>())
             .def("current_topologies", &sim::currentTopologies)
-            .def("set_kernel", &sim::setKernel, "name"_a)
+            .def("set_kernel", static_cast<void (sim::*)(const std::string&)>(&sim::setKernel), "name"_a)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)

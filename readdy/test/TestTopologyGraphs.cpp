@@ -437,7 +437,7 @@ TEST(TestTopologyGraphs, TestAppendParticle) {
         gt.graph().addEdge(++it, ++it2);
     }
     gt.configure();
-    gt.appendParticle(13, 1, 1);
+    gt.appendParticle(13, 1, 1, 1);
     gt.configure();
 
     auto it = std::find_if(gt.graph().vertices().begin(), gt.graph().vertices().end(), [](const model::top::graph::Vertex &v) -> bool {

@@ -355,8 +355,8 @@ CPUStateModel::topologies_vec &CPUStateModel::topologies() {
     return pimpl->topologies;
 }
 
-std::vector<readdy::model::top::GraphTopology const*> CPUStateModel::getTopologies() const {
-    std::vector<readdy::model::top::GraphTopology const*> result;
+std::vector<readdy::model::top::GraphTopology*> CPUStateModel::getTopologies() {
+    std::vector<readdy::model::top::GraphTopology*> result;
     result.reserve(pimpl->topologies.size() - pimpl->topologies.n_deactivated());
     for(const auto& top : pimpl->topologies) {
         if(!top->isDeactivated()) {

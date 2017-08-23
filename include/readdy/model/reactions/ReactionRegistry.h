@@ -136,6 +136,8 @@ public:
 
     const short add_external(reaction_o2 r);
 
+    bool is_topology_reaction_type(const std::string &name) const;
+
     bool is_topology_reaction_type(particle_type_type type) const;
 
     void add_external_topology_reaction(const std::string &name, const std::string& typeFrom1,

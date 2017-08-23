@@ -98,6 +98,10 @@ public:
 
     const type_map &type_mapping() const;
 
+    void debug_output() const;
+
+    void configure();
+
 private:
 
     particle_type_type _id_of(const std::string& name) const;

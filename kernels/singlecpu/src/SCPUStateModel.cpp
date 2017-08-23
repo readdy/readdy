@@ -225,8 +225,8 @@ SCPUStateModel::topologies_vec &SCPUStateModel::topologies() {
     return _topologies;
 }
 
-std::vector<readdy::model::top::GraphTopology const *> SCPUStateModel::getTopologies() const {
-    std::vector<readdy::model::top::GraphTopology const*> result;
+std::vector<readdy::model::top::GraphTopology*> SCPUStateModel::getTopologies() {
+    std::vector<readdy::model::top::GraphTopology*> result;
     result.reserve(_topologies.size() - _topologies.n_deactivated());
     for(const auto& top : _topologies) {
         if(!top->isDeactivated()) {

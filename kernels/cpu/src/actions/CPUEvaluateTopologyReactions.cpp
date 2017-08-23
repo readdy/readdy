@@ -239,13 +239,13 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
         const auto& reaction_registry = context.reactions();
         const auto& d2 = context.getDistSquaredFun();
         const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
-        const auto& neighbor_list = *kernel->getCPUKernelStateModel().getNeighborList();
+        const auto& nl = *kernel->getCPUKernelStateModel().getNeighborList();
 
         std::size_t index {0};
         for(auto it = data.begin(); it != data.end(); ++it, ++index) {
             const auto& entry = *it;
             if(!entry.deactivated && reaction_registry.is_topology_reaction_type(entry.type)) {
-                for (auto neighbor_index : neighbor_list.neighbors_of(index)) {
+                for (auto neighbor_index : nl.neighbors_of(index)) {
                     if (index > neighbor_index) {
                         continue;
                     }
@@ -311,8 +311,10 @@ void CPUEvaluateTopologyReactions::handleExternalReaction(CPUStateModel::topolog
     auto& model = kernel->getCPUKernelStateModel();
     auto& data = *model.getParticleData();
 
-    auto& entry1Type = data.entry_at(event.idx1).type;
-    auto& entry2Type = data.entry_at(event.idx2).type;
+    auto& entry1 = data.entry_at(event.idx1);
+    auto& entry2 = data.entry_at(event.idx2);
+    auto& entry1Type = entry1.type;
+    auto& entry2Type = entry2.type;
     if(entry1Type == reaction.type1()) {
         entry1Type = reaction.type_to1();
         entry2Type = reaction.type_to2();
@@ -320,8 +322,10 @@ void CPUEvaluateTopologyReactions::handleExternalReaction(CPUStateModel::topolog
         entry1Type = reaction.type_to2();
         entry2Type = reaction.type_to1();
     }
+    entry1.topology_index = event.topology_idx;
+    entry2.topology_index = event.topology_idx;
 
-    topology->appendParticle(event.idx2, entry2Type, event.idx1);
+    topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
     topology->updateReactionRates();
     topology->configure();
 }

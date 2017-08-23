@@ -46,7 +46,7 @@ void Simulation::setBoxSize(const readdy::model::Vec3 &boxSize) {
     setBoxSize(boxSize[0], boxSize[1], boxSize[2]);
 }
 
-void Simulation::setPeriodicBoundary(std::array<bool, 3> periodic) {
+void Simulation::setPeriodicBoundary(const std::array<bool, 3> &periodic) {
     ensureKernelSelected();
     pimpl->kernel->getKernelContext().setPeriodicBoundary(periodic[0], periodic[1], periodic[2]);
 
@@ -60,7 +60,7 @@ readdy::model::Vec3 Simulation::getBoxSize() const {
 
 }
 
-std::array<bool, 3> Simulation::getPeriodicBoundary() const {
+const std::array<bool, 3>& Simulation::getPeriodicBoundary() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().getPeriodicBoundary();
 }
@@ -78,7 +78,7 @@ void Simulation::run(const time_step_type steps, const scalar timeStep) {
 
 void Simulation::setKernel(const std::string &kernel) {
     if (isKernelSelected()) {
-        log::debug(R"(replacing kernel "{}" with "{}")", pimpl->kernel->getName(), kernel);
+        log::warn(R"(replacing kernel "{}" with "{}")", pimpl->kernel->getName(), kernel);
     }
     pimpl->kernel = readdy::plugin::KernelProvider::getInstance().create(kernel);
 }
@@ -393,7 +393,7 @@ void Simulation::setExpectedMaxNParticles(const std::size_t n) {
     getSelectedKernel()->expected_n_particles(n);
 }
 
-std::vector<const readdy::model::top::GraphTopology *> Simulation::currentTopologies() const {
+std::vector<readdy::model::top::GraphTopology *> Simulation::currentTopologies() {
     ensureKernelSelected();
     return getSelectedKernel()->getKernelStateModel().getTopologies();
 }
@@ -419,6 +419,14 @@ void Simulation::registerExternalTopologyReaction(const std::string &name, const
     ensureKernelSelected();
     getSelectedKernel()->getKernelContext().reactions()
             .add_external_topology_reaction(name, typeFrom1, typeFrom2, typeTo1, typeTo2, rate, radius);
+}
+
+readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::KernelProvider::kernel_ptr &&kernel) {
+    if (isKernelSelected()) {
+        log::warn(R"(replacing kernel "{}" with "{}")", pimpl->kernel->getName(), kernel->getName());
+    }
+    pimpl->kernel = std::move(kernel);
+    return pimpl->kernel.get();
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}

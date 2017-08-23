@@ -258,7 +258,7 @@ const bool GraphTopology::isNormalParticle(const Kernel &k) const {
 }
 
 void GraphTopology::appendParticle(particle_index newParticle, particle_type_type newParticleType,
-                                   particle_index counterPart) {
+                                   particle_index counterPart, particle_type_type counterPartType) {
     auto it = std::find(particles.begin(), particles.end(), counterPart);
     if(it != particles.end()) {
         auto counterPartIdx = std::distance(particles.begin(), it);
@@ -268,6 +268,7 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
 
         auto newParticleIt = std::prev(graph().vertices().end());
         auto otherParticleIt = std::next(graph().vertices().begin(), counterPartIdx);
+        otherParticleIt->setParticleType(counterPartType);
 
         graph().addEdge(newParticleIt, otherParticleIt);
     } else {

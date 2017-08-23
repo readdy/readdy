@@ -113,7 +113,7 @@ public:
     const topology_reaction_rate cumulativeRate() const;
 
     void appendParticle(particle_index newParticle, particle_type_type newParticleType,
-                        particle_index counterPart);
+                        particle_index counterPart, particle_type_type counterPartType);
 
 protected:
     topology_graph graph_;

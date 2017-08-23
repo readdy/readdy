@@ -71,7 +71,7 @@ public:
 
     virtual void run(const continue_fun &fun) = 0;
 
-    void run(const time_step_type steps) {
+    virtual void run(time_step_type steps) {
         // show every 1% of the simulation
         const auto progressOutputStride = static_cast<std::size_t>(steps / 100);
         auto defaultContinueCriterion = [this, steps, progressOutputStride](const time_step_type current) {
@@ -413,8 +413,8 @@ public:
         return ptr;
     }
 
-    void configureAndRun(const time_step_type steps, scalar timeStep) {
-        configure(timeStep)->run(steps);
+    void configureAndRun(time_step_type steps, scalar timeStep) {
+        configure(timeStep)->SimulationScheme::run(steps);
     }
 
 protected:

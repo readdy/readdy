@@ -110,5 +110,23 @@ particle_type_type ParticleTypeRegistry::_id_of(const std::string &name) const {
     }
     return it->second;
 }
+
+void ParticleTypeRegistry::debug_output() const {
+    log::debug(" - particle types:");
+    for(const auto& entry : particle_info_) {
+        auto flavorStr = [&entry]() -> std::string {
+            switch(entry.second.flavor) {
+                case model::particleflavor::NORMAL: return "NORMAL";
+                case model::particleflavor::TOPOLOGY: return "TOPOLOGY";
+                case model::particleflavor::MEMBRANE: return "MEMBRANE";
+                default: return "UNKNOWN";
+            }
+        }();
+        log::debug("     * particle type \"{}\" with D={}, r={}, flavor={}, id={}", entry.second.name,
+                   entry.second.diffusionConstant, entry.second.radius, flavorStr, entry.second.typeId);
+    }
+}
+
+void ParticleTypeRegistry::configure() { /*no op*/ }
 }
 }
