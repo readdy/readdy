@@ -242,6 +242,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
         const auto& nl = *kernel->getCPUKernelStateModel().getNeighborList();
 
         std::size_t index {0};
+        // todo parallelize this
         for(auto it = data.begin(); it != data.end(); ++it, ++index) {
             const auto& entry = *it;
             if(!entry.deactivated && reaction_registry.is_topology_reaction_type(entry.type)) {

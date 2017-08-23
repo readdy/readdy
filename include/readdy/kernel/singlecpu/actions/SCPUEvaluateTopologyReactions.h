@@ -42,13 +42,25 @@ namespace actions {
 namespace top {
 
 class SCPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
+    using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
 public:
     SCPUEvaluateTopologyReactions(SCPUKernel* kernel, scalar timeStep);
 
     void perform() override;
 
 private:
+    struct TREvent;
+    using topology_reaction_events = std::vector<TREvent>;
+
     SCPUKernel *const kernel;
+
+    topology_reaction_events gatherEvents();
+
+    void handleInternalReaction(SCPUStateModel::topologies_vec &topologies,
+                                std::vector<SCPUStateModel::topology> &new_topologies,
+                                const TREvent &event, SCPUStateModel::topology_ref &topology) const;
+
+    void handleExternalReaction(SCPUStateModel::topology_ref &topology, const TREvent& event);
 };
 
 }

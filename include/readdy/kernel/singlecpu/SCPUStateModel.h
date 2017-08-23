@@ -52,7 +52,8 @@ class SCPUStateModel : public readdy::model::KernelStateModel {
 public:
 
     using topology = readdy::model::top::GraphTopology;
-    using topologies_vec = readdy::util::index_persistent_vector<std::unique_ptr<topology>>;
+    using topology_ref = std::unique_ptr<topology>;
+    using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
     void updateNeighborList(scalar skin) override;
 
