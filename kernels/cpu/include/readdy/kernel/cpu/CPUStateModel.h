@@ -54,7 +54,8 @@ public:
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 
     using topology = readdy::model::top::GraphTopology;
-    using topologies_vec = readdy::util::index_persistent_vector<std::unique_ptr<topology>>;
+    using topology_ref = std::unique_ptr<topology>;
+    using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
     CPUStateModel(readdy::model::KernelContext* context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);
@@ -70,7 +71,7 @@ public:
 
     const std::vector<particle_t> getParticles() const override;
 
-    void updateNeighborList() override;
+    void updateNeighborList(scalar skin) override;
 
     void calculateForces() override;
 
@@ -115,7 +116,9 @@ public:
 
     topologies_vec &topologies();
 
-    std::vector<readdy::model::top::GraphTopology const *> getTopologies() const override;
+    void insert_topology(topology&& top);
+
+    std::vector<readdy::model::top::GraphTopology *> getTopologies() override;
 
     const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;
 

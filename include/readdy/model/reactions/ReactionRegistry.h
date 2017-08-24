@@ -36,6 +36,7 @@
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/ParticleTypeRegistry.h>
 #include <readdy/model/topologies/reactions/ExternalTopologyReaction.h>
+#include <unordered_set>
 #include "Reaction.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -49,10 +50,20 @@ class ReactionRegistry {
     using reaction_o1_registry_internal = std::unordered_map<particle::type_type, rea_ptr_vec1>;
     using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec2>;
 
-    using topology_reaction = top::reactions::ExternalTopologyReaction;
-    using topology_reaction_registry = util::particle_type_pair_unordered_map<topology_reaction>;
-
 public:
+    using topology_reaction = top::reactions::ExternalTopologyReaction;
+    using topology_reaction_registry = util::particle_type_pair_unordered_map<std::vector<topology_reaction>>;
+    using topology_reactions = topology_reaction_registry::mapped_type;
+    using topology_reaction_types = std::unordered_set<particle_type_type>;
+
+    using reaction_o1_registry = std::unordered_map<particle::type_type, std::vector<reactions::Reaction<1> *>>;
+    using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;
+    using reaction_o2_types = std::unordered_set<particle_type_type>;
+
+    using reactions_o1 = reaction_o1_registry::mapped_type;
+    using reactions_o2 = reaction_o2_registry::mapped_type;
+    using reaction_o1 = reactions_o1::value_type;
+    using reaction_o2 = reactions_o2::value_type;
 
     explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
@@ -66,33 +77,29 @@ public:
 
     ~ReactionRegistry() = default;
 
-    using reaction_o1_registry = std::unordered_map<particle::type_type, std::vector<reactions::Reaction<1> *>>;
-    using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;
-
     const std::size_t &n_order1() const;
 
-    const std::vector<const reactions::Reaction<1> *> order1_flat() const;
+    const reactions_o1 order1_flat() const;
 
-    const reactions::Reaction<1> *const order1_by_name(const std::string &name) const;
+    const reaction_o1 order1_by_name(const std::string &name) const;
 
-    const std::vector<reactions::Reaction<1> *> &order1_by_type(const particle::type_type type) const;
+    const reactions_o1 &order1_by_type(const particle::type_type type) const;
 
     const std::size_t &n_order2() const;
 
     const reaction_o2_registry &order2() const;
 
-    const std::vector<const reactions::Reaction<2> *> order2_flat() const;
+    const reactions_o2 order2_flat() const;
 
-    const reactions::Reaction<2> *const order2_by_name(const std::string &name) const;
+    const reaction_o2 order2_by_name(const std::string &name) const;
 
-    const std::vector<reactions::Reaction<2> *> &order2_by_type(const particle::type_type type1,
-                                                                const particle::type_type type2) const;
+    const reactions_o2 &order2_by_type(const particle::type_type type1, const particle::type_type type2) const;
 
+    const reactions_o1 &order1_by_type(const std::string &type) const;
 
-    const std::vector<reactions::Reaction<1> *> &order1_by_type(const std::string &type) const;
+    const reactions_o2 &order2_by_type(const std::string &type1, const std::string &type2) const;
 
-    const std::vector<reactions::Reaction<2> *> &order2_by_type(const std::string &type1,
-                                                                const std::string &type2) const;
+    bool is_reaction_order2_type(particle_type_type type) const;
 
     template<typename R>
     const short add(std::unique_ptr<R> r,
@@ -116,7 +123,7 @@ public:
         const auto t1 = r->getEducts()[0];
         const auto t2 = r->getEducts()[1];
 
-        const auto pp = std::tie(t1, t2);
+        const auto pp = std::make_tuple(t1, t2);
         if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
             two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
         }
@@ -125,12 +132,24 @@ public:
         return id;
     }
 
-    const short add_external(reactions::Reaction<1> *r);
+    const short add_external(reaction_o1 r);
 
-    const short add_external(reactions::Reaction<2> *r);
+    const short add_external(reaction_o2 r);
 
-    void add_topology_reaction(const std::string& name, const util::particle_type_pair& types,
-                               const util::particle_type_pair& types_to, scalar rate, scalar radius);
+    bool is_topology_reaction_type(const std::string &name) const;
+
+    bool is_topology_reaction_type(particle_type_type type) const;
+
+    void add_external_topology_reaction(const std::string &name, const std::string& typeFrom1,
+                                        const std::string& typeFrom2, const std::string& typeTo1,
+                                        const std::string& typeTo2, scalar rate, scalar radius);
+
+    void add_external_topology_reaction(const std::string &name, const util::particle_type_pair &types,
+                                        const util::particle_type_pair &types_to, scalar rate, scalar radius);
+
+    const topology_reaction_registry &external_topology_reactions() const;
+
+    const topology_reactions &external_top_reactions_by_type(particle_type_type t1, particle_type_type t2) const;
 
     void configure();
 
@@ -140,8 +159,8 @@ private:
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
 
-    std::size_t n_order1_ = 0;
-    std::size_t n_order2_ = 0;
+    std::size_t n_order1_ {0};
+    std::size_t n_order2_ {0};
 
     const ParticleTypeRegistry &typeRegistry;
 
@@ -151,11 +170,14 @@ private:
     reaction_o2_registry two_educts_registry{};
     reaction_o2_registry_internal two_educts_registry_internal{};
     reaction_o2_registry_external two_educts_registry_external{};
+    reaction_o2_types _reaction_o2_types {};
 
-    topology_reaction_registry topology_reactions {};
+    topology_reaction_registry _topology_reactions {};
+    topology_reactions defaultTopologyReactions{};
+    topology_reaction_types _topology_reaction_types{};
 
-    std::vector<reactions::Reaction<1> *> defaultReactionsO1{};
-    std::vector<reactions::Reaction<2> *> defaultReactionsO2{};
+    reactions_o1 defaultReactionsO1{};
+    reactions_o2 defaultReactionsO2{};
 };
 
 NAMESPACE_END(reactions)

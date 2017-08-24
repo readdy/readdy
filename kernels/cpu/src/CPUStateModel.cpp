@@ -239,8 +239,9 @@ const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
     return result;
 }
 
-void CPUStateModel::updateNeighborList() {
+void CPUStateModel::updateNeighborList(scalar skin) {
     if(pimpl->initial_neighbor_list_setup) {
+        pimpl->neighborList->skin() = skin;
         pimpl->neighborList->set_up();
         pimpl->initial_neighbor_list_setup = false;
     } else {
@@ -354,8 +355,8 @@ CPUStateModel::topologies_vec &CPUStateModel::topologies() {
     return pimpl->topologies;
 }
 
-std::vector<readdy::model::top::GraphTopology const*> CPUStateModel::getTopologies() const {
-    std::vector<readdy::model::top::GraphTopology const*> result;
+std::vector<readdy::model::top::GraphTopology*> CPUStateModel::getTopologies() {
+    std::vector<readdy::model::top::GraphTopology*> result;
     result.reserve(pimpl->topologies.size() - pimpl->topologies.n_deactivated());
     for(const auto& top : pimpl->topologies) {
         if(!top->isDeactivated()) {
@@ -391,6 +392,17 @@ readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy:
         return nullptr;
     }
     throw std::logic_error(fmt::format("requested particle was deactivated in getTopologyForParticle(p={})", particle));
+}
+
+void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
+    auto& topologies = pimpl->topologies;
+    auto it = topologies.push_back(std::make_unique<topology>(std::move(top)));
+    auto idx = std::distance(topologies.begin(), it);
+    const auto& particles = it->get()->getParticles();
+    auto& data = pimpl->data();
+    std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
+        data.entry_at(p).topology_index = idx;
+    });
 }
 
 CPUStateModel::~CPUStateModel() = default;

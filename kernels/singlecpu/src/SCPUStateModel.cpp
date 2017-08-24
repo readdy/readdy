@@ -110,8 +110,8 @@ const std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const 
     return result;
 }
 
-void SCPUStateModel::updateNeighborList() {
-    pimpl->neighborList->create(pimpl->particleData);
+void SCPUStateModel::updateNeighborList(scalar skin) {
+    pimpl->neighborList->create(pimpl->particleData, skin);
 }
 
 void SCPUStateModel::calculateForces() {
@@ -225,8 +225,8 @@ SCPUStateModel::topologies_vec &SCPUStateModel::topologies() {
     return _topologies;
 }
 
-std::vector<readdy::model::top::GraphTopology const *> SCPUStateModel::getTopologies() const {
-    std::vector<readdy::model::top::GraphTopology const*> result;
+std::vector<readdy::model::top::GraphTopology*> SCPUStateModel::getTopologies() {
+    std::vector<readdy::model::top::GraphTopology*> result;
     result.reserve(_topologies.size() - _topologies.n_deactivated());
     for(const auto& top : _topologies) {
         if(!top->isDeactivated()) {
@@ -262,6 +262,16 @@ readdy::model::top::GraphTopology *SCPUStateModel::getTopologyForParticle(readdy
         return nullptr;
     }
     throw std::logic_error(fmt::format("requested particle was deactivated in getTopologyForParticle(p={})", particle));
+}
+
+void SCPUStateModel::insert_topology(SCPUStateModel::topology &&top) {
+    auto it = _topologies.push_back(std::make_unique<topology>(std::move(top)));
+    auto idx = std::distance(_topologies.begin(), it);
+    const auto& particles = it->get()->getParticles();
+    auto& data = pimpl->particleData;
+    std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
+        data.entry_at(p).topology_index = idx;
+    });
 }
 
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;

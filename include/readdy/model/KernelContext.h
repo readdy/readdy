@@ -98,6 +98,8 @@ public:
 
     const pbc_fun &getPBCFun() const;
 
+    const scalar calculateMaxCutoff() const;
+
     template<typename T>
     const short registerCompartment(std::unique_ptr<T> compartment) {
         // assert to prevent errors already at compile-time

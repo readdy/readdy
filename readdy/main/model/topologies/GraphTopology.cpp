@@ -38,7 +38,7 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(const Topology::particle_indices &particles, const std::vector<particle_type_type> &types,
+GraphTopology::GraphTopology(const Topology::particle_indices &particles, const types_vec &types,
                              const api::PotentialConfiguration& config)
         : Topology(particles), config(config) {
     assert(types.size() == particles.size());
@@ -255,6 +255,25 @@ const bool GraphTopology::isNormalParticle(const Kernel &k) const {
         return info.flavor != particleflavor::NORMAL;
     }
     return false;
+}
+
+void GraphTopology::appendParticle(particle_index newParticle, particle_type_type newParticleType,
+                                   particle_index counterPart, particle_type_type counterPartType) {
+    auto it = std::find(particles.begin(), particles.end(), counterPart);
+    if(it != particles.end()) {
+        auto counterPartIdx = std::distance(particles.begin(), it);
+
+        particles.push_back(newParticle);
+        graph().addVertex(particles.size() - 1, newParticleType);
+
+        auto newParticleIt = std::prev(graph().vertices().end());
+        auto otherParticleIt = std::next(graph().vertices().begin(), counterPartIdx);
+        otherParticleIt->setParticleType(counterPartType);
+
+        graph().addEdge(newParticleIt, otherParticleIt);
+    } else {
+        log::critical("counterPart {} was not contained in topology, this should not happen", counterPart);
+    }
 }
 
 }

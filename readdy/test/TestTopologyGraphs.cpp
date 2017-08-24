@@ -360,7 +360,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
-    if(readdy::single_precision) {
+    if(kernel->singlePrecision()) {
         EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
     } else {
         EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
@@ -409,7 +409,7 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
-    if(readdy::single_precision) {
+    if(kernel->singlePrecision()) {
         EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
     } else {
         EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
@@ -422,6 +422,31 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[3], force_x_l, 1e-6);
+}
+
+TEST(TestTopologyGraphs, TestAppendParticle) {
+    using namespace readdy;
+    api::PotentialConfiguration potentialConfiguration;
+    potentialConfiguration.pairPotentials[std::make_tuple(0, 0)].emplace_back();
+    potentialConfiguration.pairPotentials[std::make_tuple(0, 1)].emplace_back();
+    model::top::GraphTopology gt {{10, 1, 200}, {0, 0, 0}, potentialConfiguration};
+    {
+        auto it = gt.graph().vertices().begin();
+        auto it2 = ++gt.graph().vertices().begin();
+        gt.graph().addEdge(it, it2);
+        gt.graph().addEdge(++it, ++it2);
+    }
+    gt.configure();
+    gt.appendParticle(13, 1, 1, 0);
+    gt.configure();
+
+    auto it = std::find_if(gt.graph().vertices().begin(), gt.graph().vertices().end(), [](const model::top::graph::Vertex &v) -> bool {
+        return v.particleIndex == 3;
+    });
+    EXPECT_TRUE(it != gt.graph().vertices().end());
+    EXPECT_EQ(it->particleType(), 1);
+    auto v2 = std::next(gt.graph().vertices().begin());
+    EXPECT_TRUE(gt.graph().containsEdge(it, v2));
 }
 
 INSTANTIATE_TEST_CASE_P(TestTopologyGraphsCore, TestTopologyGraphs, ::testing::Values("SingleCPU", "CPU"));

@@ -98,7 +98,14 @@ public:
 
     const type_map &type_mapping() const;
 
+    void debug_output() const;
+
+    void configure();
+
 private:
+
+    particle_type_type _id_of(const std::string& name) const;
+
     std::size_t n_types_ = 0;
     particle_type_type type_counter_ = 0;
     type_map type_mapping_ {};

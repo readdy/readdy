@@ -33,6 +33,7 @@
 
 #pragma once
 
+#include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/api/SimulationScheme.h>
 #include "ObservableHandle.h"
@@ -104,7 +105,7 @@ public:
     readdy::model::top::GraphTopology *addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
                                                    const std::vector<std::string> &labels = {});
 
-    std::vector<const readdy::model::top::GraphTopology *> currentTopologies() const;
+    std::vector<readdy::model::top::GraphTopology *> currentTopologies();
 
     std::vector<model::Particle> getParticlesForTopology(const model::top::GraphTopology &topology) const;
 
@@ -126,13 +127,13 @@ public:
      * Method that returns an array which indicates, if there are (partially) periodic boundaries.
      * @return an array of length 3, where each entry tells if the corresponding boundary is periodic.
      */
-    std::array<bool, 3> getPeriodicBoundary() const;
+    const std::array<bool, 3>& getPeriodicBoundary() const;
 
     /**
      * Method to set which parts of the boundary are to be periodic.
      * @param periodic an array of length three with the corresponding entries.
      */
-    void setPeriodicBoundary(std::array<bool, 3> periodic);
+    void setPeriodicBoundary(const std::array<bool, 3> &periodic);
 
     /**
      * Allows to set an expected maximal number of particles in order to avoid reallocations.
@@ -394,6 +395,12 @@ public:
     void setKernel(const std::string &kernel);
 
     /**
+     * Method that allows to set an already existing instance of a kernel for this simulation object.
+     * @param kernel  the kernel
+     */
+    plugin::KernelProvider::raw_kernel_ptr setKernel(plugin::KernelProvider::kernel_ptr &&kernel);
+
+    /**
      * Method that returns if a kernel is currently selected.
      * @return true if a kernel is selected, otherwise false.
      */
@@ -480,6 +487,10 @@ public:
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
                                       scalar rate);
 
+    void registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
+                                          const std::string &typeFrom2, const std::string &typeTo1,
+                                          const std::string& typeTo2, scalar rate, scalar radius);
+
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
                               const std::string &name, const model::Vec3 &origin,
@@ -513,13 +524,15 @@ public:
 
     bool doublePrecision() const;
 
+
 private:
     struct Impl;
     std::unique_ptr<readdy::Simulation::Impl> pimpl;
 
+    readdy::model::Kernel *const getSelectedKernel() const;
+
     void ensureKernelSelected() const;
 
-    readdy::model::Kernel *const getSelectedKernel() const;
 };
 
 class NoKernelSelectedException : public std::runtime_error {

@@ -43,13 +43,25 @@ namespace actions {
 namespace top {
 
 class CPUEvaluateTopologyReactions : public readdy::model::actions::top::EvaluateTopologyReactions {
+    using rate_t = readdy::model::top::GraphTopology::topology_reaction_rate;
 public:
     CPUEvaluateTopologyReactions(CPUKernel* kernel, readdy::scalar timeStep);
 
     void perform() override;
 
 private:
+    struct TREvent;
+    using topology_reaction_events = std::vector<TREvent>;
+
     CPUKernel *const kernel;
+
+    topology_reaction_events gatherEvents();
+
+    void handleInternalReaction(CPUStateModel::topologies_vec &topologies,
+                           std::vector<CPUStateModel::topology> &new_topologies,
+                           const TREvent &event, CPUStateModel::topology_ref &topology) const;
+
+    void handleExternalReaction(CPUStateModel::topology_ref &topology, const TREvent& event);
 };
 
 

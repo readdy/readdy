@@ -101,8 +101,6 @@ public:
 
 private:
 
-    scalar calculate_max_cutoff();
-
     void fill_container();
 
     /**

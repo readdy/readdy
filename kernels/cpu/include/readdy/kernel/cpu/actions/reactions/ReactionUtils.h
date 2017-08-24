@@ -77,6 +77,7 @@ template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
                   const data_t &data, readdy::scalar &alpha, std::vector<event_t> &events,
                   const readdy::model::KernelContext::dist_squared_fun& d2) {
+    const auto& reaction_registry = kernel->getKernelContext().reactions();
     for (const auto index : particles) {
         auto& entry = data.entry_at(index);
         // this being false should really not happen, though
@@ -88,13 +89,15 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                     const auto rate = (*it)->getRate();
                     if (rate > 0) {
                         alpha += rate;
-                        events.push_back(
-                                {1, (*it)->getNProducts(), index, 0, rate, alpha,
+                        events.emplace_back(
+                                1, (*it)->getNProducts(), index, 0, rate, alpha,
                                  static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                 entry.type, 0});
+                                 entry.type, 0);
                     }
                 }
             }
+
+            if(!reaction_registry.is_reaction_order2_type(entry.type)) continue;
             // order 2
             for (const auto idx_neighbor : nl->neighbors_of(index)) {
                 if (index > idx_neighbor) continue;
@@ -109,10 +112,10 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                             const auto rate = react->getRate();
                             if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
                                 alpha += rate;
-                                events.push_back({2, react->getNProducts(), index, idx_neighbor,
+                                events.emplace_back(2, react->getNProducts(), index, idx_neighbor,
                                                   rate, alpha,
                                                   static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                                  entry.type, neighbor.type});
+                                                  entry.type, neighbor.type);
                             }
                         }
                     }

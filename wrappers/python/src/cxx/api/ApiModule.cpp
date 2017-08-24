@@ -138,6 +138,8 @@ void exportApi(py::module &api) {
                  "weight1"_a = .5, "weight2"_a = .5)
             .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal,
                  "label"_a, "particle_type"_a, "rate"_a)
+            .def("register_external_topology_reaction", &sim::registerExternalTopologyReaction, "name"_a, "typeFrom1"_a,
+                 "typeFrom2"_a, "typeTo1"_a, "typeTo2"_a, "rate"_a, "radius"_a)
             .def("register_compartment_sphere", &sim::registerCompartmentSphere,
                  "conversion_map"_a, "name"_a, "origin"_a, "radius"_a, "larger_or_less"_a)
             .def("register_compartment_plane", &sim::registerCompartmentPlane, "conversion_map"_a, "name"_a,
@@ -155,7 +157,7 @@ void exportApi(py::module &api) {
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
             .def("add_topology", &sim::addTopology, rvp::reference, "particles"_a, "labels"_a = std::vector<std::string>())
             .def("current_topologies", &sim::currentTopologies)
-            .def("set_kernel", &sim::setKernel, "name"_a)
+            .def("set_kernel", static_cast<void (sim::*)(const std::string&)>(&sim::setKernel), "name"_a)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)

@@ -50,7 +50,7 @@ const CellContainer &NeighborList::cell_container() const {
 }
 
 void NeighborList::set_up() {
-    _max_cutoff = calculate_max_cutoff();
+    _max_cutoff = _context.calculateMaxCutoff();
     _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
     if (_max_cutoff > 0) {
         _cell_container.update_root_size();
@@ -64,21 +64,6 @@ void NeighborList::set_up() {
         fill_verlet_list();
     }
     _is_set_up = true;
-}
-
-scalar NeighborList::calculate_max_cutoff() {
-    scalar max_cutoff = 0;
-    for (const auto &entry : _context.potentials().potentials_order2()) {
-        for (const auto &potential : entry.second) {
-            max_cutoff = max_cutoff < potential->getCutoffRadius() ? potential->getCutoffRadius() : max_cutoff;
-        }
-    }
-    for (const auto &entry : _context.reactions().order2()) {
-        for (const auto &reaction : entry.second) {
-            max_cutoff = max_cutoff < reaction->getEductDistance() ? reaction->getEductDistance() : max_cutoff;
-        }
-    }
-    return max_cutoff;
 }
 
 void NeighborList::update() {

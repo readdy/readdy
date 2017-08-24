@@ -43,7 +43,7 @@ using topology_particle_t = readdy::model::TopologyParticle;
 
 class TestTopologyReactions : public KernelTest {
 protected:
-    virtual void SetUp() override {
+    void SetUp() override {
         if (kernel->supportsTopologies()) {
             auto &ctx = kernel->getKernelContext();
             ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);

@@ -52,9 +52,10 @@ class SCPUStateModel : public readdy::model::KernelStateModel {
 public:
 
     using topology = readdy::model::top::GraphTopology;
-    using topologies_vec = readdy::util::index_persistent_vector<std::unique_ptr<topology>>;
+    using topology_ref = std::unique_ptr<topology>;
+    using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    void updateNeighborList() override;
+    void updateNeighborList(scalar skin) override;
 
     void clearNeighborList() override;
 
@@ -113,7 +114,9 @@ public:
 
     topologies_vec &topologies();
 
-    std::vector<readdy::model::top::GraphTopology const*> getTopologies() const override;
+    void insert_topology(topology&& top);
+
+    std::vector<readdy::model::top::GraphTopology*> getTopologies() override;
 
     const readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const override;
 

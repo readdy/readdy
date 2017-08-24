@@ -66,7 +66,7 @@ TEST(NeighborList, Naive) {
         data.addParticle({(readdy::scalar) i, (readdy::scalar) i, (readdy::scalar) i, 5});
     }
     scpum::SCPUNaiveNeighborList list;
-    list.create(data);
+    list.create(data, 0);
     EXPECT_EQ(((n_particles - 1) * n_particles) / 2, std::distance(list.begin(), list.end()));
 
     for (auto i = 0; i < n_particles; ++i) {
@@ -82,7 +82,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     ctx.setBoxSize(3.7, 2, 2);
     ctx.setPeriodicBoundary(true, false, false);
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
-    list.setupBoxes();
+    list.setupBoxes(0);
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 3);
     for (size_t b = 0; b < 3; ++b) {
@@ -115,7 +115,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
     ctx.setBoxSize(4, 4, 4);
     ctx.setPeriodicBoundary(true, true, true);
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
-    list.setupBoxes();
+    list.setupBoxes(0);
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 27);
     for (auto &&box : boxes) {
@@ -143,7 +143,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     ctx.setBoxSize(4.8, 5, 5.1);
     ctx.setPeriodicBoundary(true, true, true);
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
-    list.setupBoxes();
+    list.setupBoxes(0);
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 64);
     for (auto &&box : boxes) {
@@ -170,7 +170,7 @@ TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     ctx.setBoxSize(1.5, 4, 1.5);
     ctx.setPeriodicBoundary(false, false, false);
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
-    list.setupBoxes();
+    list.setupBoxes(0);
     auto boxes = list.getBoxes();
     EXPECT_EQ(boxes.size(), 3);
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
