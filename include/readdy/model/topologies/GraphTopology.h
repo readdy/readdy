@@ -37,6 +37,7 @@
 #include "Topology.h"
 #include "graph/Graph.h"
 #include "reactions/reactions.h"
+#include "TopologyTypeRegistry.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -47,31 +48,29 @@ public:
 
     using topology_graph = graph::Graph;
     using topology_reaction_rate = scalar;
+    using topology_reaction_rates = std::vector<topology_reaction_rate>;
     using types_vec = std::vector<particle_type_type>;
-
-    /**
-     * a list of (reaction, (current) rate)
-     */
-    using topology_reactions = std::vector<std::tuple<reactions::TopologyReaction, topology_reaction_rate>>;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
      * particles handed in.
+     * @param type the type
      * @param particles the particles
      * @param types particle's types
      * @param config the configuration table
      */
-    GraphTopology(const particle_indices &particles, const types_vec &types,
+    GraphTopology(topology_type_type type, const particle_indices &particles, const types_vec &types,
                   const api::PotentialConfiguration &config);
 
     /**
      * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
      * of the graph will map to the i-th particles in the particles list.
+     * @param type the type
      * @param particles the particles list
      * @param graph the already existing graph
      * @param config the configuration table
      */
-    GraphTopology(particle_indices &&particles, topology_graph &&graph,
+    GraphTopology(topology_type_type type, particle_indices &&particles, topology_graph &&graph,
                   const api::PotentialConfiguration &config);
 
     virtual ~GraphTopology() = default;
@@ -90,17 +89,9 @@ public:
 
     void configure();
 
-    void updateReactionRates();
+    void updateReactionRates(const TopologyTypeRegistry::internal_topology_reactions &reactions);
 
     void validate();
-
-    void addReaction(const reactions::TopologyReaction &reaction);
-
-    void addReaction(reactions::TopologyReaction &&reaction);
-
-    const topology_reactions &registeredReactions() const;
-
-    topology_reactions &registeredReactions();
 
     std::vector<GraphTopology> connectedComponents();
 
@@ -115,11 +106,16 @@ public:
     void appendParticle(particle_index newParticle, particle_type_type newParticleType,
                         particle_index counterPart, particle_type_type counterPartType);
 
+    topology_type_type type() const;
+
+    const topology_reaction_rates &rates() const;
+
 protected:
     topology_graph graph_;
     std::reference_wrapper<const api::PotentialConfiguration> config;
-    topology_reactions reactions_;
+    topology_reaction_rates _reaction_rates;
     topology_reaction_rate _cumulativeRate;
+    topology_type_type _topology_type;
     bool deactivated{false};
 };
 

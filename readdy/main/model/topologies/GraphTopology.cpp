@@ -38,9 +38,10 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(const Topology::particle_indices &particles, const types_vec &types,
+GraphTopology::GraphTopology(topology_type_type type,
+                             const Topology::particle_indices &particles, const types_vec &types,
                              const api::PotentialConfiguration& config)
-        : Topology(particles), config(config) {
+        : Topology(particles), config(config), _topology_type(type) {
     assert(types.size() == particles.size());
     std::size_t i = 0;
     for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
@@ -48,9 +49,10 @@ GraphTopology::GraphTopology(const Topology::particle_indices &particles, const 
     }
 }
 
-GraphTopology::GraphTopology(Topology::particle_indices &&particles, graph::Graph &&graph,
+GraphTopology::GraphTopology(topology_type_type type,
+                             Topology::particle_indices &&particles, graph::Graph &&graph,
                              const api::PotentialConfiguration& config)
-        : Topology(std::move(particles)), config(config), graph_(std::move(graph)) {
+        : Topology(std::move(particles)), config(config), graph_(std::move(graph)), _topology_type(type) {
     if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
         log::error("tried creating graph topology with {} vertices but only {} particles.",
                    GraphTopology::graph().vertices().size(), GraphTopology::getNParticles());
@@ -166,40 +168,16 @@ void GraphTopology::validate() {
     }
 }
 
-void GraphTopology::updateReactionRates() {
+void GraphTopology::updateReactionRates(const TopologyTypeRegistry::internal_topology_reactions &reactions) {
     _cumulativeRate = 0;
-    for(auto&& reaction : reactions_) {
-        const auto& r = std::get<0>(reaction);
-        const auto rate = r.rate(*this);
-        std::get<1>(reaction) = rate;
+    _reaction_rates.resize(reactions.size());
+    auto it = _reaction_rates.begin();
+    for(auto&& reaction : reactions) {
+        const auto rate = reaction.rate(*this);
+        *it = rate;
         _cumulativeRate += rate;
+        ++it;
     }
-    {
-        std::stringstream ss;
-        for(const auto& r : reactions_) {
-            ss << std::get<1>(r) << " + ";
-        }
-        const auto * address = static_cast<const void*>(this);
-        std::stringstream ss2;
-        ss2 << address;
-        std::string name = ss2.str();
-    }
-}
-
-void GraphTopology::addReaction(const reactions::TopologyReaction &reaction) {
-    reactions_.emplace_back(std::make_tuple(reaction, 0));
-}
-
-void GraphTopology::addReaction(reactions::TopologyReaction &&reaction) {
-    reactions_.emplace_back(std::make_tuple(std::move(reaction), 0));
-}
-
-const GraphTopology::topology_reactions &GraphTopology::registeredReactions() const {
-    return reactions_;
-}
-
-GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
-    return reactions_;
 }
 
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
@@ -226,10 +204,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             auto it_graphs = subGraphs.begin();
             auto it_particles = subGraphsParticles.begin();
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
-                components.emplace_back(std::move(*it_particles), std::move(*it_graphs), config);
-                for(const auto& reaction : reactions_) {
-                    components.back().addReaction(std::get<0>(reaction));
-                }
+                components.emplace_back(_topology_type, std::move(*it_particles), std::move(*it_graphs), config);
             }
         }
     }
@@ -274,6 +249,14 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
     } else {
         log::critical("counterPart {} was not contained in topology, this should not happen", counterPart);
     }
+}
+
+topology_type_type GraphTopology::type() const {
+    return _topology_type;
+}
+
+const GraphTopology::topology_reaction_rates &GraphTopology::rates() const {
+    return _reaction_rates;
 }
 
 }

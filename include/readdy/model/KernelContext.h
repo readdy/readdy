@@ -58,6 +58,7 @@
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/api/PotentialConfiguration.h>
 #include <readdy/model/potentials/PotentialRegistry.h>
+#include <readdy/model/topologies/TopologyTypeRegistry.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -159,6 +160,10 @@ public:
 
     const api::PotentialConfiguration &topology_potentials() const;
 
+    top::TopologyTypeRegistry &topology_types();
+
+    const top::TopologyTypeRegistry &topology_types() const;
+
     reactions::ReactionRegistry &reactions();
 
     const reactions::ReactionRegistry &reactions() const;
@@ -195,6 +200,7 @@ private:
     ParticleTypeRegistry particleTypeRegistry_;
     reactions::ReactionRegistry reactionRegistry_;
     potentials::PotentialRegistry potentialRegistry_;
+    top::TopologyTypeRegistry topologyTypes_;
 
     std::unique_ptr<compartment_registry> compartmentRegistry = std::make_unique<compartment_registry>();
 

@@ -61,7 +61,7 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     using namespace readdy;
     auto &ctx = kernel->getKernelContext();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
-    kernel->getKernelStateModel().addTopology({x_0});
+    kernel->getKernelStateModel().addTopology(0, {x_0});
     kernel->getKernelStateModel().addParticle(
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("A"))
     );
@@ -108,7 +108,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticle) {
     using namespace readdy;
     auto &ctx = kernel->getKernelContext();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
-    auto toplogy = kernel->getKernelStateModel().addTopology({x_0});
+    auto toplogy = kernel->getKernelStateModel().addTopology(0, {x_0});
     kernel->getKernelStateModel().addParticle(
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("A"))
     );
@@ -127,6 +127,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
     auto simKernel = sim.setKernel(std::move(kernel));
     sim.setPeriodicBoundary({{true, true, true}});
     sim.setBoxSize(100, 100, 100);
+    sim.registerTopologyType("TA");
     auto topAId = sim.registerParticleType("Topology A", 10., 10., model::particleflavor::TOPOLOGY);
     auto aId = sim.registerParticleType("A", 10., 10.);
     sim.configureTopologyBondPotential("Topology A", "Topology A", 10, 1);
@@ -138,7 +139,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
             topologyParticles.emplace_back(-49. + i, c_::zero, c_::zero, topAId);
         }
     }
-    auto toplogy = sim.addTopology(topologyParticles);
+    auto toplogy = sim.addTopology("TA", topologyParticles);
     {
         auto& graph = toplogy->graph();
         auto it1 = graph.vertices().begin();
@@ -167,7 +168,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
         return recipe;
     }, .7};
 
-    toplogy->addReaction(std::move(r));
+    sim.registerInternalTopologyReaction("TA", r);
 
     sim.runScheme<api::ReaDDyScheme>(true).evaluateTopologyReactions().configureAndRun(35, 1.);
 
@@ -185,6 +186,7 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     Simulation sim;
     auto kernel = sim.setKernel(plugin::KernelProvider::getInstance().create(this->kernel->getName()));
     sim.setPeriodicBoundary({{true, true, true}});
+    sim.registerTopologyType("TA");
     sim.setBoxSize(15, 15, 15);
     sim.registerParticleType("middle", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
     sim.registerParticleType("end", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
@@ -193,9 +195,9 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     sim.configureTopologyBondPotential("middle", "end", .00000001, 1);
     sim.configureTopologyBondPotential("end", "end", .00000001, 1);
 
-    auto top = sim.addTopology({sim.createTopologyParticle("end", {c_::zero-c_::one, c_::zero, c_::zero}),
-                                sim.createTopologyParticle("middle", {c_::zero, c_::zero, c_::zero}),
-                                sim.createTopologyParticle("end", {c_::zero+c_::one, c_::zero, c_::zero})});
+    auto top = sim.addTopology("TA", {sim.createTopologyParticle("end", {c_::zero-c_::one, c_::zero, c_::zero}),
+                                      sim.createTopologyParticle("middle", {c_::zero, c_::zero, c_::zero}),
+                                      sim.createTopologyParticle("end", {c_::zero+c_::one, c_::zero, c_::zero})});
     {
         auto it = top->graph().vertices().begin();
         auto it2 = std::next(top->graph().vertices().begin());

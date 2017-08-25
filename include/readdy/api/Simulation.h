@@ -36,6 +36,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/api/SimulationScheme.h>
+#include <readdy/model/topologies/reactions/TopologyReaction.h>
 #include "ObservableHandle.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -97,12 +98,16 @@ public:
      */
     readdy::model::Vec3 getBoxSize() const;
 
+    topology_type_type registerTopologyType(const std::string& name,
+                                            const std::vector<model::top::reactions::TopologyReaction> &reactions = {});
+
     readdy::model::TopologyParticle
     createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const;
 
     bool kernelSupportsTopologies() const;
 
-    readdy::model::top::GraphTopology *addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
+    readdy::model::top::GraphTopology *addTopology(const std::string& type,
+                                                   const std::vector<readdy::model::TopologyParticle> &particles,
                                                    const std::vector<std::string> &labels = {});
 
     std::vector<readdy::model::top::GraphTopology *> currentTopologies();
@@ -490,6 +495,9 @@ public:
     void registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
                                           const std::string &typeFrom2, const std::string &typeTo1,
                                           const std::string& typeTo2, scalar rate, scalar radius);
+
+    void registerInternalTopologyReaction(const std::string &topologyType,
+                                          const model::top::reactions::TopologyReaction &reaction);
 
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,

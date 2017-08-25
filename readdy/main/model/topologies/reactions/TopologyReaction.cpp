@@ -89,7 +89,9 @@ void TopologyReaction::create_child_topologies_after_reaction() {
 TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const scalar  &rate)
         : TopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
 
-std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) {
+std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) const {
+    const auto &types = kernel->getKernelContext().particle_types();
+    const auto &topology_types = kernel->getKernelContext().topology_types();
     auto recipe = operations(topology);
     auto& steps = recipe.steps();
     if(!steps.empty()) {
@@ -134,7 +136,6 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
                 }
                 {
                     // check if all particle types are topology flavored
-                    const auto &types = kernel->getKernelContext().particle_types();
                     for (const auto &v : topology.graph().vertices()) {
                         if (types.info_of(v.particleType()).flavor != particleflavor::TOPOLOGY) {
                             log::warn("The topology contained particles that were not topology flavored.");
@@ -157,7 +158,7 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
                     // if valid, update force field
                     topology.configure();
                     // and update reaction rates
-                    topology.updateReactionRates();
+                    topology.updateReactionRates(topology_types.reactions_of(topology.type()));
                 }
             } else {
                 if (!topology.graph().isConnected()) {
@@ -168,7 +169,7 @@ std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, co
                 // if valid, update force field
                 topology.configure();
                 // and update reaction rates
-                topology.updateReactionRates();
+                topology.updateReactionRates(topology_types.reactions_of(topology.type()));
             }
         }
     }

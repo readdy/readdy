@@ -156,10 +156,7 @@ void exportTopologies(py::module &m) {
             }, "dihedrals"_a)
             .def("get_graph", [](topology &self) -> graph & { return self.graph(); }, rvp::reference_internal)
             .def("configure", &topology::configure)
-            .def("validate", &topology::validate)
-            .def("add_reaction", [](topology& self, const reaction& reaction) {
-                self.addReaction(reaction);
-            });
+            .def("validate", &topology::validate);
 
     py::class_<graph>(m, "Graph")
             .def("get_vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },

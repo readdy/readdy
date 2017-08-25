@@ -110,7 +110,7 @@ public:
 
     void create_child_topologies_after_reaction();
 
-    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *const kernel);
+    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *const kernel) const;
 
 private:
     reaction_function _reaction_function;

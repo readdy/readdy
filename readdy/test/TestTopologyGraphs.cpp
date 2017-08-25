@@ -191,7 +191,7 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology B")};
     topology_particle_t x_l{1, .1, 1, ctx.particle_types().id_of("Topology A")};
 
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     EXPECT_EQ(top->graph().vertices().size(), 4);
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();
@@ -300,7 +300,7 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     ctx.configureTopologyBondPotential("Topology A", "Topology A", {10, 5});
     topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j});
     top->graph().addEdge(top->graph().vertices().begin(), ++top->graph().vertices().begin());
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
@@ -335,7 +335,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k});
     {
         auto it = top->graph().vertices().begin();
         top->graph().setVertexLabel(it++, "a");
@@ -383,7 +383,7 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_l{1, 3, 1, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();
     while(it2 != top->graph().vertices().end()) {
@@ -429,7 +429,7 @@ TEST(TestTopologyGraphs, TestAppendParticle) {
     api::PotentialConfiguration potentialConfiguration;
     potentialConfiguration.pairPotentials[std::make_tuple(0, 0)].emplace_back();
     potentialConfiguration.pairPotentials[std::make_tuple(0, 1)].emplace_back();
-    model::top::GraphTopology gt {{10, 1, 200}, {0, 0, 0}, potentialConfiguration};
+    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, potentialConfiguration};
     {
         auto it = gt.graph().vertices().begin();
         auto it2 = ++gt.graph().vertices().begin();

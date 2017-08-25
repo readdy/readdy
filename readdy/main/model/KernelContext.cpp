@@ -354,12 +354,20 @@ const scalar KernelContext::calculateMaxCutoff() const {
             max_cutoff = std::max(max_cutoff, reaction->getEductDistance());
         }
     }
-    for(const auto& entry : reactions().external_topology_reactions()) {
+    for(const auto& entry : reactions().external_topology_reaction_registry()) {
         for(const auto& reaction : entry.second) {
             max_cutoff = std::max(max_cutoff, reaction.radius());
         }
     }
     return max_cutoff;
+}
+
+top::TopologyTypeRegistry &KernelContext::topology_types() {
+    return topologyTypes_;
+}
+
+const top::TopologyTypeRegistry &KernelContext::topology_types() const {
+    return topologyTypes_;
 }
 
 KernelContext::~KernelContext() = default;

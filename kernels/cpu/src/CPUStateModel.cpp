@@ -303,7 +303,7 @@ neighbor_list *const CPUStateModel::getNeighborList() {
 }
 
 readdy::model::top::GraphTopology *const
-CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = pimpl->data().addTopologyParticles(particles);
     std::vector<particle_type_type> types;
     types.reserve(ids.size());
@@ -311,7 +311,7 @@ CPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &p
         types.push_back(p.getType());
     }
     auto it = pimpl->topologies.push_back(
-            std::make_unique<topology>(std::move(ids), std::move(types), pimpl->context->topology_potentials())
+            std::make_unique<topology>(type, std::move(ids), std::move(types), pimpl->context->topology_potentials())
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {

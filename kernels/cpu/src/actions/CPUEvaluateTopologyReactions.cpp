@@ -77,6 +77,7 @@ bool performReactionEvent<false>(const scalar rate, const scalar timeStep) {
 
 void CPUEvaluateTopologyReactions::perform() {
     auto &model = kernel->getCPUKernelStateModel();
+    const auto &context = kernel->getKernelContext();
     auto &topologies = model.topologies();
 
     if (!topologies.empty()) {
@@ -176,7 +177,7 @@ void CPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     if (!top.isNormalParticle(*kernel)) {
                         // we have a new topology here, update data accordingly.
-                        top.updateReactionRates();
+                        top.updateReactionRates(context.topology_types().reactions_of(top.type()));
                         top.configure();
                         model.insert_topology(std::move(top));
                     } else {
@@ -193,8 +194,9 @@ void CPUEvaluateTopologyReactions::handleInternalReaction(CPUStateModel::topolog
                                                           std::vector<CPUStateModel::topology> &new_topologies,
                                                           const CPUEvaluateTopologyReactions::TREvent &event,
                                                           CPUStateModel::topology_ref &topology) const {
-    auto &reaction = topology->registeredReactions().at(static_cast<std::size_t>(event.reaction_idx));
-    auto result = std::get<0>(reaction).execute(*topology, kernel);
+    const auto &topology_type_registry = kernel->getKernelContext().topology_types();
+    auto &reaction = topology_type_registry.reactions_of(topology->type()).at(static_cast<std::size_t>(event.reaction_idx));
+    auto result = reaction.execute(*topology, kernel);
     if (!result.empty()) {
         // we had a topology fission, so we need to actually remove the current topology from the
         // data structure
@@ -214,15 +216,16 @@ void CPUEvaluateTopologyReactions::handleInternalReaction(CPUStateModel::topolog
 
 CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReactions::gatherEvents() {
     topology_reaction_events events;
+    const auto &topology_types = kernel->getKernelContext().topology_types();
     {
         rate_t current_cumulative_rate = 0;
         std::size_t topology_idx = 0;
         for (auto &top : kernel->getCPUKernelStateModel().topologies()) {
             if (!top->isDeactivated()) {
                 std::size_t reaction_idx = 0;
-                for (const auto &reaction : top->registeredReactions()) {
+                for (const auto &reaction : topology_types.reactions_of(top->type())) {
                     TREvent event{};
-                    event.own_rate = std::get<1>(reaction);
+                    event.own_rate = top->rates().at(reaction_idx);
                     event.cumulative_rate = event.own_rate + current_cumulative_rate;
                     current_cumulative_rate = event.cumulative_rate;
                     event.topology_idx = topology_idx;
@@ -236,7 +239,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
         }
 
         const auto &context = kernel->getKernelContext();
-        if (!context.reactions().external_topology_reactions().empty()) {
+        if (!context.reactions().external_topology_reaction_registry().empty()) {
             const auto &reaction_registry = context.reactions();
             const auto &d2 = context.getDistSquaredFun();
             const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
@@ -330,7 +333,7 @@ void CPUEvaluateTopologyReactions::handleExternalReaction(CPUStateModel::topolog
     entry2.topology_index = event.topology_idx;
 
     topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
-    topology->updateReactionRates();
+    topology->updateReactionRates(context.topology_types().reactions_of(topology->type()));
     topology->configure();
 }
 

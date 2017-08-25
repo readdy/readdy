@@ -78,6 +78,7 @@ bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approxima
 void SCPUEvaluateTopologyReactions::perform() {
     auto &model = kernel->getSCPUKernelStateModel();
     auto &topologies = model.topologies();
+    const auto& context = kernel->getKernelContext();
 
     if (!topologies.empty()) {
 
@@ -176,7 +177,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     if (!top.isNormalParticle(*kernel)) {
                         // we have a new topology here, update data accordingly.
-                        top.updateReactionRates();
+                        top.updateReactionRates(context.topology_types().reactions_of(top.type()));
                         top.configure();
                         model.insert_topology(std::move(top));
                     } else {
@@ -214,7 +215,7 @@ void SCPUEvaluateTopologyReactions::handleExternalReaction(SCPUStateModel::topol
     entry2.topology_index = event.topology_idx;
 
     topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
-    topology->updateReactionRates();
+    topology->updateReactionRates(context.topology_types().reactions_of(topology->type()));
     topology->configure();
 
 }
@@ -223,8 +224,10 @@ void SCPUEvaluateTopologyReactions::handleInternalReaction(SCPUStateModel::topol
                                                            std::vector<SCPUStateModel::topology> &new_topologies,
                                                            const SCPUEvaluateTopologyReactions::TREvent &event,
                                                            SCPUStateModel::topology_ref &topology) const {
-    auto &reaction = topology->registeredReactions().at(static_cast<std::size_t>(event.reaction_idx));
-    auto result = std::get<0>(reaction).execute(*topology, kernel);
+    const auto &context = kernel->getKernelContext();
+    const auto &reactions = context.topology_types().reactions_of(topology->type());
+    const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
+    auto result = reaction.execute(*topology, kernel);
     if (!result.empty()) {
         // we had a topology fission, so we need to actually remove the current topology from the
         // data structure
@@ -243,6 +246,8 @@ void SCPUEvaluateTopologyReactions::handleInternalReaction(SCPUStateModel::topol
 }
 
 SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReactions::gatherEvents() {
+    const auto& context = kernel->getKernelContext();
+    const auto& top_types = context.topology_types();
     topology_reaction_events events;
     {
         rate_t current_cumulative_rate = 0;
@@ -250,9 +255,9 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
         for (auto &top : kernel->getSCPUKernelStateModel().topologies()) {
             if (!top->isDeactivated()) {
                 std::size_t reaction_idx = 0;
-                for (const auto &reaction : top->registeredReactions()) {
+                for (const auto &reaction : top_types.reactions_of(top->type())) {
                     TREvent event{};
-                    event.own_rate = std::get<1>(reaction);
+                    event.own_rate = top->rates().at(reaction_idx);
                     event.cumulative_rate = event.own_rate + current_cumulative_rate;
                     current_cumulative_rate = event.cumulative_rate;
                     event.topology_idx = topology_idx;
@@ -266,8 +271,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
         }
 
 
-        const auto &context = kernel->getKernelContext();
-        if (!context.reactions().external_topology_reactions().empty()) {
+        if (!context.reactions().external_topology_reaction_registry().empty()) {
             const auto &reaction_registry = context.reactions();
             const auto &d2 = context.getDistSquaredFun();
             const auto &data = *kernel->getSCPUKernelStateModel().getParticleData();

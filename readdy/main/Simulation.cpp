@@ -337,12 +337,13 @@ bool Simulation::kernelSupportsTopologies() const {
 }
 
 readdy::model::top::GraphTopology *
-Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
+Simulation::addTopology(const std::string& type, const std::vector<readdy::model::TopologyParticle> &particles,
                         const std::vector<std::string> &labels) {
     assert(particles.size() == labels.size() || labels.empty());
     ensureKernelSelected();
     if (getSelectedKernel()->supportsTopologies()) {
-        auto top = getSelectedKernel()->getKernelStateModel().addTopology(particles);
+        auto typeId = getSelectedKernel()->getKernelContext().topology_types().id_of(type);
+        auto top = getSelectedKernel()->getKernelStateModel().addTopology(typeId, particles);
         auto it_labels = labels.begin();
         auto it_vertices = top->graph().vertices().begin();
         for (; it_labels != labels.end(); ++it_labels, ++it_vertices) {
@@ -427,6 +428,18 @@ readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::Ker
     }
     pimpl->kernel = std::move(kernel);
     return pimpl->kernel.get();
+}
+
+readdy::topology_type_type Simulation::registerTopologyType(const std::string &name,
+                                      const std::vector<model::top::reactions::TopologyReaction> &reactions) {
+    ensureKernelSelected();
+    return getSelectedKernel()->getKernelContext().topology_types().add_type(name, reactions);
+}
+
+void Simulation::registerInternalTopologyReaction(const std::string &topologyType,
+                                                  const model::top::reactions::TopologyReaction &reaction) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().topology_types().add_reaction(topologyType, reaction);
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
