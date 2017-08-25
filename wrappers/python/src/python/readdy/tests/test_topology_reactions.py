@@ -89,9 +89,12 @@ class TestTopologyReactions(unittest.TestCase):
         return reaction
 
     def chain_decay(self, kernel):
+        common.set_logging_level("warn", python_console_out=False)
+
         sim = Simulation()
         sim.set_kernel(kernel)
         sim.box_size = common.Vec(10, 10, 10)
+        sim.register_topology_type("TA")
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
 
         typeid_b = sim.register_particle_type("B", 1.0, 1.0, ParticleTypeFlavor.NORMAL)
@@ -101,13 +104,13 @@ class TestTopologyReactions(unittest.TestCase):
         n_elements = 50.
         particles = [sim.create_topology_particle("Topology A", common.Vec(-5. + i * 10. / n_elements, 0, 0))
                      for i in range(int(n_elements))]
-        topology = sim.add_topology(particles)
+        topology = sim.add_topology("TA", particles)
 
         for i in range(int(n_elements - 1)):
             topology.get_graph().add_edge(i, i + 1)
 
-        topology.add_reaction(self._get_decay_reaction(typeid_b))
-        topology.add_reaction(self._get_split_reaction())
+        sim.register_internal_topology_reaction("TA", self._get_decay_reaction(typeid_b))
+        sim.register_internal_topology_reaction("TA", self._get_split_reaction())
 
         # h = sim.register_observable_n_particles(1, [], lambda x: print("n particles=%s" % x))
 

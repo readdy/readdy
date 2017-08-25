@@ -154,8 +154,15 @@ void exportApi(py::module &api) {
             .def("configure_topology_dihedral_potential", &sim::configureTopologyTorsionPotential, "type1"_a,
                  "type2"_a, "type3"_a, "type4"_a, "force_constant"_a, "multiplicity"_a, "phi_0"_a,
                  "type"_a = readdy::api::TorsionType::COS_DIHEDRAL)
+            .def("register_topology_type", [](sim &self, const std::string& name) {
+                return self.registerTopologyType(name);
+            })
+            .def("register_internal_topology_reaction", &sim::registerInternalTopologyReaction)
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
-            .def("add_topology", &sim::addTopology, rvp::reference, "type"_a, "particles"_a, "labels"_a)
+            .def("add_topology", [](sim &self, const std::string &name,
+                                    const std::vector<readdy::model::TopologyParticle> &particles) {
+                return self.addTopology(name, particles);
+            }, rvp::reference, "type"_a, "particles"_a)
             .def("current_topologies", &sim::currentTopologies)
             .def("set_kernel", static_cast<void (sim::*)(const std::string&)>(&sim::setKernel), "name"_a)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
