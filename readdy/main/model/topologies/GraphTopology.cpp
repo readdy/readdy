@@ -99,13 +99,7 @@ void GraphTopology::configure() {
             std::ostringstream ss;
 
             ss << "The edge " << v1->particleIndex;
-            if (!v1->label().empty()) {
-                ss << " (" << v1->label() << ")";
-            }
             ss << " -- " << v2->particleIndex;
-            if (!v2->label().empty()) {
-                ss << " (" << v2->label() << ")";
-            }
             ss << " has no bond configured! (See KernelContext.configureTopologyBondPotential())";
 
             throw std::invalid_argument(ss.str());

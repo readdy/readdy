@@ -115,7 +115,6 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
     auto tid = kernel->getKernelContext().topology_types().add_type("Reactive Topology Type");
     auto topology = setUpSmallTopology(kernel.get(), tid);
     const auto &types = kernel->getKernelContext().particle_types();
-    topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
@@ -130,7 +129,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
-            recipe.changeParticleType("begin", types.id_of("Topology A"));
+            recipe.changeParticleType(top.graph().vertices().begin(), types.id_of("Topology A"));
             return recipe;
         };
         auto rateFunction = [&](const model::top::GraphTopology &top) {
@@ -151,7 +150,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         auto result = reactions.at(0).execute(*topology, kernel.get());
         ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->getKernelStateModel().getParticlesForTopology(*topology);
-        auto v = topology->graph().namedVertexPtr("begin");
+        auto v = topology->graph().vertices().begin();
         ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology B"));
         ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
                             "the graph representation and the particle data coincide";
@@ -160,7 +159,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         auto result = reactions.at(1).execute(*topology, kernel.get());
         ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->getKernelStateModel().getParticlesForTopology(*topology);
-        auto v = topology->graph().namedVertexPtr("begin");
+        auto v = topology->graph().vertices().begin();
         ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology A"));
         ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
                             "the graph representation and the particle data coincide";
@@ -175,9 +174,8 @@ TEST_P(TestTopologyReactions, GEXF) {
     }
     auto topology = setUpSmallTopology(kernel.get(), 0);
     auto middle = ++topology->graph().vertices().begin();
-    topology->graph().setVertexLabel(middle, "middle");
     auto gexf = model::top::util::to_gexf(topology->graph());
-    EXPECT_TRUE(gexf.find("<node id=\"1\" label=\"middle\"") != std::string::npos) << "middle node should be labelled";
+    EXPECT_TRUE(gexf.find("<node id=\"1\"") != std::string::npos) << "middle node should appear";
     EXPECT_TRUE(gexf.find("source=\"0\" target=\"1\"") != std::string::npos) << "first two vertices are connected";
 }
 
@@ -191,12 +189,10 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
     auto tid = kernel->getKernelContext().topology_types().add_type("TA");
     auto topology = setUpSmallTopology(kernel.get(), tid);
     const auto &types = kernel->getKernelContext().particle_types();
-    topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
-    topology->graph().setVertexLabel(--topology->graph().vertices().end(), "end");
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
-            recipe.addEdge("begin", "end");
+            recipe.addEdge(top.graph().vertices().begin(), std::prev(top.graph().vertices().end()));
             return recipe;
         };
         model::top::reactions::TopologyReaction reaction {reactionFunction, 5};
@@ -209,7 +205,8 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
     topology->updateReactionRates(reactions);
     auto result = reactions.back().execute(*topology, kernel.get());
     ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
-    EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple("begin", "end")));
+    EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple(topology->graph().vertices().begin(),
+                                                               std::prev(topology->graph().vertices().end()))));
 }
 
 TEST_P(TestTopologyReactions, AddEdgeIterator) {
@@ -221,8 +218,6 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
     }
     auto tid = kernel->getKernelContext().topology_types().add_type("TA");
     auto topology = setUpSmallTopology(kernel.get(), tid);
-    topology->graph().setVertexLabel(topology->graph().vertices().begin(), "begin");
-    topology->graph().setVertexLabel(--topology->graph().vertices().end(), "end");
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
@@ -238,7 +233,8 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
     topology->updateReactionRates(reactions);
     auto result = reactions.back().execute(*topology, kernel.get());
     ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
-    EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple("begin", "end")));
+    const auto &vertices = topology->graph().vertices();
+    EXPECT_TRUE(topology->graph().containsEdge(std::make_tuple(vertices.begin(), std::prev(vertices.end()))));
 }
 
 

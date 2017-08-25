@@ -48,10 +48,8 @@ class Graph {
 public:
 
     using vertex_list = std::list<Vertex>;
-    using vertex_ref = VertexRef;
-    using vertex_cref = VertexCRef;
-    using label = Vertex::label_type;
-    using label_edge = std::tuple<label, label>;
+    using vertex_ref = vertex_list::iterator;
+    using vertex_cref = vertex_list::const_iterator;
 
     using edge = std::tuple<vertex_ref, vertex_ref>;
     using cedge = std::tuple<vertex_cref, vertex_cref>;
@@ -90,47 +88,21 @@ public:
 
     vertex_ref lastVertex();
 
-    const Vertex &namedVertex(const label &name) const;
-
-    Vertex &namedVertex(const label &name);
-
     bool containsEdge(const cedge& edge) const;
 
     bool containsEdge(vertex_cref v1, vertex_cref v2) const;
 
-    bool containsEdge(const label_edge& edge) const;
-
-    bool containsEdge(const std::string& label1, const std::string& label2) const;
-
-    cedge namedEdge(const label_edge& edge) const;
-
-    edge namedEdge(const label_edge& edge);
-
-    vertex_ref namedVertexPtr(const label& name);
-
-    vertex_cref namedVertexPtr(const label& name) const;
-
     const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
 
-    void addVertex(std::size_t particleIndex, particle_type_type particleType, const label &label = "");
-
-    void setVertexLabel(vertex_ref vertex, const label &label);
+    void addVertex(std::size_t particleIndex, particle_type_type particleType);
 
     void addEdge(vertex_ref v1, vertex_ref v2);
-
-    void addEdge(const label &v1, const label &v2);
-
-    void addEdge(const label_edge& edge);
 
     void addEdge(const edge& edge);
 
     void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
 
     void removeEdge(vertex_ref v1, vertex_ref v2);
-
-    void removeEdge(const label &v1, const label &v2);
-
-    void removeEdge(const label_edge &edge);
 
     void removeEdge(const edge& edge);
 

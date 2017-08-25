@@ -337,19 +337,11 @@ bool Simulation::kernelSupportsTopologies() const {
 }
 
 readdy::model::top::GraphTopology *
-Simulation::addTopology(const std::string& type, const std::vector<readdy::model::TopologyParticle> &particles,
-                        const std::vector<std::string> &labels) {
-    assert(particles.size() == labels.size() || labels.empty());
+Simulation::addTopology(const std::string& type, const std::vector<readdy::model::TopologyParticle> &particles) {
     ensureKernelSelected();
     if (getSelectedKernel()->supportsTopologies()) {
         auto typeId = getSelectedKernel()->getKernelContext().topology_types().id_of(type);
-        auto top = getSelectedKernel()->getKernelStateModel().addTopology(typeId, particles);
-        auto it_labels = labels.begin();
-        auto it_vertices = top->graph().vertices().begin();
-        for (; it_labels != labels.end(); ++it_labels, ++it_vertices) {
-            top->graph().setVertexLabel(it_vertices, *it_labels);
-        }
-        return top;
+        return getSelectedKernel()->getKernelStateModel().addTopology(typeId, particles);
     }
     throw std::logic_error("the selected kernel does not support topologies!");
 }

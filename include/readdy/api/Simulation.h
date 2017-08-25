@@ -107,8 +107,7 @@ public:
     bool kernelSupportsTopologies() const;
 
     readdy::model::top::GraphTopology *addTopology(const std::string& type,
-                                                   const std::vector<readdy::model::TopologyParticle> &particles,
-                                                   const std::vector<std::string> &labels = {});
+                                                   const std::vector<readdy::model::TopologyParticle> &particles);
 
     std::vector<readdy::model::top::GraphTopology *> currentTopologies();
 

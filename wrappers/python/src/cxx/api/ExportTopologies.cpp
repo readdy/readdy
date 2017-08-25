@@ -103,16 +103,10 @@ void exportTopologies(py::module &m) {
 
     py::class_<reaction_recipe>(m, "Recipe")
             .def(py::init<topology&>())
-            .def("change_particle_type", [](reaction_recipe &self, const std::string& vertex_label, const readdy::particle_type_type to) {
-                return self.changeParticleType(vertex_label, to);
-            }, py::return_value_policy::reference_internal)
             .def("change_particle_type", [](reaction_recipe &self, const std::size_t vertex_index, const readdy::particle_type_type to) {
                 auto it = self.topology().graph().vertices().begin();
                 std::advance(it, vertex_index);
                 return self.changeParticleType(it, to);
-            }, py::return_value_policy::reference_internal)
-            .def("add_edge", [](reaction_recipe &self, const std::string& vlabel1, const std::string& vlabel2) {
-                return self.addEdge(vlabel1, vlabel2);
             }, py::return_value_policy::reference_internal)
             .def("add_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) {
                 auto it1 = self.topology().graph().vertices().begin();
@@ -121,18 +115,12 @@ void exportTopologies(py::module &m) {
                 std::advance(it2, v_index2);
                 return self.addEdge(it1, it2);
             }, py::return_value_policy::reference_internal)
-            .def("remove_edge", [](reaction_recipe &self, const std::string& vlabel1, const std::string& vlabel2) {
-                return self.removeEdge(vlabel1, vlabel2);
-            }, py::return_value_policy::reference_internal)
             .def("remove_edge", [](reaction_recipe &self, std::size_t v_index1, std::size_t v_index2) {
                 auto it1 = self.topology().graph().vertices().begin();
                 auto it2 = self.topology().graph().vertices().begin();
                 std::advance(it1, v_index1);
                 std::advance(it2, v_index2);
                 return self.removeEdge(it1, it2);
-            }, py::return_value_policy::reference_internal)
-            .def("separate_vertex", [](reaction_recipe &self, const std::string& label) -> reaction_recipe& {
-                return self.separateVertex(self.topology().graph().namedVertexPtr(label));
             }, py::return_value_policy::reference_internal)
             .def("separate_vertex", [](reaction_recipe &self, const std::size_t index) {
                 auto it = self.topology().graph().vertices().begin();
@@ -161,9 +149,6 @@ void exportTopologies(py::module &m) {
     py::class_<graph>(m, "Graph")
             .def("get_vertices", [](graph &self) -> graph::vertex_list & { return self.vertices(); },
                  rvp::reference_internal)
-            .def("add_edge", [](graph &self, const std::string &v1, const std::string &v2) {
-                self.addEdge(v1, v2);
-            }, "vertex_label_1"_a, "vertex_label_2"_a)
             .def("add_edge", [](graph &self, std::size_t v1, std::size_t v2) {
                 if (v1 < self.vertices().size() && v2 < self.vertices().size()) {
                     auto it1 = self.vertices().begin();
@@ -180,7 +165,6 @@ void exportTopologies(py::module &m) {
             .def("get", [](const vertex::vertex_ptr &edge) -> const vertex & { return *edge; });
 
     py::class_<vertex>(m, "Vertex")
-            .def_property_readonly("label", [](const vertex& self) { return self.label(); })
             .def_readonly("particle_index", &vertex::particleIndex)
             .def("particle_type", &vertex::particleType)
             .def("neighbors", [](const vertex &self) { return self.neighbors(); })
