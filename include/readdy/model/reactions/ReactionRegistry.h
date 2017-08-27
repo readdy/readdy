@@ -148,6 +148,8 @@ public:
                                         const util::particle_type_pair &types_to, scalar rate, scalar radius,
                                         bool connect);
 
+    void validate_external_topology_reaction(const external_topology_reaction& reaction) const;
+
     const external_topology_reaction_map &external_topology_reaction_registry() const;
 
     const external_topology_reactions &external_top_reactions_by_type(particle_type_type t1, particle_type_type t2) const;

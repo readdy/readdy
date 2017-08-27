@@ -190,53 +190,9 @@ const ReactionRegistry::reaction_o2_registry &ReactionRegistry::order2() const {
 void ReactionRegistry::add_external_topology_reaction(const std::string &name, const util::particle_type_pair &types,
                                                       const util::particle_type_pair &types_to, scalar rate,
                                                       scalar radius, bool connect) {
-    if(rate > 0 && radius > 0) {
-        auto info1 = typeRegistry.info_of(std::get<0>(types));
-        auto info2 = typeRegistry.info_of(std::get<1>(types));
-        auto infoTo1 = typeRegistry.info_of(std::get<0>(types_to));
-        auto infoTo2 = typeRegistry.info_of(std::get<1>(types_to));
-
-        if(info1.flavor == particleflavor::TOPOLOGY || info2.flavor == particleflavor::TOPOLOGY) {
-            if (infoTo1.flavor == particleflavor::TOPOLOGY && infoTo2.flavor == particleflavor::TOPOLOGY || connect) {
-                using tr_entry = external_topology_reaction_map::value_type;
-                auto it = std::find_if(_topology_reactions.begin(), _topology_reactions.end(), [&name](const tr_entry &e) -> bool {
-                    return std::find_if(e.second.begin(), e.second.end(), [&name](const external_topology_reaction& tr) {
-                        return tr.name() == name;
-                    }) != e.second.end();
-                });
-                if(it == _topology_reactions.end()) {
-                    if(info1.flavor == particleflavor::TOPOLOGY && info2.flavor == particleflavor::TOPOLOGY) {
-                        log::critical("Tried registering a topology-topology fusion reaction, this is not supported yet!");
-                    } else {
-                        _topology_reactions[types].emplace_back(name, types, types_to, rate, radius, connect);
-                    }
-                } else {
-                    throw std::invalid_argument("An external topology reaction with the same name was already "
-                                                        "registered!");
-                }
-
-            } else {
-                throw std::invalid_argument(
-                        fmt::format("One or both of the target types ({} and {}) of topology reaction {} did not have "
-                                            "the topology flavor and connect was set to true!",
-                                    infoTo1.name, infoTo2.name, name)
-                );
-            }
-        } else {
-            throw std::invalid_argument(
-                    fmt::format("At least one of the educt types ({} and {}) of topology reaction {} need "
-                                        "to be topology flavored!", info1.name, info2.name, name)
-            );
-        }
-    }
-    if(rate <= 0) {
-        throw std::invalid_argument("The rate of an external topology reaction ("
-                                    + name + ") should always be positive");
-    }
-    if(radius <= 0) {
-        throw std::invalid_argument("The radius of an external topology reaction("
-                                    + name + ") should always be positive");
-    }
+    external_topology_reaction reaction(name, types, types_to, rate, radius, connect);
+    validate_external_topology_reaction(reaction);
+    _topology_reactions[types].push_back(std::move(reaction));
 }
 
 const ReactionRegistry::external_topology_reaction_map &ReactionRegistry::external_topology_reaction_registry() const {
@@ -272,6 +228,67 @@ bool ReactionRegistry::is_reaction_order2_type(particle_type_type type) const {
 
 bool ReactionRegistry::is_topology_reaction_type(const std::string &name) const {
     return is_topology_reaction_type(typeRegistry.id_of(name));
+}
+
+void ReactionRegistry::validate_external_topology_reaction(
+        const ReactionRegistry::external_topology_reaction &reaction) const {
+    if(reaction.rate() <= 0) {
+        throw std::invalid_argument("The rate of an external topology reaction (" + reaction.name() +
+                                            ") should always be positive");
+    }
+    if(reaction.radius() <= 0) {
+        throw std::invalid_argument("The radius of an external topology reaction("
+                                    + reaction.name() + ") should always be positive");
+    }
+    auto info1 = typeRegistry.info_of(reaction.type1());
+    auto info2 = typeRegistry.info_of(reaction.type2());
+    auto infoTo1 = typeRegistry.info_of(reaction.type_to1());
+    auto infoTo2 = typeRegistry.info_of(reaction.type_to2());
+
+    if(info1.flavor != particleflavor::TOPOLOGY && info2.flavor != particleflavor::TOPOLOGY) {
+        throw std::invalid_argument(
+                fmt::format("At least one of the educt types ({} and {}) of topology reaction {} need "
+                                    "to be topology flavored!", info1.name, info2.name, reaction.name())
+        );
+    }
+
+    {
+        using tr_entry = external_topology_reaction_map::value_type;
+        auto it = std::find_if(_topology_reactions.begin(), _topology_reactions.end(), [&reaction](const tr_entry &e) -> bool {
+            return std::find_if(e.second.begin(), e.second.end(), [&reaction](const external_topology_reaction& tr) {
+                return tr.name() == reaction.name();
+            }) != e.second.end();
+        });
+        if(it != _topology_reactions.end()) {
+            throw std::invalid_argument("An external topology reaction with the same name (" + reaction.name() +
+                                                ") was already registered!");
+        }
+    }
+
+    if(reaction.connect()) {
+        if(infoTo1.flavor != particleflavor::TOPOLOGY || infoTo2.flavor != particleflavor::TOPOLOGY) {
+            throw std::invalid_argument(
+                    fmt::format("One or both of the target types ({} and {}) of topology reaction {} did not have "
+                                        "the topology flavor and connect was set to true!",
+                                infoTo1.name, infoTo2.name, reaction.name())
+            );
+        }
+    } else {
+        // flavors need to stay the same: topology particles must remain topology particles, same for normal particles
+        if(info1.flavor != infoTo1.flavor) {
+            throw std::invalid_argument(fmt::format("if connect is false, flavors need to remain same, which is not the case "
+                                                "for {} (flavor={}) -> {} (flavor={})", info1.name,
+                                        particleflavor::particle_flavor_to_str(info1.flavor), infoTo1.name,
+                                        particleflavor::particle_flavor_to_str(infoTo1.flavor)));
+        }
+        if(info2.flavor != infoTo2.flavor) {
+            throw std::invalid_argument(fmt::format("if connect is false, flavors need to remain same, which is not the case "
+                                                "for {} (flavor={}) -> {} (flavor={})", info2.name,
+                                        particleflavor::particle_flavor_to_str(info2.flavor), infoTo2.name,
+                                        particleflavor::particle_flavor_to_str(infoTo2.flavor)));
+        }
+    }
+
 }
 
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {
