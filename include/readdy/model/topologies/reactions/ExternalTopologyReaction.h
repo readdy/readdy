@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(reactions)
 class ExternalTopologyReaction {
 public:
     ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
-                             const util::particle_type_pair &types_to, scalar rate, scalar radius);
+                             const util::particle_type_pair &types_to, scalar rate, scalar radius, bool connect);
 
     ~ExternalTopologyReaction() = default;
 
@@ -73,6 +73,8 @@ public:
     const scalar rate() const;
 
     const scalar radius() const;
+    
+    const bool connect() const;
 
 private:
     std::string _name;
@@ -80,6 +82,7 @@ private:
     util::particle_type_pair _types_to;
     scalar _rate;
     scalar _radius;
+    bool _connect;
 };
 
 NAMESPACE_END(reactions)

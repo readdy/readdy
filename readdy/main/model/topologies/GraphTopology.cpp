@@ -253,6 +253,20 @@ const GraphTopology::topology_reaction_rates &GraphTopology::rates() const {
     return _reaction_rates;
 }
 
+void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
+                                   particle_type_type otherNewParticleType, Topology::particle_index thisParticle,
+                                   particle_type_type thisNewParticleType) {
+    // todo
+}
+
+graph::Graph::vertex_ref GraphTopology::vertexForParticle(Topology::particle_index particle) {
+    auto it = std::find(particles.begin(), particles.end(), particle);
+    if(it != particles.end()) {
+        return std::next(graph_.vertices().begin(), std::distance(particles.begin(), it));
+    }
+    return graph_.vertices().end();
+}
+
 }
 }
 }

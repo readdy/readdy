@@ -106,7 +106,12 @@ public:
     void appendParticle(particle_index newParticle, particle_type_type newParticleType,
                         particle_index counterPart, particle_type_type counterPartType);
 
+    void appendTopology(GraphTopology &other, particle_index otherParticle, particle_type_type otherNewParticleType,
+                        particle_index thisParticle, particle_type_type thisNewParticleType);
+
     topology_type_type type() const;
+
+    topology_graph::vertex_ref vertexForParticle(particle_index particle);
 
     const topology_reaction_rates &rates() const;
 

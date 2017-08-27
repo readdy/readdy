@@ -139,7 +139,7 @@ void exportApi(py::module &api) {
             .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal,
                  "label"_a, "particle_type"_a, "rate"_a)
             .def("register_external_topology_reaction", &sim::registerExternalTopologyReaction, "name"_a, "typeFrom1"_a,
-                 "typeFrom2"_a, "typeTo1"_a, "typeTo2"_a, "rate"_a, "radius"_a)
+                 "typeFrom2"_a, "typeTo1"_a, "typeTo2"_a, "rate"_a, "radius"_a, "connect"_a = true)
             .def("register_compartment_sphere", &sim::registerCompartmentSphere,
                  "conversion_map"_a, "name"_a, "origin"_a, "radius"_a, "larger_or_less"_a)
             .def("register_compartment_plane", &sim::registerCompartmentPlane, "conversion_map"_a, "name"_a,

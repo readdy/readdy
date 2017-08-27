@@ -189,7 +189,7 @@ const ReactionRegistry::reaction_o2_registry &ReactionRegistry::order2() const {
 
 void ReactionRegistry::add_external_topology_reaction(const std::string &name, const util::particle_type_pair &types,
                                                       const util::particle_type_pair &types_to, scalar rate,
-                                                      scalar radius) {
+                                                      scalar radius, bool connect) {
     if(rate > 0 && radius > 0) {
         auto info1 = typeRegistry.info_of(std::get<0>(types));
         auto info2 = typeRegistry.info_of(std::get<1>(types));
@@ -197,7 +197,7 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
         auto infoTo2 = typeRegistry.info_of(std::get<1>(types_to));
 
         if(info1.flavor == particleflavor::TOPOLOGY || info2.flavor == particleflavor::TOPOLOGY) {
-            if (infoTo1.flavor == particleflavor::TOPOLOGY && infoTo2.flavor == particleflavor::TOPOLOGY) {
+            if (infoTo1.flavor == particleflavor::TOPOLOGY && infoTo2.flavor == particleflavor::TOPOLOGY || connect) {
                 using tr_entry = external_topology_reaction_map::value_type;
                 auto it = std::find_if(_topology_reactions.begin(), _topology_reactions.end(), [&name](const tr_entry &e) -> bool {
                     return std::find_if(e.second.begin(), e.second.end(), [&name](const external_topology_reaction& tr) {
@@ -208,7 +208,7 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
                     if(info1.flavor == particleflavor::TOPOLOGY && info2.flavor == particleflavor::TOPOLOGY) {
                         log::critical("Tried registering a topology-topology fusion reaction, this is not supported yet!");
                     } else {
-                        _topology_reactions[types].emplace_back(name, types, types_to, rate, radius);
+                        _topology_reactions[types].emplace_back(name, types, types_to, rate, radius, connect);
                     }
                 } else {
                     throw std::invalid_argument("An external topology reaction with the same name was already "
@@ -218,7 +218,8 @@ void ReactionRegistry::add_external_topology_reaction(const std::string &name, c
             } else {
                 throw std::invalid_argument(
                         fmt::format("One or both of the target types ({} and {}) of topology reaction {} did not have "
-                                            "the topology flavor!", infoTo1.name, infoTo2.name, name)
+                                            "the topology flavor and connect was set to true!",
+                                    infoTo1.name, infoTo2.name, name)
                 );
             }
         } else {
@@ -244,10 +245,11 @@ const ReactionRegistry::external_topology_reaction_map &ReactionRegistry::extern
 
 void ReactionRegistry::add_external_topology_reaction(const std::string &name, const std::string &typeFrom1,
                                                       const std::string &typeFrom2, const std::string &typeTo1,
-                                                      const std::string &typeTo2, scalar rate, scalar radius) {
+                                                      const std::string &typeTo2, scalar rate, scalar radius,
+                                                      bool connect) {
     add_external_topology_reaction(name, std::make_tuple(typeRegistry.id_of(typeFrom1), typeRegistry.id_of(typeFrom2)),
                                    std::make_tuple(typeRegistry.id_of(typeTo1), typeRegistry.id_of(typeTo2)),
-                                   rate, radius);
+                                   rate, radius, connect);
 }
 
 const ReactionRegistry::external_topology_reactions &

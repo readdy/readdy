@@ -408,10 +408,11 @@ bool Simulation::doublePrecision() const {
 
 void Simulation::registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
                                                   const std::string &typeFrom2, const std::string &typeTo1,
-                                                  const std::string &typeTo2, scalar rate, scalar radius) {
+                                                  const std::string &typeTo2, scalar rate, scalar radius,
+                                                  bool connect) {
     ensureKernelSelected();
     getSelectedKernel()->getKernelContext().reactions()
-            .add_external_topology_reaction(name, typeFrom1, typeFrom2, typeTo1, typeTo2, rate, radius);
+            .add_external_topology_reaction(name, typeFrom1, typeFrom2, typeTo1, typeTo2, rate, radius, connect);
 }
 
 readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::KernelProvider::kernel_ptr &&kernel) {

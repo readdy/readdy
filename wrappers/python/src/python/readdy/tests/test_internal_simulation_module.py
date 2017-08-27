@@ -30,6 +30,8 @@ from readdy._internal.readdybinding.api import KernelProvider
 
 from readdy._internal.readdybinding.common import Vec
 
+import readdy._internal.readdybinding.common as common
+
 from readdy.util import platform_utils
 
 
@@ -75,6 +77,8 @@ class TestInternalSimulationModule(unittest.TestCase):
         print("mean=%s" % mean)
 
     def test_potentials(self):
+        common.set_logging_level("warn", python_console_out=False)
+
         if not self.simulation.is_kernel_selected():
             self.simulation.set_kernel("SingleCPU")
 

@@ -142,10 +142,11 @@ public:
 
     void add_external_topology_reaction(const std::string &name, const std::string& typeFrom1,
                                         const std::string& typeFrom2, const std::string& typeTo1,
-                                        const std::string& typeTo2, scalar rate, scalar radius);
+                                        const std::string& typeTo2, scalar rate, scalar radius, bool connect);
 
     void add_external_topology_reaction(const std::string &name, const util::particle_type_pair &types,
-                                        const util::particle_type_pair &types_to, scalar rate, scalar radius);
+                                        const util::particle_type_pair &types_to, scalar rate, scalar radius,
+                                        bool connect);
 
     const external_topology_reaction_map &external_topology_reaction_registry() const;
 

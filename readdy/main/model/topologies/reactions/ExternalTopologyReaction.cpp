@@ -39,8 +39,8 @@ namespace reactions {
 
 ExternalTopologyReaction::ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
                                                const util::particle_type_pair &types_to, const scalar rate,
-                                               const scalar radius)
-        : _name(name), _types(types), _types_to(types_to), _rate(rate), _radius(radius) {}
+                                               const scalar radius, bool connect)
+        : _name(name), _types(types), _types_to(types_to), _rate(rate), _radius(radius), _connect(connect) {}
 
 const std::string &ExternalTopologyReaction::name() const {
     return _name;
@@ -76,6 +76,10 @@ const particle_type_type ExternalTopologyReaction::type_to2() const {
 
 const util::particle_type_pair &ExternalTopologyReaction::types_to() const {
     return _types_to;
+}
+
+const bool ExternalTopologyReaction::connect() const {
+    return _connect;
 }
 
 

@@ -62,6 +62,9 @@ private:
                            const TREvent &event, CPUStateModel::topology_ref &topology) const;
 
     void handleExternalReaction(CPUStateModel::topology_ref &topology, const TREvent& event);
+
+    void handleTopologyTopologyReaction(CPUStateModel::topology_ref &t1, CPUStateModel::topology_ref &t2,
+                                        const TREvent& event);
 };
 
 

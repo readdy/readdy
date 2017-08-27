@@ -493,7 +493,7 @@ public:
 
     void registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
                                           const std::string &typeFrom2, const std::string &typeTo1,
-                                          const std::string& typeTo2, scalar rate, scalar radius);
+                                          const std::string& typeTo2, scalar rate, scalar radius, bool connect = true);
 
     void registerInternalTopologyReaction(const std::string &topologyType,
                                           const model::top::reactions::TopologyReaction &reaction);

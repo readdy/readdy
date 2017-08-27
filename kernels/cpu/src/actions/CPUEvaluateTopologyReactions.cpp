@@ -54,6 +54,9 @@ struct CPUEvaluateTopologyReactions::TREvent {
     rate_t cumulative_rate{0};
     rate_t own_rate{0};
     std::size_t topology_idx{0};
+    // for topology-topology fusion only
+    std::ptrdiff_t topology_idx2{-1};
+
     std::size_t reaction_idx{0};
     particle_type_type t1{0}, t2{0};
     // idx1 is always the particle that belongs to a topology
@@ -123,6 +126,8 @@ void CPUEvaluateTopologyReactions::perform() {
                             handleInternalReaction(topologies, new_topologies, event, topology);
                         } else {
                             handleExternalReaction(topology, event);
+                            // todo in case of topology<->topology, otherTopology needs to be removed from evtlist too
+                            // todo maybe handle this separately and not in handleExternalReaction ?
                         }
 
                         // loop over all other events, swap events considering this particular topology to the end
@@ -246,7 +251,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
             const auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
 
             std::size_t index{0};
-            // todo parallelize this
+            // todo: parallel loop over topolgies and their particles' neighbors instead of all particles
             for (auto it = data.begin(); it != data.end(); ++it, ++index) {
                 const auto &entry = *it;
                 if (!entry.deactivated && reaction_registry.is_topology_reaction_type(entry.type)) {
@@ -266,28 +271,33 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                             const auto distSquared = d2(entry.pos, neighbor.pos);
                             std::size_t reaction_index = 0;
                             for (const auto &reaction : reactions) {
-                                // todo this only covers the particle<->topology case, not the topology<->topology case
                                 if (distSquared < reaction.radius() * reaction.radius()) {
                                     TREvent event{};
                                     event.own_rate = reaction.rate();
                                     event.cumulative_rate = event.own_rate + current_cumulative_rate;
                                     current_cumulative_rate = event.cumulative_rate;
                                     if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
+                                        // entry is a topology, neighbor an ordinary particle
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
                                         event.t1 = entry.type;
                                         event.t2 = neighbor.type;
                                         event.idx1 = index;
                                         event.idx2 = neighbor_index;
                                     } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
+                                        // neighbor is a topology, entry an ordinary particle
                                         event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
                                         event.t1 = neighbor.type;
                                         event.t2 = entry.type;
                                         event.idx1 = neighbor_index;
                                         event.idx2 = index;
                                     } else if (entry.topology_index >= 0 && neighbor.topology_index >= 0) {
-                                        // todo this is a topology-topology fusion
-                                        log::critical(
-                                                "topology <-> topology fusion encountered, this should currently not happen");
+                                        // this is a topology-topology fusion
+                                        event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                        event.topology_idx2 = static_cast<std::size_t>(neighbor.topology_index);
+                                        event.t1 = entry.type;
+                                        event.t2 = neighbor.type;
+                                        event.idx1 = index;
+                                        event.idx2 = neighbor_index;
                                     } else {
                                         log::critical("got no topology for topology-fusion");
                                     }
@@ -329,12 +339,36 @@ void CPUEvaluateTopologyReactions::handleExternalReaction(CPUStateModel::topolog
         entry1Type = reaction.type_to2();
         entry2Type = reaction.type_to1();
     }
-    entry1.topology_index = event.topology_idx;
-    entry2.topology_index = event.topology_idx;
+    if(event.topology_idx2 < 0) {
+        entry1.topology_index = event.topology_idx;
+        entry2.topology_index = event.topology_idx;
 
-    topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
+        if(reaction.connect()) {
+            topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
+        } else {
+            topology->vertexForParticle(event.idx1)->setParticleType(entry1Type);
+        }
+    } else {
+        // topology - topology fusion
+        auto &otherTopology = kernel->getCPUKernelStateModel().topologies().at(static_cast<std::size_t>(event.topology_idx2));
+        // todo
+
+        if(reaction.connect()) {
+            //topology->appendTopology(otherTopology, ...)
+
+        } else {
+            otherTopology->updateReactionRates(context.topology_types().reactions_of(otherTopology->type()));
+            otherTopology->configure();
+        }
+    }
     topology->updateReactionRates(context.topology_types().reactions_of(topology->type()));
     topology->configure();
+}
+
+void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel::topology_ref &t1,
+                                                                  CPUStateModel::topology_ref &t2,
+                                                                  const TREvent &event) {
+    // todo
 }
 
 }
