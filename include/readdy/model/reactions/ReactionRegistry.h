@@ -35,7 +35,6 @@
 #include <readdy/common/common.h>
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/ParticleTypeRegistry.h>
-#include <readdy/model/topologies/reactions/ExternalTopologyReaction.h>
 #include <unordered_set>
 #include "Reaction.h"
 
@@ -51,11 +50,6 @@ class ReactionRegistry {
     using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec2>;
 
 public:
-    using external_topology_reaction = top::reactions::ExternalTopologyReaction;
-    using external_topology_reaction_map = util::particle_type_pair_unordered_map<std::vector<external_topology_reaction>>;
-    using external_topology_reactions = external_topology_reaction_map::mapped_type;
-    using external_topology_reaction_types = std::unordered_set<particle_type_type>;
-
     using reaction_o1_registry = std::unordered_map<particle::type_type, std::vector<reactions::Reaction<1> *>>;
     using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;
     using reaction_o2_types = std::unordered_set<particle_type_type>;
@@ -136,24 +130,6 @@ public:
 
     const short add_external(reaction_o2 r);
 
-    bool is_topology_reaction_type(const std::string &name) const;
-
-    bool is_topology_reaction_type(particle_type_type type) const;
-
-    void add_external_topology_reaction(const std::string &name, const std::string& typeFrom1,
-                                        const std::string& typeFrom2, const std::string& typeTo1,
-                                        const std::string& typeTo2, scalar rate, scalar radius, bool connect);
-
-    void add_external_topology_reaction(const std::string &name, const util::particle_type_pair &types,
-                                        const util::particle_type_pair &types_to, scalar rate, scalar radius,
-                                        bool connect);
-
-    void validate_external_topology_reaction(const external_topology_reaction& reaction) const;
-
-    const external_topology_reaction_map &external_topology_reaction_registry() const;
-
-    const external_topology_reactions &external_top_reactions_by_type(particle_type_type t1, particle_type_type t2) const;
-
     void configure();
 
     void debug_output() const;
@@ -174,10 +150,6 @@ private:
     reaction_o2_registry_internal two_educts_registry_internal{};
     reaction_o2_registry_external two_educts_registry_external{};
     reaction_o2_types _reaction_o2_types {};
-
-    external_topology_reaction_map _topology_reactions {};
-    external_topology_reactions defaultTopologyReactions{};
-    external_topology_reaction_types _topology_reaction_types{};
 
     reactions_o1 defaultReactionsO1{};
     reactions_o2 defaultReactionsO2{};

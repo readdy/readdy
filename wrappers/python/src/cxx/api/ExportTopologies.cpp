@@ -41,7 +41,7 @@ using particle = readdy::model::Particle;
 using topology_particle = readdy::model::TopologyParticle;
 using base_topology = readdy::model::top::Topology;
 using topology = readdy::model::top::GraphTopology;
-using reaction = readdy::model::top::reactions::TopologyReaction;
+using reaction = readdy::model::top::reactions::StructuralTopologyReaction;
 using reaction_recipe = readdy::model::top::reactions::Recipe;
 using graph = readdy::model::top::graph::Graph;
 using vertex = readdy::model::top::graph::Vertex;
@@ -89,7 +89,7 @@ void exportTopologies(py::module &m) {
     py::class_<reaction_function_sink>(m, "ReactionFunction").def(py::init<py::function>());
     py::class_<rate_function_sink>(m, "RateFunction").def(py::init<py::function>());
 
-    py::class_<reaction>(m, "TopologyReaction")
+    py::class_<reaction>(m, "StructuralTopologyReaction")
             .def(py::init<reaction_function_sink, rate_function_sink>())
             .def("rate", &reaction::rate, "topology"_a)
             .def("raises_if_invalid", &reaction::raises_if_invalid)

@@ -36,4 +36,4 @@
 #include "Operations.h"
 #include "TopologyReactionAction.h"
 #include "TopologyReactionActionFactory.h"
-#include "TopologyReaction.h"
+#include "StructuralTopologyReaction.h"

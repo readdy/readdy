@@ -37,7 +37,7 @@
 #include "Topology.h"
 #include "graph/Graph.h"
 #include "reactions/reactions.h"
-#include "TopologyTypeRegistry.h"
+#include "TopologyRegistry.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -89,7 +89,7 @@ public:
 
     void configure();
 
-    void updateReactionRates(const TopologyTypeRegistry::internal_topology_reactions &reactions);
+    void updateReactionRates(const TopologyRegistry::structural_reactions &reactions);
 
     void validate();
 

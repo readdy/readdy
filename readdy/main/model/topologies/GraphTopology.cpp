@@ -100,7 +100,7 @@ void GraphTopology::configure() {
 
             ss << "The edge " << v1->particleIndex;
             ss << " -- " << v2->particleIndex;
-            ss << " has no bond configured! (See KernelContext.configureTopologyBondPotential())";
+            ss << " has no bond configured! (See KernelContext.configure_bond_potential())";
 
             throw std::invalid_argument(ss.str());
         }
@@ -162,7 +162,7 @@ void GraphTopology::validate() {
     }
 }
 
-void GraphTopology::updateReactionRates(const TopologyTypeRegistry::internal_topology_reactions &reactions) {
+void GraphTopology::updateReactionRates(const TopologyRegistry::structural_reactions &reactions) {
     _cumulativeRate = 0;
     _reaction_rates.resize(reactions.size());
     auto it = _reaction_rates.begin();

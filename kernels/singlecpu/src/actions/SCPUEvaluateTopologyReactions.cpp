@@ -177,7 +177,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     if (!top.isNormalParticle(*kernel)) {
                         // we have a new topology here, update data accordingly.
-                        top.updateReactionRates(context.topology_types().reactions_of(top.type()));
+                        top.updateReactionRates(context.topology_registry().reactions_of(top.type()));
                         top.configure();
                         model.insert_topology(std::move(top));
                     } else {
@@ -194,8 +194,8 @@ void SCPUEvaluateTopologyReactions::perform() {
 void SCPUEvaluateTopologyReactions::handleExternalReaction(SCPUStateModel::topology_ref &topology,
                                                            const SCPUEvaluateTopologyReactions::TREvent &event) {
     const auto& context = kernel->getKernelContext();
-    const auto& reaction_registry = context.reactions();
-    const auto& reaction = reaction_registry.external_top_reactions_by_type(event.t1, event.t2).at(event.reaction_idx);
+    const auto& reaction_registry = context.topology_registry();
+    const auto& reaction = reaction_registry.spatial_reactions_by_type(event.t1, event.t2).at(event.reaction_idx);
 
     auto& model = kernel->getSCPUKernelStateModel();
     auto& data = *model.getParticleData();
@@ -215,7 +215,7 @@ void SCPUEvaluateTopologyReactions::handleExternalReaction(SCPUStateModel::topol
     entry2.topology_index = event.topology_idx;
 
     topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
-    topology->updateReactionRates(context.topology_types().reactions_of(topology->type()));
+    topology->updateReactionRates(context.topology_registry().reactions_of(topology->type()));
     topology->configure();
 
 }
@@ -225,7 +225,7 @@ void SCPUEvaluateTopologyReactions::handleInternalReaction(SCPUStateModel::topol
                                                            const SCPUEvaluateTopologyReactions::TREvent &event,
                                                            SCPUStateModel::topology_ref &topology) const {
     const auto &context = kernel->getKernelContext();
-    const auto &reactions = context.topology_types().reactions_of(topology->type());
+    const auto &reactions = context.topology_registry().reactions_of(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
     if (!result.empty()) {
@@ -247,7 +247,7 @@ void SCPUEvaluateTopologyReactions::handleInternalReaction(SCPUStateModel::topol
 
 SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReactions::gatherEvents() {
     const auto& context = kernel->getKernelContext();
-    const auto& top_types = context.topology_types();
+    const auto& top_types = context.topology_registry();
     topology_reaction_events events;
     {
         rate_t current_cumulative_rate = 0;
@@ -271,8 +271,8 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
         }
 
 
-        if (!context.reactions().external_topology_reaction_registry().empty()) {
-            const auto &reaction_registry = context.reactions();
+        if (!context.topology_registry().spatial_reaction_registry().empty()) {
+            const auto &reaction_registry = context.topology_registry();
             const auto &d2 = context.getDistSquaredFun();
             const auto &data = *kernel->getSCPUKernelStateModel().getParticleData();
             const auto &nl = *kernel->getSCPUKernelStateModel().getNeighborList();
@@ -281,8 +281,8 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                 auto &entry = data.entry_at(pair.idx1);
                 auto &neighbor = data.entry_at(pair.idx2);
                 if (!entry.deactivated && !neighbor.deactivated) {
-                    const auto &reactions = reaction_registry.external_top_reactions_by_type(entry.type,
-                                                                                             neighbor.type);
+                    const auto &reactions = reaction_registry.spatial_reactions_by_type(entry.type,
+                                                                                        neighbor.type);
                     const auto distSquared = d2(entry.pos, neighbor.pos);
                     std::size_t reaction_index = 0;
                     for (const auto &reaction : reactions) {

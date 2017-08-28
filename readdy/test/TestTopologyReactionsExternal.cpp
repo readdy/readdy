@@ -47,9 +47,9 @@ protected:
         ctx.particle_types().add("A", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
         ctx.particle_types().add("B", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
 
-        ctx.configureTopologyBondPotential("Topology A", "Topology A", {10, 10});
-        ctx.configureTopologyBondPotential("Topology A", "Topology B", {10, 10});
-        ctx.configureTopologyBondPotential("Topology B", "Topology B", {10, 10});
+        ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 10});
+        ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {10, 10});
+        ctx.topology_registry().configure_bond_potential("Topology B", "Topology B", {10, 10});
 
         ctx.setBoxSize(10, 10, 10);
     }
@@ -151,7 +151,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
         }
     }
 
-    model::top::reactions::TopologyReaction r {[aId](model::top::GraphTopology& top) {
+    model::top::reactions::StructuralTopologyReaction r {[aId](model::top::GraphTopology& top) {
         model::top::reactions::Recipe recipe (top);
         if(top.getNParticles() > 1) {
             auto rnd = model::rnd::uniform_int(0, static_cast<const int>(top.getNParticles() - 2));
@@ -219,9 +219,9 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
 
     const auto& type_registry = kernel->getKernelContext().particle_types();
 
-    EXPECT_TRUE(kernel->getKernelContext().reactions().is_topology_reaction_type("A"));
-    EXPECT_TRUE(kernel->getKernelContext().reactions().is_topology_reaction_type("end"));
-    EXPECT_FALSE(kernel->getKernelContext().reactions().is_topology_reaction_type("middle"));
+    EXPECT_TRUE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("A"));
+    EXPECT_TRUE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("end"));
+    EXPECT_FALSE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("middle"));
     EXPECT_EQ(kernel->getKernelContext().calculateMaxCutoff(), c_::one + c_::half);
 
     EXPECT_EQ(sim.currentTopologies().size(), 1);

@@ -31,7 +31,6 @@
 
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
-#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -182,7 +181,8 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(topology_ty
         types.push_back(p.getType());
     }
     auto it = _topologies.emplace_back(
-            std::make_unique<topology>(type, std::move(ids), std::move(types), pimpl->context->topology_potentials())
+            std::make_unique<topology>(type, std::move(ids), std::move(types),
+                                       pimpl->context->topology_registry().potential_configuration())
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {

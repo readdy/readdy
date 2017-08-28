@@ -30,7 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/reactions/TopologyReaction.h>
+#include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
 
 #include <readdy/model/Kernel.h>
 #include <readdy/model/topologies/Utils.h>
@@ -41,57 +41,57 @@ namespace model {
 namespace top {
 namespace reactions {
 
-TopologyReaction::TopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
+StructuralTopologyReaction::StructuralTopologyReaction(const reaction_function& reaction_function, const rate_function &rate_function)
         : _reaction_function(reaction_function)
         , _rate_function(rate_function) { }
 
 
-scalar  TopologyReaction::rate(const GraphTopology &topology) const {
+scalar  StructuralTopologyReaction::rate(const GraphTopology &topology) const {
     return _rate_function(topology);
 }
 
-TopologyReaction::reaction_recipe TopologyReaction::operations(GraphTopology &topology) const {
+StructuralTopologyReaction::reaction_recipe StructuralTopologyReaction::operations(GraphTopology &topology) const {
     return _reaction_function(topology);
 }
 
-const bool TopologyReaction::raises_if_invalid() const {
+const bool StructuralTopologyReaction::raises_if_invalid() const {
     return mode_.flags.test(mode::raise_or_rollback_flag);
 }
 
-void TopologyReaction::raise_if_invalid() {
+void StructuralTopologyReaction::raise_if_invalid() {
     mode_.raise();
 }
 
-const bool TopologyReaction::rolls_back_if_invalid() const {
+const bool StructuralTopologyReaction::rolls_back_if_invalid() const {
     return !raises_if_invalid();
 }
 
-void TopologyReaction::roll_back_if_invalid() {
+void StructuralTopologyReaction::roll_back_if_invalid() {
     mode_.rollback();
 }
 
-const bool TopologyReaction::expects_connected_after_reaction() const {
+const bool StructuralTopologyReaction::expects_connected_after_reaction() const {
     return mode_.flags.test(mode::expect_connected_or_create_children_flag);
 }
 
-void TopologyReaction::expect_connected_after_reaction() {
+void StructuralTopologyReaction::expect_connected_after_reaction() {
     mode_.expect_connected();
 }
 
-const bool TopologyReaction::creates_child_topologies_after_reaction() const {
+const bool StructuralTopologyReaction::creates_child_topologies_after_reaction() const {
     return !expects_connected_after_reaction();
 }
 
-void TopologyReaction::create_child_topologies_after_reaction() {
+void StructuralTopologyReaction::create_child_topologies_after_reaction() {
     mode_.create_children();
 }
 
-TopologyReaction::TopologyReaction(const TopologyReaction::reaction_function &reaction_function, const scalar  &rate)
-        : TopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
+StructuralTopologyReaction::StructuralTopologyReaction(const StructuralTopologyReaction::reaction_function &reaction_function, const scalar  &rate)
+        : StructuralTopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
 
-std::vector<GraphTopology> TopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) const {
+std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) const {
     const auto &types = kernel->getKernelContext().particle_types();
-    const auto &topology_types = kernel->getKernelContext().topology_types();
+    const auto &topology_types = kernel->getKernelContext().topology_registry();
     auto recipe = operations(topology);
     auto& steps = recipe.steps();
     if(!steps.empty()) {

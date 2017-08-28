@@ -30,56 +30,60 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/model/topologies/reactions/ExternalTopologyReaction.h>
+#include <readdy/model/topologies/reactions/SpatialTopologyReaction.h>
 
 namespace readdy {
 namespace model {
 namespace top {
 namespace reactions {
 
-ExternalTopologyReaction::ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
+SpatialTopologyReaction::SpatialTopologyReaction(const std::string &name, const util::particle_type_pair &types,
                                                const util::particle_type_pair &types_to, const scalar rate,
-                                               const scalar radius, bool connect)
-        : _name(name), _types(types), _types_to(types_to), _rate(rate), _radius(radius), _connect(connect) {}
+                                               const scalar radius, STRMode mode)
+        : _name(name), _types(types), _types_to(types_to), _rate(rate), _radius(radius), _mode(mode) {}
 
-const std::string &ExternalTopologyReaction::name() const {
+const std::string &SpatialTopologyReaction::name() const {
     return _name;
 }
 
-const particle_type_type ExternalTopologyReaction::type1() const {
+const particle_type_type SpatialTopologyReaction::type1() const {
     return std::get<0>(_types);
 }
 
-const particle_type_type ExternalTopologyReaction::type2() const {
+const particle_type_type SpatialTopologyReaction::type2() const {
     return std::get<1>(_types);
 }
 
-const scalar ExternalTopologyReaction::rate() const {
+const scalar SpatialTopologyReaction::rate() const {
     return _rate;
 }
 
-const scalar ExternalTopologyReaction::radius() const {
+const scalar SpatialTopologyReaction::radius() const {
     return _radius;
 }
 
-const util::particle_type_pair &ExternalTopologyReaction::types() const {
+const util::particle_type_pair &SpatialTopologyReaction::types() const {
     return _types;
 }
 
-const particle_type_type ExternalTopologyReaction::type_to1() const {
+const particle_type_type SpatialTopologyReaction::type_to1() const {
     return std::get<0>(_types_to);
 }
 
-const particle_type_type ExternalTopologyReaction::type_to2() const {
+const particle_type_type SpatialTopologyReaction::type_to2() const {
     return std::get<1>(_types_to);
 }
 
-const util::particle_type_pair &ExternalTopologyReaction::types_to() const {
+const util::particle_type_pair &SpatialTopologyReaction::types_to() const {
     return _types_to;
 }
 
-const bool ExternalTopologyReaction::connect() const {
-    return _connect;
+const bool SpatialTopologyReaction::connect() const {
+    return _mode == STRMode::CONNECT || _mode == STRMode::CONNECT_ALLOW_SELF;
+}
+
+const bool SpatialTopologyReaction::allow_self_connection() const {
+    return _mode == STRMode::CONNECT_ALLOW_SELF;
 }
 
 

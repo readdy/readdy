@@ -311,7 +311,8 @@ CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::mo
         types.push_back(p.getType());
     }
     auto it = pimpl->topologies.push_back(
-            std::make_unique<topology>(type, std::move(ids), std::move(types), pimpl->context->topology_potentials())
+            std::make_unique<topology>(type, std::move(ids), std::move(types),
+                                       pimpl->context->topology_registry().potential_configuration())
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {

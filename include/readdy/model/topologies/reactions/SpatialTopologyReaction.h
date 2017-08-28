@@ -41,20 +41,25 @@ NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
 NAMESPACE_BEGIN(reactions)
 
-class ExternalTopologyReaction {
+enum class STRMode {
+    NO_CONNECT, CONNECT, CONNECT_ALLOW_SELF
+};
+
+class SpatialTopologyReaction {
 public:
-    ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
-                             const util::particle_type_pair &types_to, scalar rate, scalar radius, bool connect);
+    SpatialTopologyReaction(const std::string &name, const util::particle_type_pair &types,
+                            const util::particle_type_pair &types_to, scalar rate, scalar radius,
+                            STRMode mode);
 
-    ~ExternalTopologyReaction() = default;
+    ~SpatialTopologyReaction() = default;
 
-    ExternalTopologyReaction(const ExternalTopologyReaction &) = default;
+    SpatialTopologyReaction(const SpatialTopologyReaction &) = default;
 
-    ExternalTopologyReaction &operator=(const ExternalTopologyReaction &) = default;
+    SpatialTopologyReaction &operator=(const SpatialTopologyReaction &) = default;
 
-    ExternalTopologyReaction(ExternalTopologyReaction &&) = default;
+    SpatialTopologyReaction(SpatialTopologyReaction &&) = default;
 
-    ExternalTopologyReaction &operator=(ExternalTopologyReaction &&) = default;
+    SpatialTopologyReaction &operator=(SpatialTopologyReaction &&) = default;
 
     const std::string &name() const;
 
@@ -76,13 +81,15 @@ public:
     
     const bool connect() const;
 
+    const bool allow_self_connection() const;
+
 private:
     std::string _name;
     util::particle_type_pair _types;
     util::particle_type_pair _types_to;
     scalar _rate;
     scalar _radius;
-    bool _connect;
+    STRMode _mode;
 };
 
 NAMESPACE_END(reactions)

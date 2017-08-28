@@ -51,6 +51,9 @@ public:
 
 private:
     struct TREvent;
+
+    bool eventsDependent(const TREvent& evt1, const TREvent& evt2) const;
+
     using topology_reaction_events = std::vector<TREvent>;
 
     CPUKernel *const kernel;
@@ -61,7 +64,7 @@ private:
                            std::vector<CPUStateModel::topology> &new_topologies,
                            const TREvent &event, CPUStateModel::topology_ref &topology) const;
 
-    void handleExternalReaction(CPUStateModel::topology_ref &topology, const TREvent& event);
+    void handleTopologyParticleReaction(CPUStateModel::topology_ref &topology, const TREvent &event);
 
     void handleTopologyTopologyReaction(CPUStateModel::topology_ref &t1, CPUStateModel::topology_ref &t2,
                                         const TREvent& event);

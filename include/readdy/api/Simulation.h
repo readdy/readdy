@@ -36,7 +36,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/api/SimulationScheme.h>
-#include <readdy/model/topologies/reactions/TopologyReaction.h>
+#include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
 #include "ObservableHandle.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -50,6 +50,8 @@ NAMESPACE_BEGIN(readdy)
 class Simulation {
     using particle = readdy::model::Particle;
 public:
+    using topology_reaction_mode = model::top::reactions::STRMode;
+
     /**
      * The default constructor. Currently only instantiates the pimpl.
      */
@@ -99,7 +101,7 @@ public:
     readdy::model::Vec3 getBoxSize() const;
 
     topology_type_type registerTopologyType(const std::string& name,
-                                            const std::vector<model::top::reactions::TopologyReaction> &reactions = {});
+                                            const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions = {});
 
     readdy::model::TopologyParticle
     createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const;
@@ -493,10 +495,11 @@ public:
 
     void registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
                                           const std::string &typeFrom2, const std::string &typeTo1,
-                                          const std::string& typeTo2, scalar rate, scalar radius, bool connect = true);
+                                          const std::string& typeTo2, scalar rate, scalar radius,
+                                          topology_reaction_mode mode = topology_reaction_mode::CONNECT);
 
     void registerInternalTopologyReaction(const std::string &topologyType,
-                                          const model::top::reactions::TopologyReaction &reaction);
+                                          const model::top::reactions::StructuralTopologyReaction &reaction);
 
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
