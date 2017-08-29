@@ -74,11 +74,6 @@ void exportApi(py::module &api) {
             .value("TOPOLOGY", ParticleTypeFlavor::TOPOLOGY)
             .value("MEMBRANE", ParticleTypeFlavor::MEMBRANE);
 
-    py::enum_<readdy::model::top::reactions::STRMode>(api, "SpatialTopologyReactionMode")
-            .value("CONNECT", readdy::model::top::reactions::STRMode::CONNECT)
-            .value("CONNECT_ALLOW_SELF", readdy::model::top::reactions::STRMode::CONNECT_ALLOW_SELF)
-            .value("NO_CONNECT", readdy::model::top::reactions::STRMode::NO_CONNECT);
-
     py::enum_<readdy::api::BondType>(api, "BondType").value("HARMONIC", readdy::api::BondType::HARMONIC);
     py::enum_<readdy::api::AngleType>(api, "AngleType").value("HARMONIC", readdy::api::AngleType::HARMONIC);
     py::enum_<readdy::api::TorsionType>(api, "TorsionType").value("COS_DIHEDRAL", readdy::api::TorsionType::COS_DIHEDRAL);
@@ -143,8 +138,8 @@ void exportApi(py::module &api) {
                  "weight1"_a = .5, "weight2"_a = .5)
             .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal,
                  "label"_a, "particle_type"_a, "rate"_a)
-            .def("register_external_topology_reaction", &sim::registerExternalTopologyReaction, "name"_a, "typeFrom1"_a,
-                 "typeFrom2"_a, "typeTo1"_a, "typeTo2"_a, "rate"_a, "radius"_a, "mode"_a = readdy::model::top::reactions::STRMode::CONNECT)
+            .def("register_spatial_topology_reaction", &sim::registerSpatialTopologyReaction,
+                 "descriptor"_a, "rate"_a, "radius"_a)
             .def("register_compartment_sphere", &sim::registerCompartmentSphere,
                  "conversion_map"_a, "name"_a, "origin"_a, "radius"_a, "larger_or_less"_a)
             .def("register_compartment_plane", &sim::registerCompartmentPlane, "conversion_map"_a, "name"_a,
@@ -162,7 +157,7 @@ void exportApi(py::module &api) {
             .def("register_topology_type", [](sim &self, const std::string& name) {
                 return self.registerTopologyType(name);
             })
-            .def("register_internal_topology_reaction", &sim::registerInternalTopologyReaction)
+            .def("register_structural_topology_reaction", &sim::registerStructuralTopologyReaction)
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
             .def("add_topology", [](sim &self, const std::string &name,
                                     const std::vector<readdy::model::TopologyParticle> &particles) {

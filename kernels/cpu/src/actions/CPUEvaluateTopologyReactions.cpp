@@ -185,7 +185,7 @@ void CPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     if (!top.isNormalParticle(*kernel)) {
                         // we have a new topology here, update data accordingly.
-                        top.updateReactionRates(context.topology_registry().reactions_of(top.type()));
+                        top.updateReactionRates(context.topology_registry().structural_reactions_of(top.type()));
                         top.configure();
                         model.insert_topology(std::move(top));
                     } else {
@@ -203,7 +203,7 @@ void CPUEvaluateTopologyReactions::handleInternalReaction(CPUStateModel::topolog
                                                           const CPUEvaluateTopologyReactions::TREvent &event,
                                                           CPUStateModel::topology_ref &topology) const {
     const auto &topology_type_registry = kernel->getKernelContext().topology_registry();
-    auto &reaction = topology_type_registry.reactions_of(topology->type()).at(static_cast<std::size_t>(event.reaction_idx));
+    auto &reaction = topology_type_registry.structural_reactions_of(topology->type()).at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
     if (!result.empty()) {
         // we had a topology fission, so we need to actually remove the current topology from the
@@ -231,7 +231,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
         for (auto &top : kernel->getCPUKernelStateModel().topologies()) {
             if (!top->isDeactivated()) {
                 std::size_t reaction_idx = 0;
-                for (const auto &reaction : topology_types.reactions_of(top->type())) {
+                for (const auto &reaction : topology_types.structural_reactions_of(top->type())) {
                     TREvent event{};
                     event.own_rate = top->rates().at(reaction_idx);
                     event.cumulative_rate = event.own_rate + current_cumulative_rate;
@@ -282,6 +282,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                                     event.own_rate = reaction.rate();
                                     event.cumulative_rate = event.own_rate + current_cumulative_rate;
                                     current_cumulative_rate = event.cumulative_rate;
+                                    // todo: decide whether TP or TT reaction according to reaction definition
                                     if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
                                         // entry is a topology, neighbor an ordinary particle
                                         event.topology_idx = static_cast<std::size_t>(entry.topology_index);
@@ -349,7 +350,7 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
         entry1.topology_index = event.topology_idx;
         entry2.topology_index = event.topology_idx;
 
-        if(reaction.connect()) {
+        if(reaction.is_fusion()) {
             topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
         } else {
             topology->vertexForParticle(event.idx1)->setParticleType(entry1Type);
@@ -358,7 +359,7 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
         throw std::logic_error("this branch should never be reached as topology-topology reactions are "
                                        "handeled in a different method");
     }
-    topology->updateReactionRates(context.topology_registry().reactions_of(topology->type()));
+    topology->updateReactionRates(context.topology_registry().structural_reactions_of(topology->type()));
     topology->configure();
 }
 
@@ -384,19 +385,28 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
         entry2Type = reaction.type_to1();
     }
 
-    // todo allow self connect branching
     // topology - topology fusion
-    if(reaction.connect()) {
+    if(reaction.is_fusion()) {
         //topology->appendTopology(otherTopology, ...)
-
+        if(event.topology_idx == event.topology_idx2) {
+            // introduce edge if not already present
+            auto v1 = t1->vertexForParticle(event.idx1);
+            auto v2 = t1->vertexForParticle(event.idx2);
+            if(!t1->graph().containsEdge(v1, v2)) {
+                t1->graph().addEdge(v1, v2);
+            }
+        } else {
+            // merge topologies
+            t1->appendTopology(*t2, event.idx2, entry2Type, event.idx1, entry1Type);
+        }
     } else {
         t1->vertexForParticle(event.idx1)->setParticleType(entry1Type);
         t2->vertexForParticle(event.idx2)->setParticleType(entry2Type);
 
-        t2->updateReactionRates(context.topology_registry().reactions_of(t2->type()));
+        t2->updateReactionRates(context.topology_registry().structural_reactions_of(t2->type()));
         t2->configure();
     }
-    t1->updateReactionRates(context.topology_registry().reactions_of(t1->type()));
+    t1->updateReactionRates(context.topology_registry().structural_reactions_of(t1->type()));
     t1->configure();
 }
 

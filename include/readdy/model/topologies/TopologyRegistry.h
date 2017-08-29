@@ -40,6 +40,7 @@
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/ParticleTypeRegistry.h>
 #include <readdy/api/PotentialConfiguration.h>
+#include "TopologyParticleTypeMap.h"
 
 
 NAMESPACE_BEGIN(readdy)
@@ -50,16 +51,16 @@ struct TopologyTypeInfo {
     using structural_reaction = reactions::StructuralTopologyReaction;
     using structural_reaction_vector = std::vector<structural_reaction>;
 
-    std::string name {""};
-    topology_type_type type {0};
-    structural_reaction_vector structural_reactions {};
+    std::string name{""};
+    topology_type_type type{0};
+    structural_reaction_vector structural_reactions{};
 };
 
 class TopologyRegistry {
 public:
 
     using spatial_reaction = reactions::SpatialTopologyReaction;
-    using spatial_reaction_map = util::particle_type_pair_unordered_map<std::vector<spatial_reaction>>;
+    using spatial_reaction_map = topology_particle_type_tuple_umap<std::vector<spatial_reaction>>;
     using spatial_reactions = spatial_reaction_map::mapped_type;
     using spatial_reaction_types = std::unordered_set<particle_type_type>;
 
@@ -69,13 +70,18 @@ public:
     using type_registry = std::unordered_map<topology_type_type, TopologyTypeInfo>;
 
     explicit TopologyRegistry(const ParticleTypeRegistry &typeRegistry);
-    TopologyRegistry(const TopologyRegistry&) = delete;
-    TopologyRegistry& operator=(const TopologyRegistry&) = delete;
-    TopologyRegistry(TopologyRegistry&&) = delete;
-    TopologyRegistry& operator=(TopologyRegistry&&) = delete;
+
+    TopologyRegistry(const TopologyRegistry &) = delete;
+
+    TopologyRegistry &operator=(const TopologyRegistry &) = delete;
+
+    TopologyRegistry(TopologyRegistry &&) = delete;
+
+    TopologyRegistry &operator=(TopologyRegistry &&) = delete;
+
     ~TopologyRegistry() = default;
 
-    topology_type_type add_type(const std::string& name, const structural_reactions& reactions = {});
+    topology_type_type add_type(const std::string &name, const structural_reactions &reactions = {});
 
     void add_structural_reaction(topology_type_type type, const reactions::StructuralTopologyReaction &reaction);
 
@@ -89,33 +95,60 @@ public:
 
     const std::string &name_of(topology_type_type type) const;
 
-    topology_type_type id_of(const std::string& name) const;
+    topology_type_type id_of(const std::string &name) const;
 
     bool empty();
 
     bool contains_structural_reactions();
 
-    const TopologyTypeInfo::structural_reaction_vector &reactions_of(topology_type_type type) const;
+    const TopologyTypeInfo::structural_reaction_vector &structural_reactions_of(topology_type_type type) const;
 
-    const structural_reactions &reactions_of(const std::string &type) const;
+    const structural_reactions &structural_reactions_of(const std::string &type) const;
 
     void configure();
 
     void debug_output() const;
 
+    void add_spatial_reaction(reactions::SpatialTopologyReaction &&reaction);
+
     void add_spatial_reaction(const std::string &name, const std::string &typeFrom1,
-                              const std::string &typeFrom2, const std::string &typeTo1,
-                              const std::string &typeTo2, scalar rate, scalar radius, reactions::STRMode mode);
+                              const std::string &typeFrom2, const std::string &topologyTypeFrom1,
+                              const std::string &topologyTypeFrom2, const std::string &typeTo1,
+                              const std::string &typeTo2, const std::string &topologyTypeTo1,
+                              const std::string &topologyTypeTo2, scalar rate, scalar radius, reactions::STRMode mode);
 
     void add_spatial_reaction(const std::string &name, const util::particle_type_pair &types,
-                              const util::particle_type_pair &types_to, scalar rate, scalar radius,
-                              reactions::STRMode mode);
+                              const topology_type_pair &topology_types,
+                              const util::particle_type_pair &types_to, const topology_type_pair &topology_types_to,
+                              scalar rate, scalar radius, reactions::STRMode mode);
+
+    /**
+     * Convenience function for adding spatial reaction.
+     *
+     * Pass descriptor of form for Topology<->Topology
+     * - fusion type:
+     *     name: T1 (p1) + T2 (p2) -> T3 (p3 + p4) [self=true|false]
+     * - enzymatic type:
+     *     name: T1 (p1) + T2 (p2) -> T3 (p3) + T4 (p4)
+     *
+     * and for Topology<->Particle
+     * - fusion type:
+     *     name: T1 (p1) + p2 -> T2 (p3 + p4)
+     * - enzymatic type:
+     *     name: T1 (p1) + p2 -> T2 (p3) + p4
+     *
+     * @param descriptor descriptor as described above
+     * @param rate the rate
+     * @param radius the radius
+     */
+    void add_spatial_reaction(const std::string &descriptor, scalar rate, scalar radius);
 
     void validate_spatial_reaction(const spatial_reaction &reaction) const;
 
     const spatial_reaction_map &spatial_reaction_registry() const;
 
-    const spatial_reactions &spatial_reactions_by_type(particle_type_type t1, particle_type_type t2) const;
+    const spatial_reactions &spatial_reactions_by_type(particle_type_type t1, topology_type_type tt1,
+                                                       particle_type_type t2, topology_type_type tt2) const;
 
     bool is_spatial_reaction_type(const std::string &name) const;
 
@@ -139,13 +172,13 @@ public:
     const api::PotentialConfiguration &potential_configuration() const;
 
 private:
-    static unsigned short counter;
+    static topology_type_type counter;
 
     TopologyTypeInfo defaultInfo;
-    bool _contains_structural_reactions {false};
-    type_registry _registry {};
+    bool _contains_structural_reactions{false};
+    type_registry _registry{};
 
-    spatial_reaction_map _spatial_reactions {};
+    spatial_reaction_map _spatial_reactions{};
     spatial_reactions defaultTopologyReactions{};
     spatial_reaction_types _topology_reaction_types{};
 

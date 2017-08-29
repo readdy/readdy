@@ -37,10 +37,12 @@ namespace model {
 namespace top {
 namespace reactions {
 
-SpatialTopologyReaction::SpatialTopologyReaction(const std::string &name, const util::particle_type_pair &types,
-                                               const util::particle_type_pair &types_to, const scalar rate,
-                                               const scalar radius, STRMode mode)
-        : _name(name), _types(types), _types_to(types_to), _rate(rate), _radius(radius), _mode(mode) {}
+SpatialTopologyReaction::SpatialTopologyReaction(std::string name, util::particle_type_pair types,
+                                                 topology_type_pair top_types,
+                                                 util::particle_type_pair types_to, topology_type_pair top_types_to,
+                                                 scalar rate, scalar radius, STRMode mode)
+        : _name(std::move(name)), _types(std::move(types)), _types_to(std::move(types_to)), _rate(rate),
+          _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)) {}
 
 const std::string &SpatialTopologyReaction::name() const {
     return _name;
@@ -78,13 +80,47 @@ const util::particle_type_pair &SpatialTopologyReaction::types_to() const {
     return _types_to;
 }
 
-const bool SpatialTopologyReaction::connect() const {
-    return _mode == STRMode::CONNECT || _mode == STRMode::CONNECT_ALLOW_SELF;
+const bool SpatialTopologyReaction::allow_self_connection() const {
+    return _mode == STRMode::TT_FUSION_ALLOW_SELF;
 }
 
-const bool SpatialTopologyReaction::allow_self_connection() const {
-    return _mode == STRMode::CONNECT_ALLOW_SELF;
+const topology_type_type SpatialTopologyReaction::top_type1() const {
+    return std::get<0>(_top_types);
 }
+
+const topology_type_type SpatialTopologyReaction::top_type2() const {
+    return std::get<1>(_top_types);
+}
+
+const topology_type_type SpatialTopologyReaction::top_type_to1() const {
+    return std::get<0>(_top_types_to);
+}
+
+const topology_type_type SpatialTopologyReaction::top_type_to2() const {
+    return std::get<1>(_top_types_to);
+}
+
+bool SpatialTopologyReaction::is_topology_particle_reaction() const {
+    return top_type2() == topology_type_empty;
+}
+
+bool SpatialTopologyReaction::is_topology_topology_reaction() const {
+    return !is_topology_particle_reaction();
+}
+
+const bool SpatialTopologyReaction::is_enzymatic() const {
+    return _mode == STRMode::TT_ENZYMATIC || _mode == STRMode::TP_ENZYMATIC;
+}
+
+const bool SpatialTopologyReaction::is_fusion() const {
+    return _mode == STRMode::TT_FUSION || _mode == STRMode::TT_FUSION_ALLOW_SELF || _mode == STRMode::TP_FUSION;
+}
+
+const STRMode &SpatialTopologyReaction::mode() const {
+    return _mode;
+}
+
+constexpr const char STRParser::arrow[];
 
 
 }

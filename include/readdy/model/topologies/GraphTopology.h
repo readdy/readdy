@@ -107,7 +107,7 @@ public:
                         particle_index counterPart, particle_type_type counterPartType);
 
     void appendTopology(GraphTopology &other, particle_index otherParticle, particle_type_type otherNewParticleType,
-                        particle_index thisParticle, particle_type_type thisNewParticleType);
+                        particle_index thisParticle, particle_type_type thisNewParticleType, topology_type_type newType);
 
     topology_type_type type() const;
 

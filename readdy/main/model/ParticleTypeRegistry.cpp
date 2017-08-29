@@ -31,6 +31,7 @@
  */
 
 #include <readdy/model/ParticleTypeRegistry.h>
+#include <readdy/model/Utils.h>
 
 namespace readdy {
 namespace model {
@@ -87,6 +88,7 @@ scalar  ParticleTypeRegistry::diffusion_constant_of(const std::string &particleT
 void
 ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const scalar radius,
                           const particle_flavor flavor) {
+    util::validateTypeName(name);
     particle_type_type t_id = type_counter_++;
     type_mapping_.emplace(name, t_id);
     particle_info_.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, radius, flavor, t_id}));

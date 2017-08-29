@@ -158,7 +158,7 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
                     // if valid, update force field
                     topology.configure();
                     // and update reaction rates
-                    topology.updateReactionRates(topology_types.reactions_of(topology.type()));
+                    topology.updateReactionRates(topology_types.structural_reactions_of(topology.type()));
                 }
             } else {
                 if (!topology.graph().isConnected()) {
@@ -169,7 +169,7 @@ std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &to
                 // if valid, update force field
                 topology.configure();
                 // and update reaction rates
-                topology.updateReactionRates(topology_types.reactions_of(topology.type()));
+                topology.updateReactionRates(topology_types.structural_reactions_of(topology.type()));
             }
         }
     }

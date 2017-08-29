@@ -34,6 +34,7 @@
 #include <unordered_map>
 
 #include <readdy/model/Utils.h>
+#include <sstream>
 
 namespace readdy {
 namespace model {
@@ -154,6 +155,26 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
     tau /= (scalar ) N;
     log::debug("Estimated time step: {}", tau);
     return tau;
+}
+
+void validateTypeName(const std::string &typeName) {
+    const auto ics = invalidCharacterSequences();
+    for(const auto &cs : ics) {
+        if(typeName.find(cs) != typeName.npos) {
+            std::stringstream ss;
+            for(std::size_t i = 0; i < ics.size(); ++i) {
+                if(i > 0) ss << ", ";
+                ss << "\"" << ics.at(i) << "\"";
+            }
+            throw std::invalid_argument(fmt::format(
+                    "Encountered invalid character sequence \"{}\" in type name \"{}\", you must not use either of {}.",
+                    cs, typeName, ss.str()
+            ));
+        }
+    }
+    if(typeName.find(" ") == 0 || typeName.find(" ") == typeName.npos-1) {
+        throw std::invalid_argument(fmt::format("Type name \"{}\" contained leading/trailing whitespaces.", typeName));
+    }
 }
 
 }

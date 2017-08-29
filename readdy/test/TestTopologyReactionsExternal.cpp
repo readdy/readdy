@@ -168,7 +168,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
         return recipe;
     }, .7};
 
-    sim.registerInternalTopologyReaction("TA", r);
+    sim.registerStructuralTopologyReaction("TA", r);
 
     sim.runScheme<api::ReaDDyScheme>(true).evaluateTopologyReactions().configureAndRun(35, 1.);
 
@@ -207,7 +207,7 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     }
 
     // register attach reaction that transforms (end, A) -> (middle, end)
-    sim.registerExternalTopologyReaction("attach", "end", "A", "middle", "end", c_::one, c_::one + c_::half);
+    sim.registerSpatialTopologyReaction("attach", "end", "A", "middle", "end", c_::one, c_::one + c_::half);
     sim.addParticle("A", c_::zero - c_::two, c_::zero, c_::zero);
     sim.addParticle("A", c_::zero - c_::three, c_::zero, c_::zero);
     sim.addParticle("A", c_::zero - c_::four, c_::zero, c_::zero);
@@ -285,6 +285,12 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
         }
     }
     EXPECT_TRUE(foundEndVertex);
+}
+
+TEST(TestTopologyReactionsExternal, DefinitionParser) {
+    readdy::model::top::reactions::STRParser parser;
+
+    parser.parse("name: T1 (p1) + T2 (p2) -> T3 (p3 + p4) [self=true]", 10., 10.);
 }
 
 INSTANTIATE_TEST_CASE_P(Kernels, TestTopologyReactionsExternal,

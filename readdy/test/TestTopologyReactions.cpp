@@ -141,7 +141,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         kernel->getKernelContext().topology_registry().add_structural_reaction(tid, reaction);
     }
     kernel->getKernelContext().configure();
-    const auto& reactions = kernel->getKernelContext().topology_registry().reactions_of(tid);
+    const auto& reactions = kernel->getKernelContext().topology_registry().structural_reactions_of(tid);
     topology->updateReactionRates(reactions);
     EXPECT_EQ(topology->rates().at(0), 5) << "Expected (constant) rate: 5";
     EXPECT_EQ(topology->rates().at(1), 15) << "Expected (function) rate: 15";
@@ -201,7 +201,7 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
         kernel->getKernelContext().topology_registry().add_structural_reaction(tid, reaction);
     }
     kernel->getKernelContext().configure();
-    const auto &reactions = kernel->getKernelContext().topology_registry().reactions_of(tid);
+    const auto &reactions = kernel->getKernelContext().topology_registry().structural_reactions_of(tid);
     topology->updateReactionRates(reactions);
     auto result = reactions.back().execute(*topology, kernel.get());
     ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
@@ -229,7 +229,7 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
         reaction.raise_if_invalid();
         kernel->getKernelContext().topology_registry().add_structural_reaction(tid, reaction);
     }
-    const auto &reactions = kernel->getKernelContext().topology_registry().reactions_of(tid);
+    const auto &reactions = kernel->getKernelContext().topology_registry().structural_reactions_of(tid);
     topology->updateReactionRates(reactions);
     auto result = reactions.back().execute(*topology, kernel.get());
     ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
@@ -258,7 +258,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
         reaction.raise_if_invalid();
         kernel->getKernelContext().topology_registry().add_structural_reaction("TA", reaction);
     }
-    const auto &reactions = kernel->getKernelContext().topology_registry().reactions_of("TA");
+    const auto &reactions = kernel->getKernelContext().topology_registry().structural_reactions_of("TA");
     topology->updateReactionRates(reactions);
     model::top::Topology::particle_indices particles;
     {
@@ -315,7 +315,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
         toptypes.add_structural_reaction("TA", reaction);
     }
     context.configure();
-    topology->updateReactionRates(toptypes.reactions_of("TA"));
+    topology->updateReactionRates(toptypes.structural_reactions_of("TA"));
     model::top::Topology::particle_indices particles;
     {
         std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
@@ -323,7 +323,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
     std::vector<model::top::GraphTopology> result;
     {
         log::Level level (spdlog::level::err);
-        result = toptypes.reactions_of("TA").back().execute(*topology, kernel.get());
+        result = toptypes.structural_reactions_of("TA").back().execute(*topology, kernel.get());
     }
     const auto& graph = topology->graph();
     const auto& vertices = graph.vertices();

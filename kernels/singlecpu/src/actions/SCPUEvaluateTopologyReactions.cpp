@@ -54,7 +54,7 @@ struct SCPUEvaluateTopologyReactions::TREvent {
     particle_type_type t1{0}, t2{0};
     // idx1 is always the particle that belongs to a topology
     index_type idx1{0}, idx2{0};
-    bool external {false};
+    bool structural {false};
 
 };
 
@@ -119,7 +119,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                             }
                         }
                         assert(!topology->isDeactivated());
-                        if(!event.external) {
+                        if(!event.structural) {
                             handleInternalReaction(topologies, new_topologies, event, topology);
                         } else {
                             handleExternalReaction(topology, event);
@@ -177,7 +177,7 @@ void SCPUEvaluateTopologyReactions::perform() {
                 for (auto &&top : new_topologies) {
                     if (!top.isNormalParticle(*kernel)) {
                         // we have a new topology here, update data accordingly.
-                        top.updateReactionRates(context.topology_registry().reactions_of(top.type()));
+                        top.updateReactionRates(context.topology_registry().structural_reactions_of(top.type()));
                         top.configure();
                         model.insert_topology(std::move(top));
                     } else {
@@ -195,7 +195,7 @@ void SCPUEvaluateTopologyReactions::handleExternalReaction(SCPUStateModel::topol
                                                            const SCPUEvaluateTopologyReactions::TREvent &event) {
     const auto& context = kernel->getKernelContext();
     const auto& reaction_registry = context.topology_registry();
-    const auto& reaction = reaction_registry.spatial_reactions_by_type(event.t1, event.t2).at(event.reaction_idx);
+    const auto& reaction = reaction_registry.spatial_reactions_by_type(event.t1, topology->type(), event.t2, -1).at(event.reaction_idx);
 
     auto& model = kernel->getSCPUKernelStateModel();
     auto& data = *model.getParticleData();
@@ -215,7 +215,7 @@ void SCPUEvaluateTopologyReactions::handleExternalReaction(SCPUStateModel::topol
     entry2.topology_index = event.topology_idx;
 
     topology->appendParticle(event.idx2, entry2Type, event.idx1, entry1Type);
-    topology->updateReactionRates(context.topology_registry().reactions_of(topology->type()));
+    topology->updateReactionRates(context.topology_registry().structural_reactions_of(topology->type()));
     topology->configure();
 
 }
@@ -225,7 +225,7 @@ void SCPUEvaluateTopologyReactions::handleInternalReaction(SCPUStateModel::topol
                                                            const SCPUEvaluateTopologyReactions::TREvent &event,
                                                            SCPUStateModel::topology_ref &topology) const {
     const auto &context = kernel->getKernelContext();
-    const auto &reactions = context.topology_registry().reactions_of(topology->type());
+    const auto &reactions = context.topology_registry().structural_reactions_of(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
     if (!result.empty()) {
@@ -247,7 +247,7 @@ void SCPUEvaluateTopologyReactions::handleInternalReaction(SCPUStateModel::topol
 
 SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReactions::gatherEvents() {
     const auto& context = kernel->getKernelContext();
-    const auto& top_types = context.topology_registry();
+    const auto& topology_registry = context.topology_registry();
     topology_reaction_events events;
     {
         rate_t current_cumulative_rate = 0;
@@ -255,7 +255,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
         for (auto &top : kernel->getSCPUKernelStateModel().topologies()) {
             if (!top->isDeactivated()) {
                 std::size_t reaction_idx = 0;
-                for (const auto &reaction : top_types.reactions_of(top->type())) {
+                for (const auto &reaction : topology_registry.structural_reactions_of(top->type())) {
                     TREvent event{};
                     event.own_rate = top->rates().at(reaction_idx);
                     event.cumulative_rate = event.own_rate + current_cumulative_rate;
@@ -271,18 +271,21 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
         }
 
 
-        if (!context.topology_registry().spatial_reaction_registry().empty()) {
-            const auto &reaction_registry = context.topology_registry();
+        if (!topology_registry.spatial_reaction_registry().empty()) {
             const auto &d2 = context.getDistSquaredFun();
-            const auto &data = *kernel->getSCPUKernelStateModel().getParticleData();
-            const auto &nl = *kernel->getSCPUKernelStateModel().getNeighborList();
+            const auto &stateModel = kernel->getSCPUKernelStateModel();
+            const auto &data = *stateModel.getParticleData();
+            const auto &nl = *stateModel.getNeighborList();
 
             for (auto pair : nl) {
                 auto &entry = data.entry_at(pair.idx1);
                 auto &neighbor = data.entry_at(pair.idx2);
                 if (!entry.deactivated && !neighbor.deactivated) {
-                    const auto &reactions = reaction_registry.spatial_reactions_by_type(entry.type,
-                                                                                        neighbor.type);
+                    topology_type_type tt1 = entry.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(entry.topology_index))->type() : static_cast<topology_type_type>(-1);
+                    topology_type_type tt2 = neighbor.topology_index >= 0 ? stateModel.topologies().at(static_cast<std::size_t>(neighbor.topology_index))->type() : static_cast<topology_type_type>(-1);
+                    if(tt1 == -1 && tt2 == -1) continue;
+                    const auto &reactions = topology_registry.spatial_reactions_by_type(entry.type, tt1,
+                                                                                        neighbor.type, tt2);
                     const auto distSquared = d2(entry.pos, neighbor.pos);
                     std::size_t reaction_index = 0;
                     for (const auto &reaction : reactions) {
@@ -292,13 +295,47 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                             event.own_rate = reaction.rate();
                             event.cumulative_rate = event.own_rate + current_cumulative_rate;
                             current_cumulative_rate = event.cumulative_rate;
+                            switch (reaction.mode()) {
+                                case readdy::model::top::reactions::STRMode::TT_ENZYMATIC:
+                                    log::critical("Not implemented, switch case TT_ENZYMATIC");
+                                    break;
+                                case readdy::model::top::reactions::STRMode::TT_FUSION:
+                                    log::critical("Not implemented, switch case TT_FUSION");
+                                    break;
+                                case readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF:
+                                    log::critical("Not implemented, switch case TT_FUSION_ALLOW_SFLE");
+                                    break;
+                                case readdy::model::top::reactions::STRMode::TP_ENZYMATIC:
+                                    log::critical("Not implemented, switch case TP_ENZYMATIC");
+                                    break;
+                                case readdy::model::top::reactions::STRMode::TP_FUSION:
+                                    if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
+                                        event.topology_idx = static_cast<std::size_t>(entry.topology_index);
+                                        event.t1 = entry.type;
+                                        event.t2 = neighbor.type;
+                                        event.idx1 = pair.idx1;
+                                        event.idx2 = pair.idx2;
+                                    } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
+                                        event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
+                                        event.t1 = neighbor.type;
+                                        event.t2 = entry.type;
+                                        event.idx1 = pair.idx2;
+                                        event.idx2 = pair.idx1;
+                                    } else {
+                                        log::critical("Something went wrong, switch case TP_FUSION");
+                                    }
+                                    break;
+                            }
+                            /**
                             if (entry.topology_index >= 0 && neighbor.topology_index < 0) {
+                                // TP_FUSION
                                 event.topology_idx = static_cast<std::size_t>(entry.topology_index);
                                 event.t1 = entry.type;
                                 event.t2 = neighbor.type;
                                 event.idx1 = pair.idx1;
                                 event.idx2 = pair.idx2;
                             } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
+                                // TP_FUSION
                                 event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
                                 event.t1 = neighbor.type;
                                 event.t2 = entry.type;
@@ -311,8 +348,9 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                             } else {
                                 log::critical("got no topology for topology-fusion");
                             }
+                             */
                             event.reaction_idx = reaction_index;
-                            event.external = true;
+                            event.structural = true;
 
                             events.push_back(event);
                         }

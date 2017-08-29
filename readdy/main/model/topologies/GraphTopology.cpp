@@ -255,8 +255,32 @@ const GraphTopology::topology_reaction_rates &GraphTopology::rates() const {
 
 void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
                                    particle_type_type otherNewParticleType, Topology::particle_index thisParticle,
-                                   particle_type_type thisNewParticleType) {
-    // todo
+                                   particle_type_type thisNewParticleType, topology_type_type newType) {
+    auto &otherGraph = other.graph();
+    auto &thisGraph = graph();
+
+    auto former_begin = otherGraph.vertices().begin();
+    auto former_n_vertices = particles.size();
+
+    auto other_vert = other.vertexForParticle(otherParticle);
+    auto this_vert = vertexForParticle(thisParticle);
+
+    // insert other particles into this' particles
+    particles.insert(std::end(particles), std::begin(other.particles), std::end(other.particles));
+    // move other graph into this graph
+    thisGraph.vertices().splice(thisGraph.vertices().end(), otherGraph.vertices());
+
+    for(auto it = former_begin; it != graph().vertices().end(); ++it) {
+        it->particleIndex = former_n_vertices;
+        ++former_n_vertices;
+    }
+
+    // add edge between the formerly two topologies
+    graph().addEdge(other_vert, this_vert);
+    other_vert->setParticleType(otherNewParticleType);
+    this_vert->setParticleType(thisNewParticleType);
+
+    _topology_type = newType;
 }
 
 graph::Graph::vertex_ref GraphTopology::vertexForParticle(Topology::particle_index particle) {

@@ -493,13 +493,10 @@ public:
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
                                       scalar rate);
 
-    void registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
-                                          const std::string &typeFrom2, const std::string &typeTo1,
-                                          const std::string& typeTo2, scalar rate, scalar radius,
-                                          topology_reaction_mode mode = topology_reaction_mode::CONNECT);
+    void registerSpatialTopologyReaction(const std::string &descriptor, scalar rate, scalar radius);
 
-    void registerInternalTopologyReaction(const std::string &topologyType,
-                                          const model::top::reactions::StructuralTopologyReaction &reaction);
+    void registerStructuralTopologyReaction(const std::string &topologyType,
+                                            const model::top::reactions::StructuralTopologyReaction &reaction);
 
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,

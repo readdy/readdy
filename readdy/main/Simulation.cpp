@@ -24,10 +24,8 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/api/Simulation.h>
-#include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
 #include <readdy/model/observables/io/Trajectory.h>
-#include <readdy/io/File.h>
 
 namespace readdy {
 scalar Simulation::getKBT() const {
@@ -408,14 +406,9 @@ bool Simulation::doublePrecision() const {
     return pimpl->kernel->doublePrecision();
 }
 
-void Simulation::registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
-                                                  const std::string &typeFrom2, const std::string &typeTo1,
-                                                  const std::string &typeTo2, scalar rate, scalar radius,
-                                                  topology_reaction_mode mode) {
+void Simulation::registerSpatialTopologyReaction(const std::string &descriptor, scalar rate, scalar radius) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().topology_registry().add_spatial_reaction(
-            name, typeFrom1, typeFrom2, typeTo1, typeTo2, rate, radius, mode
-    );
+    getSelectedKernel()->getKernelContext().topology_registry().add_spatial_reaction(descriptor, rate, radius);
 }
 
 readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::KernelProvider::kernel_ptr &&kernel) {
@@ -432,8 +425,8 @@ readdy::topology_type_type Simulation::registerTopologyType(const std::string &n
     return getSelectedKernel()->getKernelContext().topology_registry().add_type(name, reactions);
 }
 
-void Simulation::registerInternalTopologyReaction(const std::string &topologyType,
-                                                  const model::top::reactions::StructuralTopologyReaction &reaction) {
+void Simulation::registerStructuralTopologyReaction(const std::string &topologyType,
+                                                    const model::top::reactions::StructuralTopologyReaction &reaction) {
     ensureKernelSelected();
     getSelectedKernel()->getKernelContext().topology_registry().add_structural_reaction(topologyType, reaction);
 }
