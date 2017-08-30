@@ -245,7 +245,11 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
     }
 }
 
-topology_type_type GraphTopology::type() const {
+topology_type_type &GraphTopology::type() {
+    return _topology_type;
+}
+
+const topology_type_type &GraphTopology::type() const {
     return _topology_type;
 }
 
@@ -290,6 +294,7 @@ graph::Graph::vertex_ref GraphTopology::vertexForParticle(Topology::particle_ind
     }
     return graph_.vertices().end();
 }
+
 
 }
 }

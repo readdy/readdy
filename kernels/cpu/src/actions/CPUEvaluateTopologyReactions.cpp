@@ -384,10 +384,13 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
     auto& entry2 = data.entry_at(event.idx2);
     auto& entry1Type = entry1.type;
     auto& entry2Type = entry2.type;
-    if(entry1Type == reaction.type1()) {
+    auto top_type_to1 = reaction.top_type_to1();
+    auto top_type_to2 = reaction.top_type_to2();
+    if(entry1Type == reaction.type1() && t1->type() == reaction.top_type1()) {
         entry1Type = reaction.type_to1();
         entry2Type = reaction.type_to2();
     } else {
+        std::swap(top_type_to1, top_type_to2);
         entry1Type = reaction.type_to2();
         entry2Type = reaction.type_to1();
     }
@@ -404,11 +407,18 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
             }
         } else {
             // merge topologies
-            //t1->appendTopology(*t2, event.idx2, entry2Type, event.idx1, entry1Type);
+            for(auto pidx : t2->getParticles()) {
+                data.entry_at(pidx).topology_index = event.topology_idx;
+            }
+            auto &topologies = kernel->getCPUKernelStateModel().topologies();
+            t1->appendTopology(*t2, event.idx2, entry2Type, event.idx1, entry1Type, top_type_to1);
+            topologies.erase(topologies.begin() + event.topology_idx2);
         }
     } else {
         t1->vertexForParticle(event.idx1)->setParticleType(entry1Type);
         t2->vertexForParticle(event.idx2)->setParticleType(entry2Type);
+        t1->type() = top_type_to1;
+        t2->type() = top_type_to2;
 
         t2->updateReactionRates(context.topology_registry().structural_reactions_of(t2->type()));
         t2->configure();

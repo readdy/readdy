@@ -384,6 +384,109 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
     }
 }
 
+TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
+    using namespace readdy;
+    Simulation sim;
+    auto kernel = sim.setKernel(plugin::KernelProvider::getInstance().create(this->kernel->getName()));
+    sim.setPeriodicBoundary({{true, true, true}});
+    sim.registerTopologyType("TA");
+    sim.setBoxSize(15, 15, 15);
+    sim.registerParticleType("middle", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
+    sim.registerParticleType("end", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
+    sim.configureTopologyBondPotential("middle", "middle", .00000001, 1);
+    sim.configureTopologyBondPotential("middle", "end", .00000001, 1);
+    sim.configureTopologyBondPotential("end", "end", .00000001, 1);
+
+
+    for(int i = 0; i < 3; ++i) {
+        auto top = sim.addTopology("TA", {sim.createTopologyParticle("end", {c_::zero - c_::four + 3*i, c_::zero, c_::zero}),
+                                          sim.createTopologyParticle("middle", {c_::zero - c_::three + 3*i, c_::zero, c_::zero}),
+                                          sim.createTopologyParticle("end", {c_::zero - c_::two + 3*i, c_::zero, c_::zero})});
+        {
+            auto it = top->graph().vertices().begin();
+            auto it2 = std::next(top->graph().vertices().begin());
+            top->graph().addEdge(it, it2);
+            ++it;
+            ++it2;
+            top->graph().addEdge(it, it2);
+        }
+    }
+
+    // register attach reaction that transforms (end, A) -> (middle, end)
+    sim.registerSpatialTopologyReaction("merge: TA (end) + TA (end) -> TA (middle--middle)",c_::one, c_::one + c_::half);
+
+    EXPECT_EQ(sim.currentTopologies().size(), 3);
+    sim.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
+
+    const auto& type_registry = kernel->getKernelContext().particle_types();
+
+    EXPECT_TRUE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("end"));
+    EXPECT_FALSE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("middle"));
+    EXPECT_EQ(kernel->getKernelContext().calculateMaxCutoff(), c_::one + c_::half);
+
+    EXPECT_EQ(sim.currentTopologies().size(), 1);
+    auto chainTop = sim.currentTopologies().at(0);
+    EXPECT_EQ(chainTop->getNParticles(), 3 /*original topology particles*/ + 6 /*attached particles*/);
+
+    auto top_particles = kernel->getKernelStateModel().getParticlesForTopology(*chainTop);
+
+    bool foundEndVertex {false};
+    // check that graph is indeed linear
+    for(std::size_t idx = 0; idx < chainTop->graph().vertices().size() && !foundEndVertex; ++idx) {
+        auto prev_neighbor = std::next(chainTop->graph().vertices().begin(), idx);
+        const auto& v_end = *prev_neighbor;
+        if(v_end.particleType() == type_registry.id_of("end")) {
+            foundEndVertex = true;
+
+            EXPECT_EQ(v_end.neighbors().size(), 1);
+
+            EXPECT_EQ(top_particles.at(idx).getType(), type_registry.id_of("end"));
+
+            using flouble = fp::FloatingPoint<scalar>;
+            flouble x_end (top_particles.at(idx).getPos().x);
+            flouble y_end (top_particles.at(idx).getPos().y);
+            flouble z_end (top_particles.at(idx).getPos().z);
+            EXPECT_TRUE(x_end.AlmostEquals(flouble{c_::four}) || x_end.AlmostEquals(flouble{-c_::four}))
+                                << "the end particle of our topology sausage should be either at x=4 or x=-4";
+            EXPECT_TRUE(y_end.AlmostEquals(flouble{c_::zero})) << "no diffusion going on";
+            EXPECT_TRUE(z_end.AlmostEquals(flouble{c_::zero})) << "no diffusion going on";
+
+            auto factor = x_end.AlmostEquals(flouble{c_::four}) ? c_::one : -c_::one;
+
+            // walk along topology sausage, check end particles are always at +-4, the other ones are of type middle
+            auto next_neighbor = v_end.neighbors().at(0);
+            std::size_t i = 0;
+            while(next_neighbor->particleType() != type_registry.id_of("end") && i < 20 /*no endless loop*/) {
+                auto next_idx = std::distance(chainTop->graph().vertices().begin(), next_neighbor);
+                const auto& next_particle = top_particles.at(static_cast<std::size_t>(next_idx));
+                auto predicted_pos = factor*c_::four - factor*(i+1)*c_::one;
+                auto actual_pos = next_particle.getPos().x;
+                EXPECT_TRUE((flouble(actual_pos).AlmostEquals(flouble(predicted_pos))));
+                EXPECT_TRUE((flouble(next_particle.getPos().y)).AlmostEquals(flouble(c_::zero)));
+                EXPECT_TRUE((flouble(next_particle.getPos().z)).AlmostEquals(flouble(c_::zero)));
+                if(next_neighbor->particleType() == type_registry.id_of("middle")) {
+                    EXPECT_EQ(next_neighbor->neighbors().size(), 2);
+                    if(next_neighbor->neighbors().at(0) == prev_neighbor) {
+                        prev_neighbor = next_neighbor;
+                        next_neighbor = next_neighbor->neighbors().at(1);
+                    } else {
+                        prev_neighbor = next_neighbor;
+                        next_neighbor = next_neighbor->neighbors().at(0);
+                    }
+
+                } else {
+                    EXPECT_EQ(next_neighbor->neighbors().size(), 1);
+                }
+
+                ++i;
+            }
+
+            EXPECT_EQ(i, 3+6-1-1);
+        }
+    }
+    EXPECT_TRUE(foundEndVertex);
+}
+
 INSTANTIATE_TEST_CASE_P(Kernels, TestTopologyReactionsExternal,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 

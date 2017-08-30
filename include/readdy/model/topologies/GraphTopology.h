@@ -109,7 +109,9 @@ public:
     void appendTopology(GraphTopology &other, particle_index otherParticle, particle_type_type otherNewParticleType,
                         particle_index thisParticle, particle_type_type thisNewParticleType, topology_type_type newType);
 
-    topology_type_type type() const;
+    const topology_type_type &type() const;
+
+    topology_type_type &type();
 
     topology_graph::vertex_ref vertexForParticle(particle_index particle);
 
