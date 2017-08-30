@@ -40,8 +40,8 @@ NAMESPACE_BEGIN(util)
 scalar getRecommendedTimeStep(unsigned int N, KernelContext&);
 scalar getMaximumDisplacement(KernelContext&, scalar timeStep);
 
-constexpr inline std::array<const char*, 5> invalidCharacterSequences() {
-    return {{"[", "]", "(", ")", "->"}};
+constexpr inline std::array<const char*, 7> invalidCharacterSequences() {
+    return {{"[", "]", "(", ")", "->", "--", ":"}};
 };
 
 void validateTypeName(const std::string &typeName);

@@ -171,6 +171,8 @@ public:
 
     const api::PotentialConfiguration &potential_configuration() const;
 
+    const ParticleTypeRegistry &particle_type_registry() const;
+
 private:
     static topology_type_type counter;
 

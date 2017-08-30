@@ -167,12 +167,12 @@ void validateTypeName(const std::string &typeName) {
                 ss << "\"" << ics.at(i) << "\"";
             }
             throw std::invalid_argument(fmt::format(
-                    "Encountered invalid character sequence \"{}\" in type name \"{}\", you must not use either of {}.",
+                    R"(Encountered invalid character sequence "{}" in type name "{}", you must not use either of {}.)",
                     cs, typeName, ss.str()
             ));
         }
     }
-    if(typeName.find(" ") == 0 || typeName.find(" ") == typeName.npos-1) {
+    if(typeName.find(' ') == 0 || typeName.find(' ') == typeName.npos-1) {
         throw std::invalid_argument(fmt::format("Type name \"{}\" contained leading/trailing whitespaces.", typeName));
     }
 }

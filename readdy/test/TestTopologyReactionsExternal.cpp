@@ -207,7 +207,7 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     }
 
     // register attach reaction that transforms (end, A) -> (middle, end)
-    sim.registerSpatialTopologyReaction("attach", "end", "A", "middle", "end", c_::one, c_::one + c_::half);
+    sim.registerSpatialTopologyReaction("attach: TA (end) + (A) -> TA (middle--end)",c_::one, c_::one + c_::half);
     sim.addParticle("A", c_::zero - c_::two, c_::zero, c_::zero);
     sim.addParticle("A", c_::zero - c_::three, c_::zero, c_::zero);
     sim.addParticle("A", c_::zero - c_::four, c_::zero, c_::zero);
@@ -287,10 +287,101 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     EXPECT_TRUE(foundEndVertex);
 }
 
-TEST(TestTopologyReactionsExternal, DefinitionParser) {
-    readdy::model::top::reactions::STRParser parser;
+TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
+    auto &context = kernel->getKernelContext();
+    context.topology_registry().add_type("1");
+    context.topology_registry().add_type("2");
+    context.topology_registry().add_type("3");
+    context.topology_registry().add_type("4");
+    context.topology_registry().add_type("5");
+    context.topology_registry().add_type("6");
+    context.topology_registry().add_type("T1");
+    context.topology_registry().add_type("T2");
+    context.topology_registry().add_type("T3");
+    context.topology_registry().add_type("T4");
+    context.particle_types().add("p1", 1., 1.);
+    context.particle_types().add("p2", 1., 1.);
+    context.particle_types().add("p3", 1., 1.);
+    context.particle_types().add("p4", 1., 1.);
+    context.configure();
 
-    parser.parse("name: T1 (p1) + T2 (p2) -> T3 (p3 + p4) [self=true]", 10., 10.);
+    readdy::model::top::reactions::STRParser parser (context.topology_registry());
+
+    {
+        auto r = parser.parse("topology-topology fusion type1: T1 (p1) + T2 (p2) -> T3 (p3--p4) [self=true]", 10., 11.);
+        ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TT_FUSION_ALLOW_SELF);
+        ASSERT_EQ(r.top_type1(), context.topology_registry().id_of("T1"));
+        ASSERT_EQ(r.top_type2(), context.topology_registry().id_of("T2"));
+        ASSERT_EQ(r.type1(), context.particle_types().id_of("p1"));
+        ASSERT_EQ(r.type2(), context.particle_types().id_of("p2"));
+        ASSERT_EQ(r.top_type_to1(), context.topology_registry().id_of("T3"));
+        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.type_to1(), context.particle_types().id_of("p3"));
+        ASSERT_EQ(r.type_to2(), context.particle_types().id_of("p4"));
+        ASSERT_EQ(r.name(), "topology-topology fusion type1");
+        ASSERT_EQ(r.rate(), 10.);
+        ASSERT_EQ(r.radius(), 11.);
+    }
+    {
+        auto r = parser.parse("topology-topology fusion type2: T1 (p1) + T2 (p2) -> T3 (p3--p4)", 10., 11.);
+        ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TT_FUSION);
+        ASSERT_EQ(r.top_type1(), context.topology_registry().id_of("T1"));
+        ASSERT_EQ(r.top_type2(), context.topology_registry().id_of("T2"));
+        ASSERT_EQ(r.type1(), context.particle_types().id_of("p1"));
+        ASSERT_EQ(r.type2(), context.particle_types().id_of("p2"));
+        ASSERT_EQ(r.top_type_to1(), context.topology_registry().id_of("T3"));
+        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.type_to1(), context.particle_types().id_of("p3"));
+        ASSERT_EQ(r.type_to2(), context.particle_types().id_of("p4"));
+        ASSERT_EQ(r.name(), "topology-topology fusion type2");
+        ASSERT_EQ(r.rate(), 10.);
+        ASSERT_EQ(r.radius(), 11.);
+    }
+    {
+        auto r = parser.parse("topology-topology enzymatic type: T1 (p1) + T2 (p2) -> T3 (p3) + T4 (p4)", 10., 11.);
+        ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TT_ENZYMATIC);
+        ASSERT_EQ(r.top_type1(), context.topology_registry().id_of("T1"));
+        ASSERT_EQ(r.top_type2(), context.topology_registry().id_of("T2"));
+        ASSERT_EQ(r.type1(), context.particle_types().id_of("p1"));
+        ASSERT_EQ(r.type2(), context.particle_types().id_of("p2"));
+        ASSERT_EQ(r.top_type_to1(), context.topology_registry().id_of("T3"));
+        ASSERT_EQ(r.top_type_to2(), context.topology_registry().id_of("T4"));
+        ASSERT_EQ(r.type_to1(), context.particle_types().id_of("p3"));
+        ASSERT_EQ(r.type_to2(), context.particle_types().id_of("p4"));
+        ASSERT_EQ(r.name(), "topology-topology enzymatic type");
+        ASSERT_EQ(r.rate(), 10.);
+        ASSERT_EQ(r.radius(), 11.);
+    }
+    {
+        auto r = parser.parse("topology-particle fusion type: T1 (p1) + (p2) -> T2 (p3--p4)", 10., 11.);
+        ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TP_FUSION);
+        ASSERT_EQ(r.top_type1(), context.topology_registry().id_of("T1"));
+        ASSERT_EQ(r.top_type2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.type1(), context.particle_types().id_of("p1"));
+        ASSERT_EQ(r.type2(), context.particle_types().id_of("p2"));
+        ASSERT_EQ(r.top_type_to1(), context.topology_registry().id_of("T2"));
+        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.type_to1(), context.particle_types().id_of("p3"));
+        ASSERT_EQ(r.type_to2(), context.particle_types().id_of("p4"));
+        ASSERT_EQ(r.name(), "topology-particle fusion type");
+        ASSERT_EQ(r.rate(), 10.);
+        ASSERT_EQ(r.radius(), 11.);
+    }
+    {
+        auto r = parser.parse("topology-particle enzymatic type: T1 (p1) + (p2) -> T2 (p3) + (p4)", 10., 11.);
+        ASSERT_EQ(r.mode(), readdy::model::top::reactions::STRMode::TP_ENZYMATIC);
+        ASSERT_EQ(r.top_type1(), context.topology_registry().id_of("T1"));
+        ASSERT_EQ(r.top_type2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.type1(), context.particle_types().id_of("p1"));
+        ASSERT_EQ(r.type2(), context.particle_types().id_of("p2"));
+        ASSERT_EQ(r.top_type_to1(), context.topology_registry().id_of("T2"));
+        ASSERT_EQ(r.top_type_to2(), readdy::topology_type_empty);
+        ASSERT_EQ(r.type_to1(), context.particle_types().id_of("p3"));
+        ASSERT_EQ(r.type_to2(), context.particle_types().id_of("p4"));
+        ASSERT_EQ(r.name(), "topology-particle enzymatic type");
+        ASSERT_EQ(r.rate(), 10.);
+        ASSERT_EQ(r.radius(), 11.);
+    }
 }
 
 INSTANTIATE_TEST_CASE_P(Kernels, TestTopologyReactionsExternal,

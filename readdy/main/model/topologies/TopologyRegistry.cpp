@@ -95,7 +95,7 @@ void TopologyRegistry::configure() {
 
     for (const auto &entry : _spatial_reactions) {
         _topology_reaction_types.emplace(std::get<0>(entry.first));
-        _topology_reaction_types.emplace(std::get<1>(entry.first));
+        _topology_reaction_types.emplace(std::get<2>(entry.first));
     }
 }
 
@@ -114,64 +114,64 @@ void TopologyRegistry::debug_output() const {
                 log::debug("     * reaction {}", d);
             }
         }
-        log::debug(" - topology types:");
-        for (const auto &entry : _registry) {
-            log::debug("     * topology type \"{}\" with id {} and {} structural reactions", entry.second.name,
-                       entry.second.type, entry.second.structural_reactions.size());
-        }
+    }
+    log::debug(" - topology types:");
+    for (const auto &entry : _registry) {
+        log::debug("     * topology type \"{}\" with id {} and {} structural reactions", entry.second.name,
+                   entry.second.type, entry.second.structural_reactions.size());
+    }
 
-        log::debug(" - structural topology reactions:");
-        for (const auto &entry : _registry) {
-            log::debug("     - topology type \"{}\" with {} structural reactions:",
-                       entry.second.name, entry.second.structural_reactions.size());
-            for (const auto &r : entry.second.structural_reactions) {
-                log::debug("         * reaction with roll_back = {} and create child tops = {}",
-                           r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction());
-            }
+    log::debug(" - structural topology reactions:");
+    for (const auto &entry : _registry) {
+        log::debug("     - topology type \"{}\" with {} structural reactions:",
+                   entry.second.name, entry.second.structural_reactions.size());
+        for (const auto &r : entry.second.structural_reactions) {
+            log::debug("         * reaction with roll_back = {} and create child tops = {}",
+                       r.rolls_back_if_invalid(), r.creates_child_topologies_after_reaction());
         }
+    }
 
-        log::debug(" - topology potential configuration:");
-        log::debug("     - bonds ({}):", potentialConfiguration_.pairPotentials.size());
-        for (const auto &entry : potentialConfiguration_.pairPotentials) {
-            log::debug("         - Bonds for particle types {} and {}:",
-                       _type_registry.get().name_of(std::get<0>(entry.first)),
-                       _type_registry.get().name_of(std::get<1>(entry.first)));
-            auto bondToStr = [](const api::Bond &bond) -> std::string {
-                switch (bond.type) {
-                    case api::BondType::HARMONIC:
-                        return "Harmonic";
-                }
-            };
-            for (const auto &bond : entry.second) {
-                log::debug("             * {} bond with force constant {} and length {}", bondToStr(bond),
-                           bond.forceConstant, bond.length);
+    log::debug(" - topology potential configuration:");
+    log::debug("     - bonds ({}):", potentialConfiguration_.pairPotentials.size());
+    for (const auto &entry : potentialConfiguration_.pairPotentials) {
+        log::debug("         - Bonds for particle types {} and {}:",
+                   _type_registry.get().name_of(std::get<0>(entry.first)),
+                   _type_registry.get().name_of(std::get<1>(entry.first)));
+        auto bondToStr = [](const api::Bond &bond) -> std::string {
+            switch (bond.type) {
+                case api::BondType::HARMONIC:
+                    return "Harmonic";
             }
+        };
+        for (const auto &bond : entry.second) {
+            log::debug("             * {} bond with force constant {} and length {}", bondToStr(bond),
+                       bond.forceConstant, bond.length);
         }
-        log::debug("     - angles ({}):", potentialConfiguration_.anglePotentials.size());
-        for (const auto &entry : potentialConfiguration_.anglePotentials) {
-            auto angleToStr = [](const api::Angle &angle) -> std::string {
-                switch (angle.type) {
-                    case api::AngleType::HARMONIC:
-                        return "Harmonic";
-                }
-            };
-            for (const auto &angle : entry.second) {
-                log::debug("             * {} angle with force constant {} and equilibrium angle {}",
-                           angleToStr(angle), angle.forceConstant, angle.equilibriumAngle);
+    }
+    log::debug("     - angles ({}):", potentialConfiguration_.anglePotentials.size());
+    for (const auto &entry : potentialConfiguration_.anglePotentials) {
+        auto angleToStr = [](const api::Angle &angle) -> std::string {
+            switch (angle.type) {
+                case api::AngleType::HARMONIC:
+                    return "Harmonic";
             }
+        };
+        for (const auto &angle : entry.second) {
+            log::debug("             * {} angle with force constant {} and equilibrium angle {}",
+                       angleToStr(angle), angle.forceConstant, angle.equilibriumAngle);
         }
-        log::debug("     - torsions ({}):", potentialConfiguration_.torsionPotentials.size());
-        for (const auto &entry : potentialConfiguration_.torsionPotentials) {
-            auto torsionToStr = [](const api::TorsionAngle &torsion) -> std::string {
-                switch (torsion.type) {
-                    case api::TorsionType::COS_DIHEDRAL:
-                        return "Cosine-Dihedral";
-                }
-            };
-            for (const auto &dih : entry.second) {
-                log::debug("             * {} with force constant {}, equilibrium angle {} and multiplicity {}",
-                           torsionToStr(dih), dih.forceConstant, dih.phi_0, dih.multiplicity);
+    }
+    log::debug("     - torsions ({}):", potentialConfiguration_.torsionPotentials.size());
+    for (const auto &entry : potentialConfiguration_.torsionPotentials) {
+        auto torsionToStr = [](const api::TorsionAngle &torsion) -> std::string {
+            switch (torsion.type) {
+                case api::TorsionType::COS_DIHEDRAL:
+                    return "Cosine-Dihedral";
             }
+        };
+        for (const auto &dih : entry.second) {
+            log::debug("             * {} with force constant {}, equilibrium angle {} and multiplicity {}",
+                       torsionToStr(dih), dih.forceConstant, dih.phi_0, dih.multiplicity);
         }
     }
 }
@@ -185,7 +185,7 @@ const std::string &TopologyRegistry::name_of(readdy::topology_type_type type) co
 }
 
 readdy::topology_type_type TopologyRegistry::id_of(const std::string &name) const {
-    if(name.empty()) return topology_type_empty;
+    if (name.empty()) return topology_type_empty;
     using entry_type = type_registry::value_type;
     auto it = std::find_if(_registry.begin(), _registry.end(), [&name](const entry_type &entry) {
         return entry.second.name == name;
@@ -239,7 +239,7 @@ void TopologyRegistry::add_spatial_reaction(const std::string &name, const readd
 }
 
 void TopologyRegistry::add_spatial_reaction(const std::string &descriptor, scalar rate, scalar radius) {
-    reactions::STRParser parser;
+    reactions::STRParser parser(*this);
     add_spatial_reaction(parser.parse(descriptor, rate, radius));
 }
 
@@ -379,6 +379,10 @@ void TopologyRegistry::configure_torsion_potential(const std::string &type1, con
                                                               _type_registry.get().id_of(type3),
                                                               _type_registry.get().id_of(type4))].push_back(
             torsionAngle);
+}
+
+const ParticleTypeRegistry &TopologyRegistry::particle_type_registry() const {
+    return _type_registry.get();
 }
 
 }

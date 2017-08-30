@@ -36,10 +36,12 @@
 #include <readdy/common/common.h>
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/topologies/TopologyParticleTypeMap.h>
+#include <readdy/common/string.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
+class TopologyRegistry;
 NAMESPACE_BEGIN(reactions)
 
 /**
@@ -50,11 +52,13 @@ enum class STRMode {
     TT_ENZYMATIC = 0, TT_FUSION, TT_FUSION_ALLOW_SELF, TP_ENZYMATIC, TP_FUSION
 };
 
+class STRParser;
+
 class SpatialTopologyReaction {
 public:
     SpatialTopologyReaction(std::string name, util::particle_type_pair types, topology_type_pair top_types,
-                                util::particle_type_pair types_to, topology_type_pair top_types_to, scalar rate,
-                                scalar radius, STRMode mode);
+                            util::particle_type_pair types_to, topology_type_pair top_types_to, scalar rate,
+                            scalar radius, STRMode mode);
 
     ~SpatialTopologyReaction() = default;
 
@@ -105,56 +109,50 @@ public:
     const STRMode &mode() const;
 
 private:
+
+    friend class STRParser;
+
+    SpatialTopologyReaction() = default;
+
     std::string _name;
     util::particle_type_pair _types;
     util::particle_type_pair _types_to;
     topology_type_pair _top_types;
     topology_type_pair _top_types_to;
-    scalar _rate;
-    scalar _radius;
-    STRMode _mode;
+    scalar _rate{0};
+    scalar _radius{0};
+    STRMode _mode{STRMode::TP_ENZYMATIC};
 };
 
 class STRParser {
 public:
+
+    explicit STRParser(const TopologyRegistry &registry);
+
     /**
      *  Pass descriptor of form for Topology<->Topology
      * - fusion type:
-     *     name: T1 (p1) + T2 (p2) -> T3 (p3 + p4) [self=true|false]
+     *     name: T1 (p1) + T2 (p2) -> T3 (p3--p4) [self=true|false]
      * - enzymatic type:
      *     name: T1 (p1) + T2 (p2) -> T3 (p3) + T4 (p4)
      *
      * and for Topology<->Particle
      * - fusion type:
-     *     name: T1 (p1) + p2 -> T2 (p3 + p4)
+     *     name: T1 (p1) + (p2) -> T2 (p3--p4)
      * - enzymatic type:
-     *     name: T1 (p1) + p2 -> T2 (p3) + p4
+     *     name: T1 (p1) + (p2) -> T2 (p3) + (p4)
      *
-     * @param descriptor
-     * @param rate
-     * @param radius
-     * @return
+     * @param descriptor the descriptor
+     * @param rate the rate
+     * @param radius the radius
+     * @return the parsed reaction object
      */
-    SpatialTopologyReaction parse(const std::string& descriptor, scalar rate, scalar radius) const {
-        log::trace("begin parsing \"{}\"", descriptor);
-        auto arrowPos = descriptor.find(arrow);
-        if(arrowPos == descriptor.npos) {
-            throw std::invalid_argument(fmt::format(
-                    "the descriptor must contain an arrow (\"{}\") to indicate lhs and rhs.", arrow
-            ));
-        }
-        if(descriptor.find(arrow, arrowPos+1) != descriptor.npos) {
-            throw std::invalid_argument(fmt::format(
-                    "the descriptor must not contain more than one arrow (\"{}\").", arrow
-            ));
-        }
-        auto lhs = descriptor.substr(0, arrowPos);
-        auto rhs = descriptor.substr(arrowPos + std::strlen(arrow), descriptor.npos);
-        log::debug("got lhs={}, rhs={}", lhs, rhs);
-    }
+    SpatialTopologyReaction parse(const std::string &descriptor, scalar rate, scalar radius) const;
 
 private:
     static constexpr const char arrow[] = "->";
+    static constexpr const char bond[] = "--";
+    std::reference_wrapper<const TopologyRegistry> _topology_registry;
 };
 
 NAMESPACE_END(reactions)
