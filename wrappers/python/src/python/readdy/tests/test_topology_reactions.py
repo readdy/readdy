@@ -67,7 +67,7 @@ class TestTopologyReactions(unittest.TestCase):
         fun1 = top.ReactionFunction(reaction_function)
         fun2 = top.RateFunction(rate_function)
 
-        reaction = top.TopologyReaction(fun1, fun2)
+        reaction = top.StructuralTopologyReaction(fun1, fun2)
         reaction.roll_back_if_invalid()
         reaction.create_child_topologies_after_reaction()
         return reaction
@@ -83,7 +83,7 @@ class TestTopologyReactions(unittest.TestCase):
             return 1.0 if topology.get_n_particles() == 1 else 0
 
         fun1, fun2 = top.ReactionFunction(reaction_function), top.RateFunction(rate_function)
-        reaction = top.TopologyReaction(fun1, fun2)
+        reaction = top.StructuralTopologyReaction(fun1, fun2)
         reaction.raise_if_invalid()
         reaction.create_child_topologies_after_reaction()
         return reaction
@@ -109,8 +109,8 @@ class TestTopologyReactions(unittest.TestCase):
         for i in range(int(n_elements - 1)):
             topology.get_graph().add_edge(i, i + 1)
 
-        sim.register_internal_topology_reaction("TA", self._get_decay_reaction(typeid_b))
-        sim.register_internal_topology_reaction("TA", self._get_split_reaction())
+        sim.register_structural_topology_reaction("TA", self._get_decay_reaction(typeid_b))
+        sim.register_structural_topology_reaction("TA", self._get_split_reaction())
 
         # h = sim.register_observable_n_particles(1, [], lambda x: print("n particles=%s" % x))
 
