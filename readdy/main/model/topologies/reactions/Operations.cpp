@@ -56,6 +56,14 @@ RemoveEdge::RemoveEdge(const Operation::edge &edge) : _edge(edge) {}
 Operation::action_ptr RemoveEdge::create_action(topology_ref topology, factory_ref factory) const {
     return factory->createRemoveEdge(topology, _edge);
 }
+
+ChangeTopologyType::ChangeTopologyType(const std::string &type_to) : _type_to(type_to) {}
+
+Operation::action_ptr
+ChangeTopologyType::create_action(Operation::topology_ref topology, Operation::factory_ref factory) const {
+    return factory->createChangeTopologyType(topology, _type_to);
+}
+
 }
 }
 }

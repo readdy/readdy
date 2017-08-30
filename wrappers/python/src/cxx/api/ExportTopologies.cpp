@@ -126,7 +126,8 @@ void exportTopologies(py::module &m) {
                 auto it = self.topology().graph().vertices().begin();
                 std::advance(it, index);
                 return self.separateVertex(it);
-            }, py::return_value_policy::reference_internal);
+            }, py::return_value_policy::reference_internal)
+            .def("change_topology_type", &reaction_recipe::changeTopologyType, py::return_value_policy::reference_internal);
 
     py::class_<base_topology>(m, "BaseTopology")
             .def("get_n_particles", &base_topology::getNParticles)

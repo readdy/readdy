@@ -74,6 +74,14 @@ SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const to
     );
 }
 
+top::reactions::actions::TopologyReactionActionFactory::operation_ref
+SCPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
+                                                    const std::string &type_to) const {
+    return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
+            topology, kernel->getKernelContext().topology_registry().id_of(type_to)
+    );
+}
+
 }
 }
 }

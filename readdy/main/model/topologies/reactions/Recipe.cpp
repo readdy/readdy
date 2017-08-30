@@ -62,6 +62,11 @@ Recipe &Recipe::separateVertex(const vertex_ref &vertex) {
     return *this;
 }
 
+Recipe &Recipe::changeTopologyType(const std::string &type) {
+    _steps.push_back(std::make_shared<op::ChangeTopologyType>(type));
+    return *this;
+}
+
 const Recipe::reaction_operations &Recipe::steps() const {
     return _steps;
 }
@@ -81,6 +86,7 @@ Recipe::graph_topology &Recipe::topology() {
 const Recipe::graph_topology &Recipe::topology() const {
     return _topology;
 }
+
 
 }
 }

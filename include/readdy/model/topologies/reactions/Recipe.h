@@ -78,6 +78,8 @@ public:
     Recipe &removeEdge(vertex_ref v1, vertex_ref v2);
 
     Recipe &separateVertex(const vertex_ref &vertex);
+    
+    Recipe &changeTopologyType(const std::string &type);
 
     const reaction_operations &steps() const;
 

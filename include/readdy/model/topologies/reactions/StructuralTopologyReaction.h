@@ -73,7 +73,7 @@ class StructuralTopologyReaction {
 public:
     using mode = Mode;
     using reaction_recipe = Recipe;
-    using reaction_function = std::function<reaction_recipe(GraphTopology&)>;;
+    using reaction_function = std::function<reaction_recipe(GraphTopology&)>;
     using rate_function = std::function<scalar(const GraphTopology&)>;
 
     StructuralTopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
