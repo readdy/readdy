@@ -59,5 +59,4 @@ make install &> /dev/null
 if [ $(uname) = "Darwin" ]; then
     install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $PREFIX/bin/runUnitTests_singlecpu
     install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $PREFIX/bin/runUnitTests_cpu
-    # install_name_tool -add_rpath @loader_path/../readdy/readdy_plugins/ $PREFIX/bin/runUnitTests_cpu_dense
 fi
