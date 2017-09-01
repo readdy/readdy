@@ -31,7 +31,7 @@
  */
 
 #include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 
 namespace readdy {
 namespace kernel {

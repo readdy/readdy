@@ -46,12 +46,16 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 class NeighborList;
+class AdaptiveNeighborList;
+class CellDecompositionNeighborList;
 }
 namespace model {
 
 class CPUParticleData {
     friend class CPUNeighborList;
     friend class readdy::kernel::cpu::nl::NeighborList;
+    friend class readdy::kernel::cpu::nl::AdaptiveNeighborList;
+    friend class readdy::kernel::cpu::nl::CellDecompositionNeighborList;
 public:
 
     struct Entry;

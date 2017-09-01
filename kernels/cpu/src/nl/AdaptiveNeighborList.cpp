@@ -30,7 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 #include <readdy/kernel/cpu/util/config.h>
 
 namespace readdy {
@@ -38,19 +38,18 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-NeighborList::NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
-                           const readdy::util::thread::Config &config, bool adaptive,
-                           skin_size_t skin, bool hilbert_sort)
-        : _data(data), _context(context), _config(config), _skin(skin), _cell_container(data, context, config),
+AdaptiveNeighborList::AdaptiveNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                           const readdy::util::thread::Config &config, bool adaptive, bool hilbert_sort)
+        : NeighborList(data, context, config), _cell_container(data, context, config),
           _hilbert_sort(hilbert_sort), _adaptive(adaptive) {
 }
 
-const CellContainer &NeighborList::cell_container() const {
+const CellContainer &AdaptiveNeighborList::cell_container() const {
     return _cell_container;
 }
 
-void NeighborList::set_up() {
-    _max_cutoff = _context.calculateMaxCutoff();
+void AdaptiveNeighborList::set_up() {
+    _max_cutoff = _context.get().calculateMaxCutoff();
     _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
     if (_max_cutoff > 0) {
         _cell_container.update_root_size();
@@ -58,7 +57,7 @@ void NeighborList::set_up() {
         _cell_container.refine_uniformly();
         _cell_container.setup_uniform_neighbors();
         if (_hilbert_sort) {
-            _data.hilbert_sort(_max_cutoff + _skin);
+            _data.get().hilbert_sort(_max_cutoff + _skin);
         }
         fill_container();
         fill_verlet_list();
@@ -66,7 +65,7 @@ void NeighborList::set_up() {
     _is_set_up = true;
 }
 
-void NeighborList::update() {
+void AdaptiveNeighborList::update() {
     if(!_is_set_up) {
         set_up();
     } else {
@@ -102,19 +101,19 @@ void NeighborList::update() {
     }
 }
 
-const model::CPUParticleData &NeighborList::data() const {
+const model::CPUParticleData &AdaptiveNeighborList::data() const {
     return _data;
 }
 
-const readdy::util::thread::Config &NeighborList::config() const {
+const readdy::util::thread::Config &AdaptiveNeighborList::config() const {
     return _config;
 }
 
-void NeighborList::fill_container() {
+void AdaptiveNeighborList::fill_container() {
     if (_max_cutoff > 0) {
 
-        const auto grainSize = _data.size() / _config.nThreads();
-        const auto data_begin = _data.cbegin();
+        const auto grainSize = _data.get().size() / _config.get().nThreads();
+        const auto data_begin = _data.get().cbegin();
         auto worker = [=](std::size_t, model::CPUParticleData::const_iterator begin,
                           model::CPUParticleData::const_iterator end, const CellContainer &container) {
             auto i = std::distance(data_begin, begin);
@@ -130,12 +129,12 @@ void NeighborList::fill_container() {
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(config().nThreads());
 
-        auto it = _data.cbegin();
-        for (auto i = 0; i < _config.nThreads() - 1; ++i) {
+        auto it = _data.get().cbegin();
+        for (auto i = 0; i < _config.get().nThreads() - 1; ++i) {
             executables.push_back(executor.pack(worker, it, it + grainSize, std::cref(_cell_container)));
             it += grainSize;
         }
-        executables.push_back(executor.pack(worker, it, _data.end(), std::cref(_cell_container)));
+        executables.push_back(executor.pack(worker, it, _data.get().end(), std::cref(_cell_container)));
 
         executor.execute_and_wait(std::move(executables));
         // threads.emplace_back(worker, it, _data.end(), std::cref(_cell_container));
@@ -148,21 +147,21 @@ void NeighborList::fill_container() {
     }
 }
 
-void NeighborList::clear_cells() {
+void AdaptiveNeighborList::clear_cells() {
     _cell_container.clear();
 }
 
-void NeighborList::clear() {
+void AdaptiveNeighborList::clear() {
     if (_max_cutoff > 0) {
         clear_cells();
-        for (auto &neighbors : _data.neighbors) {
+        for (auto &neighbors : _data.get().neighbors) {
             neighbors.clear();
         }
     }
 }
 
-void NeighborList::fill_verlet_list() {
-    const auto &d2 = _context.getDistSquaredFun();
+void AdaptiveNeighborList::fill_verlet_list() {
+    const auto &d2 = _context.get().getDistSquaredFun();
     if (_max_cutoff > 0) {
         _cell_container.execute_for_each_leaf([this](const CellContainer::sub_cell &cell) {
             fill_cell_verlet_list(cell, true);
@@ -170,16 +169,16 @@ void NeighborList::fill_verlet_list() {
     }
 }
 
-void NeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, const bool reset_displacement) {
-    const auto &d2 = _context.getDistSquaredFun();
+void AdaptiveNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, const bool reset_displacement) {
+    const auto &d2 = _context.get().getDistSquaredFun();
     for (const auto particle_index : cell.particles().data()) {
-        auto &neighbors = _data.neighbors_at(particle_index);
-        auto &entry = _data.entry_at(particle_index);
+        auto &neighbors = _data.get().neighbors_at(particle_index);
+        auto &entry = _data.get().entry_at(particle_index);
         if (reset_displacement) entry.displacement = 0;
         neighbors.clear();
         for (const auto p_i : cell.particles().data()) {
             if (p_i != particle_index) {
-                const auto distSquared = d2(entry.position(), _data.pos(p_i));
+                const auto distSquared = d2(entry.position(), _data.get().pos(p_i));
                 if (distSquared < _max_cutoff_skin_squared) {
                     neighbors.push_back(p_i);
                 }
@@ -187,7 +186,7 @@ void NeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, co
         }
         for (const auto &neighbor_cell : cell.neighbors()) {
             for (const auto p_j : neighbor_cell->particles().data()) {
-                const auto distSquared = d2(entry.position(), _data.pos(p_j));
+                const auto distSquared = d2(entry.position(), _data.get().pos(p_j));
                 if (distSquared < _max_cutoff_skin_squared) {
                     neighbors.push_back(p_j);
                 }
@@ -196,26 +195,26 @@ void NeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, co
     }
 }
 
-bool &NeighborList::adaptive() {
+bool &AdaptiveNeighborList::adaptive() {
     return _adaptive;
 }
 
-const bool &NeighborList::adaptive() const {
+const bool &AdaptiveNeighborList::adaptive() const {
     return _adaptive;
 }
 
-bool &NeighborList::performs_hilbert_sort() {
+bool &AdaptiveNeighborList::performs_hilbert_sort() {
     return _hilbert_sort;
 }
 
-const bool &NeighborList::performs_hilbert_sort() const {
+const bool &AdaptiveNeighborList::performs_hilbert_sort() const {
     return _hilbert_sort;
 }
 
-void NeighborList::sort_by_hilbert_curve() {
+void AdaptiveNeighborList::sort_by_hilbert_curve() {
     clear();
     if (_hilbert_sort) {
-        _data.hilbert_sort(_max_cutoff + _skin);
+        _data.get().hilbert_sort(_max_cutoff + _skin);
     } else {
         log::error("requested hilbert sort but it is turned off!");
     }
@@ -223,38 +222,22 @@ void NeighborList::sort_by_hilbert_curve() {
     fill_verlet_list();
 }
 
-void NeighborList::displace(data_t::iterator iter, const readdy::model::Vec3 &vec) {
-    _data.displace(*iter, vec);
+void AdaptiveNeighborList::displace(data_t::iterator iter, const readdy::model::Vec3 &vec) {
+    _data.get().displace(*iter, vec);
 }
 
-void NeighborList::displace(model::CPUParticleData::Entry &entry, const readdy::model::Vec3 &delta) {
-    _data.displace(entry, delta);
+void AdaptiveNeighborList::displace(model::CPUParticleData::Entry &entry, const readdy::model::Vec3 &delta) {
+    _data.get().displace(entry, delta);
 }
 
-void NeighborList::displace(model::CPUParticleData::index_t entry, const readdy::model::Vec3 &delta) {
-    _data.displace(_data.entry_at(entry), delta);
+void AdaptiveNeighborList::displace(model::CPUParticleData::index_t entry, const readdy::model::Vec3 &delta) {
+    _data.get().displace(_data.get().entry_at(entry), delta);
 }
 
-NeighborList::iterator NeighborList::begin() {
-    return _data.neighbors.begin();
-}
-
-NeighborList::iterator NeighborList::end() {
-    return _data.neighbors.end();
-}
-
-NeighborList::const_iterator NeighborList::cbegin() const {
-    return _data.neighbors.cbegin();
-}
-
-NeighborList::const_iterator NeighborList::cend() const {
-    return _data.neighbors.cend();
-}
-
-void NeighborList::updateData(data_t::update_t &&update) {
+void AdaptiveNeighborList::updateData(data_t::update_t &&update) {
     const auto& decayed_particles = std::get<1>(update);
     for(const auto p_idx : decayed_particles) {
-        const auto sub_cell = _cell_container.leaf_cell_for_position(_data.pos(p_idx));
+        const auto sub_cell = _cell_container.leaf_cell_for_position(_data.get().pos(p_idx));
         if (sub_cell != nullptr) {
             const auto& particles = sub_cell->particles();
             if(particles.erase_if_found(p_idx)) {
@@ -279,7 +262,7 @@ void NeighborList::updateData(data_t::update_t &&update) {
         }
     }
 
-    auto new_entries = _data.update(std::move(update));
+    auto new_entries = _data.get().update(std::move(update));
 
     for(const auto p_idx : new_entries) {
         _cell_container.insert_particle(p_idx, true);
@@ -288,7 +271,7 @@ void NeighborList::updateData(data_t::update_t &&update) {
     handle_dirty_cells();
 }
 
-void NeighborList::handle_dirty_cells() {
+void AdaptiveNeighborList::handle_dirty_cells() {
     _cell_container.execute_for_each_sub_cell([this](const CellContainer::sub_cell &cell) {
         if (cell.is_dirty() || cell.neighbor_dirty() ) { // or neighbor? ||
             for (const auto &sub_cell : cell.sub_cells()) {
@@ -298,23 +281,6 @@ void NeighborList::handle_dirty_cells() {
         }
     });
     _cell_container.unset_dirty();
-}
-
-const static NeighborList::neighbors_t no_neighbors{};
-
-const NeighborList::neighbors_t &NeighborList::neighbors_of(const data_t::index_t entry) const {
-    if (_max_cutoff > 0) {
-        return _data.neighbors_at(entry);
-    }
-    return no_neighbors;
-}
-
-NeighborList::skin_size_t &NeighborList::skin() {
-    return _skin;
-}
-
-const NeighborList::skin_size_t &NeighborList::skin() const {
-    return _skin;
 }
 
 }

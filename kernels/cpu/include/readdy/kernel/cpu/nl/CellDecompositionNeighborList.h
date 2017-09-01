@@ -23,27 +23,52 @@
 /**
  * << detailed description >>
  *
- * @file config.h
+ * @file CellDecompositionNeighborList.h
  * @brief << brief description >>
  * @author clonker
- * @date 28.03.17
+ * @date 01.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
+#include <readdy/kernel/cpu/util/config.h>
+
+#include "NeighborList.h"
+#include "CellContainer.h"
+#include "SubCell.h"
+
 namespace readdy {
 namespace kernel {
 namespace cpu {
-class CPUKernel;
 namespace nl {
-class AdaptiveNeighborList;
-class CellDecompositionNeighborList;
-class NeighborList;
+
+class CellDecompositionNeighborList : public NeighborList {
+public:
+
+    CellDecompositionNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                                  const readdy::util::thread::Config &config);
+
+    void set_up() override;
+
+    void update() override;
+
+    void clear() override;
+
+    void updateData(data_t::update_t &&update) override;
+
+    void fill_container();
+
+    void fill_verlet_list();
+
+    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell);
+
+private:
+    CellContainer _cell_container;
+    bool _is_set_up {false};
+};
+
 }
-using neighbor_list = readdy::kernel::cpu::nl::NeighborList;
-using adaptive_neighbor_list = readdy::kernel::cpu::nl::AdaptiveNeighborList;
-using cell_decomposition_neighbor_list = readdy::kernel::cpu::nl::CellDecompositionNeighborList;
 }
 }
 }

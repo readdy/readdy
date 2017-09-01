@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,20 +21,19 @@
 
 
 /**
- *
+ * << detailed description >>
  *
  * @file NeighborList.h
- * @brief 
+ * @brief << brief description >>
  * @author clonker
- * @date 4/21/17
+ * @date 01.09.17
+ * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <readdy/common/macros.h>
-#include <readdy/kernel/cpu/util/config.h>
-
-#include "CellContainer.h"
-#include "SubCell.h"
+#include <readdy/common/common.h>
+#include <readdy/kernel/cpu/model/CPUParticleData.h>
 
 namespace readdy {
 namespace kernel {
@@ -43,86 +42,64 @@ namespace nl {
 
 class NeighborList {
 public:
-    using skin_size_t = scalar;
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
     using neighbors_t = data_t::neighbors_t;
     using iterator = data_t::neighbors_list_iterator;
     using const_iterator = data_t::neighbors_list_const_iterator;
 
     NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
-                 const readdy::util::thread::Config &config, bool adaptive=true, skin_size_t skin = 0,
-                 bool hilbert_sort = true);
+                 const readdy::util::thread::Config &config) : _data(data), _context(context), _config(config) {};
 
-    void set_up();
+    virtual ~NeighborList() = default;
 
-    void update();
+    virtual void set_up() = 0;
 
-    void clear();
+    virtual void update() = 0;
 
-    void clear_cells();
+    virtual void clear() = 0;
 
-    const model::CPUParticleData& data() const;
+    virtual void updateData(data_t::update_t &&update) = 0;
 
-    const readdy::util::thread::Config& config() const;
+    const neighbors_t &neighbors_of(const data_t::index_t entry) const {
+        const static neighbors_t no_neighbors{};
+        if (_max_cutoff > 0) {
+            return _data.get().neighbors_at(entry);
+        }
+        return no_neighbors;
+    };
 
-    const CellContainer& cell_container() const;
+    scalar &skin() {
+        return _skin;
+    };
 
-    bool& adaptive();
+    const scalar &skin() const {
+        return _skin;
+    };
 
-    const bool& adaptive() const;
+    iterator begin() {
+        return _data.get().neighbors.begin();
+    };
 
-    bool& performs_hilbert_sort();
+    iterator end() {
+        return _data.get().neighbors.end();
+    };
 
-    const bool& performs_hilbert_sort() const;
+    const_iterator cbegin() const {
+        return _data.get().neighbors.cbegin();
+    };
 
-    void sort_by_hilbert_curve();
+    const_iterator cend() const {
+        return _data.get().neighbors.cend();
+    };
 
-    void updateData(data_t::update_t &&update);
-
-    void displace(data_t::iterator iter, const readdy::model::Vec3 &vec);
-
-    void displace(data_t::Entry &entry, const readdy::model::Vec3 &delta);
-
-    void displace(data_t::index_t entry, const readdy::model::Vec3 &delta);
-
-    iterator begin();
-
-    iterator end();
-
-    const_iterator cbegin() const;
-
-    const_iterator cend() const;
-
-    const neighbors_t &neighbors_of(const data_t::index_t entry) const;
-
-    skin_size_t &skin();
-
-    const skin_size_t &skin() const;
-
-private:
-
-    void fill_container();
-
-    /**
-     * should be called once containers are all valid / filled
-     */
-    void fill_verlet_list();
-
-    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell, bool reset_displacement);
-
-    void handle_dirty_cells();
-
-    CellContainer _cell_container;
-
-    skin_size_t _skin;
-    scalar _max_cutoff;
+protected:
+    scalar _skin {0};
+    scalar _max_cutoff {0};
     scalar _max_cutoff_skin_squared {0};
-    bool _hilbert_sort {true};
-    bool _adaptive {true};
-    bool _is_set_up {false};
-    model::CPUParticleData &_data;
-    const readdy::model::KernelContext &_context;
-    const readdy::util::thread::Config &_config;
+
+    std::reference_wrapper<model::CPUParticleData> _data;
+    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::reference_wrapper<const readdy::util::thread::Config> _config;
 };
 
 }

@@ -31,7 +31,7 @@
 
 #include <gtest/gtest.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 
 namespace {
 

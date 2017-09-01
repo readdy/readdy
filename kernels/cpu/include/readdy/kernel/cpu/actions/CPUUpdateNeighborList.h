@@ -33,7 +33,7 @@
 #pragma once
 #include <readdy/model/actions/Actions.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 
 namespace readdy {
 namespace kernel {
