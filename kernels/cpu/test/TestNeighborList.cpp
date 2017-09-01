@@ -37,7 +37,8 @@
 #include <gtest/gtest.h>
 #include <readdy/api/SimulationScheme.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
+#include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
 #include <readdy/testing/NOOPPotential.h>
 
 
@@ -47,7 +48,7 @@ namespace m = readdy::model;
 namespace {
 
 using data_t = cpu::model::CPUParticleData;
-using nl_t = cpu::neighbor_list;
+using nl_t = cpu::cell_decomposition_neighbor_list;
 
 struct TestNeighborList : ::testing::Test {
 
@@ -139,7 +140,7 @@ TEST_F(TestNeighborList, OneDirection) {
     list.set_up();
 
     int sum = getNumberPairs(list);
-    EXPECT_EQ(sum, 4);
+    EXPECT_LE(4, sum);
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(0), ids.at(2)));
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(2), ids.at(0)));
     EXPECT_TRUE(isIdPairInList(&list, data, ids.at(1), ids.at(2)));
@@ -413,7 +414,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
         kernel->addParticle("A", pbc(n3(0, 10)));
     }
 
-    kernel::cpu::nl::NeighborList neighbor_list{
+    kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
             kernel->threadConfig()
@@ -518,7 +519,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     context.configure(false);
     const auto &d2 = context.getDistSquaredFun();
     auto &data = *kernel->getCPUKernelStateModel().getParticleData();
-    kernel::cpu::nl::NeighborList neighbor_list{
+    kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
             kernel->threadConfig()
@@ -563,12 +564,13 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     context.configure(false);
     const auto &d2 = context.getDistSquaredFun();
     auto &data = *kernel->getCPUKernelStateModel().getParticleData();
-    kernel::cpu::nl::NeighborList neighbor_list{
+    kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
             kernel->threadConfig(),
-            true, 2.5, false
+            true, false
     };
+    neighbor_list.skin() = 2.5;
     neighbor_list.set_up();
 
     {

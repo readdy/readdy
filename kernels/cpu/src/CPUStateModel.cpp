@@ -32,7 +32,8 @@
 #include <future>
 #include <readdy/kernel/cpu/CPUStateModel.h>
 #include <readdy/common/thread/barrier.h>
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
+#include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
 #include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
@@ -162,7 +163,7 @@ void CPUStateModel::calculateForces() {
             const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
             auto it_data_end = pimpl->data().end();
             auto it_data = pimpl->data().begin();
-            auto it_nl = pimpl->neighborList->begin();
+            auto it_nl = getNeighborList()->begin();
             auto it_tops = pimpl->topologies.cbegin();
             const thd::barrier barrier{config->nThreads()};
 
@@ -269,13 +270,15 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
         : pimpl(std::make_unique<Impl>(context, taf, config)), config(config) {
-    pimpl->neighborList = std::make_unique<neighbor_list>(*getParticleData(), *context, *config);
     pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             pimpl->data().registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : pimpl->topologies) {
                     if(!top->isDeactivated()) top->permuteIndices(indices);
                 }
             }));
+    pimpl->neighborList = std::unique_ptr<neighbor_list>(
+            new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
+    );
 }
 
 CPUStateModel::data_t const *const CPUStateModel::getParticleData() const {

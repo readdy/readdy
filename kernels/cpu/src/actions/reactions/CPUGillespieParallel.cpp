@@ -33,7 +33,7 @@
 #include <queue>
 
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 
 
 namespace readdy {

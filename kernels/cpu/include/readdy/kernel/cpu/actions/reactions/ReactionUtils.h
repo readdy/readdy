@@ -33,7 +33,7 @@
 #include <cmath>
 #include <readdy/model/RandomProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
-#include <readdy/kernel/cpu/nl/NeighborList.h>
+#include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 #include <readdy/common/logging.h>
 #include "Event.h"
 
