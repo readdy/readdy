@@ -60,6 +60,7 @@ using reactions_u_a_t = readdy::kernel::scpu::actions::reactions::SCPUUncontroll
 
 void exportActions(py::module &proto) {
     using scpu_kernel_t = readdy::kernel::scpu::SCPUKernel;
+    using namespace pybind11::literals;
     py::class_<action_factory_t>(proto, "ActionFactory")
             .def("create_add_particles", [](const action_factory_t& self, const std::vector<readdy::model::Particle> &p) {
                 std::unique_ptr<action_t> action_ = self.createAction<add_particle_t>(p);
@@ -87,26 +88,26 @@ void exportActions(py::module &proto) {
     py::class_ <action_t, action_wrap_t> action(proto, "Action");
     action
             .def(py::init<>())
-            .def("perform", &action_t::perform);
+            .def("perform", &action_t::perform, "measure"_a = false, "measure_label"_a = "");
 
     py::class_<add_particle_t>(proto, "AddParticles", action)
-            .def("perform", &add_particle_t::perform);
+            .def("perform", &add_particle_t::perform, "measure"_a = false, "measure_label"_a = "");
 
     py::class_<readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegratorBase", action);
     py::class_<euler_integrator_t, readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegrator")
             .def(py::init<scpu_kernel_t *, readdy::scalar>())
-            .def("perform", &euler_integrator_t::perform);
+            .def("perform", &euler_integrator_t::perform, "measure"_a = false, "measure_label"_a = "");
 
     py::class_<readdy::model::actions::CalculateForces>(proto, "CalculateForcesBase", action)
-            .def("perform", &readdy::model::actions::CalculateForces::perform);
+            .def("perform", &readdy::model::actions::CalculateForces::perform, "measure"_a = false, "measure_label"_a = "");
     py::class_<forces_t, readdy::model::actions::CalculateForces>(proto, "CalculateForces")
             .def(py::init<scpu_kernel_t *>())
-            .def("perform", &forces_t::perform);
+            .def("perform", &forces_t::perform, "measure"_a = false, "measure_label"_a = "");
 
     py::class_<readdy::model::actions::UpdateNeighborList>(proto, "UpdateNeighborListBase", action);
     py::class_<neighbor_list_t, readdy::model::actions::UpdateNeighborList>(proto, "UpdateNeighborList")
             .def(py::init<scpu_kernel_t *>())
-            .def("perform", &neighbor_list_t::perform);
+            .def("perform", &neighbor_list_t::perform, "measure"_a = false, "measure_label"_a = "");
 
     /**
      *
