@@ -56,8 +56,8 @@ public:
         long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
         const auto elapsedSeconds = (double) 1e-6 * (double) elapsed;
         std::unique_lock<std::mutex> lock(mutex);
-        cumulativeTime.at(label) += elapsedSeconds;
-        _counts.at(label)++;
+        cumulativeTime[label] += elapsedSeconds;
+        _counts[label]++;
     }
 
     static const cumulative_time_map &times() {
