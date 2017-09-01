@@ -43,7 +43,7 @@ class SCPUUncontrolledApproximation : public readdy::model::actions::reactions::
 public:
     SCPUUncontrolledApproximation(SCPUKernel* kernel, scalar timeStep);
 
-    void perform() override;
+    void perform(bool measure = false, const std::string &measureLabel = "") override;
 
     void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override;
 
@@ -82,7 +82,7 @@ public:
     SCPUGillespie(SCPUKernel *const kernel, scalar timeStep)
             : readdy::model::actions::reactions::Gillespie(timeStep), kernel(kernel) {};
 
-    void perform() override;
+    void perform(bool measure = false, const std::string &measureLabel = "") override;
 
 protected:
     SCPUKernel *const kernel;

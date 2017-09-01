@@ -60,7 +60,7 @@ public:
     AddParticles(Kernel *kernel, const std::vector<Particle> &particles);
     AddParticles(Kernel *kernel, const Particle& particle);
 
-    void perform() override;
+    void perform(bool measure = false, const std::string &measureLabel = "") override;
 
 protected:
     std::vector<Particle> particles;

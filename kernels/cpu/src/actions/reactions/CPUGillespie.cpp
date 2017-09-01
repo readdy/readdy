@@ -39,7 +39,8 @@ namespace reactions {
 
 CPUGillespie::CPUGillespie(CPUKernel *const kernel, scalar timeStep) : super(timeStep), kernel(kernel) {}
 
-void CPUGillespie::perform() {
+void CPUGillespie::perform(bool measure, const std::string &measureLabel) {
+    util::RAIITimer timer(measure, measureLabel);
     const auto &ctx = kernel->getKernelContext();
     if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
         return;

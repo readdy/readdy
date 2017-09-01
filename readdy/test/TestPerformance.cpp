@@ -147,51 +147,32 @@ protected:
         auto &&reactions = kernel->createAction<ReactionScheduler>(timeStep);
         kernel->getKernelContext().configure(verbose);
 
-        using timer = readdy::util::Timer;
-        readdy::scalar timeForces = 0, timeIntegrator = 0, timeNeighborList = 0, timeReactions = 0;
         neighborList->perform();
         {
-            timer c("forces", verbose);
-            forces->perform();
-            timeForces += c.getSeconds();
+            forces->perform(true, "forces");
         }
         for (readdy::time_step_type t = 0; t < steps; ++t) {
             if (verbose) {
                 readdy::log::debug("----------");
                 readdy::log::debug("t = {}", t);
             }
-            {
-                timer c("integrator", verbose);
-                integrator->perform();
-                timeIntegrator += c.getSeconds();
-            }
-            {
-                timer c("neighbor list 1", verbose);
-                neighborList->perform();
-                timeNeighborList += c.getSeconds();
-            }
-            {
-                timer c("reactions", verbose);
-                reactions->perform();
-                timeReactions += c.getSeconds();
-            }
-            {
-                timer c("neighbor list 2", verbose);
-                neighborList->perform();
-                timeNeighborList += c.getSeconds();
-            }
-            {
-                timer c("forces", verbose);
-                forces->perform();
-                timeForces += c.getSeconds();
-            }
+            integrator->perform(true, "integrator");
+            neighborList->perform(true, "neighbor list 1");
+            reactions->perform(true, "reactions");
+            neighborList->perform(true, "neighbor list 2");
+            forces->perform(true, "forces");
         }
         clearNeighborList->perform();
         readdy::log::critical("DONE!");
-        timeForces /= steps + 1;
-        timeIntegrator /= steps;
-        timeNeighborList /= steps;
-        timeReactions /= steps;
+        using timer = readdy::util::Timer;
+        timeForces = timer::times().at("forces");
+        timeIntegrator = timer::times().at("integrator");
+        timeNeighborList = timer::times().at("neighbor list 1") + timer::times().at("neighbor list 2");
+        timeReactions = timer::times().at("reactions");
+        timeForces /= timer::counts().at("forces");
+        timeIntegrator /= timer::counts().at("integrator");
+        timeNeighborList /= timer::counts().at("neighbor list 1") + timer::counts().at("neighbor list 2");
+        timeReactions /= timer::counts().at("reactions");
         if (verbose) {
             std::cout << "--------------------------------------------------------------" << std::endl;
             std::cout << "Average time for calculating forces: " << timeForces << std::endl;
@@ -202,6 +183,7 @@ protected:
         }
         const std::array<readdy::scalar, 4> result = {timeForces, timeIntegrator, timeNeighborList, timeReactions};
         return result;
+
     }
 
     /** This is where the actual system gets set up: define reactions/potentials, add particles ... */
@@ -287,11 +269,11 @@ private:
     unsigned long numberA = 500, numberC = 1800;
     readdy::scalar boxLength = 100., rateOn = 1e-3, rateOff = 5e-5;
     std::map<std::string, readdy::scalar> radii{{"A", 1.5},
-                                        {"B", 3},
-                                        {"C", 3.12}};
+                                                {"B", 3},
+                                                {"C", 3.12}};
     std::map<std::string, readdy::scalar> diffusionConstants{{"A", .14},
-                                                     {"B", .07},
-                                                     {"C", .06}};
+                                                             {"B", .07},
+                                                             {"C", .06}};
 };
 
 const std::string ReactiveUniformHomogeneous::name = "ReactiveUniformHomogeneous";
@@ -365,11 +347,11 @@ private:
     unsigned long numberA = 500, numberC = 1800;
     readdy::scalar boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, forceConstant = 10.;
     std::map<std::string, readdy::scalar> radii{{"A", 1.5},
-                                        {"B", 3},
-                                        {"C", 3.12}};
+                                                {"B", 3},
+                                                {"C", 3.12}};
     std::map<std::string, readdy::scalar> diffusionConstants{{"A", .14},
-                                                     {"B", .07},
-                                                     {"C", .06}};
+                                                             {"B", .07},
+                                                             {"C", .06}};
 };
 
 const std::string ReactiveCollisiveUniformHomogeneous::name = "ReactiveCollisiveUniformHomogeneous";
@@ -437,11 +419,11 @@ private:
     unsigned long numberA = 500, numberC = 1800;
     readdy::scalar boxLength = 100., forceConstant = 10.;
     std::map<std::string, readdy::scalar> radii{{"A", 1.5},
-                                        {"B", 3},
-                                        {"C", 3.12}};
+                                                {"B", 3},
+                                                {"C", 3.12}};
     std::map<std::string, readdy::scalar> diffusionConstants{{"A", .14},
-                                                     {"B", .07},
-                                                     {"C", .06}};
+                                                             {"B", .07},
+                                                             {"C", .06}};
 };
 
 const std::string CollisiveUniformHomogeneous::name = "CollisiveUniformHomogeneous";
@@ -450,7 +432,7 @@ template<typename scenario_t, typename ReactionScheduler=readdy::model::actions:
 void scaleNumbersAndBoxsize(const std::string &kernelName) {
     /** Base values will be multiplied by factors. numbers[i] and boxlength[i] factors for same i will conserve particle density */
     const std::vector<readdy::scalar> numbers = {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.5,
-                                         3., 4., 5., 6., 7.};
+                                                 3., 4., 5., 6., 7.};
     std::vector<readdy::scalar> boxLengths(numbers.size());
     {
         auto x = 0;
@@ -547,7 +529,7 @@ void scaleNumbersAndSkin(const std::string &kernelName, bool reducedNumbers) {
     for (auto i = 0; i < numbersSize; ++i) {
         for (auto j = 0; j < skinSizesSize; ++j) {
             readdy::log::error("at numbers {} / {} = {}, skins {} / {} = {}", i, numbersSize, numbers[i], j,
-                                          skinSizesSize, skinSizes[j]);
+                               skinSizesSize, skinSizes[j]);
             std::map<std::string, readdy::scalar> factors;
             factors.emplace(std::make_pair(NUMBERS_FACTOR, numbers[i]));
             factors.emplace(std::make_pair(BOXLENGTHS_FACTOR, std::cbrt(numbers[i])));
@@ -652,22 +634,23 @@ TEST(TestPerformance, ReactiveCPU) {
     //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::Gillespie>("SingleCPU", true);
     //scaleNumbersAndSkin<CollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>("CPU_Dense", false);
     //scaleNumbersAndSkin<ReactiveCollisiveUniformHomogeneous, readdy::model::actions::reactions::GillespieParallel>(
-            //"CPU", false);
+    //"CPU", false);
     readdy::Simulation sim;
     sim.setKernel("CPU");
-    sim.setBoxSize(100, 100, 100);
+    sim.setBoxSize(10, 10, 10);
     sim.setPeriodicBoundary({true, true, true});
     sim.registerParticleType("A", 1.0, 1.0);
     sim.registerHarmonicRepulsionPotential("A", "A", 1.0);
-    for(int i = 0; i < 200; ++i) {
+    for (int i = 0; i < 20; ++i) {
         sim.addParticle("A", 0, 0, 0);
     }
     readdy::log::console()->set_level(spdlog::level::debug);
     {
-        using timer = readdy::util::Timer;
-        timer c {"timer"};
+        using timer = readdy::util::RAIITimer;
+        timer c(true, "timer");
         sim.runScheme(true).includeForces(false).withReactionScheduler("Gillespie")
-                .evaluateObservables(false).configureAndRun(100000, 1);
+                .evaluateObservables(false).configureAndRun(10, 1);
+        //readdy::log::debug("Time {}", readdy::util::Timer::times().at("timer"));
     }
 
 }

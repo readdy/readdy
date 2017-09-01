@@ -81,7 +81,8 @@ struct CPUNextSubvolumes::GridCell {
     }
 };
 
-void CPUNextSubvolumes::perform() {
+void CPUNextSubvolumes::perform(bool measure, const std::string &measureLabel) {
+    util::RAIITimer timer(measure, measureLabel);
     eventQueue.clear();
     setUpGrid();
     assignParticles();
