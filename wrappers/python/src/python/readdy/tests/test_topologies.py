@@ -38,6 +38,7 @@ class TestTopologies(unittest.TestCase):
     def test_sanity(self):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
+        sim.register_topology_type("TA")
         sim.box_size = common.Vec(10, 10, 10)
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
         sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
@@ -50,7 +51,7 @@ class TestTopologies(unittest.TestCase):
         np.testing.assert_equal(p3.get_position(), common.Vec(2, 1, 1))
         np.testing.assert_equal(p4.get_position(), common.Vec(3, 1, 1))
         particles = [p1, p2, p3, p4]
-        top = sim.add_topology(particles)
+        top = sim.add_topology("TA", particles)
         bond1 = HarmonicBondPotentialBond(0, 1, 2.5, 3.3)
         bond2 = HarmonicBondPotentialBond(0, 2, 2.5, 3.3)
         top.add_harmonic_bond_potential([bond1, bond2])

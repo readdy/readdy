@@ -69,7 +69,7 @@ public:
 
     void removeAllParticles() override;
 
-    readdy::model::top::GraphTopology *const addTopology(const std::vector<readdy::model::TopologyParticle> &particles) override;
+    readdy::model::top::GraphTopology *const addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
     const std::vector<readdy::model::Vec3> getParticlePositions() const override;
 

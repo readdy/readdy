@@ -40,29 +40,29 @@ class TestTopologyGraphs(unittest.TestCase):
         sim.set_kernel("SingleCPU")
         sim.box_size = common.Vec(10, 10, 10)
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
+        sim.register_topology_type("TA")
         sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("T", "T", 10., 11.)
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(4)]
-        labels = ["%s" % i for i in range(4)]
-        top = sim.add_topology(particles, labels)
+        top = sim.add_topology("TA", particles)
         graph = top.get_graph()
-        graph.add_edge("0", "1")
+        graph.add_edge(0, 1)
         graph.add_edge(1, 2)
-        graph.add_edge("2", "3")
+        graph.add_edge(2, 3)
         np.testing.assert_equal(len(graph.get_vertices()), 4)
         for v in graph.get_vertices():
-            if v.label == "0":
+            if v.particle_index == 0:
                 np.testing.assert_equal(len(v.neighbors()), 1)
                 np.testing.assert_equal(1 in [vv.get().particle_index for vv in v], True)
-            if v.label == "1":
+            if v.particle_index == 1:
                 np.testing.assert_equal(len(v.neighbors()), 2)
                 np.testing.assert_equal(0 in [vv.get().particle_index for vv in v], True)
                 np.testing.assert_equal(2 in [vv.get().particle_index for vv in v], True)
-            if v.label == "2":
+            if v.particle_index == 2:
                 np.testing.assert_equal(len(v.neighbors()), 2)
                 np.testing.assert_equal(1 in [vv.get().particle_index for vv in v], True)
                 np.testing.assert_equal(3 in [vv.get().particle_index for vv in v], True)
-            if v.label == "3":
+            if v.particle_index == 3:
                 np.testing.assert_equal(len(v.neighbors()), 1)
                 np.testing.assert_equal(2 in [vv.get().particle_index for vv in v], True)
         top.configure()
@@ -71,12 +71,13 @@ class TestTopologyGraphs(unittest.TestCase):
     def test_unconnected_graph(self):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
+        sim.register_topology_type("TA")
         sim.box_size = common.Vec(10, 10, 10)
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
         sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("T", "T", 10., 11.)
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(4)]
-        top = sim.add_topology(particles)
+        top = sim.add_topology("TA", particles)
         graph = top.get_graph()
         graph.add_edge(0, 1)
         graph.add_edge(1, 2)
@@ -87,13 +88,14 @@ class TestTopologyGraphs(unittest.TestCase):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
         sim.box_size = common.Vec(10, 10, 10)
+        sim.register_topology_type("TA")
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
         sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
         sim.register_particle_type("D", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("T", "T", 10., 11.)
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(3)]
         particles.append(sim.create_topology_particle("D", common.Vec(0, 0, 0)))
-        top = sim.add_topology(particles)
+        top = sim.add_topology("TA", particles)
         graph = top.get_graph()
         graph.add_edge(0, 1)
         graph.add_edge(1, 2)

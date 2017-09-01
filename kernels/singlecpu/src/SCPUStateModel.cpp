@@ -31,7 +31,6 @@
 
 #include <algorithm>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
-#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -174,7 +173,7 @@ void SCPUStateModel::removeAllParticles() {
     pimpl->particleData.clear();
 }
 
-readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::vector<readdy::model::TopologyParticle> &particles) {
+readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) {
     std::vector<std::size_t> ids = pimpl->particleData.addTopologyParticles(particles);
     std::vector<particle_type_type> types;
     types.reserve(ids.size());
@@ -182,7 +181,8 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(const std::
         types.push_back(p.getType());
     }
     auto it = _topologies.emplace_back(
-            std::make_unique<topology>(std::move(ids), std::move(types), std::cref(pimpl->context->topology_potentials()))
+            std::make_unique<topology>(type, std::move(ids), std::move(types),
+                                       pimpl->context->topology_registry().potential_configuration())
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {

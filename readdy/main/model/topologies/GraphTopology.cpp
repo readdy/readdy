@@ -38,9 +38,10 @@ namespace readdy {
 namespace model {
 namespace top {
 
-GraphTopology::GraphTopology(const Topology::particle_indices &particles, const types_vec &types,
+GraphTopology::GraphTopology(topology_type_type type,
+                             const Topology::particle_indices &particles, const types_vec &types,
                              const api::PotentialConfiguration& config)
-        : Topology(particles), config(config) {
+        : Topology(particles), config(config), _topology_type(type) {
     assert(types.size() == particles.size());
     std::size_t i = 0;
     for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
@@ -48,9 +49,10 @@ GraphTopology::GraphTopology(const Topology::particle_indices &particles, const 
     }
 }
 
-GraphTopology::GraphTopology(Topology::particle_indices &&particles, graph::Graph &&graph,
+GraphTopology::GraphTopology(topology_type_type type,
+                             Topology::particle_indices &&particles, graph::Graph &&graph,
                              const api::PotentialConfiguration& config)
-        : Topology(std::move(particles)), config(config), graph_(std::move(graph)) {
+        : Topology(std::move(particles)), config(config), graph_(std::move(graph)), _topology_type(type) {
     if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
         log::error("tried creating graph topology with {} vertices but only {} particles.",
                    GraphTopology::graph().vertices().size(), GraphTopology::getNParticles());
@@ -97,14 +99,8 @@ void GraphTopology::configure() {
             std::ostringstream ss;
 
             ss << "The edge " << v1->particleIndex;
-            if (!v1->label().empty()) {
-                ss << " (" << v1->label() << ")";
-            }
             ss << " -- " << v2->particleIndex;
-            if (!v2->label().empty()) {
-                ss << " (" << v2->label() << ")";
-            }
-            ss << " has no bond configured! (See KernelContext.configureTopologyBondPotential())";
+            ss << " has no bond configured! (See KernelContext.configure_bond_potential())";
 
             throw std::invalid_argument(ss.str());
         }
@@ -166,40 +162,16 @@ void GraphTopology::validate() {
     }
 }
 
-void GraphTopology::updateReactionRates() {
+void GraphTopology::updateReactionRates(const TopologyRegistry::structural_reactions &reactions) {
     _cumulativeRate = 0;
-    for(auto&& reaction : reactions_) {
-        const auto& r = std::get<0>(reaction);
-        const auto rate = r.rate(*this);
-        std::get<1>(reaction) = rate;
+    _reaction_rates.resize(reactions.size());
+    auto it = _reaction_rates.begin();
+    for(auto&& reaction : reactions) {
+        const auto rate = reaction.rate(*this);
+        *it = rate;
         _cumulativeRate += rate;
+        ++it;
     }
-    {
-        std::stringstream ss;
-        for(const auto& r : reactions_) {
-            ss << std::get<1>(r) << " + ";
-        }
-        const auto * address = static_cast<const void*>(this);
-        std::stringstream ss2;
-        ss2 << address;
-        std::string name = ss2.str();
-    }
-}
-
-void GraphTopology::addReaction(const reactions::TopologyReaction &reaction) {
-    reactions_.emplace_back(std::make_tuple(reaction, 0));
-}
-
-void GraphTopology::addReaction(reactions::TopologyReaction &&reaction) {
-    reactions_.emplace_back(std::make_tuple(std::move(reaction), 0));
-}
-
-const GraphTopology::topology_reactions &GraphTopology::registeredReactions() const {
-    return reactions_;
-}
-
-GraphTopology::topology_reactions &GraphTopology::registeredReactions() {
-    return reactions_;
 }
 
 std::vector<GraphTopology> GraphTopology::connectedComponents() {
@@ -226,10 +198,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             auto it_graphs = subGraphs.begin();
             auto it_particles = subGraphsParticles.begin();
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
-                components.emplace_back(std::move(*it_particles), std::move(*it_graphs), config);
-                for(const auto& reaction : reactions_) {
-                    components.back().addReaction(std::get<0>(reaction));
-                }
+                components.emplace_back(_topology_type, std::move(*it_particles), std::move(*it_graphs), config);
             }
         }
     }
@@ -275,6 +244,57 @@ void GraphTopology::appendParticle(particle_index newParticle, particle_type_typ
         log::critical("counterPart {} was not contained in topology, this should not happen", counterPart);
     }
 }
+
+topology_type_type &GraphTopology::type() {
+    return _topology_type;
+}
+
+const topology_type_type &GraphTopology::type() const {
+    return _topology_type;
+}
+
+const GraphTopology::topology_reaction_rates &GraphTopology::rates() const {
+    return _reaction_rates;
+}
+
+void GraphTopology::appendTopology(GraphTopology &other, Topology::particle_index otherParticle,
+                                   particle_type_type otherNewParticleType, Topology::particle_index thisParticle,
+                                   particle_type_type thisNewParticleType, topology_type_type newType) {
+    auto &otherGraph = other.graph();
+    auto &thisGraph = graph();
+
+    auto former_begin = otherGraph.vertices().begin();
+    auto former_n_vertices = particles.size();
+
+    auto other_vert = other.vertexForParticle(otherParticle);
+    auto this_vert = vertexForParticle(thisParticle);
+
+    // insert other particles into this' particles
+    particles.insert(std::end(particles), std::begin(other.particles), std::end(other.particles));
+    // move other graph into this graph
+    thisGraph.vertices().splice(thisGraph.vertices().end(), otherGraph.vertices());
+
+    for(auto it = former_begin; it != graph().vertices().end(); ++it) {
+        it->particleIndex = former_n_vertices;
+        ++former_n_vertices;
+    }
+
+    // add edge between the formerly two topologies
+    graph().addEdge(other_vert, this_vert);
+    other_vert->setParticleType(otherNewParticleType);
+    this_vert->setParticleType(thisNewParticleType);
+
+    _topology_type = newType;
+}
+
+graph::Graph::vertex_ref GraphTopology::vertexForParticle(Topology::particle_index particle) {
+    auto it = std::find(particles.begin(), particles.end(), particle);
+    if(it != particles.end()) {
+        return std::next(graph_.vertices().begin(), std::distance(particles.begin(), it));
+    }
+    return graph_.vertices().end();
+}
+
 
 }
 }

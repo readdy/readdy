@@ -83,24 +83,6 @@ TEST(TestTopologyGraphs, TestTuple) {
     EXPECT_EQ(map[std::make_tuple(2, 1)], 5);
 }
 
-TEST(TestTopologyGraphs, TestGraphWithNamedVertices) {
-    readdy::model::top::graph::Graph graph;
-    graph.addVertex(0, 0, "myVertex");
-    graph.addVertex(1, 0, "myVertex2");
-    graph.addEdge("myVertex", "myVertex2");
-    EXPECT_EQ(graph.vertices().size(), 2);
-    EXPECT_EQ(graph.vertices().front().label(), "myVertex");
-    EXPECT_EQ(graph.vertices().back().label(), "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().size(), 1);
-    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 1);
-    EXPECT_EQ(graph.namedVertex("myVertex").neighbors().front()->label(), "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().back()->label(), "myVertex");
-    graph.removeVertex("myVertex");
-    EXPECT_EQ(graph.vertices().size(), 1);
-    EXPECT_EQ(graph.vertices().front().label(), "myVertex2");
-    EXPECT_EQ(graph.namedVertex("myVertex2").neighbors().size(), 0);
-}
-
 TEST(TestTopologyGraphs, TestGraphWithIndices) {
     readdy::model::top::graph::Graph graph;
     graph.addVertex(0, 0);
@@ -146,33 +128,6 @@ TEST(TestTopologyGraphs, ConnectedSubComponents) {
     }
 }
 
-TEST(TestTopologyGraphs, ConnectedSubComponentsWithLabels) {
-    readdy::model::top::graph::Graph graph;
-    graph.addVertex(0, 0, "0");
-    graph.addVertex(1, 0, "1");
-    graph.addVertex(2, 0, "2");
-
-    auto vertex_ref_0 = graph.vertices().begin();
-    auto vertex_ref_1 = ++graph.vertices().begin();
-    auto vertex_ref_2 = ++(++graph.vertices().begin());
-
-    auto it = graph.vertices().begin();
-    auto it_adv = ++graph.vertices().begin();
-    graph.addEdge(it, it_adv);
-
-    auto subGraphs = graph.connectedComponentsDestructive();
-    ASSERT_EQ(subGraphs.size(), 2);
-    {
-        ASSERT_EQ(subGraphs[0].vertexLabelMapping().size(), 2);
-        ASSERT_EQ(subGraphs[0].namedVertexPtr("0").data(), vertex_ref_0);
-        ASSERT_EQ(subGraphs[0].namedVertexPtr("1").data(), vertex_ref_1);
-    }
-    {
-        ASSERT_EQ(subGraphs[1].vertexLabelMapping().size(), 1);
-        ASSERT_EQ(subGraphs[1].namedVertexPtr("2").data(), vertex_ref_2);
-    }
-}
-
 TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     auto &ctx = kernel->getKernelContext();
@@ -180,10 +135,11 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
 
-    ctx.configureTopologyBondPotential("Topology A", "Topology B", {1.0, 1.0});
-    ctx.configureTopologyBondPotential("Topology A", "Topology A", {1.0, 1.0});
-    ctx.configureTopologyAnglePotential("Topology B", "Topology A", "Topology A", {1.0, 1.0});
-    ctx.configureTopologyTorsionPotential("Topology A", "Topology B", "Topology A", "Topology A", {1.0, 1.0, 3.0});
+    ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {1.0, 1.0});
+    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {1.0, 1.0});
+    ctx.topology_registry().configure_angle_potential("Topology B", "Topology A", "Topology A", {1.0, 1.0});
+    ctx.topology_registry().configure_torsion_potential("Topology A", "Topology B", "Topology A", "Topology A",
+                                                        {1.0, 1.0, 3.0});
 
     ctx.setBoxSize(10, 10, 10);
     topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
@@ -191,7 +147,7 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology B")};
     topology_particle_t x_l{1, .1, 1, ctx.particle_types().id_of("Topology A")};
 
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     EXPECT_EQ(top->graph().vertices().size(), 4);
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();
@@ -203,10 +159,7 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     top->graph().addEdge(it++, it2++);
     EXPECT_TRUE(top->graph().isConnected());
 
-    top->graph().setVertexLabel(top->graph().firstVertex(), "begin");
-    top->graph().setVertexLabel(top->graph().lastVertex(), "end");
-
-    top->graph().addEdge("begin", "end");
+    top->graph().addEdge(top->graph().firstVertex(), top->graph().lastVertex());
     EXPECT_TRUE(top->graph().isConnected());
     top->configure();
 }
@@ -214,15 +167,15 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
 TEST(TestTopologyGraphs, TestFindNTuples) {
     using namespace ::testing;
     readdy::model::top::graph::Graph graph;
-    graph.addVertex(0, 0, "a");
-    graph.addVertex(1, 0, "b");
-    graph.addVertex(2, 0, "c");
-    graph.addVertex(3, 0, "d");
+    graph.addVertex(0, 0);
+    graph.addVertex(1, 0);
+    graph.addVertex(2, 0);
+    graph.addVertex(3, 0);
 
-    graph.addEdge("a", "b");
-    graph.addEdge("b", "c");
-    graph.addEdge("c", "d");
-    graph.addEdge("d", "a");
+    graph.addEdge(graph.firstVertex(), std::next(graph.firstVertex()));
+    graph.addEdge(std::next(graph.firstVertex()), std::next(graph.firstVertex(), 2));
+    graph.addEdge(std::next(graph.firstVertex(), 2), std::next(graph.firstVertex(), 3));
+    graph.addEdge(std::next(graph.firstVertex(), 3), graph.firstVertex());
 
     auto n_tuples = graph.findNTuples();
     const auto& tuples = std::get<0>(n_tuples);
@@ -233,10 +186,10 @@ TEST(TestTopologyGraphs, TestFindNTuples) {
     EXPECT_EQ(triples.size(), 4);
     EXPECT_EQ(quadruples.size(), 4);
 
-    auto a = graph.namedVertexPtr("a");
-    auto b = graph.namedVertexPtr("b");
-    auto c = graph.namedVertexPtr("c");
-    auto d = graph.namedVertexPtr("d");
+    auto a = graph.firstVertex();
+    auto b = std::next(graph.firstVertex());
+    auto c = std::next(graph.firstVertex(), 2);
+    auto d = std::next(graph.firstVertex(), 3);
 
     // tuples
     ASSERT_THAT(tuples, AnyOf(Contains(std::tie(a, b)), Contains(std::tie(b, a))));
@@ -261,13 +214,13 @@ TEST(TestTopologyGraphs, TestFindNTuples) {
 TEST(TestTopologyGraphs, TestFindNTuplesInTriangle) {
     using namespace ::testing;
     readdy::model::top::graph::Graph graph;
-    graph.addVertex(0, 0, "a");
-    graph.addVertex(1, 0, "b");
-    graph.addVertex(2, 0, "c");
+    graph.addVertex(0, 0);
+    graph.addVertex(1, 0);
+    graph.addVertex(2, 0);
 
-    graph.addEdge("a", "b");
-    graph.addEdge("b", "c");
-    graph.addEdge("c", "a");
+    graph.addEdge(graph.firstVertex(), std::next(graph.firstVertex()));
+    graph.addEdge(std::next(graph.firstVertex()), std::next(graph.firstVertex(), 2));
+    graph.addEdge(std::next(graph.firstVertex(), 2), graph.firstVertex());
 
     auto n_tuples = graph.findNTuples();
     const auto& tuples = std::get<0>(n_tuples);
@@ -278,9 +231,9 @@ TEST(TestTopologyGraphs, TestFindNTuplesInTriangle) {
     EXPECT_EQ(triples.size(), 3);
     EXPECT_EQ(quadruples.size(), 0);
 
-    auto a = graph.namedVertexPtr("a");
-    auto b = graph.namedVertexPtr("b");
-    auto c = graph.namedVertexPtr("c");
+    auto a = graph.firstVertex();
+    auto b = std::next(graph.firstVertex());
+    auto c = std::next(std::next(graph.firstVertex()));
 
     // tuples
     ASSERT_THAT(tuples, AnyOf(Contains(std::tie(a, b)), Contains(std::tie(b, a))));
@@ -297,10 +250,10 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.setBoxSize(10, 10, 10);
-    ctx.configureTopologyBondPotential("Topology A", "Topology A", {10, 5});
+    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 5});
     topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j});
     top->graph().addEdge(top->graph().vertices().begin(), ++top->graph().vertices().begin());
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
@@ -330,19 +283,17 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.setBoxSize(10, 10, 10);
-    ctx.configureTopologyBondPotential("Topology A", "Topology A", { 0., 1.});
-    ctx.configureTopologyAnglePotential("Topology A", "Topology A", "Topology A", { 1.0, readdy::util::numeric::pi() });
+    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {0., 1.});
+    ctx.topology_registry().configure_angle_potential("Topology A", "Topology A", "Topology A",
+                                                      {1.0, readdy::util::numeric::pi()});
     topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k});
     {
         auto it = top->graph().vertices().begin();
-        top->graph().setVertexLabel(it++, "a");
-        top->graph().setVertexLabel(it++, "b");
-        top->graph().setVertexLabel(it++, "c");
-        top->graph().addEdge("b", "a");
-        top->graph().addEdge("a", "c");
+        top->graph().addEdge(std::next(it), it);
+        top->graph().addEdge(it, std::next(it, 2));
     }
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
@@ -383,7 +334,7 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_l{1, 3, 1, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology({x_i, x_j, x_k, x_l});
+    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     auto it = top->graph().vertices().begin();
     auto it2 = ++top->graph().vertices().begin();
     while(it2 != top->graph().vertices().end()) {
@@ -391,8 +342,10 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
         std::advance(it, 1);
         std::advance(it2, 1);
     }
-    ctx.configureTopologyBondPotential("Topology A", "Topology A", { 0., 1.});
-    kernel->getKernelContext().configureTopologyTorsionPotential("Topology A", "Topology A", "Topology A", "Topology A", {1.0, 3, readdy::util::numeric::pi()});
+    ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {0., 1.});
+    kernel->getKernelContext().topology_registry().configure_torsion_potential("Topology A", "Topology A", "Topology A",
+                                                                               "Topology A",
+                                                                               {1.0, 3, readdy::util::numeric::pi()});
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
     std::vector<readdy::model::Vec3> collectedForces;
@@ -429,7 +382,7 @@ TEST(TestTopologyGraphs, TestAppendParticle) {
     api::PotentialConfiguration potentialConfiguration;
     potentialConfiguration.pairPotentials[std::make_tuple(0, 0)].emplace_back();
     potentialConfiguration.pairPotentials[std::make_tuple(0, 1)].emplace_back();
-    model::top::GraphTopology gt {{10, 1, 200}, {0, 0, 0}, potentialConfiguration};
+    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, potentialConfiguration};
     {
         auto it = gt.graph().vertices().begin();
         auto it2 = ++gt.graph().vertices().begin();

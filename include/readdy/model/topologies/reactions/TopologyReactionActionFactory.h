@@ -57,6 +57,8 @@ public:
     operation_ref createRemoveEdge(GraphTopology *const topology, const edge &edge) const {
         return std::make_unique<RemoveEdge>(topology, edge);
     };
+    
+    virtual operation_ref createChangeTopologyType(GraphTopology *const topology, const std::string& type_to) const = 0;
 
 };
 

@@ -58,6 +58,7 @@
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/api/PotentialConfiguration.h>
 #include <readdy/model/potentials/PotentialRegistry.h>
+#include <readdy/model/topologies/TopologyRegistry.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -147,17 +148,9 @@ public:
      */
     bool &recordReactionCounts();
 
-    void configureTopologyBondPotential(const std::string &type1, const std::string &type2, const api::Bond &bond);
+    top::TopologyRegistry &topology_registry();
 
-    void configureTopologyAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
-                                         const api::Angle &angle);
-
-    void configureTopologyTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
-                                           const std::string &type4, const api::TorsionAngle &torsionAngle);
-
-    api::PotentialConfiguration &topology_potentials();
-
-    const api::PotentialConfiguration &topology_potentials() const;
+    const top::TopologyRegistry &topology_registry() const;
 
     reactions::ReactionRegistry &reactions();
 
@@ -190,11 +183,10 @@ private:
     struct Impl;
     std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
 
-    api::PotentialConfiguration potentialConfiguration_{};
-
     ParticleTypeRegistry particleTypeRegistry_;
     reactions::ReactionRegistry reactionRegistry_;
     potentials::PotentialRegistry potentialRegistry_;
+    top::TopologyRegistry topologyRegistry_;
 
     std::unique_ptr<compartment_registry> compartmentRegistry = std::make_unique<compartment_registry>();
 

@@ -204,8 +204,8 @@ void KernelContext::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
 
 KernelContext::KernelContext()
         : pimpl(std::make_unique<KernelContext::Impl>()),
-          potentialRegistry_(std::cref(particleTypeRegistry_)),
-          reactionRegistry_(std::cref(particleTypeRegistry_)) {}
+          potentialRegistry_(particleTypeRegistry_),
+          reactionRegistry_(particleTypeRegistry_), topologyRegistry_(particleTypeRegistry_) {}
 
 Vec3::data_arr &KernelContext::getBoxSize() const {
     return pimpl->box_size;
@@ -231,6 +231,7 @@ void KernelContext::configure(bool debugOutput) {
     particleTypeRegistry_.configure();
     potentialRegistry_.configure();
     reactionRegistry_.configure();
+    topologyRegistry_.configure();
 
     /**
      * Info output
@@ -247,6 +248,7 @@ void KernelContext::configure(bool debugOutput) {
         particleTypeRegistry_.debug_output();
         potentialRegistry_.debug_output();
         reactionRegistry_.debug_output();
+        topologyRegistry_.debug_output();
     }
 
 }
@@ -279,39 +281,6 @@ const bool &KernelContext::recordReactionCounts() const {
 
 bool &KernelContext::recordReactionCounts() {
     return recordReactionCounts_;
-}
-
-api::PotentialConfiguration &KernelContext::topology_potentials() {
-    return potentialConfiguration_;
-}
-
-const api::PotentialConfiguration &KernelContext::topology_potentials() const {
-    return potentialConfiguration_;
-}
-
-void KernelContext::configureTopologyBondPotential(const std::string &type1, const std::string &type2,
-                                                   const api::Bond &bond) {
-    potentialConfiguration_.pairPotentials[std::make_tuple(particleTypeRegistry_.id_of(type1),
-                                                           particleTypeRegistry_.id_of(type2))].push_back(
-            bond);
-}
-
-void KernelContext::configureTopologyAnglePotential(const std::string &type1, const std::string &type2,
-                                                    const std::string &type3, const api::Angle &angle) {
-    potentialConfiguration_.anglePotentials[std::make_tuple(particleTypeRegistry_.id_of(type1),
-                                                            particleTypeRegistry_.id_of(type2),
-                                                            particleTypeRegistry_.id_of(type3))].push_back(
-            angle);
-}
-
-void KernelContext::configureTopologyTorsionPotential(const std::string &type1, const std::string &type2,
-                                                      const std::string &type3, const std::string &type4,
-                                                      const api::TorsionAngle &torsionAngle) {
-    potentialConfiguration_.torsionPotentials[std::make_tuple(particleTypeRegistry_.id_of(type1),
-                                                              particleTypeRegistry_.id_of(type2),
-                                                              particleTypeRegistry_.id_of(type3),
-                                                              particleTypeRegistry_.id_of(
-                                                                      type4))].push_back(torsionAngle);
 }
 
 reactions::ReactionRegistry &KernelContext::reactions() {
@@ -354,12 +323,20 @@ const scalar KernelContext::calculateMaxCutoff() const {
             max_cutoff = std::max(max_cutoff, reaction->getEductDistance());
         }
     }
-    for(const auto& entry : reactions().external_topology_reactions()) {
+    for(const auto& entry : topologyRegistry_.spatial_reaction_registry()) {
         for(const auto& reaction : entry.second) {
             max_cutoff = std::max(max_cutoff, reaction.radius());
         }
     }
     return max_cutoff;
+}
+
+top::TopologyRegistry &KernelContext::topology_registry() {
+    return topologyRegistry_;
+}
+
+const top::TopologyRegistry &KernelContext::topology_registry() const {
+    return topologyRegistry_;
 }
 
 KernelContext::~KernelContext() = default;

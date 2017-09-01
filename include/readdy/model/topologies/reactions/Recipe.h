@@ -53,8 +53,6 @@ public:
     using vertex_ref = topology_graph::vertex_ref;
     using vertex_cref = topology_graph::vertex_cref;
     using edge = topology_graph::edge;
-    using label_edge = topology_graph::label_edge;
-    using label_vertex = topology_graph::label;
     using graph_topology = GraphTopology;
 
     explicit Recipe(graph_topology &topology);
@@ -71,25 +69,17 @@ public:
 
     Recipe &changeParticleType(const vertex_ref &ref, const particle_type_type &to);
 
-    Recipe &changeParticleType(const label_vertex &of, const particle_type_type &to);
-
     Recipe &addEdge(const edge &edge);
 
     Recipe &addEdge(vertex_ref v1, vertex_ref v2);
-
-    Recipe &addEdge(const label_edge &labels);
-
-    Recipe &addEdge(const std::string& edge_label1, const std::string& edge_label2);
 
     Recipe &removeEdge(const edge &edge);
 
     Recipe &removeEdge(vertex_ref v1, vertex_ref v2);
 
-    Recipe &removeEdge(const label_edge &labels);
-
-    Recipe &removeEdge(const std::string& label1, const std::string& label2);
-
     Recipe &separateVertex(const vertex_ref &vertex);
+    
+    Recipe &changeTopologyType(const std::string &type);
 
     const reaction_operations &steps() const;
 

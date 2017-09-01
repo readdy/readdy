@@ -31,6 +31,7 @@
  */
 
 #include <readdy/model/ParticleTypeRegistry.h>
+#include <readdy/model/Utils.h>
 
 namespace readdy {
 namespace model {
@@ -87,6 +88,7 @@ scalar  ParticleTypeRegistry::diffusion_constant_of(const std::string &particleT
 void
 ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const scalar radius,
                           const particle_flavor flavor) {
+    util::validateTypeName(name);
     particle_type_type t_id = type_counter_++;
     type_mapping_.emplace(name, t_id);
     particle_info_.emplace(std::make_pair(t_id, ParticleTypeInfo{name, diffusionConst, radius, flavor, t_id}));
@@ -114,16 +116,9 @@ particle_type_type ParticleTypeRegistry::_id_of(const std::string &name) const {
 void ParticleTypeRegistry::debug_output() const {
     log::debug(" - particle types:");
     for(const auto& entry : particle_info_) {
-        auto flavorStr = [&entry]() -> std::string {
-            switch(entry.second.flavor) {
-                case model::particleflavor::NORMAL: return "NORMAL";
-                case model::particleflavor::TOPOLOGY: return "TOPOLOGY";
-                case model::particleflavor::MEMBRANE: return "MEMBRANE";
-                default: return "UNKNOWN";
-            }
-        }();
         log::debug("     * particle type \"{}\" with D={}, r={}, flavor={}, id={}", entry.second.name,
-                   entry.second.diffusionConstant, entry.second.radius, flavorStr, entry.second.typeId);
+                   entry.second.diffusionConstant, entry.second.radius,
+                   particleflavor::particle_flavor_to_str(entry.second.flavor), entry.second.typeId);
     }
 }
 

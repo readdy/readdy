@@ -138,8 +138,8 @@ void exportApi(py::module &api) {
                  "weight1"_a = .5, "weight2"_a = .5)
             .def("register_reaction_decay", &sim::registerDecayReaction, rvp::reference_internal,
                  "label"_a, "particle_type"_a, "rate"_a)
-            .def("register_external_topology_reaction", &sim::registerExternalTopologyReaction, "name"_a, "typeFrom1"_a,
-                 "typeFrom2"_a, "typeTo1"_a, "typeTo2"_a, "rate"_a, "radius"_a)
+            .def("register_spatial_topology_reaction", &sim::registerSpatialTopologyReaction,
+                 "descriptor"_a, "rate"_a, "radius"_a)
             .def("register_compartment_sphere", &sim::registerCompartmentSphere,
                  "conversion_map"_a, "name"_a, "origin"_a, "radius"_a, "larger_or_less"_a)
             .def("register_compartment_plane", &sim::registerCompartmentPlane, "conversion_map"_a, "name"_a,
@@ -154,8 +154,15 @@ void exportApi(py::module &api) {
             .def("configure_topology_dihedral_potential", &sim::configureTopologyTorsionPotential, "type1"_a,
                  "type2"_a, "type3"_a, "type4"_a, "force_constant"_a, "multiplicity"_a, "phi_0"_a,
                  "type"_a = readdy::api::TorsionType::COS_DIHEDRAL)
+            .def("register_topology_type", [](sim &self, const std::string& name) {
+                return self.registerTopologyType(name);
+            })
+            .def("register_structural_topology_reaction", &sim::registerStructuralTopologyReaction)
             .def("get_particles_for_topology", &sim::getParticlesForTopology, "topology"_a)
-            .def("add_topology", &sim::addTopology, rvp::reference, "particles"_a, "labels"_a = std::vector<std::string>())
+            .def("add_topology", [](sim &self, const std::string &name,
+                                    const std::vector<readdy::model::TopologyParticle> &particles) {
+                return self.addTopology(name, particles);
+            }, rvp::reference, "type"_a, "particles"_a)
             .def("current_topologies", &sim::currentTopologies)
             .def("set_kernel", static_cast<void (sim::*)(const std::string&)>(&sim::setKernel), "name"_a)
             .def("run_scheme_readdy", [](sim &self, bool defaults) {

@@ -69,6 +69,16 @@ private:
     particle_type_type _type_to;
 };
 
+class ChangeTopologyType : public Operation {
+public:
+    explicit ChangeTopologyType(const std::string &type_to);
+
+    virtual action_ptr create_action(topology_ref topology, factory_ref factory) const override;
+
+private:
+    std::string _type_to;
+};
+
 class AddEdge : public Operation {
 public:
     explicit AddEdge(const edge &edge);

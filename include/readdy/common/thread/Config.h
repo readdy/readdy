@@ -44,7 +44,7 @@ enum class ThreadMode {
 
 /**
  * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
- * CPU or CPU_Dense kernel.
+ * CPU kernel.
  */
 struct Config {
     /**

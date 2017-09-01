@@ -56,11 +56,17 @@ private:
 
     topology_reaction_events gatherEvents();
 
-    void handleInternalReaction(SCPUStateModel::topologies_vec &topologies,
-                                std::vector<SCPUStateModel::topology> &new_topologies,
-                                const TREvent &event, SCPUStateModel::topology_ref &topology) const;
+    bool eventsDependent(const TREvent& evt1, const TREvent& evt2) const;
 
-    void handleExternalReaction(SCPUStateModel::topology_ref &topology, const TREvent& event);
+    void handleStructuralReaction(SCPUStateModel::topologies_vec &topologies,
+                                  std::vector<SCPUStateModel::topology> &new_topologies,
+                                  const TREvent &event, SCPUStateModel::topology_ref &topology) const;
+
+    void handleTopologyParticleReaction(SCPUStateModel::topology_ref &topology, const TREvent &event);
+
+    void handleTopologyTopologyReaction(SCPUStateModel::topology_ref &t1, SCPUStateModel::topology_ref &t2,
+                                        const TREvent& event);
+
 };
 
 }

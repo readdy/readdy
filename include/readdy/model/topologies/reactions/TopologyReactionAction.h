@@ -104,6 +104,19 @@ private:
     edge label_edge_;
 };
 
+class ChangeTopologyType : public TopologyReactionAction {
+public:
+    ChangeTopologyType(GraphTopology *topology, topology_type_type newType);
+
+    void execute() override;
+
+    void undo() override;
+
+private:
+    topology_type_type _newType;
+    topology_type_type _prevType {0};
+};
+
 NAMESPACE_END(actions)
 NAMESPACE_END(reactions)
 NAMESPACE_END(top)

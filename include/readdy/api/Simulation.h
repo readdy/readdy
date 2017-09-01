@@ -36,6 +36,7 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/api/SimulationScheme.h>
+#include <readdy/model/topologies/reactions/StructuralTopologyReaction.h>
 #include "ObservableHandle.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -49,6 +50,8 @@ NAMESPACE_BEGIN(readdy)
 class Simulation {
     using particle = readdy::model::Particle;
 public:
+    using topology_reaction_mode = model::top::reactions::STRMode;
+
     /**
      * The default constructor. Currently only instantiates the pimpl.
      */
@@ -97,13 +100,16 @@ public:
      */
     readdy::model::Vec3 getBoxSize() const;
 
+    topology_type_type registerTopologyType(const std::string& name,
+                                            const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions = {});
+
     readdy::model::TopologyParticle
     createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const;
 
     bool kernelSupportsTopologies() const;
 
-    readdy::model::top::GraphTopology *addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
-                                                   const std::vector<std::string> &labels = {});
+    readdy::model::top::GraphTopology *addTopology(const std::string& type,
+                                                   const std::vector<readdy::model::TopologyParticle> &particles);
 
     std::vector<readdy::model::top::GraphTopology *> currentTopologies();
 
@@ -487,9 +493,10 @@ public:
     const short registerDecayReaction(const std::string &name, const std::string &particleType,
                                       scalar rate);
 
-    void registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
-                                          const std::string &typeFrom2, const std::string &typeTo1,
-                                          const std::string& typeTo2, scalar rate, scalar radius);
+    void registerSpatialTopologyReaction(const std::string &descriptor, scalar rate, scalar radius);
+
+    void registerStructuralTopologyReaction(const std::string &topologyType,
+                                            const model::top::reactions::StructuralTopologyReaction &reaction);
 
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,

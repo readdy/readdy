@@ -47,7 +47,7 @@ std::string to_gexf(graph::Graph& graph) {
         ss << "<nodes>";
         std::size_t id = 0;
         for (auto &v : graph.vertices()) {
-            ss << "<node id=\"" << v.particleIndex << "\" label=\"" << v.label() << "\" />";
+            ss << "<node id=\"" << v.particleIndex << "\"/>";
             v.visited = false;
             ++id;
         }

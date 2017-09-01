@@ -60,6 +60,9 @@ public:
 
     operation_ref createChangeParticleType(top::GraphTopology* topology, const vertex &v,
                                            const particle_type_type &type_to) const override;
+
+    virtual operation_ref
+    createChangeTopologyType(top::GraphTopology *const topology, const std::string &type_to) const override;
 };
 
 NAMESPACE_END(top)

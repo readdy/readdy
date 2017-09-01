@@ -23,66 +23,62 @@
 /**
  * << detailed description >>
  *
- * @file TopologyFusionReaction.h
+ * @file TopologyParticleTypeMap.h
  * @brief << brief description >>
  * @author clonker
- * @date 23.06.17
+ * @date 29.08.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <readdy/common/common.h>
-#include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/common/hash.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(top)
-NAMESPACE_BEGIN(reactions)
 
-class ExternalTopologyReaction {
+using topology_type_pair = std::tuple<topology_type_type, topology_type_type>;
+using topology_particle_type_tuple = std::tuple<particle_type_type, topology_type_type, particle_type_type, topology_type_type>;
+
+NAMESPACE_BEGIN(detail)
+
+class TopologyParticleTypeHasher {
 public:
-    ExternalTopologyReaction(const std::string &name, const util::particle_type_pair &types,
-                             const util::particle_type_pair &types_to, scalar rate, scalar radius);
-
-    ~ExternalTopologyReaction() = default;
-
-    ExternalTopologyReaction(const ExternalTopologyReaction &) = default;
-
-    ExternalTopologyReaction &operator=(const ExternalTopologyReaction &) = default;
-
-    ExternalTopologyReaction(ExternalTopologyReaction &&) = default;
-
-    ExternalTopologyReaction &operator=(ExternalTopologyReaction &&) = default;
-
-    const std::string &name() const;
-
-    const particle_type_type type1() const;
-
-    const particle_type_type type2() const;
-
-    const util::particle_type_pair &types() const;
-
-    const particle_type_type type_to1() const;
-
-    const particle_type_type type_to2() const;
-
-    const util::particle_type_pair &types_to() const;
-
-    const scalar rate() const;
-
-    const scalar radius() const;
-
-private:
-    std::string _name;
-    util::particle_type_pair _types;
-    util::particle_type_pair _types_to;
-    scalar _rate;
-    scalar _radius;
+    std::size_t operator()(const topology_particle_type_tuple& tup) const {
+        std::size_t seed {0};
+        if(std::get<1>(tup) > std::get<3>(tup)) {
+            util::hash::combine(seed, std::get<0>(tup));
+            util::hash::combine(seed, std::get<1>(tup));
+            util::hash::combine(seed, std::get<2>(tup));
+            util::hash::combine(seed, std::get<3>(tup));
+        } else {
+            util::hash::combine(seed, std::get<2>(tup));
+            util::hash::combine(seed, std::get<3>(tup));
+            util::hash::combine(seed, std::get<0>(tup));
+            util::hash::combine(seed, std::get<1>(tup));
+        }
+        return seed;
+    }
 };
 
-NAMESPACE_END(reactions)
+class TopologyParticleTypeEq {
+public:
+    bool operator()(const topology_particle_type_tuple &t1, const topology_particle_type_tuple &t2) const {
+        return t1 == t2
+               || (std::get<0>(t1) == std::get<2>(t2) && std::get<1>(t1) == std::get<3>(t2)
+                   && std::get<2>(t1) == std::get<0>(t2) && std::get<3>(t1) == std::get<1>(t2));
+    }
+};
+
+NAMESPACE_END(detail)
+
+template<typename T>
+using topology_particle_type_tuple_umap = std::unordered_map<topology_particle_type_tuple, T,
+                                                             detail::TopologyParticleTypeHasher,
+                                                             detail::TopologyParticleTypeEq>;
+
 NAMESPACE_END(top)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

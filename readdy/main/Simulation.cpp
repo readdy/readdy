@@ -24,10 +24,8 @@
 // Created by Moritz Hoffmann on 18/02/16.
 //
 #include <readdy/api/Simulation.h>
-#include <readdy/plugin/KernelProvider.h>
 #include <readdy/model/Utils.h>
 #include <readdy/model/observables/io/Trajectory.h>
-#include <readdy/io/File.h>
 
 namespace readdy {
 scalar Simulation::getKBT() const {
@@ -337,18 +335,11 @@ bool Simulation::kernelSupportsTopologies() const {
 }
 
 readdy::model::top::GraphTopology *
-Simulation::addTopology(const std::vector<readdy::model::TopologyParticle> &particles,
-                        const std::vector<std::string> &labels) {
-    assert(particles.size() == labels.size() || labels.empty());
+Simulation::addTopology(const std::string& type, const std::vector<readdy::model::TopologyParticle> &particles) {
     ensureKernelSelected();
     if (getSelectedKernel()->supportsTopologies()) {
-        auto top = getSelectedKernel()->getKernelStateModel().addTopology(particles);
-        auto it_labels = labels.begin();
-        auto it_vertices = top->graph().vertices().begin();
-        for (; it_labels != labels.end(); ++it_labels, ++it_vertices) {
-            top->graph().setVertexLabel(it_vertices, *it_labels);
-        }
-        return top;
+        auto typeId = getSelectedKernel()->getKernelContext().topology_registry().id_of(type);
+        return getSelectedKernel()->getKernelStateModel().addTopology(typeId, particles);
     }
     throw std::logic_error("the selected kernel does not support topologies!");
 }
@@ -367,15 +358,17 @@ void
 Simulation::configureTopologyBondPotential(const std::string &type1, const std::string &type2, scalar forceConstant,
                                            scalar length, api::BondType type) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().configureTopologyBondPotential(type1, type2, {forceConstant, length, type});
+    getSelectedKernel()->getKernelContext().topology_registry().configure_bond_potential(type1, type2,
+                                                                                         {forceConstant, length, type});
 }
 
 void Simulation::configureTopologyAnglePotential(const std::string &type1, const std::string &type2,
                                                  const std::string &type3, scalar forceConstant,
                                                  scalar equilibriumAngle, api::AngleType type) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().configureTopologyAnglePotential(type1, type2, type3,
-                                                                            {forceConstant, equilibriumAngle, type});
+    getSelectedKernel()->getKernelContext().topology_registry().configure_angle_potential(type1, type2, type3,
+                                                                                          {forceConstant,
+                                                                                           equilibriumAngle, type});
 }
 
 void Simulation::configureTopologyTorsionPotential(const std::string &type1, const std::string &type2,
@@ -383,7 +376,7 @@ void Simulation::configureTopologyTorsionPotential(const std::string &type1, con
                                                    scalar forceConstant, unsigned int multiplicity, scalar phi_0,
                                                    api::TorsionType type) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().configureTopologyTorsionPotential(
+    getSelectedKernel()->getKernelContext().topology_registry().configure_torsion_potential(
             type1, type2, type3, type4, {forceConstant, static_cast<scalar>(multiplicity), phi_0, type}
     );
 }
@@ -413,12 +406,9 @@ bool Simulation::doublePrecision() const {
     return pimpl->kernel->doublePrecision();
 }
 
-void Simulation::registerExternalTopologyReaction(const std::string &name, const std::string &typeFrom1,
-                                                  const std::string &typeFrom2, const std::string &typeTo1,
-                                                  const std::string &typeTo2, scalar rate, scalar radius) {
+void Simulation::registerSpatialTopologyReaction(const std::string &descriptor, scalar rate, scalar radius) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().reactions()
-            .add_external_topology_reaction(name, typeFrom1, typeFrom2, typeTo1, typeTo2, rate, radius);
+    getSelectedKernel()->getKernelContext().topology_registry().add_spatial_reaction(descriptor, rate, radius);
 }
 
 readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::KernelProvider::kernel_ptr &&kernel) {
@@ -427,6 +417,18 @@ readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::Ker
     }
     pimpl->kernel = std::move(kernel);
     return pimpl->kernel.get();
+}
+
+readdy::topology_type_type Simulation::registerTopologyType(const std::string &name,
+                                      const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions) {
+    ensureKernelSelected();
+    return getSelectedKernel()->getKernelContext().topology_registry().add_type(name, reactions);
+}
+
+void Simulation::registerStructuralTopologyReaction(const std::string &topologyType,
+                                                    const model::top::reactions::StructuralTopologyReaction &reaction) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().topology_registry().add_structural_reaction(topologyType, reaction);
 }
 
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}

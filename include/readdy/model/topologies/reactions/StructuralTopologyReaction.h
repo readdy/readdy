@@ -69,26 +69,26 @@ struct Mode {
     void create_children();
 };
 
-class TopologyReaction {
+class StructuralTopologyReaction {
 public:
     using mode = Mode;
     using reaction_recipe = Recipe;
-    using reaction_function = std::function<reaction_recipe(GraphTopology&)>;;
+    using reaction_function = std::function<reaction_recipe(GraphTopology&)>;
     using rate_function = std::function<scalar(const GraphTopology&)>;
 
-    TopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
+    StructuralTopologyReaction(const reaction_function &reaction_function, const rate_function &rate_function);
 
-    TopologyReaction(const reaction_function &reaction_function, const scalar &rate);
+    StructuralTopologyReaction(const reaction_function &reaction_function, const scalar &rate);
 
-    TopologyReaction(const TopologyReaction&) = default;
+    StructuralTopologyReaction(const StructuralTopologyReaction&) = default;
 
-    TopologyReaction& operator=(const TopologyReaction&) = default;
+    StructuralTopologyReaction& operator=(const StructuralTopologyReaction&) = default;
 
-    TopologyReaction(TopologyReaction&&) = default;
+    StructuralTopologyReaction(StructuralTopologyReaction&&) = default;
 
-    TopologyReaction& operator=(TopologyReaction&&) = default;
+    StructuralTopologyReaction& operator=(StructuralTopologyReaction&&) = default;
 
-    ~TopologyReaction() = default;
+    ~StructuralTopologyReaction() = default;
 
     scalar rate(const GraphTopology &topology) const;
 
@@ -110,7 +110,7 @@ public:
 
     void create_child_topologies_after_reaction();
 
-    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *const kernel);
+    std::vector<GraphTopology> execute(GraphTopology &topology, const Kernel *const kernel) const;
 
 private:
     reaction_function _reaction_function;

@@ -38,10 +38,6 @@ namespace model {
 namespace top {
 namespace reactions {
 
-Recipe &Recipe::changeParticleType(const Recipe::label_vertex &of, const particle_type_type &to) {
-    return changeParticleType(vertex_ref(&_topology.get().graph(), of), to);
-}
-
 Recipe::Recipe(GraphTopology &topology) : _topology(topology) {}
 
 Recipe &Recipe::changeParticleType(const Recipe::vertex_ref &ref, const particle_type_type &to) {
@@ -54,21 +50,9 @@ Recipe &Recipe::addEdge(const Recipe::edge &edge) {
     return *this;
 }
 
-Recipe &Recipe::addEdge(const label_edge &labels) {
-    return addEdge(std::make_tuple(
-            vertex_ref(&_topology.get().graph(), std::get<0>(labels)), vertex_ref(&_topology.get().graph(), std::get<1>(labels))
-    ));
-}
-
 Recipe &Recipe::removeEdge(const Recipe::edge &edge) {
     _steps.push_back(std::make_shared<op::RemoveEdge>(edge));
     return *this;
-}
-
-Recipe &Recipe::removeEdge(const Recipe::label_edge &labels) {
-    return removeEdge(std::make_tuple(
-            vertex_ref(&_topology.get().graph(), std::get<0>(labels)), vertex_ref(&_topology.get().graph(), std::get<1>(labels))
-    ));
 }
 
 Recipe &Recipe::separateVertex(const vertex_ref &vertex) {
@@ -78,12 +62,13 @@ Recipe &Recipe::separateVertex(const vertex_ref &vertex) {
     return *this;
 }
 
-const Recipe::reaction_operations &Recipe::steps() const {
-    return _steps;
+Recipe &Recipe::changeTopologyType(const std::string &type) {
+    _steps.push_back(std::make_shared<op::ChangeTopologyType>(type));
+    return *this;
 }
 
-Recipe &Recipe::addEdge(const std::string &edge_label1, const std::string &edge_label2) {
-    return addEdge(std::tie(edge_label1, edge_label2));
+const Recipe::reaction_operations &Recipe::steps() const {
+    return _steps;
 }
 
 Recipe &Recipe::addEdge(Recipe::vertex_ref v1, Recipe::vertex_ref v2) {
@@ -94,10 +79,6 @@ Recipe &Recipe::removeEdge(Recipe::vertex_ref v1, Recipe::vertex_ref v2) {
     return removeEdge(std::tie(v1, v2));
 }
 
-Recipe &Recipe::removeEdge(const std::string &label1, const std::string &label2) {
-    return removeEdge(std::tie(label1, label2));
-}
-
 Recipe::graph_topology &Recipe::topology() {
     return _topology;
 }
@@ -105,6 +86,7 @@ Recipe::graph_topology &Recipe::topology() {
 const Recipe::graph_topology &Recipe::topology() const {
     return _topology;
 }
+
 
 }
 }

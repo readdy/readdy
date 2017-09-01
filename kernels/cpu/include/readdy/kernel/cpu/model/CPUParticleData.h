@@ -60,6 +60,7 @@ public:
     using particle_type = readdy::model::Particle;
     using entries_t = std::vector<Entry>;
     using entries_update_t = std::vector<Entry>;
+    using entry_t = entries_t::value_type;
     using top_particle_type = readdy::model::TopologyParticle;
     using neighbors_t = std::vector<Neighbor>;
     using neighbor_list_t = std::vector<neighbors_t>;

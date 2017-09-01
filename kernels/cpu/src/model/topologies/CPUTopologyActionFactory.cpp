@@ -71,3 +71,11 @@ ctop::CPUTopologyActionFactory::createChangeParticleType(
     return std::make_unique<reactions::op::CPUChangeParticleType>(kernel->getCPUKernelStateModel().getParticleData(),
                                                                   topology, v, type_to);
 }
+
+top::reactions::actions::TopologyReactionActionFactory::operation_ref
+readdy::kernel::cpu::model::top::CPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
+                                                                                    const std::string &type_to) const {
+    return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
+            topology, kernel->getKernelContext().topology_registry().id_of(type_to)
+    );
+}
