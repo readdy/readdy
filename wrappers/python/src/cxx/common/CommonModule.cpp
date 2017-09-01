@@ -27,6 +27,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 #include <readdy/model/Vec3.h>
 #include <readdy/io/io.h>
@@ -136,6 +137,7 @@ void exportCommon(py::module& common) {
         py::module perf = common.def_submodule("perf", "ReaDDy performance module");
         perf.def("times", &readdy::util::Timer::times);
         perf.def("counts", &readdy::util::Timer::counts);
+        perf.def("clear", &readdy::util::Timer::clear);
     }
 
     py::class_<readdy::model::Vec3>(common, "Vec")

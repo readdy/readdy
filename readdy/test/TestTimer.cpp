@@ -23,21 +23,61 @@
 /**
  * << detailed description >>
  *
- * @file Timer.cpp
+ * @file TestTimer.cpp
  * @brief << brief description >>
  * @author chrisfroe
  * @date 01.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <gtest/gtest.h>
 #include <readdy/common/Timer.h>
 
-namespace readdy {
-namespace util {
+namespace {
 
-Timer::cumulative_time_map Timer::cumulativeTime {};
-Timer::counts_map Timer::_counts {};
-std::mutex Timer::mutex {};
+struct TestTimer : ::testing::Test {
+};
 
+using timer = readdy::util::Timer;
+using raii_timer = readdy::util::RAIITimer;
+
+TEST(TestTimer, RAIITimerMeasureOnce) {
+    {
+        raii_timer t(true, "label");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    EXPECT_GT(timer::times().at("label"), static_cast<timer::time>(0));
+    EXPECT_EQ(timer::counts().at("label"), 1);
 }
+
+TEST(TestTimer, RAIITimerMeasureMultiple) {
+    {
+        raii_timer t1(true, "label1");
+        raii_timer t2(true, "label2");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    {
+        raii_timer t3(true, "label2");
+        raii_timer t4(true, "label2");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    EXPECT_GT(timer::times().at("label1"), static_cast<timer::time>(0));
+    EXPECT_EQ(timer::counts().at("label1"), 1);
+    EXPECT_GT(timer::times().at("label2"), static_cast<timer::time>(0));
+    EXPECT_EQ(timer::counts().at("label2"), 3);
+}
+
+TEST(TestTimer, Clear) {
+    {
+        raii_timer t(true, "label");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    timer::clear();
+    {
+        raii_timer t(true, "label");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    EXPECT_EQ(timer::counts().at("label"), 1);
+}
+
 }

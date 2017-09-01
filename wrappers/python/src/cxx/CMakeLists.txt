@@ -38,10 +38,10 @@ set(SOURCE_FILES
         api/ApiModule.cpp
         prototyping/ExportModel.cpp
         prototyping/ExportPotentials.cpp
-        prototyping/ExportPrograms.cpp
+        prototyping/ExportActions.cpp
         prototyping/KernelWrap.h
         prototyping/ModelWrap.h
-        prototyping/ProgramWrap.h
+        prototyping/ActionWrap.h
         prototyping/PrototypingModule.cpp)
 
 pybind11_add_module(readdybinding ${SOURCE_FILES})

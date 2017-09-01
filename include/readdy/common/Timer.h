@@ -42,7 +42,8 @@ NAMESPACE_BEGIN(util)
 
 class Timer {
 public:
-    using cumulative_time_map = std::unordered_map<std::string, double>;
+    using time = double;
+    using cumulative_time_map = std::unordered_map<std::string, time>;
     using counts_map = std::unordered_map<std::string, std::size_t>;
 
     Timer(const std::string &label) : label(label) {}
@@ -54,7 +55,7 @@ public:
     void stop() const {
         std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
         long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-        const auto elapsedSeconds = (double) 1e-6 * (double) elapsed;
+        const auto elapsedSeconds = static_cast<time>(1e-6) * static_cast<time>(elapsed);
         std::unique_lock<std::mutex> lock(mutex);
         cumulativeTime[label] += elapsedSeconds;
         _counts[label]++;
@@ -66,6 +67,11 @@ public:
 
     static const counts_map &counts() {
         return _counts;
+    }
+    
+    static void clear() {
+        cumulativeTime.clear();
+        _counts.clear();
     }
 
 private:
@@ -83,7 +89,7 @@ public:
      * @param label the label of the timer
      * @param measure if the timer should measure, if false, it does nothing
      */
-    RAIITimer(bool measure, const std::string &label) : _measure(measure), timer(Timer(label)) {
+    RAIITimer(bool measure, const std::string &label) : _measure(measure), timer(label) {
         if (_measure) {
             timer.start();
         }

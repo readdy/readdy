@@ -41,7 +41,7 @@ namespace py = pybind11;
 
 using rvp = py::return_value_policy;
 
-void exportPrograms(py::module &);
+void exportActions(py::module &);
 
 void exportModelClasses(py::module &);
 
@@ -54,11 +54,11 @@ using scpu_kernel_t = scpu::SCPUKernel;
 
 using core_kernel_t = readdy::model::Kernel;
 using core_kernel_wrap_t = readdy::rpy::KernelWrap;
-using core_program_factory = readdy::model::actions::ActionFactory;
-using core_program_t = readdy::model::actions::Action;
+using core_action_factory = readdy::model::actions::ActionFactory;
+using core_action_t = readdy::model::actions::Action;
 
 void exportPrototyping(py::module& proto) {
-    exportPrograms(proto);
+    exportActions(proto);
     exportModelClasses(proto);
     exportPotentials(proto);
 

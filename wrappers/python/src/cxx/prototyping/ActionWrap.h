@@ -23,14 +23,14 @@
 /**
  * << detailed description >>
  *
- * @file ProgramWrap.h
+ * @file ActionWrap.h
  * @brief << brief description >>
  * @author clonker
  * @date 08.08.16
  */
 
-#ifndef READDY_MAIN_PROGRAMWRAP_H
-#define READDY_MAIN_PROGRAMWRAP_H
+#ifndef READDY_MAIN_ACTIONWRAP_H
+#define READDY_MAIN_ACTIONWRAP_H
 
 #include <readdy/model/actions/Action.h>
 #include <pybind11/pybind11.h>
@@ -39,7 +39,7 @@ namespace py = pybind11;
 
 namespace readdy {
 namespace rpy {
-class PyProgram : public readdy::model::actions::Action {
+class PyAction : public readdy::model::actions::Action {
     using super = readdy::model::actions::Action;
 public:
     using super::Action;
@@ -52,4 +52,4 @@ public:
 }
 }
 
-#endif //READDY_MAIN_PROGRAMWRAP_H
+#endif //READDY_MAIN_ACTIONWRAP_H

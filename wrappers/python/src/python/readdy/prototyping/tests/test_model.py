@@ -111,10 +111,10 @@ class TestModel(unittest.TestCase):
         self.ctx.potentials().add_external_order1(pot)
         particles = [pr.Particle(0, 0, .5, self.ctx.particle_types().id_of("A"))]
         add_particles_program = self.progs.create_add_particles(particles)
-        add_particles_program.perform()
+        add_particles_program.perform(False, "")
         self.ctx.configure()
         updforces = self.progs.create_update_forces()
-        updforces.perform()
+        updforces.perform(False, "")
 
         np.testing.assert_equal(self.model.get_energy(), 5.0, err_msg="the user defined potential returns energy=5.0")
 
@@ -156,10 +156,10 @@ class TestModel(unittest.TestCase):
         particles = [pr.Particle(0, 0, 0, self.ctx.particle_types().id_of("A")),
                      pr.Particle(1, 1, 1, self.ctx.particle_types().id_of("B"))]
         add_particles_program = self.progs.create_add_particles(particles)
-        add_particles_program.perform()
+        add_particles_program.perform(False, "")
         self.ctx.configure()
-        self.progs.create_update_neighbor_list().perform()
-        self.progs.create_update_forces().perform()
+        self.progs.create_update_neighbor_list().perform(False, "")
+        self.progs.create_update_forces().perform(False, "")
 
         np.testing.assert_almost_equal(self.model.get_energy(), np.sqrt(3))
 

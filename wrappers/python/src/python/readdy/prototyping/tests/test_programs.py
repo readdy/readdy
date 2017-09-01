@@ -73,7 +73,7 @@ class TestPrograms(unittest.TestCase):
         neighbor_list = factory.create_update_neighbor_list()
         reactions = factory.create_reactions_uncontrolled_approximation(1)
 
-        add_particles.perform()
+        add_particles.perform(False, "")
 
         state_model = kernel.get_kernel_state_model()
         positions = state_model.get_particle_positions()
