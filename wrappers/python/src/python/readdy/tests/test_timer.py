@@ -32,7 +32,7 @@ class TestTimer(unittest.TestCase):
         scheme = simulation.run_scheme_readdy(True)
         scheme.configure_and_run(10, 0.1)
         np.testing.assert_equal(perf.counts()["integrator"], 10)
-        np.testing.assert_equal(perf.times()["integrator"] > 0., True)
+        np.testing.assert_equal(perf.times()["integrator"] >= 0., True)
 
 
 if __name__ == '__main__':
