@@ -255,6 +255,10 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                         event.t2 = neighbor.type;
                                         event.idx1 = pair.idx1;
                                         event.idx2 = pair.idx2;
+                                        event.reaction_idx = reaction_index;
+                                        event.spatial = true;
+
+                                        events.push_back(event);
                                     }
                                     break;
                                 case readdy::model::top::reactions::STRMode::TT_ENZYMATIC: // fall through
@@ -266,6 +270,10 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                         event.t2 = neighbor.type;
                                         event.idx1 = pair.idx1;
                                         event.idx2 = pair.idx2;
+                                        event.reaction_idx = reaction_index;
+                                        event.spatial = true;
+
+                                        events.push_back(event);
                                     }
                                     break;
                                 case readdy::model::top::reactions::STRMode::TP_ENZYMATIC: // fall through
@@ -276,19 +284,23 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
                                         event.t2 = neighbor.type;
                                         event.idx1 = pair.idx1;
                                         event.idx2 = pair.idx2;
+                                        event.reaction_idx = reaction_index;
+                                        event.spatial = true;
+
+                                        events.push_back(event);
                                     } else if (entry.topology_index < 0 && neighbor.topology_index >= 0) {
                                         event.topology_idx = static_cast<std::size_t>(neighbor.topology_index);
                                         event.t1 = neighbor.type;
                                         event.t2 = entry.type;
                                         event.idx1 = pair.idx2;
                                         event.idx2 = pair.idx1;
+                                        event.reaction_idx = reaction_index;
+                                        event.spatial = true;
+
+                                        events.push_back(event);
                                     }
                                     break;
                             }
-                            event.reaction_idx = reaction_index;
-                            event.spatial = true;
-
-                            events.push_back(event);
                         }
                         ++reaction_index;
                     }
