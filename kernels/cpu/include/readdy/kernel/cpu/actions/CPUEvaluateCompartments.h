@@ -40,7 +40,7 @@ class CPUEvaluateCompartments : public readdy::model::actions::EvaluateCompartme
 public:
     explicit CPUEvaluateCompartments(CPUKernel* kernel);
 
-    void perform() override;
+    void perform(bool measure = false, const std::string &measureLabel = "") override;
 
 protected:
     CPUKernel *const kernel;

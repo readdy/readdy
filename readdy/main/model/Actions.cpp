@@ -57,7 +57,8 @@ AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &pa
 AddParticles::AddParticles(Kernel *const kernel, const Particle &particle)
         : AddParticles(kernel, std::vector<Particle>{particle}) {}
 
-void AddParticles::perform() {
+void AddParticles::perform(bool measure, const std::string &measureLabel) {
+    util::RAIITimer timer(measure, measureLabel);
     if(kernel != nullptr) {
         kernel->getKernelStateModel().addParticles(particles);
     } else {

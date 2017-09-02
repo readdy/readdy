@@ -54,7 +54,7 @@ public:
 
     virtual ~Action() = default;
 
-    virtual void perform() = 0;
+    virtual void perform(bool measure = false, const std::string &measureLabel = "") = 0;
 };
 
 class TimeStepDependentAction : public Action {

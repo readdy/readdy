@@ -22,7 +22,7 @@
 
 /**
  * Vital parts of the scheme api are defined in this header. First of all, there is the SimulationScheme. Its task is
- * to execute an integrator(program), a force(program), a reaction scheduler(program) and a neighborList (program)
+ * to execute an integrator(action), a force(action), a reaction scheduler(action) and a neighborList (action)
  * in a certain way. One example would be the ReaDDyScheme, which will configure the context, then:
  *
  * - create neighbor list
@@ -44,6 +44,7 @@
  * @file SimulationScheme.h
  * @brief Header file containing the SchemeConfigurator<T> and a corresponding SimulationScheme superclass definition.
  * @author clonker
+ * @author chrisfroe
  * @date 23.08.16
  */
 
@@ -112,19 +113,19 @@ public:
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
 
-        if (neighborList) neighborList->perform();
-        if (forces) forces->perform();
+        if (neighborList) neighborList->perform(true, "neighborList");
+        if (forces) forces->perform(true, "forces");
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
         while (continueFun(t)) {
-            if (integrator) integrator->perform();
-            if (neighborList) neighborList->perform();
+            if (integrator) integrator->perform(true, "integrator");
+            if (neighborList) neighborList->perform(true, "neighborList");
             // if (forces) forces->perform();
 
-            if (reactionScheduler) reactionScheduler->perform();
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform();
-            if (neighborList) neighborList->perform();
-            if (forces) forces->perform();
+            if (reactionScheduler) reactionScheduler->perform(true, "reactionScheduler");
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(true, "evaluateTopologyReactions");
+            if (neighborList) neighborList->perform(true, "neighborList");
+            if (forces) forces->perform(true, "forces");
             if (evaluateObservables) kernel->evaluateObservables(t + 1);
             ++t;
         }
@@ -263,21 +264,21 @@ public:
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
 
-        if (neighborList) neighborList->perform();
-        if (forces) forces->perform();
+        if (neighborList) neighborList->perform(true, "neighborList");
+        if (forces) forces->perform(true, "forces");
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
         while (fun(t)) {
-            if (integrator) integrator->perform();
-            if (compartments) compartments->perform();
-            if (neighborList) neighborList->perform();
+            if (integrator) integrator->perform(true, "integrator");
+            if (compartments) compartments->perform(true, "compartments");
+            if (neighborList) neighborList->perform(true, "neighborList");
             // if (forces) forces->perform();
 
-            if (reactionScheduler) reactionScheduler->perform();
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform();
-            if (compartments) compartments->perform();
-            if (neighborList) neighborList->perform();
-            if (forces) forces->perform();
+            if (reactionScheduler) reactionScheduler->perform(true, "reactionScheduler");
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(true, "evaluateTopologyReactions");
+            if (compartments) compartments->perform(true, "compartments");
+            if (neighborList) neighborList->perform(true, "neighborList");
+            if (forces) forces->perform(true, "forces");
             if (evaluateObservables) kernel->evaluateObservables(t + 1);
             ++t;
         }

@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -11,7 +11,7 @@
  *                                                                  *
  * This program is distributed in the hope that it will be useful,  *
  * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the     *
  * GNU Lesser General Public License for more details.              *
  *                                                                  *
  * You should have received a copy of the GNU Lesser General        *
@@ -23,33 +23,21 @@
 /**
  * << detailed description >>
  *
- * @file ProgramWrap.h
+ * @file Timer.cpp
  * @brief << brief description >>
- * @author clonker
- * @date 08.08.16
+ * @author chrisfroe
+ * @date 01.09.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#ifndef READDY_MAIN_PROGRAMWRAP_H
-#define READDY_MAIN_PROGRAMWRAP_H
-
-#include <readdy/model/actions/Action.h>
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
+#include <readdy/common/Timer.h>
 
 namespace readdy {
-namespace rpy {
-class PyProgram : public readdy::model::actions::Action {
-    using super = readdy::model::actions::Action;
-public:
-    using super::Action;
+namespace util {
 
-    virtual void perform() override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(void, readdy::model::actions::Action, perform,)
-    }
-};
+Timer::cumulative_time_map Timer::cumulativeTime {};
+Timer::counts_map Timer::_counts {};
+std::mutex Timer::mutex {};
+
 }
 }
-
-#endif //READDY_MAIN_PROGRAMWRAP_H

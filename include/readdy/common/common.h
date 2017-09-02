@@ -33,6 +33,7 @@
 #pragma once
 
 #include "logging.h"
+#include "Timer.h"
 
 NAMESPACE_BEGIN(readdy)
 using scalar = double;

@@ -26,53 +26,84 @@
  * @file Timer.h
  * @brief Header file containing definition and implementation of a RAII-Timer.
  * @author clonker
+ * @author chrisfroe
  * @date 13.07.16
  */
 
 #pragma once
+
 #include <memory>
 #include <chrono>
 
 #include "logging.h"
-#include "common.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
-/**
- * Timer class.
- */
+
 class Timer {
+public:
+    using time = double;
+    using cumulative_time_map = std::unordered_map<std::string, time>;
+    using counts_map = std::unordered_map<std::string, std::size_t>;
+
+    Timer(const std::string &label) : label(label) {}
+
+    void start() {
+        begin = std::chrono::high_resolution_clock::now();
+    }
+
+    void stop() const {
+        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+        long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+        const auto elapsedSeconds = static_cast<time>(1e-6) * static_cast<time>(elapsed);
+        std::unique_lock<std::mutex> lock(mutex);
+        cumulativeTime[label] += elapsedSeconds;
+        _counts[label]++;
+    }
+
+    static const cumulative_time_map &times() {
+        return cumulativeTime;
+    }
+
+    static const counts_map &counts() {
+        return _counts;
+    }
+    
+    static void clear() {
+        cumulativeTime.clear();
+        _counts.clear();
+    }
+
+private:
+    std::string label;
+    std::chrono::high_resolution_clock::time_point begin;
+    static cumulative_time_map cumulativeTime;
+    static counts_map _counts;
+    static std::mutex mutex;
+};
+
+class RAIITimer {
 public:
     /**
      * constructs a new timer
      * @param label the label of the timer
-     * @param print if the timer should print the elapsed time when it runs out of scope
+     * @param measure if the timer should measure, if false, it does nothing
      */
-    Timer(const std::string &label, bool print = true) : label(label), print(print) {}
-
-    /**
-     * the destructor of the Timer class. prints the elapsed time if Timer::print is true.
-     */
-    ~Timer() {
-        if (print) {
-            log::debug("Elapsed ({}): {} seconds", label, getSeconds());
+    RAIITimer(bool measure, const std::string &label) : _measure(measure), timer(label) {
+        if (_measure) {
+            timer.start();
         }
     }
 
-    /**
-     * returns the elapsed seconds
-     * @return the elapsed seconds
-     */
-    scalar getSeconds() {
-        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-        long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-        return (scalar) 1e-6 * (scalar) elapsed;
+    ~RAIITimer() {
+        if (_measure) {
+            timer.stop();
+        }
     }
 
-private :
-    std::chrono::high_resolution_clock::time_point begin = std::chrono::high_resolution_clock::now();
-    std::string label;
-    bool print;
+private:
+    Timer timer;
+    bool _measure;
 };
 NAMESPACE_END(util)
 NAMESPACE_END(readdy)

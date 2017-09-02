@@ -109,7 +109,8 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
     events.set_value(std::move(eventsUpdate));
 }
 
-void CPUUncontrolledApproximation::perform() {
+void CPUUncontrolledApproximation::perform(bool measure, const std::string &measureLabel) {
+    util::RAIITimer timer(measure, measureLabel);
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     auto &stateModel = kernel->getCPUKernelStateModel();

@@ -27,9 +27,11 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 #include <readdy/model/Vec3.h>
 #include <readdy/io/io.h>
+#include <readdy/common/Timer.h>
 #include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
@@ -131,6 +133,12 @@ void exportCommon(py::module& common) {
         py::module util = common.def_submodule("util", "ReaDDy util module");
         exportUtils(util);
     }
+    {
+        py::module perf = common.def_submodule("perf", "ReaDDy performance module");
+        perf.def("times", &readdy::util::Timer::times);
+        perf.def("counts", &readdy::util::Timer::counts);
+        perf.def("clear", &readdy::util::Timer::clear);
+    }
 
     py::class_<readdy::model::Vec3>(common, "Vec")
             .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar>())
@@ -151,4 +159,6 @@ void exportCommon(py::module& common) {
             .def("__getitem__", [](const readdy::model::Vec3 &self, unsigned int i) {
                 return self[i];
             });
+
+
 }

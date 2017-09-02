@@ -23,29 +23,33 @@
 /**
  * << detailed description >>
  *
- * @file SincleCPUUpdateStateModelProgram.h
+ * @file ActionWrap.h
  * @brief << brief description >>
  * @author clonker
- * @date 20.06.16
+ * @date 08.08.16
  */
-#pragma once
-#include <readdy/model/actions/Actions.h>
-#include <readdy/kernel/singlecpu/SCPUKernel.h>
+
+#ifndef READDY_MAIN_ACTIONWRAP_H
+#define READDY_MAIN_ACTIONWRAP_H
+
+#include <readdy/model/actions/Action.h>
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
 
 namespace readdy {
-namespace kernel {
-namespace scpu {
-namespace actions {
-class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
+namespace rpy {
+class PyAction : public readdy::model::actions::Action {
+    using super = readdy::model::actions::Action;
 public:
-    explicit SCPUCalculateForces(SCPUKernel *kernel);
+    using super::Action;
 
-    void perform(bool measure = false, const std::string &measureLabel = "") override;
-
-private:
-    SCPUKernel *kernel;
+    virtual void perform(bool measure = false, const std::string &measureLabel = "") override {
+        py::gil_scoped_acquire gil;
+        PYBIND11_OVERLOAD_PURE(void, readdy::model::actions::Action, perform,)
+    }
 };
 }
 }
-}
-}
+
+#endif //READDY_MAIN_ACTIONWRAP_H
