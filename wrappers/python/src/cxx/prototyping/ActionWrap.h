@@ -44,7 +44,7 @@ class PyAction : public readdy::model::actions::Action {
 public:
     using super::Action;
 
-    virtual void perform(bool measure = false, const std::string &measureLabel = "") override {
+    virtual void perform(util::PerformanceNode &node = util::PerformanceNode::root()) override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE(void, readdy::model::actions::Action, perform,)
     }

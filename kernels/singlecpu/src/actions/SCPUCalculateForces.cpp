@@ -37,8 +37,8 @@ namespace scpu {
 namespace actions {
 SCPUCalculateForces::SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {}
 
-void SCPUCalculateForces::perform(bool measure, const std::string &measureLabel) {
-    util::RAIITimer timer(measure, measureLabel);
+void SCPUCalculateForces::perform(util::PerformanceNode &node) {
+    auto timer = node.timeit();
     kernel->getKernelStateModel().calculateForces();
 }
 

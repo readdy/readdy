@@ -21,12 +21,13 @@
 
 
 /**
- * This file contains the declaration of the base class of all programs. They
- * have a name and potentially a templatized ProgramName struct.
+ * This file contains the declaration of the base class of all actions. They
+ * have a name and potentially a templatized ActionName struct.
  *
- * @file Program.h
- * @brief Declaration of the program base class.
+ * @file Action.h
+ * @brief Declaration of the action base class.
  * @author clonker
+ * @author chrisfroe
  * @date 08.04.16
  */
 
@@ -54,7 +55,12 @@ public:
 
     virtual ~Action() = default;
 
-    virtual void perform(bool measure = false, const std::string &measureLabel = "") = 0;
+    virtual void perform() = 0;
+
+    virtual void perform(util::PerformanceNode &node) {
+        auto t = node.timeit();
+        this->perform();
+    }
 };
 
 class TimeStepDependentAction : public Action {

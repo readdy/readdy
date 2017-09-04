@@ -43,8 +43,8 @@ public:
 
     explicit CPUCalculateForces(CPUKernel* kernel) : kernel(kernel) {}
 
-    void perform(bool measure = false, const std::string &measureLabel = "") override {
-        util::RAIITimer timer(measure, measureLabel);
+    void perform(util::PerformanceNode &node = util::PerformanceNode::root()) override {
+        auto timer = node.timeit();
         kernel->getKernelStateModel().calculateForces();
     }
 

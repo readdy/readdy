@@ -21,10 +21,16 @@
 
 
 /**
- * Header file for the Timer class, which measures execution time in RAII style.
+ * Header file for performance timers. Timers measure the time and write them to their target of type PerformanceData.
+ * Multiple timers may write to the target at the same time, thus they obtain a lock on the target.
+ *
+ * Timers are created by PerformanceNodes. The nodes actually own the PerformanceData.
+ * Nodes can create sub-nodes, a tree-like structure emerges.
+ * A node may create many timers that write to its PerformanceData in a thread-safe manner, by locking the target.
+ * On the other hand, creating sub-nodes is not designed for multi-threaded use.
  *
  * @file Timer.h
- * @brief Header file containing definition and implementation of a RAII-Timer.
+ * @brief Header file for performance timers.
  * @author clonker
  * @author chrisfroe
  * @date 13.07.16
@@ -34,76 +40,102 @@
 
 #include <memory>
 #include <chrono>
+#include <utility>
 
 #include "logging.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 
+struct PerformanceData {
+    using time = double;
+    PerformanceData(time t, std::size_t c) : cumulativeTime(t), count(c) {}
+    time cumulativeTime = 0.;
+    std::size_t count = 0;
+    std::mutex mutex;
+};
+
 class Timer {
 public:
-    using time = double;
-    using cumulative_time_map = std::unordered_map<std::string, time>;
-    using counts_map = std::unordered_map<std::string, std::size_t>;
-
-    Timer(const std::string &label) : label(label) {}
-
-    void start() {
-        begin = std::chrono::high_resolution_clock::now();
+    explicit Timer(PerformanceData &target, bool measure) : target(target), measure(measure) {
+        if (measure) {
+            begin = std::chrono::high_resolution_clock::now();
+        }
     }
 
-    void stop() const {
-        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-        long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-        const auto elapsedSeconds = static_cast<time>(1e-6) * static_cast<time>(elapsed);
-        std::unique_lock<std::mutex> lock(mutex);
-        cumulativeTime[label] += elapsedSeconds;
-        _counts[label]++;
+    ~Timer() noexcept {
+        if (measure) {
+            std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+            long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+            const auto elapsedSeconds = static_cast<PerformanceData::time>(1e-6) * static_cast<PerformanceData::time>(elapsed);
+            std::unique_lock<std::mutex> lock(target.mutex);
+            target.cumulativeTime += elapsedSeconds;
+            target.count++;
+        }
     }
 
-    static const cumulative_time_map &times() {
-        return cumulativeTime;
-    }
+    Timer(const Timer &other) = delete;
 
-    static const counts_map &counts() {
-        return _counts;
-    }
-    
-    static void clear() {
-        cumulativeTime.clear();
-        _counts.clear();
-    }
+    Timer(Timer &&other) = default;
+
+    Timer &operator=(const Timer &other) = delete;
+
+    Timer &operator=(Timer &&other) = delete;
 
 private:
-    std::string label;
+    bool measure;
+    PerformanceData &target;
     std::chrono::high_resolution_clock::time_point begin;
-    static cumulative_time_map cumulativeTime;
-    static counts_map _counts;
-    static std::mutex mutex;
 };
 
-class RAIITimer {
+class PerformanceNode {
 public:
-    /**
-     * constructs a new timer
-     * @param label the label of the timer
-     * @param measure if the timer should measure, if false, it does nothing
-     */
-    RAIITimer(bool measure, const std::string &label) : _measure(measure), timer(label) {
-        if (_measure) {
-            timer.start();
+    using performance_node_ref = std::unique_ptr<PerformanceNode>;
+    PerformanceNode(const std::string &name, bool measure) : _name(name), _measure(measure), _data(0.,0) { }
+
+    PerformanceNode &subnode(const std::string &name) {
+        const auto& it = std::find_if(children.begin(), children.end(), [&name](const performance_node_ref& node){return node->_name == name;});
+        if (it == children.end()) {
+            children.push_back(std::make_unique<PerformanceNode>(name, _measure));
+            return *children.back();
+        }
+        return **it;
+    }
+
+    void clear() {
+        _data.cumulativeTime = 0.;
+        _data.count = 0;
+        for (auto &c : children) {
+            c->clear();
         }
     }
 
-    ~RAIITimer() {
-        if (_measure) {
-            timer.stop();
+    Timer timeit() {
+        return Timer(_data, _measure);
+    }
+
+    const PerformanceData &data() const {
+        return _data;
+    }
+
+    const PerformanceNode &child(const std::string &name) const {
+        const auto& it = std::find_if(children.begin(), children.end(), [&name](const performance_node_ref& node){return node->_name == name;});
+        if (it == children.end()) {
+            throw std::runtime_error(fmt::format("Child with name {} does not exist", name));
         }
+        return **it;
+    }
+
+    const std::size_t n_children() const {
+        return children.size();
     }
 
 private:
-    Timer timer;
+    std::string _name;
     bool _measure;
+    std::vector<performance_node_ref> children;
+    PerformanceData _data;
 };
+
 NAMESPACE_END(util)
 NAMESPACE_END(readdy)

@@ -47,7 +47,7 @@ public:
     CPUNextSubvolumes(const CPUKernel *const kernel, readdy::scalar timeStep);
     ~CPUNextSubvolumes();
 
-    virtual void perform(bool measure = false, const std::string &measureLabel = "") override;
+    virtual void perform(util::PerformanceNode &node = util::PerformanceNode::root()) override;
 
     readdy::scalar getMaxReactionRadius() const;
 private:

@@ -36,8 +36,8 @@ namespace actions {
 
 CPUEvaluateCompartments::CPUEvaluateCompartments(CPUKernel *const kernel) : kernel(kernel) {}
 
-void CPUEvaluateCompartments::perform(bool measure, const std::string &measureLabel) {
-    util::RAIITimer timer(measure, measureLabel);
+void CPUEvaluateCompartments::perform(util::PerformanceNode &node) {
+    auto timer = node.timeit();
     const auto &ctx = kernel->getKernelContext();
     const auto &compartments = ctx.getCompartments();
     for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {

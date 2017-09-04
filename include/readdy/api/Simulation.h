@@ -55,7 +55,7 @@ public:
     /**
      * The default constructor. Currently only instantiates the pimpl.
      */
-    Simulation();
+    Simulation(bool profile = true);
 
     /**
      * The destructor. Default behavior.

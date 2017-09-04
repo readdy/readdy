@@ -135,9 +135,22 @@ void exportCommon(py::module& common) {
     }
     {
         py::module perf = common.def_submodule("perf", "ReaDDy performance module");
-        perf.def("times", &readdy::util::Timer::times);
-        perf.def("counts", &readdy::util::Timer::counts);
-        perf.def("clear", &readdy::util::Timer::clear);
+        //perf.def("root", [](){return readdy::util::PerformanceNode::root();});
+        py::class_<readdy::util::PerformanceNode>(perf, "PerformanceNode")
+                .def("__getitem__", [](const readdy::util::PerformanceNode &self, const std::string &label) -> const readdy::util::PerformanceNode& {
+                    // todo parse string
+                    return self.child(label);
+                })
+                .def("__len__", [](const readdy::util::PerformanceNode &self) -> std::size_t {
+                    return self.n_children();
+                })
+                .def("clear", &readdy::util::PerformanceNode::clear)
+                .def("time", [](const readdy::util::PerformanceNode &self) -> readdy::util::PerformanceData::time {
+                    return self.data().cumulativeTime;
+                })
+                .def("count", [](const readdy::util::PerformanceNode &self) -> std::size_t {
+                    return self.data().count;
+                });
     }
 
     py::class_<readdy::model::Vec3>(common, "Vec")

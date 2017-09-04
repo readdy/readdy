@@ -149,30 +149,30 @@ protected:
 
         neighborList->perform();
         {
-            forces->perform(true, "forces");
+            //forces->perform(true, "forces");
         }
         for (readdy::time_step_type t = 0; t < steps; ++t) {
-            if (verbose) {
-                readdy::log::debug("----------");
-                readdy::log::debug("t = {}", t);
-            }
-            integrator->perform(true, "integrator");
-            neighborList->perform(true, "neighbor list 1");
-            reactions->perform(true, "reactions");
-            neighborList->perform(true, "neighbor list 2");
-            forces->perform(true, "forces");
+//            if (verbose) {
+//                readdy::log::debug("----------");
+//                readdy::log::debug("t = {}", t);
+//            }
+//            integrator->perform(true, "integrator");
+//            neighborList->perform(true, "neighbor list 1");
+//            reactions->perform(true, "reactions");
+//            neighborList->perform(true, "neighbor list 2");
+//            forces->perform(true, "forces");
         }
         clearNeighborList->perform();
         readdy::log::critical("DONE!");
         using timer = readdy::util::Timer;
-        timeForces = timer::times().at("forces");
-        timeIntegrator = timer::times().at("integrator");
-        timeNeighborList = timer::times().at("neighbor list 1") + timer::times().at("neighbor list 2");
-        timeReactions = timer::times().at("reactions");
-        timeForces /= timer::counts().at("forces");
-        timeIntegrator /= timer::counts().at("integrator");
-        timeNeighborList /= timer::counts().at("neighbor list 1") + timer::counts().at("neighbor list 2");
-        timeReactions /= timer::counts().at("reactions");
+//        timeForces = timer::times().at("forces");
+//        timeIntegrator = timer::times().at("integrator");
+//        timeNeighborList = timer::times().at("neighbor list 1") + timer::times().at("neighbor list 2");
+//        timeReactions = timer::times().at("reactions");
+//        timeForces /= timer::counts().at("forces");
+//        timeIntegrator /= timer::counts().at("integrator");
+//        timeNeighborList /= timer::counts().at("neighbor list 1") + timer::counts().at("neighbor list 2");
+//        timeReactions /= timer::counts().at("reactions");
         if (verbose) {
             std::cout << "--------------------------------------------------------------" << std::endl;
             std::cout << "Average time for calculating forces: " << timeForces << std::endl;
@@ -646,8 +646,8 @@ TEST(TestPerformance, ReactiveCPU) {
     }
     readdy::log::console()->set_level(spdlog::level::debug);
     {
-        using timer = readdy::util::RAIITimer;
-        timer c(true, "timer");
+//        using timer = readdy::util::RAIITimer;
+//        timer c(true, "timer");
         sim.runScheme(true).includeForces(false).withReactionScheduler("Gillespie")
                 .evaluateObservables(false).configureAndRun(10, 1);
         //readdy::log::debug("Time {}", readdy::util::Timer::times().at("timer"));

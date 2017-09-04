@@ -38,46 +38,35 @@ namespace {
 struct TestTimer : ::testing::Test {
 };
 
-using timer = readdy::util::Timer;
-using raii_timer = readdy::util::RAIITimer;
+using data = readdy::util::PerformanceData;
+using node = readdy::util::PerformanceNode;
 
-TEST(TestTimer, RAIITimerMeasureOnce) {
+TEST(TestTimer, TimerMeasureOnce) {
+    node n("label", true);
     {
-        raii_timer t(true, "label");
+        auto t = n.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    EXPECT_GT(timer::times().at("label"), static_cast<timer::time>(0));
-    EXPECT_EQ(timer::counts().at("label"), 1);
-}
-
-TEST(TestTimer, RAIITimerMeasureMultiple) {
-    {
-        raii_timer t1(true, "label1");
-        raii_timer t2(true, "label2");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    {
-        raii_timer t3(true, "label2");
-        raii_timer t4(true, "label2");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    EXPECT_GT(timer::times().at("label1"), static_cast<timer::time>(0));
-    EXPECT_EQ(timer::counts().at("label1"), 1);
-    EXPECT_GT(timer::times().at("label2"), static_cast<timer::time>(0));
-    EXPECT_EQ(timer::counts().at("label2"), 3);
+    EXPECT_GT(n.data().cumulativeTime, static_cast<data::time>(0));
+    EXPECT_EQ(n.data().count, 1);
 }
 
 TEST(TestTimer, Clear) {
+    node n1("1", true);
+    auto &n2 = readdy::util::PerformanceNode::root().subnode("2");
     {
-        raii_timer t(true, "label");
+        auto t1 = n1.timeit();
+        auto t2 = n2.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    timer::clear();
+    readdy::util::PerformanceNode::root().clear();
     {
-        raii_timer t(true, "label");
+        auto t1 = n1.timeit();
+        auto t2 = n2.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    EXPECT_EQ(timer::counts().at("label"), 1);
+    EXPECT_EQ(n1.data().count, 2);
+    EXPECT_EQ(n2.data().count, 1) << "root was cleared in between, thus only 1 call";
 }
 
 }

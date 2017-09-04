@@ -88,26 +88,26 @@ void exportActions(py::module &proto) {
     py::class_ <action_t, action_wrap_t> action(proto, "Action");
     action
             .def(py::init<>())
-            .def("perform", &action_t::perform, "measure"_a = false, "measure_label"_a = "");
+            .def("perform", [](action_t &self){self.perform();});
 
     py::class_<add_particle_t>(proto, "AddParticles", action)
-            .def("perform", &add_particle_t::perform, "measure"_a = false, "measure_label"_a = "");
+            .def("perform", [](add_particle_t &self){self.perform();});
 
     py::class_<readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegratorBase", action);
     py::class_<euler_integrator_t, readdy::model::actions::EulerBDIntegrator>(proto, "EulerBDIntegrator")
             .def(py::init<scpu_kernel_t *, readdy::scalar>())
-            .def("perform", &euler_integrator_t::perform, "measure"_a = false, "measure_label"_a = "");
+            .def("perform", [](euler_integrator_t &self){self.perform();});
 
     py::class_<readdy::model::actions::CalculateForces>(proto, "CalculateForcesBase", action)
-            .def("perform", &readdy::model::actions::CalculateForces::perform, "measure"_a = false, "measure_label"_a = "");
+            .def("perform", &readdy::model::actions::CalculateForces::perform);
     py::class_<forces_t, readdy::model::actions::CalculateForces>(proto, "CalculateForces")
             .def(py::init<scpu_kernel_t *>())
-            .def("perform", &forces_t::perform, "measure"_a = false, "measure_label"_a = "");
+            .def("perform", [](forces_t &self){self.perform();});
 
     py::class_<readdy::model::actions::UpdateNeighborList>(proto, "UpdateNeighborListBase", action);
     py::class_<neighbor_list_t, readdy::model::actions::UpdateNeighborList>(proto, "UpdateNeighborList")
             .def(py::init<scpu_kernel_t *>())
-            .def("perform", &neighbor_list_t::perform, "measure"_a = false, "measure_label"_a = "");
+            .def("perform", [](neighbor_list_t &self){self.perform();});
 
     /**
      *

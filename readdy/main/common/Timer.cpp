@@ -35,9 +35,5 @@
 namespace readdy {
 namespace util {
 
-Timer::cumulative_time_map Timer::cumulativeTime {};
-Timer::counts_map Timer::_counts {};
-std::mutex Timer::mutex {};
-
 }
 }

@@ -38,10 +38,12 @@
 NAMESPACE_BEGIN(readdy)
 
 struct Simulation::Impl {
+    Impl(bool profile) : performanceRoot("root", profile) {}
     plugin::KernelProvider::kernel_ptr kernel;
     std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables{};
     std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
     unsigned long counter = 0;
+    util::PerformanceNode performanceRoot;
 };
 
 template<typename T, typename... Args>
@@ -71,6 +73,6 @@ inline ObservableHandle Simulation::registerObservable(const std::function<void(
 template<typename SchemeType>
 inline readdy::api::SchemeConfigurator<SchemeType> Simulation::runScheme(bool useDefaults) {
     ensureKernelSelected();
-    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), useDefaults);
+    return readdy::api::SchemeConfigurator<SchemeType>(getSelectedKernel(), pimpl->performanceRoot, useDefaults);
 }
 NAMESPACE_END(readdy)
