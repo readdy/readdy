@@ -25,7 +25,6 @@
 #include <pybind11/numpy.h>
 
 #include <readdy/api/Simulation.h>
-#include <readdy/io/File.h>
 #include <readdy/common/nodelete.h>
 #include <readdy/api/PotentialConfiguration.h>
 #include "ExportSchemeApi.h"

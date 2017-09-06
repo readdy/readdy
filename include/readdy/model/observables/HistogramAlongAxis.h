@@ -33,6 +33,7 @@
 #pragma once
 
 #include <set>
+#include <readdy/io/BloscFilter.h>
 #include "Observable.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -57,7 +58,7 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     void append() override;
 
@@ -65,6 +66,8 @@ protected:
     std::set<unsigned int> typesToCount;
 
     unsigned int axis;
+
+    io::BloscFilter bloscFilter{};
 };
 
 NAMESPACE_END(observables)

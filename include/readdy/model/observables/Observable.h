@@ -43,6 +43,8 @@
 
 #pragma once
 
+#include <h5rd/h5rd.h>
+
 #include <readdy/common/common.h>
 #include <readdy/common/make_unique.h>
 #include <readdy/common/signals.h>
@@ -50,10 +52,6 @@
 #include <readdy/common/tuple_utils.h>
 
 NAMESPACE_BEGIN(readdy)
-
-NAMESPACE_BEGIN(io)
-class File;
-NAMESPACE_END(io)
 
 NAMESPACE_BEGIN(model)
 class Kernel;
@@ -73,7 +71,6 @@ using observable_type = signal_type::slot_type;
  */
 class ObservableBase {
 public:
-
     /**
      * Constructs an object of type ObservableBase. Needs a kernel and a stride, which is defaulted to 1, i.e.,
      * evaluation in every time step.
@@ -144,7 +141,7 @@ public:
      * @param dataSetName the name of the data set, automatically placed under the group /readdy/observables
      * @param flushStride performance parameter, determining the hdf5-internal chunk size
      */
-    void enableWriteToFile(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+    void enableWriteToFile(File &file, const std::string &dataSetName, unsigned int flushStride) {
         writeToFile = true;
         initializeDataSet(file, dataSetName, flushStride);
     }
@@ -170,7 +167,7 @@ protected:
      * @param dataSetName the name of the data set to be created
      * @param flushStride the flush stride, more specifically the internal hdf5 chunk size
      */
-    virtual void initializeDataSet(io::File &, const std::string &dataSetName, unsigned int flushStride) = 0;
+    virtual void initializeDataSet(File &, const std::string &dataSetName, unsigned int flushStride) = 0;
 
     /**
      * Called whenever result should be written into the file
@@ -312,7 +309,7 @@ protected:
      * @param dataSetName data set name
      * @param flushStride flush stride
      */
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override {
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override {
         throw std::runtime_error("not supported for combiner observables");
     }
 

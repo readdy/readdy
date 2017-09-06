@@ -32,9 +32,11 @@
 
 #pragma once
 
+
+#include <h5rd/h5rd.h>
+
 #include <readdy/common/common.h>
-#include <readdy/io/Group.h>
-#include <readdy/io/DataSet.h>
+#include <readdy/io/BloscFilter.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -43,8 +45,8 @@ NAMESPACE_BEGIN(util)
 
 class TimeSeriesWriter {
 public:
-    TimeSeriesWriter(io::Group &group, unsigned int chunkSize, const std::string &dsName = "time") :
-            dataSet(group.createDataSet<time_step_type>(dsName, {chunkSize}, {io::h5::UNLIMITED_DIMS})) {}
+    TimeSeriesWriter(h5rd::Group &group, unsigned int chunkSize, const std::string &dsName = "time")
+            : dataSet(group.createDataSet<time_step_type>(dsName, {chunkSize}, {h5rd::UNLIMITED_DIMS}, {&bloscFilter})) {}
 
     ~TimeSeriesWriter() = default;
 
@@ -57,15 +59,16 @@ public:
     TimeSeriesWriter &operator=(TimeSeriesWriter &&) = default;
 
     void append(const time_step_type t) {
-        dataSet.append({1}, &t);
+        dataSet->append({1}, &t);
     }
 
     void flush() {
-        dataSet.flush();
+        dataSet->flush();
     }
 
 private:
-    io::DataSet dataSet;
+    io::BloscFilter bloscFilter {};
+    std::unique_ptr<h5rd::DataSet> dataSet;
 };
 
 NAMESPACE_END(util)

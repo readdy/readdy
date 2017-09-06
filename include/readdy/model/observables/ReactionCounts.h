@@ -72,7 +72,7 @@ public:
 protected:
     void initialize(Kernel* kernel) override;
 
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     void append() override;
 

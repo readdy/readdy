@@ -35,6 +35,11 @@
 #include "logging.h"
 #include "Timer.h"
 
+NAMESPACE_BEGIN(h5rd)
+class File;
+class Group;
+NAMESPACE_END(h5rd)
+
 NAMESPACE_BEGIN(readdy)
 using scalar = double;
 using time_step_type = unsigned long;
@@ -55,5 +60,7 @@ constexpr scalar four = static_cast<scalar>(4.0);
 constexpr scalar five = static_cast<scalar>(5.0);
 constexpr scalar half = static_cast<scalar>(.5);
 NAMESPACE_END(c_)
+
+using File = h5rd::File;
 
 NAMESPACE_END(readdy)

@@ -42,10 +42,6 @@
 
 NAMESPACE_BEGIN(readdy)
 
-NAMESPACE_BEGIN(io)
-class File;
-NAMESPACE_END(io)
-
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
@@ -64,7 +60,7 @@ public:
     virtual void flush() override;
 
 protected:
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     void append() override;
 
@@ -87,7 +83,7 @@ public:
     virtual void flush() override;
 
 protected:
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     void append() override;
 

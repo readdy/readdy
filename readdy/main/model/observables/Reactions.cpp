@@ -42,10 +42,11 @@ namespace observables {
 
 struct Reactions::Impl {
     using reactions_record_t = readdy::model::reactions::ReactionRecord;
-    using reactions_writer_t = io::VLENDataSet;
+    using reactions_writer_t = h5rd::VLENDataSet;
     std::unique_ptr<reactions_writer_t> writer;
     std::unique_ptr<util::TimeSeriesWriter> time;
-    std::unique_ptr<readdy::io::Group> group;
+    std::unique_ptr<h5rd::Group> group;
+    std::unique_ptr<util::CompoundH5Types> h5types;
     bool firstWrite = true;
 };
 
@@ -58,18 +59,15 @@ void Reactions::flush() {
     if (pimpl->time) pimpl->time->flush();
 }
 
-void Reactions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void Reactions::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->writer) {
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        pimpl->group = std::make_unique<io::Group>(
+        h5rd::dimensions fs = {flushStride};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getReactionRecordTypes(file.ref()));
+        pimpl->group = std::make_unique<h5rd::Group>(
                 file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
-        {
-            auto dataSet = std::make_unique<Impl::reactions_writer_t>(
-                    pimpl->group->createVLENDataSet("records", fs, dims, util::ReactionRecordPODMemoryType(),
-                                                    util::ReactionRecordPODFileType()));
-            pimpl->writer = std::move(dataSet);
-        }
+        pimpl->writer = pimpl->group->createVLENDataSet("records", fs, dims, std::get<0>(*pimpl->h5types),
+                                                        std::get<1>(*pimpl->h5types));
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
     }
 }

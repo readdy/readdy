@@ -30,7 +30,6 @@
  */
 
 #include <readdy/model/observables/io/Trajectory.h>
-#include <readdy/io/File.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>
 
@@ -43,8 +42,9 @@ namespace observables {
 const std::string Trajectory::TRAJECTORY_GROUP_PATH = "/readdy/trajectory";
 
 struct Trajectory::Impl {
-    std::unique_ptr<io::VLENDataSet> dataSet;
-    std::unique_ptr<util::TimeSeriesWriter> time;
+    std::unique_ptr<h5rd::VLENDataSet> dataSet {nullptr};
+    std::unique_ptr<util::TimeSeriesWriter> time {nullptr};
+    std::unique_ptr<util::CompoundH5Types> h5types {nullptr};
 };
 
 
@@ -63,20 +63,19 @@ void Trajectory::evaluate() {
 void Trajectory::flush() {
     if (pimpl->dataSet) pimpl->dataSet->flush();
     if (pimpl->time) pimpl->time->flush();
-
 }
 
 Trajectory::~Trajectory() = default;
 
-void Trajectory::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void Trajectory::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getTrajectoryEntryTypes(file.parentFile()));
+        h5rd::dimensions fs = {flushStride};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         auto group = file.createGroup(
                 std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
-        auto dataSet = std::make_unique<io::VLENDataSet>(group.createVLENDataSet(
-                "records", fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()));
-        pimpl->dataSet = std::move(dataSet);
+        pimpl->dataSet = group.createVLENDataSet("records", fs, dims,
+                                                 std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }
@@ -87,32 +86,32 @@ void Trajectory::append() {
 }
 
 struct FlatTrajectory::Impl {
-    std::unique_ptr<readdy::io::DataSet> dataSet;
-    std::unique_ptr<readdy::io::DataSet> limits;
-    std::unique_ptr<util::TimeSeriesWriter> time;
+    std::unique_ptr<h5rd::DataSet> dataSet {nullptr};
+    std::unique_ptr<h5rd::DataSet> limits {nullptr};
+    std::unique_ptr<util::TimeSeriesWriter> time {nullptr};
+    std::unique_ptr<util::CompoundH5Types> h5types {nullptr};
     std::size_t current_limits[2]{0, 0};
 };
 
-FlatTrajectory::FlatTrajectory(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride),
-                                                                            pimpl(std::make_unique<Impl>()) {}
+FlatTrajectory::FlatTrajectory(Kernel *const kernel, unsigned int stride)
+        : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
-void FlatTrajectory::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void FlatTrajectory::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
+        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getTrajectoryEntryTypes(file.parentFile()));
         auto group = file.createGroup(
                 std::string(Trajectory::TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
         {
-            std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
-            std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
-            auto dataSet = std::make_unique<readdy::io::DataSet>(group.createDataSet(
-                    "records", fs, dims, util::TrajectoryEntryMemoryType(), util::TrajectoryEntryFileType()
-            ));
-            pimpl->dataSet = std::move(dataSet);
+            h5rd::dimensions fs = {flushStride};
+            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+            io::BloscFilter filter;
+            pimpl->dataSet = group.createDataSet("records", fs, dims, std::get<0>(*pimpl->h5types),
+                                                 std::get<1>(*pimpl->h5types), {&filter});
         }
         {
-            std::vector<readdy::io::h5::h5_dims> fs = {flushStride, 2};
-            std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, 2};
-            auto limits = std::make_unique<readdy::io::DataSet>(group.createDataSet<std::size_t>("limits", fs, dims));
-            pimpl->limits = std::move(limits);
+            h5rd::dimensions fs = {flushStride, 2};
+            h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, 2};
+            pimpl->limits = group.createDataSet<std::size_t>("limits", fs, dims);
         }
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 

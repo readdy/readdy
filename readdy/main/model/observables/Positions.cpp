@@ -32,7 +32,6 @@
 
 #include <readdy/model/observables/Positions.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
@@ -41,9 +40,10 @@ namespace model {
 namespace observables {
 
 struct Positions::Impl {
-    using writer_t = io::VLENDataSet;
+    using writer_t = h5rd::VLENDataSet;
     std::unique_ptr<writer_t> writer;
     std::unique_ptr<util::TimeSeriesWriter> time;
+    std::unique_ptr<util::CompoundH5Types> h5types;
 };
 
 Positions::Positions(Kernel *const kernel, unsigned int stride,
@@ -63,15 +63,14 @@ void Positions::append() {
 
 Positions::Positions(Kernel *const kernel, unsigned int stride) : Observable(kernel, stride) {}
 
-void Positions::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void Positions::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->writer) {
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.ref()));
+        h5rd::dimensions fs = {flushStride};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        auto dataSet = std::make_unique<io::VLENDataSet>(group.createVLENDataSet("data", fs, dims,
-                                                                                 util::Vec3MemoryType(),
-                                                                                 util::Vec3FileType()));
-        pimpl->writer = std::move(dataSet);
+        pimpl->writer = group.createVLENDataSet("data", fs, dims, std::get<0>(*pimpl->h5types),
+                                                std::get<1>(*pimpl->h5types));
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }

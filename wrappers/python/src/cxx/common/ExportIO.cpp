@@ -33,12 +33,11 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <spdlog/fmt/ostr.h>
-#include <readdy/io/File.h>
-#include <readdy/io/DataSet.h>
+#include <h5rd/h5rd.h>
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
-namespace io = readdy::io;
+namespace io = h5rd;
 
 template<typename T>
 void exportDataSet(py::module &io, const std::string &name) {
@@ -47,15 +46,16 @@ void exportDataSet(py::module &io, const std::string &name) {
     std::string base_name = "DataSet_";
     py::class_<dataset_t>(io, (base_name + name).c_str())
             .def("append", [](dataset_t &self, const py::array_t <T> &arr) {
-                self.append(std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.append(io::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             });
 }
 
 void exportIO(py::module &io) {
+    using namespace pybind11::literals;
     using file_t = io::File;
     using group_t = io::Group;
 
-    io.def("unlimited_dims", [] { return io::h5::UNLIMITED_DIMS; });
+    io.def("unlimited_dims", [] { return io::UNLIMITED_DIMS; });
 
     py::enum_<file_t::Action>(io, "FileAction")
             .value("CREATE", file_t::Action::CREATE)
@@ -70,58 +70,60 @@ void exportIO(py::module &io) {
             .value("CREATE_NON_EXISTING", file_t::Flag::CREATE_NON_EXISTING)
             .export_values();
 
-    py::class_<io::Object>(io, "Object").def("hid", &io::Object::hid);
+    py::class_<io::Object, std::shared_ptr<io::Object>>(io, "Object").def("hid", &io::Object::id);
 
-    py::class_<file_t, io::Object>(io, "File")
-            .def(py::init<const std::string &, file_t::Action, file_t::Flag>(), py::arg("path"), py::arg("action"),
-                 py::arg("flag") = file_t::Flag::OVERWRITE)
-            .def(py::init<const std::string &, file_t::Action, const std::vector<file_t::Flag> &>())
+    py::class_<file_t, std::shared_ptr<file_t>, io::Object>(io, "File", py::multiple_inheritance())
+            .def_static("open", [](const std::string &path, const io::File::Flag &flag) {
+                return io::File::open(path, flag);
+            }, "path"_a, "flag"_a = io::File::Flag::READ_WRITE)
+            .def_static("create", [](const std::string &path, const io::File::Flag &flag) {
+                return io::File::create(path, flag);
+            }, "path"_a, "flag"_a = io::File::Flag::OVERWRITE)
             .def("write_short", [](file_t &self, const std::string &name, const py::array_t<short> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_int", [](file_t &self, const std::string &name, const py::array_t<int> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_long", [](file_t &self, const std::string &name, const py::array_t<long> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_float", [](file_t &self, const std::string &name, const py::array_t<float> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_double", [](file_t &self, const std::string &name, const py::array_t<double> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_string", [](file_t &self, const std::string &name, const std::string &data) {
                 self.write(name, data);
             })
             .def("flush", &file_t::flush)
             .def("close", &file_t::close)
-            .def("create_group", &file_t::createGroup)
-            .def("get_root_group", [](file_t& self) { return self.getRootGroup(); });
+            .def("create_group", &file_t::createGroup);
 
-    py::class_<group_t, io::Object>(io, "Group")
+    py::class_<group_t, std::shared_ptr<group_t>, io::Object>(io, "Group", py::multiple_inheritance())
             .def("write_short", [](group_t &self, const std::string &name, const py::array_t<short> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_int", [](group_t &self, const std::string &name, const py::array_t<int> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_long", [](group_t &self, const std::string &name, const py::array_t<long> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_float", [](group_t &self, const std::string &name, const py::array_t<float> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_double", [](group_t &self, const std::string &name, const py::array_t<double> &arr) {
-                self.write(name, std::vector<io::h5::h5_dims>(arr.shape(), arr.shape() + arr.ndim()), arr.data());
+                self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
             .def("write_string", [](group_t &self, const std::string &name, const std::string &data) {
                 self.write(name, data);
             })
             .def("create_group", &group_t::createGroup, rvp::move)
             .def("subgroups", &group_t::subgroups)
-            .def("data_sets", &group_t::contained_data_sets)
-            .def("get_subgroup", &group_t::subgroup);
+            .def("data_sets", &group_t::containedDataSets)
+            .def("get_subgroup", &group_t::getSubgroup);
 
     //exportDataSet<short>(io, "short"); /* DataSet_short */
     //exportDataSet<int>(io, "int"); /* DataSet_int */

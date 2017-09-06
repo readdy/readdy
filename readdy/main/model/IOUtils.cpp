@@ -33,17 +33,17 @@
  */
 
 #include <readdy/model/IOUtils.h>
-#include <iostream>
 
 namespace readdy {
 namespace model {
 namespace ioutils {
 
-void writeReactionInformation(readdy::io::Group &group, const KernelContext &context) {
+void writeReactionInformation(h5rd::Group &group, const KernelContext &context) {
     auto subgroup = group.createGroup("./registered_reactions");
     // order1
     const auto &order1_reactions = context.reactions().order1_flat();
     auto n_reactions = order1_reactions.size();
+    auto types = getReactionInfoMemoryType(group.parentFile());
     if (n_reactions > 0) {
         std::vector<ReactionInfo> order1_info;
         for (const auto &r : order1_reactions) {
@@ -59,11 +59,11 @@ void writeReactionInformation(readdy::io::Group &group, const KernelContext &con
                 order1_info.push_back(info);
             }
         }
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        std::vector<readdy::io::h5::h5_dims> extent = {n_reactions};
-        auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, ReactionInfoMemoryType(),
-                                                           ReactionInfoFileType(), io::DataSetCompression::none);
-        order1_reaction_dset.append(extent, order1_info.data());
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        h5rd::dimensions extent = {n_reactions};
+        auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, std::get<0>(types),
+                                                           std::get<1>(types));
+        order1_reaction_dset->append(extent, order1_info.data());
     }
     // order2
     const auto &order2_reactions = context.reactions().order2_flat();
@@ -83,15 +83,17 @@ void writeReactionInformation(readdy::io::Group &group, const KernelContext &con
                 order2_info.push_back(info);
             }
         }
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        std::vector<readdy::io::h5::h5_dims> extent = {n_reactions};
-        auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, ReactionInfoMemoryType(),
-                                                           ReactionInfoFileType(), io::DataSetCompression::none);
-        order2_reaction_dset.append(extent, order2_info.data());
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        h5rd::dimensions extent = {n_reactions};
+        auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, std::get<0>(types),
+                                                           std::get<1>(types));
+        order2_reaction_dset->append(extent, order2_info.data());
     }
 }
 
-void writeParticleTypeInformation(readdy::io::Group &group, const KernelContext &context) {
+void writeParticleTypeInformation(h5rd::Group &group, const KernelContext &context) {
+    auto h5types = getParticleTypeInfoType(group.parentFile());
+
     const auto &types = context.particle_types().type_mapping();
     std::vector<ParticleTypeInfo> type_info_vec;
     for (const auto &p_type : types) {
@@ -100,15 +102,43 @@ void writeParticleTypeInformation(readdy::io::Group &group, const KernelContext 
         type_info_vec.push_back(info);
     }
     if (!type_info_vec.empty()) {
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
-        std::vector<readdy::io::h5::h5_dims> extent = {type_info_vec.size()};
-        auto dset = group.createDataSet("particle_types", extent, dims, ParticleTypeInfoMemoryType(),
-                                        ParticleTypeInfoFileType(), io::DataSetCompression::none);
-        dset.append(extent, type_info_vec.data());
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+        h5rd::dimensions extent = {type_info_vec.size()};
+        auto dset = group.createDataSet("particle_types", extent, dims, std::get<0>(h5types),
+                                        std::get<1>(h5types));
+        dset->append(extent, type_info_vec.data());
     }
 }
 
-void writeSimulationSetup(io::Group &group, const KernelContext &context) {
+std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoType(h5rd::Object::ParentFileRef ref) {
+    using namespace h5rd;
+    NativeCompoundType nct = NativeCompoundTypeBuilder(sizeof(ParticleTypeInfo), std::move(ref))
+            .insertString("name", offsetof(ParticleTypeInfo, name))
+            .insert<decltype(std::declval<ParticleTypeInfo>().type_id)>("type_id", offsetof(ParticleTypeInfo, type_id))
+            .insert<decltype(std::declval<ParticleTypeInfo>().diffusion_constant)>("diffusion_constant", offsetof(ParticleTypeInfo, diffusion_constant))
+            .build();
+    return std::make_tuple(nct, STDCompoundType(nct));
+};
+
+std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref) {
+    using namespace h5rd;
+    NativeCompoundType nct  = NativeCompoundTypeBuilder(sizeof(ReactionInfo), std::move(ref))
+            .insertString("name", offsetof(ReactionInfo, name))
+            .insert<decltype(std::declval<ReactionInfo>().index)>("index", offsetof(ReactionInfo, index))
+            .insert<decltype(std::declval<ReactionInfo>().id)>("id", offsetof(ReactionInfo, id))
+            .insert<decltype(std::declval<ReactionInfo>().n_educts)>("n_educts", offsetof(ReactionInfo, n_educts))
+            .insert<decltype(std::declval<ReactionInfo>().n_products)>("n_products", offsetof(ReactionInfo, n_products))
+            .insert<decltype(std::declval<ReactionInfo>().rate)>("rate", offsetof(ReactionInfo, rate))
+            .insert<decltype(std::declval<ReactionInfo>().educt_distance)>("educt_distance", offsetof(ReactionInfo, educt_distance))
+            .insert<decltype(std::declval<ReactionInfo>().product_distance)>("product_distance", offsetof(ReactionInfo, product_distance))
+            .insertArray<particle_type_type, 2>("educt_types", offsetof(ReactionInfo, educt_types))
+            .insertArray<particle_type_type, 2>("product_types", offsetof(ReactionInfo, product_types))
+            .build();
+    STDCompoundType sct (nct);
+    return std::make_tuple(nct, sct);
+};
+
+void writeSimulationSetup(h5rd::Group &group, const KernelContext &context) {
     writeParticleTypeInformation(group, context);
     writeReactionInformation(group, context);
 }

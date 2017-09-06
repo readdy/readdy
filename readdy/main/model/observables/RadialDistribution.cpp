@@ -31,7 +31,6 @@
  */
 
 #include <readdy/model/observables/RadialDistribution.h>
-#include <readdy/io/DataSet.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/common/numeric.h>
 #include <readdy/model/observables/io/Types.h>
@@ -44,7 +43,7 @@ namespace model {
 namespace observables {
 
 struct RadialDistribution::Impl {
-    using writer_t = readdy::io::DataSet;
+    using writer_t = h5rd::DataSet;
     std::unique_ptr<writer_t> writerRadialDistribution;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
@@ -132,7 +131,7 @@ void RadialDistribution::setBinBorders(const std::vector<scalar> &binBorders) {
 }
 
 RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride,
-                                       std::vector<scalar> binBorders,
+                                       const std::vector<scalar> &binBorders,
                                        const std::vector<std::string> &typeCountFrom,
                                        const std::vector<std::string> &typeCountTo, scalar particleToDensity)
         : RadialDistribution(kernel, stride, binBorders,
@@ -141,17 +140,16 @@ RadialDistribution::RadialDistribution(Kernel *const kernel, unsigned int stride
                              particleToDensity
 ) {}
 
-void RadialDistribution::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void RadialDistribution::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->writerRadialDistribution) {
         auto &centers = std::get<0>(result);
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride, centers.size()};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, centers.size()};
+        h5rd::dimensions fs = {flushStride, centers.size()};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, centers.size()};
         const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
         auto group = file.createGroup(path);
         log::debug("created group with path {}", path);
         group.write("bin_centers", centers);
-        auto dataSet = std::make_unique<Impl::writer_t>(group.createDataSet<scalar>("distribution", fs, dims));
-        pimpl->writerRadialDistribution = std::move(dataSet);
+        pimpl->writerRadialDistribution = group.createDataSet<scalar>("distribution", fs, dims, {&bloscFilter});
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }

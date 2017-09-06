@@ -30,8 +30,7 @@
 #include <pybind11/stl.h>
 
 #include <readdy/model/Vec3.h>
-#include <readdy/io/io.h>
-#include <readdy/common/Timer.h>
+#include <readdy/io/BloscFilter.h>
 #include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
@@ -123,7 +122,8 @@ void exportCommon(py::module& common) {
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
                        "\"err\", \"error\", \"critical\", \"off\".", "level"_a, "python_console_out"_a = true);
     common.def("register_blosc_hdf5_plugin", []() -> void {
-        readdy::io::blosc_compression::initialize();
+        readdy::io::BloscFilter filter;
+        filter.registerFilter();
     });
     {
         py::module io = common.def_submodule("io", "ReaDDy IO module");

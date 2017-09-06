@@ -32,8 +32,9 @@
 
 #pragma once
 
-#include <readdy/common/macros.h>
 #include <vector>
+#include <readdy/common/macros.h>
+#include <readdy/io/BloscFilter.h>
 #include "Observable.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -46,7 +47,7 @@ public:
                        std::vector<unsigned int> typeCountFrom, std::vector<unsigned int> typeCountTo,
                        scalar particleToDensity);
 
-    RadialDistribution(Kernel *const kernel, unsigned int stride, std::vector<scalar> binBorders,
+    RadialDistribution(Kernel *const kernel, unsigned int stride, const std::vector<scalar> &binBorders,
                        const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                        scalar particleToDensity);
 
@@ -62,7 +63,7 @@ protected:
 
     void setBinBorders(const std::vector<scalar> &binBorders);
 
-    void initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) override;
+    void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     void append() override;
 
@@ -72,6 +73,7 @@ protected:
     std::vector<scalar> counts;
     std::vector<unsigned int> typeCountFrom, typeCountTo;
     scalar particleToDensity;
+    readdy::io::BloscFilter bloscFilter;
 };
 
 NAMESPACE_END(observables)

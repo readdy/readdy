@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,27 +23,44 @@
 /**
  * << detailed description >>
  *
- * @file Types.h
+ * @file BloscFilter.h
  * @brief << brief description >>
  * @author clonker
- * @date 04/01/2017
+ * @date 06.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <hdf5.h>
-#include <readdy/common/macros.h>
+#include <h5rd/h5rd.h>
+
+#include <readdy/common/common.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(io)
-NAMESPACE_BEGIN(h5)
 
-using h5_handle = hid_t;
-using h5_dims = hsize_t;
-using h5_data_set_type = hid_t;
-using h5_group_info = H5G_info_t;
-const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
+class BloscFilter : public h5rd::Filter {
+public:
 
-NAMESPACE_END(h5)
+    enum Compressor {
+        BloscLZ, LZ4, LZ4HC, SNAPPY, ZLIB, ZSTD
+    };
+
+    explicit BloscFilter(Compressor compressor = Compressor::BloscLZ, unsigned int compressionLevel = 9,
+                         bool shuffle = true);
+
+    bool available() const override;
+
+    void activate(h5rd::PropertyList &plist) override;
+
+    void registerFilter() override;
+
+private:
+    bool shuffle;
+    Compressor compressor;
+    // 0 - no compression; 9 - maximal compression
+    unsigned int compressionLevel;
+};
+
 NAMESPACE_END(io)
 NAMESPACE_END(readdy)
