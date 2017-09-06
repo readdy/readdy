@@ -74,8 +74,8 @@ TEST(TestTimer, Clear) {
 TEST(TestTimer, Threaded) {
     node n("knoten", true);
     auto worker = [](std::size_t, node& nn){
-        nn.timeit();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        auto t = nn.timeit();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     };
     {
         readdy::util::thread::Config config;
@@ -95,9 +95,21 @@ TEST(TestTimer, Threaded) {
 
 TEST(TestTimer, SlashedPath) {
     node top("top", false);
-    auto &mid = top.subnode("mid");
-    auto &bot = mid.subnode("bot");
-    EXPECT_EQ(top.child("mid/bot").name(), "bot");
+    auto &mid = top.subnode("mid ");
+    auto &bot = mid.subnode(" bot");
+    EXPECT_EQ(top.child("mid/bot ").name(), "bot");
+}
+
+TEST(TestTimer, InvalidNodeName) {
+    auto createNode = [](){
+        node n("lk/afasov", false);
+    };
+    auto createSubNode = [](){
+        node n("validname", false);
+        auto &nn = n.subnode("invalid/name");
+    };
+    EXPECT_THROW(createNode(), std::invalid_argument);
+    EXPECT_THROW(createSubNode(), std::invalid_argument);
 }
 
 }

@@ -108,6 +108,8 @@ public:
 private:
     std::vector<std::string> parse(const std::string &path) const;
 
+    std::string validateName(const std::string &name) const;
+
     std::string _name;
     bool _measure;
     std::vector<performance_node_ref> children;

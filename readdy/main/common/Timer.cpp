@@ -36,14 +36,14 @@ namespace util {
 
 constexpr const char PerformanceNode::slash[];
 
-//todo slash is forbidden
-PerformanceNode::PerformanceNode(const std::string &name, bool measure) : _name(name), _measure(measure), _data(0., 0) {}
+PerformanceNode::PerformanceNode(const std::string &name, bool measure) : _name(validateName(name)), _measure(measure), _data(0., 0) { }
 
-//todo slash is forbidden
 PerformanceNode &PerformanceNode::subnode(const std::string &name) {
-    const auto &it = std::find_if(children.begin(), children.end(), [&name](const performance_node_ref &node) { return node->_name == name; });
+    auto validatedName = validateName(name);
+    const auto &it = std::find_if(children.begin(), children.end(),
+                                  [&validatedName](const performance_node_ref &node) { return node->_name == validatedName; });
     if (it == children.end()) {
-        children.push_back(std::make_unique<PerformanceNode>(name, _measure));
+        children.push_back(std::make_unique<PerformanceNode>(validatedName, _measure));
         return *children.back();
     }
     return **it;
@@ -131,6 +131,13 @@ const PerformanceNode &PerformanceNode::child(const std::string &path) const {
 
 const std::string &PerformanceNode::name() const {
     return _name;
+}
+
+std::string PerformanceNode::validateName(const std::string &name) const {
+    if (name.find(slash) != name.npos) {
+        throw std::invalid_argument(fmt::format("name {} contains forbidden char {}", name, slash));
+    }
+    return util::str::trim_copy(name);
 }
 
 Timer::Timer(PerformanceData &target, bool measure) : target(target), measure(measure) {
