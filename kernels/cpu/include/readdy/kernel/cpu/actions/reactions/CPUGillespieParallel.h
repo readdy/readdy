@@ -54,7 +54,7 @@ public:
     CPUGillespieParallel(CPUGillespieParallel&&) = delete;
     CPUGillespieParallel& operator=(CPUGillespieParallel&&) = delete;
 
-    void perform(util::PerformanceNode &node = util::PerformanceNode::root()) override;
+    void perform() override;
 
     void clear();
 

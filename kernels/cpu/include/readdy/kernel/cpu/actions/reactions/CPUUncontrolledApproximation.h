@@ -43,7 +43,7 @@ class CPUUncontrolledApproximation : public readdy::model::actions::reactions::U
 public:
     CPUUncontrolledApproximation(CPUKernel* kernel, readdy::scalar timeStep);
 
-    void perform(util::PerformanceNode &node = util::PerformanceNode::root()) override;
+    void perform() override;
 
     void registerReactionScheme_11(const std::string &reactionName, reaction_11 fun) override {
         throw std::runtime_error("not supported for cpu kernel thus far");

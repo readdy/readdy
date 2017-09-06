@@ -37,8 +37,7 @@ namespace kernel {
 namespace scpu {
 namespace actions {
 
-void SCPUUpdateNeighborList::perform(util::PerformanceNode &node) {
-    auto timer = node.timeit();
+void SCPUUpdateNeighborList::perform() {
     switch (operation) {
         case create:
             kernel->getKernelStateModel().updateNeighborList(skinSize > 0 ? skinSize : 0);

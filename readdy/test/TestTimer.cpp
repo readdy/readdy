@@ -53,20 +53,20 @@ TEST(TestTimer, TimerMeasureOnce) {
 
 TEST(TestTimer, Clear) {
     node n1("1", true);
-    auto &n2 = readdy::util::PerformanceNode::root().subnode("2");
+    node n2("2", true);
     {
         auto t1 = n1.timeit();
         auto t2 = n2.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    readdy::util::PerformanceNode::root().clear();
+    n2.clear();
     {
         auto t1 = n1.timeit();
         auto t2 = n2.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     EXPECT_EQ(n1.data().count, 2);
-    EXPECT_EQ(n2.data().count, 1) << "root was cleared in between, thus only 1 call";
+    EXPECT_EQ(n2.data().count, 1) << "n2 was cleared in between, thus only 1 call";
 }
 
 }

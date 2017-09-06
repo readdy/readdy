@@ -42,7 +42,7 @@ class CPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 public:
     CPUEulerBDIntegrator(CPUKernel *kernel, readdy::scalar timeStep);
 
-    void perform(util::PerformanceNode &node = util::PerformanceNode::root()) override;
+    void perform() override;
 
 private:
     CPUKernel *kernel;

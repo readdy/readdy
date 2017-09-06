@@ -24,16 +24,15 @@ import numpy as np
 import readdy._internal.readdybinding.common.perf as perf
 from readdy._internal.readdybinding.api import Simulation
 
+
 class TestTimer(unittest.TestCase):
     def test_timer_sanity(self):
-        perf.clear()
         simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
+        simulation.set_kernel("CPU")
         scheme = simulation.run_scheme_readdy(True)
         scheme.configure_and_run(10, 0.1)
-        np.testing.assert_equal(perf.counts()["integrator"], 10)
-        np.testing.assert_equal(perf.times()["integrator"] >= 0., True)
-
+        root = simulation.performance_root()
+        print(root["run"])
 
 if __name__ == '__main__':
     unittest.main()

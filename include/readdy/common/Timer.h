@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -57,22 +57,9 @@ struct PerformanceData {
 
 class Timer {
 public:
-    explicit Timer(PerformanceData &target, bool measure) : target(target), measure(measure) {
-        if (measure) {
-            begin = std::chrono::high_resolution_clock::now();
-        }
-    }
+    explicit Timer(PerformanceData &target, bool measure);
 
-    ~Timer() noexcept {
-        if (measure) {
-            std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-            long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-            const auto elapsedSeconds = static_cast<PerformanceData::time>(1e-6) * static_cast<PerformanceData::time>(elapsed);
-            std::unique_lock<std::mutex> lock(target.mutex);
-            target.cumulativeTime += elapsedSeconds;
-            target.count++;
-        }
-    }
+    ~Timer() noexcept;
 
     Timer(const Timer &other) = delete;
 
@@ -91,44 +78,26 @@ private:
 class PerformanceNode {
 public:
     using performance_node_ref = std::unique_ptr<PerformanceNode>;
-    PerformanceNode(const std::string &name, bool measure) : _name(name), _measure(measure), _data(0.,0) { }
+    PerformanceNode(const std::string &name, bool measure);
 
-    PerformanceNode &subnode(const std::string &name) {
-        const auto& it = std::find_if(children.begin(), children.end(), [&name](const performance_node_ref& node){return node->_name == name;});
-        if (it == children.end()) {
-            children.push_back(std::make_unique<PerformanceNode>(name, _measure));
-            return *children.back();
-        }
-        return **it;
+    PerformanceNode &subnode(const std::string &name);
+
+    void clear();
+
+    Timer timeit();
+
+    const PerformanceData &data() const;
+
+    const PerformanceNode &child(const std::string &name) const;
+
+    const std::size_t n_children() const;
+
+    friend std::ostream& operator<<(std::ostream &os, const PerformanceNode &node) {
+        os << node.describe();
+        return os;
     }
 
-    void clear() {
-        _data.cumulativeTime = 0.;
-        _data.count = 0;
-        for (auto &c : children) {
-            c->clear();
-        }
-    }
-
-    Timer timeit() {
-        return Timer(_data, _measure);
-    }
-
-    const PerformanceData &data() const {
-        return _data;
-    }
-
-    const PerformanceNode &child(const std::string &name) const {
-        const auto& it = std::find_if(children.begin(), children.end(), [&name](const performance_node_ref& node){return node->_name == name;});
-        if (it == children.end()) {
-            throw std::runtime_error(fmt::format("Child with name {} does not exist", name));
-        }
-        return **it;
-    }
-
-    const std::size_t n_children() const {
-        return children.size();
-    }
+    std::string describe(std::size_t level = 0) const;
 
 private:
     std::string _name;

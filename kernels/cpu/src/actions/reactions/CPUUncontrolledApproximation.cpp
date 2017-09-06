@@ -109,8 +109,7 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
     events.set_value(std::move(eventsUpdate));
 }
 
-void CPUUncontrolledApproximation::perform(util::PerformanceNode &node) {
-    auto timer = node.timeit();
+void CPUUncontrolledApproximation::perform() {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     auto &stateModel = kernel->getCPUKernelStateModel();

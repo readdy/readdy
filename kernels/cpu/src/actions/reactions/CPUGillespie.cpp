@@ -39,8 +39,7 @@ namespace reactions {
 
 CPUGillespie::CPUGillespie(CPUKernel *const kernel, scalar timeStep) : super(timeStep), kernel(kernel) {}
 
-void CPUGillespie::perform(util::PerformanceNode &node) {
-    auto timer = node.timeit();
+void CPUGillespie::perform() {
     const auto &ctx = kernel->getKernelContext();
     if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
         return;

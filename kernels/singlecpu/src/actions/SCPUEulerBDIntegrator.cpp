@@ -39,8 +39,7 @@ namespace actions {
 SCPUEulerBDIntegrator::SCPUEulerBDIntegrator(SCPUKernel *kernel, scalar timeStep)
         : readdy::model::actions::EulerBDIntegrator(timeStep), kernel(kernel) {}
 
-void SCPUEulerBDIntegrator::perform(util::PerformanceNode &node) {
-    auto timer = node.timeit();
+void SCPUEulerBDIntegrator::perform() {
     const auto &context = kernel->getKernelContext();
     const auto &kbt = context.getKBT();
     const auto &fixPos = context.getFixPositionFun();

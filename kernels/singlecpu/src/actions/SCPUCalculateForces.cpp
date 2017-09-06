@@ -37,8 +37,7 @@ namespace scpu {
 namespace actions {
 SCPUCalculateForces::SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {}
 
-void SCPUCalculateForces::perform(util::PerformanceNode &node) {
-    auto timer = node.timeit();
+void SCPUCalculateForces::perform() {
     kernel->getKernelStateModel().calculateForces();
 }
 

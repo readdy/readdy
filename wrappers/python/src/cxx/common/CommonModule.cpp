@@ -34,6 +34,7 @@
 #include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
+using rvp = py::return_value_policy;
 
 /**
  * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
@@ -135,14 +136,16 @@ void exportCommon(py::module& common) {
     }
     {
         py::module perf = common.def_submodule("perf", "ReaDDy performance module");
-        //perf.def("root", [](){return readdy::util::PerformanceNode::root();});
         py::class_<readdy::util::PerformanceNode>(perf, "PerformanceNode")
                 .def("__getitem__", [](const readdy::util::PerformanceNode &self, const std::string &label) -> const readdy::util::PerformanceNode& {
                     // todo parse string
                     return self.child(label);
-                })
+                }, rvp::reference)
                 .def("__len__", [](const readdy::util::PerformanceNode &self) -> std::size_t {
                     return self.n_children();
+                })
+                .def("__repr__", [](const readdy::util::PerformanceNode &self) -> std::string {
+                    return self.describe();
                 })
                 .def("clear", &readdy::util::PerformanceNode::clear)
                 .def("time", [](const readdy::util::PerformanceNode &self) -> readdy::util::PerformanceData::time {

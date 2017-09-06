@@ -99,7 +99,7 @@ void exportActions(py::module &proto) {
             .def("perform", [](euler_integrator_t &self){self.perform();});
 
     py::class_<readdy::model::actions::CalculateForces>(proto, "CalculateForcesBase", action)
-            .def("perform", &readdy::model::actions::CalculateForces::perform);
+            .def("perform", [](forces_t &self){self.perform();});
     py::class_<forces_t, readdy::model::actions::CalculateForces>(proto, "CalculateForces")
             .def(py::init<scpu_kernel_t *>())
             .def("perform", [](forces_t &self){self.perform();});

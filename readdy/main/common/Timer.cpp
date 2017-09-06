@@ -21,10 +21,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file Timer.cpp
- * @brief << brief description >>
+ * @brief Implementation of timer classes
  * @author chrisfroe
  * @date 01.09.17
  * @copyright GNU Lesser General Public License v3.0
@@ -34,6 +32,74 @@
 
 namespace readdy {
 namespace util {
+
+PerformanceNode::PerformanceNode(const std::string &name, bool measure) : _name(name), _measure(measure), _data(0., 0) {}
+
+PerformanceNode &PerformanceNode::subnode(const std::string &name) {
+    const auto &it = std::find_if(children.begin(), children.end(), [&name](const performance_node_ref &node) { return node->_name == name; });
+    if (it == children.end()) {
+        children.push_back(std::make_unique<PerformanceNode>(name, _measure));
+        return *children.back();
+    }
+    return **it;
+}
+
+void PerformanceNode::clear() {
+    _data.cumulativeTime = 0.;
+    _data.count = 0;
+    for (auto &c : children) {
+        c->clear();
+    }
+}
+
+Timer PerformanceNode::timeit() {
+    return Timer(_data, _measure);
+}
+
+const PerformanceData &PerformanceNode::data() const {
+    return _data;
+}
+
+const PerformanceNode &PerformanceNode::child(const std::string &name) const {
+    const auto &it = std::find_if(children.begin(), children.end(), [&name](const performance_node_ref &node) { return node->_name == name; });
+    if (it == children.end()) {
+        throw std::runtime_error(fmt::format("Child with name {} does not exist", name));
+    }
+    return **it;
+}
+
+const std::size_t PerformanceNode::n_children() const {
+    return children.size();
+}
+
+std::string PerformanceNode::describe(const size_t level) const {
+    std::string s;
+    for (auto i = 0; i < level; i++) {
+        s += "\t";
+    }
+    s += fmt::format("{}: time {} s, count {}\n", _name, _data.cumulativeTime, _data.count);
+    for (const auto &c : children) {
+        s += c->describe(level + 1);
+    }
+    return s;
+}
+
+Timer::Timer(PerformanceData &target, bool measure) : target(target), measure(measure) {
+    if (measure) {
+        begin = std::chrono::high_resolution_clock::now();
+    }
+}
+
+Timer::~Timer() {
+    if (measure) {
+        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+        long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+        const auto elapsedSeconds = static_cast<PerformanceData::time>(1e-6) * static_cast<PerformanceData::time>(elapsed);
+        std::unique_lock<std::mutex> lock(target.mutex);
+        target.cumulativeTime += elapsedSeconds;
+        target.count++;
+    }
+}
 
 }
 }

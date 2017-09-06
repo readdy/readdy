@@ -72,8 +72,7 @@ bool CPUGillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
     return particle[longestAxis] >= leftBoundary && particle[longestAxis] < rightBoundary;
 }
 
-void CPUGillespieParallel::perform(util::PerformanceNode &node) {
-    auto timer = node.timeit();
+void CPUGillespieParallel::perform() {
     {
         const auto &ctx = kernel->getKernelContext();
         if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {

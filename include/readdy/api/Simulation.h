@@ -53,9 +53,9 @@ public:
     using topology_reaction_mode = model::top::reactions::STRMode;
 
     /**
-     * The default constructor. Currently only instantiates the pimpl.
+     * The default constructor. Instantiates the pimpl and decides if performance should be profiled.
      */
-    Simulation(bool profile = true);
+    explicit Simulation(bool profile = true);
 
     /**
      * The destructor. Default behavior.
@@ -531,7 +531,11 @@ public:
 
     bool doublePrecision() const;
 
-
+    /**
+     * Access the root node of the performance measurement tree.
+     * @return reference to root node of performance measurement
+     */
+    const util::PerformanceNode &performanceRoot();
 private:
     struct Impl;
     std::unique_ptr<readdy::Simulation::Impl> pimpl;
