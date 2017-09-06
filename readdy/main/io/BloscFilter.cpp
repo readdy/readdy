@@ -94,7 +94,7 @@ void BloscFilter::registerFilter() {
 
 BloscFilter::BloscFilter(BloscFilter::Compressor compressor, unsigned int compressionLevel, bool shuffle) : compressor(
         compressor), compressionLevel(compressionLevel), shuffle(shuffle) {
-    if (compressionLevel < 0 || compressionLevel > 9) {
+    if (compressionLevel > 9) {
         throw std::invalid_argument("Blosc only allows compression levels ranging from 0 to 9.");
     }
 }

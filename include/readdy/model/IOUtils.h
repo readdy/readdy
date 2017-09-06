@@ -32,10 +32,11 @@
 
 #pragma once
 
+#include <vector>
+
 #include <h5rd/h5rd.h>
 
 #include <readdy/common/macros.h>
-
 #include "KernelContext.h"
 
 NAMESPACE_BEGIN(readdy)

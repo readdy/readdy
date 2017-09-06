@@ -49,6 +49,8 @@ public:
     explicit BloscFilter(Compressor compressor = Compressor::BloscLZ, unsigned int compressionLevel = 9,
                          bool shuffle = true);
 
+    ~BloscFilter() override = default;
+
     bool available() const override;
 
     void activate(h5rd::PropertyList &plist) override;

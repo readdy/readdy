@@ -61,8 +61,9 @@ void writeReactionInformation(h5rd::Group &group, const KernelContext &context) 
         }
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         h5rd::dimensions extent = {n_reactions};
+        std::vector<h5rd::Filter*> filters;
         auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, std::get<0>(types),
-                                                           std::get<1>(types));
+                                                           std::get<1>(types), filters);
         order1_reaction_dset->append(extent, order1_info.data());
     }
     // order2
@@ -85,8 +86,9 @@ void writeReactionInformation(h5rd::Group &group, const KernelContext &context) 
         }
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         h5rd::dimensions extent = {n_reactions};
+        std::vector<h5rd::Filter*> filters;
         auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, std::get<0>(types),
-                                                           std::get<1>(types));
+                                                           std::get<1>(types), filters);
         order2_reaction_dset->append(extent, order2_info.data());
     }
 }
@@ -104,8 +106,9 @@ void writeParticleTypeInformation(h5rd::Group &group, const KernelContext &conte
     if (!type_info_vec.empty()) {
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         h5rd::dimensions extent = {type_info_vec.size()};
+        std::vector<h5rd::Filter*> filters;
         auto dset = group.createDataSet("particle_types", extent, dims, std::get<0>(h5types),
-                                        std::get<1>(h5types));
+                                        std::get<1>(h5types), filters);
         dset->append(extent, type_info_vec.data());
     }
 }
