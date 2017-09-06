@@ -88,7 +88,13 @@ public:
 
     const PerformanceData &data() const;
 
-    const PerformanceNode &child(const std::string &name) const;
+    const std::string &name() const;
+
+    const PerformanceNode &direct_child(const std::string &name) const;
+
+    const PerformanceNode &child(const std::string &path) const;
+
+    const PerformanceNode &child(const std::vector<std::string> &labels) const;
 
     const std::size_t n_children() const;
 
@@ -100,10 +106,14 @@ public:
     std::string describe(std::size_t level = 0) const;
 
 private:
+    std::vector<std::string> parse(const std::string &path) const;
+
     std::string _name;
     bool _measure;
     std::vector<performance_node_ref> children;
     PerformanceData _data;
+
+    static constexpr const char slash[] = "/";
 };
 
 NAMESPACE_END(util)

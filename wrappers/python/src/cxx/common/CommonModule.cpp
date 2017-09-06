@@ -138,7 +138,6 @@ void exportCommon(py::module& common) {
         py::module perf = common.def_submodule("perf", "ReaDDy performance module");
         py::class_<readdy::util::PerformanceNode>(perf, "PerformanceNode")
                 .def("__getitem__", [](const readdy::util::PerformanceNode &self, const std::string &label) -> const readdy::util::PerformanceNode& {
-                    // todo parse string
                     return self.child(label);
                 }, rvp::reference)
                 .def("__len__", [](const readdy::util::PerformanceNode &self) -> std::size_t {

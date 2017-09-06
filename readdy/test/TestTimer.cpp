@@ -75,7 +75,7 @@ TEST(TestTimer, Threaded) {
     node n("knoten", true);
     auto worker = [](std::size_t, node& nn){
         nn.timeit();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     };
     {
         readdy::util::thread::Config config;
@@ -91,6 +91,13 @@ TEST(TestTimer, Threaded) {
     }
     EXPECT_EQ(n.data().count, 3);
     EXPECT_GT(n.data().cumulativeTime, static_cast<data::time>(0));
+}
+
+TEST(TestTimer, SlashedPath) {
+    node top("top", false);
+    auto &mid = top.subnode("mid");
+    auto &bot = mid.subnode("bot");
+    EXPECT_EQ(top.child("mid/bot").name(), "bot");
 }
 
 }
