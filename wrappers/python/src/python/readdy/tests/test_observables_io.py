@@ -65,7 +65,7 @@ class TestObservablesIO(unittest.TestCase):
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
         handle = sim.register_observable_particle_positions(1, [])
         n_timesteps = 19
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"particle_positions", int(3))
             sim.run_scheme_readdy(True).configure(0).run(n_timesteps)
             handle.flush()
@@ -98,7 +98,7 @@ class TestObservablesIO(unittest.TestCase):
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
         handle = sim.register_observable_particles(1)
         n_timesteps = 19
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"particles", int(3))
             sim.run_scheme_readdy(True).configure(0).run(n_timesteps)
             handle.flush()
@@ -152,7 +152,7 @@ class TestObservablesIO(unittest.TestCase):
             callback_rdf.append(pair[1])
 
         handle = simulation.register_observable_radial_distribution(1, bin_borders, ["A"], ["B"], density, rdf_callback)
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"radial_distribution", int(3))
             simulation.run(n_time_steps, 0.02)
             handle.flush()
@@ -186,7 +186,7 @@ class TestObservablesIO(unittest.TestCase):
             callback_com.append(vec)
 
         handle = simulation.register_observable_center_of_mass(1, ["A", "B"], com_callback)
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"com", 3)
             simulation.run(n_time_steps, 0.02)
             handle.flush()
@@ -222,7 +222,7 @@ class TestObservablesIO(unittest.TestCase):
             callback_hist.append(hist)
 
         handle = simulation.register_observable_histogram_along_axis(2, bin_borders, 0, ["A", "B"], hist_callback)
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"hist_along_x_axis", int(3))
             simulation.run(n_time_steps, 0.02)
             handle.flush()
@@ -264,7 +264,7 @@ class TestObservablesIO(unittest.TestCase):
 
         handle_a_b_particles = simulation.register_observable_n_particles(1, ["A", "B"], callback_ab)
         handle_all = simulation.register_observable_n_particles(1, [], callback_all)
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle_a_b_particles.enable_write_to_file(f, u"n_a_b_particles", int(3))
             handle_all.enable_write_to_file(f, u"n_particles", int(5))
             simulation.run(n_time_steps, 0.02)
@@ -300,7 +300,7 @@ class TestObservablesIO(unittest.TestCase):
         n_timesteps = 1
 
         handle = sim.register_observable_reactions(1)
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
             sim.run_scheme_readdy(True).write_config_to_file(f).configure_and_run(n_timesteps, 1)
 
@@ -372,7 +372,7 @@ class TestObservablesIO(unittest.TestCase):
 
         n_timesteps = 1
         handle = sim.register_observable_reaction_counts(1)
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
             sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("GillespieParallel").configure_and_run(n_timesteps, 1)
 
@@ -415,7 +415,7 @@ class TestObservablesIO(unittest.TestCase):
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
         handle = sim.register_observable_forces(1, [])
         n_timesteps = 19
-        with closing(io.File(fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"forces", int(3))
             sim.run_scheme_readdy(True).configure(1).run(n_timesteps)
             handle.flush()

@@ -53,7 +53,9 @@ void exportDataSet(py::module &io, const std::string &name) {
 void exportIO(py::module &io) {
     using namespace pybind11::literals;
     using file_t = io::File;
+    using file_node_t = io::Node<file_t>;
     using group_t = io::Group;
+    using group_node_t = io::Node<group_t>;
 
     io.def("unlimited_dims", [] { return io::UNLIMITED_DIMS; });
 
@@ -70,9 +72,21 @@ void exportIO(py::module &io) {
             .value("CREATE_NON_EXISTING", file_t::Flag::CREATE_NON_EXISTING)
             .export_values();
 
+    py::class_<file_node_t, std::shared_ptr<file_node_t>>(io, "FileNode")
+            .def("create_group", &file_node_t::createGroup, rvp::move)
+            .def("subgroups", &file_node_t::subgroups)
+            .def("data_sets", &file_node_t::containedDataSets)
+            .def("get_subgroup", &file_node_t::getSubgroup);
+
+    py::class_<group_node_t, std::shared_ptr<group_node_t>>(io, "GroupNode")
+            .def("create_group", &group_node_t::createGroup, rvp::move)
+            .def("subgroups", &group_node_t::subgroups)
+            .def("data_sets", &group_node_t::containedDataSets)
+            .def("get_subgroup", &group_node_t::getSubgroup);
+
     py::class_<io::Object, std::shared_ptr<io::Object>>(io, "Object").def("hid", &io::Object::id);
 
-    py::class_<file_t, std::shared_ptr<file_t>, io::Object>(io, "File", py::multiple_inheritance())
+    py::class_<file_t, std::shared_ptr<file_t>, io::Object, file_node_t>(io, "File", py::multiple_inheritance())
             .def_static("open", [](const std::string &path, const io::File::Flag &flag) {
                 return io::File::open(path, flag);
             }, "path"_a, "flag"_a = io::File::Flag::READ_WRITE)
@@ -101,7 +115,7 @@ void exportIO(py::module &io) {
             .def("close", &file_t::close)
             .def("create_group", &file_t::createGroup);
 
-    py::class_<group_t, std::shared_ptr<group_t>, io::Object>(io, "Group", py::multiple_inheritance())
+    py::class_<group_t, std::shared_ptr<group_t>, io::Object, group_node_t>(io, "Group", py::multiple_inheritance())
             .def("write_short", [](group_t &self, const std::string &name, const py::array_t<short> &arr) {
                 self.write(name, h5rd::dimensions(arr.shape(), arr.shape() + arr.ndim()), arr.data());
             })
@@ -119,11 +133,7 @@ void exportIO(py::module &io) {
             })
             .def("write_string", [](group_t &self, const std::string &name, const std::string &data) {
                 self.write(name, data);
-            })
-            .def("create_group", &group_t::createGroup, rvp::move)
-            .def("subgroups", &group_t::subgroups)
-            .def("data_sets", &group_t::containedDataSets)
-            .def("get_subgroup", &group_t::getSubgroup);
+            });
 
     //exportDataSet<short>(io, "short"); /* DataSet_short */
     //exportDataSet<int>(io, "int"); /* DataSet_int */
