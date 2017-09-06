@@ -32,6 +32,8 @@
 
 #include <gtest/gtest.h>
 #include <readdy/common/Timer.h>
+#include <readdy/common/thread/executor.h>
+#include <readdy/common/thread/Config.h>
 
 namespace {
 
@@ -66,7 +68,29 @@ TEST(TestTimer, Clear) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     EXPECT_EQ(n1.data().count, 2);
-    EXPECT_EQ(n2.data().count, 1) << "n2 was cleared in between, thus only 1 call";
+    EXPECT_EQ(n2.data().count, 1) << "n2 was cleared in between, thus only one call";
+}
+
+TEST(TestTimer, Threaded) {
+    node n("knoten", true);
+    auto worker = [](std::size_t, node& nn){
+        nn.timeit();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    };
+    {
+        readdy::util::thread::Config config;
+        config.setNThreads(3);
+        config.setMode(readdy::util::thread::ThreadMode::std_thread);
+        const auto& executor = *config.executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(config.nThreads());
+        for (auto i = 0; i < config.nThreads(); ++i) {
+            executables.push_back(executor.pack(worker, std::ref(n)));
+        }
+        executor.execute_and_wait(std::move(executables));
+    }
+    EXPECT_EQ(n.data().count, 3);
+    EXPECT_GT(n.data().cumulativeTime, static_cast<data::time>(0));
 }
 
 }
