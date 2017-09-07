@@ -146,7 +146,7 @@ class SchemeConfigurator {
     static_assert(std::is_base_of<SimulationScheme, SchemeType>::value, "SchemeType must inherit from readdy::api::SimulationScheme");
 public:
 
-    explicit SchemeConfigurator(model::Kernel *const kernel, util::PerformanceNode& perfRoot, bool useDefaults = true)
+    explicit SchemeConfigurator(model::Kernel *const kernel, util::PerformanceNode& perfRoot = {"dummy", false}, bool useDefaults = true)
             : scheme(std::make_unique<SchemeType>(kernel, perfRoot)), useDefaults(useDefaults) {}
 
     SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {

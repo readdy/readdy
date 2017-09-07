@@ -146,6 +146,7 @@ void exportCommon(py::module& common) {
                 .def("__repr__", [](const readdy::util::PerformanceNode &self) -> std::string {
                     return self.describe();
                 })
+                .def("keys", &readdy::util::PerformanceNode::keys)
                 .def("clear", &readdy::util::PerformanceNode::clear)
                 .def("time", [](const readdy::util::PerformanceNode &self) -> readdy::util::PerformanceData::time {
                     return self.data().cumulativeTime;

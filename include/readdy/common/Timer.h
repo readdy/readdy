@@ -122,6 +122,8 @@ public:
 
     std::string describe(std::size_t level = 0) const;
 
+    std::vector<std::string> keys() const;
+
 private:
     std::vector<std::string> parse(const std::string &path) const;
 

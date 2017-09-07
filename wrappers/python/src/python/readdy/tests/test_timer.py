@@ -34,7 +34,7 @@ class TestTimer(unittest.TestCase):
         root = simulation.performance_root()
         np.testing.assert_equal(root.count(), 1)
         np.testing.assert_equal(root.time() > 0., True)
-        if True:
+        if False:
             print(root)
             print(root[""])
             print(root["integrator"])
@@ -43,6 +43,7 @@ class TestTimer(unittest.TestCase):
             integrator = root["integrator"]
             print(integrator["/"])
             print(integrator["/integrator"])
+            print(root.keys())
 
 if __name__ == '__main__':
     unittest.main()

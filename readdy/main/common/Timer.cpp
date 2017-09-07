@@ -152,6 +152,14 @@ std::string PerformanceNode::validateName(const std::string &name) const {
     return util::str::trim_copy(name);
 }
 
+std::vector<std::string> PerformanceNode::keys() const {
+    std::vector<std::string> keys;
+    for (const auto &c : children) {
+        keys.push_back(c->name());
+    }
+    return keys;
+}
+
 Timer::Timer(const PerformanceData &target, bool measure) : target(target), measure(measure) {
     if (measure) {
         begin = std::chrono::high_resolution_clock::now();
