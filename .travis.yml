@@ -9,7 +9,7 @@ os:
 - linux
 - osx
 
-osx_image: xcode9
+osx_image: xcode8.1
 
 addons:
   apt:
