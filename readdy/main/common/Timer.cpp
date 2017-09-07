@@ -110,14 +110,11 @@ const PerformanceNode &PerformanceNode::child(const std::vector<std::string> &la
     if (labels.empty()) {
         throw std::invalid_argument("labels must not be empty");
     }
-    std::vector<std::reference_wrapper<const PerformanceNode>> nodes;
-    nodes.push_back(std::cref(direct_child(labels[0])));
+    std::reference_wrapper<const PerformanceNode> currentNode {direct_child(labels[0])};
     for (auto i = 1; i< labels.size(); ++i) {
-        auto previousNode = nodes.back();
-        auto nextNode = std::cref(previousNode.get().direct_child(labels[i]));
-        nodes.push_back(nextNode);
+        currentNode = std::cref(currentNode.get().direct_child(labels[i]));
     }
-    return nodes.back();
+    return currentNode.get();
 }
 
 const PerformanceNode &PerformanceNode::child(const std::string &path) const {
