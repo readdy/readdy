@@ -78,7 +78,16 @@ private:
 class PerformanceNode {
 public:
     using performance_node_ref = std::unique_ptr<PerformanceNode>;
+
+    /**
+     * Will hold a reference to itself as root.
+     */
     PerformanceNode(const std::string &name, bool measure);
+
+    /**
+     * Will use root that was given.
+     */
+    PerformanceNode(const std::string &name, bool measure, const PerformanceNode &root);
 
     PerformanceNode &subnode(const std::string &name);
 
@@ -92,6 +101,12 @@ public:
 
     const PerformanceNode &direct_child(const std::string &name) const;
 
+    /**
+     * Get the child that corresponds to path with respect to *this. Path may contain '/' to get children of children ...
+     * If path has a leading '/' the path will be resolved with respect to the root, not *this.
+     * @param path
+     * @return reference to desired node/child
+     */
     const PerformanceNode &child(const std::string &path) const;
 
     const PerformanceNode &child(const std::vector<std::string> &labels) const;
@@ -114,6 +129,7 @@ private:
     bool _measure;
     std::vector<performance_node_ref> children;
     PerformanceData _data;
+    std::reference_wrapper<const PerformanceNode> _root;
 
     static constexpr const char slash[] = "/";
 };

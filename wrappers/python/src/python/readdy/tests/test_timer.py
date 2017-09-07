@@ -37,6 +37,8 @@ class TestTimer(unittest.TestCase):
         print(root["run/integrator"])
         print(root["run/integrator"].time())
         print(root["run/integrator"].count())
+        run = root["run"]
+        print(run["/"])
 
 if __name__ == '__main__':
     unittest.main()

@@ -112,4 +112,10 @@ TEST(TestTimer, InvalidNodeName) {
     EXPECT_THROW(createSubNode(), std::invalid_argument);
 }
 
+TEST(TestTimer, GetRootFromChild) {
+    node top("top", false);
+    auto &bottom = top.subnode("bottom");
+    EXPECT_EQ(bottom.child("/").name(), "top");
+}
+
 }

@@ -36,14 +36,18 @@ namespace util {
 
 constexpr const char PerformanceNode::slash[];
 
-PerformanceNode::PerformanceNode(const std::string &name, bool measure) : _name(validateName(name)), _measure(measure), _data(0., 0) { }
+PerformanceNode::PerformanceNode(const std::string &name, bool measure)
+        : _name(validateName(name)), _measure(measure), _data(0., 0), _root(std::cref(*this)) { }
+
+PerformanceNode::PerformanceNode(const std::string &name, bool measure, const PerformanceNode& root)
+        : _name(validateName(name)), _measure(measure), _data(0., 0), _root(root) { }
 
 PerformanceNode &PerformanceNode::subnode(const std::string &name) {
     auto validatedName = validateName(name);
     const auto &it = std::find_if(children.begin(), children.end(),
                                   [&validatedName](const performance_node_ref &node) { return node->_name == validatedName; });
     if (it == children.end()) {
-        children.push_back(std::make_unique<PerformanceNode>(validatedName, _measure));
+        children.push_back(std::make_unique<PerformanceNode>(validatedName, _measure, _root.get()));
         return *children.back();
     }
     return **it;
@@ -111,18 +115,28 @@ const PerformanceNode &PerformanceNode::child(const std::vector<std::string> &la
         throw std::invalid_argument("labels must not be empty");
     }
     std::reference_wrapper<const PerformanceNode> currentNode {direct_child(labels[0])};
-    for (auto i = 1; i< labels.size(); ++i) {
+    for (auto i = 1; i < labels.size(); ++i) {
         currentNode = std::cref(currentNode.get().direct_child(labels[i]));
     }
     return currentNode.get();
 }
 
 const PerformanceNode &PerformanceNode::child(const std::string &path) const {
-    if (path.find(slash)) {
-        const auto &labels = parse(path);
-        return child(labels);
+    auto trimmedPath = util::str::trim_copy(path);
+    if (trimmedPath.empty()) {
+        return *this;
+    }
+    auto slashPos = trimmedPath.find(slash);
+    if (slashPos != trimmedPath.npos) {
+        if (slashPos == 0) {
+            auto rootPath = trimmedPath.substr(std::strlen(slash), trimmedPath.npos);
+            return _root.get().child(rootPath);
+        } else {
+            const auto &labels = parse(trimmedPath);
+            return child(labels);
+        }
     } else {
-        return direct_child(path);
+        return direct_child(trimmedPath);
     }
 }
 
