@@ -112,30 +112,29 @@ public:
     using SimulationScheme::run;
 
     void run(const continue_fun &continueFun) override {
-        auto &runNode = _performanceRoot.subnode("run");
-        auto runTimer = runNode.timeit();
+        auto runTimer = _performanceRoot.timeit();
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
 
-        if (neighborList) neighborList->perform(runNode.subnode("neighborList"));
-        if (forces) forces->perform(runNode.subnode("forces"));
+        if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+        if (forces) forces->perform(_performanceRoot.subnode("forces"));
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
         while (continueFun(t)) {
-            if (integrator) integrator->perform(runNode.subnode("integrator"));
-            if (neighborList) neighborList->perform(runNode.subnode("neighborList"));
+            if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
             // if (forces) forces->perform();
 
-            if (reactionScheduler) reactionScheduler->perform(runNode.subnode("reactionScheduler"));
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(runNode.subnode("evaluateTopologyReactions"));
-            if (neighborList) neighborList->perform(runNode.subnode("neighborList"));
-            if (forces) forces->perform(runNode.subnode("forces"));
+            if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+            if (forces) forces->perform(_performanceRoot.subnode("forces"));
             if (evaluateObservables) kernel->evaluateObservables(t + 1);
             ++t;
         }
-        if (clearNeighborList) clearNeighborList->perform(runNode.subnode("clearNeighborList"));
+        if (clearNeighborList) clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
         start = t;
         kernel->finalize();
         log::info("Simulation completed");
@@ -265,32 +264,31 @@ public:
     using SimulationScheme::run;
 
     void run(const continue_fun &fun) override {
-        auto &runNode = _performanceRoot.subnode("run");
-        auto runTimer = runNode.timeit();
+        auto runTimer = _performanceRoot.timeit();
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
-        if (neighborList) neighborList->perform(runNode.subnode("neighborList"));
-        if (forces) forces->perform(runNode.subnode("forces"));
+        if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+        if (forces) forces->perform(_performanceRoot.subnode("forces"));
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
         while (fun(t)) {
-            if (integrator) integrator->perform(runNode.subnode("integrator"));
-            if (compartments) compartments->perform(runNode.subnode("compartments"));
-            if (neighborList) neighborList->perform(runNode.subnode("neighborList"));
+            if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
+            if (compartments) compartments->perform(_performanceRoot.subnode("compartments"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
             // if (forces) forces->perform();
 
-            if (reactionScheduler) reactionScheduler->perform(runNode.subnode("reactionScheduler"));
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(runNode.subnode("evaluateTopologyReactions"));
-            if (compartments) compartments->perform(runNode.subnode("compartments"));
-            if (neighborList) neighborList->perform(runNode.subnode("neighborList"));
-            if (forces) forces->perform(runNode.subnode("forces"));
+            if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
+            if (compartments) compartments->perform(_performanceRoot.subnode("compartments"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+            if (forces) forces->perform(_performanceRoot.subnode("forces"));
             if (evaluateObservables) kernel->evaluateObservables(t + 1);
             ++t;
         }
 
-        if (clearNeighborList) clearNeighborList->perform(runNode.subnode("clearNeighborList"));
+        if (clearNeighborList) clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
         start = t;
         kernel->finalize();
         log::info("Simulation completed");

@@ -49,7 +49,7 @@ public:
 
     CPUGillespie(CPUKernel* kernel, readdy::scalar timeStep);
 
-    void perform() override;
+    void perform(const util::PerformanceNode &node) override;
 
 protected:
     CPUKernel *const kernel;

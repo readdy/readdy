@@ -53,9 +53,9 @@ public:
     using topology_reaction_mode = model::top::reactions::STRMode;
 
     /**
-     * The default constructor. Instantiates the pimpl and decides if performance should be profiled.
+     * The default constructor. Instantiates the pimpl.
      */
-    explicit Simulation(bool profile = true);
+    Simulation();
 
     /**
      * The destructor. Default behavior.

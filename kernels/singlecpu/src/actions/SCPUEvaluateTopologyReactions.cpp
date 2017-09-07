@@ -76,7 +76,8 @@ bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approxima
     return approximated ? performReactionEvent<true>(rate, timeStep) : performReactionEvent<false>(rate, timeStep);
 }
 
-void SCPUEvaluateTopologyReactions::perform() {
+void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     auto &model = kernel->getSCPUKernelStateModel();
     const auto &context = kernel->getKernelContext();
     auto &topologies = model.topologies();

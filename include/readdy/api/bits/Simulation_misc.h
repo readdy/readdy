@@ -38,12 +38,11 @@
 NAMESPACE_BEGIN(readdy)
 
 struct Simulation::Impl {
-    Impl(bool profile) : performanceRoot("root", profile) {}
     plugin::KernelProvider::kernel_ptr kernel;
     std::unordered_map<unsigned long, std::unique_ptr<readdy::model::observables::ObservableBase>> observables{};
     std::unordered_map<unsigned long, readdy::signals::scoped_connection> observableConnections{};
     unsigned long counter = 0;
-    util::PerformanceNode performanceRoot;
+    util::PerformanceNode performanceRoot{"simulation", true};
 };
 
 template<typename T, typename... Args>

@@ -43,7 +43,8 @@ public:
 
     explicit CPUCalculateForces(CPUKernel* kernel) : kernel(kernel) {}
 
-    void perform() override {
+    void perform(const util::PerformanceNode &node) override {
+        auto t = node.timeit();
         kernel->getKernelStateModel().calculateForces();
     }
 

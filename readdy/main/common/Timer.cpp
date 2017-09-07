@@ -42,8 +42,9 @@ PerformanceNode::PerformanceNode(const std::string &name, bool measure)
 PerformanceNode::PerformanceNode(const std::string &name, bool measure, const PerformanceNode& root)
         : _name(validateName(name)), _measure(measure), _data(0., 0), _root(root) { }
 
-PerformanceNode &PerformanceNode::subnode(const std::string &name) {
+const PerformanceNode &PerformanceNode::subnode(const std::string &name) const {
     auto validatedName = validateName(name);
+    performance_lock lock(childrenMutex);
     const auto &it = std::find_if(children.begin(), children.end(),
                                   [&validatedName](const performance_node_ref &node) { return node->_name == validatedName; });
     if (it == children.end()) {
@@ -61,7 +62,7 @@ void PerformanceNode::clear() {
     }
 }
 
-Timer PerformanceNode::timeit() {
+Timer PerformanceNode::timeit() const {
     return Timer(_data, _measure);
 }
 
@@ -151,7 +152,7 @@ std::string PerformanceNode::validateName(const std::string &name) const {
     return util::str::trim_copy(name);
 }
 
-Timer::Timer(PerformanceData &target, bool measure) : target(target), measure(measure) {
+Timer::Timer(const PerformanceData &target, bool measure) : target(target), measure(measure) {
     if (measure) {
         begin = std::chrono::high_resolution_clock::now();
     }

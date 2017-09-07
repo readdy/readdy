@@ -50,7 +50,7 @@ void Simulation::setPeriodicBoundary(const std::array<bool, 3> &periodic) {
 
 }
 
-Simulation::Simulation(bool profile) : pimpl(std::make_unique<Simulation::Impl>(profile)) {}
+Simulation::Simulation() : pimpl(std::make_unique<Simulation::Impl>()) {}
 
 readdy::model::Vec3 Simulation::getBoxSize() const {
     ensureKernelSelected();

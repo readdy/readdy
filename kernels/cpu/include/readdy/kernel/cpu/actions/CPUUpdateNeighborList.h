@@ -46,7 +46,8 @@ public:
 
     CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, readdy::scalar skin) : super(op, skin), kernel(kernel) {}
 
-    void perform() override {
+    void perform(const util::PerformanceNode &node) override {
+        auto t = node.timeit();
         if(firstRun) {
             if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->skin() = skinSize;
             firstRun = false;

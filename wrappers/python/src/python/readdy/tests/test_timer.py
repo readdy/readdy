@@ -32,13 +32,17 @@ class TestTimer(unittest.TestCase):
         scheme = simulation.run_scheme_readdy(True)
         scheme.configure_and_run(10, 0.1)
         root = simulation.performance_root()
-        print("\n")
-        print(root["run"])
-        print(root["run/integrator"])
-        print(root["run/integrator"].time())
-        print(root["run/integrator"].count())
-        run = root["run"]
-        print(run["/"])
+        np.testing.assert_equal(root.count(), 1)
+        np.testing.assert_equal(root.time() > 0., True)
+        if True:
+            print(root)
+            print(root[""])
+            print(root["integrator"])
+            print(root["integrator"].time())
+            print(root["integrator"].count())
+            integrator = root["integrator"]
+            print(integrator["/"])
+            print(integrator["/integrator"])
 
 if __name__ == '__main__':
     unittest.main()

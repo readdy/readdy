@@ -50,14 +50,14 @@ NAMESPACE_BEGIN(util)
 struct PerformanceData {
     using time = double;
     PerformanceData(time t, std::size_t c) : cumulativeTime(t), count(c) {}
-    time cumulativeTime = 0.;
-    std::size_t count = 0;
-    std::mutex mutex;
+    mutable time cumulativeTime = 0.;
+    mutable std::size_t count = 0;
+    mutable std::mutex mutex;
 };
 
 class Timer {
 public:
-    explicit Timer(PerformanceData &target, bool measure);
+    explicit Timer(const PerformanceData &target, bool measure);
 
     ~Timer() noexcept;
 
@@ -71,13 +71,15 @@ public:
 
 private:
     bool measure;
-    PerformanceData &target;
+    const PerformanceData &target;
     std::chrono::high_resolution_clock::time_point begin;
 };
 
 class PerformanceNode {
 public:
     using performance_node_ref = std::unique_ptr<PerformanceNode>;
+    using performance_mutex = std::mutex;
+    using performance_lock = std::unique_lock<performance_mutex>;
 
     /**
      * Will hold a reference to itself as root.
@@ -89,11 +91,11 @@ public:
      */
     PerformanceNode(const std::string &name, bool measure, const PerformanceNode &root);
 
-    PerformanceNode &subnode(const std::string &name);
+    const PerformanceNode &subnode(const std::string &name) const;
 
     void clear();
 
-    Timer timeit();
+    Timer timeit() const;
 
     const PerformanceData &data() const;
 
@@ -127,10 +129,10 @@ private:
 
     std::string _name;
     bool _measure;
-    std::vector<performance_node_ref> children;
+    mutable std::vector<performance_node_ref> children;
+    mutable performance_mutex childrenMutex;
     PerformanceData _data;
     std::reference_wrapper<const PerformanceNode> _root;
-
     static constexpr const char slash[] = "/";
 };
 

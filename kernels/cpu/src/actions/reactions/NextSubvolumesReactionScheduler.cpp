@@ -81,7 +81,8 @@ struct CPUNextSubvolumes::GridCell {
     }
 };
 
-void CPUNextSubvolumes::perform() {
+void CPUNextSubvolumes::perform(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     eventQueue.clear();
     setUpGrid();
     assignParticles();

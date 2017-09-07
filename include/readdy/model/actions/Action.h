@@ -46,6 +46,7 @@ NAMESPACE_BEGIN(actions)
 
 class Action {
 public:
+
     Action() = default;
 
     Action(const Action&) = default;
@@ -55,12 +56,13 @@ public:
 
     virtual ~Action() = default;
 
-    virtual void perform() = 0;
+    virtual void perform(const util::PerformanceNode &node) = 0;
 
-    virtual void perform(util::PerformanceNode &node) {
-        auto t = node.timeit();
-        this->perform();
+    void perform() {
+        util::PerformanceNode dummy("dummy", false);
+        this->perform(dummy);
     }
+
 };
 
 class TimeStepDependentAction : public Action {

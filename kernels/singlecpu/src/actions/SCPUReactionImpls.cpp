@@ -128,7 +128,8 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
     return eventsUpdate;
 }
 
-void SCPUUncontrolledApproximation::perform() {
+void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.getFixPositionFun();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
@@ -387,7 +388,8 @@ scpu_data::entries_update handleEventsGillespie(
     return std::make_pair(std::move(newParticles), std::move(decayedEntries));
 }
 
-void SCPUGillespie::perform() {
+void SCPUGillespie::perform(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     const auto &ctx = kernel->getKernelContext();
     if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
         return;

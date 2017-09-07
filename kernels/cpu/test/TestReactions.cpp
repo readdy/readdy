@@ -305,19 +305,18 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-        auto &&reactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
-                kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1)
-        );
+        auto &&reactions = kernel->getActionFactory().createReactionScheduler("GillespieParallel", 1);
         neighborList->perform();
         reactions->perform();
-        EXPECT_EQ(1.0, reactions->getMaxReactionRadius());
-        EXPECT_EQ(15.0, reactions->getBoxWidth());
-        EXPECT_EQ(2, reactions->getLongestAxis());
-        EXPECT_TRUE(reactions->getOtherAxis1() == 0 || reactions->getOtherAxis1() == 1);
-        if (reactions->getOtherAxis1() == 0) {
-            EXPECT_EQ(1, reactions->getOtherAxis2());
+        auto reactions_ptr = dynamic_cast<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel*>(reactions.get());
+        EXPECT_EQ(1.0, reactions_ptr->getMaxReactionRadius());
+        EXPECT_EQ(15.0, reactions_ptr->getBoxWidth());
+        EXPECT_EQ(2, reactions_ptr->getLongestAxis());
+        EXPECT_TRUE(reactions_ptr->getOtherAxis1() == 0 || reactions_ptr->getOtherAxis1() == 1);
+        if (reactions_ptr->getOtherAxis1() == 0) {
+            EXPECT_EQ(1, reactions_ptr->getOtherAxis2());
         } else {
-            EXPECT_EQ(0, reactions->getOtherAxis2());
+            EXPECT_EQ(0, reactions_ptr->getOtherAxis2());
         }
     }
     // we have two boxes, left and right, which can be projected into a line with (index, type):

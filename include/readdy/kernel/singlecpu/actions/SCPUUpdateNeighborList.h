@@ -43,7 +43,7 @@ public:
     explicit SCPUUpdateNeighborList(SCPUKernel* kernel,
                            readdy::model::actions::UpdateNeighborList::Operation op = Operation::create, scalar = -1);
 
-    void perform() override;
+    void perform(const util::PerformanceNode &node) override;
 
     bool supportsSkin() const override;
 

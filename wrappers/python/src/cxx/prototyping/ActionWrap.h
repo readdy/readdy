@@ -44,7 +44,7 @@ class PyAction : public readdy::model::actions::Action {
 public:
     using super::Action;
 
-    virtual void perform() override {
+    virtual void perform(const util::PerformanceNode &node) override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE(void, readdy::model::actions::Action, perform,)
     }

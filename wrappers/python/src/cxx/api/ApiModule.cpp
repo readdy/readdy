@@ -78,7 +78,7 @@ void exportApi(py::module &api) {
     py::enum_<readdy::api::TorsionType>(api, "TorsionType").value("COS_DIHEDRAL", readdy::api::TorsionType::COS_DIHEDRAL);
 
     py::class_<sim> simulation(api, "Simulation");
-    simulation.def(py::init<bool>(), "profile"_a = true)
+    simulation.def(py::init<>())
             .def_property("kbt", &sim::getKBT, &sim::setKBT)
             .def_property("periodic_boundary", &sim::getPeriodicBoundary, &sim::setPeriodicBoundary)
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)

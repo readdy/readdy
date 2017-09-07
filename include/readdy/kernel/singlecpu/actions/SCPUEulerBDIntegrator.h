@@ -42,7 +42,7 @@ class SCPUEulerBDIntegrator : public readdy::model::actions::EulerBDIntegrator {
 public:
     SCPUEulerBDIntegrator(SCPUKernel *kernel, scalar timeStep);
 
-    void perform() override;
+    void perform(const util::PerformanceNode &node) override;
 
 private:
     SCPUKernel *kernel;
