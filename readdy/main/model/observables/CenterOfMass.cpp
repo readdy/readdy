@@ -30,7 +30,8 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/io/DataSet.h>
+#include <h5rd/h5rd.h>
+
 #include <readdy/model/Kernel.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
@@ -41,9 +42,10 @@ namespace observables {
 
 
 struct CenterOfMass::Impl {
-    using writer_t = io::DataSet;
+    using writer_t = h5rd::DataSet;
     std::unique_ptr<writer_t> ds;
     std::unique_ptr<util::TimeSeriesWriter> timeSeries;
+    std::unique_ptr<util::CompoundH5Types> h5types;
 };
 
 CenterOfMass::CenterOfMass(readdy::model::Kernel *const kernel, unsigned int stride,
@@ -82,15 +84,14 @@ CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride, const std:
 
 }
 
-void CenterOfMass::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void CenterOfMass::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->ds) {
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.parentFile()));
+        h5rd::dimensions fs = {flushStride};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        auto dataSet = std::make_unique<io::DataSet>(
-                group.createDataSet("data", fs, dims, util::Vec3MemoryType(), util::Vec3FileType()));
+        pimpl->ds = group.createDataSet("data", fs, dims, std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
         log::debug("created data set with path {}", std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        pimpl->ds = std::move(dataSet);
         pimpl->timeSeries = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }

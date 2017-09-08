@@ -32,7 +32,6 @@
 
 #include <readdy/model/observables/NParticles.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
@@ -55,20 +54,21 @@ NParticles::NParticles(Kernel *const kernel, unsigned int stride,
 NParticles::~NParticles() = default;
 
 struct NParticles::Impl {
-    std::unique_ptr<io::DataSet> ds;
-    std::unique_ptr<util::TimeSeriesWriter> time;
+    std::unique_ptr<h5rd::DataSet> ds {nullptr};
+    std::unique_ptr<util::TimeSeriesWriter> time {nullptr};
+    io::BloscFilter bloscFilter {};
 };
 
 NParticles::NParticles(Kernel *const kernel, unsigned int stride)
         : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
-void NParticles::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void NParticles::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->ds) {
         const auto size = typesToCount.empty() ? 1 : typesToCount.size();
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride, size};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
+        h5rd::dimensions fs = {flushStride, size};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        pimpl->ds = std::make_unique<io::DataSet>(group.createDataSet<std::size_t>("data", fs, dims));
+        pimpl->ds = group.createDataSet<std::size_t>("data", fs, dims, {&pimpl->bloscFilter});
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }

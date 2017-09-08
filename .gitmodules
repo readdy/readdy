@@ -7,3 +7,6 @@
 [submodule "libraries/c-blosc"]
 	path = libraries/c-blosc
 	url = https://github.com/Blosc/c-blosc.git
+[submodule "libraries/h5rd"]
+	path = libraries/h5rd
+	url = https://github.com/readdy/h5rd

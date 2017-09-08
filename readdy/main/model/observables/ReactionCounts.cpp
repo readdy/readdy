@@ -30,6 +30,7 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
+#include <readdy/io/BloscFilter.h>
 #include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/model/IOUtils.h>
 #include <readdy/model/Kernel.h>
@@ -40,22 +41,23 @@ namespace readdy {
 namespace model {
 namespace observables {
 
-using data_set_t = io::DataSet;
-using data_set_order1_map = std::unordered_map<readdy::particle_type_type, data_set_t>;
-using data_set_order2_map = std::unordered_map<readdy::util::particle_type_pair, data_set_t,
+using data_set_t = h5rd::DataSet;
+using data_set_order1_map = std::unordered_map<readdy::particle_type_type, std::unique_ptr<data_set_t>>;
+using data_set_order2_map = std::unordered_map<readdy::util::particle_type_pair, std::unique_ptr<data_set_t>,
         readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>;
 
 struct ReactionCounts::Impl {
-    std::unique_ptr<io::Group> group;
+    std::unique_ptr<h5rd::Group> group;
     data_set_order1_map ds_order1;
     data_set_order2_map ds_order2;
     std::unique_ptr<util::TimeSeriesWriter> time;
     bool shouldWrite = false;
     unsigned int flushStride = 0;
     bool firstWrite = true;
-    std::function<void(data_set_t &)> flushFun = [](data_set_t &value) {
-        value.flush();
+    std::function<void(std::unique_ptr<data_set_t> &)> flushFun = [](std::unique_ptr<data_set_t> &value) {
+        value->flush();
     };
+    io::BloscFilter bloscFilter {};
 };
 
 ReactionCounts::ReactionCounts(Kernel *const kernel, unsigned int stride)
@@ -76,9 +78,9 @@ void ReactionCounts::initialize(Kernel *const kernel) {
     }
 }
 
-void ReactionCounts::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->group) {
-        pimpl->group = std::make_unique<io::Group>(
+        pimpl->group = std::make_unique<h5rd::Group>(
                 file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
         pimpl->shouldWrite = true;
         pimpl->flushStride = flushStride;
@@ -93,7 +95,7 @@ static void writeCountsToDataSets(const ReactionCounts::result_type &counts, dat
         for (const auto &entry : countsMap) {
             auto &dataSet = dSetOrder1.at(entry.first);
             const auto &current_counts = entry.second;
-            dataSet.append({1, current_counts.size()}, current_counts.data());
+            dataSet->append({1, current_counts.size()}, current_counts.data());
         }
     }
     {
@@ -101,7 +103,7 @@ static void writeCountsToDataSets(const ReactionCounts::result_type &counts, dat
         for (const auto &entry : countsMap) {
             auto &dataSet = dSetOrder2.at(entry.first);
             const auto &current_counts = entry.second;
-            dataSet.append({1, current_counts.size()}, current_counts.data());
+            dataSet->append({1, current_counts.size()}, current_counts.data());
         }
     }
 }
@@ -137,14 +139,14 @@ void ReactionCounts::append() {
                 const auto &pType = entry.second;
                 const auto numberOrder1Reactions = ctx.reactions().order1_by_type(pType).size();
                 if (numberOrder1Reactions > 0) {
-                    std::vector<readdy::io::h5::h5_dims> chunkSize = {pimpl->flushStride, numberOrder1Reactions};
-                    std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, numberOrder1Reactions};
+                    h5rd::dimensions chunkSize = {pimpl->flushStride, numberOrder1Reactions};
+                    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, numberOrder1Reactions};
                     pimpl->ds_order1.emplace(std::piecewise_construct, std::forward_as_tuple(pType),
                                              std::forward_as_tuple(
                                                      order1Subgroup.createDataSet<std::size_t>(
                                                              ctx.particle_types().name_of(pType) + "[id=" +
                                                              std::to_string(pType) + "]",
-                                                             chunkSize, dims)));
+                                                             chunkSize, dims, {&pimpl->bloscFilter})));
                 }
             }
             auto order2Subgroup = subgroup.createGroup("order2");
@@ -155,9 +157,8 @@ void ReactionCounts::append() {
                     if (pType2 < pType1) continue;
                     const auto numberOrder2Reactions = ctx.reactions().order2_by_type(pType1, pType2).size();
                     if (numberOrder2Reactions > 0) {
-                        std::vector<readdy::io::h5::h5_dims> chunkSize = {pimpl->flushStride, numberOrder2Reactions};
-                        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS,
-                                                                    numberOrder2Reactions};
+                        h5rd::dimensions chunkSize = {pimpl->flushStride, numberOrder2Reactions};
+                        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, numberOrder2Reactions};
                         pimpl->ds_order2.emplace(std::piecewise_construct,
                                                  std::forward_as_tuple(std::tie(pType1, pType2)),
                                                  std::forward_as_tuple(order2Subgroup.createDataSet<std::size_t>(
@@ -165,7 +166,7 @@ void ReactionCounts::append() {
                                                          std::to_string(pType1) + "] + " +
                                                          ctx.particle_types().name_of(pType2) + "[id=" +
                                                          std::to_string(pType2) + "]",
-                                                         chunkSize, dims)));
+                                                         chunkSize, dims, {&pimpl->bloscFilter})));
                     }
                 }
             }

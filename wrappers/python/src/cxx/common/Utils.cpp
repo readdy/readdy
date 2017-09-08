@@ -38,10 +38,10 @@
 
 #include <spdlog/fmt/ostr.h>
 
-#include <readdy/io/File.h>
 #include <readdy/model/observables/io/TrajectoryEntry.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/IOUtils.h>
+#include <readdy/io/BloscFilter.h>
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -51,28 +51,30 @@ using radiusmap = std::map<std::string, readdy::scalar>;
 py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &trajName) {
     readdy::log::debug(R"(converting "{}" to readdy viewer format)", h5name);
 
-    readdy::io::File f(h5name, readdy::io::File::Action::OPEN, readdy::io::File::Flag::READ_ONLY);
-    auto &rootGroup = f.getRootGroup();
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
+
+    auto particleInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
 
     // get particle types from config
     std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
     {
-        auto config = rootGroup.subgroup("readdy/config");
-        config.read("particle_types", types, readdy::model::ioutils::ParticleTypeInfoMemoryType(),
-                    readdy::model::ioutils::ParticleTypeInfoFileType());
+        auto config = f->getSubgroup("readdy/config");
+        config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
     }
 
-    auto traj = rootGroup.subgroup("readdy/trajectory/" + trajName);
+    auto traj = f->getSubgroup("readdy/trajectory/" + trajName);
 
     // limits
     std::vector<std::size_t> limits;
-    traj.read("limits", limits, readdy::io::STDDataSetType<std::size_t>(), readdy::io::NativeDataSetType<std::size_t>());
+    traj.read("limits", limits);
 
     // records
     std::vector<readdy::model::observables::TrajectoryEntry> entries;
-    readdy::model::observables::util::TrajectoryEntryMemoryType memoryType;
-    readdy::model::observables::util::TrajectoryEntryFileType fileType;
-    traj.read("records", entries, memoryType, fileType);
+    auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
+    traj.read("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes));
 
     auto n_frames = limits.size()/2;
     readdy::log::debug("got n frames: {}", n_frames);
@@ -122,17 +124,19 @@ void
 convert_xyz(const std::string &h5name, const std::string &trajName, const std::string &out, bool generateTcl = true, bool tclRuler = false,
             const radiusmap &radii = {}) {
     readdy::log::debug(R"(converting "{}" to "{}")", h5name, out);
-    readdy::io::blosc_compression::initialize();
 
-    readdy::io::File f(h5name, readdy::io::File::Action::OPEN, readdy::io::File::Flag::READ_ONLY);
-    auto &rootGroup = f.getRootGroup();
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
+
+    auto particleInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
 
     // get particle types from config
     std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
     {
-        auto config = rootGroup.subgroup("readdy/config");
-        config.read("particle_types", types, readdy::model::ioutils::ParticleTypeInfoMemoryType(),
-                    readdy::model::ioutils::ParticleTypeInfoFileType());
+        auto config = f->getSubgroup("readdy/config");
+        config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
     }
 
     // map from type name to max number of particles in traj
@@ -142,17 +146,17 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
         readdy::log::debug("got type {} with id {} and D {}", type.name, type.type_id, type.diffusion_constant);
     }
 
-    auto traj = rootGroup.subgroup("readdy/trajectory/" + trajName);
+    auto traj = f->getSubgroup("readdy/trajectory/" + trajName);
 
     // limits
     std::vector<std::size_t> limits;
-    traj.read("limits", limits, readdy::io::STDDataSetType<std::size_t>(),
-              readdy::io::NativeDataSetType<std::size_t>());
+    traj.read("limits", limits);
     // records
     std::vector<readdy::model::observables::TrajectoryEntry> entries;
-    readdy::model::observables::util::TrajectoryEntryMemoryType memoryType;
-    readdy::model::observables::util::TrajectoryEntryFileType fileType;
-    traj.read("records", entries, memoryType, fileType);
+
+
+    auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
+    traj.read("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes));
 
     std::unordered_map<readdy::particle_type_type, std::size_t> typeMapping(types.size());
     {

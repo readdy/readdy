@@ -52,9 +52,11 @@
 
 #include <memory>
 #include <type_traits>
+
+#include <h5rd/h5rd.h>
+
 #include <readdy/common/common.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/io/Group.h>
 #include <readdy/model/IOUtils.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -96,7 +98,7 @@ protected:
     std::unique_ptr<model::actions::UpdateNeighborList> neighborList {nullptr};
     std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList {nullptr};
     std::unique_ptr<evaluate_topology_reactions> evaluateTopologyReactions {nullptr};
-    std::unique_ptr<io::Group> configGroup = nullptr;
+    std::unique_ptr<h5rd::Group> configGroup = nullptr;
     bool evaluateObservables = true;
     time_step_type start = 0;
 };
@@ -197,8 +199,8 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &writeConfigToFile(io::File& file) {
-        scheme->configGroup = std::make_unique<io::Group>(file.createGroup("readdy/config"));
+    SchemeConfigurator &writeConfigToFile(File& file) {
+        scheme->configGroup = std::make_unique<h5rd::Group>(file.createGroup("readdy/config"));
         return *this;
     }
 
@@ -368,8 +370,8 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &writeConfigToFile(io::File& file) {
-        scheme->configGroup = std::make_unique<io::Group>(file.createGroup("readdy/config"));
+    SchemeConfigurator &writeConfigToFile(File& file) {
+        scheme->configGroup = std::make_unique<h5rd::Group>(file.createGroup("readdy/config"));
         return *this;
     }
 

@@ -59,7 +59,7 @@ class TestSchemeApi(unittest.TestCase):
 
         simulation.register_observable_n_particles(1, ["A"], callback)
         traj_handle = simulation.register_observable_trajectory(0)
-        with closing(io.File(traj_fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", 3)
             simulation.run_scheme_readdy(True).write_config_to_file(f).configure(1).run(20)
 
@@ -89,7 +89,7 @@ class TestSchemeApi(unittest.TestCase):
 
         simulation.register_observable_n_particles(1, ["A"], callback)
         traj_handle = simulation.register_observable_flat_trajectory(1)
-        with closing(io.File(traj_fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", int(3))
             simulation.run_scheme_readdy(True).configure(1).run(20)
 
@@ -117,7 +117,7 @@ class TestSchemeApi(unittest.TestCase):
         simulation.register_observable_n_particles(1, ["A"], callback)
         traj_handle = simulation.register_observable_trajectory(1)
 
-        with closing(io.File(traj_fname, io.FileAction.CREATE, io.FileFlag.OVERWRITE)) as f:
+        with closing(io.File.create(traj_fname, io.FileFlag.OVERWRITE)) as f:
             traj_handle.enable_write_to_file(f, u"", int(3))
             simulation.run_scheme_readdy(True).configure(1).run(20)
 
@@ -133,18 +133,17 @@ class TestSchemeApi(unittest.TestCase):
     def test_open_and_discover_file(self):
         fname = os.path.join(self.dir, "test_open_and_discover_file.h5")
         data = np.array([[2.222, 3, 4, 5], [3.3, 3, 3, 3]], dtype=np.float64)
-        with closing(io.File(fname, io.FileAction.CREATE)) as f:
+        with closing(io.File.create(fname)) as f:
             g = f.create_group("/my_super_group")
             subg = g.create_group("my_super_subgroup")
             g.write_double("doubleds", data)
             subg.write_string("stringds", u"jap")
 
-        with closing(io.File(fname, io.FileAction.OPEN, flag=io.FileFlag.READ_WRITE)) as f:
-            root_group = f.get_root_group()
-            sg = root_group.subgroups()
+        with closing(io.File.open(fname, flag=io.FileFlag.READ_WRITE)) as f:
+            sg = f.subgroups()
             np.testing.assert_equal(len(sg), 1)
             np.testing.assert_equal(sg[0], u"my_super_group")
-            sub_group = root_group.get_subgroup(sg[0])
+            sub_group = f.get_subgroup(sg[0])
             np.testing.assert_equal(len(sub_group.data_sets()), 1)
             np.testing.assert_equal(sub_group.data_sets()[0], "doubleds")
             subsub_groups = sub_group.subgroups()
@@ -157,7 +156,7 @@ class TestSchemeApi(unittest.TestCase):
     def test_readwrite_double_and_string(self):
         fname = os.path.join(self.dir, "test_readwrite_double_and_string.h5")
         data = np.array([[2.222, 3, 4, 5], [3.3, 3, 3, 3]], dtype=np.float64)
-        with closing(io.File(fname, io.FileAction.CREATE)) as f:
+        with closing(io.File.create(fname)) as f:
             f.write_double("/sowas", data)
             f.write_string("/maeh", u"hierstehtwas")
 
@@ -168,7 +167,7 @@ class TestSchemeApi(unittest.TestCase):
     def test_groups_readwrite(self):
         fname = os.path.join(self.dir, "test_groups_readwrite.h5")
         data = np.array([[2.222, 3, 4, 5], [3.3, 3, 3, 3]], dtype=np.float64)
-        with closing(io.File(fname, io.FileAction.CREATE)) as f:
+        with closing(io.File.create(fname)) as f:
             g = f.create_group("/my_super_group")
             subg = g.create_group("my_super_subgroup")
             g.write_double("doubleds", data)

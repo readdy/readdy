@@ -52,7 +52,7 @@ void readdy::model::observables::ObservableWrapper::flush() {
 }
 
 void
-readdy::model::observables::ObservableWrapper::initializeDataSet(readdy::io::File &file, const std::string &dataSetName,
+readdy::model::observables::ObservableWrapper::initializeDataSet(File &file, const std::string &dataSetName,
                                                                  unsigned int flushStride) {
     throw std::runtime_error("not supported");
 }

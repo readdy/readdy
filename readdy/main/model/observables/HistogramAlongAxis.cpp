@@ -32,9 +32,7 @@
 
 #include <readdy/model/observables/HistogramAlongAxis.h>
 
-#include <readdy/io/DataSet.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/model/_internal/Util.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
@@ -44,7 +42,7 @@ namespace observables {
 
 
 struct HistogramAlongAxis::Impl {
-    std::unique_ptr<io::DataSet> dataSet;
+    std::unique_ptr<h5rd::DataSet> dataSet;
     std::unique_ptr<util::TimeSeriesWriter> time;
 };
 
@@ -68,15 +66,14 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
 
 }
 
-void HistogramAlongAxis::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void HistogramAlongAxis::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
         const auto size = result.size();
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride, size};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS, size};
+        h5rd::dimensions fs = {flushStride, size};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
         const auto path = std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName;
         auto group = file.createGroup(path);
-        auto dataSet = std::make_unique<io::DataSet>(group.createDataSet<scalar>("data", fs, dims));
-        pimpl->dataSet = std::move(dataSet);
+        pimpl->dataSet = group.createDataSet<scalar>("data", fs, dims, {&bloscFilter});
         pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
 }

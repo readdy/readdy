@@ -66,6 +66,7 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/Structural
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/SpatialTopologyReaction.cpp")
 
 # observables
+LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Types.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Trajectory.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/CenterOfMass.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/HistogramAlongAxis.cpp")

@@ -40,7 +40,7 @@ inline ObservableHandle::ObservableHandle(observable_id id, model::observables::
         : id(id), observable(observable) {}
 
 void
-inline ObservableHandle::enableWriteToFile(readdy::io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+inline ObservableHandle::enableWriteToFile(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (observable) {
         observable->enableWriteToFile(file, dataSetName, flushStride);
     } else {

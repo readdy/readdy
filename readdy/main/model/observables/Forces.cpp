@@ -32,7 +32,6 @@
 
 #include <readdy/model/observables/Forces.h>
 #include <readdy/model/Kernel.h>
-#include <readdy/io/DataSet.h>
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 
@@ -41,9 +40,10 @@ namespace model {
 namespace observables {
 
 struct Forces::Impl {
-    using data_set_t = io::VLENDataSet;
+    using data_set_t = h5rd::VLENDataSet;
     std::unique_ptr<data_set_t> dataSet;
     std::unique_ptr<util::TimeSeriesWriter> timeSeries;
+    std::unique_ptr<util::CompoundH5Types> h5types;
 };
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
@@ -61,13 +61,14 @@ void Forces::flush() {
     if (pimpl->timeSeries) pimpl->timeSeries->flush();
 }
 
-void Forces::initializeDataSet(io::File &file, const std::string &dataSetName, unsigned int flushStride) {
+void Forces::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
     if (!pimpl->dataSet) {
-        std::vector<readdy::io::h5::h5_dims> fs = {flushStride};
-        std::vector<readdy::io::h5::h5_dims> dims = {readdy::io::h5::UNLIMITED_DIMS};
+        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getVec3Types(file.parentFile()));
+        h5rd::dimensions fs = {flushStride};
+        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
         auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        auto dataSet = std::make_unique<io::VLENDataSet>(
-                group.createVLENDataSet("data", fs, dims, util::Vec3MemoryType(), util::Vec3FileType()));
+        auto dataSet = group.createVLENDataSet("data", fs, dims,
+                                               std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
         pimpl->dataSet = std::move(dataSet);
         pimpl->timeSeries = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
     }
