@@ -59,7 +59,7 @@ public:
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->getShortestDifferenceFun();
+        const auto &d = context->shortestDifferenceFun();
         for (const auto &bond : potential->getBonds()) {
             readdy::model::Vec3 forceUpdate{0, 0, 0};
             auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
@@ -86,7 +86,7 @@ public:
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->getShortestDifferenceFun();
+        const auto &d = context->shortestDifferenceFun();
 
 
         for (const auto &angle : potential->getAngles()) {
@@ -115,7 +115,7 @@ public:
     scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->getShortestDifferenceFun();
+        const auto &d = context->shortestDifferenceFun();
 
         for (const auto &dih : potential->getDihedrals()) {
             auto &e_i = data->entry_at(particleIndices.at(dih.idx1));

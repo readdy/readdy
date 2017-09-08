@@ -49,8 +49,8 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
     const auto dt = timeStep;
 
     auto worker = [&context, &pd, dt](std::size_t id, iter_t entry_begin, iter_t entry_end)  {
-        const auto &fixPos = context.getFixPositionFun();
-        const auto kbt = context.getKBT();
+        const auto &fixPos = context.fixPositionFun();
+        const auto kbt = context.kBT();
         for (auto it = entry_begin; it != entry_end; ++it) {
             if(!it->is_deactivated()) {
                 const scalar D = context.particle_types().diffusion_constant_of(it->type);

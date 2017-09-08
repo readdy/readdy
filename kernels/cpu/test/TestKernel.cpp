@@ -39,9 +39,9 @@ namespace {
 TEST(CPUTestKernel, TestKernelLoad) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     kernel->getKernelContext().particle_types().add("X", .55, 1.);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
     kernel->registerReaction<readdy::model::reactions::Decay>("X decay", "X", .5);
     kernel->registerReaction<readdy::model::reactions::Fission>("X fission", "X", "X", "X", .00, .5);
 

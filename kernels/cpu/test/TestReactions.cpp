@@ -65,9 +65,9 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using particle_t = readdy::model::Particle;
     using data_t = readdy::kernel::cpu::model::CPUParticleData;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-    kernel->getKernelContext().setPeriodicBoundary(false, false, false);
-    kernel->getKernelContext().setBoxSize(100, 100, 100);
-    const auto diff = kernel->getKernelContext().getShortestDifferenceFun();
+    kernel->getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
+    kernel->getKernelContext().boxSize() = {{100, 100, 100}};
+    const auto diff = kernel->getKernelContext().shortestDifferenceFun();
     kernel->getKernelContext().particle_types().add("A", .1, 1.); // type id 0
     kernel->getKernelContext().particle_types().add("B", .1, 1.); // type id 1
     kernel->getKernelContext().particle_types().add("C", .1, 1.); // type id 2
@@ -215,7 +215,7 @@ TEST(CPUTestReactions, TestDecay) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     kernel->getKernelContext().particle_types().add("X", .25, 1.);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
@@ -266,8 +266,8 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-    kernel->getKernelContext().setBoxSize(10, 10, 30);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, false);
+    kernel->getKernelContext().boxSize() = {{10, 10, 30}};
+    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, false}};
 
     kernel->getKernelContext().particle_types().add("A", .25, static_cast<const readdy::scalar>(1.));
     kernel->getKernelContext().particle_types().add("B", .25, static_cast<const readdy::scalar>(1.));

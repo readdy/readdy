@@ -79,8 +79,8 @@ TEST(NeighborList, Naive) {
 TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three cells along the periodic axis
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(3.7, 2, 2);
-    ctx.setPeriodicBoundary(true, false, false);
+    ctx.boxSize() = {{3.7, 2, 2}};
+    ctx.periodicBoundaryConditions() = {{true, false, false}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes(0);
     auto boxes = list.getBoxes();
@@ -112,8 +112,8 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
 TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
     // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic, i.e. 27 cells each with 13 neighbors
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(4, 4, 4);
-    ctx.setPeriodicBoundary(true, true, true);
+    ctx.boxSize() = {{4, 4, 4}};
+    ctx.periodicBoundaryConditions() = {{true, true, true}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes(0);
     auto boxes = list.getBoxes();
@@ -140,8 +140,8 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
 TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     // maxcutoff is 1.2, system is 4.8 x 5 x 5.1, all periodic, i.e. 64 cells each with 13 neighbors
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(4.8, 5, 5.1);
-    ctx.setPeriodicBoundary(true, true, true);
+    ctx.boxSize() = {{4.8, 5, 5.1}};
+    ctx.periodicBoundaryConditions() = {{true, true, true}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes(0);
     auto boxes = list.getBoxes();
@@ -167,8 +167,8 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
 TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(1.5, 4, 1.5);
-    ctx.setPeriodicBoundary(false, false, false);
+    ctx.boxSize() = {{1.5, 4, 1.5}};
+    ctx.periodicBoundaryConditions() = {{false, false, false}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
     list.setupBoxes(0);
     auto boxes = list.getBoxes();

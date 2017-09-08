@@ -42,7 +42,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     kernel->getKernelContext().particle_types().add("X", .25, 1.);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
@@ -116,7 +116,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
 
     kernel->getKernelContext().particle_types().add("A", .25, 1.);
     kernel->getKernelContext().particle_types().add("B", .25, 1.);

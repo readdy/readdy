@@ -132,7 +132,7 @@ template<typename Reaction>
 void performReaction(data_t& data, const readdy::model::KernelContext& context, data_t::index_t idx1, data_t::index_t idx2,
                      data_t::entries_update_t& newEntries, std::vector<data_t::index_t>& decayedEntries,
                      Reaction* reaction, record_t* record) {
-    const auto& pbc = context.getPBCFun();
+    const auto& pbc = context.applyPBCFun();
     auto& entry1 = data.entry_at(idx1);
     auto& entry2 = data.entry_at(idx2);
     if(record) {

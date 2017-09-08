@@ -47,8 +47,8 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
     ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.setBoxSize(4., 4., 4.);
-    ctx.setPeriodicBoundary(false, false, false);
+    ctx.boxSize() = {{4., 4., 4.}};
+    ctx.periodicBoundaryConditions() = {{false, false, false}};
 
     kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "A", 1.0);
 
@@ -62,18 +62,18 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     // check results
     obs->evaluate();
     auto forcesIt = obs->getResult().begin();
-    if(readdy::double_precision) {
+    if(kernel->doublePrecision()) {
         EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
     } else {
         EXPECT_FVEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
     }
     ++forcesIt;
-    if(readdy::double_precision) {
+    if(kernel->doublePrecision()) {
         EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
     } else {
         EXPECT_FVEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
     }
-    if(readdy::double_precision) {
+    if(kernel->doublePrecision()) {
         EXPECT_DOUBLE_EQ(stateModel.getEnergy(), 0.02);
     } else {
         EXPECT_NEAR(stateModel.getEnergy(), 0.02, 1e-8);
@@ -89,8 +89,8 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     auto conn = kernel->connectObservable(obs.get());
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.particle_types().add("B", 1.0, 2.0);
-    ctx.setBoxSize(10., 10., 10.);
-    ctx.setPeriodicBoundary(true, true, false);
+    ctx.boxSize() = {{10., 10., 10.}};
+    ctx.periodicBoundaryConditions() = {{true, true, false}};
 
     kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "B", 1.0);
 
@@ -228,8 +228,8 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     auto conn = kernel->connectObservable(obs.get());
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.particle_types().add("B", 1.0, 2.0);
-    ctx.setBoxSize(4., 4., 4.);
-    ctx.setPeriodicBoundary(false, false, false);
+    ctx.boxSize() = {{4., 4., 4.}};
+    ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.configure();
     auto typeIdA = ctx.particle_types().id_of("A");
     auto typeIdB = ctx.particle_types().id_of("B");

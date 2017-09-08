@@ -161,7 +161,7 @@ void AdaptiveNeighborList::clear() {
 }
 
 void AdaptiveNeighborList::fill_verlet_list() {
-    const auto &d2 = _context.get().getDistSquaredFun();
+    const auto &d2 = _context.get().distSquaredFun();
     if (_max_cutoff > 0) {
         _cell_container.execute_for_each_leaf([this](const CellContainer::sub_cell &cell) {
             fill_cell_verlet_list(cell, true);
@@ -170,7 +170,7 @@ void AdaptiveNeighborList::fill_verlet_list() {
 }
 
 void AdaptiveNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell, const bool reset_displacement) {
-    const auto &d2 = _context.get().getDistSquaredFun();
+    const auto &d2 = _context.get().distSquaredFun();
     for (const auto particle_index : cell.particles().data()) {
         auto &neighbors = _data.get().neighbors_at(particle_index);
         auto &entry = _data.get().entry_at(particle_index);

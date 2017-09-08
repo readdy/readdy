@@ -43,7 +43,7 @@ namespace util {
 scalar  getMaximumDisplacement(KernelContext& context, const scalar  timeStep) {
     context.configure();
 
-    scalar  kbt = context.getKBT();
+    scalar  kbt = context.kBT();
 
     scalar  maximum_displacement = 0;
     for (auto &&pI : context.particle_types().types_flat()) {
@@ -71,7 +71,7 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
 
     context.configure();
 
-    scalar  kbt = context.getKBT();
+    scalar  kbt = context.kBT();
     scalar  kReactionMax = 0;
 
     for (auto &&reactionO1 : context.reactions().order1_flat()) {
@@ -125,7 +125,7 @@ scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
         }
         scalar  rho = rMin / 2;
         if (fMax > 0) {
-            xi = static_cast<scalar>(1. / (context.getKBT() * fMax));
+            xi = static_cast<scalar>(1. / (context.kBT() * fMax));
             tD = (xi * xi / D) * (1 + rho / xi - std::sqrt(1 + 2 * rho / xi));
         } else if (D > 0) {
             tD = static_cast<scalar>(.5 * rho * rho / D);

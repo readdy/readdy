@@ -79,7 +79,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
     std::vector<event_t> eventsUpdate;
     auto &stateModel = kernel->getSCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();
-    const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
+    const auto &d2 = kernel->getKernelContext().distSquaredFun();
     {
         std::size_t idx = 0;
         for (const auto &e : data) {
@@ -131,7 +131,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
 void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->getKernelContext();
-    const auto &fixPos = ctx.getFixPositionFun();
+    const auto &fixPos = ctx.fixPositionFun();
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
     if(ctx.recordReactionCounts()) {
@@ -273,7 +273,7 @@ scpu_data::entries_update handleEventsGillespie(
 
     if (!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
-        const auto &fixPos = ctx.getFixPositionFun();
+        const auto &fixPos = ctx.fixPositionFun();
         auto &model = kernel->getSCPUKernelStateModel();
         const auto data = kernel->getSCPUKernelStateModel().getParticleData();
         /**
@@ -400,8 +400,8 @@ void SCPUGillespie::perform(const util::PerformanceNode &node) {
         readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
     }
     auto data = stateModel.getParticleData();
-    const auto &dist = ctx.getDistSquaredFun();
-    const auto &fixPos = ctx.getFixPositionFun();
+    const auto &dist = ctx.distSquaredFun();
+    const auto &fixPos = ctx.fixPositionFun();
     const auto nl = stateModel.getNeighborList();
 
     scalar alpha = 0.0;

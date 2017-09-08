@@ -39,7 +39,7 @@ SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : k
 void SCPUEvaluateCompartments::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->getKernelContext();
-    const auto & compartments = ctx.getCompartments();
+    const auto & compartments = ctx.compartments();
     auto data = kernel->getSCPUKernelStateModel().getParticleData();
     for(auto& entry : *data) {
         if(!entry.is_deactivated()) {

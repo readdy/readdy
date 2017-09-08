@@ -108,8 +108,8 @@ TEST_P(TestObservables, TestForcesObservable) {
         }
     }
     // Two particles C and C with radius 1 and harmonic repulsion at distance 1.5 -> force = kappa * (radiiSum - 1.5)
-    kernel->getKernelContext().setPeriodicBoundary(false, false, false);
-    kernel->getKernelContext().setBoxSize(5, 5, 5);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
+    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
     kernel->getKernelContext().particle_types().add("C", 1., 1.);
     const auto typeIdC = kernel->getKernelContext().particle_types().id_of("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};

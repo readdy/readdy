@@ -47,8 +47,8 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
     }
     auto &stateModel = kernel->getCPUKernelStateModel();
     auto data = stateModel.getParticleData();
-    const auto &dist = ctx.getDistSquaredFun();
-    const auto &fixPos = ctx.getFixPositionFun();
+    const auto &dist = ctx.distSquaredFun();
+    const auto &fixPos = ctx.fixPositionFun();
     const auto nl = stateModel.getNeighborList();
 
     if(ctx.recordReactionCounts()) {

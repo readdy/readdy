@@ -251,7 +251,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
         if (!context.topology_registry().spatial_reaction_registry().empty()) {
             const auto &model = kernel->getCPUKernelStateModel();
             const auto &top_registry = context.topology_registry();
-            const auto &d2 = context.getDistSquaredFun();
+            const auto &d2 = context.distSquaredFun();
             const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
             const auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
 

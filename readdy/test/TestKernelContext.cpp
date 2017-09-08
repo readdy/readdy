@@ -53,14 +53,14 @@ class TestKernelContextWithKernels : public KernelTest {
 
 TEST_F(TestKernelContext, SetGetKBT) {
     m::KernelContext ctx;
-    ctx.setKBT(42);
-    EXPECT_EQ(42, ctx.getKBT());
+    ctx.kBT() = 42;
+    EXPECT_EQ(42, ctx.kBT());
 }
 
 TEST_F(TestKernelContext, PeriodicBoundary) {
     m::KernelContext ctx;
-    ctx.setPeriodicBoundary(true, false, true);
-    auto boundary = ctx.getPeriodicBoundary();
+    ctx.periodicBoundaryConditions() = {{true, false, true}};
+    auto boundary = ctx.periodicBoundaryConditions();
     EXPECT_TRUE(boundary[0]);
     EXPECT_FALSE(boundary[1]);
     EXPECT_TRUE(boundary[2]);
@@ -68,8 +68,8 @@ TEST_F(TestKernelContext, PeriodicBoundary) {
 
 TEST_F(TestKernelContext, BoxSize) {
     m::KernelContext ctx;
-    ctx.setBoxSize(10, 11, 12);
-    auto box_size = ctx.getBoxSize();
+    ctx.boxSize() = {{10, 11, 12}};
+    auto box_size = ctx.boxSize();
     EXPECT_EQ(box_size[0], 10);
     EXPECT_EQ(box_size[1], 11);
     EXPECT_EQ(box_size[2], 12);

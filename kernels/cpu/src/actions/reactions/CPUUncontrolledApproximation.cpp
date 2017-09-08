@@ -61,7 +61,7 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
                 std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
-    const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
+    const auto &d2 = kernel->getKernelContext().distSquaredFun();
     auto it = begin;
     auto it_nl = nl_begin;
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
@@ -112,7 +112,7 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
 void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->getKernelContext();
-    const auto &fixPos = ctx.getFixPositionFun();
+    const auto &fixPos = ctx.fixPositionFun();
     auto &stateModel = kernel->getCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();
     auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();

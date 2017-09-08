@@ -180,7 +180,7 @@ public:
 
     virtual void setupBoxes(scalar skin) {
         if (boxes.empty()) {
-            const auto simBoxSize = ctx->getBoxSize();
+            const auto &simBoxSize = ctx->boxSize();
             auto maxCutoff = ctx->calculateMaxCutoff();
             if (maxCutoff > 0) {
                 maxCutoff += skin;
@@ -212,7 +212,7 @@ public:
     }
 
     virtual void fillBoxes(const SCPUParticleData &data) {
-        const auto simBoxSize = ctx->getBoxSize();
+        const auto &simBoxSize = ctx->boxSize();
         if (maxCutoff > 0) {
 
             std::for_each(boxes.begin(), boxes.end(), [](Box& box) {box.particleIndices.clear();});
@@ -253,7 +253,7 @@ public:
     }
 
     Box *getBox(long i, long j, long k) {
-        const auto &periodic = ctx->getPeriodicBoundary();
+        const auto &periodic = ctx->periodicBoundaryConditions();
         if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nBoxes[0]);
         else if (i < 0 || i >= nBoxes[0]) return nullptr;
         if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nBoxes[1]);

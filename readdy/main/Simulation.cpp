@@ -30,14 +30,13 @@
 namespace readdy {
 scalar Simulation::getKBT() const {
     ensureKernelSelected();
-    return pimpl->kernel->getKernelContext().getKBT();
+    return pimpl->kernel->getKernelContext().kBT();
 
 }
 
 void Simulation::setKBT(scalar kBT) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().setKBT(kBT);
-
+    pimpl->kernel->getKernelContext().kBT() = kBT;
 }
 
 void Simulation::setBoxSize(const readdy::model::Vec3 &boxSize) {
@@ -46,7 +45,7 @@ void Simulation::setBoxSize(const readdy::model::Vec3 &boxSize) {
 
 void Simulation::setPeriodicBoundary(const std::array<bool, 3> &periodic) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().setPeriodicBoundary(periodic[0], periodic[1], periodic[2]);
+    pimpl->kernel->getKernelContext().periodicBoundaryConditions() = periodic;
 
 }
 
@@ -54,13 +53,13 @@ Simulation::Simulation() : pimpl(std::make_unique<Simulation::Impl>()) {}
 
 readdy::model::Vec3 Simulation::getBoxSize() const {
     ensureKernelSelected();
-    return readdy::model::Vec3(pimpl->kernel->getKernelContext().getBoxSize());
+    return readdy::model::Vec3(pimpl->kernel->getKernelContext().boxSize());
 
 }
 
 const std::array<bool, 3>& Simulation::getPeriodicBoundary() const {
     ensureKernelSelected();
-    return pimpl->kernel->getKernelContext().getPeriodicBoundary();
+    return pimpl->kernel->getKernelContext().periodicBoundaryConditions();
 }
 
 void Simulation::run(const time_step_type steps, const scalar timeStep) {
@@ -202,7 +201,9 @@ void Simulation::ensureKernelSelected() const {
 
 void Simulation::setBoxSize(scalar dx, scalar dy, scalar dz) {
     ensureKernelSelected();
-    pimpl->kernel->getKernelContext().setBoxSize(dx, dy, dz);
+    pimpl->kernel->getKernelContext().boxSize()[0] = dx;
+    pimpl->kernel->getKernelContext().boxSize()[1] = dy;
+    pimpl->kernel->getKernelContext().boxSize()[2] = dz;
 }
 
 ObservableHandle Simulation::registerObservable(readdy::model::observables::ObservableBase &observable) {

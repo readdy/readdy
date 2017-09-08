@@ -51,7 +51,7 @@ protected:
         ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {10, 10});
         ctx.topology_registry().configure_bond_potential("Topology B", "Topology B", {10, 10});
 
-        ctx.setBoxSize(10, 10, 10);
+        ctx.boxSize() = {{10, 10, 10}};
     }
 };
 

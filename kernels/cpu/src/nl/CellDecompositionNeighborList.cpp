@@ -105,7 +105,7 @@ void CellDecompositionNeighborList::fill_verlet_list() {
 }
 
 void CellDecompositionNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell) {
-    const auto &d2 = _context.get().getDistSquaredFun();
+    const auto &d2 = _context.get().distSquaredFun();
     auto &data = _data.get();
     for (const auto particle_index : cell.particles().data()) {
         auto &neighbors = data.neighbors_at(particle_index);

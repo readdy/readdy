@@ -55,7 +55,7 @@ protected:
             ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {10, 10});
             ctx.topology_registry().configure_bond_potential("Topology B", "Topology B", {10, 10});
 
-            ctx.setBoxSize(10, 10, 10);
+            ctx.boxSize() = {{10, 10, 10}};
         }
     }
 
@@ -345,7 +345,7 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
 
     toptypes.add_type("TA");
 
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     std::vector<readdy::model::TopologyParticle> topologyParticles;
     {
         topologyParticles.reserve(n_chain_elements);
@@ -432,7 +432,7 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
     auto &toptypes = ctx.topology_registry();
     toptypes.add_type("TA");
 
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     std::vector<readdy::model::TopologyParticle> topologyParticles;
     {
         topologyParticles.reserve(n_chain_elements);

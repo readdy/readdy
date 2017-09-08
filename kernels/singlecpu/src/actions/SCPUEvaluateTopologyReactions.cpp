@@ -225,7 +225,7 @@ SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReac
 
 
         if (!topology_registry.spatial_reaction_registry().empty()) {
-            const auto &d2 = context.getDistSquaredFun();
+            const auto &d2 = context.distSquaredFun();
             const auto &stateModel = kernel->getSCPUKernelStateModel();
             const auto &data = *stateModel.getParticleData();
             const auto &nl = *stateModel.getNeighborList();

@@ -189,7 +189,7 @@ const CPUParticleData::particle_type::pos_type &CPUParticleData::pos(CPUParticle
 
 void CPUParticleData::displace(CPUParticleData::Entry &entry, const readdy::model::Particle::pos_type &delta) {
     entry.pos += delta;
-    context->getFixPositionFun()(entry.pos);
+    context->fixPositionFun()(entry.pos);
     if(_trackDisplacement) {
         entry.displacement += std::sqrt(delta * delta);
     }
@@ -348,7 +348,7 @@ void CPUParticleData::hilbert_sort(const scalar grid_width) {
 }
 
 std::array<unsigned long long, 3> CPUParticleData::project(vec3 value, scalar grid_width) const{
-    const auto& box_size = context->getBoxSize();
+    const auto& box_size = context->boxSize();
     const auto i = static_cast<const unsigned long long>((value.x + .5 * box_size[0]) / grid_width);
     const auto j = static_cast<const unsigned long long>((value.y + .5 * box_size[1]) / grid_width);
     const auto k = static_cast<const unsigned long long>((value.z + .5 * box_size[2]) / grid_width);

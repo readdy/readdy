@@ -45,7 +45,7 @@ class TestPotentials : public KernelTest {
 void setupParticles(readdy::model::Kernel &kernel) {
     kernel.getKernelContext().particle_types().add("A", static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.1));
     kernel.getKernelContext().particle_types().add("B", static_cast<readdy::scalar>(0.1), static_cast<readdy::scalar>(0.01));
-    kernel.getKernelContext().setPeriodicBoundary(false, false, false);
+    kernel.getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
     const unsigned int nParticlesA = 10;
     const unsigned int nParticlesB = 10;
 
@@ -68,7 +68,7 @@ void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
 }
 
 TEST_P(TestPotentials, TestParticlesStayInBox) {
-    kernel->getKernelContext().setBoxSize(5, 5, 5);
+    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
     const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
@@ -103,7 +103,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 }
 
 TEST_P(TestPotentials, TestParticleStayInSphere) {
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
@@ -138,7 +138,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     // one particle type A
     ctx.particle_types().add("A", 1.0, 1.0);
     // large enough box
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     // particles are aligned in the x-y plane and have a distance of .09
     auto id0 = kernel->addParticle("A", {0, 0, 0});
     auto id1 = kernel->addParticle("A", {0, 0, .09});
@@ -191,9 +191,9 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto &ctx = kernel->getKernelContext();
-    ctx.setPeriodicBoundary(false, false, false);
+    ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     // distance of particles is 2.56515106768
     auto id0 = kernel->addParticle("A", {0, 0, 0});
     auto id1 = kernel->addParticle("A", {1.2, 1.5, -1.7});
@@ -250,7 +250,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
     // Combine SphereIn and SphereOut to build a 2D spherical manifold
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() =  {{10, 10, 10}};
     // add two particles, one outside, one inside the sphere
     auto id0 = kernel->addParticle("A", {2., 1., 1.});
     auto id1 = kernel->addParticle("A", {4., 3., -3.});
@@ -303,7 +303,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
 TEST_P(TestPotentials, SphericalBarrier) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     // add two particles, one on the outer edge getting pushed outside, one inside the sphere unaffected
     auto id0 = kernel->addParticle("A", {2.1, 1., 1.});
     auto id1 = kernel->addParticle("A", {1.1, 1., 1.});

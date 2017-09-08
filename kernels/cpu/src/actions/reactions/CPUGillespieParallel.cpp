@@ -106,7 +106,7 @@ void CPUGillespieParallel::setupBoxes() {
             maxReactionRadius = std::max(maxReactionRadius, e->getEductDistance());
         }
 
-        const auto &simBoxSize = kernel->getKernelContext().getBoxSize();
+        const auto &simBoxSize = kernel->getKernelContext().boxSize();
         unsigned int longestAxis{
                 static_cast<unsigned int>(
                         std::max_element(simBoxSize.begin(), simBoxSize.end()) - simBoxSize.begin()
@@ -161,7 +161,7 @@ void CPUGillespieParallel::setupBoxes() {
 void CPUGillespieParallel::fillBoxes() {
     std::for_each(boxes.begin(), boxes.end(), [](SlicedBox &box) { box.particleIndices.clear(); });
     const auto particleData = kernel->getCPUKernelStateModel().getParticleData();
-    const auto simBoxSize = kernel->getKernelContext().getBoxSize();
+    const auto simBoxSize = kernel->getKernelContext().boxSize();
     const auto nBoxes = boxes.size();
     std::size_t idx = 0;
     for (const auto &e : *particleData) {
@@ -191,8 +191,8 @@ void CPUGillespieParallel::handleBoxReactions() {
 
     auto worker = [this](std::size_t, SlicedBox &box, ctx_t ctx, data_t *data, neighbor_list *nl, promise_t &update,
                          promise_new_particles_t &newParticles, promise_records &promiseRecords, promise_counts &counts) {
-        const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
-        const auto &d2 = kernel->getKernelContext().getDistSquaredFun();
+        const auto &fixPos = kernel->getKernelContext().fixPositionFun();
+        const auto &d2 = kernel->getKernelContext().distSquaredFun();
         std::set<data_t::index_t> problematic{};
         scalar localAlpha = 0.0;
         std::vector<event_t> localEvents{};
@@ -278,7 +278,7 @@ void CPUGillespieParallel::handleBoxReactions() {
         const auto &ctx = kernel->getKernelContext();
         //readdy::util::Timer t ("\t fix marked");
         auto &data = *stateModel.getParticleData();
-        const auto &d2 = ctx.getDistSquaredFun();
+        const auto &d2 = ctx.distSquaredFun();
         auto neighbor_list = stateModel.getNeighborList();
         std::vector<event_t> evilEvents{};
         scalar alpha = 0;
@@ -296,7 +296,7 @@ void CPUGillespieParallel::handleBoxReactions() {
             std::vector<record_t> newRecords;
             auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate,
                                                              std::move(evilEvents), &newRecords, countsPtr);
-            const auto &fixPos = ctx.getFixPositionFun();
+            const auto &fixPos = ctx.fixPositionFun();
             for (auto &&future : newParticles_promises) {
                 neighbor_list->updateData(std::move(future.get_future().get()));
             }
@@ -316,7 +316,7 @@ void CPUGillespieParallel::handleBoxReactions() {
         } else {
             auto newProblemParticles = handleEventsGillespie(kernel, timeStep, false, approximateRate,
                                                              std::move(evilEvents), nullptr, countsPtr);
-            const auto &fixPos = ctx.getFixPositionFun();
+            const auto &fixPos = ctx.fixPositionFun();
             for (auto &&future : newParticles_promises) {
                 neighbor_list->updateData(std::move(future.get_future().get()));
             }

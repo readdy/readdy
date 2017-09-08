@@ -90,7 +90,7 @@ void readdy::kernel::cpu::actions::reactions::FilteredGillespieParallel::handleB
         auto newProblemParticles = handleEventsGillespie(kernel, false, approximateRate, std::move(evilEvents));
         // BOOST_LOG_TRIVIAL(trace) << "got problematic particles by conflicts within box: " << n_local_problematic;
 
-        const auto &fixPos = kernel->getKernelContext().getFixPositionFun();
+        const auto &fixPos = kernel->getKernelContext().fixPositionFun();
         for (auto &&future : newParticles) {
             auto particles = future.get();
             // reposition particles to respect the periodic b.c.

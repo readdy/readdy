@@ -93,8 +93,8 @@ const CellContainer::cell_index &CellContainer::contiguous_index() const {
 
 CellContainer::CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                              const readdy::util::thread::Config &config)
-        : _data(data), _context(context), _config(config), _size(context.getBoxSize()),
-          _root_size(context.getBoxSize()) {}
+        : _data(data), _context(context), _config(config), _size(context.boxSize()),
+          _root_size(context.boxSize()) {}
 
 CellContainer::sub_cell *const CellContainer::sub_cell_for_position(const CellContainer::vec3 &pos) {
     return const_cast<CellContainer::sub_cell *const>(static_cast<const CellContainer *>(this)->sub_cell_for_position(
@@ -108,7 +108,7 @@ const CellContainer::sub_cell *const CellContainer::sub_cell_for_position(const 
             (pos.y + .5 * _root_size.y - _offset.y) / _sub_cell_size.y));
     const auto k = static_cast<const cell_index>(floor(
             (pos.z + .5 * _root_size.z - _offset.z) / _sub_cell_size.z));
-    return sub_cell_for_grid_index(std::tie(i, j, k));
+    return sub_cell_for_grid_index(std::make_tuple(i, j, k));
 }
 
 CellContainer::sub_cell *const CellContainer::sub_cell_for_grid_index(const CellContainer::grid_index &index) {
@@ -463,8 +463,8 @@ CellContainer::execute_for_each_sub_cell(const std::function<void(const CellCont
 }
 
 void CellContainer::update_root_size() {
-    _root_size = vec3(_context.getBoxSize());
-    _size = vec3(_context.getBoxSize());
+    _root_size = vec3(_context.boxSize());
+    _size = vec3(_context.boxSize());
 }
 
 CellContainer::~CellContainer() = default;

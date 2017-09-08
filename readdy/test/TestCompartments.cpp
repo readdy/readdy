@@ -67,7 +67,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
 TEST_P(TestCompartments, TwoCompartments) {
     // two compartments, four species A,B,C and D, in the end there should only be C and D particles
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     ctx.particle_types().add("A", 1., 1.);
     ctx.particle_types().add("B", 1., 1.);
     ctx.particle_types().add("C", 1., 1.);

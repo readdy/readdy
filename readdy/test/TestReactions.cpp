@@ -65,8 +65,8 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
     kernel->getKernelContext().particle_types().add("B", 1.0, 1.0);
     kernel->getKernelContext().particle_types().add("AB", 0.0, 1.0);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
-    kernel->getKernelContext().setBoxSize(5, 5, 5);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
+    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
     kernel->registerReaction<readdy::model::reactions::Fusion>("Form complex", "A", "B", "AB", .5, 1.0);
     kernel->registerReaction<readdy::model::reactions::Fission>("Dissolve", "AB", "A", "B", .5, 1.0);
 
@@ -118,8 +118,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
      */
     kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
     kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
-    kernel->getKernelContext().setBoxSize(20, 20, 20);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
+    kernel->getKernelContext().boxSize() = {{20, 20, 20}};
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};

@@ -128,7 +128,7 @@ void SCPUStateModel::calculateForces() {
 
     // update forces and energy order 2 potentials
     {
-        const auto &difference = pimpl->context->getShortestDifferenceFun();
+        const auto &difference = pimpl->context->shortestDifferenceFun();
         readdy::model::Vec3 forceVec{0, 0, 0};
         for (auto it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
             auto i = it->idx1;

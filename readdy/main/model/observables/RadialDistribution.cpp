@@ -68,7 +68,7 @@ void RadialDistribution::evaluate() {
                                                       return isInCollection(p, typeCountFrom);
                                                   });
         {
-            const auto &distSquared = kernel->getKernelContext().getDistSquaredFun();
+            const auto &distSquared = kernel->getKernelContext().distSquaredFun();
             for (auto &&pFrom : particles) {
                 if (isInCollection(pFrom, typeCountFrom)) {
                     for (auto &&pTo : particles) {

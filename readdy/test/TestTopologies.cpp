@@ -82,7 +82,7 @@ struct TestTopologies : KernelTest {
 TEST_P(TestTopologies, BondedPotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
     auto top = kernel->getKernelStateModel().addTopology(0,{x_i, x_j});
@@ -126,7 +126,7 @@ TEST_P(TestTopologies, BondedPotential) {
 TEST_P(TestTopologies, AnglePotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{1, 1, 0, ctx.particle_types().id_of("Topology A")};
@@ -167,7 +167,7 @@ TEST_P(TestTopologies, AnglePotential) {
 TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
@@ -225,7 +225,7 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
 TEST_P(TestTopologies, DihedralPotential) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
@@ -268,7 +268,7 @@ TEST_P(TestTopologies, DihedralPotential) {
 TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     auto &ctx = kernel->getKernelContext();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.setBoxSize(10, 10, 10);
+    ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};

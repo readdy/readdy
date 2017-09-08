@@ -153,7 +153,7 @@ void CPUStateModel::calculateForces() {
     const auto &particleData = pimpl->cdata();
     const auto &potOrder1 = pimpl->context->potentials().potentials_order1();
     const auto &potOrder2 = pimpl->context->potentials().potentials_order2();
-    const auto &d = pimpl->context->getShortestDifferenceFun();
+    const auto &d = pimpl->context->shortestDifferenceFun();
     {
         //std::vector<std::future<scalar>> energyFutures;
         //energyFutures.reserve(config->nThreads());

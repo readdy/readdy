@@ -117,7 +117,7 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
         });
     }
     {
-        const auto &pbc = _context.getPBCFun();
+        const auto &pbc = _context.applyPBCFun();
         // center w.r.t. simulation coordinates
         auto my_global_center = _offset + .5 * _size - .5 * _root_size;
         auto my_root = root();
