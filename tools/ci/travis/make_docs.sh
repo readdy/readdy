@@ -14,11 +14,6 @@ function set_this_up {
         echo "This commit was made against the $TRAVIS_BRANCH branch and not the master branch. Exit."
         exit 0
     fi
-    if [ "$CONDA_PY" != "27" ]
-    then
-        echo "Only build documentation for python version 2.7. Exit."
-        exit 0
-    fi
     if [ "${TRAVIS_OS_NAME}" != "linux" ]
     then
         echo "Only build documentation for linux. Exit."
