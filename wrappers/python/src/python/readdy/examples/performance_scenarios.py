@@ -154,6 +154,7 @@ class PerformanceScenario:
 
 class Collisive(PerformanceScenario):
     """Scenario with uniformly distributed particles that repulse each other"""
+
     def __init__(self, kernel, factors, time_step=0.01, integrator=None, reaction_scheduler=None):
         super(Collisive, self).__init__(kernel, time_step, integrator, reaction_scheduler)
         box_length = 7. * factors["box_length"]
@@ -174,6 +175,21 @@ class Collisive(PerformanceScenario):
         for i in range(self.system_vars["n_particles"]):
             pos = np.random.uniform(size=3) * box_length - 0.5 * box_length
             self.sim.add_particle("A", api.Vec(*pos))
+
+
+class Reactive(PerformanceScenario):
+    # todo
+    """
+    unsigned long numberA = 500, numberC = 1800;
+    readdy::scalar boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, forceConstant = 10.;
+    A+B<-->C
+    """
+    pass
+
+
+class ReactiveCollosive(PerformanceScenario):
+    # todo combine both
+    pass
 
 
 def sample_n_particles_const_density(number_factors, n_time_steps=50, scenario_type=Collisive, kernel="SingleCPU"):
