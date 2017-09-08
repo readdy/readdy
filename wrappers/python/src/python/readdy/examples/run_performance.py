@@ -32,12 +32,15 @@ import readdy.examples.performance_scenarios as ps
 __author__ = "chrisfroe"
 __license__ = "LGPL"
 
+data_dir = "./"
+#  data_dir = "./performance_results/"
 
-def sample_and_plot_scenario(scenario_type=ps.PerformanceScenario, kernel="SingleCPU"):
-    n_samples = 10
-    n_time_steps = 20
-    number_factors = np.logspace(0, 3.5, n_samples)
-    times, counts, system_vars = ps.sample_n_particles_const_density(number_factors, n_time_steps, scenario_type=ps.Collisive, kernel=kernel)
+
+def sample_and_plot_scenario(sampler=ps.Sampler, scenario_type=ps.PerformanceScenario, kernel="SingleCPU"):
+    n_samples = 8
+    n_time_steps = 10
+    number_factors = np.logspace(0, 3, n_samples)
+    times, counts, system_vars = sampler.sample(number_factors, n_time_steps, scenario_type=ps.Collisive, kernel=kernel)
     result = (times, counts, system_vars)
     print("density", system_vars["density"])
     print("reactivity", system_vars["reactivity"])
@@ -46,28 +49,41 @@ def sample_and_plot_scenario(scenario_type=ps.PerformanceScenario, kernel="Singl
     factor = 1e-6
     plt.plot(system_vars["n_particles"], np.fromiter(map(lambda x: factor * x, system_vars["n_particles"]), dtype=np.float), "--", label="linear")
     plt.legend(loc="best")
-    plt.title(scenario_type.describe() + " at constant density, " + kernel)
+    plt.title(scenario_type.describe() + sampler.describe() + kernel)
     plt.xlabel("number of particles")
     plt.xscale("log")
     plt.yscale("log")
-    plt.savefig(scenario_type.describe() + kernel + ".pdf")
+    plt.savefig(data_dir + scenario_type.describe() + kernel + sampler.describe() + ".pdf")
     plt.clf()
-    return result, kernel + scenario_type.describe()
+    return result, kernel + scenario_type.describe() + sampler.describe()
 
 
 if __name__ == '__main__':
-    scpu_coll = sample_and_plot_scenario(ps.Collisive, "SingleCPU")
-    cpu_coll = sample_and_plot_scenario(ps.Collisive, "CPU")
-    scpu_react = sample_and_plot_scenario(ps.Reactive, "SingleCPU")
-    cpu_react = sample_and_plot_scenario(ps.Reactive, "CPU")
+    results_cd = [sample_and_plot_scenario(ps.ConstDensity, ps.Collisive, "SingleCPU"),
+                  sample_and_plot_scenario(ps.ConstDensity, ps.Collisive, "CPU"),
+                  sample_and_plot_scenario(ps.ConstDensity, ps.Reactive, "SingleCPU"),
+                  sample_and_plot_scenario(ps.ConstDensity, ps.Reactive, "CPU")]
+    results_cv = [sample_and_plot_scenario(ps.ConstVolume, ps.Collisive, "SingleCPU"),
+                  sample_and_plot_scenario(ps.ConstVolume, ps.Collisive, "CPU"),
+                  sample_and_plot_scenario(ps.ConstVolume, ps.Reactive, "SingleCPU"),
+                  sample_and_plot_scenario(ps.ConstVolume, ps.Reactive, "CPU")]
 
-    for result, label in [scpu_coll, cpu_coll, scpu_react, cpu_react]:
+    for result, label in results_cd:
         ps.plot_times(result[0], result[1], result[2]["n_particles"], total_label=label)
-
     plt.title("SCPU vs CPU")
     plt.xlabel("number of particles")
     plt.xscale("log")
     plt.yscale("log")
     plt.legend(loc="best")
-    plt.savefig("SCPU-vs-CPU.pdf")
+    plt.savefig(data_dir + "SCPU-vs-CPU-ConstDensity.pdf")
+    plt.clf()
+
+    for result, label in results_cv:
+        ps.plot_times(result[0], result[1], result[2]["n_particles"], total_label=label)
+    plt.title("SCPU vs CPU")
+    plt.xlabel("number of particles")
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.legend(loc="best")
+    plt.savefig(data_dir + "SCPU-vs-CPU-ConstVolume.pdf")
     plt.clf()

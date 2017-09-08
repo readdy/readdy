@@ -153,7 +153,7 @@ class PerformanceScenario:
 
     @classmethod
     def describe(cls):
-        return "Base"
+        return "PerformanceScenario"
 
 
 class Collisive(PerformanceScenario):
@@ -187,6 +187,7 @@ class Collisive(PerformanceScenario):
 
 class Reactive(PerformanceScenario):
     """Scenario with three species uniformly distributed and reactions"""
+
     def __init__(self, kernel, factors, time_step=0.01, integrator=None, reaction_scheduler=None):
         super(Reactive, self).__init__(kernel, time_step, integrator, reaction_scheduler)
         box_length = 20. * factors["box_length"]
@@ -229,30 +230,82 @@ class ReactiveCollosive(PerformanceScenario):
     pass
 
 
-def sample_n_particles_const_density(number_factors, n_time_steps=50, scenario_type=Collisive, kernel="SingleCPU"):
-    """Helper function to sample a scenario for varying number of particles at constant density
-
-    :param number_factors: array of factors that will be applied to the scenarios, the length of this determines the number of samples/simulations
-    :param n_time_steps: how many time steps shall be performed for each sample/simulation
-    :param scenario_type: determines which scenario shall be run,
-    :param kernel: string determining the compute kernel of the simulation
-    :return: performance results (times, counts) and unit-less system variables, these are all dictionaries
+class Sampler:
     """
-    n_samples = len(number_factors)
-    times = get_empty_result_container(n_samples)
-    counts = get_empty_result_container(n_samples)
-    system_vars = get_empty_system_variables(n_samples)
-    box_length_factors = np.cbrt(number_factors)
-    for i, _ in enumerate(number_factors):
-        factors = get_identity_factors()
-        factors["n_particles"] = number_factors[i]
-        factors["box_length"] = box_length_factors[i]
-        scenario = scenario_type(kernel, factors)
-        scenario.run(n_time_steps)
-        scenario.set_system_vars(system_vars, i)
-        scenario.set_times(times, i)
-        scenario.set_counts(counts, i)
-    return times, counts, system_vars
+    Samplers only contain a function sample(). For plotting it is convenient to
+    pass this function around together with a describe() method.
+    """
+    @staticmethod
+    def sample(*args, **kwargs):
+        pass
+
+    @classmethod
+    def describe(cls):
+        return "Sampler"
+
+
+class ConstDensity(Sampler):
+    @staticmethod
+    def sample(number_factors, n_time_steps=50, scenario_type=Collisive, kernel="SingleCPU"):
+        """Helper function to sample a scenario for varying number of particles at constant density
+
+        :param number_factors: array of factors that will be applied to the scenarios, the length of this determines the number of samples/simulations
+        :param n_time_steps: how many time steps shall be performed for each sample/simulation
+        :param scenario_type: determines which scenario shall be run,
+        :param kernel: string determining the compute kernel of the simulation
+        :return: performance results (times, counts) and unit-less system variables, these are all dictionaries
+        """
+        n_samples = len(number_factors)
+        times = get_empty_result_container(n_samples)
+        counts = get_empty_result_container(n_samples)
+        system_vars = get_empty_system_variables(n_samples)
+        box_length_factors = np.cbrt(number_factors)
+        for i, _ in enumerate(number_factors):
+            factors = get_identity_factors()
+            factors["n_particles"] = number_factors[i]
+            factors["box_length"] = box_length_factors[i]
+            scenario = scenario_type(kernel, factors)
+            scenario.run(n_time_steps)
+            scenario.set_system_vars(system_vars, i)
+            scenario.set_times(times, i)
+            scenario.set_counts(counts, i)
+        return times, counts, system_vars
+
+    @classmethod
+    def describe(cls):
+        return "ConstDensity"
+
+
+class ConstVolume(Sampler):
+    @staticmethod
+    def sample(number_factors, n_time_steps=50, scenario_type=Collisive, kernel="SingleCPU"):
+        """Helper function to sample a scenario for varying number of particles at constant volume
+
+        :param number_factors: array of factors that will be applied to the scenarios, the length of this determines the number of samples/simulations
+        :param n_time_steps: how many time steps shall be performed for each sample/simulation
+        :param scenario_type: determines which scenario shall be run,
+        :param kernel: string determining the compute kernel of the simulation
+        :return: performance results (times, counts) and unit-less system variables, these are all dictionaries
+        """
+        n_samples = len(number_factors)
+        times = get_empty_result_container(n_samples)
+        counts = get_empty_result_container(n_samples)
+        system_vars = get_empty_system_variables(n_samples)
+        box_length_factors = np.ones_like(number_factors) * 2.
+        for i, _ in enumerate(number_factors):
+            factors = get_identity_factors()
+            factors["n_particles"] = number_factors[i]
+            factors["box_length"] = box_length_factors[i]
+            scenario = scenario_type(kernel, factors)
+            scenario.run(n_time_steps)
+            scenario.set_system_vars(system_vars, i)
+            scenario.set_times(times, i)
+            scenario.set_counts(counts, i)
+        return times, counts, system_vars
+
+    @classmethod
+    def describe(cls):
+        return "ConstVolume"
 
 
 def plot_times(times, counts, x_axis, total_label=None):
