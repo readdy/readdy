@@ -74,7 +74,7 @@ __author__ = "chrisfroe"
 __license__ = "LGPL"
 
 # these are varied by the user
-factor_keys = ["n_particles", "box_length", "diff", "skin"]
+factor_keys = ["n_particles", "box_length", "diff", "skin", "reaction_rate"]
 # these usually show up on the y-axis
 result_keys = ["/", "/integrator", "/neighborList", "/forces", "/reactionScheduler"]
 # these usually show up on the x-axis, they are unit-less quantities calculated by the scenario from the factors and hardcoded base values
@@ -151,6 +151,10 @@ class PerformanceScenario:
         for key in system_variables_keys:
             container[key][idx] = self.system_vars[key]
 
+    @classmethod
+    def describe(cls):
+        return "Base"
+
 
 class Collisive(PerformanceScenario):
     """Scenario with uniformly distributed particles that repulse each other"""
@@ -176,15 +180,48 @@ class Collisive(PerformanceScenario):
             pos = np.random.uniform(size=3) * box_length - 0.5 * box_length
             self.sim.add_particle("A", api.Vec(*pos))
 
+    @classmethod
+    def describe(cls):
+        return "Collisive"
+
 
 class Reactive(PerformanceScenario):
-    # todo
-    """
-    unsigned long numberA = 500, numberC = 1800;
-    readdy::scalar boxLength = 100., rateOn = 1e-3, rateOff = 5e-5, forceConstant = 10.;
-    A+B<-->C
-    """
-    pass
+    """Scenario with three species uniformly distributed and reactions"""
+    def __init__(self, kernel, factors, time_step=0.01, integrator=None, reaction_scheduler=None):
+        super(Reactive, self).__init__(kernel, time_step, integrator, reaction_scheduler)
+        box_length = 20. * factors["box_length"]
+        self.sim.box_size = api.Vec(box_length, box_length, box_length)
+        self.sim.periodic_boundary = [True, True, True]
+        diffusion_coeff = 1. * factors["diff"]
+        self.sim.register_particle_type("A", diffusion_coeff, 0.5)
+        self.sim.register_particle_type("B", diffusion_coeff, 0.5)
+        self.sim.register_particle_type("C", diffusion_coeff, 0.5)
+        reaction_radius = 2.
+        rate_on = 1e-3 * factors["reaction_rate"]
+        rate_off = 5e-5 * factors["reaction_rate"]
+        self.sim.register_reaction_fusion("fusion", "A", "B", "C", rate_on, reaction_radius)
+        self.sim.register_reaction_fission("fission", "C", "A", "B", rate_off, reaction_radius)
+        n_a = int(25 * factors["n_particles"])
+        n_c = int(90 * factors["n_particles"])
+
+        # set dimensionless system quantities
+        self.system_vars["n_particles"] = 2 * n_a + n_c
+        self.system_vars["system_size"] = box_length ** 3 / reaction_radius ** 3
+        self.system_vars["displacement"] = np.sqrt(2. * diffusion_coeff * self.time_step) / reaction_radius
+        self.system_vars["reactivity"] = rate_on * time_step
+        self.system_vars["density"] = self.system_vars["n_particles"] / self.system_vars["system_size"]
+
+        for i in range(self.system_vars["n_particles"]):
+            pos = np.random.uniform(size=3) * box_length - 0.5 * box_length
+            self.sim.add_particle("A", api.Vec(*pos))
+            pos = np.random.uniform(size=3) * box_length - 0.5 * box_length
+            self.sim.add_particle("B", api.Vec(*pos))
+            pos = np.random.uniform(size=3) * box_length - 0.5 * box_length
+            self.sim.add_particle("C", api.Vec(*pos))
+
+    @classmethod
+    def describe(cls):
+        return "Reactive"
 
 
 class ReactiveCollosive(PerformanceScenario):
@@ -218,17 +255,17 @@ def sample_n_particles_const_density(number_factors, n_time_steps=50, scenario_t
     return times, counts, system_vars
 
 
-def plot_times(times, counts, x_axis, total=None):
+def plot_times(times, counts, x_axis, total_label=None):
     """Helper function to plot results of a sampling
 
     :param times: performance results dictionary
     :param counts: performance results dictionary
     :param x_axis: an array, most likely one of system_vars
-    :param total: label if only total time shall be plotted
+    :param total_label: label if only total time shall be plotted
     :return:
     """
-    if total is not None:
-        plt.plot(x_axis, times["/"], label=total)
+    if total_label is not None:
+        plt.plot(x_axis, times["/"], label=total_label)
         plt.ylabel("total computation time in seconds")
     else:
         plt.plot(x_axis, times["/integrator"] / counts["/integrator"], label="integrator")
