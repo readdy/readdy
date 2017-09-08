@@ -96,12 +96,14 @@ void exportModelClasses(py::module &proto) {
             });
 
     py::class_<context>(proto, "Context")
-            .def_property("kbt", &context::getKBT, &context::setKBT)
-            .def("get_box_size", [](context &self) { return readdy::model::Vec3(self.getBoxSize()); })
-            .def("set_box_size", [](context &self, readdy::model::Vec3 vec) { self.setBoxSize(vec[0], vec[1], vec[2]); })
-            .def_property("periodic_boundary", &context::getPeriodicBoundary,
-                          [](context &self, std::array<bool, 3> periodic) {
-                              self.setPeriodicBoundary(periodic[0], periodic[1], periodic[2]);
+            .def_property("kbt", [](const context &self) {return self.kBT(); }, [](context &self, readdy::scalar kbt) {
+                self.kBT() = kbt;
+            })
+            .def("get_box_size", [](context &self) { return readdy::model::Vec3(self.boxSize()); })
+            .def("set_box_size", [](context &self, readdy::model::Vec3 vec) { self.boxSize() = vec.data; })
+            .def_property("periodic_boundary", [](const context &self) {return self.periodicBoundaryConditions();},
+                          [](context &self, context::PeriodicBoundaryConditions periodic) {
+                              self.periodicBoundaryConditions() = periodic;
                           })
             .def("particle_types", [](context& self) -> type_registry& {
                 return self.particle_types();
@@ -109,9 +111,9 @@ void exportModelClasses(py::module &proto) {
             .def("potentials", [](context& self) -> potential_registry& {
                 return self.potentials();
             }, rvp::reference_internal)
-            .def("get_fix_position_fun", &context::getFixPositionFun)
-            .def("get_shortest_difference_fun", &context::getShortestDifferenceFun)
-            .def("get_dist_squared_fun", &context::getDistSquaredFun)
+            .def("get_fix_position_fun", &context::fixPositionFun)
+            .def("get_shortest_difference_fun", &context::shortestDifferenceFun)
+            .def("get_dist_squared_fun", &context::distSquaredFun)
             .def("register_conversion_reaction",
                  [](context &self, readdy::model::reactions::Conversion* r) -> const short {
                      return self.reactions().add_external(r);
