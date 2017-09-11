@@ -45,6 +45,9 @@ namespace reactions {
 class CPUGillespieParallel : public readdy::model::actions::reactions::GillespieParallel {
     using super = readdy::model::actions::reactions::GillespieParallel;
 public:
+
+    using super::perform;
+
     CPUGillespieParallel(cpu_kernel* kernel, readdy::scalar timeStep);
 
     ~CPUGillespieParallel() override;
