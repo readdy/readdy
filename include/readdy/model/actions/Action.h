@@ -35,6 +35,7 @@
 
 #include <memory>
 #include <readdy/common/common.h>
+#include <readdy/common/Timer.h>
 
 #if READDY_OSX
 #include <string>

@@ -147,7 +147,10 @@ const std::string &PerformanceNode::name() const {
 
 std::string PerformanceNode::validateName(const std::string &name) const {
     if (name.find(slash) != name.npos) {
-        throw std::invalid_argument(fmt::format("name {} contains forbidden char {}", name, slash));
+        throw std::invalid_argument(fmt::format("name \"{}\" contains forbidden char {}", name, slash));
+    }
+    if(name.find(' ') == 0 || name.find(' ') == name.npos-1) {
+        throw std::invalid_argument(fmt::format("name \"{}\" contains leading/trailing whitespaces.", name));
     }
     return util::str::trim_copy(name);
 }

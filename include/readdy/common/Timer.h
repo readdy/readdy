@@ -43,12 +43,13 @@
 #include <utility>
 
 #include "logging.h"
+#include "common.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 
 struct PerformanceData {
-    using time = double;
+    using time = readdy::scalar;
     PerformanceData(time t, std::size_t c) : cumulativeTime(t), count(c) {}
     mutable time cumulativeTime = 0.;
     mutable std::size_t count = 0;

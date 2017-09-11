@@ -95,9 +95,9 @@ TEST(TestTimer, Threaded) {
 
 TEST(TestTimer, SlashedPath) {
     node top("top", false);
-    auto &mid = top.subnode("mid ");
-    auto &bot = mid.subnode(" bot");
-    EXPECT_EQ(top.child("mid/bot ").name(), "bot");
+    auto &mid = top.subnode("mid");
+    auto &bot = mid.subnode("bot");
+    EXPECT_EQ(top.child("mid /bot ").name(), "bot");
 }
 
 TEST(TestTimer, InvalidNodeName) {
@@ -108,8 +108,12 @@ TEST(TestTimer, InvalidNodeName) {
         node n("validname", false);
         auto &nn = n.subnode("invalid/name");
     };
+    auto createNodeWhitespace = [](){
+        node n(" hasleadingwhitespace", false);
+    };
     EXPECT_THROW(createNode(), std::invalid_argument);
     EXPECT_THROW(createSubNode(), std::invalid_argument);
+    EXPECT_THROW(createNodeWhitespace(), std::invalid_argument);
 }
 
 TEST(TestTimer, GetRootFromChild) {

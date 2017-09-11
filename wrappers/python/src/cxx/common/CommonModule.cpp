@@ -31,6 +31,7 @@
 
 #include <readdy/model/Vec3.h>
 #include <readdy/io/BloscFilter.h>
+#include <readdy/common/Timer.h>
 #include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
