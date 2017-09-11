@@ -35,8 +35,10 @@
 
 #include <readdy/common/thread/Config.h>
 #include <readdy/common/common.h>
+#include <readdy/common/Index.h>
 #include <readdy/model/Vec3.h>
 #include <readdy/model/KernelContext.h>
+
 
 #include "ParticlesList.h"
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
@@ -62,7 +64,6 @@ public:
     using vec3 = readdy::model::Vec3;
     using level_t = std::uint8_t;
     using particle_index = ParticlesList::particle_index;
-
 
     CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                   const readdy::util::thread::Config &config);
@@ -209,7 +210,7 @@ public:
      * @param function
      * @todo this currently only works for leafs at level==2
      */
-    void execute_for_each_leaf(const std::function<void(const sub_cell&)> &function);
+    virtual void execute_for_each_leaf(const std::function<void(const sub_cell&)> &function);
 
     void execute_for_each_sub_cell(const std::function<void(sub_cell &)> &function);
 

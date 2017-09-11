@@ -93,6 +93,8 @@ public:
 
     void insert_particle(particle_index index, bool mark_dirty=false) override;
 
+    virtual void execute_for_each_leaf(const std::function<void(const SubCell&)> &function) override;
+
     void clear() override;
 
     const ParticlesList& particles() const;

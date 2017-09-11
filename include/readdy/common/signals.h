@@ -172,7 +172,9 @@ public:
     using slot_type = std::function<void(Args...)>;
 
     void fire_signal(Args... args) {
-        std::for_each(this->begin(), this->end(), [&](slot_type &slot) { slot(std::forward<Args>(args)...); });
+        for(auto &slot : *this) {
+            slot(std::forward<Args>(args)...);
+        }
     }
 
     void operator()(Args... args) {

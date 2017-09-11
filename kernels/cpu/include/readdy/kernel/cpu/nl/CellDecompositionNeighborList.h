@@ -66,6 +66,8 @@ public:
 private:
     CellContainer _cell_container;
     bool _is_set_up {false};
+
+    util::Index3D i3 {4, 4, 4};
 };
 
 }
