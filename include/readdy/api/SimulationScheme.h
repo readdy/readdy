@@ -102,7 +102,7 @@ protected:
     std::unique_ptr<h5rd::Group> configGroup = nullptr;
     bool evaluateObservables = true;
     time_step_type start = 0;
-    util::PerformanceNode &_performanceRoot;
+    const util::PerformanceNode &_performanceRoot;
 };
 
 class ReaDDyScheme : public SimulationScheme {

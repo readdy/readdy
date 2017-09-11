@@ -50,9 +50,18 @@ NAMESPACE_BEGIN(util)
 
 struct PerformanceData {
     using time = readdy::scalar;
-    PerformanceData(time t, std::size_t c) : cumulativeTime(t), count(c) {}
-    mutable time cumulativeTime = 0.;
-    mutable std::size_t count = 0;
+    PerformanceData(time t, std::size_t c) : _cumulativeTime(t), _count(c) {}
+
+    void record(time elapsed) const;
+
+    time cumulativeTime() const;
+
+    std::size_t count() const;
+
+    void clear() const;
+private:
+    mutable time _cumulativeTime = 0.;
+    mutable std::size_t _count = 0;
     mutable std::mutex mutex;
 };
 

@@ -150,10 +150,10 @@ void exportCommon(py::module& common) {
                 .def("keys", &readdy::util::PerformanceNode::keys)
                 .def("clear", &readdy::util::PerformanceNode::clear)
                 .def("time", [](const readdy::util::PerformanceNode &self) -> readdy::util::PerformanceData::time {
-                    return self.data().cumulativeTime;
+                    return self.data().cumulativeTime();
                 })
                 .def("count", [](const readdy::util::PerformanceNode &self) -> std::size_t {
-                    return self.data().count;
+                    return self.data().count();
                 });
     }
 

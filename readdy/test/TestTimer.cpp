@@ -49,8 +49,8 @@ TEST(TestTimer, TimerMeasureOnce) {
         auto t = n.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    EXPECT_GT(n.data().cumulativeTime, static_cast<data::time>(0));
-    EXPECT_EQ(n.data().count, 1);
+    EXPECT_GT(n.data().cumulativeTime(), static_cast<data::time>(0));
+    EXPECT_EQ(n.data().count(), 1);
 }
 
 TEST(TestTimer, Clear) {
@@ -67,8 +67,8 @@ TEST(TestTimer, Clear) {
         auto t2 = n2.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    EXPECT_EQ(n1.data().count, 2);
-    EXPECT_EQ(n2.data().count, 1) << "n2 was cleared in between, thus only one call";
+    EXPECT_EQ(n1.data().count(), 2);
+    EXPECT_EQ(n2.data().count(), 1) << "n2 was cleared in between, thus only one call";
 }
 
 TEST(TestTimer, Threaded) {
@@ -89,8 +89,8 @@ TEST(TestTimer, Threaded) {
         }
         executor.execute_and_wait(std::move(executables));
     }
-    EXPECT_EQ(n.data().count, 3);
-    EXPECT_GT(n.data().cumulativeTime, static_cast<data::time>(0));
+    EXPECT_EQ(n.data().count(), 3);
+    EXPECT_GT(n.data().cumulativeTime(), static_cast<data::time>(0));
 }
 
 TEST(TestTimer, SlashedPath) {

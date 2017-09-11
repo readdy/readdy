@@ -55,8 +55,7 @@ const PerformanceNode &PerformanceNode::subnode(const std::string &name) const {
 }
 
 void PerformanceNode::clear() {
-    _data.cumulativeTime = 0.;
-    _data.count = 0;
+    _data.clear();
     for (auto &c : children) {
         c->clear();
     }
@@ -87,7 +86,7 @@ std::string PerformanceNode::describe(const size_t level) const {
     for (auto i = 0; i < level; ++i) {
         s += "\t";
     }
-    s += fmt::format("{}: time {} s, count {}\n", _name, _data.cumulativeTime, _data.count);
+    s += fmt::format("{}: time {} s, count {}\n", _name, _data.cumulativeTime(), _data.count());
     for (const auto &c : children) {
         s += c->describe(level + 1);
     }
@@ -174,10 +173,28 @@ Timer::~Timer() {
         std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
         long elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
         const auto elapsedSeconds = static_cast<PerformanceData::time>(1e-6) * static_cast<PerformanceData::time>(elapsed);
-        std::unique_lock<std::mutex> lock(target.mutex);
-        target.cumulativeTime += elapsedSeconds;
-        target.count++;
+        target.record(elapsedSeconds);
     }
+}
+
+void PerformanceData::record(PerformanceData::time elapsed) const {
+    std::unique_lock<std::mutex> lock(mutex);
+    _cumulativeTime += elapsed;
+    _count++;
+}
+
+PerformanceData::time PerformanceData::cumulativeTime() const {
+    return _cumulativeTime;
+}
+
+std::size_t PerformanceData::count() const {
+    return _count;
+}
+
+void PerformanceData::clear() const {
+    std::unique_lock<std::mutex> lock(mutex);
+    _cumulativeTime = 0.;
+    _count = 0;
 }
 
 }
