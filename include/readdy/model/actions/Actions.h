@@ -80,10 +80,10 @@ public:
 class UpdateNeighborList : public Action {
 public:
     enum Operation {
-        create, clear
+        init, update, clear
     };
 
-    explicit UpdateNeighborList(Operation operation = Operation::create, scalar skinSize = -1);
+    explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = -1);
 
     virtual bool supportsSkin() const = 0;
 

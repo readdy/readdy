@@ -96,8 +96,14 @@ struct READDY_API SCPUNeighborListContainer {
 
     virtual void create(const SCPUParticleData &data, scalar skin) = 0;
 
+    scalar skin() const {
+        return _skin;
+    }
+
 protected:
     std::unique_ptr<container> pairs = std::make_unique<container>();
+
+    scalar _skin;
 };
 
 struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
@@ -153,6 +159,7 @@ public:
     explicit SCPUNotThatNaiveNeighborList(const context *const context) : ctx(context) {}
 
     void create(const SCPUParticleData &data, scalar skin) override {
+        super::_skin = skin;
         setupBoxes(skin);
         fillBoxes(data);
     }

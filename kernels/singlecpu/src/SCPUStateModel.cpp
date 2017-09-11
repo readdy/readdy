@@ -109,8 +109,8 @@ const std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const 
     return result;
 }
 
-void SCPUStateModel::updateNeighborList(scalar skin) {
-    pimpl->neighborList->create(pimpl->particleData, skin);
+void SCPUStateModel::updateNeighborList() {
+    pimpl->neighborList->create(pimpl->particleData, pimpl->neighborList->skin());
 }
 
 void SCPUStateModel::calculateForces() {
@@ -127,7 +127,7 @@ void SCPUStateModel::calculateForces() {
     }
 
     // update forces and energy order 2 potentials
-    {
+    if(!pimpl->context->potentials().potentials_order2().empty()) {
         const auto &difference = pimpl->context->shortestDifferenceFun();
         readdy::model::Vec3 forceVec{0, 0, 0};
         for (auto it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
@@ -272,6 +272,10 @@ void SCPUStateModel::insert_topology(SCPUStateModel::topology &&top) {
     std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
         data.entry_at(p).topology_index = idx;
     });
+}
+
+void SCPUStateModel::initializeNeighborList(scalar skin) {
+    pimpl->neighborList->create(pimpl->particleData, skin);
 }
 
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;

@@ -387,7 +387,10 @@ const std::size_t CellContainer::n_sub_cells_total() const {
 
 void CellContainer::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> &function) {
     execute_for_each_sub_cell([&](sub_cell &cell) {
-        cell.execute_for_each_leaf(function);
+        //cell.execute_for_each_leaf(function);
+        for (const auto &sub_cell : cell.sub_cells()) {
+            function(sub_cell);
+        }
     });
 }
 

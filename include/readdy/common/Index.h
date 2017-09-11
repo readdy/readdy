@@ -34,6 +34,7 @@
 
 #include <initializer_list>
 #include <array>
+#include <numeric>
 #include "macros.h"
 #include "tuple_utils.h"
 
@@ -47,19 +48,17 @@ public:
     using GridDims = std::array<int, Dims>;
     using value_type = typename GridDims::value_type;
 
-    Index() : size() {}
+    Index() : size(), n_elems(0) {}
 
     template<typename ...Args>
-    Index(Args &&...args) : size({std::forward<Args>(args)...}) {}
+    Index(Args &&...args) : size({std::forward<Args>(args)...}),
+                            n_elems(std::accumulate(size.begin(), size.end(), 1, std::multiplies<value_type>())) {}
 
-    Index(GridDims &&arr) : size(std::move(arr)) {}
+    Index(GridDims &&arr) : size(std::move(arr)),
+                            n_elems(std::accumulate(size.begin(), size.end(), 1, std::multiplies<value_type>())) {}
 
-    std::size_t nElements() const {
-        std::size_t result = 1;
-        for(const auto x : size) {
-            result *= x;
-        }
-        return result;
+    value_type nElements() const {
+        return n_elems;
     }
 
     /**
@@ -101,13 +100,12 @@ public:
      */
     constexpr std::size_t operator()(const GridDims &ix) const {
         std::size_t result = 0;
-        for(std::size_t d = 0; d < Dims; ++d) {
-            std::size_t prefactor = 1;
-            for(std::size_t j = d+1; j < Dims; ++j) {
-                prefactor *= size[j];
-            }
+        auto prefactor = n_elems / size[0];
+        for(std::size_t d = 0; d < Dims-1; ++d) {
             result += prefactor * ix[d];
+            prefactor /= size[d+1];
         }
+        result += ix[Dims-1];
         return result;
     }
 
@@ -118,20 +116,20 @@ public:
      */
     constexpr GridDims inverse(std::size_t idx) const {
         GridDims result;
-        for(std::size_t d = 0; d < Dims; ++d) {
-            std::size_t prefactor = 1;
-            for(std::size_t j = d+1; j < Dims; ++j) {
-                prefactor *= size[j];
-            }
+        auto prefactor = n_elems / size[0];
+        for(std::size_t d = 0; d < Dims-1; ++d) {
             auto x = std::floor(idx / prefactor);
             result[d] = x;
             idx -= x * prefactor;
+            prefactor /= size[d+1];
         }
+        result[Dims-1] = idx;
         return result;
     }
 
 private:
     GridDims size;
+    value_type n_elems;
 };
 
 using Index1D = Index<1>;

@@ -19,5 +19,17 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from . import api
-from . import util
+"""
+Created on 08.09.17
+
+@author: clonker
+"""
+
+class ReactionDiffusionSystem(object):
+
+    def __init__(self, **kwargs):
+        self._kbt = kwargs['kbt'] if 'kbt' in kwargs.keys() else 1.0
+        self._box_size = kwargs['box_size'] if 'box_size' in kwargs.keys() else 1.0
+        self._periodic_boundary = kwargs['periodic_boundary'] if 'periodic_boundary' in kwargs.keys() else 1.0
+        self._reactions = []
+        self._species = []

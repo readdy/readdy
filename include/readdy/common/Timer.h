@@ -92,6 +92,11 @@ public:
     using performance_lock = std::unique_lock<performance_mutex>;
 
     /**
+     * No-op performance node
+     */
+    PerformanceNode();
+    
+    /**
      * Will hold a reference to itself as root.
      */
     PerformanceNode(const std::string &name, bool measure);

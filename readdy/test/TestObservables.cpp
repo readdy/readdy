@@ -53,7 +53,9 @@ TEST_P(TestObservables, TestParticlePositions) {
 
     auto &&integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", timeStep);
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::create, -1);
+    auto &&neighborListInit = kernel->createAction<update_nl>(update_nl::Operation::init, 0);
+    auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::update, -1);
+    neighborListInit->perform();
     for (readdy::time_step_type t = 0; t < 100; t++) {
         integrator->perform();
         neighborList->perform();

@@ -19,5 +19,16 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from . import api
-from . import util
+"""
+Created on 08.09.17
+
+@author: clonker
+"""
+
+class Observables(object):
+
+    def __init__(self, simulation):
+        self._simulation = simulation
+
+    def rdf(self):
+        pass

@@ -34,6 +34,7 @@
 
 #include <readdy/common/common.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
+#include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
@@ -52,11 +53,11 @@ public:
 
     virtual ~NeighborList() = default;
 
-    virtual void set_up() = 0;
+    virtual void set_up(const util::PerformanceNode &node) = 0;
 
-    virtual void update() = 0;
+    virtual void update(const util::PerformanceNode &node) = 0;
 
-    virtual void clear() = 0;
+    virtual void clear(const util::PerformanceNode &node) = 0;
 
     virtual void updateData(data_t::update_t &&update) = 0;
 

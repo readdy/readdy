@@ -40,6 +40,7 @@
 #include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/kernel/cpu/util/config.h>
 #include <readdy/common/index_persistent_vector.h>
+#include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
@@ -71,7 +72,13 @@ public:
 
     const std::vector<particle_t> getParticles() const override;
 
-    void updateNeighborList(scalar skin) override;
+    void initializeNeighborList(scalar skin, const util::PerformanceNode &node);
+
+    void initializeNeighborList(scalar skin) override;
+
+    void updateNeighborList(const util::PerformanceNode &node);
+
+    void updateNeighborList() override;
 
     void calculateForces() override;
 
@@ -96,6 +103,8 @@ public:
     void expected_n_particles(std::size_t n) override;
 
     void clearNeighborList() override;
+
+    void clearNeighborList(const util::PerformanceNode &node);
 
     readdy::model::top::GraphTopology *const
     addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;

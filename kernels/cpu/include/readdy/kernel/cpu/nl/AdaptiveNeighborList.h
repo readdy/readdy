@@ -51,11 +51,11 @@ public:
 
     ~AdaptiveNeighborList() = default;
 
-    void set_up() override;
+    void set_up(const util::PerformanceNode &node) override;
 
-    void update() override;
+    void update(const util::PerformanceNode &node) override;
 
-    void clear() override;
+    void clear(const util::PerformanceNode &node) override;
 
     void clear_cells();
 

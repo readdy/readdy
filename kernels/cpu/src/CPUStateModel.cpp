@@ -72,17 +72,19 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
             // 2nd order potentials
             //
             scalar mySecondOrderEnergy = 0.;
-            for (const auto neighbor : *neighbors_it) {
-                auto &neighborEntry = data.entry_at(neighbor);
-                auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
-                if (potit != pot2.end()) {
-                    auto x_ij = d(myPos, neighborEntry.position());
-                    auto distSquared = x_ij * x_ij;
-                    for (const auto &potential : potit->second) {
-                        if (distSquared < potential->getCutoffRadiusSquared()) {
-                            readdy::model::Vec3 updateVec{0, 0, 0};
-                            potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
-                            force += updateVec;
+            /*if(!pot2.empty()) */{
+                for (const auto neighbor : *neighbors_it) {
+                    auto &neighborEntry = data.entry_at(neighbor);
+                    auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
+                    if (potit != pot2.end()) {
+                        auto x_ij = d(myPos, neighborEntry.position());
+                        auto distSquared = x_ij * x_ij;
+                        for (const auto &potential : potit->second) {
+                            if (distSquared < potential->getCutoffRadiusSquared()) {
+                                readdy::model::Vec3 updateVec{0, 0, 0};
+                                potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
+                                force += updateVec;
+                            }
                         }
                     }
                 }
@@ -122,7 +124,6 @@ struct CPUStateModel::Impl {
     using reaction_counts_order2_map = CPUStateModel::reaction_counts_order2_map;
     readdy::model::KernelContext *context;
     std::unique_ptr<neighbor_list> neighborList;
-    bool initial_neighbor_list_setup {true};
     scalar currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
     topologies_vec topologies{};
@@ -150,51 +151,55 @@ private:
 
 void CPUStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
-    const auto &particleData = pimpl->cdata();
     const auto &potOrder1 = pimpl->context->potentials().potentials_order1();
     const auto &potOrder2 = pimpl->context->potentials().potentials_order2();
-    const auto &d = pimpl->context->shortestDifferenceFun();
-    {
-        //std::vector<std::future<scalar>> energyFutures;
-        //energyFutures.reserve(config->nThreads());
-        std::vector<std::promise<scalar>> promises (config->nThreads());
+    if(!potOrder1.empty() || !potOrder2.empty()) {
+        const auto &particleData = pimpl->cdata();
+        const auto &d = pimpl->context->shortestDifferenceFun();
         {
-            const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
-            const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
-            auto it_data_end = pimpl->data().end();
-            auto it_data = pimpl->data().begin();
-            auto it_nl = getNeighborList()->begin();
-            auto it_tops = pimpl->topologies.cbegin();
-            const thd::barrier barrier{config->nThreads()};
-
-            const auto& executor = *config->executor();
-            std::vector<std::function<void(std::size_t)>> executables;
-            executables.reserve(config->nThreads());
-
-            for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
-                //energyFutures.push_back(promises[i].get_future());
-                //ForcesThreadArgs args (, std::cref(barrier));
-                executables.push_back(executor.pack(calculateForcesThread, it_data, it_data + grainSize, it_nl, std::ref(promises.at(i)),
-                                                    std::cref(particleData), std::cref(potOrder1), std::cref(potOrder2),
-                                                    std::cref(d)));
-                it_nl += grainSize;
-                it_data += grainSize;
-                it_tops += grainSizeTopologies;
-            }
+            //std::vector<std::future<scalar>> energyFutures;
+            //energyFutures.reserve(config->nThreads());
+            std::vector<std::promise<scalar>> promises(config->nThreads());
             {
-                std::promise<scalar> &lastPromise = promises.back();
-                //energyFutures.push_back(lastPromise.get_future());
-                //ForcesThreadArgs args (, std::cref(barrier));
-                executables.push_back(
-                        executor.pack(calculateForcesThread, it_data, it_data_end, it_nl, std::ref(lastPromise),
-                                      std::cref(particleData), std::cref(potOrder1), std::cref(potOrder2),
-                                      std::cref(d)));
-            }
-            executor.execute_and_wait(std::move(executables));
+                const std::size_t grainSize = (pimpl->cdata().size()) / config->nThreads();
+                const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
+                auto it_data_end = pimpl->data().end();
+                auto it_data = pimpl->data().begin();
+                auto it_nl = getNeighborList()->begin();
+                auto it_tops = pimpl->topologies.cbegin();
+                const thd::barrier barrier{config->nThreads()};
 
-        }
-        for (auto &f : promises) {
-            pimpl->currentEnergy += f.get_future().get();
+                const auto &executor = *config->executor();
+                std::vector<std::function<void(std::size_t)>> executables;
+                executables.reserve(config->nThreads());
+
+                for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
+                    //energyFutures.push_back(promises[i].get_future());
+                    //ForcesThreadArgs args (, std::cref(barrier));
+                    executables.push_back(executor.pack(calculateForcesThread, it_data, it_data + grainSize, it_nl,
+                                                        std::ref(promises.at(i)),
+                                                        std::cref(particleData), std::cref(potOrder1),
+                                                        std::cref(potOrder2),
+                                                        std::cref(d)));
+                    it_nl += grainSize;
+                    it_data += grainSize;
+                    it_tops += grainSizeTopologies;
+                }
+                {
+                    std::promise<scalar> &lastPromise = promises.back();
+                    //energyFutures.push_back(lastPromise.get_future());
+                    //ForcesThreadArgs args (, std::cref(barrier));
+                    executables.push_back(
+                            executor.pack(calculateForcesThread, it_data, it_data_end, it_nl, std::ref(lastPromise),
+                                          std::cref(particleData), std::cref(potOrder1), std::cref(potOrder2),
+                                          std::cref(d)));
+                }
+                executor.execute_and_wait(std::move(executables));
+
+            }
+            for (auto &f : promises) {
+                pimpl->currentEnergy += f.get_future().get();
+            }
         }
     }
 
@@ -240,14 +245,8 @@ const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
     return result;
 }
 
-void CPUStateModel::updateNeighborList(scalar skin) {
-    if(pimpl->initial_neighbor_list_setup) {
-        pimpl->neighborList->skin() = skin;
-        pimpl->neighborList->set_up();
-        pimpl->initial_neighbor_list_setup = false;
-    } else {
-        pimpl->neighborList->update();
-    }
+void CPUStateModel::updateNeighborList() {
+    updateNeighborList({});
 }
 
 void CPUStateModel::addParticle(const readdy::model::Particle &p) {
@@ -277,8 +276,9 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                 }
             }));
     pimpl->neighborList = std::unique_ptr<neighbor_list>(
-            new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
+            new nl::AdaptiveNeighborList(*getParticleData(), *pimpl->context, *config)
     );
+    // CellDecompositionNeighborList
 }
 
 CPUStateModel::data_t const *const CPUStateModel::getParticleData() const {
@@ -294,7 +294,7 @@ neighbor_list const *const CPUStateModel::getNeighborList() const {
 }
 
 void CPUStateModel::clearNeighborList() {
-    pimpl->neighborList->clear();
+    clearNeighborList({});
 }
 
 void CPUStateModel::removeAllParticles() {
@@ -407,6 +407,23 @@ void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
     std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
         data.entry_at(p).topology_index = idx;
     });
+}
+
+void CPUStateModel::updateNeighborList(const util::PerformanceNode &node) {
+    pimpl->neighborList->update(node.subnode("update"));
+}
+
+void CPUStateModel::clearNeighborList(const util::PerformanceNode &node) {
+    pimpl->neighborList->clear(node.subnode("clear"));
+}
+
+void CPUStateModel::initializeNeighborList(scalar skin) {
+    initializeNeighborList(skin, {});
+}
+
+void CPUStateModel::initializeNeighborList(scalar skin, const util::PerformanceNode &node) {
+    pimpl->neighborList->skin() = skin;
+    pimpl->neighborList->set_up(node.subnode("set_up"));
 }
 
 CPUStateModel::~CPUStateModel() = default;

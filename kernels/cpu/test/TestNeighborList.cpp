@@ -112,7 +112,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     };
 
     data.addParticles(particles);
-    list.set_up();
+    list.set_up({});
 
     int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 2);
@@ -137,7 +137,7 @@ TEST_F(TestNeighborList, OneDirection) {
     data.addParticles(particles);
 
     nl_t list(data, ctx, conf);
-    list.set_up();
+    list.set_up({});
 
     int sum = getNumberPairs(list);
     EXPECT_LE(4, sum);
@@ -164,7 +164,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     };
 
     data.addParticles(particles);
-    list.set_up();
+    list.set_up({});
     int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
@@ -419,7 +419,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
             kernel->getKernelContext(),
             kernel->threadConfig()
     };
-    neighbor_list.set_up();
+    neighbor_list.set_up({});
 
     for (std::size_t i = 0; i < data.size(); ++i) {
         auto cell = neighbor_list.cell_container().leaf_cell_for_position(pbc(data.pos(i)));
@@ -524,7 +524,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
             kernel->getKernelContext(),
             kernel->threadConfig()
     };
-    neighbor_list.set_up();
+    neighbor_list.set_up({});
 
     std::size_t i = 0;
     for (const auto &entry_i : data) {
@@ -571,7 +571,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
             true, false
     };
     neighbor_list.skin() = 2.5;
-    neighbor_list.set_up();
+    neighbor_list.set_up({});
 
     {
         std::size_t i = 0;
@@ -595,7 +595,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
 
     for (int t = 0; t < 100; ++t) {
         integrator->perform();
-        neighbor_list.update();
+        neighbor_list.update({});
         {
             std::size_t i = 0;
             for (const auto &entry_i : data) {

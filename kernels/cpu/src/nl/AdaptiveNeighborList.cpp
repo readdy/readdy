@@ -48,7 +48,8 @@ const CellContainer &AdaptiveNeighborList::cell_container() const {
     return _cell_container;
 }
 
-void AdaptiveNeighborList::set_up() {
+void AdaptiveNeighborList::set_up(const util::PerformanceNode &node) {
+    auto tx = node.timeit();
     _max_cutoff = _context.get().calculateMaxCutoff();
     _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
     if (_max_cutoff > 0) {
@@ -59,15 +60,21 @@ void AdaptiveNeighborList::set_up() {
         if (_hilbert_sort) {
             _data.get().hilbert_sort(_max_cutoff + _skin);
         }
-        fill_container();
-        fill_verlet_list();
+        {
+            auto t = node.subnode("fill_container").timeit();
+            fill_container();
+        }
+        {
+            auto t = node.subnode("fill_verlet_list").timeit();
+            fill_verlet_list();
+        }   
     }
     _is_set_up = true;
 }
 
-void AdaptiveNeighborList::update() {
+void AdaptiveNeighborList::update(const util::PerformanceNode &node) {
     if(!_is_set_up) {
-        set_up();
+        set_up(node.subnode("set_up"));
     } else {
         if (_max_cutoff > 0) {
             bool too_far = _adaptive ? !_cell_container.update_sub_cell_displacements_and_mark_dirty(_max_cutoff, _skin)
@@ -151,7 +158,8 @@ void AdaptiveNeighborList::clear_cells() {
     _cell_container.clear();
 }
 
-void AdaptiveNeighborList::clear() {
+void AdaptiveNeighborList::clear(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     if (_max_cutoff > 0) {
         clear_cells();
         for (auto &neighbors : _data.get().neighbors) {
@@ -212,7 +220,7 @@ const bool &AdaptiveNeighborList::performs_hilbert_sort() const {
 }
 
 void AdaptiveNeighborList::sort_by_hilbert_curve() {
-    clear();
+    clear({});
     if (_hilbert_sort) {
         _data.get().hilbert_sort(_max_cutoff + _skin);
     } else {

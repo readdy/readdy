@@ -37,10 +37,12 @@ namespace util {
 constexpr const char PerformanceNode::slash[];
 
 PerformanceNode::PerformanceNode(const std::string &name, bool measure)
-        : _name(validateName(name)), _measure(measure), _data(0., 0), _root(std::cref(*this)) { }
+        : _name(validateName(name)), _measure(measure), _data(0., 0), _root(*this) { }
 
 PerformanceNode::PerformanceNode(const std::string &name, bool measure, const PerformanceNode& root)
         : _name(validateName(name)), _measure(measure), _data(0., 0), _root(root) { }
+
+PerformanceNode::PerformanceNode() : _name(""), _measure(false), _data(0, 0), _root(*this) {}
 
 const PerformanceNode &PerformanceNode::subnode(const std::string &name) const {
     auto validatedName = validateName(name);

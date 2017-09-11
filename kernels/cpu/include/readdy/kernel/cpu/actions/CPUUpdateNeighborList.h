@@ -41,23 +41,21 @@ namespace cpu {
 namespace actions {
 class CPUUpdateNeighborList : public readdy::model::actions::UpdateNeighborList {
     using super = readdy::model::actions::UpdateNeighborList;
-    bool firstRun = true;
 public:
 
-    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, readdy::scalar skin) : super(op, skin), kernel(kernel) {}
+    CPUUpdateNeighborList(CPUKernel *kernel, super::Operation op, scalar skin) : super(op, skin), kernel(kernel) {}
 
     void perform(const util::PerformanceNode &node) override {
         auto t = node.timeit();
-        if(firstRun) {
-            if(skinSize >= 0) kernel->getCPUKernelStateModel().getNeighborList()->skin() = skinSize;
-            firstRun = false;
-        }
         switch (operation) {
-            case create:
-                kernel->getKernelStateModel().updateNeighborList();
+            case init:
+                kernel->getCPUKernelStateModel().initializeNeighborList(0, node);
                 break;
             case clear:
-                kernel->getKernelStateModel().clearNeighborList();
+                kernel->getCPUKernelStateModel().clearNeighborList(node);
+                break;
+            case update:
+                kernel->getCPUKernelStateModel().updateNeighborList(node);
                 break;
         }
 

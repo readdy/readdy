@@ -103,7 +103,7 @@ protected:
         return createUpdateNeighborList(op, -1);
     };
     UpdateNeighborList *createUpdateNeighborList() const {
-        return createUpdateNeighborList(UpdateNeighborList::Operation::create, -1);
+        return createUpdateNeighborList(UpdateNeighborList::Operation::init, -1);
     };
 
     virtual EvaluateCompartments *createEvaluateCompartments() const = 0;

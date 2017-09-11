@@ -49,11 +49,11 @@ public:
     CellDecompositionNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                                   const readdy::util::thread::Config &config);
 
-    void set_up() override;
+    void set_up(const util::PerformanceNode &node) override;
 
-    void update() override;
+    void update(const util::PerformanceNode &node) override;
 
-    void clear() override;
+    void clear(const util::PerformanceNode &node) override;
 
     void updateData(data_t::update_t &&update) override;
 

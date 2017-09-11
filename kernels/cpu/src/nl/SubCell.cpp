@@ -225,15 +225,15 @@ void SubCell::unset_dirty() const {
     _dirty_flag.unset();
 }
 
-void SubCell::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> &function) {
+/*void SubCell::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> &function) {
     if(is_leaf()) {
         function(*this);
     } else {
-        for(auto &sub_cell : _sub_cells) {
+        for(auto &sub_cell : sub_cells()) {
             sub_cell.execute_for_each_leaf(function);
         }
     }
-}
+}*/
 
 detail::DirtyFlag::DirtyFlag(detail::DirtyFlag &&rhs) noexcept : _is_dirty(rhs._is_dirty.load()) {}
 

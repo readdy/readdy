@@ -42,7 +42,8 @@ CellDecompositionNeighborList::CellDecompositionNeighborList(model::CPUParticleD
                                                              const readdy::util::thread::Config &config) :
         NeighborList(data, context, config), _cell_container(data, context, config) {}
 
-void CellDecompositionNeighborList::set_up() {
+void CellDecompositionNeighborList::set_up(const util::PerformanceNode &node) {
+    auto tx = node.timeit();
     _max_cutoff = _context.get().calculateMaxCutoff();
     _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
     if (_max_cutoff > 0) {
@@ -50,15 +51,22 @@ void CellDecompositionNeighborList::set_up() {
         _cell_container.subdivide(_max_cutoff + _skin);
         //_cell_container.refine_uniformly();
         _cell_container.setup_uniform_neighbors();
-        fill_container();
-        fill_verlet_list();
+        {
+            auto t = node.subnode("fill_container").timeit();
+            fill_container();
+        }
+        {
+            auto t = node.subnode("fill_verlet_list").timeit();
+            fill_verlet_list();
+        }
     }
     _is_set_up = true;
 }
 
-void CellDecompositionNeighborList::update() {
+void CellDecompositionNeighborList::update(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     if(!_is_set_up) {
-        set_up();
+        set_up(node.subnode("set_up"));
     }
     _cell_container.clear();
     fill_container();
@@ -130,7 +138,8 @@ void CellDecompositionNeighborList::fill_cell_verlet_list(const CellContainer::s
     }
 }
 
-void CellDecompositionNeighborList::clear() {
+void CellDecompositionNeighborList::clear(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     if (_max_cutoff > 0) {
         _cell_container.clear();
         for (auto &neighbors : _data.get().neighbors) {
