@@ -54,15 +54,6 @@ SET(READDY_BUILD_EXAMPLES OFF CACHE BOOL "Whether to build example targets")
 
 #####################################
 #                                   #
-# Advanced cache variables          #
-#                                   #
-#####################################
-
-SET(INCLUDE_PERFORMANCE_TESTS OFF CACHE BOOL "Whether to include performance tests into test targets.")
-MARK_AS_ADVANCED(INCLUDE_PERFORMANCE_TESTS)
-
-#####################################
-#                                   #
 # Basic setup of the project        #
 #                                   #
 #####################################

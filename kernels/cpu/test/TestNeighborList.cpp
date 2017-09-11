@@ -651,7 +651,8 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
     auto connection = kernel->connectObservable(obs.get());
 
     {
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
+        readdy::util::PerformanceNode pn("", false);
+        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
         conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
         conf.withSkinSize(.1);
         conf.configureAndRun(100, .01);
@@ -706,7 +707,8 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
     );
     auto connection = kernel->connectObservable(obs.get());
     {
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
+        readdy::util::PerformanceNode pn("", false);
+        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
         conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
         conf.withSkinSize(.1);
         conf.configureAndRun(100, .01);

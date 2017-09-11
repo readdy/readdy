@@ -305,7 +305,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-        auto &&reactions = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
+        std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
                 kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1)
         );
         neighborList->perform();

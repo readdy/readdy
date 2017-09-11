@@ -40,7 +40,7 @@ class SCPUCalculateForces : public readdy::model::actions::CalculateForces {
 public:
     explicit SCPUCalculateForces(SCPUKernel *kernel);
 
-    void perform(bool measure = false, const std::string &measureLabel = "") override;
+    void perform(const util::PerformanceNode &node) override;
 
 private:
     SCPUKernel *kernel;

@@ -32,52 +32,94 @@
 
 #include <gtest/gtest.h>
 #include <readdy/common/Timer.h>
+#include <readdy/common/thread/executor.h>
+#include <readdy/common/thread/Config.h>
 
 namespace {
 
 struct TestTimer : ::testing::Test {
 };
 
-using timer = readdy::util::Timer;
-using raii_timer = readdy::util::RAIITimer;
+using data = readdy::util::PerformanceData;
+using node = readdy::util::PerformanceNode;
 
-TEST(TestTimer, RAIITimerMeasureOnce) {
+TEST(TestTimer, TimerMeasureOnce) {
+    node n("label", true);
     {
-        raii_timer t(true, "label");
+        auto t = n.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    EXPECT_GT(timer::times().at("label"), static_cast<timer::time>(0));
-    EXPECT_EQ(timer::counts().at("label"), 1);
-}
-
-TEST(TestTimer, RAIITimerMeasureMultiple) {
-    {
-        raii_timer t1(true, "label1");
-        raii_timer t2(true, "label2");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    {
-        raii_timer t3(true, "label2");
-        raii_timer t4(true, "label2");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    EXPECT_GT(timer::times().at("label1"), static_cast<timer::time>(0));
-    EXPECT_EQ(timer::counts().at("label1"), 1);
-    EXPECT_GT(timer::times().at("label2"), static_cast<timer::time>(0));
-    EXPECT_EQ(timer::counts().at("label2"), 3);
+    EXPECT_GT(n.data().cumulativeTime(), static_cast<data::time>(0));
+    EXPECT_EQ(n.data().count(), 1);
 }
 
 TEST(TestTimer, Clear) {
+    node n1("1", true);
+    node n2("2", true);
     {
-        raii_timer t(true, "label");
+        auto t1 = n1.timeit();
+        auto t2 = n2.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    timer::clear();
+    n2.clear();
     {
-        raii_timer t(true, "label");
+        auto t1 = n1.timeit();
+        auto t2 = n2.timeit();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    EXPECT_EQ(timer::counts().at("label"), 1);
+    EXPECT_EQ(n1.data().count(), 2);
+    EXPECT_EQ(n2.data().count(), 1) << "n2 was cleared in between, thus only one call";
+}
+
+TEST(TestTimer, Threaded) {
+    node n("knoten", true);
+    auto worker = [](std::size_t, node& nn){
+        auto t = nn.timeit();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    };
+    {
+        readdy::util::thread::Config config;
+        config.setNThreads(3);
+        config.setMode(readdy::util::thread::ThreadMode::std_thread);
+        const auto& executor = *config.executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(config.nThreads());
+        for (auto i = 0; i < config.nThreads(); ++i) {
+            executables.push_back(executor.pack(worker, std::ref(n)));
+        }
+        executor.execute_and_wait(std::move(executables));
+    }
+    EXPECT_EQ(n.data().count(), 3);
+    EXPECT_GT(n.data().cumulativeTime(), static_cast<data::time>(0));
+}
+
+TEST(TestTimer, SlashedPath) {
+    node top("top", false);
+    auto &mid = top.subnode("mid");
+    auto &bot = mid.subnode("bot");
+    EXPECT_EQ(top.child("mid /bot ").name(), "bot");
+}
+
+TEST(TestTimer, InvalidNodeName) {
+    auto createNode = [](){
+        node n("lk/afasov", false);
+    };
+    auto createSubNode = [](){
+        node n("validname", false);
+        auto &nn = n.subnode("invalid/name");
+    };
+    auto createNodeWhitespace = [](){
+        node n(" hasleadingwhitespace", false);
+    };
+    EXPECT_THROW(createNode(), std::invalid_argument);
+    EXPECT_THROW(createSubNode(), std::invalid_argument);
+    EXPECT_THROW(createNodeWhitespace(), std::invalid_argument);
+}
+
+TEST(TestTimer, GetRootFromChild) {
+    node top("top", false);
+    auto &bottom = top.subnode("bottom");
+    EXPECT_EQ(bottom.child("/").name(), "top");
 }
 
 }

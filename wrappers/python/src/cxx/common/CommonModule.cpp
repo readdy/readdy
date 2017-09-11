@@ -31,9 +31,11 @@
 
 #include <readdy/model/Vec3.h>
 #include <readdy/io/BloscFilter.h>
+#include <readdy/common/Timer.h>
 #include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
+using rvp = py::return_value_policy;
 
 /**
  * Notice: Exporting classes here that are to be shared between prototyping and api module require the base
@@ -135,9 +137,24 @@ void exportCommon(py::module& common) {
     }
     {
         py::module perf = common.def_submodule("perf", "ReaDDy performance module");
-        perf.def("times", &readdy::util::Timer::times);
-        perf.def("counts", &readdy::util::Timer::counts);
-        perf.def("clear", &readdy::util::Timer::clear);
+        py::class_<readdy::util::PerformanceNode>(perf, "PerformanceNode")
+                .def("__getitem__", [](const readdy::util::PerformanceNode &self, const std::string &label) -> const readdy::util::PerformanceNode& {
+                    return self.child(label);
+                }, rvp::reference)
+                .def("__len__", [](const readdy::util::PerformanceNode &self) -> std::size_t {
+                    return self.n_children();
+                })
+                .def("__repr__", [](const readdy::util::PerformanceNode &self) -> std::string {
+                    return self.describe();
+                })
+                .def("keys", &readdy::util::PerformanceNode::keys)
+                .def("clear", &readdy::util::PerformanceNode::clear)
+                .def("time", [](const readdy::util::PerformanceNode &self) -> readdy::util::PerformanceData::time {
+                    return self.data().cumulativeTime();
+                })
+                .def("count", [](const readdy::util::PerformanceNode &self) -> std::size_t {
+                    return self.data().count();
+                });
     }
 
     py::class_<readdy::model::Vec3>(common, "Vec")

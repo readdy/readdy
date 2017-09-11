@@ -33,7 +33,6 @@
 #pragma once
 
 #include "logging.h"
-#include "Timer.h"
 
 NAMESPACE_BEGIN(h5rd)
 class File;

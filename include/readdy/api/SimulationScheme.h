@@ -70,7 +70,8 @@ public:
 
     using evaluate_topology_reactions = model::actions::top::EvaluateTopologyReactions;
 
-    explicit SimulationScheme(model::Kernel *const kernel) : kernel(kernel) {}
+    explicit SimulationScheme(model::Kernel *const kernel, util::PerformanceNode &performanceRoot)
+            : kernel(kernel), _performanceRoot(performanceRoot) {}
 
     virtual void run(const continue_fun &fun) = 0;
 
@@ -101,37 +102,39 @@ protected:
     std::unique_ptr<h5rd::Group> configGroup = nullptr;
     bool evaluateObservables = true;
     time_step_type start = 0;
+    const util::PerformanceNode &_performanceRoot;
 };
 
 class ReaDDyScheme : public SimulationScheme {
 public:
-    explicit ReaDDyScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
+    explicit ReaDDyScheme(model::Kernel *const kernel, util::PerformanceNode &performanceRoot) : SimulationScheme(kernel, performanceRoot) {};
 
     using SimulationScheme::run;
 
     void run(const continue_fun &continueFun) override {
+        auto runTimer = _performanceRoot.timeit();
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
 
-        if (neighborList) neighborList->perform(true, "neighborList");
-        if (forces) forces->perform(true, "forces");
+        if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+        if (forces) forces->perform(_performanceRoot.subnode("forces"));
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
         while (continueFun(t)) {
-            if (integrator) integrator->perform(true, "integrator");
-            if (neighborList) neighborList->perform(true, "neighborList");
+            if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
             // if (forces) forces->perform();
 
-            if (reactionScheduler) reactionScheduler->perform(true, "reactionScheduler");
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(true, "evaluateTopologyReactions");
-            if (neighborList) neighborList->perform(true, "neighborList");
-            if (forces) forces->perform(true, "forces");
+            if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+            if (forces) forces->perform(_performanceRoot.subnode("forces"));
             if (evaluateObservables) kernel->evaluateObservables(t + 1);
             ++t;
         }
-        if (clearNeighborList) clearNeighborList->perform();
+        if (clearNeighborList) clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
         start = t;
         kernel->finalize();
         log::info("Simulation completed");
@@ -143,8 +146,8 @@ class SchemeConfigurator {
     static_assert(std::is_base_of<SimulationScheme, SchemeType>::value, "SchemeType must inherit from readdy::api::SimulationScheme");
 public:
 
-    explicit SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true)
-            : scheme(std::make_unique<SchemeType>(kernel)), useDefaults(useDefaults) {}
+    explicit SchemeConfigurator(model::Kernel *const kernel, util::PerformanceNode &perfRoot, bool useDefaults = true)
+            : scheme(std::make_unique<SchemeType>(kernel, perfRoot)), useDefaults(useDefaults) {}
 
     SchemeConfigurator &withIntegrator(std::unique_ptr<model::actions::TimeStepDependentAction> integrator) {
         scheme->integrator = std::move(integrator);
@@ -159,7 +162,7 @@ public:
 
     SchemeConfigurator &withIntegrator(const std::string &integratorName) {
         scheme->integrator = scheme->kernel->getActionFactory().createIntegrator(integratorName, 0.);
-        return *this;;
+        return *this;
     }
 
     template<typename ReactionSchedulerType>
@@ -256,36 +259,36 @@ protected:
 
 class AdvancedScheme : public SimulationScheme {
 public:
-    explicit AdvancedScheme(model::Kernel *const kernel) : SimulationScheme(kernel) {};
+    explicit AdvancedScheme(model::Kernel *const kernel, util::PerformanceNode &performanceRoot) : SimulationScheme(kernel, performanceRoot) {};
 
     using SimulationScheme::run;
 
     void run(const continue_fun &fun) override {
+        auto runTimer = _performanceRoot.timeit();
         kernel->initialize();
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
-
-        if (neighborList) neighborList->perform(true, "neighborList");
-        if (forces) forces->perform(true, "forces");
+        if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+        if (forces) forces->perform(_performanceRoot.subnode("forces"));
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
         while (fun(t)) {
-            if (integrator) integrator->perform(true, "integrator");
-            if (compartments) compartments->perform(true, "compartments");
-            if (neighborList) neighborList->perform(true, "neighborList");
+            if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
+            if (compartments) compartments->perform(_performanceRoot.subnode("compartments"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
             // if (forces) forces->perform();
 
-            if (reactionScheduler) reactionScheduler->perform(true, "reactionScheduler");
-            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(true, "evaluateTopologyReactions");
-            if (compartments) compartments->perform(true, "compartments");
-            if (neighborList) neighborList->perform(true, "neighborList");
-            if (forces) forces->perform(true, "forces");
+            if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
+            if (evaluateTopologyReactions) evaluateTopologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
+            if (compartments) compartments->perform(_performanceRoot.subnode("compartments"));
+            if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+            if (forces) forces->perform(_performanceRoot.subnode("forces"));
             if (evaluateObservables) kernel->evaluateObservables(t + 1);
             ++t;
         }
 
-        if (clearNeighborList) clearNeighborList->perform();
+        if (clearNeighborList) clearNeighborList->perform(_performanceRoot.subnode("clearNeighborList"));
         start = t;
         kernel->finalize();
         log::info("Simulation completed");
@@ -302,8 +305,8 @@ protected:
 template<>
 class SchemeConfigurator<AdvancedScheme> {
 public:
-    explicit SchemeConfigurator(model::Kernel *const kernel, bool useDefaults = true)
-            : scheme(std::make_unique<AdvancedScheme>(kernel)), useDefaults(useDefaults) {}
+    explicit SchemeConfigurator(model::Kernel *const kernel, util::PerformanceNode& perfRoot, bool useDefaults = true)
+            : scheme(std::make_unique<AdvancedScheme>(kernel, perfRoot)), useDefaults(useDefaults) {}
 
     SchemeConfigurator &includeCompartments(bool include = true) {
         if (include) {

@@ -36,8 +36,8 @@ namespace actions {
 
 SCPUEvaluateCompartments::SCPUEvaluateCompartments(SCPUKernel *const kernel) : kernel(kernel) {}
 
-void SCPUEvaluateCompartments::perform(bool measure, const std::string &measureLabel) {
-    util::RAIITimer timer(measure, measureLabel);
+void SCPUEvaluateCompartments::perform(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     const auto &ctx = kernel->getKernelContext();
     const auto & compartments = ctx.getCompartments();
     auto data = kernel->getSCPUKernelStateModel().getParticleData();

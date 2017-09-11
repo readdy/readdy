@@ -45,6 +45,9 @@ namespace reactions {
 class CPUGillespieParallel : public readdy::model::actions::reactions::GillespieParallel {
     using super = readdy::model::actions::reactions::GillespieParallel;
 public:
+
+    using super::perform;
+
     CPUGillespieParallel(cpu_kernel* kernel, readdy::scalar timeStep);
 
     ~CPUGillespieParallel() override;
@@ -54,7 +57,7 @@ public:
     CPUGillespieParallel(CPUGillespieParallel&&) = delete;
     CPUGillespieParallel& operator=(CPUGillespieParallel&&) = delete;
 
-    void perform(bool measure = false, const std::string &measureLabel = "") override;
+    void perform(const util::PerformanceNode &node) override;
 
     void clear();
 

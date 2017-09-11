@@ -21,12 +21,13 @@
 
 
 /**
- * This file contains the declaration of the base class of all programs. They
- * have a name and potentially a templatized ProgramName struct.
+ * This file contains the declaration of the base class of all actions. They
+ * have a name and potentially a templatized ActionName struct.
  *
- * @file Program.h
- * @brief Declaration of the program base class.
+ * @file Action.h
+ * @brief Declaration of the action base class.
  * @author clonker
+ * @author chrisfroe
  * @date 08.04.16
  */
 
@@ -34,6 +35,7 @@
 
 #include <memory>
 #include <readdy/common/common.h>
+#include <readdy/common/Timer.h>
 
 #if READDY_OSX
 #include <string>
@@ -45,6 +47,7 @@ NAMESPACE_BEGIN(actions)
 
 class Action {
 public:
+
     Action() = default;
 
     Action(const Action&) = default;
@@ -54,7 +57,13 @@ public:
 
     virtual ~Action() = default;
 
-    virtual void perform(bool measure = false, const std::string &measureLabel = "") = 0;
+    virtual void perform(const util::PerformanceNode &node) = 0;
+
+    void perform() {
+        static util::PerformanceNode dummy("dummy", false);
+        this->perform(dummy);
+    }
+
 };
 
 class TimeStepDependentAction : public Action {

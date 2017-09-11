@@ -38,8 +38,8 @@ namespace actions {
 
 namespace rnd = readdy::model::rnd;
 
-void CPUEulerBDIntegrator::perform(bool measure, const std::string &measureLabel) {
-    util::RAIITimer timer(measure, measureLabel);
+void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     auto& pd = *kernel->getCPUKernelStateModel().getParticleData();
     const auto size = pd.size();
 

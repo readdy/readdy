@@ -431,6 +431,10 @@ void Simulation::registerStructuralTopologyReaction(const std::string &topologyT
     getSelectedKernel()->getKernelContext().topology_registry().add_structural_reaction(topologyType, reaction);
 }
 
+const util::PerformanceNode &Simulation::performanceRoot() {
+    return pimpl->performanceRoot;
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }

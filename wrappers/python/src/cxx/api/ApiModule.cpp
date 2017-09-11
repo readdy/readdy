@@ -179,7 +179,8 @@ void exportApi(py::module &api) {
             .def("run", [](sim &self, const readdy::time_step_type steps, const readdy::scalar timeStep) {
                 py::gil_scoped_release release;
                 self.run(steps, timeStep);
-            }, "n_steps"_a, "time_step"_a);
+            }, "n_steps"_a, "time_step"_a)
+            .def("performance_root", &sim::performanceRoot, rvp::reference);
     exportObservables(api, simulation);
 
     py::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
