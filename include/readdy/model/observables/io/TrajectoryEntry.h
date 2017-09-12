@@ -35,7 +35,6 @@
 #include <spdlog/fmt/ostr.h>
 #include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
-#include <readdy/model/Vec3.h>
 #include <readdy/model/ParticleTypeRegistry.h>
 
 NAMESPACE_BEGIN(readdy)

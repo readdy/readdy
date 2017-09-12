@@ -34,7 +34,6 @@
 
 #include <vector>
 #include <readdy/common/macros.h>
-#include <readdy/model/Vec3.h>
 #include "Observable.h"
 
 NAMESPACE_BEGIN(readdy)

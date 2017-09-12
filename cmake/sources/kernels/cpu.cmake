@@ -36,8 +36,6 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellContainer.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/SubCell.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/AdaptiveNeighborList.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellDecompositionNeighborList.cpp")
-
-
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellLinkedList.cpp")
 
 # --- actions ---

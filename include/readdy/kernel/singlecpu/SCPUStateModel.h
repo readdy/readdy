@@ -33,7 +33,6 @@
 
 #include <memory>
 #include <readdy/model/KernelStateModel.h>
-#include <readdy/model/Vec3.h>
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
@@ -73,7 +72,7 @@ public:
 
     readdy::model::top::GraphTopology *const addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
-    const std::vector<readdy::model::Vec3> getParticlePositions() const override;
+    const std::vector<Vec3> getParticlePositions() const override;
 
     readdy::model::Particle getParticleForIndex(std::size_t index) const override;
 

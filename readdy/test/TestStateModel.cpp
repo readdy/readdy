@@ -53,9 +53,12 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "A", 1.0);
 
     ctx.configure();
+
     auto typeIdA = ctx.particle_types().id_of("A");
     auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
+
     stateModel.addParticles(twoParticles);
+    stateModel.initializeNeighborList(0.);
     stateModel.updateNeighborList();
     stateModel.calculateForces();
     stateModel.calculateForces(); // calculating twice should yield the same result. force and energy must not accumulate
@@ -63,15 +66,15 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     obs->evaluate();
     auto forcesIt = obs->getResult().begin();
     if(kernel->doublePrecision()) {
-        EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
+        EXPECT_VEC3_EQ(*forcesIt, readdy::Vec3(0, 0, -0.2));
     } else {
-        EXPECT_FVEC3_EQ(*forcesIt, m::Vec3(0, 0, -0.2));
+        EXPECT_FVEC3_EQ(*forcesIt, readdy::Vec3(0, 0, -0.2));
     }
     ++forcesIt;
     if(kernel->doublePrecision()) {
-        EXPECT_VEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
+        EXPECT_VEC3_EQ(*forcesIt, readdy::Vec3(0, 0, 0.2));
     } else {
-        EXPECT_FVEC3_EQ(*forcesIt, m::Vec3(0, 0, 0.2));
+        EXPECT_FVEC3_EQ(*forcesIt, readdy::Vec3(0, 0, 0.2));
     }
     if(kernel->doublePrecision()) {
         EXPECT_DOUBLE_EQ(stateModel.getEnergy(), 0.02);
@@ -144,12 +147,12 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     const readdy::scalar energy15 = 2.1148056603830194;
     const readdy::scalar energy23 = 3.4833346173608031;
     const readdy::scalar energy25 = 3.4833346173608031;
-    const m::Vec3 force03(0, 0, -2.9);
-    const m::Vec3 force05(-2.5, 0, 0);
-    const m::Vec3 force13(0, 2.1768336301410027, -0.27210420376762534);
-    const m::Vec3 force15(-1.08999682000954, 1.743994912015264, 0);
-    const m::Vec3 force23(1.4641005886756873, 0, -2.1961508830135306);
-    const m::Vec3 force25(-2.1961508830135306, 0, -1.4641005886756873);
+    const readdy::Vec3 force03(0, 0, -2.9);
+    const readdy::Vec3 force05(-2.5, 0, 0);
+    const readdy::Vec3 force13(0, 2.1768336301410027, -0.27210420376762534);
+    const readdy::Vec3 force15(-1.08999682000954, 1.743994912015264, 0);
+    const readdy::Vec3 force23(1.4641005886756873, 0, -2.1961508830135306);
+    const readdy::Vec3 force25(-2.1961508830135306, 0, -1.4641005886756873);
     // check results
     obs->evaluate();
     const auto particles = stateModel.getParticles();
@@ -192,9 +195,9 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
             }
         } else if(particle.getId() == ids.at(4)) {
             if(readdy::double_precision) {
-                EXPECT_VEC3_EQ(forces.at(idx), m::Vec3(0, 0, 0)) << "force on particle 4 = 0";
+                EXPECT_VEC3_EQ(forces.at(idx), readdy::Vec3(0, 0, 0)) << "force on particle 4 = 0";
             } else {
-                EXPECT_FVEC3_EQ(forces.at(idx), m::Vec3(0, 0, 0)) << "force on particle 4 = 0";
+                EXPECT_FVEC3_EQ(forces.at(idx), readdy::Vec3(0, 0, 0)) << "force on particle 4 = 0";
             }
         } else if(particle.getId() == ids.at(5)) {
             if(readdy::double_precision) {
@@ -246,7 +249,7 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     // check results
     obs->evaluate();
     for (auto &&force : obs->getResult()) {
-        EXPECT_VEC3_EQ(force, m::Vec3(0, 0, 0));
+        EXPECT_VEC3_EQ(force, readdy::Vec3(0, 0, 0));
     }
 }
 

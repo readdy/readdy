@@ -37,6 +37,7 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
+#include <readdy/common/Timer.h>
 
 namespace readdy {
 namespace kernel {
@@ -44,22 +45,124 @@ namespace cpu {
 namespace nl {
 
 class CellLinkedList {
+public:
     CellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                    const readdy::util::thread::Config &config);
-private:
+
+    void setUp(scalar skin, std::uint8_t radius, const util::PerformanceNode &node);
+
+    virtual void update(const util::PerformanceNode &node) = 0;
+    
+    virtual void clear() = 0;
+    
+    const util::Index3D &cellIndex() const;
+    
+    const util::Index2D &neighborIndex() const;
+    
+    const std::vector<std::size_t> &neighbors() const;
+    
+    virtual std::size_t *particlesBegin(std::size_t cellIndex) = 0;
+    virtual const std::size_t *particlesBegin(std::size_t cellIndex) const = 0;
+    
+    virtual std::size_t *particlesEnd(std::size_t cellIndex) = 0;
+    virtual const std::size_t *particlesEnd(std::size_t cellIndex) const = 0;
+
+    virtual std::size_t nParticles(std::size_t cellIndex) const = 0;
+
+    std::size_t *neighborsBegin(std::size_t cellIndex);
+    const std::size_t *neighborsBegin(std::size_t cellIndex) const;
+
+    std::size_t *neighborsEnd(std::size_t cellIndex);
+    const std::size_t *neighborsEnd(std::size_t cellIndex) const;
+
+    std::size_t nNeighbors(std::size_t cellIndex) const;
+
+protected:
+    virtual void setUpBins(const util::PerformanceNode &node) = 0;
+
+    bool _is_set_up {false};
 
     scalar _skin {0};
     scalar _max_cutoff {0};
     scalar _max_cutoff_skin_squared {0};
+    std::uint8_t _radius;
 
-    std::size_t _maxParticlesPerCell;
+    Vec3 _cellSize {0, 0, 0};
+
     util::Index3D _cellIndex;
+    // index of size (n_cells x (1 + nAdjacentCells)), where the first element tells how many adj cells are stored
     util::Index2D _cellNeighbors;
-    util::Index2D _bins;
+    // backing vector of _cellNeighbors index of size (n_cells x (1 + nAdjacentCells))
+    std::vector<std::size_t> _cellNeighborsContent;
 
     std::reference_wrapper<model::CPUParticleData> _data;
     std::reference_wrapper<const readdy::model::KernelContext> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _config;
+};
+
+class ContiguousCellLinkedList : public CellLinkedList {
+public:
+    ContiguousCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                             const util::thread::Config &config);
+    void update(const util::PerformanceNode &node) override;
+
+    void clear() override;
+    
+    const std::vector<std::size_t> &bins() const;
+    
+    const util::Index2D &binsIndex() const;
+
+    std::size_t *particlesBegin(std::size_t cellIndex) override;
+
+    const std::size_t *particlesBegin(std::size_t cellIndex) const override;
+
+    std::size_t *particlesEnd(std::size_t cellIndex) override;
+
+    const std::size_t *particlesEnd(std::size_t cellIndex) const override;
+
+    size_t nParticles(std::size_t cellIndex) const override;
+
+protected:
+    void initializeBinsStructure();
+
+    void fillBins(const util::PerformanceNode &node);
+
+    void setUpBins(const util::PerformanceNode &node) override;
+
+private:
+    std::size_t _maxParticlesPerCell {0};
+    util::Index2D _binsIndex;
+    std::vector<std::size_t> _bins;
+};
+
+class DynamicCellLinkedList : public CellLinkedList {
+public:
+    using Bins = std::vector<std::vector<std::size_t>>;
+
+    DynamicCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                          const util::thread::Config &config);
+
+    void update(const util::PerformanceNode &node) override;
+
+    void clear() override;
+
+    std::size_t *particlesBegin(std::size_t cellIndex) override;
+
+    const std::size_t *particlesBegin(std::size_t cellIndex) const override;
+
+    std::size_t *particlesEnd(std::size_t cellIndex) override;
+
+    const std::size_t *particlesEnd(std::size_t cellIndex) const override;
+
+    std::size_t nParticles(std::size_t cellIndex) const override;
+
+protected:
+    void setUpBins(const util::PerformanceNode &node) override;
+
+    void fillBins(const util::PerformanceNode &node);
+
+private:
+    Bins _bins;
 };
 
 }

@@ -31,7 +31,7 @@ struct MSDAggregator {
 
     readdy::scalar msd = 0;
     long T = 0;
-    std::vector<readdy::model::Vec3> initialPositions;
+    std::vector<readdy::Vec3> initialPositions;
     std::shared_ptr<readdy::scalar> result = std::make_shared<readdy::scalar>(0);
 
     void operator()(readdy::model::observables::Positions::result_type positions) {

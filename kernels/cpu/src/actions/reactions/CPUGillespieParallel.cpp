@@ -43,7 +43,7 @@ namespace actions {
 namespace reactions {
 
 
-long CPUGillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
+long CPUGillespieParallel::SlicedBox::getShellIndex(const Vec3 &pos) const {
     if (shellWidth > 0) {
         const auto mindist = std::min(
                 std::abs(pos[longestAxis] - leftBoundary),
@@ -54,7 +54,7 @@ long CPUGillespieParallel::SlicedBox::getShellIndex(const vec_t &pos) const {
     return 0;
 }
 
-CPUGillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex,
+CPUGillespieParallel::SlicedBox::SlicedBox(unsigned int id, Vec3 lowerLeftVertex, Vec3 upperRightVertex,
                                            scalar maxReactionRadius,
                                            unsigned int longestAxis)
         : id(id), lowerLeftVertex(lowerLeftVertex), upperRightVertex(upperRightVertex), longestAxis(longestAxis) {
@@ -68,7 +68,7 @@ CPUGillespieParallel::SlicedBox::SlicedBox(unsigned int id, vec_t lowerLeftVerte
     particleIndices.resize(n_shells);
 }
 
-bool CPUGillespieParallel::SlicedBox::isInBox(const vec_t &particle) const {
+bool CPUGillespieParallel::SlicedBox::isInBox(const Vec3 &particle) const {
     return particle[longestAxis] >= leftBoundary && particle[longestAxis] < rightBoundary;
 }
 

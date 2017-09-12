@@ -230,15 +230,15 @@ void AdaptiveNeighborList::sort_by_hilbert_curve() {
     fill_verlet_list();
 }
 
-void AdaptiveNeighborList::displace(data_t::iterator iter, const readdy::model::Vec3 &vec) {
+void AdaptiveNeighborList::displace(data_t::iterator iter, const Vec3 &vec) {
     _data.get().displace(*iter, vec);
 }
 
-void AdaptiveNeighborList::displace(model::CPUParticleData::Entry &entry, const readdy::model::Vec3 &delta) {
+void AdaptiveNeighborList::displace(model::CPUParticleData::Entry &entry, const Vec3 &delta) {
     _data.get().displace(entry, delta);
 }
 
-void AdaptiveNeighborList::displace(model::CPUParticleData::index_t entry, const readdy::model::Vec3 &delta) {
+void AdaptiveNeighborList::displace(model::CPUParticleData::index_t entry, const Vec3 &delta) {
     _data.get().displace(_data.get().entry_at(entry), delta);
 }
 

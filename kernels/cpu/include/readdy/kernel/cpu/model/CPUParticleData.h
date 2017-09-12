@@ -47,6 +47,7 @@ namespace cpu {
 namespace nl {
 class NeighborList;
 class AdaptiveNeighborList;
+class ContiguousCLLNeighborList;
 class CellDecompositionNeighborList;
 }
 namespace model {
@@ -55,6 +56,7 @@ class CPUParticleData {
     friend class CPUNeighborList;
     friend class readdy::kernel::cpu::nl::NeighborList;
     friend class readdy::kernel::cpu::nl::AdaptiveNeighborList;
+    friend class readdy::kernel::cpu::nl::ContiguousCLLNeighborList;
     friend class readdy::kernel::cpu::nl::CellDecompositionNeighborList;
 public:
 
@@ -70,7 +72,7 @@ public:
     using neighbor_list_t = std::vector<neighbors_t>;
     using index_t = entries_t::size_type;
     using update_t = std::pair<entries_update_t, std::vector<index_t>>;
-    using vec3 = readdy::model::Vec3;
+    using vec3 = Vec3;
     using force_t = vec3;
     using displacement_t = readdy::scalar;
     using reorder_signal_t = readdy::signals::signal<void(const std::vector<std::size_t>)>;

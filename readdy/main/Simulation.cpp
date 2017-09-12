@@ -39,7 +39,7 @@ void Simulation::setKBT(scalar kBT) {
     pimpl->kernel->getKernelContext().kBT() = kBT;
 }
 
-void Simulation::setBoxSize(const readdy::model::Vec3 &boxSize) {
+void Simulation::setBoxSize(const Vec3 &boxSize) {
     setBoxSize(boxSize[0], boxSize[1], boxSize[2]);
 }
 
@@ -51,9 +51,9 @@ void Simulation::setPeriodicBoundary(const std::array<bool, 3> &periodic) {
 
 Simulation::Simulation() : pimpl(std::make_unique<Simulation::Impl>()) {}
 
-readdy::model::Vec3 Simulation::getBoxSize() const {
+Vec3 Simulation::getBoxSize() const {
     ensureKernelSelected();
-    return readdy::model::Vec3(pimpl->kernel->getKernelContext().boxSize());
+    return Vec3(pimpl->kernel->getKernelContext().boxSize());
 
 }
 
@@ -110,7 +110,7 @@ Simulation::registerParticleType(const std::string &name, const scalar diffusion
     return context.particle_types().id_of(name);
 }
 
-const std::vector<readdy::model::Vec3> Simulation::getAllParticlePositions() const {
+const std::vector<Vec3> Simulation::getAllParticlePositions() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelStateModel().getParticlePositions();
 }
@@ -162,7 +162,7 @@ Simulation::registerScreenedElectrostaticsPotential(const std::string &particleT
 
 const short
 Simulation::registerBoxPotential(const std::string &particleType, scalar forceConstant,
-                                 const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
+                                 const Vec3 &origin, const Vec3 &extent,
                                  bool considerParticleRadius) {
     using potential_t = readdy::model::potentials::Cube;
     ensureKernelSelected();
@@ -171,7 +171,7 @@ Simulation::registerBoxPotential(const std::string &particleType, scalar forceCo
 }
 
 const short
-Simulation::registerSphereInPotential(const std::string &particleType, scalar forceConstant, const readdy::model::Vec3 &origin,
+Simulation::registerSphereInPotential(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                                       scalar radius) {
     using potential_t = readdy::model::potentials::SphereIn;
     ensureKernelSelected();
@@ -180,14 +180,14 @@ Simulation::registerSphereInPotential(const std::string &particleType, scalar fo
 
 const short
 Simulation::registerSphereOutPotential(const std::string &particleType, scalar forceConstant,
-                                       const readdy::model::Vec3 &origin, scalar radius) {
+                                       const Vec3 &origin, scalar radius) {
     using potential_t = readdy::model::potentials::SphereOut;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
 }
 
 const short
-Simulation::registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, scalar radius, scalar height, scalar width) {
+Simulation::registerSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width) {
     using potential_t = readdy::model::potentials::SphericalBarrier;
     ensureKernelSelected();
     return pimpl->kernel->registerPotential<potential_t>(particleType, origin, radius, height, width);
@@ -284,10 +284,10 @@ Simulation::registerDecayReaction(const std::string &name, const std::string &pa
     return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
 }
 
-std::vector<readdy::model::Vec3> Simulation::getParticlePositions(std::string type) {
+std::vector<Vec3> Simulation::getParticlePositions(std::string type) {
     unsigned int typeId = pimpl->kernel->getKernelContext().particle_types().id_of(type);
     const auto particles = pimpl->kernel->getKernelStateModel().getParticles();
-    std::vector<readdy::model::Vec3> positions;
+    std::vector<Vec3> positions;
     for (auto &&p : particles) {
         if (p.getType() == typeId) {
             positions.push_back(p.getPos());
@@ -307,7 +307,7 @@ readdy::model::Kernel *const Simulation::getSelectedKernel() const {
 
 const short Simulation::registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
                                                   const std::string &name,
-                                                  const model::Vec3 &origin, const scalar radius,
+                                                  const Vec3 &origin, const scalar radius,
                                                   const bool largerOrLess) {
     ensureKernelSelected();
     return getSelectedKernel()->registerCompartment<model::compartments::Sphere>(conversionsMap, name, origin, radius,
@@ -316,7 +316,7 @@ const short Simulation::registerCompartmentSphere(const std::unordered_map<std::
 
 const short Simulation::registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
                                                  const std::string &name,
-                                                 const model::Vec3 &normalCoefficients, const scalar distanceFromPlane,
+                                                 const Vec3 &normalCoefficients, const scalar distanceFromPlane,
                                                  const bool largerOrLess) {
     ensureKernelSelected();
     return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name,
@@ -325,7 +325,7 @@ const short Simulation::registerCompartmentPlane(const std::unordered_map<std::s
 }
 
 readdy::model::TopologyParticle
-Simulation::createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const {
+Simulation::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
     ensureKernelSelected();
     return getSelectedKernel()->createTopologyParticle(type, pos);
 }

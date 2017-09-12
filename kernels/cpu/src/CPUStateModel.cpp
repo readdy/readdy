@@ -34,6 +34,7 @@
 #include <readdy/common/thread/barrier.h>
 #include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 #include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
+#include <readdy/kernel/cpu/nl/CLLNeighborList.h>
 #include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
@@ -55,7 +56,7 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
     scalar energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it) {
         if (!it->is_deactivated()) {
-            readdy::model::Vec3 force{0, 0, 0};
+            Vec3 force{0, 0, 0};
             const auto &myPos = it->position();
 
             //
@@ -81,7 +82,7 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
                         auto distSquared = x_ij * x_ij;
                         for (const auto &potential : potit->second) {
                             if (distSquared < potential->getCutoffRadiusSquared()) {
-                                readdy::model::Vec3 updateVec{0, 0, 0};
+                                Vec3 updateVec{0, 0, 0};
                                 potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
                                 force += updateVec;
                             }
@@ -223,9 +224,9 @@ void CPUStateModel::calculateForces() {
     }
 }
 
-const std::vector<readdy::model::Vec3> CPUStateModel::getParticlePositions() const {
+const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
     const auto &data = pimpl->cdata();
-    std::vector<readdy::model::Vec3> target{};
+    std::vector<Vec3> target{};
     target.reserve(data.size());
     for (const auto &entry : data) {
         if (!entry.is_deactivated()) target.push_back(entry.position());
@@ -276,7 +277,7 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                 }
             }));
     pimpl->neighborList = std::unique_ptr<neighbor_list>(
-            new nl::AdaptiveNeighborList(*getParticleData(), *pimpl->context, *config)
+            new nl::ContiguousCLLNeighborList(*getParticleData(), *pimpl->context, *config)
     );
     // CellDecompositionNeighborList
 }

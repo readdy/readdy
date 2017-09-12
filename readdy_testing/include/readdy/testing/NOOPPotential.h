@@ -50,18 +50,18 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
         return cutoff;
     }
 
-    virtual readdy::scalar calculateEnergy(const readdy::model::Vec3 &x_ij) const override {
+    virtual readdy::scalar calculateEnergy(const Vec3 &x_ij) const override {
         return energy;
     }
 
-    virtual void calculateForce(readdy::model::Vec3 &force, const readdy::model::Vec3 &x_ij) const override {
+    virtual void calculateForce(Vec3 &force, const Vec3 &x_ij) const override {
         force[0] = NOOPPotentialOrder2::force;
         force[1] = NOOPPotentialOrder2::force;
         force[2] = NOOPPotentialOrder2::force;
     }
 
-    virtual void calculateForceAndEnergy(readdy::model::Vec3 &force, readdy::scalar &energy,
-                                         const readdy::model::Vec3 &x_ij) const override {
+    virtual void calculateForceAndEnergy(Vec3 &force, readdy::scalar &energy,
+                                         const Vec3 &x_ij) const override {
         energy = NOOPPotentialOrder2::calculateEnergy(x_ij);
         NOOPPotentialOrder2::calculateForce(force, x_ij);
     }

@@ -37,7 +37,7 @@
 #include <spdlog/fmt/ostr.h>
 
 #include <readdy/common/common.h>
-#include "Vec3.h"
+#include "readdy/common/ReaDDyVec3.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

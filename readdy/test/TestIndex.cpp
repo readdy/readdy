@@ -36,20 +36,20 @@
 namespace {
 
 TEST(TestIndex, Test1D) {
-    using namespace readdy::util;
+    using namespace readdy;
 
-    Index1D index (5);
+    util::Index1D index (5_z);
     ASSERT_EQ(index[0], 5);
     ASSERT_EQ(index.get<0>(), 5);
     ASSERT_EQ(index.nElements(), 5);
-    ASSERT_EQ(index(3), 3);
+    ASSERT_EQ(index(3_z), 3);
     ASSERT_EQ(index.inverse(3)[0], 3);
 }
 TEST(TestIndex, Test2D) {
-    using namespace readdy::util;
-    auto nrows = 5;
-    auto ncols = 6;
-    Index2D index (nrows, ncols);
+    using namespace readdy;
+    auto nrows = 5_z;
+    auto ncols = 6_z;
+    util::Index2D index (nrows, ncols);
     ASSERT_EQ(index[0], nrows);
     ASSERT_EQ(index[1], ncols);
     ASSERT_EQ(index.get<0>(), nrows);
@@ -66,11 +66,11 @@ TEST(TestIndex, Test2D) {
     ASSERT_EQ(index.inverse(5+4*ncols)[1], 5);
 }
 TEST(TestIndex, Test3D) {
-    using namespace readdy::util;
-    auto width = 6;
-    auto height = 5;
-    auto depth = 6;
-    Index3D index (width, height, depth);
+    using namespace readdy;
+    auto width = 6_z;
+    auto height = 5_z;
+    auto depth = 6_z;
+    util::Index3D index (width, height, depth);
     ASSERT_EQ(index[0], index.get<0>());
     ASSERT_EQ(index[1], index.get<1>());
     ASSERT_EQ(index[2], index.get<2>());
@@ -80,17 +80,17 @@ TEST(TestIndex, Test3D) {
     ASSERT_EQ(index.nElements(), width * height * depth);
     ASSERT_EQ(index(0, 0, 3), 3);
     ASSERT_EQ(index(1, 2, 3), 3 + depth * (2 + height * 1));
-    Index3D::GridDims expected {{1,2,3}};
+    util::Index3D::GridDims expected {{1_z,2_z,3_z}};
     ASSERT_EQ(index.inverse(3 + depth * (2 + height * 1)), expected);
 }
 
 TEST(TestIndex, Test3DElch) {
-    using namespace readdy::util;
-    auto width = 7;
-    auto height = 13;
-    auto depth = 5;
+    using namespace readdy;
+    auto width = 7_z;
+    auto height = 13_z;
+    auto depth = 5_z;
 
-    Index3D index (width, height, depth);
+    util::Index3D index (width, height, depth);
 
     int n = 0;
     for(int i = 0; i < width; ++i) {
@@ -98,7 +98,9 @@ TEST(TestIndex, Test3DElch) {
             for(int k = 0; k < depth; ++k) {
                 auto x = index(i, j, k);
                 ASSERT_EQ(x, n);
-                Index3D::GridDims expectedInverse {{i, j, k}};
+                util::Index3D::GridDims expectedInverse {
+                        {static_cast<std::size_t>(i), static_cast<std::size_t>(j), static_cast<std::size_t>(k)}
+                };
                 ASSERT_EQ(index.inverse(x), expectedInverse);
                 ++n;
             }
@@ -107,14 +109,14 @@ TEST(TestIndex, Test3DElch) {
 }
 
 TEST(TestIndex, Test5DElch) {
-    using namespace readdy::util;
-    auto d1 = 7;
-    auto d2 = 13;
-    auto d3 = 5;
-    auto d4 = 11;
-    auto d5 = 23;
+    using namespace readdy;
+    auto d1 = 7_z;
+    auto d2 = 13_z;
+    auto d3 = 5_z;
+    auto d4 = 11_z;
+    auto d5 = 23_z;
 
-    Index<5> index (d1, d2, d3, d4, d5);
+    util::Index<5> index (d1, d2, d3, d4, d5);
 
     int n = 0;
     for(int i1 = 0; i1 < d1; ++i1) {
@@ -124,7 +126,13 @@ TEST(TestIndex, Test5DElch) {
                     for(int i5 = 0; i5 < d5; ++i5) {
                         auto x = index(i1, i2, i3, i4, i5);
                         ASSERT_EQ(x, n);
-                        Index<5>::GridDims expectedInverse {{i1, i2, i3, i4, i5}};
+                        util::Index<5>::GridDims expectedInverse {
+                                {
+                                        static_cast<std::size_t>(i1), static_cast<std::size_t>(i2),
+                                        static_cast<std::size_t>(i3), static_cast<std::size_t>(i4),
+                                        static_cast<std::size_t>(i5)
+                                }
+                        };
                         ASSERT_EQ(index.inverse(x), expectedInverse);
                         ++n;
                     }

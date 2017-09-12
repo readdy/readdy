@@ -88,7 +88,7 @@ TEST_F(TestKernelContext, PotentialOrder2Map) {
 }
 
 TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
-    using vec_t = readdy::model::Vec3;
+    using vec_t = readdy::Vec3;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
 
     namespace rmp = readdy::model::potentials;

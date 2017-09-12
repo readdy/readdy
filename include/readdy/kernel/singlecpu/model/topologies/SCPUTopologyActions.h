@@ -61,7 +61,7 @@ public:
         const auto &particleIndices = topology->getParticles();
         const auto &d = context->shortestDifferenceFun();
         for (const auto &bond : potential->getBonds()) {
-            readdy::model::Vec3 forceUpdate{0, 0, 0};
+            Vec3 forceUpdate{0, 0, 0};
             auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
             auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
             const auto x_ij = d(e1.position(), e2.position());

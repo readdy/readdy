@@ -37,7 +37,7 @@ class TestAggregators : public KernelTest {
 
 TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
     kernel->getKernelContext().particle_types().add("A", 1., 1.);
-    for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::model::Vec3(0, 0, 0));
+    for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::Vec3(0, 0, 0));
     auto obs = kernel->createObservable<readdy::model::observables::Particles>(1);
     auto msd = kernel->createObservable<readdy::model::observables::MeanSquaredDisplacement>(1, std::vector<std::string>(), obs.get());
     auto connection = kernel->connectObservable(msd.get());
@@ -65,7 +65,7 @@ TEST_P(TestAggregators, TestMeanSquaredDisplacement) {
 
 TEST_P(TestAggregators, TestTrivial) {
     kernel->getKernelContext().particle_types().add("A", 1., 1.);
-    for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::model::Vec3(4, 2, 0));
+    for (auto i=0; i<5; ++i) kernel->addParticle("A", readdy::Vec3(4, 2, 0));
     auto obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     auto traj = kernel->createObservable<readdy::model::observables::Trivial<readdy::model::observables::Positions>>(1, obs.get());
     auto connection = kernel->connectObservable(traj.get());
@@ -79,7 +79,7 @@ TEST_P(TestAggregators, TestTrivial) {
         EXPECT_THAT(resultTime, ::testing::ElementsAre(0));
         EXPECT_EQ(resultPos[0].size(), 5);
         for (auto j=0; j<5; ++j) {
-            EXPECT_VEC3_EQ(resultPos[0][j], readdy::model::Vec3(4, 2, 0));
+            EXPECT_VEC3_EQ(resultPos[0][j], readdy::Vec3(4, 2, 0));
         }
     }
     for (auto i=0; i<3; ++i) {
@@ -92,7 +92,7 @@ TEST_P(TestAggregators, TestTrivial) {
         EXPECT_THAT(resultTime, ::testing::ElementsAre(0, 1));
         EXPECT_EQ(resultPos[1].size(), 5);
         for (auto j=0; j<5; ++j) {
-            EXPECT_VEC3_EQ(resultPos[1][j], readdy::model::Vec3(4, 2, 0));
+            EXPECT_VEC3_EQ(resultPos[1][j], readdy::Vec3(4, 2, 0));
         }
     }
 }

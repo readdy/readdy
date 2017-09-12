@@ -98,13 +98,13 @@ public:
      * Method to get the current box size.
      * @return the box size as Vec3 object.
      */
-    readdy::model::Vec3 getBoxSize() const;
+    Vec3 getBoxSize() const;
 
     topology_type_type registerTopologyType(const std::string& name,
                                             const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions = {});
 
     readdy::model::TopologyParticle
-    createTopologyParticle(const std::string &type, const readdy::model::Vec3 &pos) const;
+    createTopologyParticle(const std::string &type, const Vec3 &pos) const;
 
     bool kernelSupportsTopologies() const;
 
@@ -127,7 +127,7 @@ public:
      * Method to set the box size.
      * @param boxSize a vector object with three components, indicating the three lengths of the axes.
      */
-    void setBoxSize(const readdy::model::Vec3 &boxSize);
+    void setBoxSize(const Vec3 &boxSize);
 
     /**
      * Method that returns an array which indicates, if there are (partially) periodic boundaries.
@@ -197,7 +197,7 @@ public:
      * @param type the type
      * @return a vector containing the particle positions
      */
-    std::vector<readdy::model::Vec3> getParticlePositions(std::string type);
+    std::vector<Vec3> getParticlePositions(std::string type);
 
     /**
      * A method to register a particle type
@@ -233,7 +233,7 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short registerBoxPotential(const std::string &particleType, scalar forceConstant,
-                                     const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
+                                     const Vec3 &origin, const Vec3 &extent,
                                      bool considerParticleRadius);
 
     /**
@@ -248,7 +248,7 @@ public:
      * @todo add a considerParticleRadius parameter
      */
     const short
-    registerSphereInPotential(const std::string &particleType, scalar forceConstant, const readdy::model::Vec3 &origin,
+    registerSphereInPotential(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                               scalar radius);
 
     /**
@@ -262,7 +262,7 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphereOutPotential(const std::string &particleType, scalar forceConstant, const readdy::model::Vec3 &origin,
+    registerSphereOutPotential(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                                scalar radius);
 
     /**
@@ -277,7 +277,7 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphericalBarrier(const std::string &particleType, const readdy::model::Vec3 &origin, scalar radius,
+    registerSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius,
                              scalar height, scalar width);
 
     //----------------------
@@ -391,7 +391,7 @@ public:
      * Method that gives access to all the positions of all the particles in the system.
      * @return a vector containing all the positions
      */
-    const std::vector<readdy::model::Vec3> getAllParticlePositions() const;
+    const std::vector<Vec3> getAllParticlePositions() const;
 
     /**
      * Method that allows to set a kernel for this simulation object. Most methods required that this method
@@ -500,12 +500,12 @@ public:
 
     const short
     registerCompartmentSphere(const std::unordered_map<std::string, std::string> &conversionsMap,
-                              const std::string &name, const model::Vec3 &origin,
+                              const std::string &name, const Vec3 &origin,
                               scalar radius, bool largerOrLess);
 
     const short registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
                                          const std::string &name,
-                                         const model::Vec3 &normalCoefficients, scalar distanceFromPlane,
+                                         const Vec3 &normalCoefficients, scalar distanceFromPlane,
                                          bool largerOrLess);
 
     void

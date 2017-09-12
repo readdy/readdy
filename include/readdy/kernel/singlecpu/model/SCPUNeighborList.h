@@ -194,7 +194,7 @@ public:
                 SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;
 
                 for (std::uint8_t i = 0; i < 3; ++i) {
-                    nBoxes[i] = static_cast<int>(floor(simBoxSize[i] / maxCutoff));
+                    nBoxes[i] = static_cast<int>(std::floor(simBoxSize[i] / maxCutoff));
                     if (nBoxes[i] == 0) nBoxes[i] = 1;
                     boxSize[i] = simBoxSize[i] / nBoxes[i];
                 }
@@ -226,8 +226,7 @@ public:
             super::pairs->clear();
 
             unsigned long idx = 0;
-            const auto shift = readdy::model::Vec3(c_::half * simBoxSize[0], c_::half * simBoxSize[1],
-                                                   c_::half * simBoxSize[2]);
+            const auto shift = Vec3(c_::half * simBoxSize[0], c_::half * simBoxSize[1], c_::half * simBoxSize[2]);
             for(const auto& entry : data) {
                 if(!entry.is_deactivated()) {
                     const auto pos_shifted = entry.position() + shift;
@@ -277,7 +276,7 @@ public:
 protected:
     std::vector<Box> boxes{};
     std::array<int, 3> nBoxes{{0, 0, 0}};
-    readdy::model::Vec3 boxSize{0, 0, 0};
+    Vec3 boxSize{0, 0, 0};
     scalar maxCutoff {0};
 
     const context *const ctx;

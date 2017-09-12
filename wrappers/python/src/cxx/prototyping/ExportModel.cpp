@@ -99,8 +99,8 @@ void exportModelClasses(py::module &proto) {
             .def_property("kbt", [](const context &self) {return self.kBT(); }, [](context &self, readdy::scalar kbt) {
                 self.kBT() = kbt;
             })
-            .def("get_box_size", [](context &self) { return readdy::model::Vec3(self.boxSize()); })
-            .def("set_box_size", [](context &self, readdy::model::Vec3 vec) { self.boxSize() = vec.data; })
+            .def("get_box_size", [](context &self) { return readdy::Vec3(self.boxSize()); })
+            .def("set_box_size", [](context &self, readdy::Vec3 vec) { self.boxSize() = vec.data; })
             .def_property("periodic_boundary", [](const context &self) {return self.periodicBoundaryConditions();},
                           [](context &self, context::PeriodicBoundaryConditions periodic) {
                               self.periodicBoundaryConditions() = periodic;

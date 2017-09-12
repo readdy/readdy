@@ -29,9 +29,9 @@
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
 
-#include <readdy/model/Vec3.h>
-#include <readdy/io/BloscFilter.h>
+#include <readdy/common/ReaDDyVec3.h>
 #include <readdy/common/Timer.h>
+#include <readdy/io/BloscFilter.h>
 #include "SpdlogPythonSink.h"
 
 namespace py = pybind11;
@@ -157,7 +157,7 @@ void exportCommon(py::module& common) {
                 });
     }
 
-    py::class_<readdy::model::Vec3>(common, "Vec")
+    py::class_<readdy::Vec3>(common, "Vec")
             .def(py::init<readdy::scalar, readdy::scalar, readdy::scalar>())
             .def(py::self + py::self)
             .def(py::self - py::self)
@@ -168,12 +168,12 @@ void exportCommon(py::module& common) {
             .def(py::self == py::self)
             .def(py::self != py::self)
             .def(py::self * py::self)
-            .def("__repr__", [](const readdy::model::Vec3 &self) {
+            .def("__repr__", [](const readdy::Vec3 &self) {
                 std::ostringstream stream;
                 stream << self;
                 return stream.str();
             })
-            .def("__getitem__", [](const readdy::model::Vec3 &self, unsigned int i) {
+            .def("__getitem__", [](const readdy::Vec3 &self, unsigned int i) {
                 return self[i];
             });
 

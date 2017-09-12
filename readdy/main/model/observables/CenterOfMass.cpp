@@ -58,7 +58,7 @@ CenterOfMass::CenterOfMass(Kernel *const kernel, unsigned int stride,
         : CenterOfMass(kernel, stride, kernel->getKernelContext().particle_types().id_of(particleType)) {}
 
 void CenterOfMass::evaluate() {
-    readdy::model::Vec3 com{0, 0, 0};
+    Vec3 com{0, 0, 0};
     unsigned long n_particles = 0;
     for (auto &&p : kernel->getKernelStateModel().getParticles()) {
         if (particleTypes.find(p.getType()) != particleTypes.end()) {

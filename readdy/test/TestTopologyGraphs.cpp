@@ -257,7 +257,7 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     top->graph().addEdge(top->graph().vertices().begin(), ++top->graph().vertices().begin());
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
-    std::vector<readdy::model::Vec3> collectedForces;
+    std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
@@ -271,9 +271,9 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 2);
-    readdy::model::Vec3 f1{40., 0, 0};
+    readdy::Vec3 f1{40., 0, 0};
     EXPECT_EQ(collectedForces.at(0), f1);
-    readdy::model::Vec3 f2{-40., 0, 0};
+    readdy::Vec3 f2{-40., 0, 0};
     EXPECT_EQ(collectedForces.at(1), f2);
     EXPECT_EQ(kernel->getKernelStateModel().getEnergy(), 40);
 }
@@ -297,7 +297,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     }
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
-    std::vector<readdy::model::Vec3> collectedForces;
+    std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
@@ -316,9 +316,9 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     } else {
         EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
     }
-    readdy::model::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
-    readdy::model::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
-    readdy::model::Vec3 force_x_k{-5.45394396, 0.42776031, 0.71293385};
+    readdy::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
+    readdy::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
+    readdy::Vec3 force_x_k{-5.45394396, 0.42776031, 0.71293385};
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);
@@ -348,7 +348,7 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
                                                                                {1.0, 3, readdy::util::numeric::pi()});
     top->configure();
     auto fObs = kernel->createObservable<readdy::model::observables::Forces>(1);
-    std::vector<readdy::model::Vec3> collectedForces;
+    std::vector<readdy::Vec3> collectedForces;
     fObs->setCallback([&collectedForces](const readdy::model::observables::Forces::result_type &result) {
         for (const auto &force : result) {
             collectedForces.push_back(force);
@@ -367,10 +367,10 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     } else {
         EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
     }
-    readdy::model::Vec3 force_x_i{0., 1.70762994, 0.};
-    readdy::model::Vec3 force_x_j{0., -1.70762994, 0.};
-    readdy::model::Vec3 force_x_k{0.51228898, -0.17076299, 0.};
-    readdy::model::Vec3 force_x_l{-0.51228898, 0.17076299, 0.};
+    readdy::Vec3 force_x_i{0., 1.70762994, 0.};
+    readdy::Vec3 force_x_j{0., -1.70762994, 0.};
+    readdy::Vec3 force_x_k{0.51228898, -0.17076299, 0.};
+    readdy::Vec3 force_x_l{-0.51228898, 0.17076299, 0.};
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[2], force_x_k, 1e-6);

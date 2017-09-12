@@ -34,8 +34,6 @@ namespace pot = readdy::model::potentials;
 
 using rvp = py::return_value_policy;
 
-using rdy_vec = readdy::model::Vec3;
-
 using rdy_pot = pot::Potential;
 using rdy_pot1 = pot::PotentialOrder1;
 using rdy_pot2 = pot::PotentialOrder2;
@@ -50,21 +48,21 @@ public:
         return "User defined potential order 1 for type " + particleType;
     }
 
-    virtual readdy::scalar calculateEnergy(const rdy_vec &position) const override {
+    virtual readdy::scalar calculateEnergy(const readdy::Vec3 &position) const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "calculate_energy", calculateEnergy, position);
     }
 
-    virtual rdy_vec calculateForceInternal(const rdy_vec &pos) const {
+    virtual readdy::Vec3 calculateForceInternal(const readdy::Vec3 &pos) const {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO1, "calculate_force", calculateForce, pos);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::Vec3, PyPotentialO1, "calculate_force", calculateForce, pos);
     }
 
-    virtual void calculateForce(rdy_vec &force, const rdy_vec &position) const override {
+    virtual void calculateForce(readdy::Vec3 &force, const readdy::Vec3 &position) const override {
         force += calculateForceInternal(position);
     }
 
-    virtual void calculateForceAndEnergy(rdy_vec &force, readdy::scalar &energy, const rdy_vec &position) const override {
+    virtual void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &position) const override {
         calculateForce(force, position);
         energy += calculateEnergy(position);
     }
@@ -101,21 +99,21 @@ public:
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_maximal_force", getMaximalForce, kbt);
     }
 
-    virtual readdy::scalar calculateEnergy(const rdy_vec &x_ij) const override {
+    virtual readdy::scalar calculateEnergy(const readdy::Vec3 &x_ij) const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "calculate_energy", calculateEnergy, x_ij);
     }
 
-    virtual rdy_vec calculateForceInternal(const rdy_vec &pos) const {
+    virtual readdy::Vec3 calculateForceInternal(const readdy::Vec3 &pos) const {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(rdy_vec, PyPotentialO2, "calculate_force", calculateForce, pos);
+        PYBIND11_OVERLOAD_PURE_NAME(readdy::Vec3, PyPotentialO2, "calculate_force", calculateForce, pos);
     }
 
-    virtual void calculateForce(rdy_vec &force, const rdy_vec &x_ij) const override {
+    virtual void calculateForce(readdy::Vec3 &force, const readdy::Vec3 &x_ij) const override {
         force += calculateForceInternal(x_ij);
     }
 
-    virtual void calculateForceAndEnergy(rdy_vec &force, readdy::scalar &energy, const rdy_vec &x_ij) const override {
+    virtual void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &x_ij) const override {
         calculateForce(force, x_ij);
         energy += calculateEnergy(x_ij);
     }
@@ -167,7 +165,7 @@ void exportPotentials(py::module &proto) {
     py::class_<rdy_pot_factory>(proto, "PotentialFactory")
             .def("create_cube_potential",
                  [](rdy_pot_factory &self, const std::string &particleType, readdy::scalar forceConstant,
-                    const readdy::model::Vec3 &origin, const readdy::model::Vec3 &extent,
+                    const readdy::Vec3 &origin, const readdy::Vec3 &extent,
                     bool considerParticleRadius) {
                      return self.createPotential<pot::Cube>(particleType, forceConstant, origin, extent,
                                                                      considerParticleRadius).release();

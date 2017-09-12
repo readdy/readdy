@@ -50,9 +50,9 @@ public:
         PYBIND11_OVERLOAD_NAME(void, super, "remove_particle", removeParticle, p);
     }
 
-    virtual const std::vector<model::Vec3> getParticlePositions() const override {
+    virtual const std::vector<Vec3> getParticlePositions() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(const std::vector<model::Vec3>, super, "get_particle_positions", getParticlePositions,);
+        PYBIND11_OVERLOAD_NAME(const std::vector<Vec3>, super, "get_particle_positions", getParticlePositions,);
     }
 
     virtual readdy::scalar getEnergy() const override {

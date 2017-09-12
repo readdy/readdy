@@ -35,27 +35,58 @@
 #include <initializer_list>
 #include <array>
 #include <numeric>
+#include <tuple>
 #include "macros.h"
 #include "tuple_utils.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 
+NAMESPACE_BEGIN(detail)
+template <typename T1, typename... T>
+struct variadic_first { using type = typename std::decay<T1>::type; };
+template<bool B, typename T = void> using disable_if = std::enable_if<!B, T>;
+
+template<std::size_t N, typename T, typename Tuple>
+struct all_of_type_impl {
+    using nth_elem = typename std::decay<typename std::tuple_element<N-1, Tuple>::type>::type;
+    static constexpr bool value = std::is_same<nth_elem, T>::value && all_of_type_impl<N-1, T, Tuple>::value;
+};
+
+template<typename T, typename Tuple>
+struct all_of_type_impl<0, T, Tuple> {
+    static constexpr bool value = true;
+};
+
+template<typename T, typename ...Args>
+struct all_of_type {
+    static constexpr bool value = all_of_type_impl<sizeof...(Args), T, typename std::tuple<Args...>>::value;
+};
+
+NAMESPACE_END(detail)
+
 template<std::size_t Dims>
 class Index {
     static_assert(Dims > 0, "Dims has to be > 0");
 public:
-    using GridDims = std::array<int, Dims>;
+    using GridDims = std::array<std::size_t, Dims>;
     using value_type = typename GridDims::value_type;
 
-    Index() : size(), n_elems(0) {}
+    Index() : _size(), n_elems(0) {}
 
-    template<typename ...Args>
-    Index(Args &&...args) : size({std::forward<Args>(args)...}),
-                            n_elems(std::accumulate(size.begin(), size.end(), 1, std::multiplies<value_type>())) {}
+    Index<Dims>(const Index<Dims> &) = default;
+    Index<Dims> &operator=(const Index<Dims> &) = default;
+    Index<Dims>(Index<Dims> &&) = default;
+    Index<Dims> &operator=(Index<Dims> &&) = default;
 
-    Index(GridDims &&arr) : size(std::move(arr)),
-                            n_elems(std::accumulate(size.begin(), size.end(), 1, std::multiplies<value_type>())) {}
+    template<typename ...Args, typename = typename std::enable_if<detail::all_of_type<std::size_t, Args...>::value>::type>
+    Index(Args &&...args) : _size({std::forward<Args>(args)...}),
+                            n_elems(std::accumulate(_size.begin(), _size.end(), 1_z, std::multiplies<value_type>())) {}
+
+
+    value_type size() const {
+        return n_elems;
+    }
 
     value_type nElements() const {
         return n_elems;
@@ -68,7 +99,7 @@ public:
      */
     template<int N>
     constexpr value_type get() const {
-        return size[N];
+        return _size[N];
     }
 
     /**
@@ -76,36 +107,28 @@ public:
      * @param N N
      * @return size of N-th axis
      */
-    constexpr value_type operator[](std::size_t N) const {
-        return size[N];
+    template<typename T>
+    constexpr value_type operator[](T N) const {
+        return _size[N];
     }
 
     /**
      * map Dims-dimensional index to 1D index
      * @tparam Ix the d-dimensional index template param type
-     * @param index the d-dimensional index
-     * @return the 1D index
-     */
-    template<typename... Ix>
-    constexpr std::size_t operator()(Ix &&... index) const {
-        static_assert(sizeof...(index) == Dims, "wrong input dim");
-        return (*this)({std::forward<Ix>(index)...});
-
-    }
-
-    /**
-     * map Dims-dimensional index to 1D index
      * @param ix the d-dimensional index
      * @return the 1D index
      */
-    constexpr std::size_t operator()(const GridDims &ix) const {
+    template<typename... Ix>
+    constexpr value_type operator()(Ix &&... ix) const {
+        static_assert(sizeof...(ix) == Dims, "wrong input dim");
+        std::array<typename detail::variadic_first<Ix...>::type, Dims> indices { std::forward<Ix>(ix)... };
         std::size_t result = 0;
-        auto prefactor = n_elems / size[0];
+        auto prefactor = n_elems / _size[0];
         for(std::size_t d = 0; d < Dims-1; ++d) {
-            result += prefactor * ix[d];
-            prefactor /= size[d+1];
+            result += prefactor * indices[d];
+            prefactor /= _size[d+1];
         }
-        result += ix[Dims-1];
+        result += indices[Dims-1];
         return result;
     }
 
@@ -116,19 +139,20 @@ public:
      */
     constexpr GridDims inverse(std::size_t idx) const {
         GridDims result;
-        auto prefactor = n_elems / size[0];
+        auto prefactor = n_elems / _size[0];
         for(std::size_t d = 0; d < Dims-1; ++d) {
             auto x = std::floor(idx / prefactor);
             result[d] = x;
             idx -= x * prefactor;
-            prefactor /= size[d+1];
+            prefactor /= _size[d+1];
         }
         result[Dims-1] = idx;
         return result;
     }
 
 private:
-    GridDims size;
+
+    GridDims _size;
     value_type n_elems;
 };
 

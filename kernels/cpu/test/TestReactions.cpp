@@ -86,7 +86,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         reac::performReaction(data, kernel->getKernelContext(), 0, 0, newParticles, decayedEntries, conversion.get(), nullptr);
 
         EXPECT_EQ(data.entry_at(0).type, conversion->getTypeTo());
-        EXPECT_EQ(data.pos(0), readdy::model::Vec3(0,0,0));
+        EXPECT_EQ(data.pos(0), readdy::Vec3(0,0,0));
     }
 
     // test fusion
@@ -110,9 +110,9 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         EXPECT_EQ(data.entry_at(0).type, fusion->getTo());
         if(readdy::single_precision) {
-            EXPECT_FVEC3_EQ(readdy::model::Vec3(.4, 0, 0), data.pos(0));
+            EXPECT_FVEC3_EQ(readdy::Vec3(.4, 0, 0), data.pos(0));
         } else {
-            EXPECT_FVEC3_EQ(readdy::model::Vec3(.4, 0, 0), data.pos(0));
+            EXPECT_FVEC3_EQ(readdy::Vec3(.4, 0, 0), data.pos(0));
         }
     }
 
@@ -258,7 +258,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using namespace readdy;
 
     using particle_t = readdy::model::Particle;
-    using vec_t = readdy::model::Vec3;
+    using vec_t = readdy::Vec3;
     using fusion_t = readdy::model::reactions::Fusion;
     using fission_t = readdy::model::reactions::Fission;
     using enzymatic_t = readdy::model::reactions::Enzymatic;

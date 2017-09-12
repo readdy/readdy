@@ -28,8 +28,6 @@
 
 #include <readdy/model/observables/Aggregators.h>
 
-#include <utility>
-
 #include <readdy/model/Kernel.h>
 
 

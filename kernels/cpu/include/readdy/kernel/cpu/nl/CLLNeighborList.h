@@ -1,0 +1,157 @@
+/********************************************************************
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
+ *                  Freie Universität Berlin (GER)                  *
+ *                                                                  *
+ * This file is part of ReaDDy.                                     *
+ *                                                                  *
+ * ReaDDy is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU Lesser General Public License as   *
+ * published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.              *
+ *                                                                  *
+ * This program is distributed in the hope that it will be useful,  *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of   *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    *
+ * GNU Lesser General Public License for more details.              *
+ *                                                                  *
+ * You should have received a copy of the GNU Lesser General        *
+ * Public License along with this program. If not, see              *
+ * <http://www.gnu.org/licenses/>.                                  *
+ ********************************************************************/
+
+
+/**
+ * << detailed description >>
+ *
+ * @file CLLNeighborList.h
+ * @brief << brief description >>
+ * @author clonker
+ * @date 12.09.17
+ * @copyright GNU Lesser General Public License v3.0
+ */
+
+#pragma once
+
+#include "NeighborList.h"
+#include "../model/CPUParticleData.h"
+#include "CellLinkedList.h"
+
+namespace readdy {
+namespace kernel {
+namespace cpu {
+namespace nl {
+
+class ContiguousCLLNeighborList : public NeighborList {
+public:
+    ContiguousCLLNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                                  const readdy::util::thread::Config &config)
+            : NeighborList(data, context, config), ccll(data, context, config) {}
+
+    void set_up(const util::PerformanceNode &node) override {
+        auto t = node.timeit();
+        _max_cutoff = _context.get().calculateMaxCutoff();
+        _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
+
+        ccll.setUp(_skin, cll_radius, node.subnode("setUp CLL"));
+        fill_verlet_list(node.subnode("fill verlet list"));
+        _is_set_up = true;
+    }
+
+    void fill_verlet_list(const util::PerformanceNode &node) {
+        auto t = node.timeit();
+        if(_max_cutoff > 0) {
+            auto cix = ccll.cellIndex();
+            auto bix = ccll.binsIndex();
+            auto nix = ccll.neighborIndex();
+
+            const auto grainSize = cix.size() / _config.get().nThreads();
+            auto worker = [this, cix, bix, nix](std::size_t tid, std::size_t begin, std::size_t end) {
+                const auto &d2 = _context.get().distSquaredFun();
+                auto &data = _data.get();
+
+                for(std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
+
+                    for(auto itParticles = ccll.particlesBegin(cellIndex); itParticles != ccll.particlesEnd(cellIndex); ++itParticles) {
+                        auto particle = *itParticles;
+                        auto &entry = data.entry_at(particle);
+                        auto &neighbors = data.neighbors_at(particle);
+                        neighbors.clear();
+
+                        for(auto itPP = ccll.particlesBegin(cellIndex); itPP != ccll.particlesEnd(cellIndex); ++itPP) {
+                            auto pparticle = *itPP;
+                            if(particle != pparticle) {
+                                const auto &pp = data.entry_at(pparticle);
+                                if(!pp.deactivated) {
+                                    const auto distSquared = d2(entry.pos, pp.pos);
+                                    if (distSquared < _max_cutoff_skin_squared) {
+                                        neighbors.push_back(pparticle);
+                                    }
+                                }
+                            }
+                        }
+
+
+                        /*for(std::size_t ncix = 0; ncix < n_neighbors; ++ncix) {
+                            const auto neighborCellIndex = ccll.neighbors().at(adjBeginIdx + ncix + 1);
+                            auto neighborBinsBeginIdx = bix(neighborCellIndex, 0_z);
+                            const auto neighborNParticles = ccll.bins().at(binsBeginIdx);
+
+                            for(std::size_t nidx = neighborBinsBeginIdx + 1; nidx < neighborBinsBeginIdx + neighborNParticles + 1; ++nidx) {
+                                auto neighbor = ccll.bins().at(nidx);
+                                const auto distSquared = d2(entry.pos, data.pos(neighbor));
+                                if(distSquared < _max_cutoff_skin_squared) {
+                                    neighbors.push_back(neighbor);
+                                }
+                            }
+
+
+                        }*/
+                    }
+                }
+            };
+            const auto& executor = *_config.get().executor();
+            std::vector<std::function<void(std::size_t)>> executables;
+            executables.reserve(_config.get().nThreads());
+            auto it = 0_z;
+            for(int i = 0; i < _config.get().nThreads()-1; ++i) {
+                executables.push_back(executor.pack(worker, it, it + grainSize));
+                it += grainSize;
+            }
+            executables.push_back(executor.pack(worker, it, cix.size()));
+            executor.execute_and_wait(std::move(executables));
+        }
+    }
+
+    void update(const util::PerformanceNode &node) override {
+        auto t = node.timeit();
+        if(!_is_set_up) {
+            set_up(node.subnode("setUp"));
+        }
+        ccll.update(node.subnode("update CLL"));
+    }
+
+    void clear(const util::PerformanceNode &node) override {
+        auto t = node.timeit();
+        if (_max_cutoff > 0) {
+            ccll.clear();
+            for (auto &neighbors : _data.get().neighbors) {
+                neighbors.clear();
+            }
+        }
+    }
+
+    void updateData(data_t::update_t &&update) override {
+        _data.get().update(std::forward<model::CPUParticleData::update_t>(update));
+    }
+
+private:
+    std::uint8_t cll_radius {1};
+
+    ContiguousCellLinkedList ccll;
+    bool _is_set_up {false};
+};
+
+}
+}
+}
+}

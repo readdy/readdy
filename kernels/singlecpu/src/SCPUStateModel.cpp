@@ -66,10 +66,10 @@ void readdy::kernel::scpu::SCPUStateModel::addParticles(const std::vector<readdy
     pimpl->particleData.addParticles(p);
 }
 
-const std::vector<readdy::model::Vec3>
+const std::vector<Vec3>
 readdy::kernel::scpu::SCPUStateModel::getParticlePositions() const {
     const auto &data = pimpl->particleData;
-    std::vector<readdy::model::Vec3> target{};
+    std::vector<Vec3> target{};
     target.reserve(data.size());
     for (const auto &entry : data) {
         if (!entry.is_deactivated()) target.push_back(entry.position());
@@ -117,7 +117,7 @@ void SCPUStateModel::calculateForces() {
     pimpl->currentEnergy = 0;
     // update forces and energy order 1 potentials
     {
-        const readdy::model::Vec3 zero{0, 0, 0};
+        const Vec3 zero{0, 0, 0};
         for (auto &e : pimpl->particleData) {
             e.force = zero;
             for (const auto &po1 : pimpl->context->potentials().potentials_of(e.type)) {
@@ -129,7 +129,7 @@ void SCPUStateModel::calculateForces() {
     // update forces and energy order 2 potentials
     if(!pimpl->context->potentials().potentials_order2().empty()) {
         const auto &difference = pimpl->context->shortestDifferenceFun();
-        readdy::model::Vec3 forceVec{0, 0, 0};
+        Vec3 forceVec{0, 0, 0};
         for (auto it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
             auto i = it->idx1;
             auto j = it->idx2;

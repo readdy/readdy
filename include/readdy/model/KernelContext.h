@@ -47,16 +47,16 @@
 #include <memory>
 #include <vector>
 #include <unordered_set>
+
+#include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/api/PotentialConfiguration.h>
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/model/reactions/ReactionRegistry.h>
 #include <readdy/model/compartments/Compartment.h>
-#include "Vec3.h"
 #include "ParticleTypeRegistry.h"
-#include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/api/PotentialConfiguration.h>
 #include <readdy/model/potentials/PotentialRegistry.h>
 #include <readdy/model/topologies/TopologyRegistry.h>
 
@@ -77,6 +77,8 @@ public:
     const scalar &kBT() const;
 
     scalar &kBT();
+
+    scalar boxVolume() const;
 
     const BoxSize &boxSize() const;
 

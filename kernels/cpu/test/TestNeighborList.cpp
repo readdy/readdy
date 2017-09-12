@@ -228,10 +228,10 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
         ASSERT_TRUE(cell != nullptr);
         ASSERT_TRUE(cell->is_leaf());
         ASSERT_EQ(cell->level(), 2);
-        ASSERT_TRUE(cell->offset() == readdy::model::Vec3(0, 0, 0));
-        ASSERT_TRUE(cell->size() == readdy::model::Vec3(.5, .5, .5));
+        ASSERT_TRUE(cell->offset() == readdy::Vec3(0, 0, 0));
+        ASSERT_TRUE(cell->size() == readdy::Vec3(.5, .5, .5));
         ASSERT_EQ(cell->neighbors().size(), 5 * 5 * 5 - 1);
-        std::set<readdy::model::Vec3> offsets;
+        std::set<readdy::Vec3> offsets;
         for (auto o : cell->neighbors()) {
             offsets.emplace(o->offset());
         }
@@ -243,17 +243,17 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
         ASSERT_TRUE(cell != nullptr);
         ASSERT_TRUE(cell->is_leaf());
         ASSERT_EQ(cell->level(), 2);
-        ASSERT_TRUE(cell->offset() == readdy::model::Vec3(5, 5, 5));
-        ASSERT_TRUE(cell->size() == readdy::model::Vec3(.5, .5, .5));
+        ASSERT_TRUE(cell->offset() == readdy::Vec3(5, 5, 5));
+        ASSERT_TRUE(cell->size() == readdy::Vec3(.5, .5, .5));
         const auto &cell_neighbors = cell->neighbors();
         ASSERT_EQ(cell_neighbors.size(), 5 * 5 * 5 - 1);
-        auto shift = .5 * model::Vec3(context.boxSize());
+        auto shift = .5 * readdy::Vec3(context.boxSize());
         for (int i = -2; i <= 2; ++i) {
             for (int j = -2; j <= 2; ++j) {
                 for (int k = -2; k <= 2; ++k) {
                     if (i == 0 && j == 0 && k == 0) continue;
                     auto pos = cell->offset() - shift +
-                               readdy::model::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
+                            readdy::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
                     auto leaf = cellContainer.leaf_cell_for_position(pos);
                     ASSERT_TRUE(leaf != nullptr);
                     ASSERT_TRUE(std::find(cell_neighbors.begin(), cell_neighbors.end(), leaf) != cell_neighbors.end())
@@ -288,25 +288,25 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipNotPeriodic) {
         ASSERT_TRUE(cell != nullptr);
         ASSERT_TRUE(cell->is_leaf());
         ASSERT_EQ(cell->level(), 2);
-        ASSERT_TRUE(cell->offset() == readdy::model::Vec3(0, 0, 0));
-        ASSERT_TRUE(cell->size() == readdy::model::Vec3(.5, .5, .5));
+        ASSERT_TRUE(cell->offset() == readdy::Vec3(0, 0, 0));
+        ASSERT_TRUE(cell->size() == readdy::Vec3(.5, .5, .5));
         const auto &cell_neighbors = cell->neighbors();
         ASSERT_EQ(cell_neighbors.size(), 3 * 3 * 3 - 1);
         {
-            std::set<readdy::model::Vec3> offsets;
+            std::set<readdy::Vec3> offsets;
             for (auto o : cell_neighbors) {
                 offsets.emplace(o->offset());
             }
             ASSERT_EQ(offsets.size(), 3 * 3 * 3 - 1);
         }
         {
-            auto shift = .5 * model::Vec3(context.boxSize());
+            auto shift = .5 * Vec3(context.boxSize());
             for (int i = 0; i <= 2; ++i) {
                 for (int j = 0; j <= 2; ++j) {
                     for (int k = 0; k <= 2; ++k) {
                         if (i == 0 && j == 0 && k == 0) continue;
                         auto pos = cell->offset() - shift +
-                                   readdy::model::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
+                                   readdy::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
                         auto leaf = cellContainer.leaf_cell_for_position(pos);
                         ASSERT_TRUE(leaf != nullptr);
                         ASSERT_TRUE(
@@ -346,13 +346,13 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
         EXPECT_EQ(cell->level(), 2);
         const auto &cell_neighbors = cell->neighbors();
         EXPECT_EQ(cell_neighbors.size(), 3 * 4 * 4 - 1);
-        auto shift = .5 * model::Vec3(context.boxSize());
+        auto shift = .5 * Vec3(context.boxSize());
         for (int i = -2; i <= 0; ++i) {
             for (int j = -2; j <= 2; ++j) {
                 for (int k = -2; k <= 2; ++k) {
                     if (i == 0 && j == 0 && k == 0) continue;
                     auto pos = context.applyPBCFun()(cell->offset() - shift +
-                                                   readdy::model::Vec3(i * cell->size().x, j * cell->size().y,
+                                                   readdy::Vec3(i * cell->size().x, j * cell->size().y,
                                                                        k * cell->size().z));
                     auto leaf = cellContainer.leaf_cell_for_position(pos);
                     ASSERT_TRUE(leaf != nullptr) << "should have a leaf for i=" << i << ", j=" << j << ", k=" << k
@@ -370,7 +370,7 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
 
 TEST(TestAdaptiveNeighborList, PositionToCell) {
     using namespace readdy;
-    std::vector<model::Vec3> positions{{5,  5,  5},
+    std::vector<Vec3> positions{{5,  5,  5},
                                        {0,  0,  0},
                                        {-5, -5, -5}};
 
@@ -390,7 +390,7 @@ TEST(TestAdaptiveNeighborList, PositionToCell) {
     cellContainer.setup_uniform_neighbors();
 
     const auto &pbc = context.applyPBCFun();
-    auto shift = .5 * model::Vec3(context.boxSize());
+    auto shift = .5 * Vec3(context.boxSize());
     for (const auto &pos : positions) {
         auto proj_pos = pbc(pos);
         auto leaf = cellContainer.leaf_cell_for_position(proj_pos);
@@ -744,7 +744,7 @@ TEST(TestAdaptiveNeighborList, TestDiffusionBenchmark) {
     kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("A", "A", force_constant);
 
     for(auto _ : readdy::util::range<int>(0, n_particles)) {
-        kernel->addParticle("A", readdy::model::Vec3(
+        kernel->addParticle("A", readdy::Vec3(
                 box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
                 box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
                 box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length));

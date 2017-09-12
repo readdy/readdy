@@ -104,7 +104,7 @@ TEST_P(TestObservables, TestForcesObservable) {
         EXPECT_EQ(resA.size(), 50);
         EXPECT_EQ(resB.size(), 55);
         EXPECT_EQ(resBoth.size(), 105);
-        m::Vec3 zero = m::Vec3(0, 0, 0);
+        readdy::Vec3 zero = readdy::Vec3(0, 0, 0);
         for (auto force : resBoth) {
             EXPECT_TRUE(force == zero);
         }
@@ -130,8 +130,8 @@ TEST_P(TestObservables, TestForcesObservable) {
         forces->perform();
         kernel->evaluateObservables(2);
         const auto &resC = obsC->getResult();
-        m::Vec3 force0 = m::Vec3(0., 1., 0.);
-        m::Vec3 force1 = m::Vec3(0., -1., 0.);
+        readdy::Vec3 force0 = readdy::Vec3(0., 1., 0.);
+        readdy::Vec3 force1 = readdy::Vec3(0., -1., 0.);
         EXPECT_EQ(resC.size(), 2);
         EXPECT_TRUE(resC[0] == force0 || resC[1] == force0);
         EXPECT_TRUE(resC[1] == force1 || resC[0] == force1);

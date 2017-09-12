@@ -367,7 +367,7 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
     }
 }
 
-CPUNextSubvolumes::GridCell *CPUNextSubvolumes::getCell(const readdy::model::Vec3 &particlePosition) {
+CPUNextSubvolumes::GridCell *CPUNextSubvolumes::getCell(const Vec3 &particlePosition) {
     const auto& simBoxSize = kernel->getKernelContext().boxSize();
     const auto i = static_cast<cell_index_t>(floor((particlePosition[0] + .5*simBoxSize[0]) / cellSize[0]));
     const auto j = static_cast<cell_index_t>(floor((particlePosition[1] + .5*simBoxSize[1]) / cellSize[1]));

@@ -35,7 +35,6 @@
 #include <tuple>
 #include <vector>
 #include <string>
-#include <readdy/model/Vec3.h>
 #include "TopologyPotential.h"
 
 NAMESPACE_BEGIN(readdy)

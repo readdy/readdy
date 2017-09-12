@@ -32,6 +32,7 @@
 #include <readdy/model/KernelContext.h>
 #include <readdy/common/Utils.h>
 #include <readdy/model/_internal/Util.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 namespace readdy {
 namespace model {
@@ -50,9 +51,9 @@ KernelContext::KernelContext()
         : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
           _topologyRegistry(_particleTypeRegistry) {
     using namespace std::placeholders;
-    _pbc = std::bind(&readdy::model::applyPBC<false, false, false>, _1, c_::one, c_::one, c_::one);
-    _fixPositionFun = std::bind(&readdy::model::fixPosition<false, false, false>, _1, c_::one, c_::one, c_::one);
-    _diffFun = std::bind(&readdy::model::shortestDifference<false, false, false>, _1, _2, c_::one, c_::one, c_::one);
+    _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, c_::one, c_::one, c_::one);
+    _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, c_::one, c_::one, c_::one);
+    _diffFun = std::bind(&bcs::shortestDifference<false, false, false>, _1, _2, c_::one, c_::one, c_::one);
     _distFun = [this](const Vec3 &v1, const Vec3 &v2) {
         const auto dv = _diffFun(v1, v2);
         return dv * dv;
@@ -191,45 +192,45 @@ void KernelContext::updateFunctions() {
     if (_periodic_boundary[0]) {
         if (_periodic_boundary[1]) {
             if (_periodic_boundary[2]) {
-                _pbc = std::bind(&applyPBC<true, true, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<true, true, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<true, true, true>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<true, true, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, true, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, true, true>, _1, _2, box[0], box[1], box[2]);
             } else {
-                _pbc = std::bind(&applyPBC<true, true, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<true, true, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<true, true, false>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<true, true, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, true, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, true, false>, _1, _2, box[0], box[1], box[2]);
             }
         } else {
             if (_periodic_boundary[2]) {
-                _pbc = std::bind(&applyPBC<true, false, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<true, false, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<true, false, true>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<true, false, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, false, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, false, true>, _1, _2, box[0], box[1], box[2]);
             } else {
-                _pbc = std::bind(&applyPBC<true, false, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<true, false, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<true, false, false>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<true, false, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, false, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, false, false>, _1, _2, box[0], box[1], box[2]);
             }
         }
     } else {
         if (_periodic_boundary[1]) {
             if (_periodic_boundary[2]) {
-                _pbc = std::bind(&applyPBC<false, true, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<false, true, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<false, true, true>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<false, true, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, true, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, true, true>, _1, _2, box[0], box[1], box[2]);
             } else {
-                _pbc = std::bind(&applyPBC<false, true, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<false, true, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<false, true, false>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<false, true, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, true, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, true, false>, _1, _2, box[0], box[1], box[2]);
             }
         } else {
             if (_periodic_boundary[2]) {
-                _pbc = std::bind(&applyPBC<false, false, true>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<false, false, true>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<false, false, true>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<false, false, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, false, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, false, true>, _1, _2, box[0], box[1], box[2]);
             } else {
-                _pbc = std::bind(&applyPBC<false, false, false>, _1, box[0], box[1], box[2]);
-                _fixPositionFun = std::bind(&fixPosition<false, false, false>, _1, box[0], box[1], box[2]);
-                _diffFun = std::bind(&shortestDifference<false, false, false>, _1, _2, box[0], box[1], box[2]);
+                _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, false, false>, _1, _2, box[0], box[1], box[2]);
             }
         }
     }
@@ -249,6 +250,10 @@ const KernelContext::PeriodicBoundaryConditions &KernelContext::periodicBoundary
 
 KernelContext::PeriodicBoundaryConditions &KernelContext::periodicBoundaryConditions() {
     return _periodic_boundary;
+}
+
+scalar KernelContext::boxVolume() const {
+    return _box_size.at(0) * _box_size.at(1) * _box_size.at(2);
 }
 
 KernelContext::~KernelContext() = default;

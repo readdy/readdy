@@ -77,11 +77,11 @@ public:
 
     void updateData(data_t::update_t &&update) override;
 
-    void displace(data_t::iterator iter, const readdy::model::Vec3 &vec);
+    void displace(data_t::iterator iter, const Vec3 &vec);
 
-    void displace(data_t::Entry &entry, const readdy::model::Vec3 &delta);
+    void displace(data_t::Entry &entry, const Vec3 &delta);
 
-    void displace(data_t::index_t entry, const readdy::model::Vec3 &delta);
+    void displace(data_t::index_t entry, const Vec3 &delta);
 
 private:
 

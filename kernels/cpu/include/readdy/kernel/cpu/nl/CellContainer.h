@@ -36,7 +36,6 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/common/common.h>
 #include <readdy/common/Index.h>
-#include <readdy/model/Vec3.h>
 #include <readdy/model/KernelContext.h>
 
 
@@ -61,7 +60,7 @@ public:
     using cell_ref = SubCell *;
     using cell_ref_list = std::vector<cell_ref>;
     using grid_index = std::tuple<int, int, int>;
-    using vec3 = readdy::model::Vec3;
+    using vec3 = Vec3;
     using level_t = std::uint8_t;
     using particle_index = ParticlesList::particle_index;
 

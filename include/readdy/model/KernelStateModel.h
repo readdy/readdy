@@ -34,7 +34,7 @@
 #include <vector>
 #include <readdy/model/topologies/GraphTopology.h>
 #include "Particle.h"
-#include "Vec3.h"
+#include "readdy/common/ReaDDyVec3.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

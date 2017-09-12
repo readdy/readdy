@@ -84,7 +84,7 @@ protected:
         using particle_indices_t = std::vector<data_t::index_t>;
         particle_indices_t particleIndices{};
         unsigned int id = 0;
-        vec_t lowerLeftVertex, upperRightVertex;
+        Vec3 lowerLeftVertex, upperRightVertex;
         readdy::scalar leftBoundary = 0;
         readdy::scalar rightBoundary = 0;
         particle_indices_t::size_type n_shells;
@@ -92,9 +92,9 @@ protected:
         readdy::scalar boxWidth;
         readdy::scalar shellWidth = 0.0;
 
-        long getShellIndex(const vec_t &pos) const;
+        long getShellIndex(const Vec3 &pos) const;
 
-        SlicedBox(unsigned int id, vec_t lowerLeftVertex, vec_t upperRightVertex, readdy::scalar maxReactionRadius,
+        SlicedBox(unsigned int id, Vec3 lowerLeftVertex, Vec3 upperRightVertex, readdy::scalar maxReactionRadius,
                   unsigned int longestAxis);
 
         friend bool operator==(const SlicedBox &lhs, const SlicedBox &rhs) {
@@ -105,7 +105,7 @@ protected:
             return !(lhs == rhs);
         }
 
-        bool isInBox(const vec_t &particle) const;
+        bool isInBox(const Vec3 &particle) const;
     };
 
     std::vector<SlicedBox> boxes;

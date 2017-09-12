@@ -39,6 +39,7 @@ class CPUKernel;
 namespace nl {
 class AdaptiveNeighborList;
 class CellDecompositionNeighborList;
+class ContiguousCLLNeighborList;
 class NeighborList;
 }
 using neighbor_list = readdy::kernel::cpu::nl::NeighborList;

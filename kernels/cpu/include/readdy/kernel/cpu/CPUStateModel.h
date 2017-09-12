@@ -68,7 +68,7 @@ public:
     CPUStateModel(CPUStateModel&&) = delete;
     CPUStateModel& operator=(CPUStateModel&&) = delete;
 
-    const std::vector<readdy::model::Vec3> getParticlePositions() const override;
+    const std::vector<Vec3> getParticlePositions() const override;
 
     const std::vector<particle_t> getParticles() const override;
 

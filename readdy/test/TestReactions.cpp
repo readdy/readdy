@@ -106,7 +106,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
 // Compare two vectors via their distance to the (1,1,1) plane in 3d space. This is quite arbitrary and only used to construct an ordered set.
 struct Vec3ProjectedLess {
-    bool operator()(const readdy::model::Vec3& lhs, const readdy::model::Vec3& rhs) const {
+    bool operator()(const readdy::Vec3& lhs, const readdy::Vec3& rhs) const {
         return (lhs.x + lhs.y + lhs.z) < (rhs.x + rhs.y + rhs.z);
     }
 };
@@ -126,7 +126,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
     kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
     kernel->registerReaction<readdy::model::reactions::Fission>("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
-    std::set<readdy::model::Vec3, Vec3ProjectedLess> fPositions;
+    std::set<readdy::Vec3, Vec3ProjectedLess> fPositions;
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     for (std::size_t i = 0; i < 15; ++i) {
         auto fPos = n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.8));
@@ -138,7 +138,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
     auto obs = kernel->createObservable<readdy::model::observables::Positions>(1, std::vector<std::string>({"F"}));
     obs->setCallback(
             [&fPositions](const readdy::model::observables::Positions::result_type &result) {
-                std::set<readdy::model::Vec3, Vec3ProjectedLess> checklist;
+                std::set<readdy::Vec3, Vec3ProjectedLess> checklist;
                 for (const auto &pos : result) {
                     checklist.emplace(pos);
                 }
