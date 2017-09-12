@@ -138,6 +138,8 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
                 }
             }
         }
+        std::sort(std::begin(_neighbors), std::end(_neighbors));
+        _neighbors.erase(std::unique(std::begin(_neighbors), std::end(_neighbors)), std::end(_neighbors));
     }
 }
 

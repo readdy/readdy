@@ -88,7 +88,7 @@ public:
      */
     template<typename... Ix>
     constexpr std::size_t operator()(Ix &&... index) const {
-        static_assert(sizeof...(index) == Dims);
+        static_assert(sizeof...(index) == Dims, "wrong input dim");
         return (*this)({std::forward<Ix>(index)...});
 
     }

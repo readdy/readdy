@@ -84,4 +84,54 @@ TEST(TestIndex, Test3D) {
     ASSERT_EQ(index.inverse(3 + depth * (2 + height * 1)), expected);
 }
 
+TEST(TestIndex, Test3DElch) {
+    using namespace readdy::util;
+    auto width = 7;
+    auto height = 13;
+    auto depth = 5;
+
+    Index3D index (width, height, depth);
+
+    int n = 0;
+    for(int i = 0; i < width; ++i) {
+        for(int j = 0; j < height; ++j) {
+            for(int k = 0; k < depth; ++k) {
+                auto x = index(i, j, k);
+                ASSERT_EQ(x, n);
+                Index3D::GridDims expectedInverse {{i, j, k}};
+                ASSERT_EQ(index.inverse(x), expectedInverse);
+                ++n;
+            }
+        }
+    }
+}
+
+TEST(TestIndex, Test5DElch) {
+    using namespace readdy::util;
+    auto d1 = 7;
+    auto d2 = 13;
+    auto d3 = 5;
+    auto d4 = 11;
+    auto d5 = 23;
+
+    Index<5> index (d1, d2, d3, d4, d5);
+
+    int n = 0;
+    for(int i1 = 0; i1 < d1; ++i1) {
+        for(int i2 = 0; i2 < d2; ++i2) {
+            for(int i3 = 0; i3 < d3; ++i3) {
+                for(int i4 = 0; i4 < d4; ++i4) {
+                    for(int i5 = 0; i5 < d5; ++i5) {
+                        auto x = index(i1, i2, i3, i4, i5);
+                        ASSERT_EQ(x, n);
+                        Index<5>::GridDims expectedInverse {{i1, i2, i3, i4, i5}};
+                        ASSERT_EQ(index.inverse(x), expectedInverse);
+                        ++n;
+                    }
+                }
+            }
+        }
+    }
+}
+
 }

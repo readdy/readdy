@@ -125,6 +125,7 @@ TEST_F(TestNeighborList, OneDirection) {
     auto &ctx = kernel->getKernelContext();
     ctx.boxSize() = {{1.2, 1.1, 2.8}};
     ctx.periodicBoundaryConditions() = {{false, false, true}};
+    ctx.configure(false);
 
     readdy::util::thread::Config conf;
     readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
@@ -211,6 +212,7 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
     auto &context = kernel->getKernelContext();
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
+    context.configure();
 
     kernel::cpu::nl::CellContainer cellContainer{
             *kernel->getCPUKernelStateModel().getParticleData(),
@@ -326,6 +328,8 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
     auto &context = kernel->getKernelContext();
     context.periodicBoundaryConditions() = {{false, true, true}};
     context.boxSize() = {{5, 1, 1.1}};
+    context.configure();
+
     kernel::cpu::nl::CellContainer cellContainer{
             *kernel->getCPUKernelStateModel().getParticleData(),
             context,
@@ -339,8 +343,9 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
         // upper right cell, check neighbors
         auto cell = cellContainer.leaf_cell_for_position({2.4, .4, .54});
         EXPECT_TRUE(cell != nullptr);
+        EXPECT_EQ(cell->level(), 2);
         const auto &cell_neighbors = cell->neighbors();
-        EXPECT_EQ(cell_neighbors.size(), 3 * 5 * 5 - 1);
+        EXPECT_EQ(cell_neighbors.size(), 3 * 4 * 4 - 1);
         auto shift = .5 * model::Vec3(context.boxSize());
         for (int i = -2; i <= 0; ++i) {
             for (int j = -2; j <= 2; ++j) {
@@ -374,6 +379,8 @@ TEST(TestAdaptiveNeighborList, PositionToCell) {
     auto &context = kernel->getKernelContext();
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
+    context.configure();
+
     kernel::cpu::nl::CellContainer cellContainer{
             *kernel->getCPUKernelStateModel().getParticleData(),
             context,
