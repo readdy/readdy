@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2017 Computational Molecular Biology Group,          * 
+ * Copyright © 2016 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,49 +21,39 @@
 
 
 /**
- * << detailed description >>
  *
- * @file CLLNeighborList.h
- * @brief << brief description >>
+ *
+ * @file KernelConfiguration.h
+ * @brief 
  * @author clonker
- * @date 12.09.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 9/13/17
  */
-
 #pragma once
 
-#include "NeighborList.h"
-#include "../model/CPUParticleData.h"
-#include "CellLinkedList.h"
+#include <string>
+#include <json.hpp>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace nl {
+#include "readdy/common/macros.h"
 
-class ContiguousCLLNeighborList : public NeighborList {
-public:
-    ContiguousCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
-                              const readdy::model::KernelContext &context, const readdy::util::thread::Config &config);
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(conf)
+using json = nlohmann::json;
 
-    void set_up(const util::PerformanceNode &node) override;
-
-    void fill_verlet_list(const util::PerformanceNode &node);
-
-    void update(const util::PerformanceNode &node) override;
-
-    void clear(const util::PerformanceNode &node) override;
-
-    void updateData(data_t::update_t &&update) override;
-
-private:
-    std::uint8_t cll_radius;
-
-    ContiguousCellLinkedList ccll;
-    bool _is_set_up {false};
+NAMESPACE_BEGIN(cpu)
+struct NeighborList {
+    std::string type {"CellDecomposition"};
+    std::uint8_t cll_radius {1};
 };
+void to_json(json &j, const NeighborList &nl);
+void from_json(const json &j, NeighborList &nl);
 
-}
-}
-}
-}
+struct Configuration {
+    NeighborList neighborList;
+};
+void to_json(json &j, const Configuration &conf);
+void from_json(const json &j, Configuration &conf);
+
+NAMESPACE_END(cpu)
+
+NAMESPACE_END(conf)
+NAMESPACE_END(readdy)

@@ -41,6 +41,7 @@
 #include <readdy/kernel/cpu/util/config.h>
 #include <readdy/common/index_persistent_vector.h>
 #include <readdy/common/Timer.h>
+#include <readdy/api/KernelConfiguration.h>
 
 namespace readdy {
 namespace kernel {
@@ -67,6 +68,8 @@ public:
     CPUStateModel& operator=(const CPUStateModel&) = delete;
     CPUStateModel(CPUStateModel&&) = delete;
     CPUStateModel& operator=(CPUStateModel&&) = delete;
+
+    void configure(const readdy::conf::cpu::Configuration &configuration);
 
     const std::vector<Vec3> getParticlePositions() const override;
 

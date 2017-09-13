@@ -238,6 +238,7 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     };
     stateModel.addParticles(particlesA);
     stateModel.addParticles(particlesB);
+    stateModel.initializeNeighborList(0.);
     stateModel.updateNeighborList();
     stateModel.calculateForces();
     // check results

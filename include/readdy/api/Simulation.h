@@ -536,6 +536,8 @@ public:
      * @return reference to root node of performance measurement
      */
     const util::PerformanceNode &performanceRoot();
+
+    void setKernelConfiguration(const std::string &conf);
 private:
     struct Impl;
     std::unique_ptr<readdy::Simulation::Impl> pimpl;

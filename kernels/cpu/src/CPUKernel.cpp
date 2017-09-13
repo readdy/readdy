@@ -128,6 +128,14 @@ readdy::util::thread::Config &CPUKernel::threadConfig() {
 void CPUKernel::initialize() {
     readdy::model::Kernel::initialize();
     threadConfig().setMode(readdy::util::thread::ThreadMode::pool);
+    readdy::conf::cpu::Configuration configuration {};
+    const auto &fullConfiguration = getKernelContext().kernelConfiguration();
+
+    if(fullConfiguration.find("CPU") != fullConfiguration.end()) {
+        configuration = fullConfiguration["CPU"];
+    }
+
+    getCPUKernelStateModel().configure(configuration);
     for(auto& top : getCPUKernelStateModel().topologies()) {
         top->configure();
         top->updateReactionRates(getKernelContext().topology_registry().structural_reactions_of(top->type()));

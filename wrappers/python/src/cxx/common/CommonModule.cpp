@@ -49,7 +49,8 @@ void exportUtils(py::module& m);
 void exportCommon(py::module& common) {
     using namespace pybind11::literals;
     common.def("set_logging_level", [](const std::string &level, bool python_console_out) -> void {
-        spdlog::drop("console");
+        std::cout << "setting logging level to " << level << std::endl;
+        /*spdlog::drop("console");
         spdlog::set_sync_mode();
         std::vector<spdlog::sink_ptr> sinks;
         auto sink_stdout = std::make_shared<spdlog::sinks::ansicolor_sink>(spdlog::sinks::stdout_sink_mt::instance());
@@ -57,10 +58,9 @@ void exportCommon(py::module& common) {
         if(python_console_out) {
             auto sink_pysink = std::make_shared<readdy::rpy::pysink>();
             sinks.push_back(sink_pysink);
-        }
-        auto logger =  spdlog::create("console", std::begin(sinks), std::end(sinks));
-        logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
-        logger->set_level([&level] {
+        }*/
+
+        auto l = [&level] {
             if (level == "trace") {
                 return spdlog::level::trace;
             }
@@ -84,16 +84,21 @@ void exportCommon(py::module& common) {
             }
             readdy::log::warn("Did not select a valid logging level, setting to debug!");
             return spdlog::level::debug;
-        }());
+        }();
 
-        if(python_console_out) {
+        readdy::log::console()->set_level(l);
+
+        /*auto logger =  spdlog::create("console", std::begin(sinks), std::end(sinks));
+        logger->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
+        logger->set_level(l);*/
+
+        /*if(python_console_out) {
             // update python loggers level
             py::gil_scoped_acquire gil;
             auto logging_module = pybind11::module::import("logging");
             auto args = py::dict("format"_a="%(message)s");
             switch(logger->level()) {
                 case spdlog::level::trace:{
-                    /* fall through */
                 }
                 case spdlog::level::debug: {
                     args["level"] = "DEBUG";
@@ -112,7 +117,6 @@ void exportCommon(py::module& common) {
                     break;
                 }
                 case spdlog::level::critical: {
-                    /* fall through */
                 }
                 case spdlog::level::off: {
                     args["level"] = "CRITICAL";
@@ -120,7 +124,7 @@ void exportCommon(py::module& common) {
                 }
             }
             logging_module.attr("basicConfig")(**args);
-        }
+        }*/
     }, "Function that sets the logging level. Possible arguments: \"trace\", \"debug\", \"info\", \"warn\", "
                        "\"err\", \"error\", \"critical\", \"off\".", "level"_a, "python_console_out"_a = true);
     common.def("register_blosc_hdf5_plugin", []() -> void {

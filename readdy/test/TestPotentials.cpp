@@ -330,6 +330,7 @@ TEST_P(TestPotentials, SphericalBarrier) {
 
     ctx.configure();
 
+    kernel->getKernelStateModel().initializeNeighborList(0.);
     kernel->getKernelStateModel().calculateForces();
     kernel->evaluateObservables(1);
 

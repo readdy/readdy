@@ -436,6 +436,11 @@ const util::PerformanceNode &Simulation::performanceRoot() {
     return pimpl->performanceRoot;
 }
 
+void Simulation::setKernelConfiguration(const std::string &conf) {
+    ensureKernelSelected();
+    getSelectedKernel()->getKernelContext().setKernelConfiguration(conf);
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }

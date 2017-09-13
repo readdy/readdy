@@ -48,6 +48,8 @@
 #include <vector>
 #include <unordered_set>
 
+#include <json.hpp>
+
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/api/PotentialConfiguration.h>
 #include <readdy/model/potentials/PotentialOrder1.h>
@@ -68,6 +70,7 @@ public:
     using CompartmentRegistry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
     using BoxSize = std::array<scalar, 3>;
     using PeriodicBoundaryConditions = std::array<bool, 3>;
+    using KernelConfiguration = nlohmann::json;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
     using pbc_fun = std::function<Vec3(const Vec3 &)>;
@@ -163,6 +166,12 @@ public:
 
     const potentials::PotentialRegistry &potentials() const;
 
+    KernelConfiguration &kernelConfiguration();
+
+    const KernelConfiguration &kernelConfiguration() const;
+
+    void setKernelConfiguration(const std::string &jsonStr);
+
     // ctor and dtor
     KernelContext();
 
@@ -186,6 +195,8 @@ private:
     potentials::PotentialRegistry _potentialRegistry;
     top::TopologyRegistry _topologyRegistry;
     CompartmentRegistry _compartmentRegistry;
+
+    KernelConfiguration _kernelConfiguration;
 
     scalar _kBT{1};
     BoxSize _box_size{{1, 1, 1}};

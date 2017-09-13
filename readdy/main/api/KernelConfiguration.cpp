@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2017 Computational Molecular Biology Group,          * 
+ * Copyright © 2016 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,49 +21,37 @@
 
 
 /**
- * << detailed description >>
  *
- * @file CLLNeighborList.h
- * @brief << brief description >>
+ *
+ * @file KernelConfiguration.cpp
+ * @brief 
  * @author clonker
- * @date 12.09.17
- * @copyright GNU Lesser General Public License v3.0
+ * @date 9/13/17
  */
 
-#pragma once
-
-#include "NeighborList.h"
-#include "../model/CPUParticleData.h"
-#include "CellLinkedList.h"
+#include <readdy/api/KernelConfiguration.h>
 
 namespace readdy {
-namespace kernel {
+namespace conf {
+
 namespace cpu {
-namespace nl {
+void to_json(json &j, const NeighborList &nl) {
+    j = json{{"type", nl.type}, {"cll_radius", nl.cll_radius}};
+}
 
-class ContiguousCLLNeighborList : public NeighborList {
-public:
-    ContiguousCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
-                              const readdy::model::KernelContext &context, const readdy::util::thread::Config &config);
+void from_json(const json &j, NeighborList &nl) {
+    nl.type = j.at("type").get<std::string>();
+    nl.cll_radius = j.at("cll_radius").get<std::uint8_t>();
+}
 
-    void set_up(const util::PerformanceNode &node) override;
-
-    void fill_verlet_list(const util::PerformanceNode &node);
-
-    void update(const util::PerformanceNode &node) override;
-
-    void clear(const util::PerformanceNode &node) override;
-
-    void updateData(data_t::update_t &&update) override;
-
-private:
-    std::uint8_t cll_radius;
-
-    ContiguousCellLinkedList ccll;
-    bool _is_set_up {false};
-};
+void to_json(json &j, const Configuration &conf) {
+    j = json {{"neighbor_list", conf.neighborList}};
+}
+void from_json(const json &j, Configuration &conf) {
+    conf.neighborList = j.at("neighbor_list").get<NeighborList>();
+}
 
 }
-}
+
 }
 }

@@ -49,7 +49,7 @@ scalar &KernelContext::kBT() {
 
 KernelContext::KernelContext()
         : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
-          _topologyRegistry(_particleTypeRegistry) {
+          _topologyRegistry(_particleTypeRegistry), _kernelConfiguration{} {
     using namespace std::placeholders;
     _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, c_::one, c_::one, c_::one);
     _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, c_::one, c_::one, c_::one);
@@ -254,6 +254,18 @@ KernelContext::PeriodicBoundaryConditions &KernelContext::periodicBoundaryCondit
 
 scalar KernelContext::boxVolume() const {
     return _box_size.at(0) * _box_size.at(1) * _box_size.at(2);
+}
+
+KernelContext::KernelConfiguration &KernelContext::kernelConfiguration() {
+    return _kernelConfiguration;
+}
+
+const KernelContext::KernelConfiguration &KernelContext::kernelConfiguration() const {
+    return _kernelConfiguration;
+}
+
+void KernelContext::setKernelConfiguration(const std::string &s) {
+    _kernelConfiguration = KernelConfiguration::parse(s);
 }
 
 KernelContext::~KernelContext() = default;

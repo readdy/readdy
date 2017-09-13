@@ -20,13 +20,14 @@
  ********************************************************************/
 
 
+#include <json.hpp>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
 #include <readdy/api/Simulation.h>
 #include <readdy/common/nodelete.h>
-#include <readdy/api/PotentialConfiguration.h>
 #include "ExportSchemeApi.h"
 #include "PyPotential.h"
 #include "ExportObservables.h"
@@ -103,6 +104,7 @@ void exportApi(py::module &api) {
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
             }, "type"_a, "pos"_a)
+            .def("set_kernel_config", &sim::setKernelConfiguration)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
             .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)

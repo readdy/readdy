@@ -37,10 +37,10 @@ namespace cpu {
 namespace nl {
 
 
-ContiguousCLLNeighborList::ContiguousCLLNeighborList(model::CPUParticleData &data,
+ContiguousCLLNeighborList::ContiguousCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
                                                      const readdy::model::KernelContext &context,
                                                      const readdy::util::thread::Config &config)
-        : NeighborList(data, context, config), ccll(data, context, config) {}
+        : NeighborList(data, context, config), ccll(data, context, config), cll_radius(cll_radius) {}
 
 void ContiguousCLLNeighborList::set_up(const util::PerformanceNode &node) {
     auto t = node.timeit();
