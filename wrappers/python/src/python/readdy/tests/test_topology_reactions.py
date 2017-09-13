@@ -36,9 +36,10 @@ from readdy._internal.readdybinding.api import KernelProvider
 from readdy._internal.readdybinding.api import ParticleTypeFlavor
 from readdy._internal.readdybinding.api import Simulation
 from readdy.util import platform_utils
+from readdy.util.testing_utils import ReaDDyTestCase
 
 
-class TestTopologyReactions(unittest.TestCase):
+class TestTopologyReactions(ReaDDyTestCase):
     @classmethod
     def setUpClass(cls):
         cls.kernel_provider = KernelProvider.get()
@@ -89,8 +90,6 @@ class TestTopologyReactions(unittest.TestCase):
         return reaction
 
     def chain_decay(self, kernel):
-        common.set_logging_level("warn", python_console_out=False)
-
         sim = Simulation()
         sim.set_kernel(kernel)
         sim.box_size = common.Vec(10, 10, 10)

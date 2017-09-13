@@ -69,7 +69,7 @@ class Timer {
 public:
     explicit Timer(const PerformanceData &target, bool measure);
 
-    ~Timer() noexcept;
+    ~Timer();
 
     Timer(const Timer &other) = delete;
 

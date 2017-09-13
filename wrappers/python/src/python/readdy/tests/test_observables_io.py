@@ -33,7 +33,6 @@ import shutil
 import h5py
 import readdy._internal.readdybinding.common as common
 import readdy._internal.readdybinding.common.io as io
-import readdy._internal.readdybinding.common.util as ioutil
 from readdy._internal.readdybinding.api import Simulation
 from readdy._internal.readdybinding.api import KernelProvider
 from readdy.util import platform_utils
@@ -42,8 +41,10 @@ import readdy.util.io_utils as ioutils
 from contextlib import closing
 import numpy as np
 
+from readdy.util.testing_utils import ReaDDyTestCase
 
-class TestObservablesIO(unittest.TestCase):
+
+class TestObservablesIO(ReaDDyTestCase):
     @classmethod
     def setUpClass(cls):
         cls.kernel_provider = KernelProvider.get()
@@ -83,7 +84,6 @@ class TestObservablesIO(unittest.TestCase):
                     np.testing.assert_equal(positions[i]["x"], 1.5)
                     np.testing.assert_equal(positions[i]["y"], 2.5)
                     np.testing.assert_equal(positions[i]["z"], 3.5)
-        common.set_logging_level("warn", python_console_out=False)
 
     def test_particles_observable(self):
         fname = os.path.join(self.dir, "test_observables_particles.h5")
@@ -126,7 +126,6 @@ class TestObservablesIO(unittest.TestCase):
                     np.testing.assert_equal(positions[t][others][2], 3.5)
 
     def test_radial_distribution_observable(self):
-        common.set_logging_level("warn", python_console_out=False)
         fname = os.path.join(self.dir, "test_observables_radial_distribution.h5")
 
         simulation = Simulation()
@@ -165,7 +164,6 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(distribution[t], np.array(callback_rdf[t]))
 
     def test_center_of_mass_observable(self):
-        common.set_logging_level("warn", python_console_out=False)
         fname = os.path.join(self.dir, "test_observables_com.h5")
 
         simulation = Simulation()
@@ -199,7 +197,6 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(com[t]["z"], callback_com[t][2])
 
     def test_histogram_along_axis_observable(self):
-        common.set_logging_level("warn", python_console_out=False)
         fname = os.path.join(self.dir, "test_observables_hist_along_axis.h5")
 
         simulation = Simulation()
@@ -235,7 +232,6 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(histogram[t], np.array(callback_hist[t]))
 
     def test_n_particles_observable(self):
-        common.set_logging_level("warn", python_console_out=False)
         fname = os.path.join(self.dir, "test_observables_n_particles.h5")
 
         simulation = Simulation()
@@ -282,7 +278,6 @@ class TestObservablesIO(unittest.TestCase):
                 np.testing.assert_equal(n_particles[t][0], callback_n_particles_all[t][0])
 
     def test_reactions_observable(self):
-        common.set_logging_level("warn", python_console_out=False)
         fname = os.path.join(self.dir, "test_observables_particle_reactions.h5")
         sim = Simulation()
         sim.set_kernel("CPU")
@@ -352,10 +347,7 @@ class TestObservablesIO(unittest.TestCase):
                     np.testing.assert_allclose(record["position"], np.array([1.05, 1.0, 1.0]))
                     np.testing.assert_equal(record["reaction_index"], 0)
 
-        common.set_logging_level("warn", python_console_out=False)
-
     def test_reaction_counts_observable(self):
-        common.set_logging_level("warn", python_console_out=False)
         fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
         sim = Simulation()
         sim.set_kernel("CPU")
@@ -400,9 +392,6 @@ class TestObservablesIO(unittest.TestCase):
             np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_mylabel], np.array([0]))
             np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_atob], np.array([1]))
             np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][1, 0], np.array([1]))
-
-        common.set_logging_level("warn", python_console_out=False)
-        # register_observable_reaction_counts
 
     def test_forces_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_forces.h5")

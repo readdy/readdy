@@ -32,11 +32,13 @@ import numpy as np
 import readdy._internal.readdybinding.common as common
 import readdy._internal.readdybinding.common.io as io
 from readdy._internal.readdybinding.api import Simulation
+
+from readdy.util.testing_utils import ReaDDyTestCase
 from readdy.util.trajectory_utils import TrajectoryReader
 from contextlib import closing
 
 
-class TestSchemeApi(unittest.TestCase):
+class TestSchemeApi(ReaDDyTestCase):
     @classmethod
     def setUpClass(cls):
         cls.dir = tempfile.mkdtemp("test-io")
@@ -46,7 +48,6 @@ class TestSchemeApi(unittest.TestCase):
         shutil.rmtree(cls.dir, ignore_errors=True)
 
     def test_write_trajectory(self):
-        common.set_logging_level("error")
         traj_fname = os.path.join(self.dir, "traj.h5")
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
@@ -74,10 +75,7 @@ class TestSchemeApi(unittest.TestCase):
         with h5py.File(traj_fname) as f:
             np.testing.assert_equal("A", f["readdy/config/particle_types"][0]["name"])
 
-        common.set_logging_level("debug")
-
     def test_write_flat_trajectory(self):
-        common.set_logging_level("error")
         traj_fname = os.path.join(self.dir, "flat_traj.h5")
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
@@ -100,11 +98,8 @@ class TestSchemeApi(unittest.TestCase):
             for item in items:
                 np.testing.assert_equal(item.t, idx)
                 np.testing.assert_equal(item.position, np.array([.0, .0, .0]))
-        common.set_logging_level("debug")
-
 
     def test_write_trajectory_as_observable(self):
-        common.set_logging_level("error")
         traj_fname = os.path.join(self.dir, "traj_as_obs.h5")
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")
@@ -180,5 +175,4 @@ class TestSchemeApi(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    common.set_logging_level("debug")
     unittest.main()

@@ -19,33 +19,10 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
-
 import unittest
 
-import readdy._internal.readdybinding.prototyping as pr
 
-from readdy.util.testing_utils import ReaDDyTestCase
-
-
-class SingleCPUExtension(pr.SingleCPUKernel):
-    def __init__(self):
-        print("calling super init")
-        super(SingleCPUExtension, self).__init__()
-
-    def get_kernel_state_model(self):
-        print("calling super get kernel state model")
-        super(SingleCPUExtension, self).get_kernel_state_model()
-
-
-def creator():
-    return SingleCPUExtension()
-
-
-class TestKernelExtension(ReaDDyTestCase):
-    def test_load_prototyping_module(self):
-        scpu = SingleCPUExtension()
-        program_factory = scpu.get_action_factory()
-
-
-if __name__ == '__main__':
-    unittest.main()
+class ReaDDyTestCase(unittest.TestCase):
+    def setUp(self):
+        import readdy._internal.readdybinding.common as common
+        common.set_logging_level("warn", python_console_out=False)

@@ -22,15 +22,14 @@
 
 import unittest
 
+from readdy.util.testing_utils import ReaDDyTestCase
 from readdy._internal.readdybinding.common import Vec
 
 
-class TestVectorClass(unittest.TestCase):
+class TestVectorClass(ReaDDyTestCase):
 
     def test_sanity(self):
         v = Vec(3, 3, 3)
-        print (v * Vec(6, 6, 6))
-
 
 if __name__ == '__main__':
     unittest.main()

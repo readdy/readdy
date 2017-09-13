@@ -33,8 +33,10 @@ import readdy._internal.readdybinding.common as common
 from readdy._internal.readdybinding.api import Simulation
 from readdy._internal.readdybinding.api import ParticleTypeFlavor
 
+from readdy.util.testing_utils import ReaDDyTestCase
 
-class TestTopologyGraphs(unittest.TestCase):
+
+class TestTopologyGraphs(ReaDDyTestCase):
     def test_sanity(self):
         sim = Simulation()
         sim.set_kernel("SingleCPU")

@@ -28,8 +28,10 @@ import readdy._internal.readdybinding.common as cmn
 
 import numpy as np
 
+from readdy.util.testing_utils import ReaDDyTestCase
 
-class TestModel(unittest.TestCase):
+
+class TestModel(ReaDDyTestCase):
     def setUp(self):
         self.kernel = pr.SingleCPUKernel()
         self.ctx = self.kernel.get_kernel_context()
