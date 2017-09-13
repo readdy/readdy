@@ -127,12 +127,12 @@ struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
 };
 
 struct READDY_API Box {
-    std::vector<Box *> neighbors{};
-    std::vector<unsigned long> particleIndices{};
+    std::vector<Box *> neighbors;
+    std::vector<unsigned long> particleIndices;
     long i, j, k;
     long id = 0;
 
-    Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
+    Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id), particleIndices(), neighbors() {
     }
 
     void addNeighbor(Box *box) {
@@ -194,8 +194,7 @@ public:
                 SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;
 
                 for (std::uint8_t i = 0; i < 3; ++i) {
-                    nBoxes[i] = static_cast<int>(std::floor(simBoxSize[i] / maxCutoff));
-                    if (nBoxes[i] == 0) nBoxes[i] = 1;
+                    nBoxes[i] = std::max(1, static_cast<int>(std::floor(simBoxSize[i] / maxCutoff)));
                     boxSize[i] = simBoxSize[i] / nBoxes[i];
                 }
                 for (long i = 0; i < nBoxes[0]; ++i) {

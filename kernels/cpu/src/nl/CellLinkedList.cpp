@@ -51,77 +51,86 @@ void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::Perform
         _radius = radius;
         _max_cutoff = _context.get().calculateMaxCutoff();
         _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
-        auto size = _context.get().boxSize();
-        auto desiredWidth = static_cast<scalar>(static_cast<scalar>(radius) * (_max_cutoff + _skin));
-        std::array<std::size_t, 3> dims {};
-        for (int i = 0; i < 3; ++i) {
-            dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
-            _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
-        }
-
-        _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
-
-        {
-            // set up cell adjacency list
-            auto t2 = node.subnode("setUpCellNeighbors").timeit();
-            std::array<std::size_t, 3> nNeighbors {{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
-            for(int i = 0; i < 3; ++i) {
-                nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
+        if(_max_cutoff > 0) {
+            auto size = _context.get().boxSize();
+            auto desiredWidth = static_cast<scalar>(static_cast<scalar>(radius) * (_max_cutoff + _skin));
+            std::array<std::size_t, 3> dims{};
+            for (int i = 0; i < 3; ++i) {
+                dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));
+                _cellSize[i] = size[i] / static_cast<scalar>(dims[i]);
             }
-            auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
-            _cellNeighbors = util::Index2D(_cellIndex.size(), 1+nAdjacentCells);
-            _cellNeighborsContent.resize(_cellNeighbors.size());
-            auto pbc = _context.get().periodicBoundaryConditions();
+
+            _cellIndex = util::Index3D(dims[0], dims[1], dims[2]);
+
             {
-                int r = _radius;
-                // local adjacency
-                std::vector<std::size_t> adj;
-                adj.reserve(1 + nAdjacentCells);
+                // set up cell adjacency list
+                auto t2 = node.subnode("setUpCellNeighbors").timeit();
+                std::array<std::size_t, 3> nNeighbors{{_cellIndex[0], _cellIndex[1], _cellIndex[2]}};
+                for (int i = 0; i < 3; ++i) {
+                    nNeighbors[i] = std::min(nNeighbors[i], static_cast<std::size_t>(2 * radius + 1));
+                }
+                auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
+                _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
+                _cellNeighborsContent.resize(_cellNeighbors.size());
+                auto pbc = _context.get().periodicBoundaryConditions();
+                {
+                    int r = _radius;
+                    // local adjacency
+                    std::vector<std::size_t> adj;
+                    adj.reserve(1 + nAdjacentCells);
 
-                for (int i = 0; i < _cellIndex[0]; ++i) {
-                    for (int j = 0; j < _cellIndex[1]; ++j) {
-                        for (int k = 0; k < _cellIndex[2]; ++k) {
-                            auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
-                                                      static_cast<std::size_t>(k));
+                    for (int i = 0; i < _cellIndex[0]; ++i) {
+                        for (int j = 0; j < _cellIndex[1]; ++j) {
+                            for (int k = 0; k < _cellIndex[2]; ++k) {
+                                auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
+                                                          static_cast<std::size_t>(k));
 
-                            adj.clear();
+                                adj.clear();
 
-                            for(int ii = i - r; ii <= i + r; ++ii) {
-                                for(int jj = j - r; jj <= j + r; ++jj) {
-                                    for(int kk = k - r; kk <= k + r; ++kk) {
-                                        if(ii == i && jj == j && kk == k) continue;
-                                        auto adj_x = ii;
-                                        if(pbc[0] && adj_x < 0) adj_x = static_cast<int>(util::numeric::positive_modulo(adj_x, _cellIndex[0]));
-                                        auto adj_y = jj;
-                                        if(pbc[1] && adj_y < 0) adj_y = static_cast<int>(util::numeric::positive_modulo(adj_y, _cellIndex[1]));
-                                        auto adj_z = kk;
-                                        if(pbc[2] && adj_z < 0) adj_z = static_cast<int>(util::numeric::positive_modulo(adj_z, _cellIndex[2]));
+                                for (int ii = i - r; ii <= i + r; ++ii) {
+                                    for (int jj = j - r; jj <= j + r; ++jj) {
+                                        for (int kk = k - r; kk <= k + r; ++kk) {
+                                            if (ii == i && jj == j && kk == k) continue;
+                                            auto adj_x = ii;
+                                            if (pbc[0] && adj_x < 0)
+                                                adj_x = static_cast<int>(util::numeric::positive_modulo(adj_x,
+                                                                                                        _cellIndex[0]));
+                                            auto adj_y = jj;
+                                            if (pbc[1] && adj_y < 0)
+                                                adj_y = static_cast<int>(util::numeric::positive_modulo(adj_y,
+                                                                                                        _cellIndex[1]));
+                                            auto adj_z = kk;
+                                            if (pbc[2] && adj_z < 0)
+                                                adj_z = static_cast<int>(util::numeric::positive_modulo(adj_z,
+                                                                                                        _cellIndex[2]));
 
-                                        if(adj_x >= 0 && adj_y >= 0 && adj_z >= 0
-                                           && adj_x < _cellIndex[0] && adj_y < _cellIndex[1] && adj_z < _cellIndex[2]) {
-                                            adj.push_back(_cellIndex(adj_x, adj_y, adj_z));
+                                            if (adj_x >= 0 && adj_y >= 0 && adj_z >= 0
+                                                && adj_x < _cellIndex[0] && adj_y < _cellIndex[1] &&
+                                                adj_z < _cellIndex[2]) {
+                                                adj.push_back(_cellIndex(adj_x, adj_y, adj_z));
+                                            }
                                         }
                                     }
                                 }
+
+                                std::sort(adj.begin(), adj.end());
+                                adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
+
+                                auto begin = _cellNeighbors(cellIdx, 0_z);
+                                _cellNeighborsContent[begin] = adj.size();
+                                std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin + 1));
                             }
-
-                            std::sort(adj.begin(), adj.end());
-                            adj.erase(std::unique(std::begin(adj), std::end(adj)), std::end(adj));
-
-                            auto begin = _cellNeighbors(cellIdx, 0_z);
-                            _cellNeighborsContent[begin] = adj.size();
-                            std::copy(adj.begin(), adj.end(), &_cellNeighborsContent.at(begin+1));
                         }
                     }
                 }
             }
-        }
 
-        if (_max_cutoff > 0) {
-            setUpBins(node.subnode("setUpBins"));
-        }
+            if (_max_cutoff > 0) {
+                setUpBins(node.subnode("setUpBins"));
+            }
 
-        _is_set_up = true;
+            _is_set_up = true;
+        }
     }
 }
 
@@ -211,17 +220,19 @@ void ContiguousCellLinkedList::fillBins(const util::PerformanceNode &node) {
             ++pidx;
         }
         if(abort) {
-            log::critical("increasing max particles per cell to {}", maxParticlesPerCell);
+            log::info("increasing max particles per cell to {}", maxParticlesPerCell);
         }
     } while(maxParticlesPerCell > _maxParticlesPerCell);
 }
 
 void ContiguousCellLinkedList::update(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    for(std::size_t box = 0; box < _cellIndex.size(); ++box) {
-        _bins.at(_binsIndex(box, 0_z)) = 0;
+    if(_max_cutoff > 0) {
+        auto t = node.timeit();
+        for (std::size_t box = 0; box < _cellIndex.size(); ++box) {
+            _bins.at(_binsIndex(box, 0_z)) = 0;
+        }
+        fillBins(node.subnode("fillBins"));
     }
-    fillBins(node.subnode("fillBins"));
 }
 
 void ContiguousCellLinkedList::clear() {
@@ -296,14 +307,16 @@ void DynamicCellLinkedList::fillBins(const util::PerformanceNode &node) {
 }
 
 void DynamicCellLinkedList::update(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    {
-        auto tt = node.subnode("clear").timeit();
-        std::for_each(_bins.begin(), _bins.end(), [](std::vector<std::size_t> &bin) {
-            bin.clear();
-        });
+    if(_max_cutoff > 0) {
+        auto t = node.timeit();
+        {
+            auto tt = node.subnode("clear").timeit();
+            std::for_each(_bins.begin(), _bins.end(), [](std::vector<std::size_t> &bin) {
+                bin.clear();
+            });
+        }
+        fillBins(node.subnode("fillBins"));
     }
-    fillBins(node.subnode("fillBins"));
 }
 
 void DynamicCellLinkedList::clear() {

@@ -137,7 +137,7 @@ public:
      * @param idx
      * @return
      */
-    constexpr GridDims inverse(std::size_t idx) const {
+    GridDims inverse(std::size_t idx) const {
         GridDims result;
         auto prefactor = n_elems / _size[0];
         for(std::size_t d = 0; d < Dims-1; ++d) {

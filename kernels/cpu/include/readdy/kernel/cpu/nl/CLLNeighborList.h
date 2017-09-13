@@ -90,22 +90,18 @@ public:
                             }
                         }
 
-
-                        /*for(std::size_t ncix = 0; ncix < n_neighbors; ++ncix) {
-                            const auto neighborCellIndex = ccll.neighbors().at(adjBeginIdx + ncix + 1);
-                            auto neighborBinsBeginIdx = bix(neighborCellIndex, 0_z);
-                            const auto neighborNParticles = ccll.bins().at(binsBeginIdx);
-
-                            for(std::size_t nidx = neighborBinsBeginIdx + 1; nidx < neighborBinsBeginIdx + neighborNParticles + 1; ++nidx) {
-                                auto neighbor = ccll.bins().at(nidx);
-                                const auto distSquared = d2(entry.pos, data.pos(neighbor));
-                                if(distSquared < _max_cutoff_skin_squared) {
-                                    neighbors.push_back(neighbor);
+                        for(auto itNeighborCell = ccll.neighborsBegin(cellIndex); itNeighborCell != ccll.neighborsEnd(cellIndex); ++itNeighborCell) {
+                            for(auto itNeighborParticle = ccll.particlesBegin(*itNeighborCell); itNeighborParticle != ccll.particlesEnd(*itNeighborCell); ++itNeighborParticle) {
+                                const auto &neighbor = data.entry_at(*itNeighborParticle);
+                                if(!neighbor.deactivated) {
+                                    const auto distSquared = d2(entry.pos, neighbor.pos);
+                                    if (distSquared < _max_cutoff_skin_squared) {
+                                        neighbors.push_back(*itNeighborParticle);
+                                    }
                                 }
                             }
+                        }
 
-
-                        }*/
                     }
                 }
             };
@@ -126,8 +122,10 @@ public:
         auto t = node.timeit();
         if(!_is_set_up) {
             set_up(node.subnode("setUp"));
+        } else {
+            ccll.update(node.subnode("update CLL"));
+            fill_verlet_list(node.subnode("fill verlet list"));
         }
-        ccll.update(node.subnode("update CLL"));
     }
 
     void clear(const util::PerformanceNode &node) override {

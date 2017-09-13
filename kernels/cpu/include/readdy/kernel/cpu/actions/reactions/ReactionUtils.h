@@ -173,15 +173,16 @@ void performReaction(data_t& data, const readdy::model::KernelContext& context, 
             auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
-            readdy::model::Particle p (entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3, reaction->getProducts()[1]);
-            newEntries.emplace_back(p);
+            //readdy::model::Particle p (, reaction->getProducts()[1]);
+            const auto id = readdy::model::Particle::nextId();
+            newEntries.emplace_back(pbc(entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3), reaction->getProducts()[1], id);
 
             entry1.type = reaction->getProducts()[0];
             entry1.id = readdy::model::Particle::nextId();
             data.displace(entry1, reaction->getWeight1() * reaction->getProductDistance() * n3);
             if(record) {
                 record->products[0] = entry1.id;
-                record->products[1] = p.getId();
+                record->products[1] = id;
             }
             break;
         }

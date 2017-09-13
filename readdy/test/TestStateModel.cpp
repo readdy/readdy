@@ -124,6 +124,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
             readdy::log::trace("got particle: {}", bar);
         }
     }
+    stateModel.initializeNeighborList(0);
     stateModel.updateNeighborList();
     {
         const auto foo = stateModel.getParticles();
