@@ -69,8 +69,14 @@ void CellDecompositionNeighborList::update(const util::PerformanceNode &node) {
         set_up(node.subnode("set_up"));
     }
     _cell_container.clear();
-    fill_container();
-    fill_verlet_list();
+    {
+        auto tt = node.subnode("update CLL").timeit();
+        fill_container();
+    }
+    {
+        auto tt = node.subnode("fill verlet list").timeit();
+        fill_verlet_list();
+    }
 }
 
 void CellDecompositionNeighborList::fill_container() {

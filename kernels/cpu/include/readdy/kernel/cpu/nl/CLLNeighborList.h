@@ -63,6 +63,27 @@ private:
     bool _is_set_up {false};
 };
 
+class DynamicCLLNeighborList : public NeighborList {
+public:
+    DynamicCLLNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                           const readdy::util::thread::Config &config);
+
+    void set_up(const util::PerformanceNode &node) override;
+
+    void fill_verlet_list(const util::PerformanceNode &node);
+
+    void update(const util::PerformanceNode &node) override;
+
+    void clear(const util::PerformanceNode &node) override;
+
+    void updateData(data_t::update_t &&update) override;
+
+private:
+    DynamicCellLinkedList dcll;
+    bool _is_set_up {false};
+
+};
+
 }
 }
 }

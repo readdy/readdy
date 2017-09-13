@@ -277,7 +277,8 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                 }
             }));
     pimpl->neighborList = std::unique_ptr<neighbor_list>(
-            new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
+            /*new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)*/
+            new nl::DynamicCLLNeighborList(*getParticleData(), *pimpl->context, *config)
     );
 }
 
@@ -451,6 +452,9 @@ void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configurat
         );
         log::debug("Using CPU/ContiguousCLL neighbor list with radius {}.", radius);
     } else if (nl.type == "DynamicCLL") {
+        (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
+                new nl::DynamicCLLNeighborList(*getParticleData(), *pimpl->context, *config)
+        );
         log::debug("Using CPU/DynamicCLL neighbor list.");
     } else if (nl.type == "Adaptive") {
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(

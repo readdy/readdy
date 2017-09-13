@@ -49,7 +49,6 @@ void exportUtils(py::module& m);
 void exportCommon(py::module& common) {
     using namespace pybind11::literals;
     common.def("set_logging_level", [](const std::string &level, bool python_console_out) -> void {
-        std::cout << "setting logging level to " << level << std::endl;
         /*spdlog::drop("console");
         spdlog::set_sync_mode();
         std::vector<spdlog::sink_ptr> sinks;

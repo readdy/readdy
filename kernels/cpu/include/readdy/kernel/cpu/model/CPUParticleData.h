@@ -48,6 +48,7 @@ namespace nl {
 class NeighborList;
 class AdaptiveNeighborList;
 class ContiguousCLLNeighborList;
+class DynamicCLLNeighborList;
 class CellDecompositionNeighborList;
 }
 namespace model {
@@ -57,6 +58,7 @@ class CPUParticleData {
     friend class readdy::kernel::cpu::nl::NeighborList;
     friend class readdy::kernel::cpu::nl::AdaptiveNeighborList;
     friend class readdy::kernel::cpu::nl::ContiguousCLLNeighborList;
+    friend class readdy::kernel::cpu::nl::DynamicCLLNeighborList;
     friend class readdy::kernel::cpu::nl::CellDecompositionNeighborList;
 public:
 

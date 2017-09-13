@@ -27,37 +27,39 @@ import readdy._internal.readdybinding.common as common
 import json
 
 import readdy.examples.performance_scenarios as ps
+import numpy as np
 
 
-class ComparePerformance(object):
-    def __init__(self, scenario):
-        self._scenario = scenario
+def scale_const_density(scale_factor):
+    factors = ps.get_identity_factors()
+    factors["n_particles"] = scale_factor
+    factors["box_length"] = np.cbrt(scale_factor)
+    return factors
 
-    @property
-    def scenario(self):
-        return self._scenario
 
-    def run(self, n_steps):
-        common.set_logging_level("debug", python_console_out=False)
-
-        self.scenario.run(n_steps)
-        return self.scenario.performance()
+def scale_const_volume(scale_factor):
+    factors = ps.get_identity_factors()
+    factors["n_particles"] = scale_factor
+    factors["box_length"] = 2 * scale_factor
 
 
 if __name__ == '__main__':
-    factors = ps.get_identity_factors()
+    common.set_logging_level("warn", python_console_out=False)
+    n_samples = 5
+    n_time_steps = 100
+    number_factors = np.logspace(0, 4, n_samples)
 
+    for factor in number_factors:
+        print("----------------------------- {} -----------------------------".format(factor))
+        factors = scale_const_density(factor)
+        s = ps.Collisive("CPU", factors, reaction_scheduler="Gillespie")
 
-
-    s = ps.Collisive("CPU", factors, reaction_scheduler="Gillespie")
-
-    s.sim.set_kernel_config(json.dumps({"CPU": {
-        "neighbor_list": {
-            "cll_radius": 3,
-            "type": "CellDecomposition"
+        s.sim.set_kernel_config(json.dumps({"CPU": {
+            "neighbor_list": {
+                "cll_radius": 2,
+                "type": "DynamicCLL"
+            }
         }
-    }
-    }))
-    perf = ComparePerformance(scenario=s)
-    times = perf.run(100)
-    print(times)
+        }))
+        s.run(n_time_steps, skin=factor*.1)
+        print(s.performance())

@@ -127,11 +127,13 @@ class PerformanceScenario:
         for key in system_variables_keys:
             self.system_vars[key] = 0.
 
-    def run(self, n_steps):
+    def run(self, n_steps, **kwargs):
         conf = self.sim.run_scheme_readdy()
         conf.with_integrator(self.integrator)
         conf.with_reaction_scheduler(self.reaction_scheduler)
         conf.configure_and_run(n_steps, self.time_step)
+        if "skin" in kwargs:
+            conf.with_skin_size(kwargs["skin"])
 
     def performance(self):
         return self.sim.performance_root()
