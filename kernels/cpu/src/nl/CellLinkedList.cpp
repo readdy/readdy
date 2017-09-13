@@ -53,7 +53,7 @@ void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::Perform
         _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
         if(_max_cutoff > 0) {
             auto size = _context.get().boxSize();
-            auto desiredWidth = static_cast<scalar>(static_cast<scalar>(radius) * (_max_cutoff + _skin));
+            auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin)/static_cast<scalar>(radius));
             std::array<std::size_t, 3> dims{};
             for (int i = 0; i < 3; ++i) {
                 dims[i] = static_cast<unsigned int>(std::max(1., std::floor(size[i] / desiredWidth)));

@@ -37,10 +37,10 @@ data_dir = "./"
 
 
 def sample_and_plot_scenario(sampler=ps.Sampler, scenario_type=ps.PerformanceScenario, kernel="SingleCPU"):
-    n_samples = 8
-    n_time_steps = 200
+    n_samples = 5
+    n_time_steps = 100
     number_factors = np.logspace(0, 3, n_samples)
-    times, counts, system_vars = sampler.sample(number_factors, n_time_steps, scenario_type=ps.Collisive, kernel=kernel)
+    times, counts, system_vars = sampler.sample(number_factors, n_time_steps, scenario_type=scenario_type, kernel=kernel)
     result = (times, counts, system_vars)
     print("density", system_vars["density"])
     print("reactivity", system_vars["reactivity"])
