@@ -97,6 +97,13 @@ void from_json(const json &j, Configuration &conf) {
     }
 }
 
+void to_json(json &j, const CPUConfiguration &conf) {
+    j = json {{"CPU", conf.cpu}};
+}
+void from_json(const json &j, CPUConfiguration &conf) {
+    conf.cpu = j.at("CPU").get<Configuration>();
+}
+
 }
 
 }

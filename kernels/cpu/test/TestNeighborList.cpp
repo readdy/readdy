@@ -68,6 +68,8 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
+class TestNeighborListImpl : public ::testing::TestWithParam<const char*> {};
+
 auto isPairInList = [](nl_t *pairs, data_t &data,
                        unsigned long idx1, unsigned long idx2) {
     const auto &neighbors1 = pairs->neighbors_of(idx1);
@@ -626,7 +628,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
 }
 
 
-TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
+TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
@@ -636,6 +638,9 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
     kernel->getKernelContext().particle_types().add("V", 0.0, 1.0);
     kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
     kernel->getKernelContext().boxSize() = {{100, 10, 10}};
+    readdy::conf::cpu::CPUConfiguration conf {};
+    conf.cpu.neighborList.type = GetParam();
+    kernel->getKernelContext().kernelConfiguration() = conf;
 
     const readdy::scalar weightF = static_cast<readdy::scalar>(0.);
     const readdy::scalar weightA = static_cast<readdy::scalar>(1.);
@@ -666,7 +671,7 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
     }
 }
 
-TEST(TestAdaptiveNeighborList, Diffusion) {
+TEST_P(TestNeighborListImpl, Diffusion) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
@@ -679,6 +684,10 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", .1, 2.0);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{100, 10, 10}};
+
+    readdy::conf::cpu::CPUConfiguration conf {};
+    conf.cpu.neighborList.type = GetParam();
+    kernel->getKernelContext().kernelConfiguration() = conf;
 
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     // 120 F particles
@@ -721,67 +730,8 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
         conf.configureAndRun(100, .01);
     }
 }
-/*
-TEST(TestAdaptiveNeighborList, TestDiffusionBenchmark) {
-    std::size_t n_timesteps = 1000;
-    readdy::scalar timestep = .1;
-
-    readdy::scalar box_length = 450.;
-    int n_particles = 1000;
-    readdy::scalar diffusion_coefficient = 1.;
-    readdy::scalar particle_radius = 1.25;
-    readdy::scalar force_constant = 100.;
-
-
-    std::unique_ptr<readdy::kernel::cpu::CPUKernel> kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-
-    // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
-    auto& context = kernel->getKernelContext();
-    context.particle_types().add("A", diffusion_coefficient, particle_radius);
-    context.setPeriodicBoundary(true, true, true);
-    context.setBoxSize(box_length, box_length, box_length);
-
-    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("A", "A", force_constant);
-
-    for(auto _ : readdy::util::range<int>(0, n_particles)) {
-        kernel->addParticle("A", readdy::Vec3(
-                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
-                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
-                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length));
-    }
-
-    auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1);
-    obs->setCallback(
-            [&](const readdy::model::observables::NParticles::result_type &result) {
-                bool wrong_i_j = false, wrong_j_i = false;
-                auto d2 = context.distSquaredFun();
-                const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
-                const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
-                std::size_t i = 0;
-                for(auto it_i = data.begin(); it_i != data.end(); ++it_i, ++i) {
-                    std::size_t j = 0;
-                    for(auto it_j = data.begin(); it_j != data.end(); ++it_j, ++j) {
-                        if(it_i != it_j && std::sqrt(d2(it_i->position(), it_j->position())) < 2. * particle_radius) {
-                            auto neigh_i = neighbor_list->neighbors_of(i);
-                            auto neigh_j = neighbor_list->neighbors_of(j);
-                            if(std::find(neigh_i.begin(), neigh_i.end(), j) == neigh_i.end()) {
-                                wrong_i_j = true;
-                            }
-                            if(std::find(neigh_j.begin(), neigh_j.end(), i) == neigh_j.end()) {
-                                wrong_j_i = true;
-                            }
-                        }
-                    }
-                }
-                EXPECT_FALSE(wrong_i_j || wrong_j_i);
-            }
-    );
-    auto connection = kernel->connectObservable(obs.get());
-
-    auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
-    conf.withSkinSize(1.);
-    conf.configureAndRun(n_timesteps, timestep);
-}*/
-
 
 }
+
+INSTANTIATE_TEST_CASE_P(TestNeighborListImplementation, TestNeighborListImpl,
+                        ::testing::Values("DynamicCLL", "CompactCLL", "ContiguousCLL", "CellDecomposition", "Adaptive"));

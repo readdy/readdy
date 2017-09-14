@@ -286,7 +286,7 @@ void CompactCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
 
             for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
 
-                auto pptr = head.at(cellIndex);
+                auto pptr = (*head.at(cellIndex)).load();
                 while (pptr != 0) {
                     auto pidx = pptr - 1;
                     auto &entry = data.entry_at(pidx);
@@ -294,7 +294,7 @@ void CompactCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
                     neighbors.clear();
 
                     {
-                        auto ppptr = head.at(cellIndex);
+                        auto ppptr = (*head.at(cellIndex)).load();
                         while (ppptr != 0) {
                             auto ppidx = ppptr - 1;
                             if (ppidx != pidx) {
@@ -313,7 +313,7 @@ void CompactCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
                     for (auto itNeighborCell = ccll.neighborsBegin(cellIndex);
                          itNeighborCell != ccll.neighborsEnd(cellIndex); ++itNeighborCell) {
 
-                        auto nptr = head.at(*itNeighborCell);
+                        auto nptr = (*head.at(*itNeighborCell)).load();
                         while (nptr != 0) {
                             auto nidx = nptr - 1;
 

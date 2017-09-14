@@ -38,6 +38,7 @@
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/common/Timer.h>
+#include <readdy/common/thread/atomic.h>
 
 namespace readdy {
 namespace kernel {
@@ -137,6 +138,10 @@ private:
 
 class CompactCellLinkedList : public CellLinkedList {
 public:
+
+    using HEAD = std::vector<util::thread::copyable_atomic<std::size_t>>;
+    using LIST = std::vector<std::size_t>;
+
     CompactCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
                           const util::thread::Config &config);
 
@@ -154,18 +159,19 @@ public:
 
     size_t nParticles(std::size_t cellIndex) const override;
 
-    const std::vector<std::size_t> &head() const;
+    const HEAD &head() const;
 
-    const std::vector<std::size_t> &list() const;
+    const LIST &list() const;
 
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
 
+    template<bool serial>
     void fillBins(const util::PerformanceNode &node);
 
-    std::vector<std::size_t> _head;
+    HEAD _head;
     // particles, 1-indexed
-    std::vector<std::size_t> _list;
+    LIST _list;
 };
 
 class DynamicCellLinkedList : public CellLinkedList {

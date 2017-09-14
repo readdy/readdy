@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -21,54 +21,57 @@
 
 
 /**
+ * << detailed description >>
  *
- *
- * @file KernelConfiguration.h
- * @brief 
+ * @file atomic.h
+ * @brief << brief description >>
  * @author clonker
- * @date 9/13/17
+ * @date 14.09.17
+ * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <string>
-#include <json.hpp>
-#include <readdy/common/thread/Config.h>
-
-#include "readdy/common/macros.h"
+#include <atomic>
+#include "../macros.h"
 
 NAMESPACE_BEGIN(readdy)
-NAMESPACE_BEGIN(conf)
-using json = nlohmann::json;
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
 
-NAMESPACE_BEGIN(cpu)
-struct NeighborList {
-    std::string type {"CellDecomposition"};
-    std::uint8_t cll_radius {1};
+template<typename T>
+class copyable_atomic {
+    std::atomic<T> _a;
+public:
+    copyable_atomic() : _a() {}
+
+    explicit copyable_atomic(const std::atomic<T> &a) : _a(a.load()) {}
+
+    copyable_atomic(const copyable_atomic &other) : _a(other._a.load()) {}
+
+    copyable_atomic &operator=(const copyable_atomic &other) {
+        _a.store(other._a.load());
+        return *this;
+    }
+
+    const std::atomic<T> &operator*() const {
+        return _a;
+    }
+
+    std::atomic<T> &operator*() {
+        return _a;
+    }
+
+    const std::atomic<T> operator->() const {
+        return &_a;
+    }
+
+    std::atomic<T> *operator->() {
+        return &_a;
+    }
 };
-void to_json(json &j, const NeighborList &nl);
-void from_json(const json &j, NeighborList &nl);
 
-struct ThreadConfig {
-    int nThreads {-1};
-    util::thread::ThreadMode threadMode {util::thread::ThreadMode::pool};
-};
-void to_json(json &j, const ThreadConfig &nl);
-void from_json(const json &j, ThreadConfig &nl);
 
-struct Configuration {
-    NeighborList neighborList {};
-    ThreadConfig threadConfig {};
-};
-void to_json(json &j, const Configuration &conf);
-void from_json(const json &j, Configuration &conf);
-
-struct CPUConfiguration {
-    Configuration cpu {};
-};
-void to_json(json &j, const CPUConfiguration &conf);
-void from_json(const json &j, CPUConfiguration &conf);
-
-NAMESPACE_END(cpu)
-
-NAMESPACE_END(conf)
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
 NAMESPACE_END(readdy)

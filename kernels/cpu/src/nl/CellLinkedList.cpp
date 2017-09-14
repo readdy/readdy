@@ -356,8 +356,8 @@ void CompactCellLinkedList::update(const util::PerformanceNode &node) {
 }
 
 void CompactCellLinkedList::clear() {
-    _head.clear();
-    _list.clear();
+    _head.resize(0);
+    _list.resize(0);
 }
 
 std::size_t *CompactCellLinkedList::particlesBegin(std::size_t /*cellIndex*/) {
@@ -378,7 +378,7 @@ const std::size_t *CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/
 
 std::size_t CompactCellLinkedList::nParticles(std::size_t cellIndex) const {
     std::size_t size = 0;
-    auto pidx = _head.at(cellIndex);
+    auto pidx = (*_head.at(cellIndex)).load();
     while(pidx != 0) {
         pidx = _list.at(pidx);
         ++size;
@@ -392,33 +392,81 @@ void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
         {
             auto tt = node.subnode("allocate").timeit();
             auto nParticles = _data.get().size();
-            _head.resize(0);
+            _head.clear();
             _head.resize(_cellIndex.size());
             _list.resize(0);
             _list.resize(nParticles + 1);
         }
-        fillBins(node.subnode("fillBins"));
+        fillBins<false>(node.subnode("fillBins"));
     }
 }
 
+template<bool serial>
 void CompactCellLinkedList::fillBins(const util::PerformanceNode &node) {
     auto t = node.timeit();
     auto boxSize = _context.get().boxSize();
-    std::size_t pidx = 1;
-    for (const auto &entry : _data.get()) {
-        if (!entry.deactivated) {
-            const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-            const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-            const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
-            const auto cellIndex = _cellIndex(i, j, k);
-            _list[pidx] = _head.at(cellIndex);
-            _head[cellIndex] = pidx;
+    if(serial) {
+        std::size_t pidx = 1;
+        for (const auto &entry : _data.get()) {
+            if (!entry.deactivated) {
+                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+                const auto cellIndex = _cellIndex(i, j, k);
+                _list[pidx] = *_head.at(cellIndex);
+                *_head[cellIndex] = pidx;
+            }
+            ++pidx;
         }
-        ++pidx;
+    } else {
+        const auto &data = _data.get();
+        const auto grainSize = data.size() / _config.get().nThreads();
+        const auto &executor = *_config.get().executor();
+        const auto cellSize = _cellSize;
+        const auto &cellIndex = _cellIndex;
+
+        auto &list = _list;
+        auto &head = _head;
+
+        auto worker = [&data, &cellIndex, cellSize, &list, &head, boxSize]
+                (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
+            auto it = data.begin() + begin_pidx - 1;
+            auto pidx = begin_pidx;
+            while(it != data.begin() + end_pidx - 1) {
+                const auto &entry = *it;
+                if (!entry.deactivated) {
+                    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / cellSize.x));
+                    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / cellSize.y));
+                    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / cellSize.z));
+                    const auto cix = cellIndex(i, j, k);
+                    auto &atomic = *head.at(cix);
+                    // perform CAS
+                    auto currentHead = atomic.load();
+                    while(!atomic.compare_exchange_weak(currentHead, pidx)) {}
+                    list[pidx] = currentHead;
+                    //*head[cix] = pidx;
+                }
+                ++pidx;
+                ++it;
+            }
+        };
+
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(_config.get().nThreads());
+        auto it = 1_z;
+        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
+            executables.push_back(executor.pack(worker, it, it + grainSize));
+            it += grainSize;
+        }
+        executables.push_back(executor.pack(worker, it, data.size()+1));
+        executor.execute_and_wait(std::move(executables));
     }
 }
 
-const std::vector<std::size_t> &CompactCellLinkedList::head() const {
+template void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode&);
+template void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode&);
+
+const CompactCellLinkedList::HEAD &CompactCellLinkedList::head() const {
     return _head;
 }
 

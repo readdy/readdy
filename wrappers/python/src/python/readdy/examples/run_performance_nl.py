@@ -49,22 +49,24 @@ if __name__ == '__main__':
     n_time_steps = 100
     number_factors = np.logspace(0, 4, n_samples)
 
-    for factor in number_factors:
-        print("----------------------------- {} -----------------------------".format(factor))
-        factors = scale_const_density(factor)
-        s = ps.Collisive("CPU", factors, reaction_scheduler="Gillespie")
+    for cll in ["DynamicCLL", "CompactCLL", "ContiguousCLL", "CellDecomposition"]:
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~".format(cll))
+        for factor in number_factors:
+            print("----------------------------- {} -----------------------------".format(factor))
+            factors = scale_const_density(factor)
+            s = ps.Collisive("CPU", factors, reaction_scheduler="Gillespie")
 
-        # DynamicCLL, CompactCLL, ContiguousCLL, Adaptive, CellDecomposition
-        s.sim.set_kernel_config(json.dumps({"CPU": {
-            "neighbor_list": {
-                "cll_radius": 1,
-                "type": "CellDecomposition"
-            },
-            "thread_config": {
-                "n_threads": -1,
-                "mode": "pool"
+            # DynamicCLL, CompactCLL, ContiguousCLL, Adaptive, CellDecomposition
+            s.sim.set_kernel_config(json.dumps({"CPU": {
+                "neighbor_list": {
+                    "cll_radius": 1,
+                    "type": "{}".format(cll)
+                },
+                "thread_config": {
+                    "n_threads": -1,
+                    "mode": "pool"
+                }
             }
-        }
-        }))
-        s.run(n_time_steps)
-        print(s.performance())
+            }))
+            s.run(n_time_steps)
+            print(s.performance())
