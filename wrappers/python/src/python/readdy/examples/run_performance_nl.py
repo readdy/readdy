@@ -54,16 +54,17 @@ if __name__ == '__main__':
         factors = scale_const_density(factor)
         s = ps.Collisive("CPU", factors, reaction_scheduler="Gillespie")
 
+        # DynamicCLL, CompactCLL, ContiguousCLL, Adaptive, CellDecomposition
         s.sim.set_kernel_config(json.dumps({"CPU": {
             "neighbor_list": {
-                "cll_radius": 2,
-                "type": "DynamicCLL"
+                "cll_radius": 1,
+                "type": "CellDecomposition"
             },
             "thread_config": {
-                "n_threads": 3,
-                "mode": "hustnuschel"
+                "n_threads": -1,
+                "mode": "pool"
             }
         }
         }))
-        s.run(n_time_steps, skin=factor*.1)
+        s.run(n_time_steps)
         print(s.performance())

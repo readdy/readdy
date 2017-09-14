@@ -19,12 +19,11 @@
  * <http://www.gnu.org/licenses/>.                                  *
  ********************************************************************/
 
-
-#include <json.hpp>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+
+#include <json.hpp>
 
 #include <readdy/api/Simulation.h>
 #include <readdy/common/nodelete.h>

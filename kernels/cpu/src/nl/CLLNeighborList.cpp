@@ -54,29 +54,28 @@ void ContiguousCLLNeighborList::set_up(const util::PerformanceNode &node) {
 
 void ContiguousCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    if(_max_cutoff > 0) {
+    if (_max_cutoff > 0) {
         auto cix = ccll.cellIndex();
-        auto bix = ccll.binsIndex();
-        auto nix = ccll.neighborIndex();
 
         const auto grainSize = cix.size() / _config.get().nThreads();
-        auto worker = [this, cix, bix, nix](std::size_t tid, std::size_t begin, std::size_t end) {
+        auto worker = [this, cix](std::size_t tid, std::size_t begin, std::size_t end) {
             const auto &d2 = _context.get().distSquaredFun();
             auto &data = _data.get();
 
-            for(std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
+            for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
 
-                for(auto itParticles = ccll.particlesBegin(cellIndex); itParticles != ccll.particlesEnd(cellIndex); ++itParticles) {
+                for (auto itParticles = ccll.particlesBegin(cellIndex);
+                     itParticles != ccll.particlesEnd(cellIndex); ++itParticles) {
                     auto particle = *itParticles;
                     auto &entry = data.entry_at(particle);
                     auto &neighbors = data.neighbors_at(particle);
                     neighbors.clear();
 
-                    for(auto itPP = ccll.particlesBegin(cellIndex); itPP != ccll.particlesEnd(cellIndex); ++itPP) {
+                    for (auto itPP = ccll.particlesBegin(cellIndex); itPP != ccll.particlesEnd(cellIndex); ++itPP) {
                         auto pparticle = *itPP;
-                        if(particle != pparticle) {
+                        if (particle != pparticle) {
                             const auto &pp = data.entry_at(pparticle);
-                            if(!pp.deactivated) {
+                            if (!pp.deactivated) {
                                 const auto distSquared = d2(entry.pos, pp.pos);
                                 if (distSquared < _max_cutoff_skin_squared) {
                                     neighbors.push_back(pparticle);
@@ -85,10 +84,12 @@ void ContiguousCLLNeighborList::fill_verlet_list(const util::PerformanceNode &no
                         }
                     }
 
-                    for(auto itNeighborCell = ccll.neighborsBegin(cellIndex); itNeighborCell != ccll.neighborsEnd(cellIndex); ++itNeighborCell) {
-                        for(auto itNeighborParticle = ccll.particlesBegin(*itNeighborCell); itNeighborParticle != ccll.particlesEnd(*itNeighborCell); ++itNeighborParticle) {
+                    for (auto itNeighborCell = ccll.neighborsBegin(cellIndex);
+                         itNeighborCell != ccll.neighborsEnd(cellIndex); ++itNeighborCell) {
+                        for (auto itNeighborParticle = ccll.particlesBegin(*itNeighborCell);
+                             itNeighborParticle != ccll.particlesEnd(*itNeighborCell); ++itNeighborParticle) {
                             const auto &neighbor = data.entry_at(*itNeighborParticle);
-                            if(!neighbor.deactivated) {
+                            if (!neighbor.deactivated) {
                                 const auto distSquared = d2(entry.pos, neighbor.pos);
                                 if (distSquared < _max_cutoff_skin_squared) {
                                     neighbors.push_back(*itNeighborParticle);
@@ -99,11 +100,11 @@ void ContiguousCLLNeighborList::fill_verlet_list(const util::PerformanceNode &no
                 }
             }
         };
-        const auto& executor = *_config.get().executor();
+        const auto &executor = *_config.get().executor();
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(_config.get().nThreads());
         auto it = 0_z;
-        for(int i = 0; i < _config.get().nThreads()-1; ++i) {
+        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
             executables.push_back(executor.pack(worker, it, it + grainSize));
             it += grainSize;
         }
@@ -114,7 +115,7 @@ void ContiguousCLLNeighborList::fill_verlet_list(const util::PerformanceNode &no
 
 void ContiguousCLLNeighborList::update(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    if(!_is_set_up) {
+    if (!_is_set_up) {
         set_up(node.subnode("setUp"));
     } else {
         ccll.update(node.subnode("update CLL"));
@@ -137,7 +138,8 @@ void ContiguousCLLNeighborList::updateData(model::CPUParticleData::update_t &&up
 }
 
 
-DynamicCLLNeighborList::DynamicCLLNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+DynamicCLLNeighborList::DynamicCLLNeighborList(model::CPUParticleData &data,
+                                               const readdy::model::KernelContext &context,
                                                const readdy::util::thread::Config &config)
         : NeighborList(data, context, config), dcll(data, context, config) {}
 
@@ -153,7 +155,7 @@ void DynamicCLLNeighborList::set_up(const util::PerformanceNode &node) {
 
 void DynamicCLLNeighborList::update(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    if(!_is_set_up) {
+    if (!_is_set_up) {
         set_up(node.subnode("setUp"));
     } else {
         dcll.update(node.subnode("update CLL"));
@@ -177,28 +179,28 @@ void DynamicCLLNeighborList::updateData(model::CPUParticleData::update_t &&updat
 
 void DynamicCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    if(_max_cutoff > 0) {
+    if (_max_cutoff > 0) {
         auto cix = dcll.cellIndex();
-        auto nix = dcll.neighborIndex();
 
         const auto grainSize = cix.size() / _config.get().nThreads();
-        auto worker = [this, cix, nix](std::size_t tid, std::size_t begin, std::size_t end) {
+        auto worker = [this, cix](std::size_t tid, std::size_t begin, std::size_t end) {
             const auto &d2 = _context.get().distSquaredFun();
             auto &data = _data.get();
 
-            for(std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
+            for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
 
-                for(auto itParticles = dcll.particlesBegin(cellIndex); itParticles != dcll.particlesEnd(cellIndex); ++itParticles) {
+                for (auto itParticles = dcll.particlesBegin(cellIndex);
+                     itParticles != dcll.particlesEnd(cellIndex); ++itParticles) {
                     auto particle = *itParticles;
                     auto &entry = data.entry_at(particle);
                     auto &neighbors = data.neighbors_at(particle);
                     neighbors.clear();
 
-                    for(auto itPP = dcll.particlesBegin(cellIndex); itPP != dcll.particlesEnd(cellIndex); ++itPP) {
+                    for (auto itPP = dcll.particlesBegin(cellIndex); itPP != dcll.particlesEnd(cellIndex); ++itPP) {
                         auto pparticle = *itPP;
-                        if(particle != pparticle) {
+                        if (particle != pparticle) {
                             const auto &pp = data.entry_at(pparticle);
-                            if(!pp.deactivated) {
+                            if (!pp.deactivated) {
                                 const auto distSquared = d2(entry.pos, pp.pos);
                                 if (distSquared < _max_cutoff_skin_squared) {
                                     neighbors.push_back(pparticle);
@@ -207,10 +209,12 @@ void DynamicCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
                         }
                     }
 
-                    for(auto itNeighborCell = dcll.neighborsBegin(cellIndex); itNeighborCell != dcll.neighborsEnd(cellIndex); ++itNeighborCell) {
-                        for(auto itNeighborParticle = dcll.particlesBegin(*itNeighborCell); itNeighborParticle != dcll.particlesEnd(*itNeighborCell); ++itNeighborParticle) {
+                    for (auto itNeighborCell = dcll.neighborsBegin(cellIndex);
+                         itNeighborCell != dcll.neighborsEnd(cellIndex); ++itNeighborCell) {
+                        for (auto itNeighborParticle = dcll.particlesBegin(*itNeighborCell);
+                             itNeighborParticle != dcll.particlesEnd(*itNeighborCell); ++itNeighborParticle) {
                             const auto &neighbor = data.entry_at(*itNeighborParticle);
-                            if(!neighbor.deactivated) {
+                            if (!neighbor.deactivated) {
                                 const auto distSquared = d2(entry.pos, neighbor.pos);
                                 if (distSquared < _max_cutoff_skin_squared) {
                                     neighbors.push_back(*itNeighborParticle);
@@ -221,11 +225,118 @@ void DynamicCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
                 }
             }
         };
-        const auto& executor = *_config.get().executor();
+        const auto &executor = *_config.get().executor();
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(_config.get().nThreads());
         auto it = 0_z;
-        for(int i = 0; i < _config.get().nThreads()-1; ++i) {
+        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
+            executables.push_back(executor.pack(worker, it, it + grainSize));
+            it += grainSize;
+        }
+        executables.push_back(executor.pack(worker, it, cix.size()));
+        executor.execute_and_wait(std::move(executables));
+    }
+}
+
+CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
+                                               const readdy::model::KernelContext &context,
+                                               const util::thread::Config &config)
+        : NeighborList(data, context, config), ccll(data, context, config), cll_radius(cll_radius) {}
+
+
+void CompactCLLNeighborList::set_up(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    _max_cutoff = _context.get().calculateMaxCutoff();
+    _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
+
+    ccll.setUp(_skin, cll_radius, node.subnode("setUp CLL"));
+    fill_verlet_list(node.subnode("fill verlet list"));
+    _is_set_up = true;
+}
+
+void CompactCLLNeighborList::update(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    if (!_is_set_up) {
+        set_up(node.subnode("setUp"));
+    } else {
+        ccll.update(node.subnode("update CLL"));
+        fill_verlet_list(node.subnode("fill verlet list"));
+    }
+}
+
+void CompactCLLNeighborList::clear(const util::PerformanceNode &node) {
+    ccll.clear();
+}
+
+void CompactCLLNeighborList::updateData(model::CPUParticleData::update_t &&update) {
+    _data.get().update(std::forward<model::CPUParticleData::update_t>(update));
+}
+
+void CompactCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    if (_max_cutoff > 0) {
+        auto cix = ccll.cellIndex();
+
+        const auto grainSize = cix.size() / _config.get().nThreads();
+        auto worker = [this, cix](std::size_t tid, std::size_t begin, std::size_t end) {
+            const auto &d2 = _context.get().distSquaredFun();
+            auto &data = _data.get();
+            const auto &head = ccll.head();
+            const auto &list = ccll.list();
+
+            for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
+
+                auto pptr = head.at(cellIndex);
+                while (pptr != 0) {
+                    auto pidx = pptr - 1;
+                    auto &entry = data.entry_at(pidx);
+                    auto &neighbors = data.neighbors_at(pidx);
+                    neighbors.clear();
+
+                    {
+                        auto ppptr = head.at(cellIndex);
+                        while (ppptr != 0) {
+                            auto ppidx = ppptr - 1;
+                            if (ppidx != pidx) {
+                                const auto &pp = data.entry_at(ppidx);
+                                if (!pp.deactivated) {
+                                    const auto distSquared = d2(entry.pos, pp.pos);
+                                    if (distSquared < _max_cutoff_skin_squared) {
+                                        neighbors.push_back(ppidx);
+                                    }
+                                }
+                            }
+                            ppptr = list.at(ppptr);
+                        }
+                    }
+
+                    for (auto itNeighborCell = ccll.neighborsBegin(cellIndex);
+                         itNeighborCell != ccll.neighborsEnd(cellIndex); ++itNeighborCell) {
+
+                        auto nptr = head.at(*itNeighborCell);
+                        while (nptr != 0) {
+                            auto nidx = nptr - 1;
+
+                            const auto &neighbor = data.entry_at(nidx);
+                            if (!neighbor.deactivated) {
+                                const auto distSquared = d2(entry.pos, neighbor.pos);
+                                if (distSquared < _max_cutoff_skin_squared) {
+                                    neighbors.push_back(nidx);
+                                }
+                            }
+
+                            nptr = list.at(nptr);
+                        }
+                    }
+                    pptr = list.at(pptr);
+                }
+            }
+        };
+        const auto &executor = *_config.get().executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(_config.get().nThreads());
+        auto it = 0_z;
+        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
             executables.push_back(executor.pack(worker, it, it + grainSize));
             it += grainSize;
         }

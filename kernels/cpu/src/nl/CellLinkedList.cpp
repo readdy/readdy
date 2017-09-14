@@ -85,7 +85,7 @@ void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::Perform
                                 auto cellIdx = _cellIndex(static_cast<std::size_t>(i), static_cast<std::size_t>(j),
                                                           static_cast<std::size_t>(k));
 
-                                adj.clear();
+                                adj.resize(0);
 
                                 for (int ii = i - r; ii <= i + r; ++ii) {
                                     for (int jj = j - r; jj <= j + r; ++jj) {
@@ -175,7 +175,7 @@ ContiguousCellLinkedList::ContiguousCellLinkedList(model::CPUParticleData &data,
 
 void ContiguousCellLinkedList::initializeBinsStructure() {
     _binsIndex = util::Index2D(_cellIndex.size(), 1+_maxParticlesPerCell);
-    _bins.clear();
+    _bins.resize(0);
     _bins.resize(_binsIndex.size());
 }
 
@@ -275,19 +275,21 @@ DynamicCellLinkedList::DynamicCellLinkedList(model::CPUParticleData &data, const
         : CellLinkedList(data, context, config) {}
 
 void DynamicCellLinkedList::setUpBins(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    {
-        auto tt = node.subnode("allocate").timeit();
-        _bins.clear();
-        _bins.resize(_cellIndex.size());
-        auto nParticles = static_cast<scalar>(_data.get().size() - _data.get().getNDeactivated());
-        auto estimatedParticlesPerCell = static_cast<std::size_t>(std::ceil(
-                1.5 * nParticles / _context.get().boxVolume()));
-        std::for_each(_bins.begin(), _bins.end(), [estimatedParticlesPerCell](std::vector<std::size_t> &bin) {
-            bin.reserve(estimatedParticlesPerCell);
-        });
+    if(_max_cutoff > 0) {
+        auto t = node.timeit();
+        {
+            auto tt = node.subnode("allocate").timeit();
+            _bins.resize(0);
+            _bins.resize(_cellIndex.size());
+            auto nParticles = static_cast<scalar>(_data.get().size() - _data.get().getNDeactivated());
+            auto estimatedParticlesPerCell = static_cast<std::size_t>(std::ceil(
+                    1.5 * nParticles / _context.get().boxVolume()));
+            std::for_each(_bins.begin(), _bins.end(), [estimatedParticlesPerCell](std::vector<std::size_t> &bin) {
+                bin.reserve(estimatedParticlesPerCell);
+            });
+        }
+        fillBins(node.subnode("fillBins"));
     }
-    fillBins(node.subnode("fillBins"));
 }
 
 void DynamicCellLinkedList::fillBins(const util::PerformanceNode &node) {
@@ -312,7 +314,7 @@ void DynamicCellLinkedList::update(const util::PerformanceNode &node) {
         {
             auto tt = node.subnode("clear").timeit();
             std::for_each(_bins.begin(), _bins.end(), [](std::vector<std::size_t> &bin) {
-                bin.clear();
+                bin.resize(0);
             });
         }
         fillBins(node.subnode("fillBins"));
@@ -320,7 +322,7 @@ void DynamicCellLinkedList::update(const util::PerformanceNode &node) {
 }
 
 void DynamicCellLinkedList::clear() {
-    _bins.clear();
+    _bins.resize(0);
 }
 
 std::size_t *DynamicCellLinkedList::particlesBegin(std::size_t cellIndex) {
@@ -343,6 +345,86 @@ std::size_t DynamicCellLinkedList::nParticles(std::size_t cellIndex) const {
     return _bins.at(cellIndex).size();
 }
 
+
+CompactCellLinkedList::CompactCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                                             const util::thread::Config &config) : CellLinkedList(data, context,
+                                                                                                  config) {}
+
+void CompactCellLinkedList::update(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    setUpBins(node.subnode("setUpBins"));
+}
+
+void CompactCellLinkedList::clear() {
+    _head.clear();
+    _list.clear();
+}
+
+std::size_t *CompactCellLinkedList::particlesBegin(std::size_t /*cellIndex*/) {
+    throw std::logic_error("no particlesBegin for CompactCLL");
+}
+
+const std::size_t *CompactCellLinkedList::particlesBegin(std::size_t /*cellIndex*/) const {
+    throw std::logic_error("no particlesBegin for CompactCLL");
+}
+
+std::size_t *CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/) {
+    throw std::logic_error("no particlesEnd for CompactCLL");
+}
+
+const std::size_t *CompactCellLinkedList::particlesEnd(std::size_t /*cellIndex*/) const {
+    throw std::logic_error("no particlesEnd for CompactCLL");
+}
+
+std::size_t CompactCellLinkedList::nParticles(std::size_t cellIndex) const {
+    std::size_t size = 0;
+    auto pidx = _head.at(cellIndex);
+    while(pidx != 0) {
+        pidx = _list.at(pidx);
+        ++size;
+    }
+    return size;
+}
+
+void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
+    if(_max_cutoff > 0) {
+        auto t = node.timeit();
+        {
+            auto tt = node.subnode("allocate").timeit();
+            auto nParticles = _data.get().size();
+            _head.resize(0);
+            _head.resize(_cellIndex.size());
+            _list.resize(0);
+            _list.resize(nParticles + 1);
+        }
+        fillBins(node.subnode("fillBins"));
+    }
+}
+
+void CompactCellLinkedList::fillBins(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    auto boxSize = _context.get().boxSize();
+    std::size_t pidx = 1;
+    for (const auto &entry : _data.get()) {
+        if (!entry.deactivated) {
+            const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+            const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+            const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+            const auto cellIndex = _cellIndex(i, j, k);
+            _list[pidx] = _head.at(cellIndex);
+            _head[cellIndex] = pidx;
+        }
+        ++pidx;
+    }
+}
+
+const std::vector<std::size_t> &CompactCellLinkedList::head() const {
+    return _head;
+}
+
+const std::vector<std::size_t> &CompactCellLinkedList::list() const {
+    return _list;
+}
 
 }
 }

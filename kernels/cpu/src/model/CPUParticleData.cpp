@@ -111,7 +111,6 @@ void CPUParticleData::removeParticle(const CPUParticleData::index_t index) {
     if(!p.deactivated) {
         blanks.push_back(index);
         p.deactivated = true;
-        // neighbors.at(index).clear();
     } else {
         log::error("Tried to remove particle (index={}), that was already removed!", index);
     }

@@ -277,8 +277,8 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                 }
             }));
     pimpl->neighborList = std::unique_ptr<neighbor_list>(
-            /*new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)*/
-            new nl::DynamicCLLNeighborList(*getParticleData(), *pimpl->context, *config)
+           // new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
+            new nl::CompactCLLNeighborList(1, *getParticleData(), *pimpl->context, *config)
     );
 }
 
@@ -436,21 +436,10 @@ void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configurat
         );
         log::debug("Using CPU/CellDecomposition neighborList");
     } else if(nl.type == "ContiguousCLL") {
-        std::uint8_t radius{1};
-        auto r = nl.cll_radius;
-        if (r <= 0 || r > std::numeric_limits<std::uint8_t>::max()) {
-            throw std::invalid_argument(
-                    fmt::format(
-                            "In configuration /CPU/NeighborList/ContiguousCLL/radius: Invalid value of {}, "
-                                    "only integer values between 1 and {} are allowed.",
-                            r, std::numeric_limits<std::uint8_t>::max()));
-        } else {
-            radius = static_cast<std::uint8_t>(r);
-        }
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::ContiguousCLLNeighborList(radius, *getParticleData(), *pimpl->context, *config)
+                new nl::ContiguousCLLNeighborList(nl.cll_radius, *getParticleData(), *pimpl->context, *config)
         );
-        log::debug("Using CPU/ContiguousCLL neighbor list with radius {}.", radius);
+        log::debug("Using CPU/ContiguousCLL neighbor list with radius {}.", nl.cll_radius);
     } else if (nl.type == "DynamicCLL") {
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
                 new nl::DynamicCLLNeighborList(*getParticleData(), *pimpl->context, *config)
@@ -461,6 +450,11 @@ void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configurat
                 new nl::AdaptiveNeighborList(*getParticleData(), *pimpl->context, *config)
         );
         log::debug("Using CPU/Adaptive neighbor list.");
+    } else if (nl.type == "CompactCLL") {
+        (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
+                new nl::CompactCLLNeighborList(nl.cll_radius, *getParticleData(), *pimpl->context, *config)
+        );
+        log::debug("Using CPU/CompactCLL neighbor list with radius {}.", nl.cll_radius);
     } else {
         throw std::invalid_argument(fmt::format(
                 R"(In configuration /CPU/NeighborList only "{}", "{}", "{}", or "{}" are valid but not {}.)",

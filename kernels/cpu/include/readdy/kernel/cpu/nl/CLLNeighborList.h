@@ -81,7 +81,28 @@ public:
 private:
     DynamicCellLinkedList dcll;
     bool _is_set_up {false};
+};
 
+class CompactCLLNeighborList : public NeighborList {
+public:
+    CompactCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
+                           const readdy::model::KernelContext &context, const util::thread::Config &config);
+
+    void set_up(const util::PerformanceNode &node) override;
+
+    void update(const util::PerformanceNode &node) override;
+
+    void clear(const util::PerformanceNode &node) override;
+
+    void updateData(data_t::update_t &&update) override;
+
+    void fill_verlet_list(const util::PerformanceNode &node);
+
+private:
+    std::uint8_t cll_radius;
+
+    CompactCellLinkedList ccll;
+    bool _is_set_up {false};
 };
 
 }

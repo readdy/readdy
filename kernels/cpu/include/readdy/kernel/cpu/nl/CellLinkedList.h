@@ -135,6 +135,39 @@ private:
     std::vector<std::size_t> _bins;
 };
 
+class CompactCellLinkedList : public CellLinkedList {
+public:
+    CompactCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+                          const util::thread::Config &config);
+
+    void update(const util::PerformanceNode &node) override;
+
+    void clear() override;
+
+    size_t *particlesBegin(std::size_t cellIndex) override;
+
+    const size_t *particlesBegin(std::size_t cellIndex) const override;
+
+    size_t *particlesEnd(std::size_t cellIndex) override;
+
+    const size_t *particlesEnd(std::size_t cellIndex) const override;
+
+    size_t nParticles(std::size_t cellIndex) const override;
+
+    const std::vector<std::size_t> &head() const;
+
+    const std::vector<std::size_t> &list() const;
+
+protected:
+    void setUpBins(const util::PerformanceNode &node) override;
+
+    void fillBins(const util::PerformanceNode &node);
+
+    std::vector<std::size_t> _head;
+    // particles, 1-indexed
+    std::vector<std::size_t> _list;
+};
+
 class DynamicCellLinkedList : public CellLinkedList {
 public:
     using Bins = std::vector<std::vector<std::size_t>>;
