@@ -158,6 +158,18 @@ void CellDecompositionNeighborList::updateData(data_type::DataUpdate &&update) {
     _data.get().update(std::forward<data_type::DataUpdate>(update));
 }
 
+bool CellDecompositionNeighborList::is_adaptive() const {
+    return false;
+}
+
+NeighborList::const_iterator CellDecompositionNeighborList::cbegin() const {
+    return NeighborListIterator{_data.get().neighbors().begin()};
+}
+
+NeighborList::const_iterator CellDecompositionNeighborList::cend() const {
+    return NeighborListIterator{_data.get().neighbors().end()};
+}
+
 
 }
 }

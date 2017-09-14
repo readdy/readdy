@@ -150,7 +150,9 @@ NLDataContainer::NeighborList &NLDataContainer::neighbors() {
 }
 
 NLDataContainer::NLDataContainer(const model::KernelContext &context, const util::thread::Config &threadConfig)
-        : DataContainer(context, threadConfig) {}
+        : DataContainer(context, threadConfig), _neighbors{} {
+    _neighbors.resize(_entries.size());
+}
 }
 }
 }

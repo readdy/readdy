@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,58 +23,13 @@
 /**
  * << detailed description >>
  *
- * @file CellDecompositionNeighborList.h
+ * @file NoNeighborList.h
  * @brief << brief description >>
  * @author clonker
- * @date 01.09.17
+ * @date 15.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <readdy/kernel/cpu/util/config.h>
-
-#include "NeighborList.h"
-#include "CellContainer.h"
-#include "SubCell.h"
-
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace nl {
-
-class CellDecompositionNeighborList : public NeighborList {
-public:
-
-    CellDecompositionNeighborList(data_type &data, const readdy::model::KernelContext &context,
-                                  const readdy::util::thread::Config &config);
-
-    bool is_adaptive() const override;
-
-    void set_up(const util::PerformanceNode &node) override;
-
-    void update(const util::PerformanceNode &node) override;
-
-    void clear(const util::PerformanceNode &node) override;
-
-    void updateData(data_type::DataUpdate &&update) override;
-
-    void fill_container();
-
-    void fill_verlet_list();
-
-    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell);
-
-    virtual const_iterator cbegin() const override;
-
-    virtual const_iterator cend() const override;
-
-private:
-    CellContainer _cell_container;
-    bool _is_set_up {false};
-};
-
-}
-}
-}
-}
+// todo

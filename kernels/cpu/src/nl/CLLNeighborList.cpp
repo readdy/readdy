@@ -137,6 +137,18 @@ void ContiguousCLLNeighborList::updateData(data_type::DataUpdate &&update) {
     _data.get().update(std::forward<data_type::DataUpdate>(update));
 }
 
+bool ContiguousCLLNeighborList::is_adaptive() const {
+    return false;
+}
+
+NeighborList::const_iterator ContiguousCLLNeighborList::cbegin() const {
+    return NeighborListIterator{_data.get().neighbors().begin()};
+}
+
+NeighborList::const_iterator ContiguousCLLNeighborList::cend() const {
+    return NeighborListIterator{_data.get().neighbors().end()};
+}
+
 
 DynamicCLLNeighborList::DynamicCLLNeighborList(data_type &data,
                                                const readdy::model::KernelContext &context,
@@ -236,6 +248,18 @@ void DynamicCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
         executables.push_back(executor.pack(worker, it, cix.size()));
         executor.execute_and_wait(std::move(executables));
     }
+}
+
+bool DynamicCLLNeighborList::is_adaptive() const {
+    return false;
+}
+
+NeighborList::const_iterator DynamicCLLNeighborList::cbegin() const {
+    return NeighborListIterator{_data.get().neighbors().begin()};
+}
+
+NeighborList::const_iterator DynamicCLLNeighborList::cend() const {
+    return NeighborListIterator{_data.get().neighbors().end()};
 }
 
 CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, data_type &data,
@@ -343,6 +367,18 @@ void CompactCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
         executables.push_back(executor.pack(worker, it, cix.size()));
         executor.execute_and_wait(std::move(executables));
     }
+}
+
+bool CompactCLLNeighborList::is_adaptive() const {
+    return false;
+}
+
+NeighborList::const_iterator CompactCLLNeighborList::cbegin() const {
+    return NeighborListIterator{_data.get().neighbors().begin()};
+}
+
+NeighborList::const_iterator CompactCLLNeighborList::cend() const {
+    return NeighborListIterator{_data.get().neighbors().end()};
 }
 
 }

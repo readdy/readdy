@@ -87,7 +87,6 @@ protected:
 
     scalar _skin {0};
     scalar _max_cutoff {0};
-    scalar _max_cutoff_skin_squared {0};
     std::uint8_t _radius;
 
     Vec3 _cellSize {0, 0, 0};

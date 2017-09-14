@@ -74,7 +74,8 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
             //
             scalar mySecondOrderEnergy = 0.;
             /*if(!pot2.empty()) */{
-                for (const auto neighbor : *neighbors_it) {
+                const auto &bounds = *neighbors_it;
+                for (auto neighbor : bounds) {
                     auto &neighborEntry = data.entry_at(neighbor);
                     auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
                     if (potit != pot2.end()) {
@@ -134,11 +135,10 @@ struct CPUStateModel::Impl {
 
     Impl(readdy::model::KernelContext *context, top_action_factory const *const taf,
          readdy::util::thread::Config const *const config)
-            : particleData(std::make_unique<CPUStateModel::data_type>(data::DefaultDataContainer(*context, *config))), topologyActionFactory(taf) {
-        Impl::context = context;
-    }
+            : particleData(std::make_unique<data_type>(data::DefaultDataContainer(*context, *config))),
+              topologyActionFactory(taf), context(context) {}
 
-    std::unique_ptr<CPUStateModel::data_type> particleData;
+    std::unique_ptr<data_type> particleData;
 };
 
 void CPUStateModel::calculateForces() {

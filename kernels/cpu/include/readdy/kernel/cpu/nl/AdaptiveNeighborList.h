@@ -48,10 +48,11 @@ public:
     using skin_size_t = scalar;
 
     AdaptiveNeighborList(data_type &data, const readdy::model::KernelContext &context,
-                         const readdy::util::thread::Config &config, bool adaptive=true,
-                         bool hilbert_sort = true);
+                         const readdy::util::thread::Config &config, bool hilbert_sort = true);
 
     ~AdaptiveNeighborList() = default;
+
+    bool is_adaptive() const override;
 
     void set_up(const util::PerformanceNode &node) override;
 
@@ -67,10 +68,6 @@ public:
 
     const CellContainer& cell_container() const;
 
-    bool& adaptive();
-
-    const bool& adaptive() const;
-
     bool& performs_hilbert_sort();
 
     const bool& performs_hilbert_sort() const;
@@ -79,11 +76,11 @@ public:
 
     void updateData(data_type::DataUpdate &&update) override;
 
-    void displace(data_type::iterator iter, const Vec3 &vec);
+    virtual const neighbors_type &neighbors_of(const data_type::size_type entry) const override;
 
-    void displace(data_type::Entries::value_type &entry, const Vec3 &delta);
+    virtual const_iterator cbegin() const override;
 
-    void displace(data_type::size_type entry, const Vec3 &delta);
+    virtual const_iterator cend() const override;
 
 private:
 
@@ -101,7 +98,6 @@ private:
     CellContainer _cell_container;
 
     bool _hilbert_sort {true};
-    bool _adaptive {true};
     bool _is_set_up {false};
 };
 

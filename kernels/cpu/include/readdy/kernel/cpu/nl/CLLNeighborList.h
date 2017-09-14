@@ -45,6 +45,8 @@ public:
     ContiguousCLLNeighborList(std::uint8_t cll_radius, NeighborList::data_type &data,
                               const readdy::model::KernelContext &context, const readdy::util::thread::Config &config);
 
+    bool is_adaptive() const override;
+
     void set_up(const util::PerformanceNode &node) override;
 
     void fill_verlet_list(const util::PerformanceNode &node);
@@ -54,6 +56,10 @@ public:
     void clear(const util::PerformanceNode &node) override;
 
     void updateData(data_type::DataUpdate &&update) override;
+
+    virtual const_iterator cbegin() const override;
+
+    virtual const_iterator cend() const override;
 
 private:
     std::uint8_t cll_radius;
@@ -67,6 +73,8 @@ public:
     DynamicCLLNeighborList(NeighborList::data_type &data, const readdy::model::KernelContext &context,
                            const readdy::util::thread::Config &config);
 
+    bool is_adaptive() const override;
+
     void set_up(const util::PerformanceNode &node) override;
 
     void fill_verlet_list(const util::PerformanceNode &node);
@@ -76,6 +84,10 @@ public:
     void clear(const util::PerformanceNode &node) override;
 
     void updateData(data_type::DataUpdate &&update) override;
+
+    virtual const_iterator cbegin() const override;
+
+    virtual const_iterator cend() const override;
 
 private:
     DynamicCellLinkedList dcll;
@@ -87,6 +99,8 @@ public:
     CompactCLLNeighborList(std::uint8_t cll_radius, NeighborList::data_type &data,
                            const readdy::model::KernelContext &context, const util::thread::Config &config);
 
+    bool is_adaptive() const override;
+
     void set_up(const util::PerformanceNode &node) override;
 
     void update(const util::PerformanceNode &node) override;
@@ -96,6 +110,10 @@ public:
     void updateData(data_type::DataUpdate &&update) override;
 
     void fill_verlet_list(const util::PerformanceNode &node);
+
+    virtual const_iterator cbegin() const override;
+
+    virtual const_iterator cend() const override;
 
 private:
     std::uint8_t cll_radius;

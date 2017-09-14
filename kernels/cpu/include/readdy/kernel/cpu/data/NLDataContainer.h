@@ -104,7 +104,7 @@ public:
     const NeighborList &neighbors() const;
 
 private:
-    NeighborList _neighbors;
+    NeighborList _neighbors {};
 };
 
 }

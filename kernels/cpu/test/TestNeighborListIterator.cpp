@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,58 +23,44 @@
 /**
  * << detailed description >>
  *
- * @file CellDecompositionNeighborList.h
+ * @file TestNeighborListIterator.cpp
  * @brief << brief description >>
  * @author clonker
- * @date 01.09.17
+ * @date 15.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
+#include "gtest/gtest.h"
 
-#include <readdy/kernel/cpu/util/config.h>
+#include "readdy/common/common.h"
+#include "readdy/kernel/cpu/nl/NeighborListIterator.h"
 
-#include "NeighborList.h"
-#include "CellContainer.h"
-#include "SubCell.h"
+namespace {
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace nl {
+TEST(TestNeighborListIterator, Adaptive) {
+    using namespace readdy;
+    std::vector<std::vector<std::size_t>> adaptive_data;
+    adaptive_data.emplace_back();
+    adaptive_data.emplace_back(std::vector<std::size_t>{1_z, 2_z, 3_z});
+    adaptive_data.emplace_back(std::vector<std::size_t>{3_z, 4_z});
+    adaptive_data.emplace_back();
+    adaptive_data.emplace_back(std::vector<std::size_t>{5_z});
 
-class CellDecompositionNeighborList : public NeighborList {
-public:
+    kernel::cpu::nl::NeighborListIterator itBegins(adaptive_data.begin());
+    kernel::cpu::nl::NeighborListIterator itEnds (adaptive_data.end());
 
-    CellDecompositionNeighborList(data_type &data, const readdy::model::KernelContext &context,
-                                  const readdy::util::thread::Config &config);
+    auto it_proper = adaptive_data.begin();
 
-    bool is_adaptive() const override;
+    for(auto it = itBegins; it != itEnds; ++it, ++it_proper) {
+        auto pit_proper = it_proper->begin();
+        for(auto pit = it->begin(); pit != it->end(); ++pit, ++pit_proper) {
+            EXPECT_EQ(*pit_proper, *pit);
+        }
+    }
+}
 
-    void set_up(const util::PerformanceNode &node) override;
-
-    void update(const util::PerformanceNode &node) override;
-
-    void clear(const util::PerformanceNode &node) override;
-
-    void updateData(data_type::DataUpdate &&update) override;
-
-    void fill_container();
-
-    void fill_verlet_list();
-
-    void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell);
-
-    virtual const_iterator cbegin() const override;
-
-    virtual const_iterator cend() const override;
-
-private:
-    CellContainer _cell_container;
-    bool _is_set_up {false};
-};
+TEST(TestNeighborListIterator, Static) {
 
 }
-}
-}
+
 }

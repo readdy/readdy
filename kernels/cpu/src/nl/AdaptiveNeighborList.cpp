@@ -39,9 +39,9 @@ namespace cpu {
 namespace nl {
 
 AdaptiveNeighborList::AdaptiveNeighborList(data_type &data, const readdy::model::KernelContext &context,
-                           const readdy::util::thread::Config &config, bool adaptive, bool hilbert_sort)
+                           const readdy::util::thread::Config &config, bool hilbert_sort)
         : NeighborList(data, context, config), _cell_container(data, context, config),
-          _hilbert_sort(hilbert_sort), _adaptive(adaptive) {
+          _hilbert_sort(hilbert_sort) {
 }
 
 const CellContainer &AdaptiveNeighborList::cell_container() const {
@@ -77,14 +77,12 @@ void AdaptiveNeighborList::update(const util::PerformanceNode &node) {
         set_up(node.subnode("set_up"));
     } else {
         if (_max_cutoff > 0) {
-            bool too_far = _adaptive ? !_cell_container.update_sub_cell_displacements_and_mark_dirty(_max_cutoff, _skin)
-                                     : false;
-            bool too_many = _adaptive ? _cell_container.n_dirty_macro_cells() >=
-                                        .9 * _cell_container.n_sub_cells_total() : false;
+            bool too_far = !_cell_container.update_sub_cell_displacements_and_mark_dirty(_max_cutoff, _skin);
+            bool too_many = _cell_container.n_dirty_macro_cells() >= .9 * _cell_container.n_sub_cells_total();
             log::trace("updating {}% ({} of {})",
                        100. * _cell_container.n_dirty_macro_cells() / _cell_container.n_sub_cells_total(),
                        _cell_container.n_dirty_macro_cells(), _cell_container.n_sub_cells_total());
-            if (_adaptive && !too_far && !too_many) {
+            if (!too_far && !too_many) {
                 _cell_container.update_dirty_cells();
                 handle_dirty_cells();
             } else {
@@ -203,14 +201,6 @@ void AdaptiveNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &
     }
 }
 
-bool &AdaptiveNeighborList::adaptive() {
-    return _adaptive;
-}
-
-const bool &AdaptiveNeighborList::adaptive() const {
-    return _adaptive;
-}
-
 bool &AdaptiveNeighborList::performs_hilbert_sort() {
     return _hilbert_sort;
 }
@@ -228,18 +218,6 @@ void AdaptiveNeighborList::sort_by_hilbert_curve() {
     }
     fill_container();
     fill_verlet_list();
-}
-
-void AdaptiveNeighborList::displace(data_type::iterator iter, const Vec3 &vec) {
-    _data.get().displace(*iter, vec);
-}
-
-void AdaptiveNeighborList::displace(data_type::Entries::value_type &entry, const Vec3 &delta) {
-    _data.get().displace(entry, delta);
-}
-
-void AdaptiveNeighborList::displace(data_type::size_type entry, const Vec3 &delta) {
-    _data.get().displace(_data.get().entry_at(entry), delta);
 }
 
 void AdaptiveNeighborList::updateData(data_type::DataUpdate &&update) {
@@ -289,6 +267,27 @@ void AdaptiveNeighborList::handle_dirty_cells() {
         }
     });
     _cell_container.unset_dirty();
+}
+
+const NeighborList::neighbors_type &
+AdaptiveNeighborList::neighbors_of(const data_type::size_type entry) const {
+    const static neighbors_type no_neighbors{};
+    if (_max_cutoff > 0) {
+        return _data.get().neighbors_at(entry);
+    }
+    return no_neighbors;
+}
+
+bool AdaptiveNeighborList::is_adaptive() const {
+    return true;
+}
+
+NeighborList::const_iterator AdaptiveNeighborList::cbegin() const {
+    return NeighborListIterator{_data.get().neighbors().begin()};
+}
+
+NeighborList::const_iterator AdaptiveNeighborList::cend() const {
+    return NeighborListIterator{_data.get().neighbors().end()};
 }
 
 }

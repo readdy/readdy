@@ -444,7 +444,6 @@ void CompactCellLinkedList::fillBins(const util::PerformanceNode &node) {
                     auto currentHead = atomic.load();
                     while(!atomic.compare_exchange_weak(currentHead, pidx)) {}
                     list[pidx] = currentHead;
-                    //*head[cix] = pidx;
                 }
                 ++pidx;
                 ++it;

@@ -35,6 +35,7 @@
 #include <readdy/common/common.h>
 #include <readdy/common/Timer.h>
 #include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include "NeighborListIterator.h"
 
 namespace readdy {
 namespace kernel {
@@ -45,13 +46,24 @@ class NeighborList {
 public:
     using data_type = readdy::kernel::cpu::data::NLDataContainer;
     using neighbors_type = data_type::Neighbors;
-    using iterator = data_type::neighbors_iterator;
-    using const_iterator = data_type::neighbors_const_iterator;
+    using const_iterator = NeighborListIterator;
 
     NeighborList(data_type &data, const readdy::model::KernelContext &context,
                  const readdy::util::thread::Config &config) : _data(data), _context(context), _config(config) {};
 
     virtual ~NeighborList() = default;
+
+    const_iterator begin() const {
+        return cbegin();
+    };
+
+    virtual const_iterator cbegin() const = 0;
+
+    const_iterator end() const {
+        return cend();
+    }
+
+    virtual const_iterator cend() const = 0;
 
     virtual void set_up(const util::PerformanceNode &node) = 0;
 
@@ -61,7 +73,9 @@ public:
 
     virtual void updateData(data_type::DataUpdate &&update) = 0;
 
-    const neighbors_type &neighbors_of(const data_type::size_type entry) const {
+    virtual bool is_adaptive() const = 0;
+
+    virtual const neighbors_type &neighbors_of(data_type::size_type entry) const {
         const static neighbors_type no_neighbors{};
         if (_max_cutoff > 0) {
             return _data.get().neighbors_at(entry);
@@ -75,22 +89,6 @@ public:
 
     const scalar &skin() const {
         return _skin;
-    };
-
-    iterator begin() {
-        return _data.get().neighbors().begin();
-    };
-
-    iterator end() {
-        return _data.get().neighbors().end();
-    };
-
-    const_iterator cbegin() const {
-        return _data.get().neighbors().cbegin();
-    };
-
-    const_iterator cend() const {
-        return _data.get().neighbors().cend();
     };
 
 protected:

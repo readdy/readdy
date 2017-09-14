@@ -82,7 +82,8 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
                 }
             }
             // order 2
-            for (const auto idx_neighbor : *it_nl) {
+            for(auto nit = it_nl->begin(); nit != it_nl->end(); ++nit) {
+                auto idx_neighbor = *nit;
                 if (index > idx_neighbor) continue;
                 const auto &neighbor = data.entry_at(idx_neighbor);
                 const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,

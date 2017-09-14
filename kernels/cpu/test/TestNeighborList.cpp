@@ -94,7 +94,7 @@ auto isIdPairInList = [](nl_t *pairs, data_t &data, std::size_t id1, std::size_t
 auto getNumberPairs = [](nl_t &pairs) {
     using val_t = decltype(*pairs.begin());
     return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, val_t &x) {
-        return acc + x.size();
+        return acc + (x.end() - x.begin());
     });
 };
 
@@ -577,7 +577,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
             data,
             kernel->getKernelContext(),
             kernel->threadConfig(),
-            true, false
+            false
     };
     neighbor_list.skin() = 2.5;
     neighbor_list.set_up({});
