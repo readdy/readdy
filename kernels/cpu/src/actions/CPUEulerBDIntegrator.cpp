@@ -30,6 +30,7 @@
  */
 
 #include <readdy/kernel/cpu/actions/CPUEulerBDIntegrator.h>
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -52,7 +53,7 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
         const auto &fixPos = context.fixPositionFun();
         const auto kbt = context.kBT();
         for (auto it = entry_begin; it != entry_end; ++it) {
-            if(!it->is_deactivated()) {
+            if(!it->deactivated) {
                 const scalar D = context.particle_types().diffusion_constant_of(it->type);
                 const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);
                 const auto deterministicDisplacement = it->force * dt * D / kbt;

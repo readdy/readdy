@@ -38,7 +38,7 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-CellLinkedList::CellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+CellLinkedList::CellLinkedList(data_type &data, const readdy::model::KernelContext &context,
                                const readdy::util::thread::Config &config)
         : _data(data), _context(context), _config(config) {}
 
@@ -169,7 +169,7 @@ std::size_t CellLinkedList::nNeighbors(std::size_t cellIndex) const {
 }
 
 
-ContiguousCellLinkedList::ContiguousCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+ContiguousCellLinkedList::ContiguousCellLinkedList(data_type &data, const readdy::model::KernelContext &context,
                                                    const util::thread::Config &config)
         : CellLinkedList(data, context, config) {}
 
@@ -270,7 +270,7 @@ std::size_t ContiguousCellLinkedList::nParticles(std::size_t cellIndex) const {
 }
 
 
-DynamicCellLinkedList::DynamicCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+DynamicCellLinkedList::DynamicCellLinkedList(data_type &data, const readdy::model::KernelContext &context,
                                              const util::thread::Config &config)
         : CellLinkedList(data, context, config) {}
 
@@ -346,7 +346,7 @@ std::size_t DynamicCellLinkedList::nParticles(std::size_t cellIndex) const {
 }
 
 
-CompactCellLinkedList::CompactCellLinkedList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+CompactCellLinkedList::CompactCellLinkedList(data_type &data, const readdy::model::KernelContext &context,
                                              const util::thread::Config &config) : CellLinkedList(data, context,
                                                                                                   config) {}
 

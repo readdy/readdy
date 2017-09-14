@@ -67,7 +67,7 @@ void SubCell::update_displacements() {
     } else {
         for (const auto particle_index : _particles_list) {
             const auto &entry = data().entry_at(particle_index);
-            assert(!entry.is_deactivated());
+            assert(!entry.deactivated);
             if (entry.displacement > _maximal_displacements[0]) {
                 _maximal_displacements[0] = entry.displacement;
             } else if (entry.displacement > _maximal_displacements[1]) {

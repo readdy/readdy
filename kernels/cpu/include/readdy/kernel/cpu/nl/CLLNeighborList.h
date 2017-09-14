@@ -33,7 +33,6 @@
 #pragma once
 
 #include "NeighborList.h"
-#include "../model/CPUParticleData.h"
 #include "CellLinkedList.h"
 
 namespace readdy {
@@ -43,7 +42,7 @@ namespace nl {
 
 class ContiguousCLLNeighborList : public NeighborList {
 public:
-    ContiguousCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
+    ContiguousCLLNeighborList(std::uint8_t cll_radius, NeighborList::data_type &data,
                               const readdy::model::KernelContext &context, const readdy::util::thread::Config &config);
 
     void set_up(const util::PerformanceNode &node) override;
@@ -54,7 +53,7 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_t::update_t &&update) override;
+    void updateData(data_type::DataUpdate &&update) override;
 
 private:
     std::uint8_t cll_radius;
@@ -65,7 +64,7 @@ private:
 
 class DynamicCLLNeighborList : public NeighborList {
 public:
-    DynamicCLLNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+    DynamicCLLNeighborList(NeighborList::data_type &data, const readdy::model::KernelContext &context,
                            const readdy::util::thread::Config &config);
 
     void set_up(const util::PerformanceNode &node) override;
@@ -76,7 +75,7 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_t::update_t &&update) override;
+    void updateData(data_type::DataUpdate &&update) override;
 
 private:
     DynamicCellLinkedList dcll;
@@ -85,7 +84,7 @@ private:
 
 class CompactCLLNeighborList : public NeighborList {
 public:
-    CompactCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
+    CompactCLLNeighborList(std::uint8_t cll_radius, NeighborList::data_type &data,
                            const readdy::model::KernelContext &context, const util::thread::Config &config);
 
     void set_up(const util::PerformanceNode &node) override;
@@ -94,7 +93,7 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_t::update_t &&update) override;
+    void updateData(data_type::DataUpdate &&update) override;
 
     void fill_verlet_list(const util::PerformanceNode &node);
 

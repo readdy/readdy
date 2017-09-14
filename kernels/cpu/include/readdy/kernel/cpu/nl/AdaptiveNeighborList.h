@@ -32,6 +32,8 @@
 
 #include <readdy/kernel/cpu/util/config.h>
 
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
+
 #include "CellContainer.h"
 #include "SubCell.h"
 #include "NeighborList.h"
@@ -45,7 +47,7 @@ class AdaptiveNeighborList : public NeighborList{
 public:
     using skin_size_t = scalar;
 
-    AdaptiveNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+    AdaptiveNeighborList(data_type &data, const readdy::model::KernelContext &context,
                          const readdy::util::thread::Config &config, bool adaptive=true,
                          bool hilbert_sort = true);
 
@@ -59,7 +61,7 @@ public:
 
     void clear_cells();
 
-    const model::CPUParticleData& data() const;
+    const data_type& data() const;
 
     const readdy::util::thread::Config& config() const;
 
@@ -75,13 +77,13 @@ public:
 
     void sort_by_hilbert_curve();
 
-    void updateData(data_t::update_t &&update) override;
+    void updateData(data_type::DataUpdate &&update) override;
 
-    void displace(data_t::iterator iter, const Vec3 &vec);
+    void displace(data_type::iterator iter, const Vec3 &vec);
 
-    void displace(data_t::Entry &entry, const Vec3 &delta);
+    void displace(data_type::Entries::value_type &entry, const Vec3 &delta);
 
-    void displace(data_t::index_t entry, const Vec3 &delta);
+    void displace(data_type::size_type entry, const Vec3 &delta);
 
 private:
 

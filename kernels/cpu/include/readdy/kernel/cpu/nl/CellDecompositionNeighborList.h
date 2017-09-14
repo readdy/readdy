@@ -46,7 +46,7 @@ namespace nl {
 class CellDecompositionNeighborList : public NeighborList {
 public:
 
-    CellDecompositionNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+    CellDecompositionNeighborList(data_type &data, const readdy::model::KernelContext &context,
                                   const readdy::util::thread::Config &config);
 
     void set_up(const util::PerformanceNode &node) override;
@@ -55,7 +55,7 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_t::update_t &&update) override;
+    void updateData(data_type::DataUpdate &&update) override;
 
     void fill_container();
 

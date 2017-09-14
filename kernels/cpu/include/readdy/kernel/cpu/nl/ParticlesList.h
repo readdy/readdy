@@ -33,7 +33,7 @@
 #pragma once
 
 #include <vector>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
+#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -42,7 +42,7 @@ namespace nl {
 
 class ParticlesList {
 public:
-    using particle_index = model::CPUParticleData::index_t;
+    using particle_index = data::DefaultDataContainer::size_type;
     using particle_indices = std::vector<particle_index>;
     using mutex_type = std::mutex;
     using particles_lock = std::unique_lock<mutex_type>;

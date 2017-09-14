@@ -37,7 +37,7 @@ namespace cpu {
 namespace nl {
 
 
-ContiguousCLLNeighborList::ContiguousCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
+ContiguousCLLNeighborList::ContiguousCLLNeighborList(std::uint8_t cll_radius, data_type &data,
                                                      const readdy::model::KernelContext &context,
                                                      const readdy::util::thread::Config &config)
         : NeighborList(data, context, config), ccll(data, context, config), cll_radius(cll_radius) {}
@@ -127,18 +127,18 @@ void ContiguousCLLNeighborList::clear(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
         ccll.clear();
-        for (auto &neighbors : _data.get().neighbors) {
+        for (auto &neighbors : _data.get().neighbors()) {
             neighbors.clear();
         }
     }
 }
 
-void ContiguousCLLNeighborList::updateData(model::CPUParticleData::update_t &&update) {
-    _data.get().update(std::forward<model::CPUParticleData::update_t>(update));
+void ContiguousCLLNeighborList::updateData(data_type::DataUpdate &&update) {
+    _data.get().update(std::forward<data_type::DataUpdate>(update));
 }
 
 
-DynamicCLLNeighborList::DynamicCLLNeighborList(model::CPUParticleData &data,
+DynamicCLLNeighborList::DynamicCLLNeighborList(data_type &data,
                                                const readdy::model::KernelContext &context,
                                                const readdy::util::thread::Config &config)
         : NeighborList(data, context, config), dcll(data, context, config) {}
@@ -167,14 +167,14 @@ void DynamicCLLNeighborList::clear(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
         dcll.clear();
-        for (auto &neighbors : _data.get().neighbors) {
+        for (auto &neighbors : _data.get().neighbors()) {
             neighbors.clear();
         }
     }
 }
 
-void DynamicCLLNeighborList::updateData(model::CPUParticleData::update_t &&update) {
-    _data.get().update(std::forward<model::CPUParticleData::update_t>(update));
+void DynamicCLLNeighborList::updateData(data_type::DataUpdate &&update) {
+    _data.get().update(std::forward<data_type::DataUpdate>(update));
 }
 
 void DynamicCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {
@@ -238,7 +238,7 @@ void DynamicCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node)
     }
 }
 
-CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, model::CPUParticleData &data,
+CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, data_type &data,
                                                const readdy::model::KernelContext &context,
                                                const util::thread::Config &config)
         : NeighborList(data, context, config), ccll(data, context, config), cll_radius(cll_radius) {}
@@ -268,8 +268,8 @@ void CompactCLLNeighborList::clear(const util::PerformanceNode &node) {
     ccll.clear();
 }
 
-void CompactCLLNeighborList::updateData(model::CPUParticleData::update_t &&update) {
-    _data.get().update(std::forward<model::CPUParticleData::update_t>(update));
+void CompactCLLNeighborList::updateData(data_type::DataUpdate &&update) {
+    _data.get().update(std::forward<data_type::DataUpdate>(update));
 }
 
 void CompactCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {

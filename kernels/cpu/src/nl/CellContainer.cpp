@@ -91,7 +91,7 @@ const CellContainer::cell_index &CellContainer::contiguous_index() const {
     return _contiguous_index;
 }
 
-CellContainer::CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+CellContainer::CellContainer(DataContainer &data, const readdy::model::KernelContext &context,
                              const readdy::util::thread::Config &config)
         : _data(data), _context(context), _config(config), _size(context.boxSize()),
           _root_size(context.boxSize()) {}
@@ -168,7 +168,7 @@ void CellContainer::subdivide(const scalar desired_cell_width) {
     }
 }
 
-const model::CPUParticleData &CellContainer::data() const {
+const CellContainer::DataContainer &CellContainer::data() const {
     return _data;
 }
 
@@ -254,8 +254,8 @@ const CellContainer *const CellContainer::super_cell() const {
 
 void CellContainer::insert_particle(const CellContainer::particle_index index, bool mark_dirty) const {
     const auto &entry = data().entry_at(index);
-    if (!entry.is_deactivated()) {
-        auto cell = leaf_cell_for_position(entry.position());
+    if (!entry.deactivated) {
+        auto cell = leaf_cell_for_position(entry.pos);
         if (cell != nullptr) {
             cell->insert_particle(index);
             if(mark_dirty) {
@@ -269,8 +269,8 @@ void CellContainer::insert_particle(const CellContainer::particle_index index, b
 
 void CellContainer::insert_particle(const CellContainer::particle_index index, bool mark_dirty) {
     const auto &entry = data().entry_at(index);
-    if (!entry.is_deactivated()) {
-        auto cell = leaf_cell_for_position(entry.position());
+    if (!entry.deactivated) {
+        auto cell = leaf_cell_for_position(entry.pos);
         if (cell != nullptr) {
             cell->insert_particle(index);
             if(mark_dirty) {
@@ -352,7 +352,7 @@ void CellContainer::update_dirty_cells() {
                 for (const auto p_idx : dirty_cell) {
                     auto &entry = _data.entry_at(p_idx);
                     // entry.displacement = 0;
-                    auto cell = container.leaf_cell_for_position(entry.position());
+                    auto cell = container.leaf_cell_for_position(entry.pos);
                     if (cell != nullptr) {
                         cell->insert_particle(p_idx);
                     }
@@ -415,7 +415,7 @@ void CellContainer::execute_for_each_sub_cell(const std::function<void(CellConta
     executor.execute_and_wait(std::move(executables));
 }
 
-model::CPUParticleData &CellContainer::data() {
+CellContainer::DataContainer &CellContainer::data() {
     return _data;
 }
 

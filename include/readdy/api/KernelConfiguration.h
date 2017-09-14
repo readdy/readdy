@@ -62,13 +62,21 @@ struct Configuration {
 void to_json(json &j, const Configuration &conf);
 void from_json(const json &j, Configuration &conf);
 
-struct CPUConfiguration {
-    Configuration cpu {};
-};
-void to_json(json &j, const CPUConfiguration &conf);
-void from_json(const json &j, CPUConfiguration &conf);
-
 NAMESPACE_END(cpu)
+
+NAMESPACE_BEGIN(scpu)
+struct Configuration {
+
+};
+NAMESPACE_END(scpu)
+
+struct Configuration {
+    scpu::Configuration scpu;
+    cpu::Configuration cpu;
+};
+void to_json(json &j, const Configuration &conf);
+void from_json(const json &j, Configuration &conf);
+
 
 NAMESPACE_END(conf)
 NAMESPACE_END(readdy)

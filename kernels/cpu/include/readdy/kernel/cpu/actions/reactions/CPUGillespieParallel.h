@@ -81,7 +81,7 @@ protected:
     unsigned int otherAxis1, otherAxis2;
 
     struct SlicedBox {
-        using particle_indices_t = std::vector<data_t::index_t>;
+        using particle_indices_t = std::vector<data_t::size_type>;
         particle_indices_t particleIndices{};
         unsigned int id = 0;
         Vec3 lowerLeftVertex, upperRightVertex;
@@ -127,8 +127,8 @@ protected:
      */
     virtual void handleBoxReactions();
 
-    void findProblematicParticles(data_t::index_t entry, const SlicedBox &box, ctx_t ctx,
-                                  const data_t& data, neighbor_list * nl, std::set<data_t::index_t> &problematic,
+    void findProblematicParticles(data_t::size_type entry, const SlicedBox &box, ctx_t ctx,
+                                  const data_t& data, neighbor_list * nl, std::set<data_t::size_type> &problematic,
                                   const readdy::model::KernelContext::dist_squared_fun&) const;
 
 };

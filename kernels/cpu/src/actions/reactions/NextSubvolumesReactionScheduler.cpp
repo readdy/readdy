@@ -61,7 +61,7 @@ struct CPUNextSubvolumes::ReactionEvent {
 };
 
 struct CPUNextSubvolumes::GridCell {
-    using particle_index = data_t::index_t;
+    using particle_index = data_t::size_type;
 
     cell_index_t i, j, k, id;
     std::vector<const GridCell *> neighbors;
@@ -127,8 +127,8 @@ void CPUNextSubvolumes::assignParticles() {
 
     std::size_t idx = 0;
     for (auto& e : *data) {
-        if(!e.is_deactivated()) {
-            auto box = getCell(e.position());
+        if(!e.deactivated) {
+            auto box = getCell(e.pos);
             if (box) {
                 box->particles[e.type].push_back(idx);
                 ++(box->typeCounts[e.type]);

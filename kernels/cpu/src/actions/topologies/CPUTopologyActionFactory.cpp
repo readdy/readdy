@@ -30,11 +30,11 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/model/topologies/CPUTopologyActionFactory.h>
-#include <readdy/kernel/cpu/model/topologies/CPUTopologyActions.h>
+#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActionFactory.h>
+#include <readdy/kernel/cpu/actions/topologies/CPUTopologyActions.h>
 
 namespace top = readdy::model::top;
-namespace ctop = readdy::kernel::cpu::model::top;
+namespace ctop = readdy::kernel::cpu::actions::top;
 
 ctop::CPUTopologyActionFactory::CPUTopologyActionFactory(
         readdy::kernel::cpu::CPUKernel *const kernel) : kernel(kernel) {
@@ -73,7 +73,7 @@ ctop::CPUTopologyActionFactory::createChangeParticleType(
 }
 
 top::reactions::actions::TopologyReactionActionFactory::operation_ref
-readdy::kernel::cpu::model::top::CPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
+readdy::kernel::cpu::actions::top::CPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
                                                                                     const std::string &type_to) const {
     return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(
             topology, kernel->getKernelContext().topology_registry().id_of(type_to)

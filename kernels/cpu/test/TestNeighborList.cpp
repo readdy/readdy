@@ -47,7 +47,7 @@ namespace m = readdy::model;
 
 namespace {
 
-using data_t = cpu::model::CPUParticleData;
+using data_t = cpu::CPUStateModel::data_type;
 using nl_t = cpu::cell_decomposition_neighbor_list;
 
 struct TestNeighborList : ::testing::Test {
@@ -105,7 +105,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
+    data_t data {ctx, kernel->threadConfig()};
     nl_t list(data, ctx, conf);
 
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
@@ -130,7 +130,7 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.configure(false);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
+    data_t data {ctx, kernel->threadConfig()};
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
@@ -158,7 +158,7 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     ctx.boxSize() = {{4, 4, 4}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
+    data_t data {ctx, kernel->threadConfig()};
     nl_t list(data, ctx, conf);
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
@@ -457,7 +457,7 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
     }
     auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     ASSERT_EQ(data.size(), i);
-    data.hilbert_sort(.01);
+    data.hilbertSort(.01);
     ASSERT_EQ(data.getNDeactivated(), 0);
     ASSERT_EQ(data.size(), i);
 
@@ -494,20 +494,20 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
     data.removeEntry(15);
 
     ASSERT_EQ(data.getNDeactivated(), 3);
-    data.hilbert_sort(.01);
+    data.hilbertSort(.01);
     data.blanks_moved_to_front();
     ASSERT_EQ(data.getNDeactivated(), 3);
 
-    ASSERT_TRUE(data.entry_at(0).is_deactivated());
-    ASSERT_TRUE(data.entry_at(1).is_deactivated());
-    ASSERT_TRUE(data.entry_at(2).is_deactivated());
+    ASSERT_TRUE(data.entry_at(0).deactivated);
+    ASSERT_TRUE(data.entry_at(1).deactivated);
+    ASSERT_TRUE(data.entry_at(2).deactivated);
 
     ASSERT_TRUE(data.entry_at(0).id == e0 || data.entry_at(0).id == e3 || data.entry_at(0).id == e15);
     ASSERT_TRUE(data.entry_at(1).id == e0 || data.entry_at(1).id == e3 || data.entry_at(1).id == e15);
     ASSERT_TRUE(data.entry_at(2).id == e0 || data.entry_at(2).id == e3 || data.entry_at(2).id == e15);
 
     for (auto it = data.begin() + 3; it != data.end(); ++it) {
-        ASSERT_FALSE(it->is_deactivated());
+        ASSERT_FALSE(it->deactivated);
     }
 }
 
@@ -539,8 +539,8 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     for (const auto &entry_i : data) {
         std::size_t j = 0;
         for (const auto &entry_j : data) {
-            if (!entry_i.is_deactivated() && !entry_j.is_deactivated() && i != j) {
-                if (std::sqrt(d2(entry_i.position(), entry_j.position())) < .1) {
+            if (!entry_i.deactivated && !entry_j.deactivated && i != j) {
+                if (std::sqrt(d2(entry_i.pos, entry_j.pos)) < .1) {
                     const auto &neighbors = data.neighbors_at(i);
                     ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
                                                 << i << " and " << j << " should be neighbors";
@@ -587,8 +587,8 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
         for (const auto &entry_i : data) {
             std::size_t j = 0;
             for (const auto &entry_j : data) {
-                if (!entry_i.is_deactivated() && !entry_j.is_deactivated() && i != j) {
-                    if (d2(entry_i.position(), entry_j.position()) < cutoff * cutoff) {
+                if (!entry_i.deactivated && !entry_j.deactivated && i != j) {
+                    if (d2(entry_i.pos, entry_j.pos) < cutoff * cutoff) {
                         const auto &neighbors = data.neighbors_at(i);
                         ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
                                                     << i << " and " << j << " should be neighbors";
@@ -610,8 +610,8 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
             for (const auto &entry_i : data) {
                 std::size_t j = 0;
                 for (const auto &entry_j : data) {
-                    if ((!entry_i.is_deactivated()) && (!entry_j.is_deactivated()) && i != j) {
-                        if (d2(entry_i.position(), entry_j.position()) < cutoff * cutoff) {
+                    if ((!entry_i.deactivated) && (!entry_j.deactivated) && i != j) {
+                        if (d2(entry_i.pos, entry_j.pos) < cutoff * cutoff) {
                             const auto &neighbors = data.neighbors_at(i);
                             bool neighbors_of_each_other = std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end();
                             EXPECT_TRUE(neighbors_of_each_other);
@@ -638,7 +638,7 @@ TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     kernel->getKernelContext().particle_types().add("V", 0.0, 1.0);
     kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
     kernel->getKernelContext().boxSize() = {{100, 10, 10}};
-    readdy::conf::cpu::CPUConfiguration conf {};
+    readdy::conf::Configuration conf {};
     conf.cpu.neighborList.type = GetParam();
     kernel->getKernelContext().kernelConfiguration() = conf;
 
@@ -685,7 +685,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{100, 10, 10}};
 
-    readdy::conf::cpu::CPUConfiguration conf {};
+    readdy::conf::Configuration conf {};
     conf.cpu.neighborList.type = GetParam();
     kernel->getKernelContext().kernelConfiguration() = conf;
 
@@ -706,7 +706,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
                 for(auto it_i = data.begin(); it_i != data.end(); ++it_i, ++i) {
                     std::size_t j = 0;
                     for(auto it_j = data.begin(); it_j != data.end(); ++it_j, ++j) {
-                        if(it_i != it_j && std::sqrt(d2(it_i->position(), it_j->position())) < 2.0) {
+                        if(it_i != it_j && std::sqrt(d2(it_i->pos, it_j->pos)) < 2.0) {
                             auto neigh_i = neighbor_list->neighbors_of(i);
                             auto neigh_j = neighbor_list->neighbors_of(j);
                             if(std::find(neigh_i.begin(), neigh_i.end(), j) == neigh_i.end()) {
@@ -724,10 +724,10 @@ TEST_P(TestNeighborListImpl, Diffusion) {
     auto connection = kernel->connectObservable(obs.get());
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
-        conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
-        conf.withSkinSize(.1);
-        conf.configureAndRun(100, .01);
+        auto sc = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
+        sc.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
+        sc.withSkinSize(.1);
+        sc.configureAndRun(100, .01);
     }
 }
 

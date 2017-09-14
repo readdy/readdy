@@ -38,7 +38,7 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-AdaptiveNeighborList::AdaptiveNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+AdaptiveNeighborList::AdaptiveNeighborList(data_type &data, const readdy::model::KernelContext &context,
                            const readdy::util::thread::Config &config, bool adaptive, bool hilbert_sort)
         : NeighborList(data, context, config), _cell_container(data, context, config),
           _hilbert_sort(hilbert_sort), _adaptive(adaptive) {
@@ -58,7 +58,7 @@ void AdaptiveNeighborList::set_up(const util::PerformanceNode &node) {
         _cell_container.refine_uniformly();
         _cell_container.setup_uniform_neighbors();
         if (_hilbert_sort) {
-            _data.get().hilbert_sort(_max_cutoff + _skin);
+            _data.get().hilbertSort(_max_cutoff + _skin);
         }
         {
             auto t = node.subnode("fill_container").timeit();
@@ -108,7 +108,7 @@ void AdaptiveNeighborList::update(const util::PerformanceNode &node) {
     }
 }
 
-const model::CPUParticleData &AdaptiveNeighborList::data() const {
+const AdaptiveNeighborList::data_type &AdaptiveNeighborList::data() const {
     return _data;
 }
 
@@ -121,11 +121,11 @@ void AdaptiveNeighborList::fill_container() {
 
         const auto grainSize = _data.get().size() / _config.get().nThreads();
         const auto data_begin = _data.get().cbegin();
-        auto worker = [=](std::size_t, model::CPUParticleData::const_iterator begin,
-                          model::CPUParticleData::const_iterator end, const CellContainer &container) {
+        auto worker = [=](std::size_t, data_type::const_iterator begin,
+                          data_type::const_iterator end, const CellContainer &container) {
             auto i = std::distance(data_begin, begin);
             for (auto it = begin; it != end; ++it, ++i) {
-                if (!it->is_deactivated()) {
+                if (!it->deactivated) {
                     container.insert_particle(static_cast<const CellContainer::particle_index>(i));
                 }
             }
@@ -162,7 +162,7 @@ void AdaptiveNeighborList::clear(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
         clear_cells();
-        for (auto &neighbors : _data.get().neighbors) {
+        for (auto &neighbors : _data.get().neighbors()) {
             neighbors.clear();
         }
     }
@@ -186,7 +186,7 @@ void AdaptiveNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &
         neighbors.clear();
         for (const auto p_i : cell.particles().data()) {
             if (p_i != particle_index) {
-                const auto distSquared = d2(entry.position(), _data.get().pos(p_i));
+                const auto distSquared = d2(entry.pos, _data.get().pos(p_i));
                 if (distSquared < _max_cutoff_skin_squared) {
                     neighbors.push_back(p_i);
                 }
@@ -194,7 +194,7 @@ void AdaptiveNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &
         }
         for (const auto &neighbor_cell : cell.neighbors()) {
             for (const auto p_j : neighbor_cell->particles().data()) {
-                const auto distSquared = d2(entry.position(), _data.get().pos(p_j));
+                const auto distSquared = d2(entry.pos, _data.get().pos(p_j));
                 if (distSquared < _max_cutoff_skin_squared) {
                     neighbors.push_back(p_j);
                 }
@@ -222,7 +222,7 @@ const bool &AdaptiveNeighborList::performs_hilbert_sort() const {
 void AdaptiveNeighborList::sort_by_hilbert_curve() {
     clear({});
     if (_hilbert_sort) {
-        _data.get().hilbert_sort(_max_cutoff + _skin);
+        _data.get().hilbertSort(_max_cutoff + _skin);
     } else {
         log::error("requested hilbert sort but it is turned off!");
     }
@@ -230,19 +230,19 @@ void AdaptiveNeighborList::sort_by_hilbert_curve() {
     fill_verlet_list();
 }
 
-void AdaptiveNeighborList::displace(data_t::iterator iter, const Vec3 &vec) {
+void AdaptiveNeighborList::displace(data_type::iterator iter, const Vec3 &vec) {
     _data.get().displace(*iter, vec);
 }
 
-void AdaptiveNeighborList::displace(model::CPUParticleData::Entry &entry, const Vec3 &delta) {
+void AdaptiveNeighborList::displace(data_type::Entries::value_type &entry, const Vec3 &delta) {
     _data.get().displace(entry, delta);
 }
 
-void AdaptiveNeighborList::displace(model::CPUParticleData::index_t entry, const Vec3 &delta) {
+void AdaptiveNeighborList::displace(data_type::size_type entry, const Vec3 &delta) {
     _data.get().displace(_data.get().entry_at(entry), delta);
 }
 
-void AdaptiveNeighborList::updateData(data_t::update_t &&update) {
+void AdaptiveNeighborList::updateData(data_type::DataUpdate &&update) {
     const auto& decayed_particles = std::get<1>(update);
     for(const auto p_idx : decayed_particles) {
         const auto sub_cell = _cell_container.leaf_cell_for_position(_data.get().pos(p_idx));

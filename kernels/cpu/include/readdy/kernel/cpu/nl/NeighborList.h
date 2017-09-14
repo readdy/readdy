@@ -33,8 +33,8 @@
 #pragma once
 
 #include <readdy/common/common.h>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/common/Timer.h>
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -43,12 +43,12 @@ namespace nl {
 
 class NeighborList {
 public:
-    using data_t = readdy::kernel::cpu::model::CPUParticleData;
-    using neighbors_t = data_t::neighbors_t;
-    using iterator = data_t::neighbors_list_iterator;
-    using const_iterator = data_t::neighbors_list_const_iterator;
+    using data_type = readdy::kernel::cpu::data::NLDataContainer;
+    using neighbors_type = data_type::Neighbors;
+    using iterator = data_type::neighbors_iterator;
+    using const_iterator = data_type::neighbors_const_iterator;
 
-    NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+    NeighborList(data_type &data, const readdy::model::KernelContext &context,
                  const readdy::util::thread::Config &config) : _data(data), _context(context), _config(config) {};
 
     virtual ~NeighborList() = default;
@@ -59,10 +59,10 @@ public:
 
     virtual void clear(const util::PerformanceNode &node) = 0;
 
-    virtual void updateData(data_t::update_t &&update) = 0;
+    virtual void updateData(data_type::DataUpdate &&update) = 0;
 
-    const neighbors_t &neighbors_of(const data_t::index_t entry) const {
-        const static neighbors_t no_neighbors{};
+    const neighbors_type &neighbors_of(const data_type::size_type entry) const {
+        const static neighbors_type no_neighbors{};
         if (_max_cutoff > 0) {
             return _data.get().neighbors_at(entry);
         }
@@ -78,19 +78,19 @@ public:
     };
 
     iterator begin() {
-        return _data.get().neighbors.begin();
+        return _data.get().neighbors().begin();
     };
 
     iterator end() {
-        return _data.get().neighbors.end();
+        return _data.get().neighbors().end();
     };
 
     const_iterator cbegin() const {
-        return _data.get().neighbors.cbegin();
+        return _data.get().neighbors().cbegin();
     };
 
     const_iterator cend() const {
-        return _data.get().neighbors.cend();
+        return _data.get().neighbors().cend();
     };
 
 protected:
@@ -98,7 +98,7 @@ protected:
     scalar _max_cutoff {0};
     scalar _max_cutoff_skin_squared {0};
 
-    std::reference_wrapper<model::CPUParticleData> _data;
+    std::reference_wrapper<data_type> _data;
     std::reference_wrapper<const readdy::model::KernelContext> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _config;
 };

@@ -28,6 +28,7 @@
  */
 
 #include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -41,9 +42,9 @@ void CPUEvaluateCompartments::perform(const util::PerformanceNode &node) {
     const auto &ctx = kernel->getKernelContext();
     const auto &compartments = ctx.compartments();
     for(auto& e : *kernel->getCPUKernelStateModel().getParticleData()) {
-        if(!e.is_deactivated()) {
+        if(!e.deactivated) {
             for (const auto &compartment : compartments) {
-                if (compartment->isContained(e.position())) {
+                if (compartment->isContained(e.pos)) {
                     const auto &conversions = compartment->getConversions();
                     const auto convIt = conversions.find(e.type);
                     if (convIt != conversions.end()) {

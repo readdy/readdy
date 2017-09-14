@@ -38,9 +38,9 @@
 #include <readdy/common/Index.h>
 #include <readdy/model/KernelContext.h>
 
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 #include "ParticlesList.h"
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
 
 namespace readdy {
 namespace kernel {
@@ -63,8 +63,9 @@ public:
     using vec3 = Vec3;
     using level_t = std::uint8_t;
     using particle_index = ParticlesList::particle_index;
+    using DataContainer = data::NLDataContainer;
 
-    CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+    CellContainer(DataContainer &data, const readdy::model::KernelContext &context,
                   const readdy::util::thread::Config &config);
 
     virtual ~CellContainer();
@@ -169,9 +170,9 @@ public:
 
     virtual void refine_uniformly();
 
-    const model::CPUParticleData &data() const;
+    const DataContainer &data() const;
 
-    model::CPUParticleData& data();
+    DataContainer& data();
 
     const readdy::model::KernelContext &context() const;
 
@@ -241,7 +242,7 @@ protected:
 
     std::size_t _n_dirty_macro_cells {0};
 
-    model::CPUParticleData &_data;
+    DataContainer &_data;
     const readdy::model::KernelContext &_context;
     const readdy::util::thread::Config& _config;
 };

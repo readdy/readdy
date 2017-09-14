@@ -46,7 +46,7 @@ CPUEvaluateTopologyReactions::CPUEvaluateTopologyReactions(CPUKernel *const kern
  * Struct holding information about a topology reaction event.
  */
 struct CPUEvaluateTopologyReactions::TREvent {
-    using index_type = model::CPUParticleData::index_t;
+    using index_type = CPUStateModel::data_type::size_type;
 
     rate_t cumulative_rate{0};
     rate_t own_rate{0};

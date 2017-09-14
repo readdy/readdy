@@ -63,7 +63,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    using data_t = readdy::kernel::cpu::model::CPUParticleData;
+    using data_t = readdy::kernel::cpu::CPUStateModel::data_type;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
     kernel->getKernelContext().boxSize() = {{100, 100, 100}};
@@ -77,11 +77,11 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         auto conversion = kernel->getReactionFactory().createReaction<conversion_t>("A->B", 0, 1, 1);
         particle_t p_A{0, 0, 0, 0};
 
-        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data {kernel->getKernelContext(), kernel->threadConfig()};
         data.addParticles({p_A});
 
-        data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries {};
+        data_t::EntriesUpdate newParticles{};
+        std::vector<data_t::size_type> decayedEntries {};
 
         reac::performReaction(data, kernel->getKernelContext(), 0, 0, newParticles, decayedEntries, conversion.get(), nullptr);
 
@@ -91,10 +91,10 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // test fusion
     {
-        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data {kernel->getKernelContext(), kernel->threadConfig()};
 
-        data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries {};
+        data_t::EntriesUpdate newParticles{};
+        std::vector<data_t::size_type> decayedEntries {};
 
         readdy::scalar eductDistance = .4;
         readdy::scalar weight1 = .3, weight2 = .7;
@@ -118,10 +118,10 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // fission
     {
-        data_t data {&kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data {kernel->getKernelContext(), kernel->threadConfig()};
 
-        data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries {};
+        data_t::EntriesUpdate newParticles{};
+        std::vector<data_t::size_type> decayedEntries {};
 
         readdy::scalar productDistance = .4;
         readdy::scalar weight1 = .3, weight2 = .7;
@@ -148,10 +148,10 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // enzymatic 1
     {
-        data_t data{&kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data{kernel->getKernelContext(), kernel->threadConfig()};
 
-        data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries{};
+        data_t::EntriesUpdate newParticles{};
+        std::vector<data_t::size_type > decayedEntries{};
 
         auto enzymatic = kernel->getReactionFactory().createReaction<enzymatic_t>("A+C->B+C", 2, 0, 1, 1, .5);
         particle_t p_A{0, 0, 0, 0};
@@ -165,22 +165,22 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
             if (e1.type == enzymatic->getCatalyst()) {
                 EXPECT_EQ(enzymatic->getCatalyst(), e1.type);
                 EXPECT_EQ(enzymatic->getTo(), e2.type);
-                EXPECT_EQ(p_C.getPos(), e1.position());
-                EXPECT_EQ(p_A.getPos(), e2.position());
+                EXPECT_EQ(p_C.getPos(), e1.pos);
+                EXPECT_EQ(p_A.getPos(), e2.pos);
             } else {
                 EXPECT_EQ(enzymatic->getCatalyst(), e2.type);
                 EXPECT_EQ(enzymatic->getTo(), e1.type);
-                EXPECT_EQ(p_C.getPos(), e2.position());
-                EXPECT_EQ(p_A.getPos(), e1.position());
+                EXPECT_EQ(p_C.getPos(), e2.pos);
+                EXPECT_EQ(p_A.getPos(), e1.pos);
             }
         }
     }
     // enzymatic 2
     {
-        data_t data{&kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data{kernel->getKernelContext(), kernel->threadConfig()};
 
-        data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries{};
+        data_t::EntriesUpdate newParticles{};
+        std::vector<data_t::size_type> decayedEntries{};
 
         auto enzymatic = kernel->getReactionFactory().createReaction<enzymatic_t>("A+C->B+C", 2, 0, 1, 1, .5);
         particle_t p_A{0, 0, 0, 0};
@@ -194,13 +194,13 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
             if (e1.type == enzymatic->getCatalyst()) {
                 EXPECT_EQ(enzymatic->getCatalyst(), e1.type);
                 EXPECT_EQ(enzymatic->getTo(), e2.type);
-                EXPECT_EQ(p_C.getPos(), e1.position());
-                EXPECT_EQ(p_A.getPos(), e2.position());
+                EXPECT_EQ(p_C.getPos(), e1.pos);
+                EXPECT_EQ(p_A.getPos(), e2.pos);
             } else {
                 EXPECT_EQ(enzymatic->getCatalyst(), e2.type);
                 EXPECT_EQ(enzymatic->getTo(), e1.type);
-                EXPECT_EQ(p_C.getPos(), e2.position());
-                EXPECT_EQ(p_A.getPos(), e1.position());
+                EXPECT_EQ(p_C.getPos(), e2.pos);
+                EXPECT_EQ(p_A.getPos(), e1.pos);
             }
         }
     }

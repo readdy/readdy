@@ -43,10 +43,10 @@ namespace actions {
 namespace reactions {
 
 using event_t = Event;
-using data_t = neighbor_list::data_t;
+using data_t = neighbor_list::data_type;
 using data_iter_t = data_t::const_iterator;
 using neighbor_list_iter_t = neighbor_list::const_iterator;
-using entry_type = data_t::Entry;
+using entry_type = data_t::Entries::value_type;
 
 using event_future_t = std::future<std::vector<event_t>>;
 using event_promise_t = std::promise<std::vector<event_t>>;
@@ -68,7 +68,7 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
     for (; it != end; ++it, ++it_nl, ++index) {
         const auto &entry = *it;
         // this being false should really not happen, though
-        if (!entry.is_deactivated()) {
+        if (!entry.deactivated) {
             // order 1
             {
                 const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(entry.type);
@@ -88,7 +88,7 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
                 const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
                                                                                               neighbor.type);
                 if (!reactions.empty()) {
-                    const auto distSquared = d2(neighbor.position(), entry.position());
+                    const auto distSquared = d2(neighbor.pos, entry.pos);
                     for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
                         const auto &react = *it_reactions;
                         const auto rate = react->getRate();
@@ -183,8 +183,8 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
 
     // execute reactions
     {
-        data_t::entries_update_t newParticles{};
-        std::vector<data_t::index_t> decayedEntries{};
+        data_t::EntriesUpdate newParticles{};
+        std::vector<data_t::size_type> decayedEntries{};
 
         // todo better conflict detection?
         for (auto it = events.begin(); it != events.end(); ++it) {

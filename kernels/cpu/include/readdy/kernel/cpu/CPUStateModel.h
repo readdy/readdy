@@ -33,15 +33,14 @@
 
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
-#include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/common/thread/Config.h>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/kernel/cpu/util/config.h>
 #include <readdy/common/index_persistent_vector.h>
 #include <readdy/common/Timer.h>
 #include <readdy/api/KernelConfiguration.h>
+#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -50,8 +49,8 @@ class CPUStateModel : public readdy::model::KernelStateModel {
 
 public:
 
-    using data_t = readdy::kernel::cpu::model::CPUParticleData;
-    using particle_t = readdy::model::Particle;
+    using data_type = readdy::kernel::cpu::data::NLDataContainer;
+    using particle_type = readdy::model::Particle;
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 
@@ -73,7 +72,7 @@ public:
 
     const std::vector<Vec3> getParticlePositions() const override;
 
-    const std::vector<particle_t> getParticles() const override;
+    const std::vector<particle_type> getParticles() const override;
 
     void initializeNeighborList(scalar skin, const util::PerformanceNode &node);
 
@@ -85,19 +84,19 @@ public:
 
     void calculateForces() override;
 
-    void addParticle(const particle_t &p) override;
+    void addParticle(const particle_type &p) override;
 
-    void addParticles(const std::vector<particle_t> &p) override;
+    void addParticles(const std::vector<particle_type> &p) override;
 
-    void removeParticle(const particle_t &p) override;
+    void removeParticle(const particle_type &p) override;
 
     void removeAllParticles() override;
 
     readdy::scalar getEnergy() const override;
 
-    data_t const *const getParticleData() const;
+    data_type const *const getParticleData() const;
 
-    data_t *const getParticleData();
+    data_type *const getParticleData();
 
     neighbor_list const *const getNeighborList() const;
 
@@ -120,7 +119,7 @@ public:
 
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
-    particle_t getParticleForIndex(std::size_t index) const override;
+    particle_type getParticleForIndex(std::size_t index) const override;
 
     particle_type_type getParticleType(std::size_t index) const override;
 
