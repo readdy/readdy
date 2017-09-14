@@ -42,6 +42,8 @@ enum class ThreadMode {
     inactive, pool, std_thread, std_async
 };
 
+
+
 /**
  * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
  * CPU kernel.

@@ -58,6 +58,10 @@ if __name__ == '__main__':
             "neighbor_list": {
                 "cll_radius": 2,
                 "type": "DynamicCLL"
+            },
+            "thread_config": {
+                "n_threads": 3,
+                "mode": "hustnuschel"
             }
         }
         }))

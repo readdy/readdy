@@ -127,7 +127,6 @@ readdy::util::thread::Config &CPUKernel::threadConfig() {
 
 void CPUKernel::initialize() {
     readdy::model::Kernel::initialize();
-    threadConfig().setMode(readdy::util::thread::ThreadMode::pool);
     readdy::conf::cpu::Configuration configuration {};
     const auto &fullConfiguration = getKernelContext().kernelConfiguration();
 
@@ -135,7 +134,17 @@ void CPUKernel::initialize() {
         configuration = fullConfiguration["CPU"];
     }
 
-    getCPUKernelStateModel().configure(configuration);
+    {
+        // thread config
+        if (configuration.threadConfig.nThreads > 0) {
+            threadConfig().setNThreads(static_cast<unsigned int>(configuration.threadConfig.nThreads));
+        }
+        threadConfig().setMode(configuration.threadConfig.threadMode);
+    }
+    {
+        // state model config
+        getCPUKernelStateModel().configure(configuration);
+    }
     for(auto& top : getCPUKernelStateModel().topologies()) {
         top->configure();
         top->updateReactionRates(getKernelContext().topology_registry().structural_reactions_of(top->type()));

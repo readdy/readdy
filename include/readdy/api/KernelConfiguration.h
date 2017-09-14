@@ -32,6 +32,7 @@
 
 #include <string>
 #include <json.hpp>
+#include <readdy/common/thread/Config.h>
 
 #include "readdy/common/macros.h"
 
@@ -47,8 +48,16 @@ struct NeighborList {
 void to_json(json &j, const NeighborList &nl);
 void from_json(const json &j, NeighborList &nl);
 
+struct ThreadConfig {
+    int nThreads {-1};
+    util::thread::ThreadMode threadMode {util::thread::ThreadMode::pool};
+};
+void to_json(json &j, const ThreadConfig &nl);
+void from_json(const json &j, ThreadConfig &nl);
+
 struct Configuration {
     NeighborList neighborList;
+    ThreadConfig threadConfig;
 };
 void to_json(json &j, const Configuration &conf);
 void from_json(const json &j, Configuration &conf);
