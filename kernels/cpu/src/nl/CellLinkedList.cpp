@@ -50,7 +50,6 @@ void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::Perform
         _skin = skin;
         _radius = radius;
         _max_cutoff = _context.get().calculateMaxCutoff();
-        _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
         if(_max_cutoff > 0) {
             auto size = _context.get().boxSize();
             auto desiredWidth = static_cast<scalar>((_max_cutoff + _skin)/static_cast<scalar>(radius));

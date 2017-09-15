@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2017 Computational Molecular Biology Group,          * 
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,60 +23,33 @@
 /**
  * << detailed description >>
  *
- * @file NeighborListContainer.h
+ * @file NeighborListContainer.cpp
  * @brief << brief description >>
  * @author clonker
  * @date 15.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#pragma once
 
-#include <vector>
-#include <readdy/common/thread/Config.h>
-#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
-#include <readdy/common/flat_iterator.h>
+#include <readdy/kernel/cpu/nl/NeighborListContainer.h>
+#include <readdy/kernel/cpu/nl/NeighborList.h>
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace nl {
 
-class NeighborList;
 
-class NeighborListContainer {
+NeighborListContainer::NeighborListContainer(const data_container_type &data, const thread_config_type &threadConfig)
+        : _data(data), _config(threadConfig){}
 
-public:
-    using value_type = std::size_t;
-    using local_index_vector = std::vector<value_type>;
-    using index_vector = std::vector<local_index_vector>;
-    using data_container_type = readdy::kernel::cpu::data::DefaultDataContainer;
-    using thread_config_type = readdy::util::thread::Config;
+NeighborListContainer::const_iterator NeighborListContainer::begin() const {
+    return {_elements.begin(), _elements.end()};
+}
 
-    using const_iterator = readdy::util::flat_const_iterator<index_vector::const_iterator>;
-
-    NeighborListContainer(const data_container_type &data, const thread_config_type &threadConfig);
-
-    index_vector &elements() {
-        return _elements;
-    }
-
-    const index_vector &elements() const {
-        return _elements;
-    }
-
-    const_iterator begin() const;
-
-    const_iterator end() const;
-
-    virtual void update() = 0;
-
-private:
-    index_vector _elements;
-
-    std::reference_wrapper<const data_container_type> _data;
-    std::reference_wrapper<const thread_config_type> _config;
-};
+NeighborListContainer::const_iterator NeighborListContainer::end() const {
+    return const_iterator(_elements.end());
+}
 
 }
 }

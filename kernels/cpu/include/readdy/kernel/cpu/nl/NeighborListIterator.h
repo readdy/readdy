@@ -34,6 +34,7 @@
 
 #include <cstddef>
 #include <vector>
+#include "NeighborListContainer.h"
 
 namespace readdy {
 namespace kernel {
@@ -44,7 +45,7 @@ class NeighborListIterator;
 
 struct IteratorState {
     using size_type = std::size_t;
-    using static_iterator = std::vector<std::size_t>::const_iterator;
+    using static_iterator = NeighborListContainer::const_iterator;
     using adaptive_iterator = std::vector<std::vector<std::size_t>>::const_iterator;
 
     const size_type *begin() const;

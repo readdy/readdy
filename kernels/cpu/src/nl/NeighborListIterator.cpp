@@ -104,11 +104,7 @@ NeighborListIterator &NeighborListIterator::operator+=(size_type x) {
     if(_state._adaptive) {
         _state._adaptiveIt += x;
     } else {
-        if(x >= 0) {
-            for(int i = 0; i < x; ++i) operator++();
-        } else {
-            log::critical("tried to decrease neighbor list iterator, this is not supported.");
-        }
+        for(int i = 0; i < x; ++i) operator++();
     }
     return *this;
 }
