@@ -237,10 +237,6 @@ bool Kernel::supportsTopologies() const {
     return getTopologyActionFactory() != nullptr;
 }
 
-void Kernel::expected_n_particles(const std::size_t n) {
-    getKernelStateModel().expected_n_particles(n);
-}
-
 void Kernel::initialize() {
     getKernelContext().configure(true);
 }

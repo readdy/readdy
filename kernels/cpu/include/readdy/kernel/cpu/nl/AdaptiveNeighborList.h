@@ -46,9 +46,13 @@ namespace nl {
 class AdaptiveNeighborList : public NeighborList{
 public:
     using skin_size_t = scalar;
+    using data_type = data::NLDataContainer;
 
-    AdaptiveNeighborList(data_type &data, const readdy::model::KernelContext &context,
-                         const readdy::util::thread::Config &config, bool hilbert_sort = true);
+    AdaptiveNeighborList(data::EntryDataContainer *data, const readdy::model::KernelContext &context, const readdy::util::thread::Config &config,
+                         bool hilbert_sort = true);
+
+    AdaptiveNeighborList(const readdy::model::KernelContext &context, const readdy::util::thread::Config &config,
+                         bool hilbert_sort = true);
 
     ~AdaptiveNeighborList() = default;
 
@@ -61,8 +65,6 @@ public:
     void clear(const util::PerformanceNode &node) override;
 
     void clear_cells();
-
-    const data_type& data() const;
 
     const readdy::util::thread::Config& config() const;
 
@@ -82,6 +84,10 @@ public:
 
     virtual const_iterator cend() const override;
 
+    data::EntryDataContainer *data() override;
+
+    const data::EntryDataContainer * data() const override;
+
 private:
 
     void fill_container();
@@ -95,10 +101,12 @@ private:
 
     void handle_dirty_cells();
 
-    CellContainer _cell_container;
-
     bool _hilbert_sort {true};
     bool _is_set_up {false};
+
+    data::NLDataContainer _data;
+
+    CellContainer _cell_container;
 };
 
 }

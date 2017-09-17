@@ -46,8 +46,8 @@ TEST(TestNeighborListIterator, Adaptive) {
     adaptive_data.emplace_back();
     adaptive_data.emplace_back(std::vector<std::size_t>{5_z});
 
-    kernel::cpu::nl::NeighborListIterator itBegins(adaptive_data.begin());
-    kernel::cpu::nl::NeighborListIterator itEnds (adaptive_data.end());
+    kernel::cpu::nl::NeighborListIterator itBegins(adaptive_data.begin(), true);
+    kernel::cpu::nl::NeighborListIterator itEnds (adaptive_data.end(), true);
 
     auto it_proper = adaptive_data.begin();
 
@@ -60,7 +60,58 @@ TEST(TestNeighborListIterator, Adaptive) {
 }
 
 TEST(TestNeighborListIterator, Static) {
+    using namespace readdy;
+    std::vector<std::vector<std::size_t>> static_data;
+    // particle 0: no neighbors, particle 1: neighbors (2), particle 2: neighbors(4, 0, 1)
+    static_data.emplace_back(std::vector<std::size_t>{0_z, 0_z, 1_z, 1_z, 2_z, 2_z, 3_z, 4_z, 0_z, 1_z});
+    // this thread was lazy
+    static_data.emplace_back(std::vector<std::size_t>{});
+    // particle 3: neighbors (4), particle 4: no neighbors, particle 5: neighbors (1, 0)
+    static_data.emplace_back(std::vector<std::size_t>{4_z, 0_z, 5_z, 2_z, 1_z, 0_z, 3_z, 1_z, 4_z});
+    // this thread was lazy again
+    static_data.emplace_back();
+    static_data.emplace_back();
 
+    kernel::cpu::nl::NeighborListIterator itBegins (static_data.begin(), false);
+    kernel::cpu::nl::NeighborListIterator itEnds (static_data.end(), false);
+
+    std::vector<std::size_t> expectedNNeighbors {0_z, 1_z, 3_z, 1_z, 0_z, 2_z};
+    std::vector<std::vector<std::size_t>> expectedNeighbors {
+            std::vector<std::size_t> {},
+            std::vector<std::size_t> {2_z},
+            std::vector<std::size_t> {4_z, 0_z, 1_z},
+            std::vector<std::size_t> {4_z},
+            std::vector<std::size_t> {},
+            std::vector<std::size_t> {1_z, 0_z}
+    };
+
+    for(auto it = itBegins; it != itEnds; ++it) {
+        //log::warn("Particle {} got {} neighbors", it->current_particle(), it->n_neighbors());
+        EXPECT_EQ(it->n_neighbors(), expectedNNeighbors.at(it->current_particle()));
+        EXPECT_EQ(expectedNeighbors.at(it->current_particle()).size(), it->n_neighbors());
+        auto itExpected = expectedNeighbors.at(it->current_particle()).begin();
+        for(auto neighbor : *it) {
+            EXPECT_EQ(neighbor, *itExpected);
+            ++itExpected;
+        }
+    }
+
+    {
+        auto itBeginsDynamic = kernel::cpu::nl::NeighborListIterator(expectedNeighbors.begin(), true);
+        auto itEndsDynamic = kernel::cpu::nl::NeighborListIterator(expectedNeighbors.end(), true);
+
+        auto itStatic = itBegins;
+        const auto &itDynamic = itBeginsDynamic;
+        for(; itStatic != itEnds; ++itStatic) {
+            auto itd = itDynamic + itStatic->current_particle();
+            EXPECT_EQ(itStatic->n_neighbors(), itd->n_neighbors());
+            auto it1 = itStatic->begin();
+            auto it2 = itd->begin();
+            for(; it1 != itStatic->end(); ++it1, ++it2) {
+                EXPECT_EQ(*it1, *it2);
+            }
+        }
+    }
 }
 
 }

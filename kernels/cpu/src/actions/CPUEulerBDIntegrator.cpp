@@ -49,15 +49,16 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
 
     const auto dt = timeStep;
 
-    auto worker = [&context, &pd, dt](std::size_t id, iter_t entry_begin, iter_t entry_end)  {
+    auto worker = [&context, &pd, dt](std::size_t id, std::size_t beginIdx,  iter_t entry_begin, iter_t entry_end)  {
         const auto &fixPos = context.fixPositionFun();
         const auto kbt = context.kBT();
-        for (auto it = entry_begin; it != entry_end; ++it) {
+        std::size_t idx = beginIdx;
+        for (auto it = entry_begin; it != entry_end; ++it, ++beginIdx) {
             if(!it->deactivated) {
                 const scalar D = context.particle_types().diffusion_constant_of(it->type);
                 const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);
                 const auto deterministicDisplacement = it->force * dt * D / kbt;
-                pd.displace(*it, randomDisplacement + deterministicDisplacement);
+                pd.displace(idx, randomDisplacement + deterministicDisplacement);
             }
         }
     };
@@ -71,11 +72,13 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
         auto granularity = kernel->getNThreads();
         const std::size_t grainSize = size / granularity;
 
+        std::size_t idx = 0;
         for (unsigned int i = 0; i < granularity - 1; ++i) {
-            executables.push_back(executor.pack(worker, work_iter, work_iter+grainSize));
+            executables.push_back(executor.pack(worker, idx, work_iter, work_iter+grainSize));
             work_iter += grainSize;
+            idx += grainSize;
         }
-        executables.push_back(executor.pack(worker, work_iter, pd.end()));
+        executables.push_back(executor.pack(worker, idx, work_iter, pd.end()));
         executor.execute_and_wait(std::move(executables));
     }
 

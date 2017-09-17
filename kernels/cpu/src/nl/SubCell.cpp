@@ -66,12 +66,12 @@ void SubCell::update_displacements() {
         }
     } else {
         for (const auto particle_index : _particles_list) {
-            const auto &entry = data().entry_at(particle_index);
-            assert(!entry.deactivated);
-            if (entry.displacement > _maximal_displacements[0]) {
-                _maximal_displacements[0] = entry.displacement;
-            } else if (entry.displacement > _maximal_displacements[1]) {
-                _maximal_displacements[1] = entry.displacement;
+            const auto displacement = data().displacements().at(particle_index);
+            assert(!data().entry_at(particle_index).deactivated);
+            if (displacement > _maximal_displacements[0]) {
+                _maximal_displacements[0] = displacement;
+            } else if (displacement > _maximal_displacements[1]) {
+                _maximal_displacements[1] = displacement;
             }
         }
     }
@@ -214,7 +214,7 @@ void SubCell::reset_particles_displacements() {
         }
     } else {
         for (const auto p_idx : _particles_list) {
-            _data.entry_at(p_idx).displacement = 0;
+            _data.displacements().at(p_idx) = 0;
         }
     }
 }

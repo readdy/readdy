@@ -43,8 +43,8 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
+using data_t = data::EntryDataContainer;
 using cpu_kernel = readdy::kernel::cpu::CPUKernel;
-using data_t = readdy::kernel::cpu::data::NLDataContainer;
 using reaction_type = readdy::model::reactions::ReactionType;
 using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().getKernelContext())>::type;
 using event_t = Event;
@@ -179,7 +179,7 @@ void performReaction(data_t& data, const readdy::model::KernelContext& context, 
 
             entry1.type = reaction->getProducts()[0];
             entry1.id = readdy::model::Particle::nextId();
-            data.displace(entry1, reaction->getWeight1() * reaction->getProductDistance() * n3);
+            data.displace(idx1, reaction->getWeight1() * reaction->getProductDistance() * n3);
             if(record) {
                 record->products[0] = entry1.id;
                 record->products[1] = id;

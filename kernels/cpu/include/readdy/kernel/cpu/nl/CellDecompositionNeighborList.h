@@ -46,7 +46,10 @@ namespace nl {
 class CellDecompositionNeighborList : public NeighborList {
 public:
 
-    CellDecompositionNeighborList(data_type &data, const readdy::model::KernelContext &context,
+    CellDecompositionNeighborList(data::EntryDataContainer *data, const readdy::model::KernelContext &context,
+                                  const readdy::util::thread::Config &config);
+
+    CellDecompositionNeighborList(const readdy::model::KernelContext &context,
                                   const readdy::util::thread::Config &config);
 
     bool is_adaptive() const override;
@@ -57,7 +60,7 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_type::DataUpdate &&update) override;
+    void updateData(DataUpdate &&update) override;
 
     void fill_container();
 
@@ -69,9 +72,17 @@ public:
 
     virtual const_iterator cend() const override;
 
+    const data::EntryDataContainer *data() const override;
+
+    data::EntryDataContainer *data() override;
+
+    const neighbors_type &neighbors_of(std::size_t entry) const override;
+
 private:
-    CellContainer _cell_container;
     bool _is_set_up {false};
+
+    data::NLDataContainer _data;
+    CellContainer _cell_container;
 };
 
 }

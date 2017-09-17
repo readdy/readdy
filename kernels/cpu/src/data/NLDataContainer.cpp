@@ -37,31 +37,25 @@ namespace kernel {
 namespace cpu {
 namespace data {
 
-NLDataContainer::NLDataContainer(const DefaultDataContainer &base)
-        : DataContainer(base.context(), base.threadConfig()) {
-    _blanks = base._blanks;
-    _entries.reserve(base._entries.size());
-    for (const auto &baseEntry : base) {
-        _entries.emplace_back(baseEntry);
-    }
-}
-
 void NLDataContainer::reserve(std::size_t n) {
     _entries.reserve(n);
     _neighbors.reserve(n);
+    _displacements.reserve(n);
 }
 
-NLDataContainer::size_type NLDataContainer::addEntry(DEntry &&entry) {
+NLDataContainer::size_type NLDataContainer::addEntry(Entry &&entry) {
     if (!_blanks.empty()) {
         const auto idx = _blanks.back();
         _blanks.pop_back();
         _entries.at(idx) = std::move(entry);
         _neighbors.at(idx).clear();
+        _displacements.at(idx) = 0;
         return idx;
     }
 
     _entries.push_back(std::move(entry));
     _neighbors.emplace_back();
+    _displacements.emplace_back();
     return _entries.size() - 1;
 }
 
@@ -70,10 +64,13 @@ void NLDataContainer::addParticles(const std::vector<Particle> &particles) {
         if (!_blanks.empty()) {
             const auto idx = _blanks.back();
             _blanks.pop_back();
-            _entries.at(idx) = DEntry(p);
+            _entries.at(idx) = Entry(p);
+            _neighbors.at(idx).clear();
+            _displacements.at(idx) = 0;
         } else {
             _entries.emplace_back(p);
             _neighbors.emplace_back();
+            _displacements.emplace_back();
         }
     }
 }
@@ -86,11 +83,14 @@ NLDataContainer::addTopologyParticles(const std::vector<TopologyParticle> &topol
         if (!_blanks.empty()) {
             const auto idx = _blanks.back();
             _blanks.pop_back();
-            _entries.at(idx) = DEntry(p);
+            _entries.at(idx) = Entry(p);
+            _neighbors.at(idx).clear();
+            _displacements.at(idx) = 0;
             indices.push_back(idx);
         } else {
             _entries.emplace_back(p);
             _neighbors.emplace_back();
+            _displacements.emplace_back();
             indices.push_back(_entries.size() - 1);
         }
     }
@@ -109,6 +109,7 @@ std::vector<NLDataContainer::size_type> NLDataContainer::update(DataUpdate &&upd
         if (it_del != removedEntries.end()) {
             _entries.at(*it_del) = std::move(newEntry);
             _neighbors.at(*it_del).clear();
+            _displacements.at(*it_del) = 0;
             result.push_back(*it_del);
             ++it_del;
         } else {
@@ -123,10 +124,11 @@ std::vector<NLDataContainer::size_type> NLDataContainer::update(DataUpdate &&upd
     return result;
 }
 
-void NLDataContainer::displace(DEntry &entry, const Particle::pos_type &delta) {
+void NLDataContainer::displace(size_type ix, const Particle::pos_type &delta) {
+    auto &entry = _entries.at(ix);
     entry.pos += delta;
     _context.get().fixPositionFun()(entry.pos);
-    entry.displacement += std::sqrt(delta * delta);
+    _displacements.at(ix) += std::sqrt(delta * delta);
 }
 
 NLDataContainer::Neighbors &NLDataContainer::neighbors_at(DataContainer::size_type index) {
@@ -151,8 +153,23 @@ NLDataContainer::NeighborList &NLDataContainer::neighbors() {
 
 NLDataContainer::NLDataContainer(const model::KernelContext &context, const util::thread::Config &threadConfig)
         : DataContainer(context, threadConfig), _neighbors{} {
-    _neighbors.resize(_entries.size());
 }
+
+NLDataContainer::NLDataContainer(EntryDataContainer *data) : NLDataContainer(data->context(), data->threadConfig()) {
+    _entries = data->entries();
+    _blanks = data->blanks();
+    _neighbors.resize(_entries.size());
+    _displacements.resize(_entries.size());
+}
+
+std::vector<scalar> &NLDataContainer::displacements() {
+    return _displacements;
+}
+
+const std::vector<scalar> &NLDataContainer::displacements() const {
+    return _displacements;
+}
+
 }
 }
 }

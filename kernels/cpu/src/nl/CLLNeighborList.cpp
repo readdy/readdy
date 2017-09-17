@@ -37,10 +37,18 @@ namespace cpu {
 namespace nl {
 
 
-ContiguousCLLNeighborList::ContiguousCLLNeighborList(std::uint8_t cll_radius, data_type &data,
+ContiguousCLLNeighborList::ContiguousCLLNeighborList(std::uint8_t cll_radius,
                                                      const readdy::model::KernelContext &context,
                                                      const readdy::util::thread::Config &config)
-        : NeighborList(data, context, config), ccll(data, context, config), cll_radius(cll_radius) {}
+        : NeighborList(context, config), _data(context, config), ccll(_data, context, config),
+          ccllContainer({context, config, _data}, ccll), cll_radius(cll_radius) {}
+
+
+ContiguousCLLNeighborList::ContiguousCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
+                                                     const readdy::model::KernelContext &context,
+                                                     const readdy::util::thread::Config &config)
+        : NeighborList(context, config), _data(data), ccll(_data, context, config),
+          ccllContainer({context, config, _data}, ccll), cll_radius(cll_radius) {}
 
 void ContiguousCLLNeighborList::set_up(const util::PerformanceNode &node) {
     auto t = node.timeit();
@@ -53,63 +61,8 @@ void ContiguousCLLNeighborList::set_up(const util::PerformanceNode &node) {
 }
 
 void ContiguousCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {
-    auto t = node.timeit();
     if (_max_cutoff > 0) {
-        auto cix = ccll.cellIndex();
-
-        const auto grainSize = cix.size() / _config.get().nThreads();
-        auto worker = [this, cix](std::size_t tid, std::size_t begin, std::size_t end) {
-            const auto &d2 = _context.get().distSquaredFun();
-            auto &data = _data.get();
-
-            for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
-
-                for (auto itParticles = ccll.particlesBegin(cellIndex);
-                     itParticles != ccll.particlesEnd(cellIndex); ++itParticles) {
-                    auto particle = *itParticles;
-                    auto &entry = data.entry_at(particle);
-                    auto &neighbors = data.neighbors_at(particle);
-                    neighbors.clear();
-
-                    for (auto itPP = ccll.particlesBegin(cellIndex); itPP != ccll.particlesEnd(cellIndex); ++itPP) {
-                        auto pparticle = *itPP;
-                        if (particle != pparticle) {
-                            const auto &pp = data.entry_at(pparticle);
-                            if (!pp.deactivated) {
-                                const auto distSquared = d2(entry.pos, pp.pos);
-                                if (distSquared < _max_cutoff_skin_squared) {
-                                    neighbors.push_back(pparticle);
-                                }
-                            }
-                        }
-                    }
-
-                    for (auto itNeighborCell = ccll.neighborsBegin(cellIndex);
-                         itNeighborCell != ccll.neighborsEnd(cellIndex); ++itNeighborCell) {
-                        for (auto itNeighborParticle = ccll.particlesBegin(*itNeighborCell);
-                             itNeighborParticle != ccll.particlesEnd(*itNeighborCell); ++itNeighborParticle) {
-                            const auto &neighbor = data.entry_at(*itNeighborParticle);
-                            if (!neighbor.deactivated) {
-                                const auto distSquared = d2(entry.pos, neighbor.pos);
-                                if (distSquared < _max_cutoff_skin_squared) {
-                                    neighbors.push_back(*itNeighborParticle);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-        const auto &executor = *_config.get().executor();
-        std::vector<std::function<void(std::size_t)>> executables;
-        executables.reserve(_config.get().nThreads());
-        auto it = 0_z;
-        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
-            executables.push_back(executor.pack(worker, it, it + grainSize));
-            it += grainSize;
-        }
-        executables.push_back(executor.pack(worker, it, cix.size()));
-        executor.execute_and_wait(std::move(executables));
+        ccllContainer.update(_max_cutoff_skin_squared, node.subnode("update neighbor list container"));
     }
 }
 
@@ -127,14 +80,12 @@ void ContiguousCLLNeighborList::clear(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
         ccll.clear();
-        for (auto &neighbors : _data.get().neighbors()) {
-            neighbors.clear();
-        }
+        ccllContainer.clear();
     }
 }
 
-void ContiguousCLLNeighborList::updateData(data_type::DataUpdate &&update) {
-    _data.get().update(std::forward<data_type::DataUpdate>(update));
+void ContiguousCLLNeighborList::updateData(DataUpdate &&update) {
+    _data.update(std::forward<DataUpdate>(update));
 }
 
 bool ContiguousCLLNeighborList::is_adaptive() const {
@@ -142,18 +93,37 @@ bool ContiguousCLLNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator ContiguousCLLNeighborList::cbegin() const {
-    return NeighborListIterator{_data.get().neighbors().begin()};
+    return NeighborListIterator{ccllContainer.begin(), false};
 }
 
 NeighborList::const_iterator ContiguousCLLNeighborList::cend() const {
-    return NeighborListIterator{_data.get().neighbors().end()};
+    return NeighborListIterator{ccllContainer.end() , false};
+}
+
+const data::EntryDataContainer *ContiguousCLLNeighborList::data() const {
+    return &_data;
+}
+
+data::EntryDataContainer *ContiguousCLLNeighborList::data() {
+    return &_data;
+}
+
+const NeighborList::neighbors_type &ContiguousCLLNeighborList::neighbors_of(std::size_t entry) const {
+    throw std::logic_error("do not use neighbors_of with contiguous cll neighbor list!");
 }
 
 
-DynamicCLLNeighborList::DynamicCLLNeighborList(data_type &data,
+DynamicCLLNeighborList::DynamicCLLNeighborList(data::EntryDataContainer *data,
                                                const readdy::model::KernelContext &context,
                                                const readdy::util::thread::Config &config)
-        : NeighborList(data, context, config), dcll(data, context, config) {}
+        : NeighborList(context, config), _data(data), dcll(_data, context, config),
+          dcllContainer({context, config, _data}, dcll) {}
+
+
+DynamicCLLNeighborList::DynamicCLLNeighborList(const readdy::model::KernelContext &context,
+                                               const readdy::util::thread::Config &config)
+        : NeighborList(context, config), _data(context, config), dcll(_data, context, config),
+          dcllContainer({context, config, _data}, dcll) {}
 
 void DynamicCLLNeighborList::set_up(const util::PerformanceNode &node) {
     auto t = node.timeit();
@@ -179,74 +149,18 @@ void DynamicCLLNeighborList::clear(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
         dcll.clear();
-        for (auto &neighbors : _data.get().neighbors()) {
-            neighbors.clear();
-        }
+        dcllContainer.clear();
     }
 }
 
-void DynamicCLLNeighborList::updateData(data_type::DataUpdate &&update) {
-    _data.get().update(std::forward<data_type::DataUpdate>(update));
+void DynamicCLLNeighborList::updateData(DataUpdate &&update) {
+    _data.update(std::forward<DataUpdate>(update));
 }
 
 void DynamicCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
-        auto cix = dcll.cellIndex();
-
-        const auto grainSize = cix.size() / _config.get().nThreads();
-        auto worker = [this, cix](std::size_t tid, std::size_t begin, std::size_t end) {
-            const auto &d2 = _context.get().distSquaredFun();
-            auto &data = _data.get();
-
-            for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
-
-                for (auto itParticles = dcll.particlesBegin(cellIndex);
-                     itParticles != dcll.particlesEnd(cellIndex); ++itParticles) {
-                    auto particle = *itParticles;
-                    auto &entry = data.entry_at(particle);
-                    auto &neighbors = data.neighbors_at(particle);
-                    neighbors.clear();
-
-                    for (auto itPP = dcll.particlesBegin(cellIndex); itPP != dcll.particlesEnd(cellIndex); ++itPP) {
-                        auto pparticle = *itPP;
-                        if (particle != pparticle) {
-                            const auto &pp = data.entry_at(pparticle);
-                            if (!pp.deactivated) {
-                                const auto distSquared = d2(entry.pos, pp.pos);
-                                if (distSquared < _max_cutoff_skin_squared) {
-                                    neighbors.push_back(pparticle);
-                                }
-                            }
-                        }
-                    }
-
-                    for (auto itNeighborCell = dcll.neighborsBegin(cellIndex);
-                         itNeighborCell != dcll.neighborsEnd(cellIndex); ++itNeighborCell) {
-                        for (auto itNeighborParticle = dcll.particlesBegin(*itNeighborCell);
-                             itNeighborParticle != dcll.particlesEnd(*itNeighborCell); ++itNeighborParticle) {
-                            const auto &neighbor = data.entry_at(*itNeighborParticle);
-                            if (!neighbor.deactivated) {
-                                const auto distSquared = d2(entry.pos, neighbor.pos);
-                                if (distSquared < _max_cutoff_skin_squared) {
-                                    neighbors.push_back(*itNeighborParticle);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-        const auto &executor = *_config.get().executor();
-        std::vector<std::function<void(std::size_t)>> executables;
-        executables.reserve(_config.get().nThreads());
-        auto it = 0_z;
-        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
-            executables.push_back(executor.pack(worker, it, it + grainSize));
-            it += grainSize;
-        }
-        executables.push_back(executor.pack(worker, it, cix.size()));
-        executor.execute_and_wait(std::move(executables));
+        dcllContainer.update(_max_cutoff_skin_squared, node.subnode("fill verlet list"));
     }
 }
 
@@ -255,18 +169,35 @@ bool DynamicCLLNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator DynamicCLLNeighborList::cbegin() const {
-    return NeighborListIterator{_data.get().neighbors().begin()};
+    return NeighborListIterator{dcllContainer.begin(), false};
 }
 
 NeighborList::const_iterator DynamicCLLNeighborList::cend() const {
-    return NeighborListIterator{_data.get().neighbors().end()};
+    return NeighborListIterator{dcllContainer.end(), false};
 }
 
-CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, data_type &data,
+const NeighborList::neighbors_type &DynamicCLLNeighborList::neighbors_of(std::size_t entry) const {
+    throw std::logic_error("do not use neighbors_of with dynamic cll neighbor list");
+}
+
+const data::EntryDataContainer *DynamicCLLNeighborList::data() const {
+    return &_data;
+}
+
+data::EntryDataContainer *DynamicCLLNeighborList::data() {
+    return &_data;
+}
+
+CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, const readdy::model::KernelContext &context,
+                                               const util::thread::Config &config)
+        : NeighborList(context, config), _data(context, config), ccll(_data, context, config), cll_radius(cll_radius),
+          ccllContainer({context, config, _data}, ccll) {}
+
+CompactCLLNeighborList::CompactCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
                                                const readdy::model::KernelContext &context,
                                                const util::thread::Config &config)
-        : NeighborList(data, context, config), ccll(data, context, config), cll_radius(cll_radius) {}
-
+        : NeighborList(context, config), _data(data), ccll(_data, context, config), cll_radius(cll_radius),
+          ccllContainer({context, config, _data}, ccll) {}
 
 void CompactCLLNeighborList::set_up(const util::PerformanceNode &node) {
     auto t = node.timeit();
@@ -292,80 +223,14 @@ void CompactCLLNeighborList::clear(const util::PerformanceNode &node) {
     ccll.clear();
 }
 
-void CompactCLLNeighborList::updateData(data_type::DataUpdate &&update) {
-    _data.get().update(std::forward<data_type::DataUpdate>(update));
+void CompactCLLNeighborList::updateData(DataUpdate &&update) {
+    _data.update(std::forward<DataUpdate>(update));
 }
 
 void CompactCLLNeighborList::fill_verlet_list(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
-        auto cix = ccll.cellIndex();
-
-        const auto grainSize = cix.size() / _config.get().nThreads();
-        auto worker = [this, cix](std::size_t tid, std::size_t begin, std::size_t end) {
-            const auto &d2 = _context.get().distSquaredFun();
-            auto &data = _data.get();
-            const auto &head = ccll.head();
-            const auto &list = ccll.list();
-
-            for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
-
-                auto pptr = (*head.at(cellIndex)).load();
-                while (pptr != 0) {
-                    auto pidx = pptr - 1;
-                    auto &entry = data.entry_at(pidx);
-                    auto &neighbors = data.neighbors_at(pidx);
-                    neighbors.clear();
-
-                    {
-                        auto ppptr = (*head.at(cellIndex)).load();
-                        while (ppptr != 0) {
-                            auto ppidx = ppptr - 1;
-                            if (ppidx != pidx) {
-                                const auto &pp = data.entry_at(ppidx);
-                                if (!pp.deactivated) {
-                                    const auto distSquared = d2(entry.pos, pp.pos);
-                                    if (distSquared < _max_cutoff_skin_squared) {
-                                        neighbors.push_back(ppidx);
-                                    }
-                                }
-                            }
-                            ppptr = list.at(ppptr);
-                        }
-                    }
-
-                    for (auto itNeighborCell = ccll.neighborsBegin(cellIndex);
-                         itNeighborCell != ccll.neighborsEnd(cellIndex); ++itNeighborCell) {
-
-                        auto nptr = (*head.at(*itNeighborCell)).load();
-                        while (nptr != 0) {
-                            auto nidx = nptr - 1;
-
-                            const auto &neighbor = data.entry_at(nidx);
-                            if (!neighbor.deactivated) {
-                                const auto distSquared = d2(entry.pos, neighbor.pos);
-                                if (distSquared < _max_cutoff_skin_squared) {
-                                    neighbors.push_back(nidx);
-                                }
-                            }
-
-                            nptr = list.at(nptr);
-                        }
-                    }
-                    pptr = list.at(pptr);
-                }
-            }
-        };
-        const auto &executor = *_config.get().executor();
-        std::vector<std::function<void(std::size_t)>> executables;
-        executables.reserve(_config.get().nThreads());
-        auto it = 0_z;
-        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
-            executables.push_back(executor.pack(worker, it, it + grainSize));
-            it += grainSize;
-        }
-        executables.push_back(executor.pack(worker, it, cix.size()));
-        executor.execute_and_wait(std::move(executables));
+        ccllContainer.update(_max_cutoff_skin_squared, node.subnode("fill verlet list"));
     }
 }
 
@@ -374,11 +239,35 @@ bool CompactCLLNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator CompactCLLNeighborList::cbegin() const {
-    return NeighborListIterator{_data.get().neighbors().begin()};
+    return NeighborListIterator{ccllContainer.begin(), false};
 }
 
 NeighborList::const_iterator CompactCLLNeighborList::cend() const {
-    return NeighborListIterator{_data.get().neighbors().end()};
+    return NeighborListIterator{ccllContainer.end(), false};
+}
+
+const data::EntryDataContainer *CompactCLLNeighborList::data() const {
+    return &_data;
+}
+
+data::EntryDataContainer *CompactCLLNeighborList::data() {
+    return &_data;
+}
+
+const NeighborList::neighbors_type &CompactCLLNeighborList::neighbors_of(std::size_t entry) const {
+    throw std::logic_error("CompactCLLNeighborList should not be used with \"neighbors_of\"");
+}
+
+const CompactCLLNeighborListContainer &CompactCLLNeighborList::container() const {
+    return ccllContainer;
+}
+
+const CompactCellLinkedList &CompactCLLNeighborList::cellLinkedList() const {
+    return ccll;
+}
+
+CompactCellLinkedList &CompactCLLNeighborList::cellLinkedList() {
+    return ccll;
 }
 
 }

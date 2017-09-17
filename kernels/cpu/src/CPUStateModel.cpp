@@ -35,7 +35,6 @@
 #include <readdy/kernel/cpu/nl/AdaptiveNeighborList.h>
 #include <readdy/kernel/cpu/nl/CellDecompositionNeighborList.h>
 #include <readdy/kernel/cpu/nl/CLLNeighborList.h>
-#include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
 namespace kernel {
@@ -51,7 +50,7 @@ using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
 using top_action_factory = readdy::model::top::TopologyActionFactory;
 
 void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighbor_list::const_iterator neighbors_it,
-                           std::promise<scalar>& energyPromise, const CPUStateModel::data_type& data, const pot1Map& pot1,
+                           std::promise<scalar>& energyPromise, const CPUStateModel::data_type* data, const pot1Map& pot1,
                            const pot2Map& pot2, const dist_fun& d) {
     scalar energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it) {
@@ -76,7 +75,7 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
             /*if(!pot2.empty()) */{
                 const auto &bounds = *neighbors_it;
                 for (auto neighbor : bounds) {
-                    auto &neighborEntry = data.entry_at(neighbor);
+                    auto &neighborEntry = data->entry_at(neighbor);
                     auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
                     if (potit != pot2.end()) {
                         auto x_ij = d(myPos, neighborEntry.pos);
@@ -134,11 +133,7 @@ struct CPUStateModel::Impl {
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
 
     Impl(readdy::model::KernelContext *context, top_action_factory const *const taf,
-         readdy::util::thread::Config const *const config)
-            : particleData(std::make_unique<data_type>(data::DefaultDataContainer(*context, *config))),
-              topologyActionFactory(taf), context(context) {}
-
-    std::unique_ptr<data_type> particleData;
+         readdy::util::thread::Config const *const config) : topologyActionFactory(taf), context(context) {}
 };
 
 void CPUStateModel::calculateForces() {
@@ -146,17 +141,17 @@ void CPUStateModel::calculateForces() {
     const auto &potOrder1 = pimpl->context->potentials().potentials_order1();
     const auto &potOrder2 = pimpl->context->potentials().potentials_order2();
     if(!potOrder1.empty() || !potOrder2.empty()) {
-        const auto &particleData = *pimpl->particleData;
+        const auto particleData = pimpl->neighborList->data();
         const auto &d = pimpl->context->shortestDifferenceFun();
         {
             //std::vector<std::future<scalar>> energyFutures;
             //energyFutures.reserve(config->nThreads());
             std::vector<std::promise<scalar>> promises(config->nThreads());
             {
-                const std::size_t grainSize = (pimpl->particleData->size()) / config->nThreads();
+                const std::size_t grainSize = (particleData->size()) / config->nThreads();
                 const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
-                auto it_data_end = pimpl->particleData->end();
-                auto it_data = pimpl->particleData->begin();
+                auto it_data_end = particleData->end();
+                auto it_data = particleData->begin();
                 auto it_nl = getNeighborList()->begin();
                 auto it_tops = pimpl->topologies.cbegin();
                 const thd::barrier barrier{config->nThreads()};
@@ -169,10 +164,8 @@ void CPUStateModel::calculateForces() {
                     //energyFutures.push_back(promises[i].get_future());
                     //ForcesThreadArgs args (, std::cref(barrier));
                     executables.push_back(executor.pack(calculateForcesThread, it_data, it_data + grainSize, it_nl,
-                                                        std::ref(promises.at(i)),
-                                                        std::cref(particleData), std::cref(potOrder1),
-                                                        std::cref(potOrder2),
-                                                        std::cref(d)));
+                                                        std::ref(promises.at(i)), particleData, std::cref(potOrder1),
+                                                        std::cref(potOrder2), std::cref(d)));
                     it_nl += grainSize;
                     it_data += grainSize;
                     it_tops += grainSizeTopologies;
@@ -216,7 +209,7 @@ void CPUStateModel::calculateForces() {
 }
 
 const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
-    const auto &data = *pimpl->particleData;
+    const auto &data = *pimpl->neighborList->data();
     std::vector<Vec3> target{};
     target.reserve(data.size());
     for (const auto &entry : data) {
@@ -226,7 +219,7 @@ const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
 }
 
 const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
-    const auto &data = *pimpl->particleData;
+    const auto &data = *pimpl->neighborList->data();
     std::vector<readdy::model::Particle> result;
     result.reserve(data.size());
     for (const auto &entry : data) {
@@ -242,15 +235,15 @@ void CPUStateModel::updateNeighborList() {
 }
 
 void CPUStateModel::addParticle(const readdy::model::Particle &p) {
-    pimpl->particleData->addParticle(p);
+    getParticleData()->addParticle(p);
 }
 
 void CPUStateModel::addParticles(const std::vector<readdy::model::Particle> &p) {
-    pimpl->particleData->addParticles(p);
+    getParticleData()->addParticles(p);
 }
 
 void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
-    pimpl->particleData->removeParticle(p);
+    getParticleData()->removeParticle(p);
 }
 
 scalar CPUStateModel::getEnergy() const {
@@ -261,24 +254,25 @@ CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
         : pimpl(std::make_unique<Impl>(context, taf, config)), config(config) {
+    pimpl->neighborList = std::unique_ptr<neighbor_list>(
+            // new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
+            //new nl::CompactCLLNeighborList(1, *pimpl->context, *config)
+            new nl::DynamicCLLNeighborList(*pimpl->context, *config)
+    );
     pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
-            pimpl->particleData->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
+            getParticleData()->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
                 for (auto &top : pimpl->topologies) {
                     if(!top->isDeactivated()) top->permuteIndices(indices);
                 }
             }));
-    pimpl->neighborList = std::unique_ptr<neighbor_list>(
-           // new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
-            new nl::CompactCLLNeighborList(1, *getParticleData(), *pimpl->context, *config)
-    );
 }
 
 CPUStateModel::data_type const *const CPUStateModel::getParticleData() const {
-    return pimpl->particleData.get();
+    return pimpl->neighborList->data();
 }
 
 CPUStateModel::data_type *const CPUStateModel::getParticleData() {
-    return pimpl->particleData.get();
+    return pimpl->neighborList->data();
 }
 
 neighbor_list const *const CPUStateModel::getNeighborList() const {
@@ -290,7 +284,7 @@ void CPUStateModel::clearNeighborList() {
 }
 
 void CPUStateModel::removeAllParticles() {
-    pimpl->particleData->clear();
+    getParticleData()->clear();
 }
 
 neighbor_list *const CPUStateModel::getNeighborList() {
@@ -299,7 +293,7 @@ neighbor_list *const CPUStateModel::getNeighborList() {
 
 readdy::model::top::GraphTopology *const
 CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) {
-    std::vector<std::size_t> ids = pimpl->particleData->addTopologyParticles(particles);
+    std::vector<std::size_t> ids = getParticleData()->addTopologyParticles(particles);
     std::vector<particle_type_type> types;
     types.reserve(ids.size());
     for (const auto &p : particles) {
@@ -311,7 +305,7 @@ CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::mo
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {
-        pimpl->particleData->entry_at(p).topology_index = idx;
+        getParticleData()->entry_at(p).topology_index = idx;
     }
     return it->get();
 }
@@ -325,14 +319,7 @@ const std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reac
 }
 
 readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {
-    return pimpl->particleData->getParticle(index);
-}
-
-void CPUStateModel::expected_n_particles(const std::size_t n) {
-    auto& data = *pimpl->particleData;
-    if(data.size() < n) {
-        data.reserve(n);
-    }
+    return getParticleData()->getParticle(index);
 }
 
 const std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() const {
@@ -363,11 +350,11 @@ std::vector<readdy::model::top::GraphTopology*> CPUStateModel::getTopologies() {
 }
 
 particle_type_type CPUStateModel::getParticleType(const std::size_t index) const {
-    return pimpl->particleData->entry_at(index).type;
+    return getParticleData()->entry_at(index).type;
 }
 
 const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_index particle) const {
-    const auto& entry = pimpl->particleData->entry_at(particle);
+    const auto& entry = getParticleData()->entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
             return pimpl->topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
@@ -379,7 +366,7 @@ const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(r
 }
 
 readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy::model::top::Topology::particle_index particle) {
-    const auto& entry = pimpl->particleData->entry_at(particle);
+    const auto& entry = getParticleData()->entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
             return pimpl->topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
@@ -395,7 +382,7 @@ void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
     auto it = topologies.push_back(std::make_unique<topology>(std::move(top)));
     auto idx = std::distance(topologies.begin(), it);
     const auto& particles = it->get()->getParticles();
-    auto& data = *pimpl->particleData;
+    auto& data = *getParticleData();
     std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
         data.entry_at(p).topology_index = idx;
     });
@@ -423,27 +410,27 @@ void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configurat
 
     if(nl.type == "CellDecomposition") {
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
+                new nl::CellDecompositionNeighborList(getParticleData(), *pimpl->context, *config)
         );
         log::debug("Using CPU/CellDecomposition neighborList");
     } else if(nl.type == "ContiguousCLL") {
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::ContiguousCLLNeighborList(nl.cll_radius, *getParticleData(), *pimpl->context, *config)
+                new nl::ContiguousCLLNeighborList(getParticleData(), nl.cll_radius, *pimpl->context, *config)
         );
         log::debug("Using CPU/ContiguousCLL neighbor list with radius {}.", nl.cll_radius);
     } else if (nl.type == "DynamicCLL") {
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::DynamicCLLNeighborList(*getParticleData(), *pimpl->context, *config)
+                new nl::DynamicCLLNeighborList(getParticleData(), *pimpl->context, *config)
         );
         log::debug("Using CPU/DynamicCLL neighbor list.");
     } else if (nl.type == "Adaptive") {
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::AdaptiveNeighborList(*getParticleData(), *pimpl->context, *config)
+                new nl::AdaptiveNeighborList(getParticleData(), *pimpl->context, *config)
         );
         log::debug("Using CPU/Adaptive neighbor list.");
     } else if (nl.type == "CompactCLL") {
         (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::CompactCLLNeighborList(nl.cll_radius, *getParticleData(), *pimpl->context, *config)
+                new nl::CompactCLLNeighborList(getParticleData(), nl.cll_radius, *pimpl->context, *config)
         );
         log::debug("Using CPU/CompactCLL neighbor list with radius {}.", nl.cll_radius);
     } else {

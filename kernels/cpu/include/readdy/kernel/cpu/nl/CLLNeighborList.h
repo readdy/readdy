@@ -34,6 +34,7 @@
 
 #include "NeighborList.h"
 #include "CellLinkedList.h"
+#include "NeighborListContainer.h"
 
 namespace readdy {
 namespace kernel {
@@ -42,7 +43,10 @@ namespace nl {
 
 class ContiguousCLLNeighborList : public NeighborList {
 public:
-    ContiguousCLLNeighborList(std::uint8_t cll_radius, NeighborList::data_type &data,
+    ContiguousCLLNeighborList(std::uint8_t cll_radius, const readdy::model::KernelContext &context,
+                              const readdy::util::thread::Config &config);
+
+    ContiguousCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
                               const readdy::model::KernelContext &context, const readdy::util::thread::Config &config);
 
     bool is_adaptive() const override;
@@ -55,22 +59,34 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_type::DataUpdate &&update) override;
+    void updateData(DataUpdate &&update) override;
 
     virtual const_iterator cbegin() const override;
 
     virtual const_iterator cend() const override;
 
+    const data::EntryDataContainer *data() const override;
+
+    data::EntryDataContainer *data() override;
+
+    const neighbors_type &neighbors_of(std::size_t entry) const override;
+
 private:
+
     std::uint8_t cll_radius;
+    data::DefaultDataContainer _data;
 
     ContiguousCellLinkedList ccll;
+    ContiguousCLLNeighborListContainer ccllContainer;
     bool _is_set_up {false};
 };
 
 class DynamicCLLNeighborList : public NeighborList {
 public:
-    DynamicCLLNeighborList(NeighborList::data_type &data, const readdy::model::KernelContext &context,
+    DynamicCLLNeighborList(const readdy::model::KernelContext &context,
+                           const readdy::util::thread::Config &config);
+
+    DynamicCLLNeighborList(data::EntryDataContainer *data, const readdy::model::KernelContext &context,
                            const readdy::util::thread::Config &config);
 
     bool is_adaptive() const override;
@@ -83,21 +99,31 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_type::DataUpdate &&update) override;
+    void updateData(DataUpdate &&update) override;
 
     virtual const_iterator cbegin() const override;
 
     virtual const_iterator cend() const override;
 
+    const neighbors_type &neighbors_of(std::size_t entry) const override;
+
+    const data::EntryDataContainer *data() const override;
+
+    data::EntryDataContainer *data() override;
+
 private:
+    data::DefaultDataContainer _data;
     DynamicCellLinkedList dcll;
+    DynamicCLLNeighborListContainer dcllContainer;
     bool _is_set_up {false};
 };
 
 class CompactCLLNeighborList : public NeighborList {
 public:
-    CompactCLLNeighborList(std::uint8_t cll_radius, NeighborList::data_type &data,
-                           const readdy::model::KernelContext &context, const util::thread::Config &config);
+    CompactCLLNeighborList(std::uint8_t cll_radius, const readdy::model::KernelContext &context, const util::thread::Config &config);
+
+    CompactCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
+                           const model::KernelContext &context, const util::thread::Config &config);
 
     bool is_adaptive() const override;
 
@@ -107,7 +133,7 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
-    void updateData(data_type::DataUpdate &&update) override;
+    void updateData(DataUpdate &&update) override;
 
     void fill_verlet_list(const util::PerformanceNode &node);
 
@@ -115,10 +141,23 @@ public:
 
     virtual const_iterator cend() const override;
 
+    const data::EntryDataContainer *data() const override;
+
+    data::EntryDataContainer *data() override;
+
+    const neighbors_type &neighbors_of(std::size_t entry) const override;
+
+    const CompactCLLNeighborListContainer &container() const;
+
+    const CompactCellLinkedList &cellLinkedList() const;
+
+    CompactCellLinkedList &cellLinkedList();
+
 private:
     std::uint8_t cll_radius;
-
+    data::DefaultDataContainer _data;
     CompactCellLinkedList ccll;
+    CompactCLLNeighborListContainer ccllContainer;
     bool _is_set_up {false};
 };
 

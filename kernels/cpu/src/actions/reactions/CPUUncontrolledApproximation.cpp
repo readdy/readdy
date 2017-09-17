@@ -35,6 +35,7 @@
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
 #include <readdy/kernel/cpu/actions/reactions/Event.h>
 #include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
+#include <readdy/kernel/cpu/data/DataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -42,8 +43,8 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
+using data_t = data::EntryDataContainer;
 using event_t = Event;
-using data_t = neighbor_list::data_type;
 using data_iter_t = data_t::const_iterator;
 using neighbor_list_iter_t = neighbor_list::const_iterator;
 using entry_type = data_t::Entries::value_type;

@@ -71,13 +71,12 @@ void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::Perform
                 auto nAdjacentCells = nNeighbors[0] * nNeighbors[1] * nNeighbors[2];
                 _cellNeighbors = util::Index2D(_cellIndex.size(), 1 + nAdjacentCells);
                 _cellNeighborsContent.resize(_cellNeighbors.size());
-                auto pbc = _context.get().periodicBoundaryConditions();
                 {
+                    auto pbc = _context.get().periodicBoundaryConditions();
                     int r = _radius;
                     // local adjacency
                     std::vector<std::size_t> adj;
                     adj.reserve(1 + nAdjacentCells);
-
                     for (int i = 0; i < _cellIndex[0]; ++i) {
                         for (int j = 0; j < _cellIndex[1]; ++j) {
                             for (int k = 0; k < _cellIndex[2]; ++k) {
@@ -91,22 +90,27 @@ void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::Perform
                                         for (int kk = k - r; kk <= k + r; ++kk) {
                                             if (ii == i && jj == j && kk == k) continue;
                                             auto adj_x = ii;
-                                            if (pbc[0] && adj_x < 0)
-                                                adj_x = static_cast<int>(util::numeric::positive_modulo(adj_x,
-                                                                                                        _cellIndex[0]));
+                                            if(pbc[0]) {
+                                                auto cix = static_cast<int>(_cellIndex[0]);
+                                                adj_x = (adj_x % cix + cix) % cix;
+                                            }
                                             auto adj_y = jj;
-                                            if (pbc[1] && adj_y < 0)
-                                                adj_y = static_cast<int>(util::numeric::positive_modulo(adj_y,
-                                                                                                        _cellIndex[1]));
+                                            if(pbc[1]) {
+                                                auto cix = static_cast<int>(_cellIndex[1]);
+                                                adj_y = (adj_y % cix + cix) % cix;
+                                            }
                                             auto adj_z = kk;
-                                            if (pbc[2] && adj_z < 0)
-                                                adj_z = static_cast<int>(util::numeric::positive_modulo(adj_z,
-                                                                                                        _cellIndex[2]));
+                                            if(pbc[2]) {
+                                                auto cix = static_cast<int>(_cellIndex[2]);
+                                                adj_z = (adj_z % cix + cix) % cix;
+                                            }
 
                                             if (adj_x >= 0 && adj_y >= 0 && adj_z >= 0
                                                 && adj_x < _cellIndex[0] && adj_y < _cellIndex[1] &&
                                                 adj_z < _cellIndex[2]) {
                                                 adj.push_back(_cellIndex(adj_x, adj_y, adj_z));
+                                            } else {
+                                                log::critical("got {}, {}, {}", adj_x, adj_y, adj_z);
                                             }
                                         }
                                     }
@@ -385,6 +389,70 @@ std::size_t CompactCellLinkedList::nParticles(std::size_t cellIndex) const {
     return size;
 }
 
+template<>
+void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    auto boxSize = _context.get().boxSize();
+    std::size_t pidx = 1;
+    for (const auto &entry : _data.get()) {
+        if (!entry.deactivated) {
+            const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
+            const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
+            const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
+            const auto cellIndex = _cellIndex(i, j, k);
+            _list[pidx] = *_head.at(cellIndex);
+            *_head[cellIndex] = pidx;
+        }
+        ++pidx;
+    }
+}
+
+template<>
+void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode &node) {
+    auto t = node.timeit();
+    auto boxSize = _context.get().boxSize();
+    const auto &data = _data.get();
+    const auto grainSize = data.size() / _config.get().nThreads();
+    const auto &executor = *_config.get().executor();
+    const auto cellSize = _cellSize;
+    const auto &cellIndex = _cellIndex;
+
+    auto &list = _list;
+    auto &head = _head;
+
+    auto worker = [&data, &cellIndex, cellSize, &list, &head, boxSize]
+            (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
+        auto it = data.begin() + begin_pidx - 1;
+        auto pidx = begin_pidx;
+        while(it != data.begin() + end_pidx - 1) {
+            const auto &entry = *it;
+            if (!entry.deactivated) {
+                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / cellSize.x));
+                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / cellSize.y));
+                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / cellSize.z));
+                const auto cix = cellIndex(i, j, k);
+                auto &atomic = *head.at(cix);
+                // perform CAS
+                auto currentHead = atomic.load();
+                while(!atomic.compare_exchange_weak(currentHead, pidx)) {}
+                list[pidx] = currentHead;
+            }
+            ++pidx;
+            ++it;
+        }
+    };
+
+    std::vector<std::function<void(std::size_t)>> executables;
+    executables.reserve(_config.get().nThreads());
+    auto it = 1_z;
+    for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
+        executables.push_back(executor.pack(worker, it, it + grainSize));
+        it += grainSize;
+    }
+    executables.push_back(executor.pack(worker, it, data.size()+1));
+    executor.execute_and_wait(std::move(executables));
+}
+
 void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
     if(_max_cutoff > 0) {
         auto t = node.timeit();
@@ -396,68 +464,11 @@ void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
             _list.resize(0);
             _list.resize(nParticles + 1);
         }
-        fillBins<false>(node.subnode("fillBins"));
-    }
-}
-
-template<bool serial>
-void CompactCellLinkedList::fillBins(const util::PerformanceNode &node) {
-    auto t = node.timeit();
-    auto boxSize = _context.get().boxSize();
-    if(serial) {
-        std::size_t pidx = 1;
-        for (const auto &entry : _data.get()) {
-            if (!entry.deactivated) {
-                const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / _cellSize.x));
-                const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / _cellSize.y));
-                const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / _cellSize.z));
-                const auto cellIndex = _cellIndex(i, j, k);
-                _list[pidx] = *_head.at(cellIndex);
-                *_head[cellIndex] = pidx;
-            }
-            ++pidx;
+        if(_serial) {
+            fillBins<true>(node.subnode("fillBins serial"));
+        } else {
+            fillBins<false>(node.subnode("fillBins parallel"));
         }
-    } else {
-        const auto &data = _data.get();
-        const auto grainSize = data.size() / _config.get().nThreads();
-        const auto &executor = *_config.get().executor();
-        const auto cellSize = _cellSize;
-        const auto &cellIndex = _cellIndex;
-
-        auto &list = _list;
-        auto &head = _head;
-
-        auto worker = [&data, &cellIndex, cellSize, &list, &head, boxSize]
-                (std::size_t tid, std::size_t begin_pidx, std::size_t end_pidx) {
-            auto it = data.begin() + begin_pidx - 1;
-            auto pidx = begin_pidx;
-            while(it != data.begin() + end_pidx - 1) {
-                const auto &entry = *it;
-                if (!entry.deactivated) {
-                    const auto i = static_cast<std::size_t>(std::floor((entry.pos.x + .5 * boxSize[0]) / cellSize.x));
-                    const auto j = static_cast<std::size_t>(std::floor((entry.pos.y + .5 * boxSize[1]) / cellSize.y));
-                    const auto k = static_cast<std::size_t>(std::floor((entry.pos.z + .5 * boxSize[2]) / cellSize.z));
-                    const auto cix = cellIndex(i, j, k);
-                    auto &atomic = *head.at(cix);
-                    // perform CAS
-                    auto currentHead = atomic.load();
-                    while(!atomic.compare_exchange_weak(currentHead, pidx)) {}
-                    list[pidx] = currentHead;
-                }
-                ++pidx;
-                ++it;
-            }
-        };
-
-        std::vector<std::function<void(std::size_t)>> executables;
-        executables.reserve(_config.get().nThreads());
-        auto it = 1_z;
-        for (int i = 0; i < _config.get().nThreads() - 1; ++i) {
-            executables.push_back(executor.pack(worker, it, it + grainSize));
-            it += grainSize;
-        }
-        executables.push_back(executor.pack(worker, it, data.size()+1));
-        executor.execute_and_wait(std::move(executables));
     }
 }
 
@@ -470,6 +481,14 @@ const CompactCellLinkedList::HEAD &CompactCellLinkedList::head() const {
 
 const std::vector<std::size_t> &CompactCellLinkedList::list() const {
     return _list;
+}
+
+bool &CompactCellLinkedList::serial() {
+    return _serial;
+}
+
+const bool &CompactCellLinkedList::serial() const {
+    return _serial;
 }
 
 }

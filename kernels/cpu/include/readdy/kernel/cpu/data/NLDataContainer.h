@@ -42,34 +42,7 @@ namespace kernel {
 namespace cpu {
 namespace data {
 
-struct DEntry : public Entry {
-    using Particle = readdy::model::Particle;
-
-    explicit DEntry(const Particle &particle) : Entry(particle), displacement(0) {}
-
-    DEntry(Particle::pos_type pos, particle_type_type type, Particle::id_type id)
-            : Entry(pos, type, id), displacement(0) {}
-
-    explicit DEntry(const Entry &e)
-            : Entry(e.pos, e.type, e.id), displacement(0) {
-        force = e.force;
-        deactivated = e.deactivated;
-    }
-
-    DEntry(const DEntry &) = delete;
-
-    DEntry &operator=(const DEntry &) = delete;
-
-    DEntry(DEntry &&) noexcept = default;
-
-    DEntry &operator=(DEntry &&) noexcept = default;
-
-    ~DEntry() = default;
-
-    scalar displacement;
-};
-
-class NLDataContainer : public DataContainer<DEntry> {
+class NLDataContainer : public EntryDataContainer {
 public:
     using Neighbors = std::vector<std::size_t>;
     using NeighborList = std::vector<Neighbors>;
@@ -77,13 +50,13 @@ public:
     using neighbors_iterator = NeighborList::iterator;
     using neighbors_const_iterator = NeighborList::const_iterator;
 
-    NLDataContainer(const model::KernelContext &context, const util::thread::Config &threadConfig);
+    explicit NLDataContainer(EntryDataContainer *data);
 
-    explicit NLDataContainer(const DefaultDataContainer &base);
+    NLDataContainer(const model::KernelContext &context, const util::thread::Config &threadConfig);
 
     void reserve(std::size_t n) override;
 
-    size_type addEntry(DEntry &&entry) override;
+    size_type addEntry(Entry &&entry) override;
 
     void addParticles(const std::vector<Particle> &particles) override;
 
@@ -91,7 +64,7 @@ public:
 
     std::vector<size_type> update(DataUpdate &&update) override;
 
-    void displace(DEntry &entry, const Particle::pos_type &delta) override;
+    void displace(size_type entry, const Particle::pos_type &delta) override;
 
     Neighbors &neighbors_at(size_type index);
 
@@ -103,8 +76,13 @@ public:
 
     const NeighborList &neighbors() const;
 
+    std::vector<scalar> &displacements();
+
+    const std::vector<scalar> &displacements() const;
+
 private:
     NeighborList _neighbors {};
+    std::vector<scalar> _displacements {};
 };
 
 }

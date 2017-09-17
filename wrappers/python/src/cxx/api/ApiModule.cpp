@@ -84,7 +84,6 @@ void exportApi(py::module &api) {
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)
             .def_property_readonly("single_precision", &sim::singlePrecision)
             .def_property_readonly("double_precision", &sim::doublePrecision)
-            .def("set_expected_max_n_particles", &sim::setExpectedMaxNParticles, "n"_a)
             .def("register_particle_type",
                  [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient, readdy::scalar radius,
                     ParticleTypeFlavor flavor) {

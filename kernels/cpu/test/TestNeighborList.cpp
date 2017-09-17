@@ -47,7 +47,7 @@ namespace m = readdy::model;
 
 namespace {
 
-using data_t = cpu::CPUStateModel::data_type;
+using data_t = cpu::data::NLDataContainer;
 using nl_t = cpu::cell_decomposition_neighbor_list;
 
 struct TestNeighborList : ::testing::Test {
@@ -70,7 +70,7 @@ struct TestNeighborList : ::testing::Test {
 
 class TestNeighborListImpl : public ::testing::TestWithParam<const char*> {};
 
-auto isPairInList = [](nl_t *pairs, data_t &data,
+auto isPairInList = [](nl_t *pairs, readdy::kernel::cpu::data::EntryDataContainer *data,
                        unsigned long idx1, unsigned long idx2) {
     const auto &neighbors1 = pairs->neighbors_of(idx1);
     for (auto &neigh_idx : neighbors1) {
@@ -87,8 +87,8 @@ auto isPairInList = [](nl_t *pairs, data_t &data,
     return false;
 };
 
-auto isIdPairInList = [](nl_t *pairs, data_t &data, std::size_t id1, std::size_t id2) {
-    return isPairInList(pairs, data, data.getIndexForId(id1), data.getIndexForId(id2));
+auto isIdPairInList = [](nl_t *pairs, readdy::kernel::cpu::data::EntryDataContainer *data, std::size_t id1, std::size_t id2) {
+    return isPairInList(pairs, data, data->getIndexForId(id1), data->getIndexForId(id2));
 };
 
 auto getNumberPairs = [](nl_t &pairs) {
@@ -105,15 +105,17 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
     readdy::util::thread::Config conf;
-    data_t data {ctx, kernel->threadConfig()};
-    nl_t list(data, ctx, conf);
+
+    nl_t list(ctx, conf);
+
+    auto data = list.data();
 
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
 
-    data.addParticles(particles);
+    data->addParticles(particles);
     list.set_up({});
 
     int sum = getNumberPairs(list);
@@ -130,16 +132,16 @@ TEST_F(TestNeighborList, OneDirection) {
     ctx.configure(false);
 
     readdy::util::thread::Config conf;
-    data_t data {ctx, kernel->threadConfig()};
+    nl_t list(ctx, conf);
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
     std::vector<std::size_t> ids(particles.size());
     std::transform(particles.begin(), particles.end(), ids.begin(), [](const m::Particle& p) {return p.getId();});
-    data.addParticles(particles);
+    auto data = list.data();
+    data->addParticles(particles);
 
-    nl_t list(data, ctx, conf);
     list.set_up({});
 
     int sum = getNumberPairs(list);
@@ -158,15 +160,15 @@ TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     ctx.boxSize() = {{4, 4, 4}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
     readdy::util::thread::Config conf;
-    data_t data {ctx, kernel->threadConfig()};
-    nl_t list(data, ctx, conf);
+    nl_t list(ctx, conf);
+    auto data = list.data();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
             m::Particle(0, .3, -.3, typeIdA), m::Particle(-.3, 0, .3, typeIdA), m::Particle(.3, -.3, 0, typeIdA)
     };
 
-    data.addParticles(particles);
+    data->addParticles(particles);
     list.set_up({});
     int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 30);
@@ -186,8 +188,9 @@ TEST(TestAdaptiveNeighborList, CellContainerSanity) {
     auto &context = kernel->getKernelContext();
     context.boxSize() = {{10, 10, 10}};
 
+    auto data = cpu::data::NLDataContainer(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
 
@@ -216,8 +219,9 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
     context.boxSize() = {{10, 10, 10}};
     context.configure();
 
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(1);
@@ -276,8 +280,9 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipNotPeriodic) {
     context.periodicBoundaryConditions() = {{false, false, false}};
     context.boxSize() = {{10, 10, 10}};
 
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(1);
@@ -332,8 +337,9 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
     context.boxSize() = {{5, 1, 1.1}};
     context.configure();
 
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(.5);
@@ -383,8 +389,9 @@ TEST(TestAdaptiveNeighborList, PositionToCell) {
     context.boxSize() = {{10, 10, 10}};
     context.configure();
 
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(1);
@@ -407,7 +414,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
     
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto data = kernel->getCPUKernelStateModel().getParticleData();
     auto &context = kernel->getKernelContext();
     const auto &pbc = context.applyPBCFun();
 
@@ -430,9 +437,9 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
     };
     neighbor_list.set_up({});
 
-    for (std::size_t i = 0; i < data.size(); ++i) {
-        auto cell = neighbor_list.cell_container().leaf_cell_for_position(pbc(data.pos(i)));
-        ASSERT_TRUE(cell != nullptr) << "expected cell for position " << data.pos(i);
+    for (std::size_t i = 0; i < data->size(); ++i) {
+        auto cell = neighbor_list.cell_container().leaf_cell_for_position(pbc(data->pos(i)));
+        ASSERT_TRUE(cell != nullptr) << "expected cell for position " << data->pos(i);
         const auto &cells_particles = cell->particles();
         ASSERT_TRUE(std::find(cells_particles.begin(), cells_particles.end(), i) != cells_particles.end());
     }
@@ -527,9 +534,9 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .1);
     context.configure(false);
     const auto &d2 = context.distSquaredFun();
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
-            data,
+            &data,
             kernel->getKernelContext(),
             kernel->threadConfig()
     };
@@ -572,7 +579,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", cutoff, cutoff);
     context.configure(false);
     const auto &d2 = context.distSquaredFun();
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto data = kernel->getCPUKernelStateModel().getParticleData();
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
@@ -584,12 +591,12 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
 
     {
         std::size_t i = 0;
-        for (const auto &entry_i : data) {
+        for (const auto &entry_i : *data) {
             std::size_t j = 0;
-            for (const auto &entry_j : data) {
+            for (const auto &entry_j : *data) {
                 if (!entry_i.deactivated && !entry_j.deactivated && i != j) {
                     if (d2(entry_i.pos, entry_j.pos) < cutoff * cutoff) {
-                        const auto &neighbors = data.neighbors_at(i);
+                        const auto &neighbors = neighbor_list.neighbors_of(i);
                         ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
                                                     << i << " and " << j << " should be neighbors";
                     }
@@ -607,12 +614,12 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
         neighbor_list.update({});
         {
             std::size_t i = 0;
-            for (const auto &entry_i : data) {
+            for (const auto &entry_i : *data) {
                 std::size_t j = 0;
-                for (const auto &entry_j : data) {
+                for (const auto &entry_j : *data) {
                     if ((!entry_i.deactivated) && (!entry_j.deactivated) && i != j) {
                         if (d2(entry_i.pos, entry_j.pos) < cutoff * cutoff) {
-                            const auto &neighbors = data.neighbors_at(i);
+                            const auto &neighbors = neighbor_list.neighbors_of(i);
                             bool neighbors_of_each_other = std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end();
                             EXPECT_TRUE(neighbors_of_each_other);
                         }

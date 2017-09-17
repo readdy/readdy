@@ -62,7 +62,7 @@ public:
     using const_iterator = typename Entries::const_iterator;
 
     DataContainer(const readdy::model::KernelContext &context, const readdy::util::thread::Config &threadConfig)
-            : _context(context), _threadConfig(threadConfig), reorderSignal(std::make_unique<ReorderSignal>()) {};
+            : _context(context), _threadConfig(threadConfig), reorderSignal(std::make_shared<ReorderSignal>()) {};
 
     virtual ~DataContainer() = default;
 
@@ -265,7 +265,7 @@ public:
 
     virtual std::vector<size_type> update(DataUpdate &&) = 0;
 
-    virtual void displace(T &entry, const Particle::pos_type &delta) = 0;
+    virtual void displace(size_type entry, const Particle::pos_type &delta) = 0;
 
     void blanks_moved_to_end() {
         auto n_blanks = _blanks.size();
@@ -284,6 +284,14 @@ public:
         return _threadConfig.get();
     }
 
+    const Entries &entries() const {
+        return _entries;
+    }
+
+    const std::vector<size_type> &blanks() const {
+        return _blanks;
+    }
+
 protected:
     std::reference_wrapper<const readdy::model::KernelContext> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _threadConfig;
@@ -291,8 +299,37 @@ protected:
     std::vector<size_type> _blanks {};
     Entries _entries {};
 
-    std::unique_ptr<ReorderSignal> reorderSignal;
+    std::shared_ptr<ReorderSignal> reorderSignal;
 };
+
+struct Entry {
+    using Particle = readdy::model::Particle;
+
+    explicit Entry(const Particle &particle)
+            : pos(particle.getPos()), force(), type(particle.getType()), deactivated(false), id(particle.getId()) {}
+
+    Entry(Particle::pos_type pos, particle_type_type type, Particle::id_type id)
+            : pos(pos), type(type), id(id), deactivated(false) {}
+
+    Entry(const Entry &) = default;
+
+    Entry &operator=(const Entry &) = default;
+
+    Entry(Entry &&) noexcept = default;
+
+    Entry &operator=(Entry &&) noexcept = default;
+
+    virtual ~Entry() = default;
+
+    Vec3 force;
+    Vec3 pos;
+    std::ptrdiff_t topology_index{-1};
+    Particle::id_type id;
+    Particle::type_type type;
+    bool deactivated;
+};
+
+using EntryDataContainer = DataContainer<Entry>;
 
 }
 }

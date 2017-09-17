@@ -63,7 +63,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using conversion_t = readdy::model::reactions::Conversion;
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
-    using data_t = readdy::kernel::cpu::CPUStateModel::data_type;
+    using data_t = readdy::kernel::cpu::data::NLDataContainer;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
     kernel->getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
     kernel->getKernelContext().boxSize() = {{100, 100, 100}};

@@ -40,6 +40,14 @@ namespace data {
 DefaultDataContainer::DefaultDataContainer(const readdy::model::KernelContext &context, const util::thread::Config &threadConfig)
         : DataContainer(context, threadConfig) {}
 
+DefaultDataContainer::DefaultDataContainer(EntryDataContainer *entryDataContainer)
+        : DataContainer(entryDataContainer->context(), entryDataContainer->threadConfig()) {
+    _entries = entryDataContainer->entries();
+    //_entries.insert(_entries.end(), entryDataContainer.entries().begin(), entryDataContainer.entries().end());
+    _blanks = entryDataContainer->blanks();
+    // _blanks.insert(_blanks.end(), entryDataContainer.blanks().begin(), entryDataContainer.blanks().end());
+}
+
 void DefaultDataContainer::reserve(std::size_t n) {
     _entries.reserve(n);
 }
@@ -87,20 +95,16 @@ DefaultDataContainer::addTopologyParticles(const std::vector<TopologyParticle> &
 }
 
 std::vector<DefaultDataContainer::size_type> DefaultDataContainer::update(DataUpdate &&update) {
-    std::vector<size_type> result;
-
     auto &&newEntries = std::move(std::get<0>(update));
     auto &&removedEntries = std::move(std::get<1>(update));
-    result.reserve(newEntries.size());
 
     auto it_del = removedEntries.begin();
     for(auto&& newEntry : newEntries) {
         if(it_del != removedEntries.end()) {
             _entries.at(*it_del) = std::move(newEntry);
-            result.push_back(*it_del);
             ++it_del;
         } else {
-            result.push_back(addEntry(std::move(newEntry)));
+            addEntry(std::move(newEntry));
         }
     }
     while(it_del != removedEntries.end()) {
@@ -108,13 +112,18 @@ std::vector<DefaultDataContainer::size_type> DefaultDataContainer::update(DataUp
         ++it_del;
     }
 
+    static thread_local std::vector<size_type> result;
     return result;
 }
 
-void DefaultDataContainer::displace(Entry &entry, const Particle::pos_type &delta) {
+void DefaultDataContainer::displace(size_type index, const Particle::pos_type &delta) {
+    auto &entry = _entries.at(index);
     entry.pos += delta;
     _context.get().fixPositionFun()(entry.pos);
 }
+
+
+
 }
 }
 }

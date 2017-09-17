@@ -49,7 +49,7 @@ class CPUStateModel : public readdy::model::KernelStateModel {
 
 public:
 
-    using data_type = readdy::kernel::cpu::data::NLDataContainer;
+    using data_type = readdy::kernel::cpu::data::EntryDataContainer;
     using particle_type = readdy::model::Particle;
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
@@ -101,8 +101,6 @@ public:
     neighbor_list const *const getNeighborList() const;
 
     neighbor_list *const getNeighborList();
-
-    void expected_n_particles(std::size_t n) override;
 
     void clearNeighborList() override;
 

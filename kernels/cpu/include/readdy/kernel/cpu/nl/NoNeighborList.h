@@ -32,4 +32,59 @@
 
 #pragma once
 
-// todo
+#include "NeighborList.h"
+#include "../data/DefaultDataContainer.h"
+
+namespace readdy {
+namespace kernel {
+namespace cpu {
+namespace nl {
+
+class NoNeighborList : public NeighborList {
+public:
+    NoNeighborList(const readdy::model::KernelContext &context, const readdy::util::thread::Config &config)
+            : NeighborList(context, config), _data(context, config) {}
+
+    const_iterator cbegin() const override {
+        return NeighborListIterator{_neighbors.begin()};
+    }
+
+    const_iterator cend() const override {
+        return NeighborListIterator{_neighbors.end()};
+    }
+
+    void set_up(const util::PerformanceNode &node) override {}
+
+    void update(const util::PerformanceNode &node) override {}
+
+    void clear(const util::PerformanceNode &node) override {}
+
+    void updateData(DataUpdate &&update) override {
+        _data.update(std::forward<DataUpdate>(update));
+    }
+
+    bool is_adaptive() const override {
+        return false;
+    }
+
+    const data::EntryDataContainer *data() const override {
+        return &_data;
+    }
+
+    data::EntryDataContainer *data() override {
+        return &_data;
+    }
+
+    const neighbors_type &neighbors_of(std::size_t entry) const override {
+        return {};
+    }
+
+private:
+    data::DefaultDataContainer _data;
+    std::vector<std::vector<std::size_t>> _neighbors {};
+};
+
+}
+}
+}
+}

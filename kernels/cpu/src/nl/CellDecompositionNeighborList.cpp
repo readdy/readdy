@@ -37,10 +37,15 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-CellDecompositionNeighborList::CellDecompositionNeighborList(data_type &data,
+CellDecompositionNeighborList::CellDecompositionNeighborList(data::EntryDataContainer *data,
                                                              const readdy::model::KernelContext &context,
-                                                             const readdy::util::thread::Config &config) :
-        NeighborList(data, context, config), _cell_container(data, context, config) {}
+                                                             const readdy::util::thread::Config &config)
+        : NeighborList(context, config), _data(data), _cell_container(_data, context, config) {}
+
+CellDecompositionNeighborList::CellDecompositionNeighborList(const readdy::model::KernelContext &context,
+                                                             const readdy::util::thread::Config &config)
+        : NeighborList(context, config), _data(context, config), _cell_container(_data, context, config) {}
+
 
 void CellDecompositionNeighborList::set_up(const util::PerformanceNode &node) {
     auto tx = node.timeit();
@@ -81,11 +86,11 @@ void CellDecompositionNeighborList::update(const util::PerformanceNode &node) {
 
 void CellDecompositionNeighborList::fill_container() {
     if (_max_cutoff > 0) {
-        const auto &data = _data.get();
+        const auto &data = _data;
         const auto grainSize = data.size() / _config.get().nThreads();
         const auto data_begin = data.cbegin();
-        auto worker = [data_begin](std::size_t, data_type::const_iterator begin,
-                          data_type::const_iterator end, const CellContainer &container) {
+        auto worker = [data_begin](std::size_t, data::EntryDataContainer::const_iterator begin,
+                          data::EntryDataContainer::const_iterator end, const CellContainer &container) {
             auto i = std::distance(data_begin, begin);
             for (auto it = begin; it != end; ++it, ++i) {
                 if (!it->deactivated) {
@@ -120,7 +125,7 @@ void CellDecompositionNeighborList::fill_verlet_list() {
 
 void CellDecompositionNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell) {
     const auto &d2 = _context.get().distSquaredFun();
-    auto &data = _data.get();
+    auto &data = _data;
     for (const auto particle_index : cell.particles().data()) {
         auto &neighbors = data.neighbors_at(particle_index);
         auto &entry = data.entry_at(particle_index);
@@ -148,14 +153,14 @@ void CellDecompositionNeighborList::clear(const util::PerformanceNode &node) {
     auto t = node.timeit();
     if (_max_cutoff > 0) {
         _cell_container.clear();
-        for (auto &neighbors : _data.get().neighbors()) {
+        for (auto &neighbors : _data.neighbors()) {
             neighbors.clear();
         }
     }
 }
 
-void CellDecompositionNeighborList::updateData(data_type::DataUpdate &&update) {
-    _data.get().update(std::forward<data_type::DataUpdate>(update));
+void CellDecompositionNeighborList::updateData(DataUpdate &&update) {
+    _data.update(std::forward<DataUpdate>(update));
 }
 
 bool CellDecompositionNeighborList::is_adaptive() const {
@@ -163,11 +168,27 @@ bool CellDecompositionNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator CellDecompositionNeighborList::cbegin() const {
-    return NeighborListIterator{_data.get().neighbors().begin()};
+    return NeighborListIterator{_data.neighbors().begin(), true};
 }
 
 NeighborList::const_iterator CellDecompositionNeighborList::cend() const {
-    return NeighborListIterator{_data.get().neighbors().end()};
+    return NeighborListIterator{_data.neighbors().end(), true};
+}
+
+const data::EntryDataContainer *CellDecompositionNeighborList::data() const {
+    return &_data;
+}
+
+data::EntryDataContainer *CellDecompositionNeighborList::data() {
+    return &_data;
+}
+
+const NeighborList::neighbors_type &CellDecompositionNeighborList::neighbors_of(std::size_t entry) const {
+    const static neighbors_type no_neighbors{};
+    if (_max_cutoff > 0) {
+        return _data.neighbors_at(entry);
+    }
+    return no_neighbors;
 }
 
 

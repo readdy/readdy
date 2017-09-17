@@ -34,7 +34,6 @@
 
 #include <cstddef>
 #include <vector>
-#include "NeighborListContainer.h"
 
 namespace readdy {
 namespace kernel {
@@ -45,8 +44,8 @@ class NeighborListIterator;
 
 struct IteratorState {
     using size_type = std::size_t;
-    using static_iterator = NeighborListContainer::const_iterator;
-    using adaptive_iterator = std::vector<std::vector<std::size_t>>::const_iterator;
+    using const_iterator = std::vector<std::vector<std::size_t>>::const_iterator;
+    using inner_iterator = std::vector<std::size_t>::const_iterator;
 
     const size_type *begin() const;
     const size_type *end() const;
@@ -63,12 +62,17 @@ struct IteratorState {
 
     bool adaptive() const;
 
+    std::size_t n_neighbors() const;
+
+    std::size_t current_particle() const;
+
 private:
     friend class NeighborListIterator;
 
+    std::size_t _adaptive_pidx;
     bool _adaptive {true};
-    static_iterator _staticIt;
-    adaptive_iterator _adaptiveIt;
+    const_iterator _iterator {};
+    inner_iterator _inner_iterator {};
 };
 
 class NeighborListIterator {
@@ -81,17 +85,15 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using size_type = IteratorState::size_type;
 
-    explicit NeighborListIterator(IteratorState::static_iterator staticIterator);
-
-    explicit NeighborListIterator(IteratorState::adaptive_iterator adaptiveIterator);
+    explicit NeighborListIterator(IteratorState::const_iterator iterator, bool adaptive);
 
     NeighborListIterator(const NeighborListIterator &);
 
     NeighborListIterator &operator=(const NeighborListIterator &);
 
-    NeighborListIterator(NeighborListIterator &&);
+    NeighborListIterator(NeighborListIterator &&) = default;
 
-    NeighborListIterator &operator=(NeighborListIterator &&);
+    NeighborListIterator &operator=(NeighborListIterator &&) = default;
 
     ~NeighborListIterator() = default;
 

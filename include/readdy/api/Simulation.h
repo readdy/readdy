@@ -142,12 +142,6 @@ public:
     void setPeriodicBoundary(const std::array<bool, 3> &periodic);
 
     /**
-     * Allows to set an expected maximal number of particles in order to avoid reallocations.
-     * @param n expected number of particles
-     */
-    void setExpectedMaxNParticles(std::size_t n);
-
-    /**
      * Registers a predefined observable with the kernel. A list of available observables can be obtained by
      * getAvailableObservables().
      * @param stride the stride argument which decides how often the observable gets called

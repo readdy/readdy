@@ -35,14 +35,24 @@
 #include <vector>
 #include <readdy/common/thread/Config.h>
 #include <readdy/kernel/cpu/data/DefaultDataContainer.h>
-#include <readdy/common/flat_iterator.h>
+#include "CellLinkedList.h"
 
 namespace readdy {
 namespace kernel {
 namespace cpu {
 namespace nl {
 
-class NeighborList;
+struct NLContainerConfig {
+    using data_container_type = readdy::kernel::cpu::data::DefaultDataContainer;
+    using thread_config_type = readdy::util::thread::Config;
+
+    NLContainerConfig(const model::KernelContext &context, const thread_config_type &threads,
+                      const data_container_type &data);
+
+    std::reference_wrapper<const model::KernelContext> context;
+    std::reference_wrapper<const data_container_type> data;
+    std::reference_wrapper<const thread_config_type> threads;
+};
 
 class NeighborListContainer {
 
@@ -50,12 +60,11 @@ public:
     using value_type = std::size_t;
     using local_index_vector = std::vector<value_type>;
     using index_vector = std::vector<local_index_vector>;
-    using data_container_type = readdy::kernel::cpu::data::DefaultDataContainer;
-    using thread_config_type = readdy::util::thread::Config;
+    using indexer = std::vector<std::size_t>;
 
-    using const_iterator = readdy::util::flat_const_iterator<index_vector::const_iterator>;
+    using const_iterator = index_vector::const_iterator;
 
-    NeighborListContainer(const data_container_type &data, const thread_config_type &threadConfig);
+    explicit NeighborListContainer(NLContainerConfig config);
 
     index_vector &elements() {
         return _elements;
@@ -69,13 +78,51 @@ public:
 
     const_iterator end() const;
 
-    virtual void update() = 0;
+    void clear();
+
+    virtual void update(scalar cutoffSquared, const util::PerformanceNode &perf) = 0;
+
+protected:
+    index_vector _elements;
+    // todo: offsets array filled if "indexed==true"
+    indexer _indexer;
+
+    NLContainerConfig _config;
+
+
+};
+
+class ContiguousCLLNeighborListContainer : public NeighborListContainer {
+public:
+    ContiguousCLLNeighborListContainer(NLContainerConfig config, const ContiguousCellLinkedList &cll);
+
+    void update(scalar cutoffSquared, const util::PerformanceNode &perf) override;
 
 private:
-    index_vector _elements;
+    const ContiguousCellLinkedList &_cll;
+};
 
-    std::reference_wrapper<const data_container_type> _data;
-    std::reference_wrapper<const thread_config_type> _config;
+class DynamicCLLNeighborListContainer : public NeighborListContainer {
+public:
+    DynamicCLLNeighborListContainer(NLContainerConfig config, const DynamicCellLinkedList &cll);
+
+    void update(scalar cutoffSquared, const util::PerformanceNode &perf) override;
+
+private:
+    const DynamicCellLinkedList &_cll;
+};
+
+class CompactCLLNeighborListContainer : public NeighborListContainer {
+public:
+    CompactCLLNeighborListContainer(NLContainerConfig config, const CompactCellLinkedList &cll);
+
+    void update(scalar cutoffSquared, const util::PerformanceNode &perf) override;
+
+    void updateSerial(scalar cutoffSquared);
+
+private:
+    bool serialUpdate {false};
+    const CompactCellLinkedList &_cll;
 };
 
 }

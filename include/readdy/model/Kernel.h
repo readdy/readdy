@@ -237,8 +237,6 @@ public:
 
     readdy::model::top::TopologyActionFactory *const getTopologyActionFactory();
 
-    void expected_n_particles(std::size_t n);
-
     virtual void initialize();
 
     virtual void finalize();

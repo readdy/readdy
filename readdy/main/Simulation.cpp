@@ -382,11 +382,6 @@ void Simulation::configureTopologyTorsionPotential(const std::string &type1, con
     );
 }
 
-void Simulation::setExpectedMaxNParticles(const std::size_t n) {
-    ensureKernelSelected();
-    getSelectedKernel()->expected_n_particles(n);
-}
-
 std::vector<readdy::model::top::GraphTopology *> Simulation::currentTopologies() {
     ensureKernelSelected();
     return getSelectedKernel()->getKernelStateModel().getTopologies();

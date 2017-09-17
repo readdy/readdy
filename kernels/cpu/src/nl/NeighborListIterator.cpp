@@ -39,17 +39,17 @@ namespace nl {
 
 const IteratorState::size_type *IteratorState::begin() const {
     if(_adaptive) {
-        return &*_adaptiveIt->begin();
+        return &*_iterator->begin();
     } else {
-        return &*(_staticIt+1);
+        return &*(_inner_iterator+2);
     }
 }
 
 const IteratorState::size_type *IteratorState::end() const {
     if(_adaptive) {
-        return &*_adaptiveIt->end();
+        return &*_iterator->end();
     } else {
-        return &*(_staticIt + *_staticIt + 1);
+        return &*(_inner_iterator + n_neighbors() + 2);
     }
 }
 
@@ -57,13 +57,25 @@ bool IteratorState::adaptive() const {
     return _adaptive;
 }
 
+std::size_t IteratorState::n_neighbors() const {
+    return adaptive() ? _iterator->size() : *(_inner_iterator+1);
+}
+
+std::size_t IteratorState::current_particle() const {
+    if (adaptive()) {
+        return _adaptive_pidx;
+    } else {
+        return *_inner_iterator;
+    }
+}
+
 bool NeighborListIterator::operator!=(const NeighborListIterator &rhs) const {
     return !(rhs==*this);
 }
 
 bool NeighborListIterator::operator==(const NeighborListIterator &rhs) const {
-    return _state._adaptive == rhs._state._adaptive &&
-            (_state._adaptive ? _state._adaptiveIt == rhs._state._adaptiveIt : _state._staticIt == rhs._state._staticIt);
+    return _state._adaptive == rhs._state._adaptive && _state._iterator == rhs._state._iterator
+           && (_state._adaptive ? true : _state._inner_iterator == rhs._state._inner_iterator);
 }
 
 NeighborListIterator::reference NeighborListIterator::operator*() const {
@@ -76,33 +88,38 @@ NeighborListIterator::pointer NeighborListIterator::operator->() const {
 
 NeighborListIterator &NeighborListIterator::operator++() {
     if(_state._adaptive) {
-        ++_state._adaptiveIt;
+        ++_state._iterator;
+        ++_state._adaptive_pidx;
     } else {
-        auto size = *_state._staticIt;
-        _state._staticIt += size+1;
+        _state._inner_iterator = _state._inner_iterator + _state.n_neighbors() + 2;
+        while(_state._inner_iterator == _state._iterator->end()) {
+            ++_state._iterator;
+            _state._inner_iterator = _state._iterator->begin();
+        }
     }
     return *this;
 }
 
 bool NeighborListIterator::operator<(const NeighborListIterator &rhs) const {
-    return _state._adaptive ? _state._adaptiveIt < rhs._state._adaptiveIt : _state._staticIt < rhs._state._staticIt;
+    return _state._iterator < rhs._state._iterator && _state._adaptive ? true : _state._inner_iterator < rhs._state._inner_iterator;
 }
 
 bool NeighborListIterator::operator>(const NeighborListIterator &rhs) const {
-    return _state._adaptive ? _state._adaptiveIt > rhs._state._adaptiveIt : _state._staticIt > rhs._state._staticIt;
+    return _state._iterator < rhs._state._iterator && _state._adaptive ? true : _state._inner_iterator > rhs._state._inner_iterator;
 }
 
 bool NeighborListIterator::operator<=(const NeighborListIterator &rhs) const {
-    return _state._adaptive ? _state._adaptiveIt <= rhs._state._adaptiveIt : _state._staticIt <= rhs._state._staticIt;
+    return !(*this > rhs);
 }
 
 bool NeighborListIterator::operator>=(const NeighborListIterator &rhs) const {
-    return _state._adaptive ? _state._adaptiveIt >= rhs._state._adaptiveIt : _state._staticIt >= rhs._state._staticIt;
+    return !(*this < rhs);
 }
 
 NeighborListIterator &NeighborListIterator::operator+=(size_type x) {
     if(_state._adaptive) {
-        _state._adaptiveIt += x;
+        _state._iterator += x;
+        _state._adaptive_pidx += x;
     } else {
         for(int i = 0; i < x; ++i) operator++();
     }
@@ -119,23 +136,19 @@ NeighborListIterator operator+(NeighborListIterator::size_type x, const Neighbor
     return it + x;
 }
 
-NeighborListIterator::NeighborListIterator(IteratorState::static_iterator staticIterator) : _state() {
-    _state._adaptive = false;
-    _state._staticIt = staticIterator;
-}
-
-NeighborListIterator::NeighborListIterator(IteratorState::adaptive_iterator adaptiveIterator) : _state() {
-    _state._adaptive = true;
-    _state._adaptiveIt = adaptiveIterator;
+NeighborListIterator::NeighborListIterator(IteratorState::const_iterator iterator, bool adaptive) : _state() {
+    _state._adaptive = adaptive;
+    _state._iterator = iterator;
+    if(!adaptive) {
+        _state._inner_iterator = iterator->begin();
+    } else {
+        _state._adaptive_pidx = 0;
+    }
 }
 
 NeighborListIterator::NeighborListIterator(const NeighborListIterator &rhs) = default;
 
 NeighborListIterator &NeighborListIterator::operator=(const NeighborListIterator &) = default;
-
-NeighborListIterator::NeighborListIterator(NeighborListIterator &&) = default;
-
-NeighborListIterator &NeighborListIterator::operator=(NeighborListIterator &&) = default;
 
 }
 }

@@ -109,8 +109,6 @@ public:
 
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
-    void expected_n_particles(std::size_t n) override;
-
     const topologies_vec &topologies() const;
 
     topologies_vec &topologies();

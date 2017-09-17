@@ -44,12 +44,12 @@ namespace nl {
 
 class NeighborList {
 public:
-    using data_type = readdy::kernel::cpu::data::NLDataContainer;
-    using neighbors_type = data_type::Neighbors;
+    using DataUpdate = std::tuple<std::vector<data::Entry>, std::vector<std::size_t>>;
+    using neighbors_type = std::vector<std::size_t>;
     using const_iterator = NeighborListIterator;
 
-    NeighborList(data_type &data, const readdy::model::KernelContext &context,
-                 const readdy::util::thread::Config &config) : _data(data), _context(context), _config(config) {};
+    NeighborList(const readdy::model::KernelContext &context,
+                 const readdy::util::thread::Config &config) : _context(context), _config(config) {};
 
     virtual ~NeighborList() = default;
 
@@ -71,17 +71,15 @@ public:
 
     virtual void clear(const util::PerformanceNode &node) = 0;
 
-    virtual void updateData(data_type::DataUpdate &&update) = 0;
+    virtual void updateData(DataUpdate &&update) = 0;
 
     virtual bool is_adaptive() const = 0;
 
-    virtual const neighbors_type &neighbors_of(data_type::size_type entry) const {
-        const static neighbors_type no_neighbors{};
-        if (_max_cutoff > 0) {
-            return _data.get().neighbors_at(entry);
-        }
-        return no_neighbors;
-    };
+    virtual const data::EntryDataContainer * data() const = 0;
+
+    virtual data::EntryDataContainer *data() = 0;
+
+    virtual const neighbors_type &neighbors_of(std::size_t entry) const = 0;
 
     scalar &skin() {
         return _skin;
@@ -96,7 +94,6 @@ protected:
     scalar _max_cutoff {0};
     scalar _max_cutoff_skin_squared {0};
 
-    std::reference_wrapper<data_type> _data;
     std::reference_wrapper<const readdy::model::KernelContext> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _config;
 };

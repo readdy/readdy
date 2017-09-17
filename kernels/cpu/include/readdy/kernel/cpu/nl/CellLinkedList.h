@@ -47,7 +47,7 @@ namespace nl {
 
 class CellLinkedList {
 public:
-    using data_type = readdy::kernel::cpu::data::NLDataContainer;
+    using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
 
     CellLinkedList(data_type &data, const readdy::model::KernelContext &context,
                    const readdy::util::thread::Config &config);
@@ -164,6 +164,10 @@ public:
 
     const LIST &list() const;
 
+    bool &serial();
+
+    const bool &serial() const;
+
 protected:
     void setUpBins(const util::PerformanceNode &node) override;
 
@@ -173,6 +177,8 @@ protected:
     HEAD _head;
     // particles, 1-indexed
     LIST _list;
+
+    bool _serial {false};
 };
 
 class DynamicCellLinkedList : public CellLinkedList {
