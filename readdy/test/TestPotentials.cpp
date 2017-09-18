@@ -133,6 +133,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
 }
 
 TEST_P(TestPotentials, TestLennardJonesRepellent) {
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     // test system where the particles are closer together than they should be, i.e., the force should be repellent
     auto& ctx = kernel->getKernelContext();
     // one particle type A
@@ -169,12 +170,12 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     neighborList->perform();
     // calc forces
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     // give me results
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    EXPECT_NEAR(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
+    EXPECT_NEAR(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
     auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::Vec3 forceOnParticle0 {0, 0, static_cast<readdy::scalar>(-123.45679012)};
@@ -190,6 +191,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 }
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &ctx = kernel->getKernelContext();
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.particle_types().add("A", 1.0, 1.0);
@@ -227,15 +229,15 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     neighborList->perform();
     // calc forces
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     // give me results
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(-0.0264715664281));
     } else {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(-0.0264715664281));
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(-0.0264715664281));
     }
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
@@ -282,12 +284,13 @@ TEST_P(TestPotentials, SphericalMembrane) {
     auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     neighborList->perform();
     // calc forces
-    kernel->getKernelStateModel().calculateForces();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    calculateForces->perform();
     // give me results
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 0.803847577293 + 2.41154273188);
+    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().energy(), 0.803847577293 + 2.41154273188);
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(0.73205081),
@@ -302,6 +305,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
 
 TEST_P(TestPotentials, SphericalBarrier) {
     auto &ctx = kernel->getKernelContext();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.boxSize() = {{10, 10, 10}};
     // add two particles, one on the outer edge getting pushed outside, one inside the sphere unaffected
@@ -331,11 +335,11 @@ TEST_P(TestPotentials, SphericalBarrier) {
     ctx.configure();
 
     kernel->getKernelStateModel().initializeNeighborList(0.);
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), 1.51432015278);
+    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().energy(), 1.51432015278);
     auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(9.2539372), static_cast<readdy::scalar>(0.84126702),

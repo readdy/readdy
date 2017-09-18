@@ -61,8 +61,10 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     stateModel.addParticles(twoParticles);
     stateModel.initializeNeighborList(0.);
     stateModel.updateNeighborList();
-    stateModel.calculateForces();
-    stateModel.calculateForces(); // calculating twice should yield the same result. force and energy must not accumulate
+
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    calculateForces->perform();
+    calculateForces->perform(); // calculating twice should yield the same result. force and energy must not accumulate
     // check results
     obs->evaluate();
     auto forcesIt = obs->getResult().begin();
@@ -78,14 +80,15 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
         EXPECT_FVEC3_EQ(*forcesIt, readdy::Vec3(0, 0, 0.2));
     }
     if(kernel->doublePrecision()) {
-        EXPECT_DOUBLE_EQ(stateModel.getEnergy(), 0.02);
+        EXPECT_DOUBLE_EQ(stateModel.energy(), 0.02);
     } else {
-        EXPECT_NEAR(stateModel.getEnergy(), 0.02, 1e-8);
+        EXPECT_NEAR(stateModel.energy(), 0.02, 1e-8);
     }
 }
 
 TEST_P(TestStateModel, CalculateForcesRepulsion) {
     m::KernelContext &ctx = kernel->getKernelContext();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &stateModel = kernel->getKernelStateModel();
 
     // similar situation as before but now with repulsion between A and B
@@ -133,7 +136,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
             readdy::log::trace("-> got particle: {}", bar);
         }
     }
-    stateModel.calculateForces();
+    calculateForces->perform();
     {
         {
             const auto foo = stateModel.getParticles();
@@ -210,16 +213,16 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
 
     const readdy::scalar totalEnergy = energy03 + energy05 + energy13 + energy15 + energy23 + energy25;
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(stateModel.getEnergy(), totalEnergy);
+        EXPECT_FLOAT_EQ(stateModel.energy(), totalEnergy);
     } else {
-        EXPECT_DOUBLE_EQ(stateModel.getEnergy(), totalEnergy);
+        EXPECT_DOUBLE_EQ(stateModel.energy(), totalEnergy);
     }
 }
 
 TEST_P(TestStateModel, CalculateForcesNoForces) {
     m::KernelContext &ctx = kernel->getKernelContext();
     auto &stateModel = kernel->getKernelStateModel();
-
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     // several particles without potentials -> forces must all be zero
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
@@ -240,7 +243,7 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     stateModel.addParticles(particlesB);
     stateModel.initializeNeighborList(0.);
     stateModel.updateNeighborList();
-    stateModel.calculateForces();
+    calculateForces->perform();
     // check results
     obs->evaluate();
     for (auto &&force : obs->getResult()) {

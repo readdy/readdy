@@ -54,13 +54,11 @@ public:
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    virtual void initializeNeighborList(scalar skin) override;
+    void initializeNeighborList(scalar skin) override;
 
     void updateNeighborList() override;
 
     void clearNeighborList() override;
-
-    void calculateForces() override;
 
     void addParticle(const readdy::model::Particle &p) override;
 
@@ -78,7 +76,9 @@ public:
 
     particle_type_type getParticleType(std::size_t index) const override;
 
-    scalar getEnergy() const override;
+    scalar energy() const override;
+
+    scalar &energy() override;
 
     virtual void increaseEnergy(scalar increase);
 

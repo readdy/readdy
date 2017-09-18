@@ -39,7 +39,63 @@ SCPUCalculateForces::SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {}
 
 void SCPUCalculateForces::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    kernel->getKernelStateModel().calculateForces();
+
+    const auto &context = kernel->getKernelContext();
+
+    auto &stateModel = kernel->getSCPUKernelStateModel();
+    auto &data = *stateModel.getParticleData();
+    auto &neighborList = *stateModel.getNeighborList();
+
+    stateModel.energy() = 0;
+    // update forces and energy order 1 potentials
+    {
+        const Vec3 zero{0, 0, 0};
+        for (auto &e : data) {
+            e.force = zero;
+            for (const auto &po1 : context.potentials().potentials_of(e.type)) {
+                po1->calculateForceAndEnergy(e.force, stateModel.energy(), e.position());
+            }
+        }
+    }
+
+    // update forces and energy order 2 potentials
+    if(!context.potentials().potentials_order2().empty()) {
+        const auto &difference = context.shortestDifferenceFun();
+        Vec3 forceVec{0, 0, 0};
+        for (auto it = neighborList.begin(); it != neighborList.end(); ++it) {
+            auto i = it->idx1;
+            auto j = it->idx2;
+            auto &entry_i = data.entry_at(i);
+            auto &entry_j = data.entry_at(j);
+            const auto &potentials = context.potentials().potentials_of(entry_i.type, entry_j.type);
+            for (const auto &potential : potentials) {
+                potential->calculateForceAndEnergy(forceVec, stateModel.energy(), difference(entry_i.position(), entry_j.position()));
+                entry_i.force += forceVec;
+                entry_j.force += -1 * forceVec;
+            }
+        }
+    }
+    // update forces and energy for topologies
+    {
+        auto taf = kernel->getTopologyActionFactory();
+        for ( auto &topology : stateModel.topologies()) {
+            if(!topology->isDeactivated()) {
+                // calculate bonded potentials
+                for (const auto &bondedPot : topology->getBondedPotentials()) {
+                    auto energy = bondedPot->createForceAndEnergyAction(taf)->perform(topology.get());
+                    stateModel.energy() += energy;
+                }
+                for (const auto &anglePot : topology->getAnglePotentials()) {
+                    auto energy = anglePot->createForceAndEnergyAction(taf)->perform(topology.get());
+                    stateModel.energy() += energy;
+                }
+                for (const auto &torsionPot : topology->getTorsionPotentials()) {
+                    auto energy = torsionPot->createForceAndEnergyAction(taf)->perform(topology.get());
+                    stateModel.energy() += energy;
+                }
+            }
+        }
+    }
 }
 
 }

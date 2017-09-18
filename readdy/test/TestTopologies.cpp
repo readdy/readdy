@@ -102,7 +102,8 @@ TEST_P(TestTopologies, BondedPotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 2);
@@ -110,7 +111,7 @@ TEST_P(TestTopologies, BondedPotential) {
     EXPECT_EQ(collectedForces.at(0), f1);
     readdy::Vec3 f2{-40., 0, 0};
     EXPECT_EQ(collectedForces.at(1), f2);
-    EXPECT_EQ(kernel->getKernelStateModel().getEnergy(), 40);
+    EXPECT_EQ(kernel->getKernelStateModel().energy(), 40);
 }
 
 /**
@@ -146,14 +147,15 @@ TEST_P(TestTopologies, AnglePotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
-    if(readdy::single_precision) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.4674011002723395));
+    if(kernel->singlePrecision()) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.4674011002723395));
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
     }
     readdy::Vec3 force_x_i{0, 3.14159265, 0};
     readdy::Vec3 force_x_j{3.14159265, -3.14159265, 0};
@@ -187,14 +189,15 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
-    if(readdy::single_precision) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+    if(kernel->singlePrecision()) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     }
     readdy::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
     readdy::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
@@ -244,16 +247,16 @@ TEST_P(TestTopologies, DihedralPotential) {
     });
 
     auto conn = kernel->connectObservable(fObs.get());
-
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
-    if(readdy::single_precision) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.044370223263673791));
+    if(kernel->singlePrecision()) {
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(0.044370223263673791));
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
     }
     readdy::Vec3 force_x_i{0., -0.88371125, 0.};
     readdy::Vec3 force_x_j{0., 0.88371125, 0.};
@@ -287,16 +290,16 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     });
 
     auto conn = kernel->connectObservable(fObs.get());
-
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     }
     readdy::Vec3 force_x_i{0., 1.70762994, 0.};
     readdy::Vec3 force_x_j{0., -1.70762994, 0.};

@@ -55,9 +55,9 @@ public:
         PYBIND11_OVERLOAD_NAME(const std::vector<Vec3>, super, "get_particle_positions", getParticlePositions,);
     }
 
-    virtual readdy::scalar getEnergy() const override {
+    virtual readdy::scalar energy() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(readdy::scalar, super, "get_energy", getEnergy,);
+        PYBIND11_OVERLOAD_NAME(readdy::scalar, super, "get_energy", energy,);
     }
 
     virtual void increaseEnergy(readdy::scalar increase) override {

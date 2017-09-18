@@ -248,6 +248,7 @@ TEST(TestTopologyGraphs, TestFindNTuplesInTriangle) {
 
 TEST_P(TestTopologyGraphs, BondedPotential) {
     auto &ctx = kernel->getKernelContext();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 5});
@@ -267,7 +268,7 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 2);
@@ -275,12 +276,13 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
     EXPECT_EQ(collectedForces.at(0), f1);
     readdy::Vec3 f2{-40., 0, 0};
     EXPECT_EQ(collectedForces.at(1), f2);
-    EXPECT_EQ(kernel->getKernelStateModel().getEnergy(), 40);
+    EXPECT_EQ(kernel->getKernelStateModel().energy(), 40);
 }
 
 
 TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     auto &ctx = kernel->getKernelContext();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {0., 1.});
@@ -307,14 +309,14 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 3);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(2.5871244540347655));
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     }
     readdy::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
     readdy::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
@@ -328,6 +330,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
 
 TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     auto &ctx = kernel->getKernelContext();
+    auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
@@ -358,14 +361,14 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     auto conn = kernel->connectObservable(fObs.get());
 
     ctx.configure();
-    kernel->getKernelStateModel().calculateForces();
+    calculateForces->perform();
     kernel->evaluateObservables(1);
 
     EXPECT_EQ(collectedForces.size(), 4);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().getEnergy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     }
     readdy::Vec3 force_x_i{0., 1.70762994, 0.};
     readdy::Vec3 force_x_j{0., -1.70762994, 0.};

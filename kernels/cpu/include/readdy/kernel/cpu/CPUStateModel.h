@@ -82,8 +82,6 @@ public:
 
     void updateNeighborList() override;
 
-    void calculateForces() override;
-
     void addParticle(const particle_type &p) override;
 
     void addParticles(const std::vector<particle_type> &p) override;
@@ -92,7 +90,9 @@ public:
 
     void removeAllParticles() override;
 
-    readdy::scalar getEnergy() const override;
+    scalar energy() const override;
+
+    scalar &energy() override;
 
     data_type const *const getParticleData() const;
 

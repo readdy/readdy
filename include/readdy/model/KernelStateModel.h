@@ -69,8 +69,6 @@ public:
 
     virtual void clearNeighborList() = 0;
 
-    virtual void calculateForces() = 0;
-
     virtual void addParticle(const Particle &p) = 0;
 
     virtual void addParticles(const std::vector<Particle> &p) = 0;
@@ -91,7 +89,9 @@ public:
 
     virtual void removeAllParticles() = 0;
 
-    virtual scalar getEnergy() const = 0;
+    virtual scalar energy() const = 0;
+
+    virtual scalar &energy() = 0;
 };
 
 NAMESPACE_END(model)

@@ -85,10 +85,6 @@ void readdy::kernel::scpu::SCPUStateModel::removeParticle(const readdy::model::P
     pimpl->particleData.removeParticle(p);
 }
 
-scalar readdy::kernel::scpu::SCPUStateModel::getEnergy() const {
-    return pimpl->currentEnergy;
-}
-
 void readdy::kernel::scpu::SCPUStateModel::increaseEnergy(scalar increase) {
     pimpl->currentEnergy += increase;
 }
@@ -111,58 +107,6 @@ const std::vector<readdy::model::Particle> SCPUStateModel::getParticles() const 
 
 void SCPUStateModel::updateNeighborList() {
     pimpl->neighborList->create(pimpl->particleData, pimpl->neighborList->skin());
-}
-
-void SCPUStateModel::calculateForces() {
-    pimpl->currentEnergy = 0;
-    // update forces and energy order 1 potentials
-    {
-        const Vec3 zero{0, 0, 0};
-        for (auto &e : pimpl->particleData) {
-            e.force = zero;
-            for (const auto &po1 : pimpl->context->potentials().potentials_of(e.type)) {
-                po1->calculateForceAndEnergy(e.force, pimpl->currentEnergy, e.position());
-            }
-        }
-    }
-
-    // update forces and energy order 2 potentials
-    if(!pimpl->context->potentials().potentials_order2().empty()) {
-        const auto &difference = pimpl->context->shortestDifferenceFun();
-        Vec3 forceVec{0, 0, 0};
-        for (auto it = pimpl->neighborList->begin(); it != pimpl->neighborList->end(); ++it) {
-            auto i = it->idx1;
-            auto j = it->idx2;
-            auto &entry_i = pimpl->particleData.entry_at(i);
-            auto &entry_j = pimpl->particleData.entry_at(j);
-            const auto &potentials = pimpl->context->potentials().potentials_of(entry_i.type, entry_j.type);
-            for (const auto &potential : potentials) {
-                potential->calculateForceAndEnergy(forceVec, pimpl->currentEnergy, difference(entry_i.position(), entry_j.position()));
-                entry_i.force += forceVec;
-                entry_j.force += -1 * forceVec;
-            }
-        }
-    }
-    // update forces and energy for topologies
-    {
-        for ( auto &topology : _topologies) {
-            if(!topology->isDeactivated()) {
-                // calculate bonded potentials
-                for (const auto &bondedPot : topology->getBondedPotentials()) {
-                    auto energy = bondedPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(topology.get());
-                    pimpl->currentEnergy += energy;
-                }
-                for (const auto &anglePot : topology->getAnglePotentials()) {
-                    auto energy = anglePot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(topology.get());
-                    pimpl->currentEnergy += energy;
-                }
-                for (const auto &torsionPot : topology->getTorsionPotentials()) {
-                    auto energy = torsionPot->createForceAndEnergyAction(pimpl->topologyActionFactory)->perform(topology.get());
-                    pimpl->currentEnergy += energy;
-                }
-            }
-        }
-    }
 }
 
 void SCPUStateModel::clearNeighborList() {
@@ -270,6 +214,14 @@ void SCPUStateModel::insert_topology(SCPUStateModel::topology &&top) {
 
 void SCPUStateModel::initializeNeighborList(scalar skin) {
     pimpl->neighborList->create(pimpl->particleData, skin);
+}
+
+scalar SCPUStateModel::energy() const {
+    return pimpl->currentEnergy;
+}
+
+scalar &SCPUStateModel::energy() {
+    return pimpl->currentEnergy;
 }
 
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;
