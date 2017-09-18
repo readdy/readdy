@@ -286,11 +286,11 @@ bool AdaptiveNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator AdaptiveNeighborList::cbegin() const {
-    return NeighborListIterator{_data.neighbors().begin(), true};
+    return NeighborListIterator{_data.neighbors().begin(), _data.neighbors().end(), true};
 }
 
 NeighborList::const_iterator AdaptiveNeighborList::cend() const {
-    return NeighborListIterator{_data.neighbors().end(), true};
+    return NeighborListIterator{_data.neighbors().end(), _data.neighbors().end(), true};
 }
 
 data::EntryDataContainer *AdaptiveNeighborList::data() {

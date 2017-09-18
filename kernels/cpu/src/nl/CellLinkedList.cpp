@@ -109,8 +109,6 @@ void CellLinkedList::setUp(scalar skin, std::uint8_t radius, const util::Perform
                                                 && adj_x < _cellIndex[0] && adj_y < _cellIndex[1] &&
                                                 adj_z < _cellIndex[2]) {
                                                 adj.push_back(_cellIndex(adj_x, adj_y, adj_z));
-                                            } else {
-                                                log::critical("got {}, {}, {}", adj_x, adj_y, adj_z);
                                             }
                                         }
                                     }

@@ -137,7 +137,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     auto obs = kernel->createObservable<readdy::model::observables::Positions>(1, std::vector<std::string>({"F"}));
     obs->setCallback(
-            [&fPositions](const readdy::model::observables::Positions::result_type &result) {
+            [&fPositions, this](const readdy::model::observables::Positions::result_type &result) {
                 std::set<readdy::Vec3, Vec3ProjectedLess> checklist;
                 for (const auto &pos : result) {
                     checklist.emplace(pos);
@@ -146,7 +146,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
                 auto itPos = fPositions.begin();
                 auto itCheck = checklist.begin();
                 while (itPos != fPositions.end()) {
-                    EXPECT_VEC3_NEAR(*itPos, *itCheck, readdy::double_precision ? 1e-8 : 1e-6);
+                    EXPECT_VEC3_NEAR(*itPos, *itCheck, kernel->doublePrecision() ? 1e-8 : 1e-6);
                     ++itPos;
                     ++itCheck;
                 }

@@ -74,8 +74,17 @@ bool NeighborListIterator::operator!=(const NeighborListIterator &rhs) const {
 }
 
 bool NeighborListIterator::operator==(const NeighborListIterator &rhs) const {
-    return _state._adaptive == rhs._state._adaptive && _state._iterator == rhs._state._iterator
-           && (_state._adaptive ? true : _state._inner_iterator == rhs._state._inner_iterator);
+    if(rhs._state._adaptive == _state._adaptive) {
+        if(_state._adaptive) {
+            return _state._iterator == rhs._state._iterator;
+        } else {
+            if(_state._iterator == rhs._state._iterator) {
+                return _state._iterator == _globalEnd || _state._inner_iterator == rhs._state._inner_iterator;
+            }
+            return false;
+        }
+    }
+    return false;
 }
 
 NeighborListIterator::reference NeighborListIterator::operator*() const {
@@ -92,9 +101,11 @@ NeighborListIterator &NeighborListIterator::operator++() {
         ++_state._adaptive_pidx;
     } else {
         _state._inner_iterator = _state._inner_iterator + _state.n_neighbors() + 2;
-        while(_state._inner_iterator == _state._iterator->end()) {
+        while( _state._iterator != _globalEnd && _state._inner_iterator == _state._iterator->end()) {
             ++_state._iterator;
-            _state._inner_iterator = _state._iterator->begin();
+            if(_state._iterator != _globalEnd) {
+                _state._inner_iterator = _state._iterator->begin();
+            }
         }
     }
     return *this;
@@ -136,11 +147,17 @@ NeighborListIterator operator+(NeighborListIterator::size_type x, const Neighbor
     return it + x;
 }
 
-NeighborListIterator::NeighborListIterator(IteratorState::const_iterator iterator, bool adaptive) : _state() {
+NeighborListIterator::NeighborListIterator(input_iterator iteratorBegin, input_iterator iteratorEnd, bool adaptive)
+        : _state(), _globalEnd(iteratorEnd) {
     _state._adaptive = adaptive;
-    _state._iterator = iterator;
+    _state._iterator = iteratorBegin;
     if(!adaptive) {
-        _state._inner_iterator = iterator->begin();
+        while(_state._iterator != _globalEnd && _state._iterator->begin() == _state._iterator->end()) {
+            ++_state._iterator;
+        }
+        if(_state._iterator != _globalEnd) {
+            _state._inner_iterator = _state._iterator->begin();
+        }
     } else {
         _state._adaptive_pidx = 0;
     }

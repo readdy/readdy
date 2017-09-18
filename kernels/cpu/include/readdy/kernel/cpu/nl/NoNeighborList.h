@@ -46,16 +46,20 @@ public:
             : NeighborList(context, config), _data(context, config) {}
 
     const_iterator cbegin() const override {
-        return NeighborListIterator{_neighbors.begin()};
+        return NeighborListIterator{_neighbors.begin(), _neighbors.end(), true};
     }
 
     const_iterator cend() const override {
-        return NeighborListIterator{_neighbors.end()};
+        return NeighborListIterator{_neighbors.end(), _neighbors.end(), true};
     }
 
-    void set_up(const util::PerformanceNode &node) override {}
+    void set_up(const util::PerformanceNode &node) override {
+        _neighbors.resize(_data.size());
+    }
 
-    void update(const util::PerformanceNode &node) override {}
+    void update(const util::PerformanceNode &node) override {
+        _neighbors.resize(_data.size());
+    }
 
     void clear(const util::PerformanceNode &node) override {}
 

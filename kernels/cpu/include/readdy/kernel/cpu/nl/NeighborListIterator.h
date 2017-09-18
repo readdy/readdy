@@ -84,8 +84,9 @@ public:
     using pointer = typename Alloc::const_pointer;
     using iterator_category = std::forward_iterator_tag;
     using size_type = IteratorState::size_type;
+    using input_iterator = IteratorState::const_iterator;
 
-    explicit NeighborListIterator(IteratorState::const_iterator iterator, bool adaptive);
+    NeighborListIterator(input_iterator iteratorBegin, input_iterator iteratorEnd, bool adaptive);
 
     NeighborListIterator(const NeighborListIterator &);
 
@@ -123,6 +124,7 @@ public:
 
 private:
     IteratorState _state;
+    input_iterator _globalEnd;
 };
 
 }

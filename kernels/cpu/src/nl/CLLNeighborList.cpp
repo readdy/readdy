@@ -93,11 +93,11 @@ bool ContiguousCLLNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator ContiguousCLLNeighborList::cbegin() const {
-    return NeighborListIterator{ccllContainer.begin(), false};
+    return NeighborListIterator{ccllContainer.begin(), ccllContainer.end(), false};
 }
 
 NeighborList::const_iterator ContiguousCLLNeighborList::cend() const {
-    return NeighborListIterator{ccllContainer.end() , false};
+    return NeighborListIterator{ccllContainer.end(), ccllContainer.end(), false};
 }
 
 const data::EntryDataContainer *ContiguousCLLNeighborList::data() const {
@@ -169,11 +169,11 @@ bool DynamicCLLNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator DynamicCLLNeighborList::cbegin() const {
-    return NeighborListIterator{dcllContainer.begin(), false};
+    return NeighborListIterator{dcllContainer.begin(), dcllContainer.end(), false};
 }
 
 NeighborList::const_iterator DynamicCLLNeighborList::cend() const {
-    return NeighborListIterator{dcllContainer.end(), false};
+    return NeighborListIterator{dcllContainer.end(), dcllContainer.end(), false};
 }
 
 const NeighborList::neighbors_type &DynamicCLLNeighborList::neighbors_of(std::size_t entry) const {
@@ -239,11 +239,11 @@ bool CompactCLLNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator CompactCLLNeighborList::cbegin() const {
-    return NeighborListIterator{ccllContainer.begin(), false};
+    return NeighborListIterator{ccllContainer.begin(), ccllContainer.end(), false};
 }
 
 NeighborList::const_iterator CompactCLLNeighborList::cend() const {
-    return NeighborListIterator{ccllContainer.end(), false};
+    return NeighborListIterator{ccllContainer.end(), ccllContainer.end(), false};
 }
 
 const data::EntryDataContainer *CompactCLLNeighborList::data() const {

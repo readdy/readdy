@@ -168,11 +168,11 @@ bool CellDecompositionNeighborList::is_adaptive() const {
 }
 
 NeighborList::const_iterator CellDecompositionNeighborList::cbegin() const {
-    return NeighborListIterator{_data.neighbors().begin(), true};
+    return NeighborListIterator{_data.neighbors().begin(), _data.neighbors().end(), true};
 }
 
 NeighborList::const_iterator CellDecompositionNeighborList::cend() const {
-    return NeighborListIterator{_data.neighbors().end(), true};
+    return NeighborListIterator{_data.neighbors().end(), _data.neighbors().end(), true};
 }
 
 const data::EntryDataContainer *CellDecompositionNeighborList::data() const {

@@ -49,19 +49,21 @@ using pot2Map = readdy::model::potentials::PotentialRegistry::potential_o2_regis
 using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
 using top_action_factory = readdy::model::top::TopologyActionFactory;
 
-void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighbor_list::const_iterator neighbors_it,
-                           std::promise<scalar>& energyPromise, const CPUStateModel::data_type* data, const pot1Map& pot1,
+void calculateForcesThread(std::size_t /*tid*/, const neighbor_list::const_iterator &begin,
+                           const neighbor_list::const_iterator &end,
+                           std::promise<scalar>& energyPromise, CPUStateModel::data_type* data, const pot1Map& pot1,
                            const pot2Map& pot2, const dist_fun& d) {
     scalar energyUpdate = 0.0;
     for (auto it = begin; it != end; ++it) {
-        if (!it->deactivated) {
+        auto &entry = data->entry_at(it->current_particle());
+        if (!entry.deactivated) {
             Vec3 force{0, 0, 0};
-            const auto &myPos = it->pos;
+            const auto &myPos = entry.pos;
 
             //
             // 1st order potentials
             //
-            auto find_it = pot1.find(it->type);
+            auto find_it = pot1.find(entry.type);
             if (find_it != pot1.end()) {
                 for (const auto &potential : find_it->second) {
                     potential->calculateForceAndEnergy(force, energyUpdate, myPos);
@@ -73,10 +75,9 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
             //
             scalar mySecondOrderEnergy = 0.;
             /*if(!pot2.empty()) */{
-                const auto &bounds = *neighbors_it;
-                for (auto neighbor : bounds) {
-                    auto &neighborEntry = data->entry_at(neighbor);
-                    auto potit = pot2.find(std::tie(it->type, neighborEntry.type));
+                for(const auto nidx : *it) {
+                    auto &neighborEntry = data->entry_at(nidx);
+                    auto potit = pot2.find(std::tie(entry.type, neighborEntry.type));
                     if (potit != pot2.end()) {
                         auto x_ij = d(myPos, neighborEntry.pos);
                         auto distSquared = x_ij * x_ij;
@@ -94,9 +95,8 @@ void calculateForcesThread(std::size_t, entries_it begin, entries_it end, neighb
             // Thus every particle pair potential is seen twice
             energyUpdate += 0.5 * mySecondOrderEnergy;
 
-            it->force = force;
+            entry.force = force;
         }
-        ++neighbors_it;
     }
     // todo reactivate this ?
     /*barrier.wait();
@@ -151,8 +151,8 @@ void CPUStateModel::calculateForces() {
                 const std::size_t grainSize = (particleData->size()) / config->nThreads();
                 const std::size_t grainSizeTopologies = pimpl->topologies.size() / config->nThreads();
                 auto it_data_end = particleData->end();
-                auto it_data = particleData->begin();
                 auto it_nl = getNeighborList()->begin();
+                auto it_nl_end = getNeighborList()->end();
                 auto it_tops = pimpl->topologies.cbegin();
                 const thd::barrier barrier{config->nThreads()};
 
@@ -163,11 +163,10 @@ void CPUStateModel::calculateForces() {
                 for (std::size_t i = 0; i < config->nThreads() - 1; ++i) {
                     //energyFutures.push_back(promises[i].get_future());
                     //ForcesThreadArgs args (, std::cref(barrier));
-                    executables.push_back(executor.pack(calculateForcesThread, it_data, it_data + grainSize, it_nl,
+                    executables.push_back(executor.pack(calculateForcesThread, it_nl, it_nl + grainSize,
                                                         std::ref(promises.at(i)), particleData, std::cref(potOrder1),
                                                         std::cref(potOrder2), std::cref(d)));
                     it_nl += grainSize;
-                    it_data += grainSize;
                     it_tops += grainSizeTopologies;
                 }
                 {
@@ -175,9 +174,10 @@ void CPUStateModel::calculateForces() {
                     //energyFutures.push_back(lastPromise.get_future());
                     //ForcesThreadArgs args (, std::cref(barrier));
                     executables.push_back(
-                            executor.pack(calculateForcesThread, it_data, it_data_end, it_nl, std::ref(lastPromise),
-                                          std::cref(particleData), std::cref(potOrder1), std::cref(potOrder2),
-                                          std::cref(d)));
+                            executor.pack(calculateForcesThread, it_nl, it_nl_end, std::ref(lastPromise),
+                                          particleData, std::cref(potOrder1), std::cref(potOrder2),
+                                          std::cref(d))
+                    );
                 }
                 executor.execute_and_wait(std::move(executables));
 
