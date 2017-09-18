@@ -167,8 +167,11 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     ctx.configure();
 
     // we need to update the neighbor list as this is a pair potential
-    auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
+    auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::init);
     neighborList->perform();
+
+    auto updateNeighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::update);
+    updateNeighborList->perform();
     // calc forces
     calculateForces->perform();
     // give me results
@@ -283,6 +286,8 @@ TEST_P(TestPotentials, SphericalMembrane) {
     // we need to update the neighbor list as this is a pair potential
     auto neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     neighborList->perform();
+    auto updateNeighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::update);
+    updateNeighborList->perform();
     // calc forces
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     calculateForces->perform();
@@ -334,7 +339,8 @@ TEST_P(TestPotentials, SphericalBarrier) {
 
     ctx.configure();
 
-    kernel->getKernelStateModel().initializeNeighborList(0.);
+    kernel->initialize();
+
     calculateForces->perform();
     kernel->evaluateObservables(1);
 

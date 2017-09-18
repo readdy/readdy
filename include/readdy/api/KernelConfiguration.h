@@ -42,7 +42,7 @@ using json = nlohmann::json;
 
 NAMESPACE_BEGIN(cpu)
 struct NeighborList {
-    std::string type {"CellDecomposition"};
+    std::string type {"CompactCLL"};
     std::uint8_t cll_radius {1};
 };
 void to_json(json &j, const NeighborList &nl);

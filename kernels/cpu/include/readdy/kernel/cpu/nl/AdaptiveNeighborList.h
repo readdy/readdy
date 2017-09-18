@@ -78,8 +78,6 @@ public:
 
     void updateData(data_type::DataUpdate &&update) override;
 
-    virtual const neighbors_type &neighbors_of(const data_type::size_type entry) const override;
-
     virtual const_iterator cbegin() const override;
 
     virtual const_iterator cend() const override;
@@ -87,6 +85,8 @@ public:
     data::EntryDataContainer *data() override;
 
     const data::EntryDataContainer * data() const override;
+
+    const data::NLDataContainer &nlData() const;
 
 private:
 

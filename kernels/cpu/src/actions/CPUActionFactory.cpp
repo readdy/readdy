@@ -36,8 +36,6 @@
 #include <readdy/kernel/cpu/actions/CPUEvaluateCompartments.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
 #include <readdy/kernel/cpu/actions/reactions/CPUUncontrolledApproximation.h>
-#include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
-#include <readdy/kernel/cpu/actions/reactions/NextSubvolumesReactionScheduler.h>
 #include <readdy/kernel/cpu/actions/CPUEvaluateTopologyReactions.h>
 
 namespace core_p = readdy::model::actions;
@@ -73,14 +71,6 @@ CPUActionFactory::createUncontrolledApproximation(scalar timeStep) const {
 
 core_p::reactions::Gillespie *CPUActionFactory::createGillespie(scalar timeStep) const {
     return new reactions::CPUGillespie(kernel, timeStep);
-}
-
-core_p::reactions::GillespieParallel *CPUActionFactory::createGillespieParallel(scalar timeStep) const {
-    return new reactions::CPUGillespieParallel(kernel, timeStep);
-}
-
-core_p::reactions::NextSubvolumes *CPUActionFactory::createNextSubvolumes(scalar timeStep) const {
-    return new reactions::CPUNextSubvolumes(kernel, timeStep);
 }
 
 readdy::model::actions::AddParticles *

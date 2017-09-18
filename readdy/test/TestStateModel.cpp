@@ -54,7 +54,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "A", 1.0);
 
     ctx.configure();
-
+    kernel->initialize();
     auto typeIdA = ctx.particle_types().id_of("A");
     auto twoParticles = std::vector<m::Particle> {m::Particle(0., 0., 0., typeIdA), m::Particle(0., 0., 1.8, typeIdA)};
 
@@ -122,6 +122,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     }
     stateModel.addParticles(particlesA);
     stateModel.addParticles(particlesB);
+    kernel->initialize();
     {
         const auto foo = stateModel.getParticles();
         for(const auto& bar : foo) {

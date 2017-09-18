@@ -50,8 +50,8 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/ReactionUtils.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/Event.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUUncontrolledApproximation.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespie.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespieParallel.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/NextSubvolumesReactionScheduler.cpp")
+#LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespieParallel.cpp")
+#LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/NextSubvolumesReactionScheduler.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/topologies/CPUTopologyActionFactory.cpp")
 
 # --- c sources ---

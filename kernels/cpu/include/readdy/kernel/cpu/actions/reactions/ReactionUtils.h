@@ -78,7 +78,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                   const readdy::model::KernelContext::dist_squared_fun& d2) {
     const auto& reaction_registry = kernel->getKernelContext().reactions();
     for (const auto index : particles) {
-        auto& entry = data.entry_at(index);
+        auto &entry = data.entry_at(index);
         // this being false should really not happen, though
         if (!entry.deactivated) {
             // order 1
@@ -90,31 +90,38 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                         alpha += rate;
                         events.emplace_back(
                                 1, (*it)->getNProducts(), index, 0, rate, alpha,
-                                 static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                 entry.type, 0);
+                                static_cast<event_t::reaction_index_type>(it - reactions.begin()),
+                                entry.type, 0);
                     }
                 }
             }
 
-            if(!reaction_registry.is_reaction_order2_type(entry.type)) continue;
-            // order 2
-            for (const auto idx_neighbor : nl->neighbors_of(index)) {
+            if (!reaction_registry.is_reaction_order2_type(entry.type)) continue;
+        }
+    }
+    // order 2
+    for (auto it = nl->begin(); it != nl->end(); ++it) {
+        auto index = it->current_particle();
+        const auto &entry = data.entry_at(index);
+        if(!entry.deactivated) {
+            for (auto idx_neighbor : *it) {
                 if (index > idx_neighbor) continue;
-                const auto& neighbor = data.entry_at(idx_neighbor);
-                if(!neighbor.deactivated) {
+                const auto &neighbor = data.entry_at(idx_neighbor);
+                if (!neighbor.deactivated) {
                     const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
                                                                                                   neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
-                        for (auto it = reactions.begin(); it < reactions.end(); ++it) {
-                            const auto &react = *it;
+                        for (auto itReactions = reactions.begin(); itReactions < reactions.end(); ++itReactions) {
+                            const auto &react = *itReactions;
                             const auto rate = react->getRate();
                             if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
                                 alpha += rate;
                                 events.emplace_back(2, react->getNProducts(), index, idx_neighbor,
-                                                  rate, alpha,
-                                                  static_cast<event_t::reaction_index_type>(it - reactions.begin()),
-                                                  entry.type, neighbor.type);
+                                                    rate, alpha,
+                                                    static_cast<event_t::reaction_index_type>(itReactions -
+                                                                                              reactions.begin()),
+                                                    entry.type, neighbor.type);
                             }
                         }
                     }
@@ -122,9 +129,10 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                     log::critical("deactivated entry in neighbor list!");
                 }
             }
+        } else {
+            log::warn("nööööö");
         }
     }
-
 }
 
 template<typename Reaction>

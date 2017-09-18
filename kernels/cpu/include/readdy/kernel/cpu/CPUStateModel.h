@@ -134,9 +134,15 @@ public:
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
 private:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-    readdy::util::thread::Config const *const config;
+    std::reference_wrapper<const readdy::util::thread::Config> _config;
+    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::unique_ptr<neighbor_list> _neighborList;
+    scalar _currentEnergy = 0;
+    std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
+    topologies_vec _topologies{};
+    std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
+    std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
+    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> _reactionCounts;
 };
 }
 }

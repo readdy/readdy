@@ -57,16 +57,14 @@ CPUUncontrolledApproximation::CPUUncontrolledApproximation(CPUKernel *const kern
 
 }
 
-void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin,
+void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbor_list_iter_t nl_begin, neighbor_list_iter_t nl_end,
                 const CPUKernel *const kernel, scalar dt, bool approximateRate, event_promise_t &events,
                 std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     const auto &d2 = kernel->getKernelContext().distSquaredFun();
-    auto it = begin;
-    auto it_nl = nl_begin;
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
-    for (; it != end; ++it, ++it_nl, ++index) {
+    for (auto it = begin; it != end; ++it, ++index) {
         const auto &entry = *it;
         // this being false should really not happen, though
         if (!entry.deactivated) {
@@ -77,29 +75,35 @@ void findEvents(std::size_t tid, data_iter_t begin, data_iter_t end, neighbor_li
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
                         eventsUpdate.emplace_back(1, (*it_reactions)->getNProducts(), index, index, rate, 0,
-                                 static_cast<event_t::reaction_index_type>(it_reactions - reactions.begin()),
-                                 entry.type, 0);
+                                                  static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                            reactions.begin()),
+                                                  entry.type, 0);
                     }
                 }
             }
-            // order 2
-            for(auto nit = it_nl->begin(); nit != it_nl->end(); ++nit) {
-                auto idx_neighbor = *nit;
-                if (index > idx_neighbor) continue;
-                const auto &neighbor = data.entry_at(idx_neighbor);
-                const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
-                                                                                              neighbor.type);
-                if (!reactions.empty()) {
-                    const auto distSquared = d2(neighbor.pos, entry.pos);
-                    for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
-                        const auto &react = *it_reactions;
-                        const auto rate = react->getRate();
-                        if (rate > 0 && distSquared < react->getEductDistanceSquared()
-                            && shouldPerformEvent(rate, dt, approximateRate)) {
-                            const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
-                                                                                                  reactions.begin());
-                            eventsUpdate.emplace_back(2, react->getNProducts(), index, idx_neighbor, rate, 0,
-                                                      reaction_index, entry.type, neighbor.type);
+        }
+    }
+    for(auto nit = nl_begin; nit != nl_end; ++nit) {
+        const auto &entry = data.entry_at(nit->current_particle());
+        if(!entry.deactivated) {
+            for(auto neighborIdx : *nit) {
+                const auto &neighbor = data.entry_at(neighborIdx);
+                if(nit->current_particle() > neighborIdx) continue;
+                if(!neighbor.deactivated) {
+                    const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
+                                                                                                  neighbor.type);
+                    if (!reactions.empty()) {
+                        const auto distSquared = d2(neighbor.pos, entry.pos);
+                        for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
+                            const auto &react = *it_reactions;
+                            const auto rate = react->getRate();
+                            if (rate > 0 && distSquared < react->getEductDistanceSquared()
+                                && shouldPerformEvent(rate, dt, approximateRate)) {
+                                const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
+                                                                                                      reactions.begin());
+                                eventsUpdate.emplace_back(2, react->getNProducts(), nit->current_particle(), neighborIdx, rate, 0,
+                                                          reaction_index, entry.type, neighbor.type);
+                            }
                         }
                     }
                 }
@@ -145,11 +149,11 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             eventFutures.push_back(promises.at(i).get_future());
             n_eventsFutures.push_back(n_events_promises.at(i).get_future());
-
-            executables.push_back(executor.pack(findEvents, it, it + grainSize, it_nl, kernel, timeStep, true,
+            auto it_nl_end = it_nl + grainSize;
+            executables.push_back(executor.pack(findEvents, it, it + grainSize, it_nl, it_nl_end, kernel, timeStep, true,
                                                 std::ref(promises.at(i)), std::ref(n_events_promises.at(i))));
             it += grainSize;
-            it_nl += grainSize;
+            it_nl = it_nl_end;
         }
         {
             auto &eventPromise = promises.back();
@@ -158,7 +162,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             n_eventsFutures.push_back(n_events.get_future());
 
 
-            executables.push_back(executor.pack(findEvents, it, data.cend(), it_nl, kernel, timeStep, true,
+            executables.push_back(executor.pack(findEvents, it, data.cend(), it_nl, nl.cend(), kernel, timeStep, true,
                                                 std::ref(eventPromise), std::ref(n_events)));
         }
         executor.execute_and_wait(std::move(executables));

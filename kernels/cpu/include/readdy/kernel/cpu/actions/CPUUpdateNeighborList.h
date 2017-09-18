@@ -49,7 +49,7 @@ public:
         auto t = node.timeit();
         switch (operation) {
             case init:
-                kernel->getCPUKernelStateModel().initializeNeighborList(0, node);
+                kernel->getCPUKernelStateModel().initializeNeighborList(skinSize, node);
                 break;
             case clear:
                 kernel->getCPUKernelStateModel().clearNeighborList(node);

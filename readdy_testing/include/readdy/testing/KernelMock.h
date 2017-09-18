@@ -64,13 +64,6 @@ class FakeActionFactory : public readdy::model::actions::ActionFactory {
         return nullptr;
     }
 
-    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(readdy::scalar timeStep) const override {
-        return nullptr;
-    }
-
-    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(readdy::scalar timeStep) const override {
-        return nullptr;
-    }
 };
 
 class KernelMock : public readdy::model::Kernel {

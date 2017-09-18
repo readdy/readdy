@@ -83,7 +83,7 @@ public:
         init, update, clear
     };
 
-    explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = -1);
+    explicit UpdateNeighborList(Operation operation = Operation::init, scalar skinSize = 0);
 
     virtual bool supportsSkin() const = 0;
 
@@ -119,15 +119,6 @@ public:
 class Gillespie : public TimeStepDependentAction {
 public:
     explicit Gillespie(scalar timeStep);
-};
-
-class GillespieParallel : public TimeStepDependentAction {
-public:
-    explicit GillespieParallel(scalar timeStep);
-};
-
-struct NextSubvolumes : public TimeStepDependentAction {
-    explicit NextSubvolumes(scalar timeStep);
 };
 
 NAMESPACE_END(reactions)
@@ -175,18 +166,6 @@ getActionName(typename std::enable_if<std::is_base_of<reactions::UncontrolledApp
 template<typename T>
 const std::string getActionName(typename std::enable_if<std::is_base_of<reactions::Gillespie, T>::value>::type * = 0) {
     return "Gillespie";
-}
-
-template<typename T>
-const std::string
-getActionName(typename std::enable_if<std::is_base_of<reactions::GillespieParallel, T>::value>::type * = 0) {
-    return "GillespieParallel";
-}
-
-template<typename T>
-const std::string
-getActionName(typename std::enable_if<std::is_base_of<reactions::NextSubvolumes, T>::value>::type * = 0) {
-    return "NextSubvolumes";
 }
 
 template<typename T>

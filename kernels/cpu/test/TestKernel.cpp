@@ -48,7 +48,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::Gillespie>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     auto connection = kernel->connectObservable(pp_obs.get());

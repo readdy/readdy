@@ -120,6 +120,8 @@ public:
 
     void updateSerial(scalar cutoffSquared);
 
+    void updateParallel(scalar cutoffSquared, const util::PerformanceNode &perf);
+
 private:
     bool serialUpdate {false};
     const CompactCellLinkedList &_cll;

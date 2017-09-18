@@ -65,6 +65,9 @@ public:
 
     virtual const_iterator cend() const = 0;
 
+    // todo! this can screw up grain size (as deactivated entries are omitted in iterator of the compact neighbor list)
+    virtual std::size_t size() const = 0;
+
     virtual void set_up(const util::PerformanceNode &node) = 0;
 
     virtual void update(const util::PerformanceNode &node) = 0;
@@ -78,8 +81,6 @@ public:
     virtual const data::EntryDataContainer * data() const = 0;
 
     virtual data::EntryDataContainer *data() = 0;
-
-    virtual const neighbors_type &neighbors_of(std::size_t entry) const = 0;
 
     scalar &skin() {
         return _skin;

@@ -76,8 +76,6 @@ public:
 
     data::EntryDataContainer *data() override;
 
-    const neighbors_type &neighbors_of(std::size_t entry) const override;
-
 private:
     bool _is_set_up {false};
 

@@ -126,8 +126,6 @@ public:
         while (continueFun(t)) {
             if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
             if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
-            // if (forces) forces->perform();
-
             if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
             if (evaluateTopologyReactions) evaluateTopologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
             if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
@@ -208,7 +206,7 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &withSkinSize(scalar skin = -1) {
+    SchemeConfigurator &withSkinSize(scalar skin = 0) {
         skinSize = skin;
         return *this;
     }
@@ -257,7 +255,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     std::unique_ptr<SchemeType> scheme = nullptr;
-    scalar skinSize = -1;
+    scalar skinSize = 0;
 };
 
 class AdvancedScheme : public SimulationScheme {
@@ -381,7 +379,7 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &withSkinSize(scalar skin = -1) {
+    SchemeConfigurator &withSkinSize(scalar skin = 0) {
         skinSize = skin;
         return *this;
     }
@@ -434,7 +432,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     bool includeCompartmentsSet = false;
-    scalar skinSize = -1;
+    scalar skinSize = 0;
 
 };
 

@@ -272,15 +272,6 @@ void AdaptiveNeighborList::handle_dirty_cells() {
     _cell_container.unset_dirty();
 }
 
-const NeighborList::neighbors_type &
-AdaptiveNeighborList::neighbors_of(const data_type::size_type entry) const {
-    const static neighbors_type no_neighbors{};
-    if (_max_cutoff > 0) {
-        return _data.neighbors_at(entry);
-    }
-    return no_neighbors;
-}
-
 bool AdaptiveNeighborList::is_adaptive() const {
     return true;
 }
@@ -299,6 +290,10 @@ data::EntryDataContainer *AdaptiveNeighborList::data() {
 
 const data::EntryDataContainer *AdaptiveNeighborList::data() const {
     return &_data;
+}
+
+const data::NLDataContainer &AdaptiveNeighborList::nlData() const {
+    return _data;
 }
 
 }

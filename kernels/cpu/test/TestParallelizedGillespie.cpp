@@ -43,9 +43,16 @@ TEST(TestParallelGillespie, Sanity) {
     kernel.addParticle("A", {-5, .2, -5.5});
     kernel.addParticle("A", {-5, .2, 5.5});
     kernel.addParticle("A", {-5, .2, 0});
+    {
+        readdy::conf::Configuration conf;
+        conf.cpu.neighborList.type = "Adaptive";
+        kernel.getKernelContext().kernelConfiguration() = conf;
+    }
     kernel.getKernelContext().configure();
+    kernel.initialize();
     kernel.getCPUKernelStateModel().initializeNeighborList(0.);
-    auto prog = kernel.createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+
+    auto prog = kernel.createAction<readdy::model::actions::reactions::Gillespie>(1);
     prog->perform();
 }
 }

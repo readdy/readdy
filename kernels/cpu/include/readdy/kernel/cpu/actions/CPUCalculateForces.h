@@ -62,7 +62,7 @@ public:
 
         const auto &potOrder1 = context.potentials().potentials_order1();
         const auto &potOrder2 = context.potentials().potentials_order2();
-        if(!potOrder1.empty() || !potOrder2.empty()) {
+        if(!potOrder1.empty() || !potOrder2.empty() || !stateModel.topologies().empty()) {
             const auto &d = context.shortestDifferenceFun();
             {
                 //std::vector<std::future<scalar>> energyFutures;
@@ -155,7 +155,8 @@ protected:
             for (auto it = std::get<0>(dataBounds); it != std::get<1>(dataBounds); ++it) {
                 auto &entry = *it;
                 if (!entry.deactivated) {
-                    Vec3 force{0, 0, 0};
+                    auto &force = entry.force;
+                    force = {c_::zero, c_::zero, c_::zero};
                     const auto &myPos = entry.pos;
                     auto find_it = pot1.find(entry.type);
                     if (find_it != pot1.end()) {
@@ -176,43 +177,37 @@ protected:
             for(auto it = std::get<0>(nlBounds); it != std::get<1>(nlBounds); ++it) {
                 auto &entry = data->entry_at(it->current_particle());
                 if (!entry.deactivated) {
-                    Vec3 force{0, 0, 0};
+                    auto &force = entry.force;
                     const auto &myPos = entry.pos;
-
-
-                    auto find_it = pot1.find(entry.type);
-                    if (find_it != pot1.end()) {
-                        for (const auto &potential : find_it->second) {
-                            potential->calculateForceAndEnergy(force, energyUpdate, myPos);
-                        }
-                    }
 
                     //
                     // 2nd order potentials
                     //
                     scalar mySecondOrderEnergy = 0.;
-                    /*if(!pot2.empty()) */{
+                    if(!pot2.empty()) {
                         for(const auto nidx : *it) {
                             auto &neighborEntry = data->entry_at(nidx);
-                            auto potit = pot2.find(std::tie(entry.type, neighborEntry.type));
-                            if (potit != pot2.end()) {
-                                auto x_ij = d(myPos, neighborEntry.pos);
-                                auto distSquared = x_ij * x_ij;
-                                for (const auto &potential : potit->second) {
-                                    if (distSquared < potential->getCutoffRadiusSquared()) {
-                                        Vec3 updateVec{0, 0, 0};
-                                        potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
-                                        force += updateVec;
+                            if(!neighborEntry.deactivated) {
+                                auto potit = pot2.find(std::tie(entry.type, neighborEntry.type));
+                                if (potit != pot2.end()) {
+                                    auto x_ij = d(myPos, neighborEntry.pos);
+                                    auto distSquared = x_ij * x_ij;
+                                    for (const auto &potential : potit->second) {
+                                        if (distSquared < potential->getCutoffRadiusSquared()) {
+                                            Vec3 updateVec{0, 0, 0};
+                                            potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
+                                            force += updateVec;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    // The contribution of second order potentials must be halved since we parallelise over particles.
+                    // The contribution of second order potentials must be halved since we parallelize over particles.
                     // Thus every particle pair potential is seen twice
                     energyUpdate += 0.5 * mySecondOrderEnergy;
 
-                    entry.force = force;
+                    entry.force += force;
                 }
             }
         }
@@ -226,17 +221,19 @@ protected:
 
             for(auto it = std::get<0>(topBounds); it != std::get<1>(topBounds); ++it) {
                 const auto &top = *it;
-                for (const auto &bondedPot : top->getBondedPotentials()) {
-                    auto energy = bondedPot->createForceAndEnergyAction(taf)->perform(top.get());
-                    energyUpdate += energy;
-                }
-                for (const auto &anglePot : top->getAnglePotentials()) {
-                    auto energy = anglePot->createForceAndEnergyAction(taf)->perform(top.get());
-                    energyUpdate += energy;
-                }
-                for (const auto &torsionPot : top->getTorsionPotentials()) {
-                    auto energy = torsionPot->createForceAndEnergyAction(taf)->perform(top.get());
-                    energyUpdate += energy;
+                if(!top->isDeactivated()) {
+                    for (const auto &bondedPot : top->getBondedPotentials()) {
+                        auto energy = bondedPot->createForceAndEnergyAction(taf)->perform(top.get());
+                        energyUpdate += energy;
+                    }
+                    for (const auto &anglePot : top->getAnglePotentials()) {
+                        auto energy = anglePot->createForceAndEnergyAction(taf)->perform(top.get());
+                        energyUpdate += energy;
+                    }
+                    for (const auto &torsionPot : top->getTorsionPotentials()) {
+                        auto energy = torsionPot->createForceAndEnergyAction(taf)->perform(top.get());
+                        energyUpdate += energy;
+                    }
                 }
             }
         }

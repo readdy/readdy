@@ -83,9 +83,13 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
         ASSERT_EQ(nNormalFlavor, 1);
     }
 
-    auto nl = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>();
-    nl->perform();
+    kernel->initialize();
+
+    auto nlCreate = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::init);
+    auto nlUpdate = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::update);
     auto action = kernel->getActionFactory().createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1.0);
+    nlCreate->perform();
+    nlUpdate->perform();
     action->perform();
 
     auto particles = kernel->getKernelStateModel().getParticles();

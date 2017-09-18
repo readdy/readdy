@@ -183,15 +183,6 @@ data::EntryDataContainer *CellDecompositionNeighborList::data() {
     return &_data;
 }
 
-const NeighborList::neighbors_type &CellDecompositionNeighborList::neighbors_of(std::size_t entry) const {
-    const static neighbors_type no_neighbors{};
-    if (_max_cutoff > 0) {
-        return _data.neighbors_at(entry);
-    }
-    return no_neighbors;
-}
-
-
 }
 }
 }

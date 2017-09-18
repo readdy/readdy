@@ -67,18 +67,6 @@ core_actions::reactions::Gillespie *SCPUActionFactory::createGillespie(scalar ti
     return new reactions::SCPUGillespie(kernel, timeStep);
 }
 
-core_actions::reactions::GillespieParallel *SCPUActionFactory::createGillespieParallel(scalar /*timeStep*/) const {
-    log::critical("SingleCPU kernel does not support the \"{}\" action",
-                  core_actions::getActionName<core_actions::reactions::GillespieParallel>());
-    return nullptr;
-}
-
-core_actions::reactions::NextSubvolumes *SCPUActionFactory::createNextSubvolumes(scalar /*timeStep*/) const {
-    log::critical("SingleCPU kernel does not support the \"{}\" action",
-                  core_actions::getActionName<core_actions::reactions::NextSubvolumes>());
-    return nullptr;
-}
-
 readdy::model::actions::AddParticles *
 SCPUActionFactory::createAddParticles(const std::vector<readdy::model::Particle> &particles) const {
     return new readdy::model::actions::AddParticles(kernel, particles);

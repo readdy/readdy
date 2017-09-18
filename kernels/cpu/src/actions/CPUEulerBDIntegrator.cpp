@@ -41,15 +41,15 @@ namespace rnd = readdy::model::rnd;
 
 void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    auto& pd = *kernel->getCPUKernelStateModel().getParticleData();
-    const auto size = pd.size();
+    auto data = kernel->getCPUKernelStateModel().getParticleData();
+    const auto size = data->size();
 
     const auto &context = kernel->getKernelContext();
-    using iter_t = decltype(pd.begin());
+    using iter_t = data::EntryDataContainer::iterator;
 
     const auto dt = timeStep;
 
-    auto worker = [&context, &pd, dt](std::size_t id, std::size_t beginIdx,  iter_t entry_begin, iter_t entry_end)  {
+    auto worker = [&context, data, dt](std::size_t id, std::size_t beginIdx,  iter_t entry_begin, iter_t entry_end)  {
         const auto &fixPos = context.fixPositionFun();
         const auto kbt = context.kBT();
         std::size_t idx = beginIdx;
@@ -58,12 +58,12 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
                 const scalar D = context.particle_types().diffusion_constant_of(it->type);
                 const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);
                 const auto deterministicDisplacement = it->force * dt * D / kbt;
-                pd.displace(idx, randomDisplacement + deterministicDisplacement);
+                data->displace(idx, randomDisplacement + deterministicDisplacement);
             }
         }
     };
 
-    auto work_iter = pd.begin();
+    auto work_iter = data->begin();
     {
         auto& executor = kernel->executor();
         std::vector<std::function<void(std::size_t)>> executables;
@@ -78,7 +78,7 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
             work_iter += grainSize;
             idx += grainSize;
         }
-        executables.push_back(executor.pack(worker, idx, work_iter, pd.end()));
+        executables.push_back(executor.pack(worker, idx, work_iter, data->end()));
         executor.execute_and_wait(std::move(executables));
     }
 

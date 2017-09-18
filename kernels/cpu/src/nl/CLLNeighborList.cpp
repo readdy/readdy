@@ -108,11 +108,6 @@ data::EntryDataContainer *ContiguousCLLNeighborList::data() {
     return &_data;
 }
 
-const NeighborList::neighbors_type &ContiguousCLLNeighborList::neighbors_of(std::size_t entry) const {
-    throw std::logic_error("do not use neighbors_of with contiguous cll neighbor list!");
-}
-
-
 DynamicCLLNeighborList::DynamicCLLNeighborList(data::EntryDataContainer *data,
                                                const readdy::model::KernelContext &context,
                                                const readdy::util::thread::Config &config)
@@ -174,10 +169,6 @@ NeighborList::const_iterator DynamicCLLNeighborList::cbegin() const {
 
 NeighborList::const_iterator DynamicCLLNeighborList::cend() const {
     return NeighborListIterator{dcllContainer.end(), dcllContainer.end(), false};
-}
-
-const NeighborList::neighbors_type &DynamicCLLNeighborList::neighbors_of(std::size_t entry) const {
-    throw std::logic_error("do not use neighbors_of with dynamic cll neighbor list");
 }
 
 const data::EntryDataContainer *DynamicCLLNeighborList::data() const {
@@ -252,10 +243,6 @@ const data::EntryDataContainer *CompactCLLNeighborList::data() const {
 
 data::EntryDataContainer *CompactCLLNeighborList::data() {
     return &_data;
-}
-
-const NeighborList::neighbors_type &CompactCLLNeighborList::neighbors_of(std::size_t entry) const {
-    throw std::logic_error("CompactCLLNeighborList should not be used with \"neighbors_of\"");
 }
 
 const CompactCLLNeighborListContainer &CompactCLLNeighborList::container() const {

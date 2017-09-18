@@ -69,8 +69,6 @@ public:
 
     data::EntryDataContainer *data() override;
 
-    const neighbors_type &neighbors_of(std::size_t entry) const override;
-
 private:
 
     std::uint8_t cll_radius;
@@ -104,8 +102,6 @@ public:
     virtual const_iterator cbegin() const override;
 
     virtual const_iterator cend() const override;
-
-    const neighbors_type &neighbors_of(std::size_t entry) const override;
 
     const data::EntryDataContainer *data() const override;
 
@@ -144,8 +140,6 @@ public:
     const data::EntryDataContainer *data() const override;
 
     data::EntryDataContainer *data() override;
-
-    const neighbors_type &neighbors_of(std::size_t entry) const override;
 
     const CompactCLLNeighborListContainer &container() const;
 

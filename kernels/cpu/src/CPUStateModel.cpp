@@ -47,112 +47,24 @@ using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopol
 using pot1Map = readdy::model::potentials::PotentialRegistry::potential_o1_registry;
 using pot2Map = readdy::model::potentials::PotentialRegistry::potential_o2_registry;
 using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
-using top_action_factory = readdy::model::top::TopologyActionFactory;
-
-void calculateForcesThread(std::size_t /*tid*/, const neighbor_list::const_iterator &begin,
-                           const neighbor_list::const_iterator &end,
-                           std::promise<scalar>& energyPromise, CPUStateModel::data_type* data, const pot1Map& pot1,
-                           const pot2Map& pot2, const dist_fun& d) {
-    scalar energyUpdate = 0.0;
-    for (auto it = begin; it != end; ++it) {
-        auto &entry = data->entry_at(it->current_particle());
-        if (!entry.deactivated) {
-            Vec3 force{0, 0, 0};
-            const auto &myPos = entry.pos;
-
-            //
-            // 1st order potentials
-            //
-            auto find_it = pot1.find(entry.type);
-            if (find_it != pot1.end()) {
-                for (const auto &potential : find_it->second) {
-                    potential->calculateForceAndEnergy(force, energyUpdate, myPos);
-                }
-            }
-
-            //
-            // 2nd order potentials
-            //
-            scalar mySecondOrderEnergy = 0.;
-            /*if(!pot2.empty()) */{
-                for(const auto nidx : *it) {
-                    auto &neighborEntry = data->entry_at(nidx);
-                    auto potit = pot2.find(std::tie(entry.type, neighborEntry.type));
-                    if (potit != pot2.end()) {
-                        auto x_ij = d(myPos, neighborEntry.pos);
-                        auto distSquared = x_ij * x_ij;
-                        for (const auto &potential : potit->second) {
-                            if (distSquared < potential->getCutoffRadiusSquared()) {
-                                Vec3 updateVec{0, 0, 0};
-                                potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
-                                force += updateVec;
-                            }
-                        }
-                    }
-                }
-            }
-            // The contribution of second order potentials must be halved since we parallelise over particles.
-            // Thus every particle pair potential is seen twice
-            energyUpdate += 0.5 * mySecondOrderEnergy;
-
-            entry.force = force;
-        }
-    }
-    // todo reactivate this ?
-    /*barrier.wait();
-
-    for (auto t_it = tbegin; t_it != tend; ++t_it) {
-        const auto &top = *t_it;
-        for (const auto &bondedPot : top->getBondedPotentials()) {
-            auto energy = bondedPot->createForceAndEnergyAction(taf)->perform();
-            energyUpdate += energy;
-        }
-        for (const auto &anglePot : top->getAnglePotentials()) {
-            auto energy = anglePot->createForceAndEnergyAction(taf)->perform();
-            energyUpdate += energy;
-        }
-        for (const auto &torsionPot : top->getTorsionPotentials()) {
-            auto energy = torsionPot->createForceAndEnergyAction(taf)->perform();
-            energyUpdate += energy;
-        }
-    }*/
-
-    energyPromise.set_value(energyUpdate);
-}
-
-struct CPUStateModel::Impl {
-    using reaction_counts_order1_map = CPUStateModel::reaction_counts_order1_map;
-    using reaction_counts_order2_map = CPUStateModel::reaction_counts_order2_map;
-    readdy::model::KernelContext *context;
-    std::unique_ptr<neighbor_list> neighborList;
-    scalar currentEnergy = 0;
-    std::unique_ptr<readdy::signals::scoped_connection> reorderConnection;
-    topologies_vec topologies{};
-    top_action_factory const *const topologyActionFactory;
-    std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
-
-    Impl(readdy::model::KernelContext *context, top_action_factory const *const taf,
-         readdy::util::thread::Config const *const config) : topologyActionFactory(taf), context(context) {}
-};
 
 const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
-    const auto &data = *pimpl->neighborList->data();
+    const auto data = _neighborList->data();
     std::vector<Vec3> target{};
-    target.reserve(data.size());
-    for (const auto &entry : data) {
+    target.reserve(data->size());
+    for (const auto &entry : *data) {
         if (!entry.deactivated) target.push_back(entry.pos);
     }
     return target;
 }
 
 const std::vector<readdy::model::Particle> CPUStateModel::getParticles() const {
-    const auto &data = *pimpl->neighborList->data();
+    const auto data = _neighborList->data();
     std::vector<readdy::model::Particle> result;
-    result.reserve(data.size());
-    for (const auto &entry : data) {
+    result.reserve(data->size());
+    for (const auto &entry : *data) {
         if (!entry.deactivated) {
-            result.push_back(data.toParticle(entry));
+            result.push_back(data->toParticle(entry));
         }
     }
     return result;
@@ -177,30 +89,30 @@ void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
 CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
-        : pimpl(std::make_unique<Impl>(context, taf, config)), config(config) {
-    pimpl->neighborList = std::unique_ptr<neighbor_list>(
+        : _config(*config), _context(*context), _topologyActionFactory(*taf) {
+    _neighborList = std::unique_ptr<neighbor_list>(
             // new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
-            //new nl::CompactCLLNeighborList(1, *pimpl->context, *config)
-            new nl::DynamicCLLNeighborList(*pimpl->context, *config)
+            new nl::CompactCLLNeighborList(1, _context.get(), *config)
+            //new nl::DynamicCLLNeighborList(*pimpl->context, *config)
     );
-    pimpl->reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
+    _reorderConnection = std::make_unique<readdy::signals::scoped_connection>(
             getParticleData()->registerReorderEventListener([this](const std::vector<std::size_t> &indices) -> void {
-                for (auto &top : pimpl->topologies) {
+                for (auto &top : _topologies) {
                     if(!top->isDeactivated()) top->permuteIndices(indices);
                 }
             }));
 }
 
 CPUStateModel::data_type const *const CPUStateModel::getParticleData() const {
-    return pimpl->neighborList->data();
+    return _neighborList->data();
 }
 
 CPUStateModel::data_type *const CPUStateModel::getParticleData() {
-    return pimpl->neighborList->data();
+    return _neighborList->data();
 }
 
 neighbor_list const *const CPUStateModel::getNeighborList() const {
-    return pimpl->neighborList.get();
+    return _neighborList.get();
 }
 
 void CPUStateModel::clearNeighborList() {
@@ -212,7 +124,7 @@ void CPUStateModel::removeAllParticles() {
 }
 
 neighbor_list *const CPUStateModel::getNeighborList() {
-    return pimpl->neighborList.get();
+    return _neighborList.get();
 }
 
 readdy::model::top::GraphTopology *const
@@ -223,9 +135,9 @@ CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::mo
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    auto it = pimpl->topologies.push_back(
+    auto it = _topologies.push_back(
             std::make_unique<topology>(type, std::move(ids), std::move(types),
-                                       pimpl->context->topology_registry().potential_configuration())
+                                       _context.get().topology_registry().potential_configuration())
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {
@@ -235,11 +147,11 @@ CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::mo
 }
 
 std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() {
-    return pimpl->reactionRecords;
+    return _reactionRecords;
 }
 
 const std::vector<readdy::model::reactions::ReactionRecord> &CPUStateModel::reactionRecords() const {
-    return pimpl->reactionRecords;
+    return _reactionRecords;
 }
 
 readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t index) const {
@@ -247,25 +159,25 @@ readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t ind
 }
 
 const std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() const {
-    return pimpl->reactionCounts;
+    return _reactionCounts;
 }
 
 std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() {
-    return pimpl->reactionCounts;
+    return _reactionCounts;
 }
 
 const CPUStateModel::topologies_vec &CPUStateModel::topologies() const {
-    return pimpl->topologies;
+    return _topologies;
 }
 
 CPUStateModel::topologies_vec &CPUStateModel::topologies() {
-    return pimpl->topologies;
+    return _topologies;
 }
 
 std::vector<readdy::model::top::GraphTopology*> CPUStateModel::getTopologies() {
     std::vector<readdy::model::top::GraphTopology*> result;
-    result.reserve(pimpl->topologies.size() - pimpl->topologies.n_deactivated());
-    for(const auto& top : pimpl->topologies) {
+    result.reserve(_topologies.size() - _topologies.n_deactivated());
+    for(const auto& top : _topologies) {
         if(!top->isDeactivated()) {
             result.push_back(top.get());
         }
@@ -281,7 +193,7 @@ const readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(r
     const auto& entry = getParticleData()->entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
-            return pimpl->topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
+            return _topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
         }
         log::trace("requested particle {} of type {} had no assigned topology", particle, entry.type);
         return nullptr;
@@ -293,7 +205,7 @@ readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy:
     const auto& entry = getParticleData()->entry_at(particle);
     if(!entry.deactivated) {
         if(entry.topology_index >= 0) {
-            return pimpl->topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
+            return _topologies.at(static_cast<topologies_vec::size_type>(entry.topology_index)).get();
         }
         log::trace("requested particle {} of type {} had no assigned topology", particle, entry.type);
         return nullptr;
@@ -302,9 +214,8 @@ readdy::model::top::GraphTopology *CPUStateModel::getTopologyForParticle(readdy:
 }
 
 void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
-    auto& topologies = pimpl->topologies;
-    auto it = topologies.push_back(std::make_unique<topology>(std::move(top)));
-    auto idx = std::distance(topologies.begin(), it);
+    auto it = _topologies.push_back(std::make_unique<topology>(std::move(top)));
+    auto idx = std::distance(_topologies.begin(), it);
     const auto& particles = it->get()->getParticles();
     auto& data = *getParticleData();
     std::for_each(particles.begin(), particles.end(), [idx, &data](const topology::particle_index p) {
@@ -313,11 +224,11 @@ void CPUStateModel::insert_topology(CPUStateModel::topology &&top) {
 }
 
 void CPUStateModel::updateNeighborList(const util::PerformanceNode &node) {
-    pimpl->neighborList->update(node.subnode("update"));
+    _neighborList->update(node.subnode("update"));
 }
 
 void CPUStateModel::clearNeighborList(const util::PerformanceNode &node) {
-    pimpl->neighborList->clear(node.subnode("clear"));
+    _neighborList->clear(node.subnode("clear"));
 }
 
 void CPUStateModel::initializeNeighborList(scalar skin) {
@@ -325,36 +236,36 @@ void CPUStateModel::initializeNeighborList(scalar skin) {
 }
 
 void CPUStateModel::initializeNeighborList(scalar skin, const util::PerformanceNode &node) {
-    pimpl->neighborList->skin() = skin;
-    pimpl->neighborList->set_up(node.subnode("set_up"));
+    _neighborList->skin() = skin;
+    _neighborList->set_up(node.subnode("set_up"));
 }
 
 void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configuration) {
     const auto& nl = configuration.neighborList;
 
     if(nl.type == "CellDecomposition") {
-        (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::CellDecompositionNeighborList(getParticleData(), *pimpl->context, *config)
+        _neighborList = std::unique_ptr<neighbor_list>(
+                new nl::CellDecompositionNeighborList(getParticleData(), _context.get(), _config.get())
         );
         log::debug("Using CPU/CellDecomposition neighborList");
     } else if(nl.type == "ContiguousCLL") {
-        (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::ContiguousCLLNeighborList(getParticleData(), nl.cll_radius, *pimpl->context, *config)
+        _neighborList = std::unique_ptr<neighbor_list>(
+                new nl::ContiguousCLLNeighborList(getParticleData(), nl.cll_radius, _context.get(), _config.get())
         );
         log::debug("Using CPU/ContiguousCLL neighbor list with radius {}.", nl.cll_radius);
     } else if (nl.type == "DynamicCLL") {
-        (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::DynamicCLLNeighborList(getParticleData(), *pimpl->context, *config)
+        _neighborList = std::unique_ptr<neighbor_list>(
+                new nl::DynamicCLLNeighborList(getParticleData(), _context.get(), _config.get())
         );
         log::debug("Using CPU/DynamicCLL neighbor list.");
     } else if (nl.type == "Adaptive") {
-        (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::AdaptiveNeighborList(getParticleData(), *pimpl->context, *config)
+        _neighborList = std::unique_ptr<neighbor_list>(
+                new nl::AdaptiveNeighborList(getParticleData(), _context.get(), _config.get())
         );
         log::debug("Using CPU/Adaptive neighbor list.");
     } else if (nl.type == "CompactCLL") {
-        (*pimpl).neighborList = std::unique_ptr<neighbor_list>(
-                new nl::CompactCLLNeighborList(getParticleData(), nl.cll_radius, *pimpl->context, *config)
+        _neighborList = std::unique_ptr<neighbor_list>(
+                new nl::CompactCLLNeighborList(getParticleData(), nl.cll_radius, _context.get(), _config.get())
         );
         log::debug("Using CPU/CompactCLL neighbor list with radius {}.", nl.cll_radius);
     } else {
@@ -365,11 +276,11 @@ void CPUStateModel::configure(const readdy::conf::cpu::Configuration &configurat
 }
 
 scalar &CPUStateModel::energy() {
-    return pimpl->currentEnergy;
+    return _currentEnergy;
 }
 
 scalar CPUStateModel::energy() const {
-    return pimpl->currentEnergy;
+    return _currentEnergy;
 }
 
 CPUStateModel::~CPUStateModel() = default;

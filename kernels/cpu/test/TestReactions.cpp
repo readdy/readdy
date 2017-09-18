@@ -34,10 +34,9 @@
 #include <readdy/plugin/KernelProvider.h>
 #include <readdy/kernel/cpu/CPUKernel.h>
 #include <readdy/kernel/cpu/actions/reactions/ReactionUtils.h>
-#include <readdy/kernel/cpu/actions/reactions/CPUGillespieParallel.h>
-#include <readdy/kernel/cpu/actions/reactions/NextSubvolumesReactionScheduler.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/FloatingPoints.h>
+#include <readdy/kernel/cpu/actions/reactions/CPUGillespie.h>
 
 namespace reac = readdy::kernel::cpu::actions::reactions;
 
@@ -223,7 +222,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::Gillespie>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     pp_obs->setCallback([](const readdy::model::observables::Positions::result_type &t) {
@@ -305,11 +304,12 @@ TEST(CPUTestReactions, TestGillespieParallel) {
         fix_n_threads n_threads{kernel.get(), 2};
         EXPECT_EQ(2, kernel->getNThreads());
         auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
-        std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespieParallel>(
-                kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1)
+        std::unique_ptr<readdy::kernel::cpu::actions::reactions::CPUGillespie> reactions = readdy::util::static_unique_ptr_cast_no_del<readdy::kernel::cpu::actions::reactions::CPUGillespie>(
+                kernel->createAction<readdy::model::actions::reactions::Gillespie>(1)
         );
         neighborList->perform();
-        reactions->perform();
+        reactions->perform({});
+        /*reactions->perform();
         EXPECT_EQ(1.0, reactions->getMaxReactionRadius());
         EXPECT_EQ(15.0, reactions->getBoxWidth());
         EXPECT_EQ(2, reactions->getLongestAxis());
@@ -318,7 +318,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
             EXPECT_EQ(1, reactions->getOtherAxis2());
         } else {
             EXPECT_EQ(0, reactions->getOtherAxis2());
-        }
+        }*/
     }
     // we have two boxes, left and right, which can be projected into a line with (index, type):
     // Box left:  |---(8, A)---(7, A)--------(6, B)---(3, C)---(1, A)---(0, A)    |
@@ -358,29 +358,4 @@ TEST(CPUTestReactions, TestGillespieParallel) {
             return p.getType() == typeA && p.getPos() == vec_t(0, 0, 5.25);
         }) != particles.end()) << "This particle should be placed between the particles 9 and 10 (see above).";
     }
-}
-
-
-TEST(TestNextSubvolumes, ReactionRadii) {
-    using fusion_t = readdy::model::reactions::Fusion;
-    auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-    kernel->getKernelContext().particle_types().add("A", 1.0, 1.);
-
-    auto nextSubvolumes = readdy::util::static_unique_ptr_cast<readdy::kernel::cpu::actions::reactions::CPUNextSubvolumes>(
-            kernel->createAction<readdy::model::actions::reactions::NextSubvolumes>(1)
-    );
-    kernel->getKernelContext().configure();
-    EXPECT_EQ(0, nextSubvolumes->getMaxReactionRadius()) << "no reactions present, expect max radius to be 0";
-
-    kernel->registerReaction<fusion_t>("annihilation", "A", "A", "A", 1.0, 6.0);
-    kernel->getKernelContext().configure();
-    EXPECT_EQ(6.0, nextSubvolumes->getMaxReactionRadius()) << "one reaction with radius 6.0";
-
-    kernel->registerReaction<fusion_t>("annihilation2", "A", "A", "A", 1.0, 5.0);
-    kernel->getKernelContext().configure();
-    EXPECT_EQ(6.0, nextSubvolumes->getMaxReactionRadius()) << "max(5.0, 6.0) = 6.0";
-
-    kernel->registerReaction<fusion_t>("annihilation3", "A", "A", "A", 1.0, 7.0);
-    kernel->getKernelContext().configure();
-    EXPECT_EQ(7.0, nextSubvolumes->getMaxReactionRadius()) << "max(5.0, 6.0, 7.0) = 7.0";
 }
