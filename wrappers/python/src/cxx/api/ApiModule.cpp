@@ -19,14 +19,14 @@
  * <http://www.gnu.org/licenses/>.                                  *
  ********************************************************************/
 
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
+#include <json.hpp>
+
 #include <readdy/api/Simulation.h>
 #include <readdy/common/nodelete.h>
-#include <readdy/api/PotentialConfiguration.h>
 #include "ExportSchemeApi.h"
 #include "PyPotential.h"
 #include "ExportObservables.h"
@@ -36,7 +36,7 @@ namespace py = pybind11;
 using rvp = py::return_value_policy;
 using sim = readdy::Simulation;
 using kp = readdy::plugin::KernelProvider;
-using vec = readdy::model::Vec3;
+using vec = readdy::Vec3;
 using pot2 = readdy::rpy::PotentialOrder2Wrapper;
 using model = readdy::model::KernelStateModel;
 using ctx = readdy::model::KernelContext;
@@ -84,7 +84,6 @@ void exportApi(py::module &api) {
             .def_property("box_size", &sim::getBoxSize, &setBoxSize)
             .def_property_readonly("single_precision", &sim::singlePrecision)
             .def_property_readonly("double_precision", &sim::doublePrecision)
-            .def("set_expected_max_n_particles", &sim::setExpectedMaxNParticles, "n"_a)
             .def("register_particle_type",
                  [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient, readdy::scalar radius,
                     ParticleTypeFlavor flavor) {
@@ -103,6 +102,7 @@ void exportApi(py::module &api) {
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
             }, "type"_a, "pos"_a)
+            .def("set_kernel_config", &sim::setKernelConfiguration)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)
             .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)

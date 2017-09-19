@@ -69,7 +69,7 @@ class Timer {
 public:
     explicit Timer(const PerformanceData &target, bool measure);
 
-    ~Timer() noexcept;
+    ~Timer();
 
     Timer(const Timer &other) = delete;
 
@@ -91,6 +91,11 @@ public:
     using performance_mutex = std::mutex;
     using performance_lock = std::unique_lock<performance_mutex>;
 
+    /**
+     * No-op performance node
+     */
+    PerformanceNode();
+    
     /**
      * Will hold a reference to itself as root.
      */

@@ -24,6 +24,8 @@ import unittest
 
 import readdy._internal.readdybinding.prototyping as pr
 
+from readdy.util.testing_utils import ReaDDyTestCase
+
 
 class SingleCPUExtension(pr.SingleCPUKernel):
     def __init__(self):
@@ -34,12 +36,12 @@ class SingleCPUExtension(pr.SingleCPUKernel):
         print("calling super get kernel state model")
         super(SingleCPUExtension, self).get_kernel_state_model()
 
+
 def creator():
     return SingleCPUExtension()
 
 
-class TestKernelExtension(unittest.TestCase):
-
+class TestKernelExtension(ReaDDyTestCase):
     def test_load_prototyping_module(self):
         scpu = SingleCPUExtension()
         program_factory = scpu.get_action_factory()

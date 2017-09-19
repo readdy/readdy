@@ -31,7 +31,7 @@
  */
 
 #include <readdy/common/numeric.h>
-#include <readdy/model/Vec3Tensor.h>
+#include <readdy/common/Vec3Tensor.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 
 #define SMALL .0001

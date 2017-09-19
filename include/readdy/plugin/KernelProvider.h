@@ -32,6 +32,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <readdy/model/Kernel.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -83,8 +85,8 @@ protected:
 
 public:
 
-    using kernel_ptr = std::unique_ptr<readdy::model::Kernel, KernelDeleter>;
-    using raw_kernel_ptr = readdy::model::Kernel*;
+    using kernel_ptr = std::unique_ptr<model::Kernel, KernelDeleter>;
+    using raw_kernel_ptr = model::Kernel*;
 
     // prevent that copies can be created
     KernelProvider(KernelProvider const &) = delete;

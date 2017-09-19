@@ -28,8 +28,10 @@ import readdy._internal.readdybinding.common as cmn
 
 import numpy as np
 
+from readdy.util.testing_utils import ReaDDyTestCase
 
-class TestModel(unittest.TestCase):
+
+class TestModel(ReaDDyTestCase):
     def setUp(self):
         self.kernel = pr.SingleCPUKernel()
         self.ctx = self.kernel.get_kernel_context()
@@ -57,6 +59,7 @@ class TestModel(unittest.TestCase):
     def test_kernel_context_fix_position_fun(self):
         self.ctx.set_box_size(cmn.Vec(1, 1, 1))
         self.ctx.periodic_boundary = [True, True, True]
+        self.ctx.configure()
         fix_pos = self.ctx.get_fix_position_fun()
         v_outside = cmn.Vec(4, 4, 4)
         fix_pos(v_outside)
@@ -68,6 +71,7 @@ class TestModel(unittest.TestCase):
     def test_kernel_context_shortest_difference(self):
         self.ctx.set_box_size(cmn.Vec(2, 2, 2))
         self.ctx.periodic_boundary = [True, True, True]
+        self.ctx.configure()
         diff = self.ctx.get_shortest_difference_fun()
         np.testing.assert_equal(diff(cmn.Vec(0, 0, 0), cmn.Vec(1, 0, 0)), cmn.Vec(1, 0, 0),
                                 err_msg="both vectors were already inside the domain")

@@ -66,12 +66,12 @@ void SubCell::update_displacements() {
         }
     } else {
         for (const auto particle_index : _particles_list) {
-            const auto &entry = data().entry_at(particle_index);
-            assert(!entry.is_deactivated());
-            if (entry.displacement > _maximal_displacements[0]) {
-                _maximal_displacements[0] = entry.displacement;
-            } else if (entry.displacement > _maximal_displacements[1]) {
-                _maximal_displacements[1] = entry.displacement;
+            const auto displacement = data().displacements().at(particle_index);
+            assert(!data().entry_at(particle_index).deactivated);
+            if (displacement > _maximal_displacements[0]) {
+                _maximal_displacements[0] = displacement;
+            } else if (displacement > _maximal_displacements[1]) {
+                _maximal_displacements[1] = displacement;
             }
         }
     }
@@ -117,7 +117,7 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
         });
     }
     {
-        const auto &pbc = _context.getPBCFun();
+        const auto &pbc = _context.applyPBCFun();
         // center w.r.t. simulation coordinates
         auto my_global_center = _offset + .5 * _size - .5 * _root_size;
         auto my_root = root();
@@ -138,6 +138,8 @@ void SubCell::setup_uniform_neighbors(const std::uint8_t radius) {
                 }
             }
         }
+        std::sort(std::begin(_neighbors), std::end(_neighbors));
+        _neighbors.erase(std::unique(std::begin(_neighbors), std::end(_neighbors)), std::end(_neighbors));
     }
 }
 
@@ -212,7 +214,7 @@ void SubCell::reset_particles_displacements() {
         }
     } else {
         for (const auto p_idx : _particles_list) {
-            _data.entry_at(p_idx).displacement = 0;
+            _data.displacements().at(p_idx) = 0;
         }
     }
 }
@@ -224,6 +226,16 @@ void SubCell::set_dirty() const {
 void SubCell::unset_dirty() const {
     _dirty_flag.unset();
 }
+
+/*void SubCell::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> &function) {
+    if(is_leaf()) {
+        function(*this);
+    } else {
+        for(auto &sub_cell : sub_cells()) {
+            sub_cell.execute_for_each_leaf(function);
+        }
+    }
+}*/
 
 detail::DirtyFlag::DirtyFlag(detail::DirtyFlag &&rhs) noexcept : _is_dirty(rhs._is_dirty.load()) {}
 

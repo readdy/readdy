@@ -37,14 +37,14 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 
-data_t::update_t handleEventsGillespie(
+data_t::DataUpdate handleEventsGillespie(
         CPUKernel *const kernel, scalar timeStep, bool filterEventsInAdvance, bool approximateRate,
         std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts) {
     using rdy_particle_t = readdy::model::Particle;
-    const auto& fixPos = kernel->getKernelContext().getFixPositionFun();
+    const auto& fixPos = kernel->getKernelContext().fixPositionFun();
 
-    data_t::entries_update_t newParticles{};
-    std::vector<data_t::index_t> decayedEntries {};
+    data_t::EntriesUpdate newParticles{};
+    std::vector<data_t::size_type> decayedEntries {};
 
     if(!events.empty()) {
         const auto &ctx = kernel->getKernelContext();
@@ -80,11 +80,11 @@ data_t::update_t handleEventsGillespie(
                             if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
-                                performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
+                                performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                                 fixPos(record.where);
                                 maybeRecords->push_back(record);
                             } else {
-                                performReaction(*data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
+                                performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                             }
                             if(maybeCounts != nullptr) {
                                 auto &countsOrder1 = std::get<0>(*maybeCounts);
@@ -95,12 +95,12 @@ data_t::update_t handleEventsGillespie(
                             if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
-                                performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
+                                performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 &record);
                                 fixPos(record.where);
                                 maybeRecords->push_back(record);
                             } else {
-                                performReaction(*data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
+                                performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 nullptr);
                             }
                             if(maybeCounts != nullptr) {

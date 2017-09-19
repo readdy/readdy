@@ -37,7 +37,7 @@ namespace readdy {
 namespace model {
 
 
-ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar  diffusionConstant, const scalar  radius,
+ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar  diffusionConstant, const scalar radius,
                                    const particle_flavor flavor, const Particle::type_type typeId)
         : name(name), diffusionConstant(diffusionConstant), radius(radius), flavor(flavor), typeId(typeId) {}
 

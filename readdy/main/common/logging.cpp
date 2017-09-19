@@ -32,6 +32,7 @@
  */
 
 #include <readdy/common/logging.h>
+#include <iostream>
 
 namespace readdy {
 namespace log {

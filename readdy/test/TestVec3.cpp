@@ -30,12 +30,12 @@
  */
 
 #include <gtest/gtest.h>
-#include <readdy/model/Vec3.h>
-#include <readdy/common/logging.h>
+#include <readdy/common/common.h>
+#include <readdy/common/ReaDDyVec3.h>
 
 namespace {
 
-using vec_t = readdy::model::Vec3;
+using vec_t = readdy::Vec3;
 
 TEST(Vec3, SizeOfVec3) {
     vec_t vec(0,0,0);

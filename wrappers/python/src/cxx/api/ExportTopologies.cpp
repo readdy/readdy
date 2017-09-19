@@ -52,7 +52,7 @@ using torsion_potential = readdy::model::top::pot::TorsionPotential;
 using harmonic_bond = readdy::model::top::pot::HarmonicBondPotential;
 using harmonic_angle = readdy::model::top::pot::HarmonicAnglePotential;
 using cosine_dihedral = readdy::model::top::pot::CosineDihedralPotential;
-using vec3 = readdy::model::Vec3;
+using vec3 = readdy::Vec3;
 
 struct reaction_function_sink {
     std::shared_ptr<py::function> f;

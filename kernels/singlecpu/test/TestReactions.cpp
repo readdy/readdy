@@ -42,7 +42,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     kernel->getKernelContext().particle_types().add("X", .25, 1.);
     kernel->registerReaction<death_t>("X decay", "X", 1);
     kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
@@ -51,7 +51,8 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(update_nl::Operation::create, -1);
+    auto &&initNeighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(update_nl::Operation::init, 0);
+    auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>(update_nl::Operation::update, 0);
     auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(timeStep);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
@@ -65,7 +66,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->getKernelStateModel().addParticles(particlesToBeginWith);
     kernel->getKernelContext().configure();
-    neighborList->perform();
+    initNeighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
         forces->perform();
@@ -116,7 +117,7 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
 
     kernel->getKernelContext().particle_types().add("A", .25, 1.);
     kernel->getKernelContext().particle_types().add("B", .25, 1.);

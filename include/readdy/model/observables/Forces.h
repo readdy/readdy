@@ -33,14 +33,13 @@
 #pragma once
 
 #include <readdy/common/macros.h>
-#include <readdy/model/Vec3.h>
 #include "Observable.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class Forces : public Observable<std::vector<readdy::model::Vec3>> {
+class Forces : public Observable<std::vector<Vec3>> {
 
 public:
     Forces(Kernel* kernel, unsigned int stride);

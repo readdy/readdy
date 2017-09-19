@@ -37,7 +37,7 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
 NAMESPACE_BEGIN(cpu)
-NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(actions)
 NAMESPACE_BEGIN(top)
 
 namespace top = readdy::model::top;
@@ -65,7 +65,7 @@ public:
 };
 
 NAMESPACE_END(top)
-NAMESPACE_END(model)
+NAMESPACE_END(actions)
 NAMESPACE_END(cpu)
 NAMESPACE_END(kernel)
 NAMESPACE_END(readdy)

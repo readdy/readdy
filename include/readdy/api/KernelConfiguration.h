@@ -21,33 +21,62 @@
 
 
 /**
- * << detailed description >>
  *
- * @file FilteredGillespieParallel.h
- * @brief << brief description >>
+ *
+ * @file KernelConfiguration.h
+ * @brief 
  * @author clonker
- * @date 20.10.16
+ * @date 9/13/17
  */
-
 #pragma once
-#include "CPUGillespieParallel.h"
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace reactions {
+#include <string>
+#include <json.hpp>
+#include <readdy/common/thread/Config.h>
 
-class FilteredGillespieParallel : public CPUGillespieParallel {
-public:
-    FilteredGillespieParallel(cpu_kernel *const kernel, readdy::scalar timeStep);
+#include "readdy/common/macros.h"
 
-private:
-    virtual void handleBoxReactions() override;
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(conf)
+using json = nlohmann::json;
+
+NAMESPACE_BEGIN(cpu)
+struct NeighborList {
+    std::string type {"CompactCLL"};
+    std::uint8_t cll_radius {1};
 };
+void to_json(json &j, const NeighborList &nl);
+void from_json(const json &j, NeighborList &nl);
 
-}
-}
-}
-}
-}
+struct ThreadConfig {
+    int nThreads {-1};
+    util::thread::ThreadMode threadMode {util::thread::ThreadMode::pool};
+};
+void to_json(json &j, const ThreadConfig &nl);
+void from_json(const json &j, ThreadConfig &nl);
+
+struct Configuration {
+    NeighborList neighborList {};
+    ThreadConfig threadConfig {};
+};
+void to_json(json &j, const Configuration &conf);
+void from_json(const json &j, Configuration &conf);
+
+NAMESPACE_END(cpu)
+
+NAMESPACE_BEGIN(scpu)
+struct Configuration {
+
+};
+NAMESPACE_END(scpu)
+
+struct Configuration {
+    scpu::Configuration scpu;
+    cpu::Configuration cpu;
+};
+void to_json(json &j, const Configuration &conf);
+void from_json(const json &j, Configuration &conf);
+
+
+NAMESPACE_END(conf)
+NAMESPACE_END(readdy)

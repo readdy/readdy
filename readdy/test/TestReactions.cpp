@@ -65,8 +65,8 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
     kernel->getKernelContext().particle_types().add("B", 1.0, 1.0);
     kernel->getKernelContext().particle_types().add("AB", 0.0, 1.0);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
-    kernel->getKernelContext().setBoxSize(5, 5, 5);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
+    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
     kernel->registerReaction<readdy::model::reactions::Fusion>("Form complex", "A", "B", "AB", .5, 1.0);
     kernel->registerReaction<readdy::model::reactions::Fission>("Dissolve", "AB", "A", "B", .5, 1.0);
 
@@ -96,9 +96,6 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         readdy::util::PerformanceNode pn("", false);
         auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
         const auto progs = kernel->getAvailableActions();
-        if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
-            conf = std::move(conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>());
-        }
         conf.configureAndRun(10, 1);
     }
 
@@ -106,7 +103,7 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
 
 // Compare two vectors via their distance to the (1,1,1) plane in 3d space. This is quite arbitrary and only used to construct an ordered set.
 struct Vec3ProjectedLess {
-    bool operator()(const readdy::model::Vec3& lhs, const readdy::model::Vec3& rhs) const {
+    bool operator()(const readdy::Vec3& lhs, const readdy::Vec3& rhs) const {
         return (lhs.x + lhs.y + lhs.z) < (rhs.x + rhs.y + rhs.z);
     }
 };
@@ -116,29 +113,32 @@ TEST_P(TestReactions, FusionFissionWeights) {
      * Also during reactions, weights are chosen such that F does not move.
      * Idea: position F particles and remember their positions (ordered set), do ONE time-step and check if current positions are still the same.
      */
-    kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
-    kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
-    kernel->getKernelContext().setBoxSize(20, 20, 20);
+    auto &context = kernel->getKernelContext();
+    context.particle_types().add("A", 0.5, 1.0);
+    context.particle_types().add("F", 0.0, 1.0);
+    context.periodicBoundaryConditions() = {{true, true, true}};
+    context.boxSize() = {{20, 20, 20}};
+    context.configure(false);
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
     kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
     kernel->registerReaction<readdy::model::reactions::Fission>("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
-    std::set<readdy::model::Vec3, Vec3ProjectedLess> fPositions;
+    std::set<readdy::Vec3, Vec3ProjectedLess> fPositions;
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     for (std::size_t i = 0; i < 15; ++i) {
         auto fPos = n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.8));
-        fPositions.emplace(fPos);
         kernel->addParticle("F", fPos);
+        // fPos
+        fPositions.emplace(kernel->getKernelStateModel().getParticles().back().getPos());
         kernel->addParticle("A", n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(1.)));
     }
 
     auto obs = kernel->createObservable<readdy::model::observables::Positions>(1, std::vector<std::string>({"F"}));
     obs->setCallback(
-            [&fPositions](const readdy::model::observables::Positions::result_type &result) {
-                std::set<readdy::model::Vec3, Vec3ProjectedLess> checklist;
+            [&fPositions, this](const readdy::model::observables::Positions::result_type &result) {
+                std::set<readdy::Vec3, Vec3ProjectedLess> checklist;
                 for (const auto &pos : result) {
                     checklist.emplace(pos);
                 }
@@ -146,7 +146,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
                 auto itPos = fPositions.begin();
                 auto itCheck = checklist.begin();
                 while (itPos != fPositions.end()) {
-                    EXPECT_VEC3_NEAR(*itPos, *itCheck, readdy::double_precision ? 1e-8 : 1e-6);
+                    EXPECT_VEC3_NEAR(*itPos, *itCheck, kernel->doublePrecision() ? 1e-8 : 1e-6);
                     ++itPos;
                     ++itCheck;
                 }
@@ -156,12 +156,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
-        const auto progs = kernel->getAvailableActions();
-        if (std::find(progs.begin(), progs.end(), "GillespieParallel") != progs.end()) {
-            conf = std::move(conf.withReactionScheduler<readdy::model::actions::reactions::GillespieParallel>());
-        }
-        conf.configureAndRun(1, 0.5);
+        readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn).configureAndRun(1, .5);
     }
 }
 

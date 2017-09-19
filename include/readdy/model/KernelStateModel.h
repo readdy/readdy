@@ -34,7 +34,7 @@
 #include <vector>
 #include <readdy/model/topologies/GraphTopology.h>
 #include "Particle.h"
-#include "Vec3.h"
+#include "readdy/common/ReaDDyVec3.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -63,11 +63,11 @@ public:
 
     virtual particle_type_type getParticleType(std::size_t index) const = 0;
 
-    virtual void updateNeighborList(scalar skin = 0) = 0;
+    virtual void initializeNeighborList(scalar skin) = 0;
+
+    virtual void updateNeighborList() = 0;
 
     virtual void clearNeighborList() = 0;
-
-    virtual void calculateForces() = 0;
 
     virtual void addParticle(const Particle &p) = 0;
 
@@ -89,9 +89,9 @@ public:
 
     virtual void removeAllParticles() = 0;
 
-    virtual scalar getEnergy() const = 0;
+    virtual scalar energy() const = 0;
 
-    virtual void expected_n_particles(std::size_t n) = 0;
+    virtual scalar &energy() = 0;
 };
 
 NAMESPACE_END(model)

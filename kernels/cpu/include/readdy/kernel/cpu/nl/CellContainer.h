@@ -35,11 +35,12 @@
 
 #include <readdy/common/thread/Config.h>
 #include <readdy/common/common.h>
-#include <readdy/model/Vec3.h>
+#include <readdy/common/Index.h>
 #include <readdy/model/KernelContext.h>
 
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
+
 #include "ParticlesList.h"
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
 
 namespace readdy {
 namespace kernel {
@@ -59,12 +60,12 @@ public:
     using cell_ref = SubCell *;
     using cell_ref_list = std::vector<cell_ref>;
     using grid_index = std::tuple<int, int, int>;
-    using vec3 = readdy::model::Vec3;
+    using vec3 = Vec3;
     using level_t = std::uint8_t;
     using particle_index = ParticlesList::particle_index;
+    using DataContainer = data::NLDataContainer;
 
-
-    CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+    CellContainer(DataContainer &data, const readdy::model::KernelContext &context,
                   const readdy::util::thread::Config &config);
 
     virtual ~CellContainer();
@@ -169,9 +170,9 @@ public:
 
     virtual void refine_uniformly();
 
-    const model::CPUParticleData &data() const;
+    const DataContainer &data() const;
 
-    model::CPUParticleData& data();
+    DataContainer& data();
 
     const readdy::model::KernelContext &context() const;
 
@@ -209,7 +210,7 @@ public:
      * @param function
      * @todo this currently only works for leafs at level==2
      */
-    void execute_for_each_leaf(const std::function<void(const sub_cell&)> &function);
+    virtual void execute_for_each_leaf(const std::function<void(const sub_cell&)> &function);
 
     void execute_for_each_sub_cell(const std::function<void(sub_cell &)> &function);
 
@@ -241,7 +242,7 @@ protected:
 
     std::size_t _n_dirty_macro_cells {0};
 
-    model::CPUParticleData &_data;
+    DataContainer &_data;
     const readdy::model::KernelContext &_context;
     const readdy::util::thread::Config& _config;
 };

@@ -87,7 +87,7 @@ public:
     }
 
 protected:
-    std::unordered_map<readdy::model::Particle::id_type, readdy::model::Vec3> initialPositions;
+    std::unordered_map<readdy::model::Particle::id_type, Vec3> initialPositions;
     std::vector<unsigned long> numberOfParticles;
     KERNEL *const kernel;
 };

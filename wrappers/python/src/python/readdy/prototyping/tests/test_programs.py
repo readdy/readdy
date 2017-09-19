@@ -26,7 +26,10 @@ import numpy as np
 import readdy._internal.readdybinding.common as cmn
 import readdy._internal.readdybinding.prototyping as pr
 
-class TestPrograms(unittest.TestCase):
+from readdy.util.testing_utils import ReaDDyTestCase
+
+
+class TestPrograms(ReaDDyTestCase):
     def test_custom_state_model(self):
         class CustomStateModel(pr.Model):
             def get_particle_positions(self):

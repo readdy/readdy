@@ -32,6 +32,8 @@
 
 #include <readdy/kernel/cpu/util/config.h>
 
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
+
 #include "CellContainer.h"
 #include "SubCell.h"
 #include "NeighborList.h"
@@ -44,30 +46,31 @@ namespace nl {
 class AdaptiveNeighborList : public NeighborList{
 public:
     using skin_size_t = scalar;
+    using data_type = data::NLDataContainer;
 
-    AdaptiveNeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
-                         const readdy::util::thread::Config &config, bool adaptive=true,
+    AdaptiveNeighborList(data::EntryDataContainer *data, const readdy::model::KernelContext &context, const readdy::util::thread::Config &config,
+                         bool hilbert_sort = true);
+
+    AdaptiveNeighborList(const readdy::model::KernelContext &context, const readdy::util::thread::Config &config,
                          bool hilbert_sort = true);
 
     ~AdaptiveNeighborList() = default;
 
-    void set_up() override;
+    bool is_adaptive() const override;
 
-    void update() override;
+    void set_up(const util::PerformanceNode &node) override;
 
-    void clear() override;
+    void update(const util::PerformanceNode &node) override;
+
+    void clear(const util::PerformanceNode &node) override;
+
+    std::size_t size() const override;
 
     void clear_cells();
-
-    const model::CPUParticleData& data() const;
 
     const readdy::util::thread::Config& config() const;
 
     const CellContainer& cell_container() const;
-
-    bool& adaptive();
-
-    const bool& adaptive() const;
 
     bool& performs_hilbert_sort();
 
@@ -75,13 +78,17 @@ public:
 
     void sort_by_hilbert_curve();
 
-    void updateData(data_t::update_t &&update) override;
+    void updateData(data_type::DataUpdate &&update) override;
 
-    void displace(data_t::iterator iter, const readdy::model::Vec3 &vec);
+    virtual const_iterator cbegin() const override;
 
-    void displace(data_t::Entry &entry, const readdy::model::Vec3 &delta);
+    virtual const_iterator cend() const override;
 
-    void displace(data_t::index_t entry, const readdy::model::Vec3 &delta);
+    data::EntryDataContainer *data() override;
+
+    const data::EntryDataContainer * data() const override;
+
+    const data::NLDataContainer &nlData() const;
 
 private:
 
@@ -96,11 +103,12 @@ private:
 
     void handle_dirty_cells();
 
-    CellContainer _cell_container;
-
     bool _hilbert_sort {true};
-    bool _adaptive {true};
     bool _is_set_up {false};
+
+    data::NLDataContainer _data;
+
+    CellContainer _cell_container;
 };
 
 }

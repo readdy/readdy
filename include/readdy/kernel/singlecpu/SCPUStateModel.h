@@ -33,7 +33,6 @@
 
 #include <memory>
 #include <readdy/model/KernelStateModel.h>
-#include <readdy/model/Vec3.h>
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 #include <readdy/model/KernelContext.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
@@ -55,11 +54,11 @@ public:
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    void updateNeighborList(scalar skin) override;
+    void initializeNeighborList(scalar skin) override;
+
+    void updateNeighborList() override;
 
     void clearNeighborList() override;
-
-    void calculateForces() override;
 
     void addParticle(const readdy::model::Particle &p) override;
 
@@ -71,13 +70,15 @@ public:
 
     readdy::model::top::GraphTopology *const addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
 
-    const std::vector<readdy::model::Vec3> getParticlePositions() const override;
+    const std::vector<Vec3> getParticlePositions() const override;
 
     readdy::model::Particle getParticleForIndex(std::size_t index) const override;
 
     particle_type_type getParticleType(std::size_t index) const override;
 
-    scalar getEnergy() const override;
+    scalar energy() const override;
+
+    scalar &energy() override;
 
     virtual void increaseEnergy(scalar increase);
 
@@ -107,8 +108,6 @@ public:
     const std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts() const;
 
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
-
-    void expected_n_particles(std::size_t n) override;
 
     const topologies_vec &topologies() const;
 

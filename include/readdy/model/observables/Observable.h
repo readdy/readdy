@@ -50,6 +50,7 @@
 #include <readdy/common/signals.h>
 #include <readdy/common/logging.h>
 #include <readdy/common/tuple_utils.h>
+#include <readdy/common/ReaDDyVec3.h>
 
 NAMESPACE_BEGIN(readdy)
 

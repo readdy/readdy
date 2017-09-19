@@ -57,10 +57,6 @@ protected:
 
     readdy::model::actions::reactions::Gillespie *createGillespie(scalar timeStep) const override;
 
-    readdy::model::actions::reactions::GillespieParallel *createGillespieParallel(scalar timeStep) const override;
-
-    readdy::model::actions::reactions::NextSubvolumes *createNextSubvolumes(scalar timeStep) const override;
-
     readdy::model::actions::top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const override;
 
 private:

@@ -47,57 +47,59 @@
 #include <memory>
 #include <vector>
 #include <unordered_set>
+
+#include <json.hpp>
+
+#include <readdy/common/ParticleTypeTuple.h>
+#include <readdy/api/PotentialConfiguration.h>
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
 #include <readdy/model/reactions/Reaction.h>
 #include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/model/reactions/ReactionRegistry.h>
 #include <readdy/model/compartments/Compartment.h>
-#include "Vec3.h"
 #include "ParticleTypeRegistry.h"
-#include <readdy/common/ParticleTypeTuple.h>
-#include <readdy/api/PotentialConfiguration.h>
 #include <readdy/model/potentials/PotentialRegistry.h>
 #include <readdy/model/topologies/TopologyRegistry.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
-class UnknownParticleType : public std::runtime_error {
-public:
-    explicit UnknownParticleType(const std::string &__arg) : runtime_error(__arg) {}
-};
-
 class KernelContext {
 public:
-    using compartment_registry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
+    using CompartmentRegistry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
+    using BoxSize = std::array<scalar, 3>;
+    using PeriodicBoundaryConditions = std::array<bool, 3>;
+    using KernelConfiguration = nlohmann::json;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
     using pbc_fun = std::function<Vec3(const Vec3 &)>;
     using dist_squared_fun = std::function<scalar(const Vec3 &, const Vec3 &)>;
     using shortest_dist_fun = std::function<Vec3(const Vec3 &, const Vec3 &)>;
 
-    scalar getKBT() const;
+    const scalar &kBT() const;
 
-    void setKBT(scalar kBT);
+    scalar &kBT();
 
-    Vec3::data_arr &getBoxSize() const;
+    scalar boxVolume() const;
 
-    std::tuple<readdy::model::Vec3, readdy::model::Vec3> getBoxBoundingVertices() const;
+    const BoxSize &boxSize() const;
 
-    void setBoxSize(scalar dx, scalar dy, scalar dz);
+    BoxSize &boxSize();
 
-    const std::array<bool, 3> &getPeriodicBoundary() const;
+    const PeriodicBoundaryConditions &periodicBoundaryConditions() const;
 
-    void setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z);
+    PeriodicBoundaryConditions &periodicBoundaryConditions();
 
-    const fix_pos_fun &getFixPositionFun() const;
+    std::tuple<Vec3, Vec3> getBoxBoundingVertices() const;
 
-    const dist_squared_fun &getDistSquaredFun() const;
+    const fix_pos_fun &fixPositionFun() const;
 
-    const shortest_dist_fun &getShortestDifferenceFun() const;
+    const dist_squared_fun &distSquaredFun() const;
 
-    const pbc_fun &getPBCFun() const;
+    const shortest_dist_fun &shortestDifferenceFun() const;
+
+    const pbc_fun &applyPBCFun() const;
 
     const scalar calculateMaxCutoff() const;
 
@@ -106,11 +108,11 @@ public:
         // assert to prevent errors already at compile-time
         static_assert(std::is_base_of<compartments::Compartment, T>::value, "argument must be a compartment");
         const auto id = compartment->getId();
-        compartmentRegistry->push_back(std::move(compartment));
+        _compartmentRegistry.push_back(std::move(compartment));
         return id;
     }
 
-    const compartment_registry &getCompartments() const;
+    const CompartmentRegistry &compartments() const;
 
     /**
      * Copy the reactions and potentials of the internal and external registries into the actual registries, which
@@ -164,6 +166,12 @@ public:
 
     const potentials::PotentialRegistry &potentials() const;
 
+    KernelConfiguration &kernelConfiguration();
+
+    const KernelConfiguration &kernelConfiguration() const;
+
+    void setKernelConfiguration(const std::string &jsonStr);
+
     // ctor and dtor
     KernelContext();
 
@@ -180,19 +188,29 @@ public:
     KernelContext &operator=(const KernelContext &rhs) = delete;
 
 private:
-    struct Impl;
-    std::unique_ptr<readdy::model::KernelContext::Impl> pimpl;
+    void updateFunctions();
 
-    ParticleTypeRegistry particleTypeRegistry_;
-    reactions::ReactionRegistry reactionRegistry_;
-    potentials::PotentialRegistry potentialRegistry_;
-    top::TopologyRegistry topologyRegistry_;
+    ParticleTypeRegistry _particleTypeRegistry;
+    reactions::ReactionRegistry _reactionRegistry;
+    potentials::PotentialRegistry _potentialRegistry;
+    top::TopologyRegistry _topologyRegistry;
+    CompartmentRegistry _compartmentRegistry;
 
-    std::unique_ptr<compartment_registry> compartmentRegistry = std::make_unique<compartment_registry>();
+    KernelConfiguration _kernelConfiguration;
+
+    scalar _kBT{1};
+    BoxSize _box_size{{1, 1, 1}};
+    PeriodicBoundaryConditions _periodic_boundary{{true, true, true}};
+
+    std::function<Vec3(const Vec3 &)> _pbc;
+    std::function<void(Vec3 &)> _fixPositionFun;
+    std::function<Vec3(const Vec3 &, const Vec3 &)> _diffFun;
+    std::function<scalar(const Vec3 &, const Vec3 &)> _distFun;
 
     // here come horrible flags
-    bool recordReactionsWithPositions_ = false;
-    bool recordReactionCounts_ = false;
+    bool _recordReactionsWithPositions{false};
+    bool _recordReactionCounts{false};
+
 };
 
 NAMESPACE_END(model)

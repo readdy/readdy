@@ -26,16 +26,20 @@ SET(CPU_INCLUDE_DIR "${READDY_GLOBAL_DIR}/kernels/cpu/include")
 # --- main sources ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUKernel.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/CPUStateModel.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/CPUParticleData.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/data/DefaultDataContainer.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/data/NLDataContainer.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservableFactory.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/observables/CPUObservables.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/model/topologies/CPUTopologyActionFactory.cpp")
 
 # --- neighbor list ---
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/NeighborListIterator.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellContainer.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/SubCell.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/AdaptiveNeighborList.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellDecompositionNeighborList.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CellLinkedList.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/CLLNeighborList.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/nl/NeighborListContainer.cpp")
 
 # --- actions ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/CPUActionFactory.cpp")
@@ -46,9 +50,9 @@ LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/ReactionUtils.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/Event.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUUncontrolledApproximation.cpp")
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespie.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespieParallel.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/FilteredGillespieParallel.cpp")
-LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/NextSubvolumesReactionScheduler.cpp")
+#LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/CPUGillespieParallel.cpp")
+#LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/reactions/NextSubvolumesReactionScheduler.cpp")
+LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/actions/topologies/CPUTopologyActionFactory.cpp")
 
 # --- c sources ---
 LIST(APPEND CPU_SOURCES "${SOURCES_DIR}/util/hilbert.c")

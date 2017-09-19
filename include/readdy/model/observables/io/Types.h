@@ -33,11 +33,7 @@
 #pragma once
 
 #include <h5rd/h5rd.h>
-
 #include <readdy/common/macros.h>
-#include <readdy/model/Vec3.h>
-#include <readdy/model/reactions/ReactionRecord.h>
-#include "TrajectoryEntry.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

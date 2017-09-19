@@ -96,8 +96,14 @@ struct READDY_API SCPUNeighborListContainer {
 
     virtual void create(const SCPUParticleData &data, scalar skin) = 0;
 
+    scalar skin() const {
+        return _skin;
+    }
+
 protected:
     std::unique_ptr<container> pairs = std::make_unique<container>();
+
+    scalar _skin;
 };
 
 struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
@@ -121,12 +127,12 @@ struct READDY_API SCPUNaiveNeighborList : public SCPUNeighborListContainer<> {
 };
 
 struct READDY_API Box {
-    std::vector<Box *> neighbors{};
-    std::vector<unsigned long> particleIndices{};
+    std::vector<Box *> neighbors;
+    std::vector<unsigned long> particleIndices;
     long i, j, k;
     long id = 0;
 
-    Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id) {
+    Box(long i, long j, long k, long id) : i(i), j(j), k(k), id(id), particleIndices(), neighbors() {
     }
 
     void addNeighbor(Box *box) {
@@ -153,6 +159,7 @@ public:
     explicit SCPUNotThatNaiveNeighborList(const context *const context) : ctx(context) {}
 
     void create(const SCPUParticleData &data, scalar skin) override {
+        super::_skin = skin;
         setupBoxes(skin);
         fillBoxes(data);
     }
@@ -180,15 +187,14 @@ public:
 
     virtual void setupBoxes(scalar skin) {
         if (boxes.empty()) {
-            const auto simBoxSize = ctx->getBoxSize();
+            const auto &simBoxSize = ctx->boxSize();
             auto maxCutoff = ctx->calculateMaxCutoff();
             if (maxCutoff > 0) {
                 maxCutoff += skin;
                 SCPUNotThatNaiveNeighborList::maxCutoff = maxCutoff;
 
                 for (std::uint8_t i = 0; i < 3; ++i) {
-                    nBoxes[i] = static_cast<int>(floor(simBoxSize[i] / maxCutoff));
-                    if (nBoxes[i] == 0) nBoxes[i] = 1;
+                    nBoxes[i] = std::max(1, static_cast<int>(std::floor(simBoxSize[i] / maxCutoff)));
                     boxSize[i] = simBoxSize[i] / nBoxes[i];
                 }
                 for (long i = 0; i < nBoxes[0]; ++i) {
@@ -212,15 +218,14 @@ public:
     }
 
     virtual void fillBoxes(const SCPUParticleData &data) {
-        const auto simBoxSize = ctx->getBoxSize();
+        const auto &simBoxSize = ctx->boxSize();
         if (maxCutoff > 0) {
 
             std::for_each(boxes.begin(), boxes.end(), [](Box& box) {box.particleIndices.clear();});
             super::pairs->clear();
 
             unsigned long idx = 0;
-            const auto shift = readdy::model::Vec3(c_::half * simBoxSize[0], c_::half * simBoxSize[1],
-                                                   c_::half * simBoxSize[2]);
+            const auto shift = Vec3(c_::half * simBoxSize[0], c_::half * simBoxSize[1], c_::half * simBoxSize[2]);
             for(const auto& entry : data) {
                 if(!entry.is_deactivated()) {
                     const auto pos_shifted = entry.position() + shift;
@@ -253,7 +258,7 @@ public:
     }
 
     Box *getBox(long i, long j, long k) {
-        const auto &periodic = ctx->getPeriodicBoundary();
+        const auto &periodic = ctx->periodicBoundaryConditions();
         if (periodic[0]) i = readdy::util::numeric::positive_modulo(i, nBoxes[0]);
         else if (i < 0 || i >= nBoxes[0]) return nullptr;
         if (periodic[1]) j = readdy::util::numeric::positive_modulo(j, nBoxes[1]);
@@ -270,7 +275,7 @@ public:
 protected:
     std::vector<Box> boxes{};
     std::array<int, 3> nBoxes{{0, 0, 0}};
-    readdy::model::Vec3 boxSize{0, 0, 0};
+    Vec3 boxSize{0, 0, 0};
     scalar maxCutoff {0};
 
     const context *const ctx;

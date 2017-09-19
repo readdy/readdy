@@ -54,8 +54,8 @@ public:
         return {
                 getActionName<AddParticles>(), getActionName<EulerBDIntegrator>(), getActionName<CalculateForces>(),
                 getActionName<UpdateNeighborList>(), getActionName<reactions::UncontrolledApproximation>(),
-                getActionName<reactions::Gillespie>(), getActionName<reactions::GillespieParallel>(),
-                getActionName<reactions::NextSubvolumes>(), getActionName<top::EvaluateTopologyReactions>()
+                getActionName<reactions::Gillespie>(), /*getActionName<reactions::GillespieParallel>(),*/
+                /*getActionName<reactions::NextSubvolumes>(),*/ getActionName<top::EvaluateTopologyReactions>()
         };
     }
 
@@ -74,12 +74,12 @@ public:
         if(name == getActionName<reactions::Gillespie>()) {
             return std::unique_ptr<TimeStepDependentAction>(createGillespie(timeStep));
         }
-        if(name == getActionName<reactions::GillespieParallel>()) {
+        /*if(name == getActionName<reactions::GillespieParallel>()) {
             return std::unique_ptr<TimeStepDependentAction>(createGillespieParallel(timeStep));
         }
         if(name == getActionName<reactions::NextSubvolumes>()) {
             return std::unique_ptr<TimeStepDependentAction>(createNextSubvolumes(timeStep));
-        }
+        }*/
         if(name == getActionName<reactions::UncontrolledApproximation>()) {
             return std::unique_ptr<TimeStepDependentAction>(createUncontrolledApproximation(timeStep));
         }
@@ -100,10 +100,10 @@ protected:
 
     virtual UpdateNeighborList *createUpdateNeighborList(UpdateNeighborList::Operation, scalar skinSize) const = 0;
     UpdateNeighborList *createUpdateNeighborList(UpdateNeighborList::Operation op) const {
-        return createUpdateNeighborList(op, -1);
+        return createUpdateNeighborList(op, 0);
     };
     UpdateNeighborList *createUpdateNeighborList() const {
-        return createUpdateNeighborList(UpdateNeighborList::Operation::create, -1);
+        return createUpdateNeighborList(UpdateNeighborList::Operation::init, 0);
     };
 
     virtual EvaluateCompartments *createEvaluateCompartments() const = 0;
@@ -112,9 +112,9 @@ protected:
 
     virtual reactions::Gillespie *createGillespie(scalar timeStep) const = 0;
 
-    virtual reactions::GillespieParallel *createGillespieParallel(scalar timeStep) const = 0;
+    // virtual reactions::GillespieParallel *createGillespieParallel(scalar timeStep) const = 0;
 
-    virtual reactions::NextSubvolumes *createNextSubvolumes(scalar timeStep) const = 0;
+    // virtual reactions::NextSubvolumes *createNextSubvolumes(scalar timeStep) const = 0;
 
     virtual top::EvaluateTopologyReactions *createEvaluateTopologyReactions(scalar timeStep) const = 0;
 
@@ -144,9 +144,9 @@ READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, UncontrolledApproxim
 
 READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, Gillespie)
 
-READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, GillespieParallel)
+// READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, GillespieParallel)
 
-READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, NextSubvolumes)
+// READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, reactions, NextSubvolumes)
 
 READDY_CREATE_FACTORY_DISPATCHER2(ActionFactory, top, EvaluateTopologyReactions)
 

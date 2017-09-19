@@ -96,6 +96,7 @@ protected:
     std::unique_ptr<model::actions::TimeStepDependentAction> integrator {nullptr};
     std::unique_ptr<model::actions::Action> forces {nullptr};
     std::unique_ptr<model::actions::TimeStepDependentAction> reactionScheduler {nullptr};
+    std::unique_ptr<model::actions::UpdateNeighborList> initNeighborList {nullptr};
     std::unique_ptr<model::actions::UpdateNeighborList> neighborList {nullptr};
     std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList {nullptr};
     std::unique_ptr<evaluate_topology_reactions> evaluateTopologyReactions {nullptr};
@@ -118,15 +119,13 @@ public:
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
 
-        if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+        if (initNeighborList) initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
         if (forces) forces->perform(_performanceRoot.subnode("forces"));
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
         while (continueFun(t)) {
             if (integrator) integrator->perform(_performanceRoot.subnode("integrator"));
             if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
-            // if (forces) forces->perform();
-
             if (reactionScheduler) reactionScheduler->perform(_performanceRoot.subnode("reactionScheduler"));
             if (evaluateTopologyReactions) evaluateTopologyReactions->perform(_performanceRoot.subnode("evaluateTopologyReactions"));
             if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
@@ -207,7 +206,7 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &withSkinSize(scalar skin = -1) {
+    SchemeConfigurator &withSkinSize(scalar skin = 0) {
         skinSize = skin;
         return *this;
     }
@@ -232,10 +231,12 @@ public:
             }
         }
         if (scheme->forces || scheme->reactionScheduler) {
+            scheme->initNeighborList = scheme->kernel
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::init, skinSize);
             scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::create, skinSize);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::update, skinSize);
             scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, -1);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, skinSize);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
@@ -254,7 +255,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     std::unique_ptr<SchemeType> scheme = nullptr;
-    scalar skinSize = -1;
+    scalar skinSize = 0;
 };
 
 class AdvancedScheme : public SimulationScheme {
@@ -269,7 +270,7 @@ public:
         if(configGroup) {
             model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
         }
-        if (neighborList) neighborList->perform(_performanceRoot.subnode("neighborList"));
+        if (initNeighborList) initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
         if (forces) forces->perform(_performanceRoot.subnode("forces"));
         if (evaluateObservables) kernel->evaluateObservables(start);
         time_step_type t = start;
@@ -378,7 +379,7 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &withSkinSize(scalar skin = -1) {
+    SchemeConfigurator &withSkinSize(scalar skin = 0) {
         skinSize = skin;
         return *this;
     }
@@ -406,10 +407,12 @@ public:
             }
         }
         if (scheme->forces || scheme->reactionScheduler) {
+            scheme->initNeighborList = scheme->kernel
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::init, skinSize);
             scheme->neighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::create, skinSize);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::update, skinSize);
             scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, -1);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, skinSize);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
@@ -429,7 +432,7 @@ protected:
     bool evaluateObservablesSet = false;
     bool includeForcesSet = false;
     bool includeCompartmentsSet = false;
-    scalar skinSize = -1;
+    scalar skinSize = 0;
 
 };
 

@@ -47,10 +47,6 @@ reactions::UncontrolledApproximation::UncontrolledApproximation(scalar timeStep)
 
 reactions::Gillespie::Gillespie(scalar timeStep) : TimeStepDependentAction(timeStep) {}
 
-reactions::GillespieParallel::GillespieParallel(scalar timeStep) : TimeStepDependentAction(timeStep) {}
-
-reactions::NextSubvolumes::NextSubvolumes(scalar timeStep) : TimeStepDependentAction(timeStep) {}
-
 AddParticles::AddParticles(Kernel *const kernel, const std::vector<Particle> &particles)
         : particles(particles), kernel(kernel) {}
 

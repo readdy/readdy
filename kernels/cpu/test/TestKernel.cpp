@@ -39,16 +39,16 @@ namespace {
 TEST(CPUTestKernel, TestKernelLoad) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     kernel->getKernelContext().particle_types().add("X", .55, 1.);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
     kernel->registerReaction<readdy::model::reactions::Decay>("X decay", "X", .5);
     kernel->registerReaction<readdy::model::reactions::Fission>("X fission", "X", "X", "X", .00, .5);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::GillespieParallel>(1);
+    auto &&reactions = kernel->createAction<readdy::model::actions::reactions::Gillespie>(1);
 
     auto pp_obs = kernel->createObservable<readdy::model::observables::Positions>(1);
     auto connection = kernel->connectObservable(pp_obs.get());

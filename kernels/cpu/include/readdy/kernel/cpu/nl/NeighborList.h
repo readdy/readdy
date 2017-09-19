@@ -33,7 +33,9 @@
 #pragma once
 
 #include <readdy/common/common.h>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
+#include <readdy/common/Timer.h>
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
+#include "NeighborListIterator.h"
 
 namespace readdy {
 namespace kernel {
@@ -42,31 +44,42 @@ namespace nl {
 
 class NeighborList {
 public:
-    using data_t = readdy::kernel::cpu::model::CPUParticleData;
-    using neighbors_t = data_t::neighbors_t;
-    using iterator = data_t::neighbors_list_iterator;
-    using const_iterator = data_t::neighbors_list_const_iterator;
+    using DataUpdate = std::tuple<std::vector<data::Entry>, std::vector<std::size_t>>;
+    using neighbors_type = std::vector<std::size_t>;
+    using const_iterator = NeighborListIterator;
 
-    NeighborList(model::CPUParticleData &data, const readdy::model::KernelContext &context,
-                 const readdy::util::thread::Config &config) : _data(data), _context(context), _config(config) {};
+    NeighborList(const readdy::model::KernelContext &context,
+                 const readdy::util::thread::Config &config) : _context(context), _config(config) {};
 
     virtual ~NeighborList() = default;
 
-    virtual void set_up() = 0;
-
-    virtual void update() = 0;
-
-    virtual void clear() = 0;
-
-    virtual void updateData(data_t::update_t &&update) = 0;
-
-    const neighbors_t &neighbors_of(const data_t::index_t entry) const {
-        const static neighbors_t no_neighbors{};
-        if (_max_cutoff > 0) {
-            return _data.get().neighbors_at(entry);
-        }
-        return no_neighbors;
+    const_iterator begin() const {
+        return cbegin();
     };
+
+    virtual const_iterator cbegin() const = 0;
+
+    const_iterator end() const {
+        return cend();
+    }
+
+    virtual const_iterator cend() const = 0;
+
+    virtual std::size_t size() const = 0;
+
+    virtual void set_up(const util::PerformanceNode &node) = 0;
+
+    virtual void update(const util::PerformanceNode &node) = 0;
+
+    virtual void clear(const util::PerformanceNode &node) = 0;
+
+    virtual void updateData(DataUpdate &&update) = 0;
+
+    virtual bool is_adaptive() const = 0;
+
+    virtual const data::EntryDataContainer * data() const = 0;
+
+    virtual data::EntryDataContainer *data() = 0;
 
     scalar &skin() {
         return _skin;
@@ -76,28 +89,11 @@ public:
         return _skin;
     };
 
-    iterator begin() {
-        return _data.get().neighbors.begin();
-    };
-
-    iterator end() {
-        return _data.get().neighbors.end();
-    };
-
-    const_iterator cbegin() const {
-        return _data.get().neighbors.cbegin();
-    };
-
-    const_iterator cend() const {
-        return _data.get().neighbors.cend();
-    };
-
 protected:
     scalar _skin {0};
     scalar _max_cutoff {0};
     scalar _max_cutoff_skin_squared {0};
 
-    std::reference_wrapper<model::CPUParticleData> _data;
     std::reference_wrapper<const readdy::model::KernelContext> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _config;
 };

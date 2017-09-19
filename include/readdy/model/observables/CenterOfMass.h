@@ -32,7 +32,6 @@
 
 #pragma once
 
-#include <readdy/model/Vec3.h>
 #include <set>
 #include "Observable.h"
 
@@ -40,7 +39,7 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class CenterOfMass : public Observable<readdy::model::Vec3> {
+class CenterOfMass : public Observable<Vec3> {
 
 public:
     CenterOfMass(Kernel* kernel, unsigned int stride, unsigned int particleType);

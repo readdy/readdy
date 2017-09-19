@@ -26,8 +26,10 @@ import numpy as np
 from readdy._internal.readdybinding.api import Simulation
 from readdy._internal.readdybinding.common import Vec
 
+from readdy.util.testing_utils import ReaDDyTestCase
 
-class TestSchemeApi(unittest.TestCase):
+
+class TestSchemeApi(ReaDDyTestCase):
     def test_sanity(self):
         simulation = Simulation()
         simulation.set_kernel("SingleCPU")

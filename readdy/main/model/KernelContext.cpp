@@ -32,206 +32,53 @@
 #include <readdy/model/KernelContext.h>
 #include <readdy/common/Utils.h>
 #include <readdy/model/_internal/Util.h>
+#include <readdy/common/boundary_condition_operations.h>
 
 namespace readdy {
 namespace model {
 
 using particle_t = readdy::model::Particle;
 
-struct KernelContext::Impl {
-
-    scalar kBT = 1;
-    std::array<scalar, 3> box_size{{1, 1, 1}};
-    std::array<bool, 3> periodic_boundary{{true, true, true}};
-
-    std::function<Vec3(const Vec3 &)> pbc = [](const Vec3 &in) {
-        return readdy::model::applyPBC<false, false, false>(in, 1, 1, 1);
-    };
-    std::function<void(Vec3 &)> fixPositionFun = [](
-            Vec3 &vec) -> void { readdy::model::fixPosition<true, true, true>(vec, static_cast<const scalar>(1.),
-                                                                              static_cast<const scalar>(1.),
-                                                                              static_cast<const scalar>(1.)); };
-    std::function<Vec3(const Vec3 &, const Vec3 &)> diffFun = [](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-        return readdy::model::shortestDifference<true, true, true>(lhs, rhs, static_cast<const scalar>(1.),
-                                                                   static_cast<const scalar>(1.),
-                                                                   static_cast<const scalar>(1.));
-    };
-    std::function<scalar(const Vec3 &, const Vec3 &)> distFun = [&](const Vec3 &lhs,
-                                                                    const Vec3 &rhs) -> scalar {
-        const auto dv = diffFun(lhs, rhs);
-        return dv * dv;
-    };
-
-    Impl() = default;
-    ~Impl() = default;
-
-    Impl(const Impl&) = delete;
-    Impl(Impl&&) = delete;
-    Impl& operator=(const Impl&) = delete;
-    Impl& operator=(Impl&&) = delete;
-
-    void updateDistAndFixPositionFun() {
-        if (periodic_boundary[0]) {
-            if (periodic_boundary[1]) {
-                if (periodic_boundary[2]) {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<true, true, true>(lhs, rhs, box_size[0],
-                                                                                   box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<true, true, true>(vec, box_size[0], box_size[1],
-                                                                     box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<true, true, true>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                } else {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<true, true, false>(lhs, rhs, box_size[0],
-                                                                                    box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<true, true, false>(vec, box_size[0], box_size[1],
-                                                                      box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<true, true, false>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                }
-            } else {
-                if (periodic_boundary[2]) {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<true, false, true>(lhs, rhs, box_size[0],
-                                                                                    box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<true, false, true>(vec, box_size[0], box_size[1],
-                                                                      box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<true, false, true>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                } else {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<true, false, false>(lhs, rhs, box_size[0],
-                                                                                     box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<true, false, false>(vec, box_size[0], box_size[1],
-                                                                       box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<true, false, false>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                }
-            }
-        } else {
-            if (periodic_boundary[1]) {
-                if (periodic_boundary[2]) {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<false, true, true>(lhs, rhs, box_size[0],
-                                                                                    box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<false, true, true>(vec, box_size[0], box_size[1],
-                                                                      box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<false, true, true>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                } else {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<false, true, false>(lhs, rhs, box_size[0],
-                                                                                     box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<false, true, false>(vec, box_size[0], box_size[1],
-                                                                       box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<false, true, false>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                }
-            } else {
-                if (periodic_boundary[2]) {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<false, false, true>(lhs, rhs, box_size[0],
-                                                                                     box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<false, false, true>(vec, box_size[0], box_size[1],
-                                                                       box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<false, false, true>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                } else {
-                    diffFun = [&](const Vec3 &lhs, const Vec3 &rhs) -> Vec3 {
-                        return readdy::model::shortestDifference<false, false, false>(lhs, rhs, box_size[0],
-                                                                                      box_size[1], box_size[2]);
-                    };
-                    fixPositionFun = [&](Vec3 &vec) -> void {
-                        readdy::model::fixPosition<false, false, false>(vec, box_size[0], box_size[1],
-                                                                        box_size[2]);
-                    };
-                    pbc = [=](const Vec3 &in) {
-                        return applyPBC<false, false, false>(in, box_size[0], box_size[1], box_size[2]);
-                    };
-                }
-            }
-        }
-    }
-};
-
-
-scalar KernelContext::getKBT() const {
-    return (*pimpl).kBT;
+const scalar &KernelContext::kBT() const {
+    return _kBT;
 }
 
-void KernelContext::setKBT(scalar kBT) {
-    (*pimpl).kBT = kBT;
-}
-
-void KernelContext::setBoxSize(scalar dx, scalar dy, scalar dz) {
-    (*pimpl).box_size = {dx, dy, dz};
-    pimpl->updateDistAndFixPositionFun();
-}
-
-void KernelContext::setPeriodicBoundary(bool pb_x, bool pb_y, bool pb_z) {
-    (*pimpl).periodic_boundary = {pb_x, pb_y, pb_z};
-    pimpl->updateDistAndFixPositionFun();
+scalar &KernelContext::kBT() {
+    return _kBT;
 }
 
 KernelContext::KernelContext()
-        : pimpl(std::make_unique<KernelContext::Impl>()),
-          potentialRegistry_(particleTypeRegistry_),
-          reactionRegistry_(particleTypeRegistry_), topologyRegistry_(particleTypeRegistry_) {}
-
-Vec3::data_arr &KernelContext::getBoxSize() const {
-    return pimpl->box_size;
+        : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
+          _topologyRegistry(_particleTypeRegistry), _kernelConfiguration{} {
+    using namespace std::placeholders;
+    _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, c_::one, c_::one, c_::one);
+    _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, c_::one, c_::one, c_::one);
+    _diffFun = std::bind(&bcs::shortestDifference<false, false, false>, _1, _2, c_::one, c_::one, c_::one);
+    _distFun = [this](const Vec3 &v1, const Vec3 &v2) {
+        const auto dv = _diffFun(v1, v2);
+        return dv * dv;
+    };
 }
 
-const std::array<bool, 3> &KernelContext::getPeriodicBoundary() const {
-    return pimpl->periodic_boundary;
+const KernelContext::fix_pos_fun &KernelContext::fixPositionFun() const {
+    return _fixPositionFun;
 }
 
-const KernelContext::fix_pos_fun &KernelContext::getFixPositionFun() const {
-    return pimpl->fixPositionFun;
+const KernelContext::dist_squared_fun &KernelContext::distSquaredFun() const {
+    return _distFun;
 }
 
-const KernelContext::dist_squared_fun &KernelContext::getDistSquaredFun() const {
-    return pimpl->distFun;
-}
-
-const KernelContext::shortest_dist_fun &KernelContext::getShortestDifferenceFun() const {
-    return pimpl->diffFun;
+const KernelContext::shortest_dist_fun &KernelContext::shortestDifferenceFun() const {
+    return _diffFun;
 }
 
 void KernelContext::configure(bool debugOutput) {
-    particleTypeRegistry_.configure();
-    potentialRegistry_.configure();
-    reactionRegistry_.configure();
-    topologyRegistry_.configure();
+    updateFunctions();
+
+    _particleTypeRegistry.configure();
+    _potentialRegistry.configure();
+    _reactionRegistry.configure();
+    _topologyRegistry.configure();
 
     /**
      * Info output
@@ -240,79 +87,79 @@ void KernelContext::configure(bool debugOutput) {
 
         log::debug("Configured kernel context with: ");
         log::debug("--------------------------------");
-        log::debug(" - kBT = {}", getKBT());
-        log::debug(" - periodic b.c. = ({}, {}, {})", getPeriodicBoundary()[0], getPeriodicBoundary()[1],
-                   getPeriodicBoundary()[2]);
-        log::debug(" - box size = ({}, {}, {})", getBoxSize()[0], getBoxSize()[1], getBoxSize()[2]);
+        log::debug(" - kBT = {}", kBT());
+        log::debug(" - periodic b.c. = ({}, {}, {})", periodicBoundaryConditions()[0], periodicBoundaryConditions()[1],
+                   periodicBoundaryConditions()[2]);
+        log::debug(" - box size = ({}, {}, {})", boxSize()[0], boxSize()[1], boxSize()[2]);
 
-        particleTypeRegistry_.debug_output();
-        potentialRegistry_.debug_output();
-        reactionRegistry_.debug_output();
-        topologyRegistry_.debug_output();
+        _particleTypeRegistry.debug_output();
+        _potentialRegistry.debug_output();
+        _reactionRegistry.debug_output();
+        _topologyRegistry.debug_output();
     }
 
 }
 
-std::tuple<readdy::model::Vec3, readdy::model::Vec3> KernelContext::getBoxBoundingVertices() const {
-    const auto &boxSize = getBoxSize();
-    readdy::model::Vec3 lowerLeft{static_cast<scalar>(-0.5) * boxSize[0],
-                                  static_cast<scalar>(-0.5) * boxSize[1],
-                                  static_cast<scalar>(-0.5) * boxSize[2]};
-    readdy::model::Vec3 upperRight = lowerLeft + readdy::model::Vec3(boxSize);
+std::tuple<Vec3, Vec3> KernelContext::getBoxBoundingVertices() const {
+    const auto &boxSize = _box_size;
+    Vec3 lowerLeft{static_cast<scalar>(-0.5) * boxSize[0],
+                   static_cast<scalar>(-0.5) * boxSize[1],
+                   static_cast<scalar>(-0.5) * boxSize[2]};
+    auto upperRight = lowerLeft + Vec3(boxSize);
     return std::make_tuple(lowerLeft, upperRight);
 }
 
-const KernelContext::compartment_registry &KernelContext::getCompartments() const {
-    return *compartmentRegistry;
+const KernelContext::CompartmentRegistry &KernelContext::compartments() const {
+    return _compartmentRegistry;
 }
 
 
 const bool &KernelContext::recordReactionsWithPositions() const {
-    return recordReactionsWithPositions_;
+    return _recordReactionsWithPositions;
 }
 
 bool &KernelContext::recordReactionsWithPositions() {
-    return recordReactionsWithPositions_;
+    return _recordReactionsWithPositions;
 }
 
 const bool &KernelContext::recordReactionCounts() const {
-    return recordReactionCounts_;
+    return _recordReactionCounts;
 }
 
 bool &KernelContext::recordReactionCounts() {
-    return recordReactionCounts_;
+    return _recordReactionCounts;
 }
 
 reactions::ReactionRegistry &KernelContext::reactions() {
-    return reactionRegistry_;
+    return _reactionRegistry;
 }
 
 const reactions::ReactionRegistry &KernelContext::reactions() const {
-    return reactionRegistry_;
+    return _reactionRegistry;
 }
 
 ParticleTypeRegistry &KernelContext::particle_types() {
-    return particleTypeRegistry_;
+    return _particleTypeRegistry;
 }
 
 const ParticleTypeRegistry &KernelContext::particle_types() const {
-    return particleTypeRegistry_;
+    return _particleTypeRegistry;
 }
 
 const potentials::PotentialRegistry &KernelContext::potentials() const {
-    return potentialRegistry_;
+    return _potentialRegistry;
 }
 
 potentials::PotentialRegistry &KernelContext::potentials() {
-    return potentialRegistry_;
+    return _potentialRegistry;
 }
 
-const KernelContext::pbc_fun &KernelContext::getPBCFun() const {
-    return pimpl->pbc;
+const KernelContext::pbc_fun &KernelContext::applyPBCFun() const {
+    return _pbc;
 }
 
 const scalar KernelContext::calculateMaxCutoff() const {
-    scalar max_cutoff {0};
+    scalar max_cutoff{0};
     for (const auto &entry : potentials().potentials_order2()) {
         for (const auto &potential : entry.second) {
             max_cutoff = std::max(max_cutoff, potential->getCutoffRadius());
@@ -323,8 +170,8 @@ const scalar KernelContext::calculateMaxCutoff() const {
             max_cutoff = std::max(max_cutoff, reaction->getEductDistance());
         }
     }
-    for(const auto& entry : topologyRegistry_.spatial_reaction_registry()) {
-        for(const auto& reaction : entry.second) {
+    for (const auto &entry : _topologyRegistry.spatial_reaction_registry()) {
+        for (const auto &reaction : entry.second) {
             max_cutoff = std::max(max_cutoff, reaction.radius());
         }
     }
@@ -332,11 +179,93 @@ const scalar KernelContext::calculateMaxCutoff() const {
 }
 
 top::TopologyRegistry &KernelContext::topology_registry() {
-    return topologyRegistry_;
+    return _topologyRegistry;
 }
 
 const top::TopologyRegistry &KernelContext::topology_registry() const {
-    return topologyRegistry_;
+    return _topologyRegistry;
+}
+
+void KernelContext::updateFunctions() {
+    using namespace std::placeholders;
+    const auto &box = _box_size;
+    if (_periodic_boundary[0]) {
+        if (_periodic_boundary[1]) {
+            if (_periodic_boundary[2]) {
+                _pbc = std::bind(&bcs::applyPBC<true, true, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, true, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, true, true>, _1, _2, box[0], box[1], box[2]);
+            } else {
+                _pbc = std::bind(&bcs::applyPBC<true, true, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, true, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, true, false>, _1, _2, box[0], box[1], box[2]);
+            }
+        } else {
+            if (_periodic_boundary[2]) {
+                _pbc = std::bind(&bcs::applyPBC<true, false, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, false, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, false, true>, _1, _2, box[0], box[1], box[2]);
+            } else {
+                _pbc = std::bind(&bcs::applyPBC<true, false, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<true, false, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<true, false, false>, _1, _2, box[0], box[1], box[2]);
+            }
+        }
+    } else {
+        if (_periodic_boundary[1]) {
+            if (_periodic_boundary[2]) {
+                _pbc = std::bind(&bcs::applyPBC<false, true, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, true, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, true, true>, _1, _2, box[0], box[1], box[2]);
+            } else {
+                _pbc = std::bind(&bcs::applyPBC<false, true, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, true, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, true, false>, _1, _2, box[0], box[1], box[2]);
+            }
+        } else {
+            if (_periodic_boundary[2]) {
+                _pbc = std::bind(&bcs::applyPBC<false, false, true>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, false, true>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, false, true>, _1, _2, box[0], box[1], box[2]);
+            } else {
+                _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, box[0], box[1], box[2]);
+                _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, box[0], box[1], box[2]);
+                _diffFun = std::bind(&bcs::shortestDifference<false, false, false>, _1, _2, box[0], box[1], box[2]);
+            }
+        }
+    }
+}
+
+const KernelContext::BoxSize &KernelContext::boxSize() const {
+    return _box_size;
+}
+
+KernelContext::BoxSize &KernelContext::boxSize() {
+    return _box_size;
+}
+
+const KernelContext::PeriodicBoundaryConditions &KernelContext::periodicBoundaryConditions() const {
+    return _periodic_boundary;
+}
+
+KernelContext::PeriodicBoundaryConditions &KernelContext::periodicBoundaryConditions() {
+    return _periodic_boundary;
+}
+
+scalar KernelContext::boxVolume() const {
+    return _box_size.at(0) * _box_size.at(1) * _box_size.at(2);
+}
+
+KernelContext::KernelConfiguration &KernelContext::kernelConfiguration() {
+    return _kernelConfiguration;
+}
+
+const KernelContext::KernelConfiguration &KernelContext::kernelConfiguration() const {
+    return _kernelConfiguration;
+}
+
+void KernelContext::setKernelConfiguration(const std::string &s) {
+    _kernelConfiguration = KernelConfiguration::parse(s);
 }
 
 KernelContext::~KernelContext() = default;

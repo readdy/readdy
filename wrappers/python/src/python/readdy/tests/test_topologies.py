@@ -21,6 +21,8 @@
 
 from __future__ import print_function
 
+from readdy.util.testing_utils import ReaDDyTestCase
+
 """
 Created on 09.02.17
 
@@ -34,7 +36,7 @@ from readdy._internal.readdybinding.api import ParticleTypeFlavor
 from readdy._internal.readdybinding.api.top import HarmonicBondPotentialBond
 
 
-class TestTopologies(unittest.TestCase):
+class TestTopologies(ReaDDyTestCase):
     def test_sanity(self):
         sim = Simulation()
         sim.set_kernel("SingleCPU")

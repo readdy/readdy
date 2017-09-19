@@ -34,13 +34,14 @@ import readdy._internal.readdybinding.api as api
 import readdy.util.platform_utils as putils
 import readdy._internal.readdybinding.common.io as io
 import readdy.util.io_utils as ioutils
+from readdy.util.testing_utils import ReaDDyTestCase
 
 
 def get_item(name, collection):
     return next(x for x in collection if x["name"] == name)
 
 
-class TestIOUtils(unittest.TestCase):
+class TestIOUtils(ReaDDyTestCase):
     @classmethod
     def setUpClass(cls):
         cls.kernel_provider = api.KernelProvider.get()

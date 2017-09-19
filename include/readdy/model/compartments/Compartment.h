@@ -31,10 +31,10 @@
  */
 #pragma once
 
-#include <readdy/model/Vec3.h>
-#include <readdy/model/Particle.h>
 #include <unordered_map>
 #include <utility>
+
+#include <readdy/model/Particle.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)

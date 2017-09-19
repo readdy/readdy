@@ -33,8 +33,6 @@
 #include <readdy/model/observables/io/TimeSeriesWriter.h>
 #include <readdy/model/observables/io/Types.h>
 
-using particle_t = readdy::model::Particle;
-using vec_t = readdy::model::Vec3;
 namespace readdy {
 namespace model {
 namespace observables {

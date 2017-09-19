@@ -53,7 +53,9 @@ TEST_P(TestObservables, TestParticlePositions) {
 
     auto &&integrator = kernel->getActionFactory().createIntegrator("EulerBDIntegrator", timeStep);
     using update_nl = readdy::model::actions::UpdateNeighborList;
-    auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::create, -1);
+    auto &&neighborListInit = kernel->createAction<update_nl>(update_nl::Operation::init, 0);
+    auto &&neighborList = kernel->createAction<update_nl>(update_nl::Operation::update, -1);
+    neighborListInit->perform();
     for (readdy::time_step_type t = 0; t < 100; t++) {
         integrator->perform();
         neighborList->perform();
@@ -79,7 +81,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     kernel->getKernelContext().particle_types().add("B", 1337., 1.);
     const auto typeIdA = kernel->getKernelContext().particle_types().id_of("A");
     const auto typeIdB = kernel->getKernelContext().particle_types().id_of("B");
-    const unsigned int n_particles = 50; // There will be 55 Bs
+    const unsigned int n_particles = 2; // There will be 55 Bs
     const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, typeIdA));
     const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0, 0, 0, typeIdB));
     kernel->getKernelStateModel().addParticles(particlesA);
@@ -99,17 +101,17 @@ TEST_P(TestObservables, TestForcesObservable) {
         const auto &resA = obsA->getResult();
         const auto &resB = obsB->getResult();
         const auto &resBoth = obsBoth->getResult();
-        EXPECT_EQ(resA.size(), 50);
-        EXPECT_EQ(resB.size(), 55);
-        EXPECT_EQ(resBoth.size(), 105);
-        m::Vec3 zero = m::Vec3(0, 0, 0);
+        EXPECT_EQ(resA.size(), n_particles);
+        EXPECT_EQ(resB.size(), n_particles+5);
+        EXPECT_EQ(resBoth.size(), n_particles + n_particles + 5);
+        readdy::Vec3 zero = readdy::Vec3(0, 0, 0);
         for (auto force : resBoth) {
             EXPECT_TRUE(force == zero);
         }
     }
     // Two particles C and C with radius 1 and harmonic repulsion at distance 1.5 -> force = kappa * (radiiSum - 1.5)
-    kernel->getKernelContext().setPeriodicBoundary(false, false, false);
-    kernel->getKernelContext().setBoxSize(5, 5, 5);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
+    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
     kernel->getKernelContext().particle_types().add("C", 1., 1.);
     const auto typeIdC = kernel->getKernelContext().particle_types().id_of("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
@@ -121,6 +123,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     auto &&nl = kernel->createAction<update_nl>();
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     kernel->getKernelContext().configure();
+    kernel->initialize();
     {
         auto obsC = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"C"});
         auto connectionC = kernel->connectObservable(obsC.get());
@@ -128,15 +131,15 @@ TEST_P(TestObservables, TestForcesObservable) {
         forces->perform();
         kernel->evaluateObservables(2);
         const auto &resC = obsC->getResult();
-        m::Vec3 force0 = m::Vec3(0., 1., 0.);
-        m::Vec3 force1 = m::Vec3(0., -1., 0.);
+        readdy::Vec3 force0 = readdy::Vec3(0., 1., 0.);
+        readdy::Vec3 force1 = readdy::Vec3(0., -1., 0.);
         EXPECT_EQ(resC.size(), 2);
         EXPECT_TRUE(resC[0] == force0 || resC[1] == force0);
         EXPECT_TRUE(resC[1] == force1 || resC[0] == force1);
     }
 }
 
-INSTANTIATE_TEST_CASE_P(TestObservables, TestObservables,
+INSTANTIATE_TEST_CASE_P(TestObservablesKernel, TestObservables,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 }
 

@@ -91,10 +91,10 @@ const CellContainer::cell_index &CellContainer::contiguous_index() const {
     return _contiguous_index;
 }
 
-CellContainer::CellContainer(model::CPUParticleData &data, const readdy::model::KernelContext &context,
+CellContainer::CellContainer(DataContainer &data, const readdy::model::KernelContext &context,
                              const readdy::util::thread::Config &config)
-        : _data(data), _context(context), _config(config), _size(context.getBoxSize()),
-          _root_size(context.getBoxSize()) {}
+        : _data(data), _context(context), _config(config), _size(context.boxSize()),
+          _root_size(context.boxSize()) {}
 
 CellContainer::sub_cell *const CellContainer::sub_cell_for_position(const CellContainer::vec3 &pos) {
     return const_cast<CellContainer::sub_cell *const>(static_cast<const CellContainer *>(this)->sub_cell_for_position(
@@ -108,7 +108,7 @@ const CellContainer::sub_cell *const CellContainer::sub_cell_for_position(const 
             (pos.y + .5 * _root_size.y - _offset.y) / _sub_cell_size.y));
     const auto k = static_cast<const cell_index>(floor(
             (pos.z + .5 * _root_size.z - _offset.z) / _sub_cell_size.z));
-    return sub_cell_for_grid_index(std::tie(i, j, k));
+    return sub_cell_for_grid_index(std::make_tuple(i, j, k));
 }
 
 CellContainer::sub_cell *const CellContainer::sub_cell_for_grid_index(const CellContainer::grid_index &index) {
@@ -168,7 +168,7 @@ void CellContainer::subdivide(const scalar desired_cell_width) {
     }
 }
 
-const model::CPUParticleData &CellContainer::data() const {
+const CellContainer::DataContainer &CellContainer::data() const {
     return _data;
 }
 
@@ -254,8 +254,8 @@ const CellContainer *const CellContainer::super_cell() const {
 
 void CellContainer::insert_particle(const CellContainer::particle_index index, bool mark_dirty) const {
     const auto &entry = data().entry_at(index);
-    if (!entry.is_deactivated()) {
-        auto cell = leaf_cell_for_position(entry.position());
+    if (!entry.deactivated) {
+        auto cell = leaf_cell_for_position(entry.pos);
         if (cell != nullptr) {
             cell->insert_particle(index);
             if(mark_dirty) {
@@ -269,8 +269,8 @@ void CellContainer::insert_particle(const CellContainer::particle_index index, b
 
 void CellContainer::insert_particle(const CellContainer::particle_index index, bool mark_dirty) {
     const auto &entry = data().entry_at(index);
-    if (!entry.is_deactivated()) {
-        auto cell = leaf_cell_for_position(entry.position());
+    if (!entry.deactivated) {
+        auto cell = leaf_cell_for_position(entry.pos);
         if (cell != nullptr) {
             cell->insert_particle(index);
             if(mark_dirty) {
@@ -352,7 +352,7 @@ void CellContainer::update_dirty_cells() {
                 for (const auto p_idx : dirty_cell) {
                     auto &entry = _data.entry_at(p_idx);
                     // entry.displacement = 0;
-                    auto cell = container.leaf_cell_for_position(entry.position());
+                    auto cell = container.leaf_cell_for_position(entry.pos);
                     if (cell != nullptr) {
                         cell->insert_particle(p_idx);
                     }
@@ -387,6 +387,7 @@ const std::size_t CellContainer::n_sub_cells_total() const {
 
 void CellContainer::execute_for_each_leaf(const std::function<void(const CellContainer::sub_cell &)> &function) {
     execute_for_each_sub_cell([&](sub_cell &cell) {
+        //cell.execute_for_each_leaf(function);
         for (const auto &sub_cell : cell.sub_cells()) {
             function(sub_cell);
         }
@@ -414,7 +415,7 @@ void CellContainer::execute_for_each_sub_cell(const std::function<void(CellConta
     executor.execute_and_wait(std::move(executables));
 }
 
-model::CPUParticleData &CellContainer::data() {
+CellContainer::DataContainer &CellContainer::data() {
     return _data;
 }
 
@@ -463,8 +464,8 @@ CellContainer::execute_for_each_sub_cell(const std::function<void(const CellCont
 }
 
 void CellContainer::update_root_size() {
-    _root_size = vec3(_context.getBoxSize());
-    _size = vec3(_context.getBoxSize());
+    _root_size = vec3(_context.boxSize());
+    _size = vec3(_context.boxSize());
 }
 
 CellContainer::~CellContainer() = default;

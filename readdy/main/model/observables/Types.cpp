@@ -31,6 +31,8 @@
  */
 
 #include <readdy/model/observables/io/Types.h>
+#include <readdy/model/reactions/ReactionRecord.h>
+#include <readdy/model/observables/io/TrajectoryEntry.h>
 
 namespace readdy {
 namespace model {

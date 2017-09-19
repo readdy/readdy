@@ -51,7 +51,7 @@ protected:
         ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {10, 10});
         ctx.topology_registry().configure_bond_potential("Topology B", "Topology B", {10, 10});
 
-        ctx.setBoxSize(10, 10, 10);
+        ctx.boxSize() = {{10, 10, 10}};
     }
 };
 
@@ -61,7 +61,10 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     using namespace readdy;
     auto &ctx = kernel->getKernelContext();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
-    kernel->getKernelStateModel().addTopology(0, {x_0});
+    {
+        auto tid = kernel->getKernelContext().topology_registry().add_type("MyType");
+        kernel->getKernelStateModel().addTopology(tid, {x_0});
+    }
     kernel->getKernelStateModel().addParticle(
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("A"))
     );
@@ -83,9 +86,13 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
         ASSERT_EQ(nNormalFlavor, 1);
     }
 
-    auto nl = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>();
-    nl->perform();
+    kernel->initialize();
+
+    auto nlCreate = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::init);
+    auto nlUpdate = kernel->getActionFactory().createAction<readdy::model::actions::UpdateNeighborList>(readdy::model::actions::UpdateNeighborList::Operation::update);
     auto action = kernel->getActionFactory().createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1.0);
+    nlCreate->perform();
+    nlUpdate->perform();
     action->perform();
 
     auto particles = kernel->getKernelStateModel().getParticles();

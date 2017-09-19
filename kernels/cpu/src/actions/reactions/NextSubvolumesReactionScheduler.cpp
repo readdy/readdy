@@ -61,7 +61,7 @@ struct CPUNextSubvolumes::ReactionEvent {
 };
 
 struct CPUNextSubvolumes::GridCell {
-    using particle_index = data_t::index_t;
+    using particle_index = data_t::size_type;
 
     cell_index_t i, j, k, id;
     std::vector<const GridCell *> neighbors;
@@ -95,7 +95,7 @@ CPUNextSubvolumes::CPUNextSubvolumes(const CPUKernel *const kernel, scalar timeS
 
 void CPUNextSubvolumes::setUpGrid() {
     if (cells.empty()) {
-        const auto &simBoxSize = kernel->getKernelContext().getBoxSize();
+        const auto &simBoxSize = kernel->getKernelContext().boxSize();
         const auto minCellWidth = getMaxReactionRadius();
         const auto nTypes = kernel->getKernelContext().particle_types().n_types();
         for (unsigned int i = 0; i < 3; ++i) {
@@ -127,8 +127,8 @@ void CPUNextSubvolumes::assignParticles() {
 
     std::size_t idx = 0;
     for (auto& e : *data) {
-        if(!e.is_deactivated()) {
-            auto box = getCell(e.position());
+        if(!e.deactivated) {
+            auto box = getCell(e.pos);
             if (box) {
                 box->particles[e.type].push_back(idx);
                 ++(box->typeCounts[e.type]);
@@ -271,7 +271,7 @@ void CPUNextSubvolumes::setUpNeighbors(CPUNextSubvolumes::GridCell &cell) {
 
 CPUNextSubvolumes::GridCell *
 CPUNextSubvolumes::getCell(signed_cell_index_t i, signed_cell_index_t j, signed_cell_index_t k) {
-    const auto &periodic = kernel->getKernelContext().getPeriodicBoundary();
+    const auto &periodic = kernel->getKernelContext().periodicBoundaryConditions();
     if (periodic[0]) i = static_cast<cell_index_t>(readdy::util::numeric::positive_modulo(i, nCells[0]));
     else if (i < 0 || i >= nCells[0]) return nullptr;
     if (periodic[1]) j = static_cast<cell_index_t>(readdy::util::numeric::positive_modulo(j, nCells[1]));
@@ -367,8 +367,8 @@ void CPUNextSubvolumes::setUpCell(CPUNextSubvolumes::GridCell &cell) {
     }
 }
 
-CPUNextSubvolumes::GridCell *CPUNextSubvolumes::getCell(const readdy::model::Vec3 &particlePosition) {
-    const auto& simBoxSize = kernel->getKernelContext().getBoxSize();
+CPUNextSubvolumes::GridCell *CPUNextSubvolumes::getCell(const Vec3 &particlePosition) {
+    const auto& simBoxSize = kernel->getKernelContext().boxSize();
     const auto i = static_cast<cell_index_t>(floor((particlePosition[0] + .5*simBoxSize[0]) / cellSize[0]));
     const auto j = static_cast<cell_index_t>(floor((particlePosition[1] + .5*simBoxSize[1]) / cellSize[1]));
     const auto k = static_cast<cell_index_t>(floor((particlePosition[2] + .5*simBoxSize[2]) / cellSize[2]));

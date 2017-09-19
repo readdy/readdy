@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,60 +23,55 @@
 /**
  * << detailed description >>
  *
- * @file ParticleIndexPair.h
+ * @file atomic.h
  * @brief << brief description >>
  * @author clonker
- * @date 14.07.16
+ * @date 14.09.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
-#include <cstddef>
-#include <stdexcept>
-#include <ostream>
-#include <readdy/common/hash.h>
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace model {
-struct ParticleIndexPair {
-    std::size_t idx1, idx2;
+#include <atomic>
+#include "../macros.h"
 
-    ParticleIndexPair(std::size_t idx1, std::size_t idx2) {
-        if (idx1 < idx2) {
-            ParticleIndexPair::idx1 = idx1;
-            ParticleIndexPair::idx2 = idx2;
-        } else if (idx1 > idx2) {
-            ParticleIndexPair::idx1 = idx2;
-            ParticleIndexPair::idx2 = idx1;
-        } else {
-            throw std::runtime_error("pair must not have equal indices");
-        }
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(util)
+NAMESPACE_BEGIN(thread)
+
+template<typename T>
+class copyable_atomic {
+    std::atomic<T> _a;
+public:
+    copyable_atomic() : _a() {}
+
+    explicit copyable_atomic(const std::atomic<T> &a) : _a(a.load()) {}
+
+    copyable_atomic(const copyable_atomic &other) : _a(other._a.load()) {}
+
+    copyable_atomic &operator=(const copyable_atomic &other) {
+        _a.store(other._a.load());
+        return *this;
     }
 
-    friend std::size_t hash_value(const ParticleIndexPair &pip) {
-        std::size_t seed = 0;
-        readdy::util::hash::combine(seed, pip.idx1);
-        readdy::util::hash::combine(seed, pip.idx2);
-        return seed;
+    const std::atomic<T> &operator*() const {
+        return _a;
     }
 
-    friend bool operator==(const ParticleIndexPair &pip1, const ParticleIndexPair &pip2) {
-        return pip1.idx1 == pip2.idx1 && pip1.idx2 == pip2.idx2;
+    std::atomic<T> &operator*() {
+        return _a;
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const ParticleIndexPair &pip) {
-        os << "ParticleIndexPair(" << pip.idx1 << ", " << pip.idx2 << ")";
-        return os;
+    const std::atomic<T> operator->() const {
+        return &_a;
     }
-};
 
-struct ParticleIndexPairHasher {
-    std::size_t operator()(const ParticleIndexPair &pip) const {
-        return hash_value(pip);
+    std::atomic<T> *operator->() {
+        return &_a;
     }
 };
-}
-}
-}
-}
+
+
+NAMESPACE_END(thread)
+NAMESPACE_END(util)
+NAMESPACE_END(readdy)

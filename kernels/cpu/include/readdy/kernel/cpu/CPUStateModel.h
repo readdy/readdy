@@ -33,13 +33,14 @@
 
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/model/KernelContext.h>
-#include <readdy/kernel/cpu/model/ParticleIndexPair.h>
 #include <readdy/common/thread/Config.h>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/kernel/cpu/util/config.h>
 #include <readdy/common/index_persistent_vector.h>
+#include <readdy/common/Timer.h>
+#include <readdy/api/KernelConfiguration.h>
+#include <readdy/kernel/cpu/data/DefaultDataContainer.h>
 
 namespace readdy {
 namespace kernel {
@@ -48,8 +49,8 @@ class CPUStateModel : public readdy::model::KernelStateModel {
 
 public:
 
-    using data_t = readdy::kernel::cpu::model::CPUParticleData;
-    using particle_t = readdy::model::Particle;
+    using data_type = readdy::kernel::cpu::data::EntryDataContainer;
+    using particle_type = readdy::model::Particle;
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 
@@ -67,35 +68,43 @@ public:
     CPUStateModel(CPUStateModel&&) = delete;
     CPUStateModel& operator=(CPUStateModel&&) = delete;
 
-    const std::vector<readdy::model::Vec3> getParticlePositions() const override;
+    void configure(const readdy::conf::cpu::Configuration &configuration);
 
-    const std::vector<particle_t> getParticles() const override;
+    const std::vector<Vec3> getParticlePositions() const override;
 
-    void updateNeighborList(scalar skin) override;
+    const std::vector<particle_type> getParticles() const override;
 
-    void calculateForces() override;
+    void initializeNeighborList(scalar skin, const util::PerformanceNode &node);
 
-    void addParticle(const particle_t &p) override;
+    void initializeNeighborList(scalar skin) override;
 
-    void addParticles(const std::vector<particle_t> &p) override;
+    void updateNeighborList(const util::PerformanceNode &node);
 
-    void removeParticle(const particle_t &p) override;
+    void updateNeighborList() override;
+
+    void addParticle(const particle_type &p) override;
+
+    void addParticles(const std::vector<particle_type> &p) override;
+
+    void removeParticle(const particle_type &p) override;
 
     void removeAllParticles() override;
 
-    readdy::scalar getEnergy() const override;
+    scalar energy() const override;
 
-    data_t const *const getParticleData() const;
+    scalar &energy() override;
 
-    data_t *const getParticleData();
+    data_type const *const getParticleData() const;
+
+    data_type *const getParticleData();
 
     neighbor_list const *const getNeighborList() const;
 
     neighbor_list *const getNeighborList();
 
-    void expected_n_particles(std::size_t n) override;
-
     void clearNeighborList() override;
+
+    void clearNeighborList(const util::PerformanceNode &node);
 
     readdy::model::top::GraphTopology *const
     addTopology(topology_type_type type, const std::vector<readdy::model::TopologyParticle> &particles) override;
@@ -108,7 +117,7 @@ public:
 
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
 
-    particle_t getParticleForIndex(std::size_t index) const override;
+    particle_type getParticleForIndex(std::size_t index) const override;
 
     particle_type_type getParticleType(std::size_t index) const override;
 
@@ -125,9 +134,15 @@ public:
     readdy::model::top::GraphTopology *getTopologyForParticle(readdy::model::top::Topology::particle_index particle) override;
 
 private:
-    struct Impl;
-    std::unique_ptr<Impl> pimpl;
-    readdy::util::thread::Config const *const config;
+    std::reference_wrapper<const readdy::util::thread::Config> _config;
+    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::unique_ptr<neighbor_list> _neighborList;
+    std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
+    std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
+    std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
+    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> _reactionCounts;
+    scalar _currentEnergy = 0;
+    topologies_vec _topologies{};
 };
 }
 }

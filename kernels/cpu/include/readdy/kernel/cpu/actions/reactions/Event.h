@@ -31,7 +31,7 @@
 
 #pragma once
 #include <spdlog/fmt/ostr.h>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
+#include <readdy/model/Particle.h>
 
 namespace readdy {
 namespace kernel {
@@ -39,7 +39,7 @@ namespace cpu {
 namespace actions {
 namespace reactions {
 struct Event {
-    using index_type = model::CPUParticleData::index_t;
+    using index_type = std::size_t;
     using reaction_index_type = std::size_t;
     std::uint8_t nEducts;
     std::uint8_t nProducts;
@@ -49,8 +49,8 @@ struct Event {
     readdy::scalar reactionRate;
     readdy::scalar cumulativeRate;
 
-    Event(unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, readdy::scalar reactionRate,
-          readdy::scalar cumulativeRate, reaction_index_type reactionIdx, unsigned int t1, unsigned int t2);
+    Event(std::uint8_t nEducts, std::uint8_t nProducts, index_type idx1, index_type idx2, readdy::scalar reactionRate,
+          readdy::scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2);
 
     friend std::ostream &operator<<(std::ostream &, const Event &);
 

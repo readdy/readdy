@@ -47,7 +47,7 @@ namespace m = readdy::model;
 
 namespace {
 
-using data_t = cpu::model::CPUParticleData;
+using data_t = cpu::data::NLDataContainer;
 using nl_t = cpu::cell_decomposition_neighbor_list;
 
 struct TestNeighborList : ::testing::Test {
@@ -68,76 +68,80 @@ struct TestNeighborList : ::testing::Test {
 
 };
 
-auto isPairInList = [](nl_t *pairs, data_t &data,
-                       unsigned long idx1, unsigned long idx2) {
-    const auto &neighbors1 = pairs->neighbors_of(idx1);
-    for (auto &neigh_idx : neighbors1) {
-        if (neigh_idx == idx2) {
-            return true;
+class TestNeighborListImpl : public ::testing::TestWithParam<const char*> {};
+
+auto isPairInList = [](readdy::kernel::cpu::nl::NeighborList *pairs, std::size_t idx1, std::size_t idx2) {
+    bool foundOneDirection {false};
+    bool foundOtherDirection {false};
+    for(auto it : *pairs) {
+        if(it.current_particle() == idx1) {
+            foundOneDirection = std::find(it.begin(), it.end(), idx2) != it.end();
+        } else {
+            foundOtherDirection = std::find(it.begin(), it.end(), idx1) != it.end();
         }
-    }
-    const auto &neighbors2 = pairs->neighbors_of(idx2);
-    for (auto &neigh_idx : neighbors2) {
-        if (neigh_idx == idx1) {
+        if(foundOneDirection && foundOtherDirection) {
             return true;
         }
     }
     return false;
 };
 
-auto isIdPairInList = [](nl_t *pairs, data_t &data, std::size_t id1, std::size_t id2) {
-    return isPairInList(pairs, data, data.getIndexForId(id1), data.getIndexForId(id2));
+auto isIdPairInList = [](nl_t *pairs, readdy::kernel::cpu::data::EntryDataContainer *data, std::size_t id1, std::size_t id2) {
+    return isPairInList(pairs, data->getIndexForId(id1), data->getIndexForId(id2));
 };
 
 auto getNumberPairs = [](nl_t &pairs) {
     using val_t = decltype(*pairs.begin());
     return std::accumulate(pairs.begin(), pairs.end(), 0, [](int acc, val_t &x) {
-        return acc + x.size();
+        return acc + (x.end() - x.begin());
     });
 };
 
 TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(1.5, 4, 1.5);
-    ctx.setPeriodicBoundary(false, false, false);
+    ctx.boxSize() = {{1.5, 4, 1.5}};
+    ctx.periodicBoundaryConditions() = {{false, false, false}};
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
-    nl_t list(data, ctx, conf);
+
+    nl_t list(ctx, conf);
+
+    auto data = list.data();
 
     // Add three particles, two are in one outer box, the third on the other end and thus no neighbor
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, -1.8, 0, typeIdA), m::Particle(0, 1.8, 0, typeIdA)
     };
 
-    data.addParticles(particles);
-    list.set_up();
+    data->addParticles(particles);
+    list.set_up({});
 
     int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 2);
-    EXPECT_TRUE(isPairInList(&list, data, 0, 1));
-    EXPECT_TRUE(isPairInList(&list, data, 1, 0));
+    EXPECT_TRUE(isPairInList(&list, 0, 1));
+    EXPECT_TRUE(isPairInList(&list, 1, 0));
 }
 
 TEST_F(TestNeighborList, OneDirection) {
     // maxcutoff is 1.2, system is 4.8 x 5 x 5.1
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(1.2, 1.1, 2.8);
-    ctx.setPeriodicBoundary(false, false, true);
+    ctx.boxSize() = {{1.2, 1.1, 2.8}};
+    ctx.periodicBoundaryConditions() = {{false, false, true}};
+    ctx.configure(false);
 
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
+    nl_t list(ctx, conf);
     // Add three particles, one of which is in the neighborhood of the other two
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, -1.1, typeIdA), m::Particle(0, 0, .4, typeIdA), m::Particle(0, 0, 1.1, typeIdA)
     };
     std::vector<std::size_t> ids(particles.size());
     std::transform(particles.begin(), particles.end(), ids.begin(), [](const m::Particle& p) {return p.getId();});
-    data.addParticles(particles);
+    auto data = list.data();
+    data->addParticles(particles);
 
-    nl_t list(data, ctx, conf);
-    list.set_up();
+    list.set_up({});
 
     int sum = getNumberPairs(list);
     EXPECT_LE(4, sum);
@@ -152,25 +156,25 @@ TEST_F(TestNeighborList, OneDirection) {
 TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic
     auto &ctx = kernel->getKernelContext();
-    ctx.setBoxSize(4, 4, 4);
-    ctx.setPeriodicBoundary(true, true, true);
+    ctx.boxSize() = {{4, 4, 4}};
+    ctx.periodicBoundaryConditions() = {{true, true, true}};
     readdy::util::thread::Config conf;
-    readdy::kernel::cpu::model::CPUParticleData data {&ctx, kernel->threadConfig()};
-    nl_t list(data, ctx, conf);
+    nl_t list(ctx, conf);
+    auto data = list.data();
     // Create a few particles. In this box setup, all particles are neighbors.
     const auto particles = std::vector<m::Particle>{
             m::Particle(0, 0, 0, typeIdA), m::Particle(0, 0, 0, typeIdA), m::Particle(.3, 0, 0, typeIdA),
             m::Particle(0, .3, -.3, typeIdA), m::Particle(-.3, 0, .3, typeIdA), m::Particle(.3, -.3, 0, typeIdA)
     };
 
-    data.addParticles(particles);
-    list.set_up();
+    data->addParticles(particles);
+    list.set_up({});
     int sum = getNumberPairs(list);
     EXPECT_EQ(sum, 30);
     for (size_t i = 0; i < 6; ++i) {
         for (size_t j = i + 1; j < 6; ++j) {
-            EXPECT_TRUE(isPairInList(&list, data, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
-            EXPECT_TRUE(isPairInList(&list, data, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(&list, i, j)) << "Particles " << i << " and " << j << " were not neighbors.";
+            EXPECT_TRUE(isPairInList(&list, j, i)) << "Particles " << j << " and " << i << " were not neighbors.";
         }
     }
 }
@@ -181,10 +185,11 @@ TEST(TestAdaptiveNeighborList, CellContainerSanity) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     auto &context = kernel->getKernelContext();
-    context.setBoxSize(10, 10, 10);
+    context.boxSize() = {{10, 10, 10}};
 
+    auto data = cpu::data::NLDataContainer(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
 
@@ -209,11 +214,13 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     auto &context = kernel->getKernelContext();
-    context.setPeriodicBoundary(true, true, true);
-    context.setBoxSize(10, 10, 10);
+    context.periodicBoundaryConditions() = {{true, true, true}};
+    context.boxSize() = {{10, 10, 10}};
+    context.configure();
 
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(1);
@@ -226,10 +233,10 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
         ASSERT_TRUE(cell != nullptr);
         ASSERT_TRUE(cell->is_leaf());
         ASSERT_EQ(cell->level(), 2);
-        ASSERT_TRUE(cell->offset() == readdy::model::Vec3(0, 0, 0));
-        ASSERT_TRUE(cell->size() == readdy::model::Vec3(.5, .5, .5));
+        ASSERT_TRUE(cell->offset() == readdy::Vec3(0, 0, 0));
+        ASSERT_TRUE(cell->size() == readdy::Vec3(.5, .5, .5));
         ASSERT_EQ(cell->neighbors().size(), 5 * 5 * 5 - 1);
-        std::set<readdy::model::Vec3> offsets;
+        std::set<readdy::Vec3> offsets;
         for (auto o : cell->neighbors()) {
             offsets.emplace(o->offset());
         }
@@ -241,17 +248,17 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
         ASSERT_TRUE(cell != nullptr);
         ASSERT_TRUE(cell->is_leaf());
         ASSERT_EQ(cell->level(), 2);
-        ASSERT_TRUE(cell->offset() == readdy::model::Vec3(5, 5, 5));
-        ASSERT_TRUE(cell->size() == readdy::model::Vec3(.5, .5, .5));
+        ASSERT_TRUE(cell->offset() == readdy::Vec3(5, 5, 5));
+        ASSERT_TRUE(cell->size() == readdy::Vec3(.5, .5, .5));
         const auto &cell_neighbors = cell->neighbors();
         ASSERT_EQ(cell_neighbors.size(), 5 * 5 * 5 - 1);
-        auto shift = .5 * model::Vec3(context.getBoxSize());
+        auto shift = .5 * readdy::Vec3(context.boxSize());
         for (int i = -2; i <= 2; ++i) {
             for (int j = -2; j <= 2; ++j) {
                 for (int k = -2; k <= 2; ++k) {
                     if (i == 0 && j == 0 && k == 0) continue;
                     auto pos = cell->offset() - shift +
-                               readdy::model::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
+                            readdy::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
                     auto leaf = cellContainer.leaf_cell_for_position(pos);
                     ASSERT_TRUE(leaf != nullptr);
                     ASSERT_TRUE(std::find(cell_neighbors.begin(), cell_neighbors.end(), leaf) != cell_neighbors.end())
@@ -269,11 +276,12 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipNotPeriodic) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     auto &context = kernel->getKernelContext();
-    context.setPeriodicBoundary(false, false, false);
-    context.setBoxSize(10, 10, 10);
+    context.periodicBoundaryConditions() = {{false, false, false}};
+    context.boxSize() = {{10, 10, 10}};
 
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(1);
@@ -286,25 +294,25 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipNotPeriodic) {
         ASSERT_TRUE(cell != nullptr);
         ASSERT_TRUE(cell->is_leaf());
         ASSERT_EQ(cell->level(), 2);
-        ASSERT_TRUE(cell->offset() == readdy::model::Vec3(0, 0, 0));
-        ASSERT_TRUE(cell->size() == readdy::model::Vec3(.5, .5, .5));
+        ASSERT_TRUE(cell->offset() == readdy::Vec3(0, 0, 0));
+        ASSERT_TRUE(cell->size() == readdy::Vec3(.5, .5, .5));
         const auto &cell_neighbors = cell->neighbors();
         ASSERT_EQ(cell_neighbors.size(), 3 * 3 * 3 - 1);
         {
-            std::set<readdy::model::Vec3> offsets;
+            std::set<readdy::Vec3> offsets;
             for (auto o : cell_neighbors) {
                 offsets.emplace(o->offset());
             }
             ASSERT_EQ(offsets.size(), 3 * 3 * 3 - 1);
         }
         {
-            auto shift = .5 * model::Vec3(context.getBoxSize());
+            auto shift = .5 * Vec3(context.boxSize());
             for (int i = 0; i <= 2; ++i) {
                 for (int j = 0; j <= 2; ++j) {
                     for (int k = 0; k <= 2; ++k) {
                         if (i == 0 && j == 0 && k == 0) continue;
                         auto pos = cell->offset() - shift +
-                                   readdy::model::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
+                                   readdy::Vec3(i * cell->size().x, j * cell->size().y, k * cell->size().z);
                         auto leaf = cellContainer.leaf_cell_for_position(pos);
                         ASSERT_TRUE(leaf != nullptr);
                         ASSERT_TRUE(
@@ -324,10 +332,13 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     auto &context = kernel->getKernelContext();
-    context.setPeriodicBoundary(false, true, true);
-    context.setBoxSize(5, 1, 1.1);
+    context.periodicBoundaryConditions() = {{false, true, true}};
+    context.boxSize() = {{5, 1, 1.1}};
+    context.configure();
+
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(.5);
@@ -339,15 +350,16 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
         // upper right cell, check neighbors
         auto cell = cellContainer.leaf_cell_for_position({2.4, .4, .54});
         EXPECT_TRUE(cell != nullptr);
+        EXPECT_EQ(cell->level(), 2);
         const auto &cell_neighbors = cell->neighbors();
-        EXPECT_EQ(cell_neighbors.size(), 3 * 5 * 5 - 1);
-        auto shift = .5 * model::Vec3(context.getBoxSize());
+        EXPECT_EQ(cell_neighbors.size(), 3 * 4 * 4 - 1);
+        auto shift = .5 * Vec3(context.boxSize());
         for (int i = -2; i <= 0; ++i) {
             for (int j = -2; j <= 2; ++j) {
                 for (int k = -2; k <= 2; ++k) {
                     if (i == 0 && j == 0 && k == 0) continue;
-                    auto pos = context.getPBCFun()(cell->offset() - shift +
-                                                   readdy::model::Vec3(i * cell->size().x, j * cell->size().y,
+                    auto pos = context.applyPBCFun()(cell->offset() - shift +
+                                                   readdy::Vec3(i * cell->size().x, j * cell->size().y,
                                                                        k * cell->size().z));
                     auto leaf = cellContainer.leaf_cell_for_position(pos);
                     ASSERT_TRUE(leaf != nullptr) << "should have a leaf for i=" << i << ", j=" << j << ", k=" << k
@@ -365,25 +377,28 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
 
 TEST(TestAdaptiveNeighborList, PositionToCell) {
     using namespace readdy;
-    std::vector<model::Vec3> positions{{5,  5,  5},
+    std::vector<Vec3> positions{{5,  5,  5},
                                        {0,  0,  0},
                                        {-5, -5, -5}};
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     auto &context = kernel->getKernelContext();
-    context.setPeriodicBoundary(true, true, true);
-    context.setBoxSize(10, 10, 10);
+    context.periodicBoundaryConditions() = {{true, true, true}};
+    context.boxSize() = {{10, 10, 10}};
+    context.configure();
+
+    auto data = data_t(kernel->getCPUKernelStateModel().getParticleData());
     kernel::cpu::nl::CellContainer cellContainer{
-            *kernel->getCPUKernelStateModel().getParticleData(),
+            data,
             context,
             kernel->threadConfig()};
     cellContainer.subdivide(1);
     cellContainer.refine_uniformly();
     cellContainer.setup_uniform_neighbors();
 
-    const auto &pbc = context.getPBCFun();
-    auto shift = .5 * model::Vec3(context.getBoxSize());
+    const auto &pbc = context.applyPBCFun();
+    auto shift = .5 * Vec3(context.boxSize());
     for (const auto &pos : positions) {
         auto proj_pos = pbc(pos);
         auto leaf = cellContainer.leaf_cell_for_position(proj_pos);
@@ -398,12 +413,12 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
     
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    auto data = kernel->getCPUKernelStateModel().getParticleData();
     auto &context = kernel->getKernelContext();
-    const auto &pbc = context.getPBCFun();
+    const auto &pbc = context.applyPBCFun();
 
-    context.setPeriodicBoundary(true, true, true);
-    context.setBoxSize(10, 10, 10);
+    context.periodicBoundaryConditions() = {{true, true, true}};
+    context.boxSize() = {{10, 10, 10}};
     context.particle_types().add("A", 1.0, 1.0);
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .5);
 
@@ -419,11 +434,12 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
             kernel->getKernelContext(),
             kernel->threadConfig()
     };
-    neighbor_list.set_up();
+    neighbor_list.set_up({});
+    data = neighbor_list.data();
 
-    for (std::size_t i = 0; i < data.size(); ++i) {
-        auto cell = neighbor_list.cell_container().leaf_cell_for_position(pbc(data.pos(i)));
-        ASSERT_TRUE(cell != nullptr) << "expected cell for position " << data.pos(i);
+    for (std::size_t i = 0; i < data->size(); ++i) {
+        auto cell = neighbor_list.cell_container().leaf_cell_for_position(pbc(data->pos(i)));
+        ASSERT_TRUE(cell != nullptr) << "expected cell for position " << data->pos(i);
         const auto &cells_particles = cell->particles();
         ASSERT_TRUE(std::find(cells_particles.begin(), cells_particles.end(), i) != cells_particles.end());
     }
@@ -434,7 +450,7 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
     auto &context = kernel->getKernelContext();
-    context.setBoxSize(1, 1, 1);
+    context.boxSize() = {{1, 1, 1}};
     context.particle_types().add("A", 1.0, 1.0);
 
     std::size_t i = 0;
@@ -448,7 +464,7 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
     }
     auto &data = *kernel->getCPUKernelStateModel().getParticleData();
     ASSERT_EQ(data.size(), i);
-    data.hilbert_sort(.01);
+    data.hilbertSort(.01);
     ASSERT_EQ(data.getNDeactivated(), 0);
     ASSERT_EQ(data.size(), i);
 
@@ -485,20 +501,20 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
     data.removeEntry(15);
 
     ASSERT_EQ(data.getNDeactivated(), 3);
-    data.hilbert_sort(.01);
+    data.hilbertSort(.01);
     data.blanks_moved_to_front();
     ASSERT_EQ(data.getNDeactivated(), 3);
 
-    ASSERT_TRUE(data.entry_at(0).is_deactivated());
-    ASSERT_TRUE(data.entry_at(1).is_deactivated());
-    ASSERT_TRUE(data.entry_at(2).is_deactivated());
+    ASSERT_TRUE(data.entry_at(0).deactivated);
+    ASSERT_TRUE(data.entry_at(1).deactivated);
+    ASSERT_TRUE(data.entry_at(2).deactivated);
 
     ASSERT_TRUE(data.entry_at(0).id == e0 || data.entry_at(0).id == e3 || data.entry_at(0).id == e15);
     ASSERT_TRUE(data.entry_at(1).id == e0 || data.entry_at(1).id == e3 || data.entry_at(1).id == e15);
     ASSERT_TRUE(data.entry_at(2).id == e0 || data.entry_at(2).id == e3 || data.entry_at(2).id == e15);
 
     for (auto it = data.begin() + 3; it != data.end(); ++it) {
-        ASSERT_FALSE(it->is_deactivated());
+        ASSERT_FALSE(it->deactivated);
     }
 }
 
@@ -507,7 +523,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
     auto &context = kernel->getKernelContext();
-    context.setBoxSize(1, 1, 1);
+    context.boxSize() = {{1, 1, 1}};
     context.particle_types().add("A", 1.0, 1.0);
 
     for (int i = 0; i < 50; ++i) {
@@ -517,22 +533,23 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     }
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .1);
     context.configure(false);
-    const auto &d2 = context.getDistSquaredFun();
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    const auto &d2 = context.distSquaredFun();
+    auto data = kernel->getCPUKernelStateModel().getParticleData();
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
             kernel->threadConfig()
     };
-    neighbor_list.set_up();
+    neighbor_list.set_up({});
+    data = neighbor_list.data();
 
     std::size_t i = 0;
-    for (const auto &entry_i : data) {
+    for (const auto &entry_i : *data) {
         std::size_t j = 0;
-        for (const auto &entry_j : data) {
-            if (!entry_i.is_deactivated() && !entry_j.is_deactivated() && i != j) {
-                if (std::sqrt(d2(entry_i.position(), entry_j.position())) < .1) {
-                    const auto &neighbors = data.neighbors_at(i);
+        for (const auto &entry_j : *data) {
+            if (!entry_i.deactivated && !entry_j.deactivated && i != j) {
+                if (std::sqrt(d2(entry_i.pos, entry_j.pos)) < .1) {
+                    const auto &neighbors = neighbor_list.nlData().neighbors().at(i);
                     ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
                                                 << i << " and " << j << " should be neighbors";
                 }
@@ -548,11 +565,11 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
     auto &context = kernel->getKernelContext();
-    context.setBoxSize(28, 28, 28);
+    context.boxSize() = {{28, 28, 28}};
     context.particle_types().add("A", .1, .1);
     context.particle_types().add("V", .1, .1);
-    context.setPeriodicBoundary(true, true, true);
-    context.setKBT(1.0);
+    context.periodicBoundaryConditions() = {{true, true, true}};
+    context.kBT() = 1.0;
 
     auto cutoff = 1.5;
     for (int i = 0; i < 100; ++i) {
@@ -562,25 +579,25 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     }
     kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", cutoff, cutoff);
     context.configure(false);
-    const auto &d2 = context.getDistSquaredFun();
-    auto &data = *kernel->getCPUKernelStateModel().getParticleData();
+    const auto &d2 = context.distSquaredFun();
+    auto data = kernel->getCPUKernelStateModel().getParticleData();
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
             kernel->getKernelContext(),
             kernel->threadConfig(),
-            true, false
+            false
     };
     neighbor_list.skin() = 2.5;
-    neighbor_list.set_up();
+    neighbor_list.set_up({});
 
     {
         std::size_t i = 0;
-        for (const auto &entry_i : data) {
+        for (const auto &entry_i : *data) {
             std::size_t j = 0;
-            for (const auto &entry_j : data) {
-                if (!entry_i.is_deactivated() && !entry_j.is_deactivated() && i != j) {
-                    if (d2(entry_i.position(), entry_j.position()) < cutoff * cutoff) {
-                        const auto &neighbors = data.neighbors_at(i);
+            for (const auto &entry_j : *data) {
+                if (!entry_i.deactivated && !entry_j.deactivated && i != j) {
+                    if (d2(entry_i.pos, entry_j.pos) < cutoff * cutoff) {
+                        const auto &neighbors = neighbor_list.nlData().neighbors().at(i);
                         ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end())
                                                     << i << " and " << j << " should be neighbors";
                     }
@@ -595,15 +612,15 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
 
     for (int t = 0; t < 100; ++t) {
         integrator->perform();
-        neighbor_list.update();
+        neighbor_list.update({});
         {
             std::size_t i = 0;
-            for (const auto &entry_i : data) {
+            for (const auto &entry_i : *data) {
                 std::size_t j = 0;
-                for (const auto &entry_j : data) {
-                    if ((!entry_i.is_deactivated()) && (!entry_j.is_deactivated()) && i != j) {
-                        if (d2(entry_i.position(), entry_j.position()) < cutoff * cutoff) {
-                            const auto &neighbors = data.neighbors_at(i);
+                for (const auto &entry_j : *data) {
+                    if ((!entry_i.deactivated) && (!entry_j.deactivated) && i != j) {
+                        if (d2(entry_i.pos, entry_j.pos) < cutoff * cutoff) {
+                            const auto &neighbors = neighbor_list.nlData().neighbors().at(i);
                             bool neighbors_of_each_other = std::find(neighbors.begin(), neighbors.end(), j) != neighbors.end();
                             EXPECT_TRUE(neighbors_of_each_other);
                         }
@@ -619,7 +636,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
 }
 
 
-TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
+TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
@@ -627,8 +644,11 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
     kernel->getKernelContext().particle_types().add("A", 0.05, 1.0);
     kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
     kernel->getKernelContext().particle_types().add("V", 0.0, 1.0);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
-    kernel->getKernelContext().setBoxSize(100, 10, 10);
+    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
+    kernel->getKernelContext().boxSize() = {{100, 10, 10}};
+    readdy::conf::Configuration conf {};
+    conf.cpu.neighborList.type = GetParam();
+    kernel->getKernelContext().kernelConfiguration() = conf;
 
     const readdy::scalar weightF = static_cast<readdy::scalar>(0.);
     const readdy::scalar weightA = static_cast<readdy::scalar>(1.);
@@ -659,7 +679,7 @@ TEST(TestAdaptiveNeighborList, DiffusionAndReaction) {
     }
 }
 
-TEST(TestAdaptiveNeighborList, Diffusion) {
+TEST_P(TestNeighborListImpl, Diffusion) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
@@ -668,113 +688,67 @@ TEST(TestAdaptiveNeighborList, Diffusion) {
     context.particle_types().add("A", 0.05, 1.0);
     context.particle_types().add("F", 0.0, 1.0);
     context.particle_types().add("V", 0.0, 1.0);
+
+    scalar cutoff = 2.0;
+
     // just to have a cutoff
-    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", .1, 2.0);
-    context.setPeriodicBoundary(true, true, true);
-    context.setBoxSize(100, 10, 10);
+    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", .1, cutoff);
+    context.periodicBoundaryConditions() = {{true, true, true}};
+    context.boxSize() = {{100, 10, 10}};
+
+    {
+        readdy::conf::Configuration conf{};
+        conf.cpu.neighborList.type = GetParam();
+        kernel->getKernelContext().kernelConfiguration() = conf;
+    }
 
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     // 120 F particles
-    for (std::size_t i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < 50; ++i) {
         kernel->addParticle("F", n3(0., 1.));
         kernel->addParticle("A", n3(0., 1.));
     }
     auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1);
     obs->setCallback(
-            [&](const readdy::model::observables::NParticles::result_type &result) {
-                bool wrong_i_j = false, wrong_j_i = false;
-                const auto &d2 = context.getDistSquaredFun();
+            [&](const readdy::model::observables::NParticles::result_type &) {
+                const auto &d2 = context.distSquaredFun();
                 const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
-                const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
-                std::size_t i = 0;
-                for(auto it_i = data.begin(); it_i != data.end(); ++it_i, ++i) {
-                    std::size_t j = 0;
-                    for(auto it_j = data.begin(); it_j != data.end(); ++it_j, ++j) {
-                        if(it_i != it_j && std::sqrt(d2(it_i->position(), it_j->position())) < 2.0) {
-                            auto neigh_i = neighbor_list->neighbors_of(i);
-                            auto neigh_j = neighbor_list->neighbors_of(j);
-                            if(std::find(neigh_i.begin(), neigh_i.end(), j) == neigh_i.end()) {
-                                wrong_i_j = true;
-                            }
-                            if(std::find(neigh_j.begin(), neigh_j.end(), i) == neigh_j.end()) {
-                                wrong_j_i = true;
-                            }
+
+                for(auto it = neighbor_list->begin(); it != neighbor_list->end(); ++it) {
+                    const auto &entry = neighbor_list->data()->entry_at(it->current_particle());
+                    ASSERT_FALSE(entry.deactivated);
+
+                    std::vector<std::size_t> neighbors;
+                    neighbors.reserve(it->n_neighbors());
+                    for (unsigned long neighbor : *it) {
+                        const auto &neighborEntry = neighbor_list->data()->entry_at(neighbor);
+                        ASSERT_FALSE(neighborEntry.deactivated);
+                        neighbors.push_back(neighbor);
+                        ASSERT_LE(d2(entry.pos, neighborEntry.pos), (cutoff+.1) * (cutoff+.1));
+                    }
+
+                    std::size_t pidx = 0;
+                    for(const auto &e : *neighbor_list->data()) {
+                        ASSERT_FALSE(e.deactivated);
+                        if (pidx != it->current_particle() && d2(entry.pos, e.pos) < cutoff * cutoff) {
+                            ASSERT_TRUE(std::find(neighbors.begin(), neighbors.end(), pidx) != neighbors.end());
                         }
+                        ++pidx;
                     }
                 }
-                EXPECT_FALSE(wrong_i_j || wrong_j_i);
             }
     );
     auto connection = kernel->connectObservable(obs.get());
     {
         readdy::util::PerformanceNode pn("", false);
-        auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
-        conf.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
-        conf.withSkinSize(.1);
-        conf.configureAndRun(100, .01);
+        auto sc = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), pn);
+        sc.withReactionScheduler<readdy::model::actions::reactions::Gillespie>();
+        sc.withSkinSize(.1);
+        sc.configureAndRun(100, .01);
     }
 }
-/*
-TEST(TestAdaptiveNeighborList, TestDiffusionBenchmark) {
-    std::size_t n_timesteps = 1000;
-    readdy::scalar timestep = .1;
-
-    readdy::scalar box_length = 450.;
-    int n_particles = 1000;
-    readdy::scalar diffusion_coefficient = 1.;
-    readdy::scalar particle_radius = 1.25;
-    readdy::scalar force_constant = 100.;
-
-
-    std::unique_ptr<readdy::kernel::cpu::CPUKernel> kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-
-    // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
-    auto& context = kernel->getKernelContext();
-    context.particle_types().add("A", diffusion_coefficient, particle_radius);
-    context.setPeriodicBoundary(true, true, true);
-    context.setBoxSize(box_length, box_length, box_length);
-
-    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("A", "A", force_constant);
-
-    for(auto _ : readdy::util::range<int>(0, n_particles)) {
-        kernel->addParticle("A", readdy::model::Vec3(
-                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
-                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length,
-                box_length * readdy::model::rnd::uniform_real(0., 1.) - .5 * box_length));
-    }
-
-    auto obs = kernel->createObservable<readdy::model::observables::NParticles>(1);
-    obs->setCallback(
-            [&](const readdy::model::observables::NParticles::result_type &result) {
-                bool wrong_i_j = false, wrong_j_i = false;
-                auto d2 = context.getDistSquaredFun();
-                const auto neighbor_list = kernel->getCPUKernelStateModel().getNeighborList();
-                const auto& data = *kernel->getCPUKernelStateModel().getParticleData();
-                std::size_t i = 0;
-                for(auto it_i = data.begin(); it_i != data.end(); ++it_i, ++i) {
-                    std::size_t j = 0;
-                    for(auto it_j = data.begin(); it_j != data.end(); ++it_j, ++j) {
-                        if(it_i != it_j && std::sqrt(d2(it_i->position(), it_j->position())) < 2. * particle_radius) {
-                            auto neigh_i = neighbor_list->neighbors_of(i);
-                            auto neigh_j = neighbor_list->neighbors_of(j);
-                            if(std::find(neigh_i.begin(), neigh_i.end(), j) == neigh_i.end()) {
-                                wrong_i_j = true;
-                            }
-                            if(std::find(neigh_j.begin(), neigh_j.end(), i) == neigh_j.end()) {
-                                wrong_j_i = true;
-                            }
-                        }
-                    }
-                }
-                EXPECT_FALSE(wrong_i_j || wrong_j_i);
-            }
-    );
-    auto connection = kernel->connectObservable(obs.get());
-
-    auto conf = readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>(kernel.get(), true);
-    conf.withSkinSize(1.);
-    conf.configureAndRun(n_timesteps, timestep);
-}*/
-
 
 }
+
+INSTANTIATE_TEST_CASE_P(TestNeighborListImplImplementation, TestNeighborListImpl,
+                        ::testing::Values("CompactCLL", "ContiguousCLL", "DynamicCLL", "CellDecomposition", "Adaptive"));

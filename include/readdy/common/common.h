@@ -40,7 +40,15 @@ class Group;
 NAMESPACE_END(h5rd)
 
 NAMESPACE_BEGIN(readdy)
+
+NAMESPACE_BEGIN(_internal)
+class ReaDDyVec3;
+NAMESPACE_END(_internal)
+
+constexpr inline std::size_t operator "" _z ( unsigned long long n ) { return n; }
+
 using scalar = double;
+using Vec3 = _internal::ReaDDyVec3;
 using time_step_type = unsigned long;
 using particle_type_type = unsigned short;
 // signed short on purpose

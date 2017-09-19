@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     readdy::Simulation simulation;
     simulation.setKernel("CPU");
     simulation.setPeriodicBoundary({true, true, true});
-    simulation.setBoxSize(readdy::model::Vec3(box_length, box_length, box_length));
+    simulation.setBoxSize(readdy::Vec3(box_length, box_length, box_length));
     simulation.registerParticleType("A", diffusion_coefficient, particle_radius);
     simulation.registerHarmonicRepulsionPotential("A", "A", force_constant);
 
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     using timer = readdy::util::Timer;
 
     {
-        timer clock {"timer"};
+        //timer clock {"timer"};
         simulation.runScheme<readdy::api::ReaDDyScheme>(true).withSkinSize(50.).configureAndRun(n_timesteps, timestep);
     }
 

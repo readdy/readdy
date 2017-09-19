@@ -21,11 +21,13 @@
 
 import unittest
 import numpy as np
-import readdy._internal.readdybinding.common.perf as perf
 from readdy._internal.readdybinding.api import Simulation
 
+from readdy.util.testing_utils import ReaDDyTestCase
 
-class TestTimer(unittest.TestCase):
+
+class TestTimer(ReaDDyTestCase):
+
     def test_timer_sanity(self):
         simulation = Simulation()
         simulation.set_kernel("CPU")

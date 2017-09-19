@@ -35,34 +35,34 @@
 #include <readdy/common/macros.h>
 #include <readdy/model/topologies/Topology.h>
 #include <readdy/model/topologies/potentials/TopologyPotentialActions.h>
-#include <readdy/kernel/cpu/model/CPUParticleData.h>
+#include <readdy/kernel/cpu/data/NLDataContainer.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(kernel)
 NAMESPACE_BEGIN(cpu)
-NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(actions)
 NAMESPACE_BEGIN(top)
 
 class CPUCalculateHarmonicBondPotential : public readdy::model::top::pot::CalculateHarmonicBondPotential {
 
     const harmonic_bond *const potential;
-    CPUParticleData *const data;
+    CPUStateModel::data_type *const data;
 
 public:
     CPUCalculateHarmonicBondPotential(const readdy::model::KernelContext *const context,
-                                      CPUParticleData *const data,
+                                      CPUStateModel::data_type *const data,
                                       const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
 
     readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->getShortestDifferenceFun();
+        const auto &d = context->shortestDifferenceFun();
         for (const auto &bond : potential->getBonds()) {
-            readdy::model::Vec3 forceUpdate{0, 0, 0};
+            Vec3 forceUpdate{0, 0, 0};
             auto &e1 = data->entry_at(particleIndices.at(bond.idx1));
             auto &e2 = data->entry_at(particleIndices.at(bond.idx2));
-            const auto x_ij = d(e1.position(), e2.position());
+            const auto x_ij = d(e1.pos, e2.pos);
             potential->calculateForce(forceUpdate, x_ij, bond);
             e1.force += forceUpdate;
             e2.force += -1 * forceUpdate;
@@ -76,24 +76,24 @@ public:
 
 class CPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::CalculateHarmonicAnglePotential {
     const harmonic_angle *const potential;
-    CPUParticleData *const data;
+    CPUStateModel::data_type *const data;
 public:
-    CPUCalculateHarmonicAnglePotential(const readdy::model::KernelContext *const context, CPUParticleData *const data,
+    CPUCalculateHarmonicAnglePotential(const readdy::model::KernelContext *const context, CPUStateModel::data_type *const data,
                                        const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
     readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->getShortestDifferenceFun();
+        const auto &d = context->shortestDifferenceFun();
 
 
         for (const auto &angle : potential->getAngles()) {
             auto &e1 = data->entry_at(particleIndices.at(angle.idx1));
             auto &e2 = data->entry_at(particleIndices.at(angle.idx2));
             auto &e3 = data->entry_at(particleIndices.at(angle.idx3));
-            const auto x_ji = d(e2.position(), e1.position());
-            const auto x_jk = d(e2.position(), e3.position());
+            const auto x_ji = d(e2.pos, e1.pos);
+            const auto x_jk = d(e2.pos, e3.pos);
             energy += potential->calculateEnergy(x_ji, x_jk, angle);
             potential->calculateForce(e1.force, e2.force, e3.force, x_ji, x_jk, angle);
         }
@@ -103,10 +103,10 @@ public:
 
 class CPUCalculateCosineDihedralPotential : public readdy::model::top::pot::CalculateCosineDihedralPotential {
     const cos_dihedral *const potential;
-    CPUParticleData *const data;
+    CPUStateModel::data_type *const data;
 public:
     CPUCalculateCosineDihedralPotential(const readdy::model::KernelContext *const context,
-                                        CPUParticleData *const data,
+                                        CPUStateModel::data_type *const data,
                                         const cos_dihedral *const pot)
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {
     }
@@ -114,16 +114,16 @@ public:
     readdy::scalar perform(const readdy::model::top::Topology* const topology) override {
         scalar energy = 0;
         const auto &particleIndices = topology->getParticles();
-        const auto &d = context->getShortestDifferenceFun();
+        const auto &d = context->shortestDifferenceFun();
 
         for (const auto &dih : potential->getDihedrals()) {
             auto &e_i = data->entry_at(particleIndices.at(dih.idx1));
             auto &e_j = data->entry_at(particleIndices.at(dih.idx2));
             auto &e_k = data->entry_at(particleIndices.at(dih.idx3));
             auto &e_l = data->entry_at(particleIndices.at(dih.idx4));
-            const auto x_ji = d(e_j.position(), e_i.position());
-            const auto x_kj = d(e_k.position(), e_j.position());
-            const auto x_kl = d(e_k.position(), e_l.position());
+            const auto x_ji = d(e_j.pos, e_i.pos);
+            const auto x_kj = d(e_k.pos, e_j.pos);
+            const auto x_kl = d(e_k.pos, e_l.pos);
             energy += potential->calculateEnergy(x_ji, x_kj, x_kl, dih);
             potential->calculateForce(e_i.force, e_j.force, e_k.force, e_l.force, x_ji, x_kj, x_kl, dih);
         }
@@ -135,9 +135,9 @@ NAMESPACE_BEGIN(reactions)
 NAMESPACE_BEGIN(op)
 
 class CPUChangeParticleType : public readdy::model::top::reactions::actions::ChangeParticleType {
-    CPUParticleData *const data;
+    CPUStateModel::data_type *const data;
 public:
-    CPUChangeParticleType(CPUParticleData *const data, top::GraphTopology *const topology, const vertex &v,
+    CPUChangeParticleType(CPUStateModel::data_type *const data, top::GraphTopology *const topology, const vertex &v,
                           const particle_type_type &type_to) : ChangeParticleType(topology, v, type_to), data(data) {}
 
     void execute() override {
@@ -156,7 +156,7 @@ NAMESPACE_END(op)
 NAMESPACE_END(reactions)
 
 NAMESPACE_END(top)
-NAMESPACE_END(model)
+NAMESPACE_END(actions)
 NAMESPACE_END(cpu)
 NAMESPACE_END(kernel)
 NAMESPACE_END(readdy)

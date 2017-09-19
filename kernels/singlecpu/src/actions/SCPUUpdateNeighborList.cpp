@@ -40,11 +40,14 @@ namespace actions {
 void SCPUUpdateNeighborList::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     switch (operation) {
-        case create:
-            kernel->getKernelStateModel().updateNeighborList(skinSize > 0 ? skinSize : 0);
+        case init:
+            kernel->getKernelStateModel().initializeNeighborList(skinSize > 0 ? skinSize : 0);
             break;
         case clear:
             kernel->getKernelStateModel().clearNeighborList();
+            break;
+        case update:
+            kernel->getKernelStateModel().updateNeighborList();
             break;
     }
 }

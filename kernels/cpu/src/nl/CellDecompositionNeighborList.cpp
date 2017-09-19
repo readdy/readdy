@@ -37,12 +37,18 @@ namespace kernel {
 namespace cpu {
 namespace nl {
 
-CellDecompositionNeighborList::CellDecompositionNeighborList(model::CPUParticleData &data,
+CellDecompositionNeighborList::CellDecompositionNeighborList(data::EntryDataContainer *data,
                                                              const readdy::model::KernelContext &context,
-                                                             const readdy::util::thread::Config &config) :
-        NeighborList(data, context, config), _cell_container(data, context, config) {}
+                                                             const readdy::util::thread::Config &config)
+        : NeighborList(context, config), _data(data), _cell_container(_data, context, config) {}
 
-void CellDecompositionNeighborList::set_up() {
+CellDecompositionNeighborList::CellDecompositionNeighborList(const readdy::model::KernelContext &context,
+                                                             const readdy::util::thread::Config &config)
+        : NeighborList(context, config), _data(context, config), _cell_container(_data, context, config) {}
+
+
+void CellDecompositionNeighborList::set_up(const util::PerformanceNode &node) {
+    auto tx = node.timeit();
     _max_cutoff = _context.get().calculateMaxCutoff();
     _max_cutoff_skin_squared = (_max_cutoff + _skin) * (_max_cutoff + _skin);
     if (_max_cutoff > 0) {
@@ -50,31 +56,44 @@ void CellDecompositionNeighborList::set_up() {
         _cell_container.subdivide(_max_cutoff + _skin);
         //_cell_container.refine_uniformly();
         _cell_container.setup_uniform_neighbors();
-        fill_container();
-        fill_verlet_list();
+        {
+            auto t = node.subnode("fill_container").timeit();
+            fill_container();
+        }
+        {
+            auto t = node.subnode("fill_verlet_list").timeit();
+            fill_verlet_list();
+        }
     }
     _is_set_up = true;
 }
 
-void CellDecompositionNeighborList::update() {
+void CellDecompositionNeighborList::update(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     if(!_is_set_up) {
-        set_up();
+        set_up(node.subnode("set_up"));
     }
     _cell_container.clear();
-    fill_container();
-    fill_verlet_list();
+    {
+        auto tt = node.subnode("update CLL").timeit();
+        fill_container();
+    }
+    {
+        auto tt = node.subnode("fill verlet list").timeit();
+        fill_verlet_list();
+    }
 }
 
 void CellDecompositionNeighborList::fill_container() {
     if (_max_cutoff > 0) {
-        const auto &data = _data.get();
+        const auto &data = _data;
         const auto grainSize = data.size() / _config.get().nThreads();
         const auto data_begin = data.cbegin();
-        auto worker = [data_begin](std::size_t, model::CPUParticleData::const_iterator begin,
-                          model::CPUParticleData::const_iterator end, const CellContainer &container) {
+        auto worker = [data_begin](std::size_t, data::EntryDataContainer::const_iterator begin,
+                          data::EntryDataContainer::const_iterator end, const CellContainer &container) {
             auto i = std::distance(data_begin, begin);
             for (auto it = begin; it != end; ++it, ++i) {
-                if (!it->is_deactivated()) {
+                if (!it->deactivated) {
                     container.insert_particle(static_cast<const CellContainer::particle_index>(i));
                 }
             }
@@ -105,15 +124,15 @@ void CellDecompositionNeighborList::fill_verlet_list() {
 }
 
 void CellDecompositionNeighborList::fill_cell_verlet_list(const CellContainer::sub_cell &cell) {
-    const auto &d2 = _context.get().getDistSquaredFun();
-    auto &data = _data.get();
+    const auto &d2 = _context.get().distSquaredFun();
+    auto &data = _data;
     for (const auto particle_index : cell.particles().data()) {
         auto &neighbors = data.neighbors_at(particle_index);
         auto &entry = data.entry_at(particle_index);
         neighbors.clear();
         for (const auto p_i : cell.particles().data()) {
             if (p_i != particle_index) {
-                const auto distSquared = d2(entry.position(), data.pos(p_i));
+                const auto distSquared = d2(entry.pos, data.pos(p_i));
                 if (distSquared < _max_cutoff_skin_squared) {
                     neighbors.push_back(p_i);
                 }
@@ -121,7 +140,7 @@ void CellDecompositionNeighborList::fill_cell_verlet_list(const CellContainer::s
         }
         for (const auto &neighbor_cell : cell.neighbors()) {
             for (const auto p_j : neighbor_cell->particles().data()) {
-                const auto distSquared = d2(entry.position(), data.pos(p_j));
+                const auto distSquared = d2(entry.pos, data.pos(p_j));
                 if (distSquared < _max_cutoff_skin_squared) {
                     neighbors.push_back(p_j);
                 }
@@ -130,19 +149,43 @@ void CellDecompositionNeighborList::fill_cell_verlet_list(const CellContainer::s
     }
 }
 
-void CellDecompositionNeighborList::clear() {
+void CellDecompositionNeighborList::clear(const util::PerformanceNode &node) {
+    auto t = node.timeit();
     if (_max_cutoff > 0) {
         _cell_container.clear();
-        for (auto &neighbors : _data.get().neighbors) {
+        for (auto &neighbors : _data.neighbors()) {
             neighbors.clear();
         }
     }
 }
 
-void CellDecompositionNeighborList::updateData(model::CPUParticleData::update_t &&update) {
-    _data.get().update(std::forward<model::CPUParticleData::update_t>(update));
+void CellDecompositionNeighborList::updateData(DataUpdate &&update) {
+    _data.update(std::forward<DataUpdate>(update));
 }
 
+bool CellDecompositionNeighborList::is_adaptive() const {
+    return false;
+}
+
+NeighborList::const_iterator CellDecompositionNeighborList::cbegin() const {
+    return NeighborListIterator{_data.neighbors().begin(), _data.neighbors().end(), true};
+}
+
+NeighborList::const_iterator CellDecompositionNeighborList::cend() const {
+    return NeighborListIterator{_data.neighbors().end(), _data.neighbors().end(), true};
+}
+
+const data::EntryDataContainer *CellDecompositionNeighborList::data() const {
+    return &_data;
+}
+
+data::EntryDataContainer *CellDecompositionNeighborList::data() {
+    return &_data;
+}
+
+size_t CellDecompositionNeighborList::size() const {
+    return _data.neighbors().size();
+}
 
 }
 }

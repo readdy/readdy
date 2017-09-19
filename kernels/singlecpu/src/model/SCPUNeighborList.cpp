@@ -37,6 +37,7 @@ namespace scpu {
 namespace model {
 
 void SCPUNaiveNeighborList::create(const SCPUParticleData &data, scalar /*skin*/) {
+    _skin = 0;
     pairs->clear();
     for (size_t i = 0; i < data.size(); ++i) {
         for (size_t j = i + 1; j < data.size(); ++j) {
