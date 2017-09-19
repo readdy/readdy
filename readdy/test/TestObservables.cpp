@@ -81,7 +81,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     kernel->getKernelContext().particle_types().add("B", 1337., 1.);
     const auto typeIdA = kernel->getKernelContext().particle_types().id_of("A");
     const auto typeIdB = kernel->getKernelContext().particle_types().id_of("B");
-    const unsigned int n_particles = 50; // There will be 55 Bs
+    const unsigned int n_particles = 2; // There will be 55 Bs
     const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, typeIdA));
     const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0, 0, 0, typeIdB));
     kernel->getKernelStateModel().addParticles(particlesA);
@@ -101,9 +101,9 @@ TEST_P(TestObservables, TestForcesObservable) {
         const auto &resA = obsA->getResult();
         const auto &resB = obsB->getResult();
         const auto &resBoth = obsBoth->getResult();
-        EXPECT_EQ(resA.size(), 50);
-        EXPECT_EQ(resB.size(), 55);
-        EXPECT_EQ(resBoth.size(), 105);
+        EXPECT_EQ(resA.size(), n_particles);
+        EXPECT_EQ(resB.size(), n_particles+5);
+        EXPECT_EQ(resBoth.size(), n_particles + n_particles + 5);
         readdy::Vec3 zero = readdy::Vec3(0, 0, 0);
         for (auto force : resBoth) {
             EXPECT_TRUE(force == zero);
@@ -123,6 +123,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     auto &&nl = kernel->createAction<update_nl>();
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     kernel->getKernelContext().configure();
+    kernel->initialize();
     {
         auto obsC = kernel->createObservable<m::observables::Forces>(1, std::vector<std::string>{"C"});
         auto connectionC = kernel->connectObservable(obsC.get());
@@ -138,7 +139,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     }
 }
 
-INSTANTIATE_TEST_CASE_P(TestObservables, TestObservables,
+INSTANTIATE_TEST_CASE_P(TestObservablesKernel, TestObservables,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 }
 

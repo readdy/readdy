@@ -76,7 +76,9 @@ void ContiguousCLLNeighborListContainer::update(scalar cutoffSquared, const util
     const auto &context = _config.context.get();
     const auto &d2 = context.distSquaredFun();
 
-    auto worker = [this, cix, &data, &cll, &d2, cutoffSquared](std::size_t tid, std::size_t begin, std::size_t end) {
+    std::atomic<std::size_t> counter {0};
+
+    auto worker = [this, &counter, cix, &data, &cll, &d2, cutoffSquared](std::size_t tid, std::size_t begin, std::size_t end) {
         auto &neighbors = _elements.at(tid);
 
         for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
@@ -88,6 +90,8 @@ void ContiguousCLLNeighborListContainer::update(scalar cutoffSquared, const util
                 const auto &entry = data.entry_at(pidx);
 
                 if(!entry.deactivated) {
+
+                    ++counter;
 
                     neighbors.push_back(pidx);
 
@@ -127,16 +131,19 @@ void ContiguousCLLNeighborListContainer::update(scalar cutoffSquared, const util
             }
         }
     };
-    const auto &executor = *_config.threads.get().executor();
-    std::vector<std::function<void(std::size_t)>> executables;
-    executables.reserve(_config.threads.get().nThreads());
-    auto it = 0_z;
-    for (int i = 0; i < _config.threads.get().nThreads() - 1; ++i) {
-        executables.push_back(executor.pack(worker, it, it + grainSize));
-        it += grainSize;
+    {
+        const auto &executor = *_config.threads.get().executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(_config.threads.get().nThreads());
+        auto it = 0_z;
+        for (int i = 0; i < _config.threads.get().nThreads() - 1; ++i) {
+            executables.push_back(executor.pack(worker, it, it + grainSize));
+            it += grainSize;
+        }
+        executables.push_back(executor.pack(worker, it, cix.size()));
+        executor.execute_and_wait(std::move(executables));
     }
-    executables.push_back(executor.pack(worker, it, cix.size()));
-    executor.execute_and_wait(std::move(executables));
+    _size = counter.load();
 }
 
 
@@ -149,6 +156,10 @@ NLContainerConfig::NLContainerConfig(const model::KernelContext &context,
 ContiguousCLLNeighborListContainer::ContiguousCLLNeighborListContainer(NLContainerConfig config,
                                                                        const ContiguousCellLinkedList &cll)
         : NeighborListContainer(config), _cll(cll) {}
+
+std::size_t ContiguousCLLNeighborListContainer::size() const {
+    return _size;
+}
 
 DynamicCLLNeighborListContainer::DynamicCLLNeighborListContainer(NLContainerConfig config,
                                                                  const DynamicCellLinkedList &cll)
@@ -168,11 +179,12 @@ void DynamicCLLNeighborListContainer::update(scalar cutoffSquared, const util::P
     auto cix = _cll.cellIndex();
     const auto &d2 = _config.context.get().distSquaredFun();
 
+    std::atomic<std::size_t> counter {0};
 
     const auto grainSize = cix.size() / _config.threads.get().nThreads();
     const auto &data = _config.data.get();
     const auto &dcll = _cll;
-    auto worker = [this, cix, &dcll, &d2, &data, cutoffSquared](std::size_t tid, std::size_t begin, std::size_t end) {
+    auto worker = [this, cix, &counter, &dcll, &d2, &data, cutoffSquared](std::size_t tid, std::size_t begin, std::size_t end) {
 
         auto &neighbors = _elements.at(tid);
         for (std::size_t cellIndex = begin; cellIndex < end; ++cellIndex) {
@@ -181,6 +193,7 @@ void DynamicCLLNeighborListContainer::update(scalar cutoffSquared, const util::P
                 auto pidx = *itParticles;
                 auto &entry = data.entry_at(pidx);
                 if(!entry.deactivated) {
+                    ++counter;
                     neighbors.push_back(pidx);
                     auto n_neighbors_index = neighbors.size();
                     neighbors.push_back(0_z);
@@ -220,16 +233,23 @@ void DynamicCLLNeighborListContainer::update(scalar cutoffSquared, const util::P
             }
         }
     };
-    const auto &executor = *_config.threads.get().executor();
-    std::vector<std::function<void(std::size_t)>> executables;
-    executables.reserve(_config.threads.get().nThreads());
-    auto it = 0_z;
-    for (int i = 0; i < _config.threads.get().nThreads() - 1; ++i) {
-        executables.push_back(executor.pack(worker, it, it + grainSize));
-        it += grainSize;
+    {
+        const auto &executor = *_config.threads.get().executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(_config.threads.get().nThreads());
+        auto it = 0_z;
+        for (int i = 0; i < _config.threads.get().nThreads() - 1; ++i) {
+            executables.push_back(executor.pack(worker, it, it + grainSize));
+            it += grainSize;
+        }
+        executables.push_back(executor.pack(worker, it, cix.size()));
+        executor.execute_and_wait(std::move(executables));
     }
-    executables.push_back(executor.pack(worker, it, cix.size()));
-    executor.execute_and_wait(std::move(executables));
+    _size = counter.load();
+}
+
+std::size_t DynamicCLLNeighborListContainer::size() const {
+    return _size;
 }
 
 
@@ -337,8 +357,10 @@ void CompactCLLNeighborListContainer::updateParallel(scalar cutoffSquared, const
     const auto &data = _config.data.get();
     const auto &ccll = _cll;
 
+    std::atomic<std::size_t> counter {0};
+
     const auto grainSize = cix.size() / _config.threads.get().nThreads();
-    auto worker = [this, cix, &d2, &data, &ccll, cutoffSquared](std::size_t tid, std::size_t begin, std::size_t end) {
+    auto worker = [this, cix, &counter, &d2, &data, &ccll, cutoffSquared](std::size_t tid, std::size_t begin, std::size_t end) {
         const auto &head = ccll.head();
         const auto &list = ccll.list();
 
@@ -350,6 +372,7 @@ void CompactCLLNeighborListContainer::updateParallel(scalar cutoffSquared, const
                 auto pidx = pptr - 1;
                 const auto &entry = data.entry_at(pidx);
                 if(!entry.deactivated) {
+                    ++counter;
                     neighbors.push_back(pidx);
                     auto n_neighbors_index = neighbors.size();
                     neighbors.push_back(0_z);
@@ -398,16 +421,23 @@ void CompactCLLNeighborListContainer::updateParallel(scalar cutoffSquared, const
             }
         }
     };
-    const auto &executor = *_config.threads.get().executor();
-    std::vector<std::function<void(std::size_t)>> executables;
-    executables.reserve(_config.threads.get().nThreads());
-    auto it = 0_z;
-    for (int i = 0; i < _config.threads.get().nThreads() - 1; ++i) {
-        executables.push_back(executor.pack(worker, it, it + grainSize));
-        it += grainSize;
+    {
+        const auto &executor = *_config.threads.get().executor();
+        std::vector<std::function<void(std::size_t)>> executables;
+        executables.reserve(_config.threads.get().nThreads());
+        auto it = 0_z;
+        for (int i = 0; i < _config.threads.get().nThreads() - 1; ++i) {
+            executables.push_back(executor.pack(worker, it, it + grainSize));
+            it += grainSize;
+        }
+        executables.push_back(executor.pack(worker, it, cix.size()));
+        executor.execute_and_wait(std::move(executables));
     }
-    executables.push_back(executor.pack(worker, it, cix.size()));
-    executor.execute_and_wait(std::move(executables));
+    _size = counter.load();
+}
+
+std::size_t CompactCLLNeighborListContainer::size() const {
+    return _size;
 }
 
 

@@ -137,12 +137,12 @@ private:
     std::reference_wrapper<const readdy::util::thread::Config> _config;
     std::reference_wrapper<const readdy::model::KernelContext> _context;
     std::unique_ptr<neighbor_list> _neighborList;
-    scalar _currentEnergy = 0;
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
-    topologies_vec _topologies{};
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> _reactionCounts;
+    scalar _currentEnergy = 0;
+    topologies_vec _topologies{};
 };
 }
 }

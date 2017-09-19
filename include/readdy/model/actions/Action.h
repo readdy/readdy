@@ -60,7 +60,7 @@ public:
     virtual void perform(const util::PerformanceNode &node) = 0;
 
     void perform() {
-        static util::PerformanceNode dummy("dummy", false);
+        /*static */util::PerformanceNode dummy("dummy", false);
         this->perform(dummy);
     }
 

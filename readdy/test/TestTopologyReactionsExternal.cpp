@@ -61,7 +61,10 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     using namespace readdy;
     auto &ctx = kernel->getKernelContext();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
-    kernel->getKernelStateModel().addTopology(0, {x_0});
+    {
+        auto tid = kernel->getKernelContext().topology_registry().add_type("MyType");
+        kernel->getKernelStateModel().addTopology(tid, {x_0});
+    }
     kernel->getKernelStateModel().addParticle(
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("A"))
     );

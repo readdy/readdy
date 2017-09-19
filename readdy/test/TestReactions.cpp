@@ -113,10 +113,12 @@ TEST_P(TestReactions, FusionFissionWeights) {
      * Also during reactions, weights are chosen such that F does not move.
      * Idea: position F particles and remember their positions (ordered set), do ONE time-step and check if current positions are still the same.
      */
-    kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
-    kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
-    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
-    kernel->getKernelContext().boxSize() = {{20, 20, 20}};
+    auto &context = kernel->getKernelContext();
+    context.particle_types().add("A", 0.5, 1.0);
+    context.particle_types().add("F", 0.0, 1.0);
+    context.periodicBoundaryConditions() = {{true, true, true}};
+    context.boxSize() = {{20, 20, 20}};
+    context.configure(false);
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
@@ -127,8 +129,9 @@ TEST_P(TestReactions, FusionFissionWeights) {
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
     for (std::size_t i = 0; i < 15; ++i) {
         auto fPos = n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.8));
-        fPositions.emplace(fPos);
         kernel->addParticle("F", fPos);
+        // fPos
+        fPositions.emplace(kernel->getKernelStateModel().getParticles().back().getPos());
         kernel->addParticle("A", n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(1.)));
     }
 

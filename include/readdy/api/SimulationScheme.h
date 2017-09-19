@@ -236,7 +236,7 @@ public:
             scheme->neighborList = scheme->kernel
                     ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::update, skinSize);
             scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, -1);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, skinSize);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);
@@ -412,7 +412,7 @@ public:
             scheme->neighborList = scheme->kernel
                     ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::update, skinSize);
             scheme->clearNeighborList = scheme->kernel
-                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, -1);
+                    ->template createAction<update_neighbor_list>(update_neighbor_list::Operation::clear, skinSize);
         }
         if (scheme->integrator) scheme->integrator->setTimeStep(timeStep);
         if (scheme->reactionScheduler) scheme->reactionScheduler->setTimeStep(timeStep);

@@ -64,6 +64,8 @@ public:
 
     void clear(const util::PerformanceNode &node) override;
 
+    std::size_t size() const override;
+
     void clear_cells();
 
     const readdy::util::thread::Config& config() const;

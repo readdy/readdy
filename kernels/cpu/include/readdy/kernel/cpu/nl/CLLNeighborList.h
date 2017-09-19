@@ -69,6 +69,8 @@ public:
 
     data::EntryDataContainer *data() override;
 
+    std::size_t size() const override;
+
 private:
 
     std::uint8_t cll_radius;
@@ -106,6 +108,8 @@ public:
     const data::EntryDataContainer *data() const override;
 
     data::EntryDataContainer *data() override;
+
+    std::size_t size() const override;
 
 private:
     data::DefaultDataContainer _data;
@@ -146,6 +150,8 @@ public:
     const CompactCellLinkedList &cellLinkedList() const;
 
     CompactCellLinkedList &cellLinkedList();
+
+    std::size_t size() const override;
 
 private:
     std::uint8_t cll_radius;

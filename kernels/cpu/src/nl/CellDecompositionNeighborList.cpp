@@ -183,6 +183,10 @@ data::EntryDataContainer *CellDecompositionNeighborList::data() {
     return &_data;
 }
 
+size_t CellDecompositionNeighborList::size() const {
+    return _data.neighbors().size();
+}
+
 }
 }
 }

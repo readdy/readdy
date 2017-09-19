@@ -111,9 +111,7 @@ std::vector<DefaultDataContainer::size_type> DefaultDataContainer::update(DataUp
         removeEntry(*it_del);
         ++it_del;
     }
-
-    static thread_local std::vector<size_type> result;
-    return result;
+    return {};
 }
 
 void DefaultDataContainer::displace(size_type index, const Particle::pos_type &delta) {

@@ -75,6 +75,10 @@ public:
         return &_data;
     }
 
+    std::size_t size() const override {
+        return 0;
+    }
+
     data::EntryDataContainer *data() override {
         return &_data;
     }

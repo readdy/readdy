@@ -470,9 +470,6 @@ void CompactCellLinkedList::setUpBins(const util::PerformanceNode &node) {
     }
 }
 
-template void CompactCellLinkedList::fillBins<true>(const util::PerformanceNode&);
-template void CompactCellLinkedList::fillBins<false>(const util::PerformanceNode&);
-
 const CompactCellLinkedList::HEAD &CompactCellLinkedList::head() const {
     return _head;
 }

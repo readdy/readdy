@@ -296,6 +296,10 @@ const data::NLDataContainer &AdaptiveNeighborList::nlData() const {
     return _data;
 }
 
+size_t AdaptiveNeighborList::size() const {
+    return _data.neighbors().size();
+}
+
 }
 }
 }

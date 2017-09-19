@@ -43,5 +43,6 @@ int main(int argc, char **argv) {
     console->set_pattern("[          ] [%Y-%m-%d %H:%M:%S] [%t] [%l] %v");
     int result = perform_tests(argc, argv);
     spdlog::drop_all();
+    std::cout << "------ Finished core tests ------" << std::endl;
     return result;
 }

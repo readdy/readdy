@@ -53,7 +53,7 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
         const auto &fixPos = context.fixPositionFun();
         const auto kbt = context.kBT();
         std::size_t idx = beginIdx;
-        for (auto it = entry_begin; it != entry_end; ++it, ++beginIdx) {
+        for (auto it = entry_begin; it != entry_end; ++it, ++idx) {
             if(!it->deactivated) {
                 const scalar D = context.particle_types().diffusion_constant_of(it->type);
                 const auto randomDisplacement = std::sqrt(2. * D * dt) * rnd::normal3<readdy::scalar>(0, 1);

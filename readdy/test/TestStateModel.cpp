@@ -123,29 +123,10 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     stateModel.addParticles(particlesA);
     stateModel.addParticles(particlesB);
     kernel->initialize();
-    {
-        const auto foo = stateModel.getParticles();
-        for(const auto& bar : foo) {
-            readdy::log::trace("got particle: {}", bar);
-        }
-    }
     stateModel.initializeNeighborList(0);
     stateModel.updateNeighborList();
-    {
-        const auto foo = stateModel.getParticles();
-        for(const auto& bar : foo) {
-            readdy::log::trace("-> got particle: {}", bar);
-        }
-    }
     calculateForces->perform();
-    {
-        {
-            const auto foo = stateModel.getParticles();
-            for(const auto& bar : foo) {
-                readdy::log::trace("--> got particle: {}", bar);
-            }
-        }
-    }
+
     // by hand calculated expectations
     const readdy::scalar energy03 = 4.205;
     const readdy::scalar energy05 = 3.125;
@@ -159,6 +140,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     const readdy::Vec3 force15(-1.08999682000954, 1.743994912015264, 0);
     const readdy::Vec3 force23(1.4641005886756873, 0, -2.1961508830135306);
     const readdy::Vec3 force25(-2.1961508830135306, 0, -1.4641005886756873);
+
     // check results
     obs->evaluate();
     const auto particles = stateModel.getParticles();

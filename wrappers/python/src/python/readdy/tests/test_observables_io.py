@@ -366,7 +366,7 @@ class TestObservablesIO(ReaDDyTestCase):
         handle = sim.register_observable_reaction_counts(1)
         with closing(io.File.create(fname)) as f:
             handle.enable_write_to_file(f, u"reactions", int(3))
-            sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("GillespieParallel").configure_and_run(n_timesteps, 1)
+            sim.run_scheme_readdy(True).write_config_to_file(f).with_reaction_scheduler("Gillespie").configure_and_run(n_timesteps, 1)
 
         with h5py.File(fname, "r") as f2:
             data = f2["readdy/observables/reactions"]

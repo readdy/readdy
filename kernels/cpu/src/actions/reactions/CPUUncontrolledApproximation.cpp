@@ -120,8 +120,8 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     const auto &ctx = kernel->getKernelContext();
     const auto &fixPos = ctx.fixPositionFun();
     auto &stateModel = kernel->getCPUKernelStateModel();
-    auto &data = *stateModel.getParticleData();
-    auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
+    auto nl = stateModel.getNeighborList();
+    auto data = nl->data();
 
     if (ctx.recordReactionsWithPositions()) {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
@@ -142,10 +142,10 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         std::vector<std::function<void(std::size_t)>> executables;
         executables.reserve(kernel->getNThreads());
 
-        const std::size_t grainSize = data.size() / kernel->getNThreads();
+        const std::size_t grainSize = data->size() / kernel->getNThreads();
 
-        auto it = data.cbegin();
-        auto it_nl = nl.cbegin();
+        auto it = data->cbegin();
+        auto it_nl = nl->cbegin();
         for (unsigned int i = 0; i < kernel->getNThreads() - 1; ++i) {
             eventFutures.push_back(promises.at(i).get_future());
             n_eventsFutures.push_back(n_events_promises.at(i).get_future());
@@ -162,7 +162,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             n_eventsFutures.push_back(n_events.get_future());
 
 
-            executables.push_back(executor.pack(findEvents, it, data.cend(), it_nl, nl.cend(), kernel, timeStep, true,
+            executables.push_back(executor.pack(findEvents, it, data->cend(), it_nl, nl->cend(), kernel, timeStep, true,
                                                 std::ref(eventPromise), std::ref(n_events)));
         }
         executor.execute_and_wait(std::move(executables));
@@ -242,7 +242,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             }
         }
 
-        nl.updateData(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
+        nl->updateData(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
     }
 }
 }

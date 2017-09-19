@@ -70,6 +70,7 @@ public:
                 std::vector<std::promise<scalar>> promises(config.nThreads());
                 {
                     const std::size_t grainSize = data->size() / config.nThreads();
+                    const std::size_t grainSizeNeighborList = neighborList->size() / config.nThreads();
                     const std::size_t grainSizeTopologies = topologies.size() / config.nThreads();
                     auto it_data = data->begin();
                     auto it_data_end = data->end();
@@ -87,7 +88,7 @@ public:
                         //energyFutures.push_back(promises[i].get_future());
                         //ForcesThreadArgs args (, std::cref(barrier));
                         auto dataBounds = std::make_tuple(it_data, it_data + grainSize);
-                        auto nlBounds = std::make_tuple(it_nl, it_nl + grainSize);
+                        auto nlBounds = std::make_tuple(it_nl, it_nl + grainSizeNeighborList);
                         auto topBounds = std::make_tuple(it_tops, it_tops + grainSizeTopologies);
                         executables.push_back(executor.pack(calculate, dataBounds, nlBounds, topBounds,
                                                             std::ref(promises.at(i)), data, taf, std::cref(context),
@@ -115,25 +116,6 @@ public:
                 }
             }
         }
-
-        /*for (auto t_it = topologies.cbegin(); t_it != topologies.cend(); ++t_it) {
-            const auto &top = **t_it;
-            if (!top.isDeactivated()) {
-                for (const auto &bondedPot : top.getBondedPotentials()) {
-                    auto action = bondedPot->createForceAndEnergyAction(kernel->getTopologyActionFactory());
-                    auto energy = action->perform(&top);
-                    stateModel.energy() += energy;
-                }
-                for (const auto &anglePot : top.getAnglePotentials()) {
-                    auto energy = anglePot->createForceAndEnergyAction(kernel->getTopologyActionFactory())->perform(&top);
-                    stateModel.energy() += energy;
-                }
-                for (const auto &torsionPot : top.getTorsionPotentials()) {
-                    auto energy = torsionPot->createForceAndEnergyAction(kernel->getTopologyActionFactory())->perform(&top);
-                    stateModel.energy() += energy;
-                }
-            }
-        }*/
     }
 
 protected:
@@ -194,9 +176,10 @@ protected:
                                     auto distSquared = x_ij * x_ij;
                                     for (const auto &potential : potit->second) {
                                         if (distSquared < potential->getCutoffRadiusSquared()) {
-                                            Vec3 updateVec{0, 0, 0};
-                                            potential->calculateForceAndEnergy(updateVec, mySecondOrderEnergy, x_ij);
-                                            force += updateVec;
+                                            Vec3 forceUpdate {0, 0, 0};
+                                            potential->calculateForceAndEnergy(forceUpdate, mySecondOrderEnergy, x_ij);
+                                            force += forceUpdate;
+                                            // log::warn("applying 2nd order potential to particles {} and {} of types {} and {} with resulting force {}", it->current_particle(), nidx, entry.type, neighborEntry.type, forceUpdate);
                                         }
                                     }
                                 }
@@ -206,8 +189,6 @@ protected:
                     // The contribution of second order potentials must be halved since we parallelize over particles.
                     // Thus every particle pair potential is seen twice
                     energyUpdate += 0.5 * mySecondOrderEnergy;
-
-                    entry.force += force;
                 }
             }
         }

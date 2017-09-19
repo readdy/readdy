@@ -74,11 +74,11 @@ data_t::DataUpdate handleEventsGillespie(
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
-                  const data_t &data, readdy::scalar &alpha, std::vector<event_t> &events,
+                  const data_t *data, readdy::scalar &alpha, std::vector<event_t> &events,
                   const readdy::model::KernelContext::dist_squared_fun& d2) {
     const auto& reaction_registry = kernel->getKernelContext().reactions();
     for (const auto index : particles) {
-        auto &entry = data.entry_at(index);
+        const auto &entry = data->entry_at(index);
         // this being false should really not happen, though
         if (!entry.deactivated) {
             // order 1
@@ -95,18 +95,16 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                     }
                 }
             }
-
-            if (!reaction_registry.is_reaction_order2_type(entry.type)) continue;
         }
     }
     // order 2
-    for (auto it = nl->begin(); it != nl->end(); ++it) {
-        auto index = it->current_particle();
-        const auto &entry = data.entry_at(index);
+    for (auto it : *nl) {
+        auto index = it.current_particle();
+        const auto &entry = data->entry_at(index);
         if(!entry.deactivated) {
-            for (auto idx_neighbor : *it) {
+            for (auto idx_neighbor : it) {
                 if (index > idx_neighbor) continue;
-                const auto &neighbor = data.entry_at(idx_neighbor);
+                const auto &neighbor = data->entry_at(idx_neighbor);
                 if (!neighbor.deactivated) {
                     const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
                                                                                                   neighbor.type);
@@ -129,19 +127,17 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                     log::critical("deactivated entry in neighbor list!");
                 }
             }
-        } else {
-            log::warn("nööööö");
         }
     }
 }
 
 template<typename Reaction>
-void performReaction(data_t& data, const readdy::model::KernelContext& context, data_t::size_type idx1, data_t::size_type idx2,
+void performReaction(data_t* data, const readdy::model::KernelContext& context, data_t::size_type idx1, data_t::size_type idx2,
                      data_t::EntriesUpdate& newEntries, std::vector<data_t::size_type>& decayedEntries,
                      Reaction* reaction, record_t* record) {
     const auto& pbc = context.applyPBCFun();
-    auto& entry1 = data.entry_at(idx1);
-    auto& entry2 = data.entry_at(idx2);
+    auto& entry1 = data->entry_at(idx1);
+    auto& entry2 = data->entry_at(idx2);
     if(record) {
         record->type = static_cast<int>(reaction->getType());
         record->where = (entry1.pos + entry2.pos) / 2.;
@@ -187,7 +183,7 @@ void performReaction(data_t& data, const readdy::model::KernelContext& context, 
 
             entry1.type = reaction->getProducts()[0];
             entry1.id = readdy::model::Particle::nextId();
-            data.displace(idx1, reaction->getWeight1() * reaction->getProductDistance() * n3);
+            data->displace(idx1, reaction->getWeight1() * reaction->getProductDistance() * n3);
             if(record) {
                 record->products[0] = entry1.id;
                 record->products[1] = id;

@@ -64,6 +64,8 @@ public:
 
     void fill_container();
 
+    std::size_t size() const override;
+
     void fill_verlet_list();
 
     void fill_cell_verlet_list(const CellContainer::sub_cell &sub_cell);

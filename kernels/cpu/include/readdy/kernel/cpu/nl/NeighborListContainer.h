@@ -82,14 +82,14 @@ public:
 
     virtual void update(scalar cutoffSquared, const util::PerformanceNode &perf) = 0;
 
+    virtual std::size_t size() const = 0;
+
 protected:
     index_vector _elements;
     // todo: offsets array filled if "indexed==true"
     indexer _indexer;
 
     NLContainerConfig _config;
-
-
 };
 
 class ContiguousCLLNeighborListContainer : public NeighborListContainer {
@@ -98,8 +98,12 @@ public:
 
     void update(scalar cutoffSquared, const util::PerformanceNode &perf) override;
 
+    std::size_t size() const override;
+
 private:
     const ContiguousCellLinkedList &_cll;
+
+    std::size_t _size {0};
 };
 
 class DynamicCLLNeighborListContainer : public NeighborListContainer {
@@ -108,8 +112,12 @@ public:
 
     void update(scalar cutoffSquared, const util::PerformanceNode &perf) override;
 
+    std::size_t size() const override;
+
 private:
     const DynamicCellLinkedList &_cll;
+
+    std::size_t _size {0};
 };
 
 class CompactCLLNeighborListContainer : public NeighborListContainer {
@@ -122,7 +130,10 @@ public:
 
     void updateParallel(scalar cutoffSquared, const util::PerformanceNode &perf);
 
+    std::size_t size() const override;
+
 private:
+    std::size_t _size {0};
     bool serialUpdate {false};
     const CompactCellLinkedList &_cll;
 };

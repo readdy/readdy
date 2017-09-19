@@ -57,7 +57,7 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
 
     scalar alpha = 0.0;
     std::vector<event_t> events;
-    gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, *data, alpha, events, dist);
+    gatherEvents(kernel, readdy::util::range<event_t::index_type>(0, data->size()), nl, data, alpha, events, dist);
     if(ctx.recordReactionsWithPositions()) {
         stateModel.reactionRecords().clear();
         if(ctx.recordReactionCounts()) {

@@ -108,6 +108,10 @@ data::EntryDataContainer *ContiguousCLLNeighborList::data() {
     return &_data;
 }
 
+std::size_t ContiguousCLLNeighborList::size() const {
+    return ccllContainer.size();
+}
+
 DynamicCLLNeighborList::DynamicCLLNeighborList(data::EntryDataContainer *data,
                                                const readdy::model::KernelContext &context,
                                                const readdy::util::thread::Config &config)
@@ -177,6 +181,10 @@ const data::EntryDataContainer *DynamicCLLNeighborList::data() const {
 
 data::EntryDataContainer *DynamicCLLNeighborList::data() {
     return &_data;
+}
+
+std::size_t DynamicCLLNeighborList::size() const {
+    return dcllContainer.size();
 }
 
 CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, const readdy::model::KernelContext &context,
@@ -255,6 +263,10 @@ const CompactCellLinkedList &CompactCLLNeighborList::cellLinkedList() const {
 
 CompactCellLinkedList &CompactCLLNeighborList::cellLinkedList() {
     return ccll;
+}
+
+std::size_t CompactCLLNeighborList::size() const {
+    return ccllContainer.size();
 }
 
 }
