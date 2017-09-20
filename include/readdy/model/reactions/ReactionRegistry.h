@@ -97,7 +97,7 @@ public:
 
     bool is_reaction_order2_type(particle_type_type type) const;
 
-    reaction_id add(const std::string &descriptor);
+    reaction_id add(const std::string &descriptor, scalar rate);
 
     reaction_id addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate);
 

@@ -264,8 +264,8 @@ ReactionRegistry::addFusion(const std::string &name, particle_type_type from1, p
     return id;
 }
 
-ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descriptor) {
-     // todo
+ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descriptor, scalar rate) {
+    // todo
     return 0;
 }
 
