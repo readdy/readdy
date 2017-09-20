@@ -245,8 +245,7 @@ const short
 Simulation::registerConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                        const scalar rate) {
     ensureKernelSelected();
-    auto reaction = pimpl->kernel->createConversionReaction(name, from, to, rate);
-    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().addConversion(name, from, to, rate);
 }
 
 const short
@@ -254,8 +253,7 @@ Simulation::registerEnzymaticReaction(const std::string &name, const std::string
                                       const std::string &to, const scalar rate,
                                       const scalar eductDistance) {
     ensureKernelSelected();
-    auto reaction = pimpl->kernel->createEnzymaticReaction(name, catalyst, from, to, rate, eductDistance);
-    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().addEnzymatic(name, catalyst, from, to, rate, eductDistance);
 }
 
 const short
@@ -264,8 +262,8 @@ Simulation::registerFissionReaction(const std::string &name, const std::string &
                                     const scalar rate, const scalar productDistance, const scalar weight1,
                                     const scalar weight2) {
     ensureKernelSelected();
-    auto reaction = pimpl->kernel->createFissionReaction(name, from, to1, to2, rate, productDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().addFission(name, from, to1, to2, rate, productDistance,
+                                                                    weight1, weight2);
 }
 
 const short
@@ -273,15 +271,14 @@ Simulation::registerFusionReaction(const std::string &name, const std::string &f
                                    const std::string &to, const scalar rate,
                                    const scalar eductDistance, const scalar weight1, const scalar weight2) {
     ensureKernelSelected();
-    auto reaction = pimpl->kernel->createFusionReaction(name, from1, from2, to, rate, eductDistance, weight1, weight2);
-    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().addFusion(name, from1, from2, to, rate, eductDistance,
+                                                                   weight1, weight2);
 }
 
 const short
 Simulation::registerDecayReaction(const std::string &name, const std::string &particleType, const scalar rate) {
     ensureKernelSelected();
-    auto reaction = pimpl->kernel->createDecayReaction(name, particleType, rate);
-    return pimpl->kernel->getKernelContext().reactions().add(std::move(reaction));
+    return pimpl->kernel->getKernelContext().reactions().addDecay(name, particleType, rate);
 }
 
 std::vector<Vec3> Simulation::getParticlePositions(std::string type) {

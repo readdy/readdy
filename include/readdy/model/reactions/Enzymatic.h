@@ -47,15 +47,15 @@ public:
     }
 
 
-    const unsigned int getCatalyst() const {
+    const particle_type_type getCatalyst() const {
         return educts[1];
     }
 
-    const unsigned int getFrom() const {
+    const particle_type_type getFrom() const {
         return educts[0];
     }
 
-    const unsigned int getTo() const {
+    const particle_type_type getTo() const {
         return products[0];
     }
 

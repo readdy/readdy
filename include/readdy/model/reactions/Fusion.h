@@ -57,15 +57,15 @@ public:
         }
     }
 
-    const unsigned int getFrom1() const {
+    const particle_type_type getFrom1() const {
         return educts[0];
     }
 
-    const unsigned int getFrom2() const {
+    const particle_type_type getFrom2() const {
         return educts[1];
     }
 
-    const unsigned int getTo() const {
+    const particle_type_type getTo() const {
         return products[0];
     }
 

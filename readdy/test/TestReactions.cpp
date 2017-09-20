@@ -43,7 +43,7 @@ struct TestReactions : KernelTest {
 TEST_P(TestReactions, TestReactionFactory) {
     kernel->getKernelContext().particle_types().add("B", 2.0, 1.0);
     kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
-    kernel->registerReaction<readdy::model::reactions::Conversion>("A to B", "A", "B", 0.55);
+    kernel->getKernelContext().reactions().addConversion("A to B", "A", "B", 0.55);
 
     {
         // sanity check of operator<< for reactions
@@ -67,8 +67,8 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     kernel->getKernelContext().particle_types().add("AB", 0.0, 1.0);
     kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
     kernel->getKernelContext().boxSize() = {{5, 5, 5}};
-    kernel->registerReaction<readdy::model::reactions::Fusion>("Form complex", "A", "B", "AB", .5, 1.0);
-    kernel->registerReaction<readdy::model::reactions::Fission>("Dissolve", "AB", "A", "B", .5, 1.0);
+    kernel->getKernelContext().reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
+    kernel->getKernelContext().reactions().addFission("Dissolve", "AB", "A", "B", .5, 1.0);
 
     unsigned long n_A = 50;
     unsigned long n_B = n_A;
@@ -122,8 +122,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
-    kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
-    kernel->registerReaction<readdy::model::reactions::Fission>("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
+    kernel->getKernelContext().reactions().addFusion("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
+    kernel->getKernelContext().reactions().addFission("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
     std::set<readdy::Vec3, Vec3ProjectedLess> fPositions;
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;

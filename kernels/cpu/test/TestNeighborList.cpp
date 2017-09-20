@@ -59,7 +59,7 @@ struct TestNeighborList : ::testing::Test {
         auto &ctx = kernel->getKernelContext();
         ctx.particle_types().add("A", 1., 1.);
         readdy::scalar eductDistance = 1.2;
-        ctx.reactions().add(kernel->createFusionReaction("test", "A", "A", "A", 0., eductDistance));
+        ctx.reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
 
         ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
         typeIdA = ctx.particle_types().id_of("A");
@@ -420,7 +420,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
     context.particle_types().add("A", 1.0, 1.0);
-    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .5);
+    context.reactions().addFusion("test", "A", "A", "A", .1, .5);
 
     context.configure();
 
@@ -531,7 +531,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
                                   static_cast<readdy::scalar>(model::rnd::uniform_real(-.5, .5)),
                                   static_cast<readdy::scalar>(model::rnd::uniform_real(-.5, .5))});
     }
-    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "A", "A", "A", .1, .1);
+    context.reactions().addFusion("test", "A", "A", "A", .1, .1);
     context.configure(false);
     const auto &d2 = context.distSquaredFun();
     auto data = kernel->getCPUKernelStateModel().getParticleData();
@@ -577,7 +577,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
                                   static_cast<readdy::scalar>(model::rnd::uniform_real(-14., 14.)),
                                   static_cast<readdy::scalar>(model::rnd::uniform_real(-14., 14.))});
     }
-    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", cutoff, cutoff);
+    context.reactions().addFusion("test", "V", "V", "V", cutoff, cutoff);
     context.configure(false);
     const auto &d2 = context.distSquaredFun();
     auto data = kernel->getCPUKernelStateModel().getParticleData();
@@ -650,9 +650,9 @@ TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     conf.cpu.neighborList.type = GetParam();
     kernel->getKernelContext().kernelConfiguration() = conf;
 
-    const readdy::scalar weightF = static_cast<readdy::scalar>(0.);
-    const readdy::scalar weightA = static_cast<readdy::scalar>(1.);
-    kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F", "A", "F", "F", .1, 2.0, weightF, weightA);
+    const auto weightF = static_cast<readdy::scalar>(0.);
+    const auto weightA = static_cast<readdy::scalar>(1.);
+    kernel->getKernelContext().reactions().addFusion("F+A->F", "A", "F", "F", .1, 2.0, weightF, weightA);
     //kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F2", "V", "V", "V", .1, 2.0, weightF, weightA);
 
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
@@ -692,7 +692,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
     scalar cutoff = 2.0;
 
     // just to have a cutoff
-    kernel->registerReaction<readdy::model::reactions::Fusion>("test", "V", "V", "V", .1, cutoff);
+    context.reactions().addFusion("test", "V", "V", "V", .1, cutoff);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{100, 10, 10}};
 

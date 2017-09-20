@@ -44,8 +44,8 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     kernel->getKernelContext().particle_types().add("X", .25, 1.);
-    kernel->registerReaction<death_t>("X decay", "X", 1);
-    kernel->registerReaction<fission_t>("X fission", "X", "X", "X", .5, .3);
+    kernel->getKernelContext().reactions().addDecay("X decay", "X", 1);
+    kernel->getKernelContext().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
     readdy::scalar timeStep = 1.0;
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
@@ -125,11 +125,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     kernel->getKernelContext().particle_types().add("D", .25, 1.);
     kernel->getKernelContext().particle_types().add("E", .25, 1.);
 
-    kernel->registerReaction<death_t>("A decay", "A", 1);
-    kernel->registerReaction<fusion_t>("B+C->E", "B", "C", "E", 1, 17);
-    kernel->registerReaction<fusion_t>("B+D->A", "B", "D", "A", 1, 17);
-    kernel->registerReaction<conversion_t>("E->A", "E", "A", 1);
-    kernel->registerReaction<conversion_t>("C->D", "C", "D", 1);
+    kernel->getKernelContext().reactions().addDecay("A decay", "A", 1);
+    kernel->getKernelContext().reactions().addFusion("B+C->E", "B", "C", "E", 1, 17);
+    kernel->getKernelContext().reactions().addFusion("B+D->A", "B", "D", "A", 1, 17);
+    kernel->getKernelContext().reactions().addConversion("E->A", "E", "A", 1);
+    kernel->getKernelContext().reactions().addConversion("C->D", "C", "D", 1);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();

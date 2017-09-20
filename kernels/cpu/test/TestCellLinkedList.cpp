@@ -45,7 +45,7 @@ TEST_P(TestCLLImpl, Insert) {
     context.particle_types().add("Test", 1., 1.);
     auto id = context.particle_types().id_of("Test");
     scalar cutoff = 1;
-    context.reactions().add(std::make_shared<model::reactions::Fusion>("Fusion", id, id, id, 1., cutoff));
+    context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
     context.boxSize()[2] = 10;
@@ -117,7 +117,7 @@ TEST_P(TestCLLImpl, InsertAndDeactivate) {
     context.particle_types().add("Test", 1., 1.);
     auto id = context.particle_types().id_of("Test");
     scalar cutoff = 1;
-    context.reactions().add(std::make_shared<model::reactions::Fusion>("Fusion", id, id, id, 1., cutoff));
+    context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
     context.boxSize()[2] = 10;
@@ -198,7 +198,7 @@ TEST_P(TestCLLImpl, Diffuse) {
     context.particle_types().add("Test", 1., 1.);
     auto id = context.particle_types().id_of("Test");
     scalar cutoff = 1;
-    context.reactions().add(std::make_shared<model::reactions::Fusion>("Fusion", id, id, id, 1., cutoff));
+    context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
     context.boxSize()[1] = 10;
     context.boxSize()[2] = 10;

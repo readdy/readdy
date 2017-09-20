@@ -32,6 +32,7 @@ set(SOURCE_FILES
         api/ExportObservables.h
         api/ExportSchemeApi.h
         api/ExportTopologies.cpp
+        api/ExportKernelContext.cpp
         api/PyFunction.h
         api/PyPotential.h
         api/PyPotential.cpp

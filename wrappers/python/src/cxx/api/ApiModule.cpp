@@ -44,6 +44,8 @@ using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);
 
+void exportKernelContext(py::module &);
+
 void registerPotentialOrder2(sim &self, pot2 *potential) {
     self.registerPotentialOrder2(potential);
 }
@@ -67,6 +69,8 @@ void exportApi(py::module &api) {
 
     auto topologyModule = api.def_submodule("top");
     exportTopologies(topologyModule);
+
+    exportKernelContext(api);
 
     py::enum_<ParticleTypeFlavor>(api, "ParticleTypeFlavor")
             .value("NORMAL", ParticleTypeFlavor::NORMAL)

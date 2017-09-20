@@ -46,11 +46,11 @@ public:
         products = {typeTo};
     }
 
-    const unsigned int getTypeFrom() const {
+    const particle_type_type getTypeFrom() const {
         return educts[0];
     }
 
-    const unsigned int getTypeTo() const {
+    const particle_type_type getTypeTo() const {
         return products[0];
     }
 

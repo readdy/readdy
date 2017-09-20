@@ -44,7 +44,7 @@ public:
         educts[0] = typeFrom;
     }
 
-    const unsigned int getTypeFrom() const {
+    const particle_type_type getTypeFrom() const {
         return educts[0];
     }
 

@@ -42,8 +42,8 @@ TEST(CPUTestKernel, TestKernelLoad) {
     kernel->getKernelContext().boxSize() = {{10, 10, 10}};
     kernel->getKernelContext().particle_types().add("X", .55, 1.);
     kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
-    kernel->registerReaction<readdy::model::reactions::Decay>("X decay", "X", .5);
-    kernel->registerReaction<readdy::model::reactions::Fission>("X fission", "X", "X", "X", .00, .5);
+    kernel->getKernelContext().reactions().addDecay("X decay", "X", .5);
+    kernel->getKernelContext().reactions().addFission("X fission", "X", "X", "X", .00, .5);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();

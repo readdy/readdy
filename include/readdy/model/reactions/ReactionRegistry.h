@@ -59,6 +59,8 @@ public:
     using reaction_o1 = reactions_o1::value_type;
     using reaction_o2 = reactions_o2::value_type;
 
+    using reaction_id = short;
+
     explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
     ReactionRegistry(const ReactionRegistry &) = default;
@@ -95,36 +97,37 @@ public:
 
     bool is_reaction_order2_type(particle_type_type type) const;
 
-    template<typename R>
-    const short add(std::shared_ptr<R> r,
-                    typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type * = 0) {
-        log::trace("registering reaction {}", *r);
-        const auto id = r->getId();
-        const auto type = r->getEducts()[0];
-        if (one_educt_registry_internal.find(type) == one_educt_registry_internal.end()) {
-            one_educt_registry_internal.emplace(type, rea_ptr_vec1());
-        }
-        one_educt_registry_internal[type].push_back(std::move(r));
-        n_order1_ += 1;
-        return id;
-    }
+    reaction_id add(const std::string &descriptor);
 
-    template<typename R>
-    const short add(std::shared_ptr<R> r,
-                    typename std::enable_if<std::is_base_of<reactions::Reaction<2>, R>::value>::type * = 0) {
-        log::trace("registering reaction {}", *r);
-        const auto id = r->getId();
-        const auto t1 = r->getEducts()[0];
-        const auto t2 = r->getEducts()[1];
+    reaction_id addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate);
 
-        const auto pp = std::make_tuple(t1, t2);
-        if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
-            two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
-        }
-        two_educts_registry_internal[pp].push_back(std::move(r));
-        n_order2_ += 1;
-        return id;
-    }
+    reaction_id addConversion(const std::string &name, particle_type_type from, particle_type_type to, scalar rate);
+
+    reaction_id addEnzymatic(const std::string &name, const std::string &catalyst, const std::string &from,
+                             const std::string &to, scalar rate, scalar eductDistance);
+
+    reaction_id addEnzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from,
+                             particle_type_type to, scalar rate, scalar eductDistance);
+
+    reaction_id addFission(const std::string &name, const std::string &from, const std::string &to1,
+                           const std::string &to2, scalar rate, scalar productDistance,
+                           scalar weight1 = 0.5, scalar weight2 = 0.5);
+
+    reaction_id addFission(const std::string &name, particle_type_type from, particle_type_type to1,
+                           particle_type_type to2, scalar rate, scalar productDistance,
+                           scalar weight1 = 0.5, scalar weight2 = 0.5);
+
+    reaction_id addFusion(const std::string &name, const std::string &from1, const std::string &from2,
+                          const std::string &to, scalar rate, scalar eductDistance,
+                          scalar weight1 = 0.5, scalar weight2 = 0.5);
+
+    reaction_id addFusion(const std::string &name, particle_type_type from1, particle_type_type from2,
+                          particle_type_type to, scalar rate, scalar eductDistance,
+                          scalar weight1 = 0.5, scalar weight2 = 0.5);
+
+    reaction_id addDecay(const std::string &name, const std::string &type, scalar rate);
+
+    reaction_id addDecay(const std::string &name, particle_type_type type, scalar rate);
 
     const short add_external(reaction_o1 r);
 
@@ -138,10 +141,10 @@ private:
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
 
-    std::size_t n_order1_ {0};
-    std::size_t n_order2_ {0};
+    std::size_t _n_order1{0};
+    std::size_t _n_order2{0};
 
-    const ParticleTypeRegistry &typeRegistry;
+    std::reference_wrapper<const ParticleTypeRegistry> _types;
 
     reaction_o1_registry one_educt_registry{};
     reaction_o1_registry_internal one_educt_registry_internal{};
@@ -149,7 +152,7 @@ private:
     reaction_o2_registry two_educts_registry{};
     reaction_o2_registry_internal two_educts_registry_internal{};
     reaction_o2_registry_external two_educts_registry_external{};
-    reaction_o2_types _reaction_o2_types {};
+    reaction_o2_types _reaction_o2_types{};
 
     reactions_o1 defaultReactionsO1{};
     reactions_o2 defaultReactionsO2{};

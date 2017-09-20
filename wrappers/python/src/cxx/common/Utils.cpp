@@ -130,7 +130,7 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
 
     auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
 
-    auto particleInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
+    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
 
     // get particle types from config
     std::vector<readdy::model::ioutils::ParticleTypeInfo> types;

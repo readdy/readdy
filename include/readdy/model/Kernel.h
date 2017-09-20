@@ -169,35 +169,7 @@ public:
         return getObservableFactory().create(stride, std::forward<Args>(args)...);
     }
 
-    template<typename T, typename... Args>
-    const short registerReaction(Args &&... args) {
-        return getKernelContext().reactions().add(
-                detail::get_reaction_dispatcher<T, Args...>::impl(this, std::forward<Args>(args)...));
-    }
-
     bool supportsTopologies() const;
-
-    // todo registerConversion -> creates and register with context
-    std::shared_ptr<reactions::Reaction<1>>
-    createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
-                             scalar rate) const;
-
-    std::shared_ptr<reactions::Reaction<2>>
-    createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
-                            const std::string &to, scalar rate, scalar eductDistance) const;
-
-    std::shared_ptr<reactions::Reaction<1>>
-    createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
-                          const std::string &to2, scalar rate, scalar productDistance,
-                          scalar weight1 = 0.5, scalar weight2 = 0.5) const;
-
-    std::shared_ptr<reactions::Reaction<2>>
-    createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
-                         const std::string &to, scalar rate, scalar eductDistance,
-                         scalar weight1 = 0.5, scalar weight2 = 0.5) const;
-
-    std::shared_ptr<reactions::Reaction<1>>
-    createDecayReaction(const std::string &name, const std::string &type, scalar rate) const;
 
     /*
      * 
@@ -275,47 +247,6 @@ protected:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
 };
-namespace detail {
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Conversion, Args...> {
-    static std::shared_ptr<readdy::model::reactions::Reaction<1>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createConversionReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Enzymatic, Args...> {
-    static std::shared_ptr<readdy::model::reactions::Reaction<2>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createEnzymaticReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Fission, Args...> {
-    static std::shared_ptr<readdy::model::reactions::Reaction<1>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createFissionReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Fusion, Args...> {
-    static std::shared_ptr<readdy::model::reactions::Reaction<2>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createFusionReaction(std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-struct get_reaction_dispatcher<readdy::model::reactions::Decay, Args...> {
-    static std::shared_ptr<readdy::model::reactions::Reaction<1>>
-    impl(const readdy::model::Kernel *const self, Args &&... args) {
-        return self->createDecayReaction(std::forward<Args>(args)...);
-    }
-};
-}
 
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

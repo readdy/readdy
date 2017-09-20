@@ -39,7 +39,7 @@ TEST(TestParallelGillespie, Sanity) {
     readdy::kernel::cpu::CPUKernel kernel;
     kernel.getKernelContext().boxSize() = {{10, 10, 11}};
     kernel.getKernelContext().particle_types().add("A", 10.0, 1.);
-    kernel.registerReaction<readdy::model::reactions::Fusion>("Fusion", "A", "A", "A", 10, 1.0);
+    kernel.getKernelContext().reactions().addFusion("Fusion", "A", "A", "A", 10, 1.0);
     kernel.addParticle("A", {-5, .2, -5.5});
     kernel.addParticle("A", {-5, .2, 5.5});
     kernel.addParticle("A", {-5, .2, 0});
