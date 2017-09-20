@@ -193,13 +193,17 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 }
 
 TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
-    m::KernelContext ctx;
-    ctx.particle_types().add("A", 1., 1.);
-    ctx.particle_types().add("B", 1., 1.);
-    ctx.particle_types().add("C", 1., 1.);
+    const auto prepareCtx = [](m::KernelContext &ctx, const std::string& descriptor, readdy::scalar rate){
+        ctx.particle_types().add("A", 1., 1.);
+        ctx.particle_types().add("B", 1., 1.);
+        ctx.particle_types().add("C", 1., 1.);
+        ctx.reactions().add(descriptor, rate);
+        ctx.configure();
+    };
     {
+        m::KernelContext ctx;
         auto decay = "mydecay:A->";
-        ctx.reactions().add(decay, 2.);
+        prepareCtx(ctx, decay, 2.);
         const auto &r = ctx.reactions().order1_by_name("mydecay");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->getType(), m::reactions::ReactionType::Decay);
@@ -209,8 +213,9 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 2.);
     }
     {
+        m::KernelContext ctx;
         auto conversion = "myconv: A -> B";
-        ctx.reactions().add(conversion, 3.);
+        prepareCtx(ctx, conversion, 3.);
         const auto &r = ctx.reactions().order1_by_name("myconv");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->getType(), m::reactions::ReactionType::Conversion);
@@ -221,8 +226,9 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 3.);
     }
     {
+        m::KernelContext ctx;
         auto fusion = "myfus: B +(1.2) B -> C [0.5, 0.5]";
-        ctx.reactions().add(fusion, 4.);
+        prepareCtx(ctx, fusion, 4.);
         const auto &r = ctx.reactions().order2_by_name("myfus");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->getType(), m::reactions::ReactionType::Fusion);
@@ -237,8 +243,9 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 4.);
     }
     {
+        m::KernelContext ctx;
         auto fission = "myfiss: B -> C +(3.0) B [0.1, 0.9]";
-        ctx.reactions().add(fission, 5.);
+        prepareCtx(ctx, fission, 5.);
         const auto &r = ctx.reactions().order1_by_name("myfiss");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->getType(), m::reactions::ReactionType::Fission);
@@ -253,8 +260,9 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 5.);
     }
     {
+        m::KernelContext ctx;
         auto enzymatic = "myenz:A +(1.5) C -> B + C";
-        ctx.reactions().add(enzymatic, 6.);
+        prepareCtx(ctx, enzymatic, 6.);
         const auto &r = ctx.reactions().order2_by_name("myenz");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->getType(), m::reactions::ReactionType::Enzymatic);
