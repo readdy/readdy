@@ -44,6 +44,9 @@ constexpr inline std::array<const char*, 8> invalidCharacterSequences() {
     return {{"[", "]", "(", ")", "->", "--", ":", "+"}};
 };
 
+static constexpr const char arrow[] = "->";
+static constexpr const char bond[] = "--";
+
 void validateTypeName(const std::string &typeName);
 
 NAMESPACE_END(util)

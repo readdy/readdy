@@ -34,15 +34,16 @@
 
 #include <regex>
 #include <readdy/model/topologies/TopologyRegistry.h>
+#include <readdy/model/Utils.h>
 
 namespace readdy {
 namespace model {
 namespace top {
 namespace reactions {
 
-SpatialTopologyReaction::SpatialTopologyReaction(std::string name, util::particle_type_pair types,
+SpatialTopologyReaction::SpatialTopologyReaction(std::string name, readdy::util::particle_type_pair types,
                                                  topology_type_pair top_types,
-                                                 util::particle_type_pair types_to, topology_type_pair top_types_to,
+                                                 readdy::util::particle_type_pair types_to, topology_type_pair top_types_to,
                                                  scalar rate, scalar radius, STRMode mode)
         : _name(std::move(name)), _types(std::move(types)), _types_to(std::move(types_to)), _rate(rate),
           _radius(radius), _mode(mode), _top_types(std::move(top_types)), _top_types_to(std::move(top_types_to)) {}
@@ -67,7 +68,7 @@ const scalar SpatialTopologyReaction::radius() const {
     return _radius;
 }
 
-const util::particle_type_pair &SpatialTopologyReaction::types() const {
+const readdy::util::particle_type_pair &SpatialTopologyReaction::types() const {
     return _types;
 }
 
@@ -79,7 +80,7 @@ const particle_type_type SpatialTopologyReaction::type_to2() const {
     return std::get<1>(_types_to);
 }
 
-const util::particle_type_pair &SpatialTopologyReaction::types_to() const {
+const readdy::util::particle_type_pair &SpatialTopologyReaction::types_to() const {
     return _types_to;
 }
 
@@ -123,31 +124,30 @@ const STRMode &SpatialTopologyReaction::mode() const {
     return _mode;
 }
 
-constexpr const char STRParser::arrow[];
-constexpr const char STRParser::bond[];
-
 SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar rate, scalar radius) const {
+    namespace mutil = readdy::model::util;
+    namespace rutil = readdy::util;
     SpatialTopologyReaction reaction;
     reaction._rate = rate;
     reaction._radius = radius;
 
     log::trace("begin parsing \"{}\"", descriptor);
-    auto arrowPos = descriptor.find(arrow);
+    auto arrowPos = descriptor.find(mutil::arrow);
     if (arrowPos == descriptor.npos) {
         throw std::invalid_argument(fmt::format(
-                "the descriptor must contain an arrow (\"{}\") to indicate lhs and rhs.", arrow
+                "the descriptor must contain an arrow (\"{}\") to indicate lhs and rhs.", mutil::arrow
         ));
     }
-    if (descriptor.find(arrow, arrowPos + 1) != descriptor.npos) {
+    if (descriptor.find(mutil::arrow, arrowPos + 1) != descriptor.npos) {
         throw std::invalid_argument(fmt::format(
-                "the descriptor must not contain more than one arrow (\"{}\").", arrow
+                "the descriptor must not contain more than one arrow (\"{}\").", mutil::arrow
         ));
     }
     auto lhs = descriptor.substr(0, arrowPos);
-    auto rhs = descriptor.substr(arrowPos + std::strlen(arrow), descriptor.npos);
+    auto rhs = descriptor.substr(arrowPos + std::strlen(mutil::arrow), descriptor.npos);
 
-    util::str::trim(lhs);
-    util::str::trim(rhs);
+    rutil::str::trim(lhs);
+    rutil::str::trim(rhs);
 
     std::string name;
     {
@@ -155,8 +155,8 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
         if (colonPos == lhs.npos) {
             throw std::invalid_argument("The descriptor did not contain a colon ':' to specify the end of the name.");
         }
-        name = util::str::trim_copy(lhs.substr(0, colonPos));
-        lhs = util::str::trim_copy(lhs.substr(colonPos + 1, lhs.npos));
+        name = rutil::str::trim_copy(lhs.substr(0, colonPos));
+        lhs = rutil::str::trim_copy(lhs.substr(colonPos + 1, lhs.npos));
     }
     reaction._name = name;
 
@@ -166,15 +166,15 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
     static auto getTop = [](const std::string &s) {
         std::smatch topMatch;
         if (std::regex_search(s, topMatch, topologyTypeRegex)) {
-            return util::str::trim_copy(topMatch.str());
+            return rutil::str::trim_copy(topMatch.str());
         }
         throw std::invalid_argument(fmt::format("The term \"{}\" did not contain a topology type.", s));
     };
     static auto getParticleType = [](const std::string &s) {
         std::smatch ptMatch;
         if (std::regex_search(s, ptMatch, particleTypeRegex)) {
-            auto pt = util::str::trim_copy(ptMatch.str());
-            return util::str::trim_copy(pt.substr(1, pt.size() - 2));
+            auto pt = rutil::str::trim_copy(ptMatch.str());
+            return rutil::str::trim_copy(pt.substr(1, pt.size() - 2));
         }
         throw std::invalid_argument(fmt::format("The term \"{}\" did not contain a particle type.", s));
     };
@@ -188,8 +188,8 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
         if (plusPos == s.npos) {
             throw std::invalid_argument("The left hand side of the topology reaction did not contain a '+'.");
         }
-        auto educt1 = util::str::trim_copy(s.substr(0, plusPos));
-        auto educt2 = util::str::trim_copy(s.substr(plusPos + 1, s.npos));
+        auto educt1 = rutil::str::trim_copy(s.substr(0, plusPos));
+        auto educt2 = rutil::str::trim_copy(s.substr(plusPos + 1, s.npos));
 
         std::string t1, t2, p1, p2;
         std::tie(p1, t1) = treatTerm(educt1);
@@ -214,15 +214,15 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
             std::tie(fuse, rhs_t1) = treatTerm(rhs);
             rhs_t2 = "";
 
-            auto separatorPos = fuse.find(bond);
+            auto separatorPos = fuse.find(mutil::bond);
             if (separatorPos == fuse.npos) {
                 throw std::invalid_argument(fmt::format(
-                        "The right-hand side was of fusion type but there was no bond \"{}\" defined.", bond
+                        "The right-hand side was of fusion type but there was no bond \"{}\" defined.", mutil::bond
                 ));
             }
 
-            rhs_p1 = util::str::trim_copy(fuse.substr(0, separatorPos));
-            rhs_p2 = util::str::trim_copy(fuse.substr(separatorPos + std::strlen(bond), fuse.npos));
+            rhs_p1 = rutil::str::trim_copy(fuse.substr(0, separatorPos));
+            rhs_p2 = rutil::str::trim_copy(fuse.substr(separatorPos + std::strlen(mutil::bond), fuse.npos));
         } else {
             // enzymatic type
             std::tie(rhs_p1, rhs_t1, rhs_p2, rhs_t2) = treatSide(rhs);

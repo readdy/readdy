@@ -26,6 +26,7 @@
  * @file ReactionRegistry.cpp
  * @brief << brief description >>
  * @author clonker
+ * @author chrisfroe
  * @date 29.03.17
  * @copyright GNU Lesser General Public License v3.0
  */
@@ -37,6 +38,8 @@
 #include <readdy/model/reactions/Fission.h>
 #include <readdy/model/reactions/Fusion.h>
 #include <readdy/model/reactions/Decay.h>
+#include <readdy/common/string.h>
+#include <readdy/model/Utils.h>
 
 namespace readdy {
 namespace model {
@@ -73,7 +76,7 @@ const ReactionRegistry::reactions_o2 ReactionRegistry::order2_flat() const {
 }
 
 const ReactionRegistry::reactions_o1 &ReactionRegistry::order1_by_type(const Particle::type_type type) const {
-    return util::collections::getOrDefault(one_educt_registry, type, defaultReactionsO1);
+    return readdy::util::collections::getOrDefault(one_educt_registry, type, defaultReactionsO1);
 }
 
 const ReactionRegistry::reaction_o2 ReactionRegistry::order2_by_name(const std::string &name) const {
@@ -96,7 +99,7 @@ const ReactionRegistry::reactions_o2 &ReactionRegistry::order2_by_type(const Par
 
 void ReactionRegistry::configure() {
     namespace coll = readdy::util::collections;
-    using pair = util::particle_type_pair;
+    using pair = readdy::util::particle_type_pair;
     using reaction1ptr = std::shared_ptr<reactions::Reaction<1>>;
     using reaction2ptr = std::shared_ptr<reactions::Reaction<2>>;
 
@@ -265,7 +268,37 @@ ReactionRegistry::addFusion(const std::string &name, particle_type_type from1, p
 }
 
 ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descriptor, scalar rate) {
+    namespace mutil = readdy::model::util;
+    namespace rutil = readdy::util;
     log::trace("begin parsing \"{}\"", descriptor);
+    auto arrowPos = descriptor.find(mutil::arrow);
+    if (arrowPos == descriptor.npos) {
+        throw std::invalid_argument(fmt::format(
+                "the descriptor must contain an arrow (\"{}\") to indicate lhs and rhs.", mutil::arrow
+        ));
+    }
+    if (descriptor.find(mutil::arrow, arrowPos + 1) != descriptor.npos) {
+        throw std::invalid_argument(fmt::format(
+                "the descriptor must not contain more than one arrow (\"{}\").", mutil::arrow
+        ));
+    }
+    auto lhs = descriptor.substr(0, arrowPos);
+    auto rhs = descriptor.substr(arrowPos + std::strlen(mutil::arrow), descriptor.npos);
+
+    rutil::str::trim(lhs);
+    rutil::str::trim(rhs);
+
+    std::string name;
+    {
+        auto colonPos = lhs.find(':');
+        if (colonPos == lhs.npos) {
+            throw std::invalid_argument("The descriptor did not contain a colon ':' to specify the end of the name.");
+        }
+        name = rutil::str::trim_copy(lhs.substr(0, colonPos));
+        lhs = rutil::str::trim_copy(lhs.substr(colonPos + 1, lhs.npos));
+    }
+
+
     return 0;
 }
 
