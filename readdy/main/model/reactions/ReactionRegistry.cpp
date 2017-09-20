@@ -265,7 +265,7 @@ ReactionRegistry::addFusion(const std::string &name, particle_type_type from1, p
 }
 
 ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descriptor, scalar rate) {
-    // todo
+    log::trace("begin parsing \"{}\"", descriptor);
     return 0;
 }
 
