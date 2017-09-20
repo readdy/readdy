@@ -178,25 +178,25 @@ public:
     bool supportsTopologies() const;
 
     // todo registerConversion -> creates and register with context
-    std::unique_ptr<reactions::Reaction<1>>
+    std::shared_ptr<reactions::Reaction<1>>
     createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                              scalar rate) const;
 
-    std::unique_ptr<reactions::Reaction<2>>
+    std::shared_ptr<reactions::Reaction<2>>
     createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                             const std::string &to, scalar rate, scalar eductDistance) const;
 
-    std::unique_ptr<reactions::Reaction<1>>
+    std::shared_ptr<reactions::Reaction<1>>
     createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                           const std::string &to2, scalar rate, scalar productDistance,
                           scalar weight1 = 0.5, scalar weight2 = 0.5) const;
 
-    std::unique_ptr<reactions::Reaction<2>>
+    std::shared_ptr<reactions::Reaction<2>>
     createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
                          const std::string &to, scalar rate, scalar eductDistance,
                          scalar weight1 = 0.5, scalar weight2 = 0.5) const;
 
-    std::unique_ptr<reactions::Reaction<1>>
+    std::shared_ptr<reactions::Reaction<1>>
     createDecayReaction(const std::string &name, const std::string &type, scalar rate) const;
 
     /*
@@ -278,7 +278,7 @@ protected:
 namespace detail {
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Conversion, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
+    static std::shared_ptr<readdy::model::reactions::Reaction<1>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createConversionReaction(std::forward<Args>(args)...);
     }
@@ -286,7 +286,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Conversion, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Enzymatic, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<2>>
+    static std::shared_ptr<readdy::model::reactions::Reaction<2>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createEnzymaticReaction(std::forward<Args>(args)...);
     }
@@ -294,7 +294,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Enzymatic, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Fission, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
+    static std::shared_ptr<readdy::model::reactions::Reaction<1>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createFissionReaction(std::forward<Args>(args)...);
     }
@@ -302,7 +302,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Fission, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Fusion, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<2>>
+    static std::shared_ptr<readdy::model::reactions::Reaction<2>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createFusionReaction(std::forward<Args>(args)...);
     }
@@ -310,7 +310,7 @@ struct get_reaction_dispatcher<readdy::model::reactions::Fusion, Args...> {
 
 template<typename... Args>
 struct get_reaction_dispatcher<readdy::model::reactions::Decay, Args...> {
-    static std::unique_ptr<readdy::model::reactions::Reaction<1>>
+    static std::shared_ptr<readdy::model::reactions::Reaction<1>>
     impl(const readdy::model::Kernel *const self, Args &&... args) {
         return self->createDecayReaction(std::forward<Args>(args)...);
     }

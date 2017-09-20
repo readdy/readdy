@@ -40,8 +40,8 @@ NAMESPACE_BEGIN(compartments)
 class CompartmentFactory {
 public:
     template<typename T, typename... Args>
-    std::unique_ptr<T> createCompartment(const Compartment::conversion_map &convMap, Args &&... args) const {
-        return std::unique_ptr<T>(get_dispatcher<T, Args...>::impl(this, convMap, std::forward<Args>(args)...));
+    std::shared_ptr<T> createCompartment(const Compartment::conversion_map &convMap, Args &&... args) const {
+        return std::shared_ptr<T>(get_dispatcher<T, Args...>::impl(this, convMap, std::forward<Args>(args)...));
     }
 
 protected:

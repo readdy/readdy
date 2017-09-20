@@ -44,8 +44,8 @@ NAMESPACE_BEGIN(reactions)
 
 class ReactionRegistry {
     using particle = readdy::model::Particle;
-    using rea_ptr_vec1 = std::vector<std::unique_ptr<reactions::Reaction<1>>>;
-    using rea_ptr_vec2 = std::vector<std::unique_ptr<reactions::Reaction<2>>>;
+    using rea_ptr_vec1 = std::vector<std::shared_ptr<reactions::Reaction<1>>>;
+    using rea_ptr_vec2 = std::vector<std::shared_ptr<reactions::Reaction<2>>>;
     using reaction_o1_registry_internal = std::unordered_map<particle::type_type, rea_ptr_vec1>;
     using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec2>;
 
@@ -61,13 +61,13 @@ public:
 
     explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
-    ReactionRegistry(const ReactionRegistry &) = delete;
+    ReactionRegistry(const ReactionRegistry &) = default;
 
-    ReactionRegistry &operator=(const ReactionRegistry &) = delete;
+    ReactionRegistry &operator=(const ReactionRegistry &) = default;
 
-    ReactionRegistry(ReactionRegistry &&) = delete;
+    ReactionRegistry(ReactionRegistry &&) = default;
 
-    ReactionRegistry &operator=(ReactionRegistry &&) = delete;
+    ReactionRegistry &operator=(ReactionRegistry &&) = default;
 
     ~ReactionRegistry() = default;
 
@@ -96,7 +96,7 @@ public:
     bool is_reaction_order2_type(particle_type_type type) const;
 
     template<typename R>
-    const short add(std::unique_ptr<R> r,
+    const short add(std::shared_ptr<R> r,
                     typename std::enable_if<std::is_base_of<reactions::Reaction<1>, R>::value>::type * = 0) {
         log::trace("registering reaction {}", *r);
         const auto id = r->getId();
@@ -110,7 +110,7 @@ public:
     }
 
     template<typename R>
-    const short add(std::unique_ptr<R> r,
+    const short add(std::shared_ptr<R> r,
                     typename std::enable_if<std::is_base_of<reactions::Reaction<2>, R>::value>::type * = 0) {
         log::trace("registering reaction {}", *r);
         const auto id = r->getId();

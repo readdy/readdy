@@ -72,13 +72,13 @@ public:
 
     ParticleTypeRegistry() = default;
 
-    ParticleTypeRegistry(const ParticleTypeRegistry &) = delete;
+    ParticleTypeRegistry(const ParticleTypeRegistry &) = default;
 
-    ParticleTypeRegistry &operator=(const ParticleTypeRegistry &) = delete;
+    ParticleTypeRegistry &operator=(const ParticleTypeRegistry &) = default;
 
-    ParticleTypeRegistry(ParticleTypeRegistry &&) = delete;
+    ParticleTypeRegistry(ParticleTypeRegistry &&) = default;
 
-    ParticleTypeRegistry &operator=(ParticleTypeRegistry &&) = delete;
+    ParticleTypeRegistry &operator=(ParticleTypeRegistry &&) = default;
 
     ~ParticleTypeRegistry() = default;
 

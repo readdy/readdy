@@ -45,22 +45,22 @@ NAMESPACE_BEGIN(potentials)
 
 class PotentialRegistry {
 
-    using pot_ptr_vec1 = std::vector<std::unique_ptr<potentials::PotentialOrder1>>;
+    using pot_ptr_vec1 = std::vector<std::shared_ptr<potentials::PotentialOrder1>>;
     using pot_ptr_vec1_external = std::vector<potentials::PotentialOrder1 *>;
-    using pot_ptr_vec2 = std::vector<std::unique_ptr<potentials::PotentialOrder2>>;
+    using pot_ptr_vec2 = std::vector<std::shared_ptr<potentials::PotentialOrder2>>;
     using pot_ptr_vec2_external = std::vector<potentials::PotentialOrder2 *>;
 public:
     using particle_type_registry_ref = std::reference_wrapper<const ParticleTypeRegistry>;
 
     explicit PotentialRegistry(particle_type_registry_ref typeRegistry);
 
-    PotentialRegistry(const PotentialRegistry &) = delete;
+    PotentialRegistry(const PotentialRegistry &) = default;
 
-    PotentialRegistry &operator=(const PotentialRegistry &) = delete;
+    PotentialRegistry &operator=(const PotentialRegistry &) = default;
 
-    PotentialRegistry(PotentialRegistry &&) = delete;
+    PotentialRegistry(PotentialRegistry &&) = default;
 
-    PotentialRegistry &operator=(PotentialRegistry &&) = delete;
+    PotentialRegistry &operator=(PotentialRegistry &&) = default;
 
     ~PotentialRegistry() = default;
 
@@ -74,9 +74,9 @@ public:
 
     const Potential::id add_external(potentials::PotentialOrder2 *potential);
 
-    const Potential::id add(std::unique_ptr<PotentialOrder1> potential);
+    const Potential::id add(std::shared_ptr<PotentialOrder1> potential);
 
-    const Potential::id add(std::unique_ptr<PotentialOrder2> potential);
+    const Potential::id add(std::shared_ptr<PotentialOrder2> potential);
 
     void remove(Potential::id handle);
 

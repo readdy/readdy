@@ -92,8 +92,8 @@ const ReactionRegistry::reactions_o2& ReactionRegistry::order2_by_type(const Par
 void ReactionRegistry::configure() {
     namespace coll = readdy::util::collections;
     using pair = util::particle_type_pair;
-    using reaction1ptr = std::unique_ptr<reactions::Reaction<1>>;
-    using reaction2ptr = std::unique_ptr<reactions::Reaction<2>>;
+    using reaction1ptr = std::shared_ptr<reactions::Reaction<1>>;
+    using reaction2ptr = std::shared_ptr<reactions::Reaction<2>>;
 
     one_educt_registry.clear();
     two_educts_registry.clear();

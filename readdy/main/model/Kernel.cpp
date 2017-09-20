@@ -114,7 +114,7 @@ particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name)
     throw std::invalid_argument("did not find type id for " + name);
 }
 
-std::unique_ptr<reactions::Reaction<1>>
+std::shared_ptr<reactions::Reaction<1>>
 Kernel::createConversionReaction(const std::string &name, const std::string &from, const std::string &to,
                                  const scalar rate) const {
     const auto typeFrom = getTypeIdRequireNormalFlavor(from);
@@ -122,7 +122,7 @@ Kernel::createConversionReaction(const std::string &name, const std::string &fro
     return getReactionFactory().createReaction<reactions::Conversion>(name, typeFrom, typeTo, rate);
 }
 
-std::unique_ptr<reactions::Reaction<2>>
+std::shared_ptr<reactions::Reaction<2>>
 Kernel::createFusionReaction(const std::string &name, const std::string &from1, const std::string &from2,
                              const std::string &to, const scalar rate, const scalar eductDistance,
                              const scalar weight1, const scalar weight2) const {
@@ -132,7 +132,7 @@ Kernel::createFusionReaction(const std::string &name, const std::string &from1, 
                                                                   weight1, weight2);
 }
 
-std::unique_ptr<reactions::Reaction<2>>
+std::shared_ptr<reactions::Reaction<2>>
 Kernel::createEnzymaticReaction(const std::string &name, const std::string &catalyst, const std::string &from,
                                 const std::string &to, const scalar rate, const scalar eductDistance) const {
     return getReactionFactory().createReaction<reactions::Enzymatic>(name, getTypeId(catalyst),
@@ -141,7 +141,7 @@ Kernel::createEnzymaticReaction(const std::string &name, const std::string &cata
                                                                      eductDistance);
 }
 
-std::unique_ptr<reactions::Reaction<1>>
+std::shared_ptr<reactions::Reaction<1>>
 Kernel::createFissionReaction(const std::string &name, const std::string &from, const std::string &to1,
                               const std::string &to2, const scalar rate, const scalar productDistance,
                               const scalar weight1, const scalar weight2) const {
@@ -152,7 +152,7 @@ Kernel::createFissionReaction(const std::string &name, const std::string &from, 
                                                                    weight2);
 }
 
-std::unique_ptr<reactions::Reaction<1>>
+std::shared_ptr<reactions::Reaction<1>>
 Kernel::createDecayReaction(const std::string &name, const std::string &type, const scalar rate) const {
     return getReactionFactory().createReaction<reactions::Decay>(name, getTypeIdRequireNormalFlavor(type), rate);
 }

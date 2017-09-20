@@ -75,6 +75,11 @@ TEST_F(TestKernelContext, BoxSize) {
     EXPECT_EQ(box_size[2], 12);
 }
 
+TEST_F(TestKernelContext, Copyable) {
+    m::KernelContext context;
+    m::KernelContext copy(context);
+}
+
 TEST_F(TestKernelContext, PotentialOrder2Map) {
     m::KernelContext ctx;
     ctx.particle_types().add("a", 1., 1.);

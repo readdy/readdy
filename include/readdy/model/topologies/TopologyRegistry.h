@@ -71,13 +71,13 @@ public:
 
     explicit TopologyRegistry(const ParticleTypeRegistry &typeRegistry);
 
-    TopologyRegistry(const TopologyRegistry &) = delete;
+    TopologyRegistry(const TopologyRegistry &) = default;
 
-    TopologyRegistry &operator=(const TopologyRegistry &) = delete;
+    TopologyRegistry &operator=(const TopologyRegistry &) = default;
 
-    TopologyRegistry(TopologyRegistry &&) = delete;
+    TopologyRegistry(TopologyRegistry &&) = default;
 
-    TopologyRegistry &operator=(TopologyRegistry &&) = delete;
+    TopologyRegistry &operator=(TopologyRegistry &&) = default;
 
     ~TopologyRegistry() = default;
 

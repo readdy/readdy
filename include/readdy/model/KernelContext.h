@@ -67,7 +67,7 @@ NAMESPACE_BEGIN(model)
 
 class KernelContext {
 public:
-    using CompartmentRegistry = std::vector<std::unique_ptr<readdy::model::compartments::Compartment>>;
+    using CompartmentRegistry = std::vector<std::shared_ptr<readdy::model::compartments::Compartment>>;
     using BoxSize = std::array<scalar, 3>;
     using PeriodicBoundaryConditions = std::array<bool, 3>;
     using KernelConfiguration = nlohmann::json;
@@ -104,7 +104,7 @@ public:
     const scalar calculateMaxCutoff() const;
 
     template<typename T>
-    const short registerCompartment(std::unique_ptr<T> compartment) {
+    const short registerCompartment(std::shared_ptr<T> compartment) {
         // assert to prevent errors already at compile-time
         static_assert(std::is_base_of<compartments::Compartment, T>::value, "argument must be a compartment");
         const auto id = compartment->getId();
@@ -178,14 +178,14 @@ public:
     ~KernelContext();
 
     // move
-    KernelContext(KernelContext &&rhs) = delete;
+    KernelContext(KernelContext &&rhs) = default;
 
-    KernelContext &operator=(KernelContext &&rhs) = delete;
+    KernelContext &operator=(KernelContext &&rhs) = default;
 
     // copy
-    KernelContext(const KernelContext &rhs) = delete;
+    KernelContext(const KernelContext &rhs) = default;
 
-    KernelContext &operator=(const KernelContext &rhs) = delete;
+    KernelContext &operator=(const KernelContext &rhs) = default;
 
 private:
     void updateFunctions();

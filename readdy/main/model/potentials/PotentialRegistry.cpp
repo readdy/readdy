@@ -62,14 +62,14 @@ const Potential::id PotentialRegistry::add_external(potentials::PotentialOrder1 
 void PotentialRegistry::remove(const Potential::id handle) {
     for (auto &entry : potentialO1RegistryInternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
-                                        [=](const std::unique_ptr<potentials::PotentialOrder1> &p) -> bool {
+                                        [=](const std::shared_ptr<potentials::PotentialOrder1> &p) -> bool {
                                             return handle == p->getId();
                                         }
         ), entry.second.end());
     }
     for (auto &entry : potentialO2RegistryInternal) {
         entry.second.erase(std::remove_if(entry.second.begin(), entry.second.end(),
-                                        [=](const std::unique_ptr<potentials::PotentialOrder2> &p) -> bool {
+                                        [=](const std::shared_ptr<potentials::PotentialOrder2> &p) -> bool {
                                             return handle == p->getId();
                                         }
         ), entry.second.end());
@@ -128,8 +128,8 @@ void PotentialRegistry::configure() {
     namespace coll = readdy::util::collections;
     using pair = util::particle_type_pair;
     using pot1 = potentials::PotentialOrder1;
-    using pot1_ptr = std::unique_ptr<potentials::PotentialOrder1>;
-    using pot2_ptr = std::unique_ptr<potentials::PotentialOrder2>;
+    using pot1_ptr = std::shared_ptr<potentials::PotentialOrder1>;
+    using pot2_ptr = std::shared_ptr<potentials::PotentialOrder2>;
     using pot2 = potentials::PotentialOrder2;
     potentialO1Registry.clear();
     potentialO2Registry.clear();
@@ -180,14 +180,14 @@ void PotentialRegistry::debug_output() const {
     }
 }
 
-const Potential::id PotentialRegistry::add(std::unique_ptr<PotentialOrder1> potential) {
+const Potential::id PotentialRegistry::add(std::shared_ptr<PotentialOrder1> potential) {
     const auto id = potential->getId();
     auto typeId = typeRegistry.id_of(potential->particleType);
     potentialO1RegistryInternal[typeId].push_back(std::move(potential));
     return id;
 }
 
-const Potential::id PotentialRegistry::add(std::unique_ptr<PotentialOrder2> potential) {
+const Potential::id PotentialRegistry::add(std::shared_ptr<PotentialOrder2> potential) {
     const auto id = potential->getId();
     auto type1Id = typeRegistry.id_of(potential->particleType1);
     auto type2Id = typeRegistry.id_of(potential->particleType2);
