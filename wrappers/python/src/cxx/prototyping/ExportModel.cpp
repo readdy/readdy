@@ -50,9 +50,6 @@ namespace rpy = readdy::rpy;
 using rvp = py::return_value_policy;
 
 using context = readdy::model::KernelContext;
-using type_registry = readdy::model::ParticleTypeRegistry;
-using potential_registry = readdy::model::potentials::PotentialRegistry;
-using reaction_registry = readdy::model::reactions::ReactionRegistry;
 using particle_t = readdy::model::Particle;
 
 using model_t = readdy::kernel::scpu::SCPUStateModel;
@@ -78,27 +75,6 @@ void exportModelClasses(py::module &proto) {
             .def_property_readonly("id", &particle_t::getId, rvp::reference_internal)
             .def(py::self == py::self)
             .def(py::self != py::self);
-
-    py::class_<type_registry>(proto, "ParticleTypeRegistry")
-            .def("add", [](type_registry& self, const std::string& name, readdy::scalar D, readdy::scalar r,
-                           readdy::model::particle_flavor flavor) {
-                self.add(name, D, r, flavor);
-            }, "name"_a, "diffusion_constant"_a, "radius"_a, "flavor"_a = 0)
-            .def("diffusion_constant_of", [](const type_registry& self, const std::string& type) {
-                return self.diffusion_constant_of(type);
-            }, "type"_a)
-            .def("radius_of", [](const type_registry& self, const std::string& type) {
-                return self.radius_of(type);
-            }, "type"_a)
-            .def("id_of", &type_registry::id_of, "name"_a);
-
-    py::class_<potential_registry>(proto, "PotentialRegistry")
-            .def("add_external_order1", [](potential_registry& self, potential_o1& pot) {
-                return self.addUserDefined(&pot);
-            })
-            .def("add_external_order2", [](potential_registry& self, potential_o2& pot) {
-                return self.addUserDefined(&pot);
-            });
 
     py::class_ <model_t, model_wrap> model(proto, "Model");
     model
