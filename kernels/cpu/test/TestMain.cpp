@@ -48,8 +48,5 @@ int main(int argc, char **argv) {
     int result = perform_tests(argc, argv);
 
     spdlog::drop_all();
-
-    std::cout << "FINISHED" << std::endl;
-
     return result;
 }
