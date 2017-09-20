@@ -123,5 +123,10 @@ void ParticleTypeRegistry::debug_output() const {
 }
 
 void ParticleTypeRegistry::configure() { /*no op*/ }
+
+particle_type_type ParticleTypeRegistry::operator()(const std::string &name) const {
+    return id_of(name);
+}
+
 }
 }

@@ -122,9 +122,8 @@ void Simulation::deregisterPotential(const short uuid) {
 const short
 Simulation::registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
                                                scalar forceConstant) {
-    using potential_t = readdy::model::potentials::HarmonicRepulsion;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant);
+    return pimpl->kernel->getKernelContext().potentials().addHarmonicRepulsion(particleTypeA, particleTypeB, forceConstant);
 }
 
 const short
@@ -132,18 +131,16 @@ Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string 
                                                               const std::string &particleTypeB, scalar forceConstant,
                                                               scalar desiredParticleDistance, scalar depth,
                                                               scalar noInteractionDistance) {
-    using potential_t = readdy::model::potentials::WeakInteractionPiecewiseHarmonic;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleTypeA, particleTypeB, forceConstant,
+    return pimpl->kernel->getKernelContext().potentials().addWeakInteractionPiecewiseHarmonic(particleTypeA, particleTypeB, forceConstant,
                                                          desiredParticleDistance, depth, noInteractionDistance);
 }
 
 const short
 Simulation::registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m,
                                           unsigned int n, scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
-    using potential_t = readdy::model::potentials::LennardJones;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(type1, type2, m, n, cutoff, shift, epsilon, sigma);
+    return pimpl->kernel->getKernelContext().potentials().addLennardJones(type1, type2, m, n, cutoff, shift, epsilon, sigma);
 }
 
 
@@ -153,9 +150,8 @@ Simulation::registerScreenedElectrostaticsPotential(const std::string &particleT
                                                     scalar inverseScreeningDepth, scalar repulsionStrength,
                                                     scalar repulsionDistance,
                                                     unsigned int exponent, scalar cutoff) {
-    using potential_t = readdy::model::potentials::ScreenedElectrostatics;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleType1, particleType2, electrostaticStrength,
+    return pimpl->kernel->getKernelContext().potentials().addScreenedElectrostatics(particleType1, particleType2, electrostaticStrength,
                                                          inverseScreeningDepth,
                                                          repulsionStrength, repulsionDistance, exponent, cutoff);
 }
@@ -164,33 +160,29 @@ const short
 Simulation::registerBoxPotential(const std::string &particleType, scalar forceConstant,
                                  const Vec3 &origin, const Vec3 &extent,
                                  bool considerParticleRadius) {
-    using potential_t = readdy::model::potentials::Cube;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, extent,
+    return pimpl->kernel->getKernelContext().potentials().addCube(particleType, forceConstant, origin, extent,
                                                          considerParticleRadius);
 }
 
 const short
 Simulation::registerSphereInPotential(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                                       scalar radius) {
-    using potential_t = readdy::model::potentials::SphereIn;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
+    return pimpl->kernel->getKernelContext().potentials().addSphereIn(particleType, forceConstant, origin, radius);
 }
 
 const short
 Simulation::registerSphereOutPotential(const std::string &particleType, scalar forceConstant,
                                        const Vec3 &origin, scalar radius) {
-    using potential_t = readdy::model::potentials::SphereOut;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleType, forceConstant, origin, radius);
+    return pimpl->kernel->getKernelContext().potentials().addSphereOut(particleType, forceConstant, origin, radius);
 }
 
 const short
 Simulation::registerSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width) {
-    using potential_t = readdy::model::potentials::SphericalBarrier;
     ensureKernelSelected();
-    return pimpl->kernel->registerPotential<potential_t>(particleType, origin, radius, height, width);
+    return pimpl->kernel->getKernelContext().potentials().addSphericalBarrier(particleType, origin, radius, height, width);
 }
 
 void Simulation::ensureKernelSelected() const {
@@ -344,12 +336,12 @@ Simulation::addTopology(const std::string& type, const std::vector<readdy::model
 
 void Simulation::registerPotentialOrder1(readdy::model::potentials::PotentialOrder1 *ptr) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().potentials().add_external(ptr);
+    getSelectedKernel()->getKernelContext().potentials().addUserDefined(ptr);
 }
 
 void Simulation::registerPotentialOrder2(readdy::model::potentials::PotentialOrder2 *ptr) {
     ensureKernelSelected();
-    getSelectedKernel()->getKernelContext().potentials().add_external(ptr);
+    getSelectedKernel()->getKernelContext().potentials().addUserDefined(ptr);
 }
 
 void

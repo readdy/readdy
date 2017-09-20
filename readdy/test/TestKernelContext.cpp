@@ -37,6 +37,7 @@
 #include <readdy/testing/KernelTest.h>
 #include <readdy/testing/Utils.h>
 #include <readdy/testing/NOOPPotential.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
 
 namespace m = readdy::model;
 
@@ -84,9 +85,10 @@ TEST_F(TestKernelContext, PotentialOrder2Map) {
     m::KernelContext ctx;
     ctx.particle_types().add("a", 1., 1.);
     ctx.particle_types().add("b", 1., 1.);
-    auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>("a", "b");
-    ctx.potentials().add(std::move(noop));
-    ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("b", "a"));
+    auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(ctx.particle_types()("a"), ctx.particle_types()("b"));
+    ctx.potentials().addUserDefined(noop.get());
+    auto noop2 = std::make_unique<readdy::testing::NOOPPotentialOrder2>(ctx.particle_types()("b"),ctx.particle_types()( "a"));
+    ctx.potentials().addUserDefined(noop2.get());
     ctx.configure();
     auto vector = ctx.potentials().potentials_of("b", "a");
     EXPECT_EQ(vector.size(), 2);
@@ -108,20 +110,20 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     std::vector<short> idsToRemove;
     short uuid2_1, uuid2_2;
     {
-        auto id1 = kernel->registerPotential<rmp::Cube>("A", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id2 = kernel->registerPotential<rmp::Cube>("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id3 = kernel->registerPotential<rmp::Cube>("D", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id4 = kernel->registerPotential<rmp::Cube>("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id1 = kernel->getKernelContext().potentials().addCube("A", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id2 = kernel->getKernelContext().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id3 = kernel->getKernelContext().potentials().addCube("D", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id4 = kernel->getKernelContext().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
         idsToRemove.push_back(id1);
         idsToRemove.push_back(id2);
         idsToRemove.push_back(id3);
         idsToRemove.push_back(id4);
 
-        kernel->registerPotential<rmp::Cube>("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        kernel->getKernelContext().potentials().addCube("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
-        uuid2_1 = kernel->registerPotential<rmp::HarmonicRepulsion>("A", "C", 0);
-        uuid2_2 = kernel->registerPotential<rmp::HarmonicRepulsion>("B", "C", 0);
+        uuid2_1 = kernel->getKernelContext().potentials().addHarmonicRepulsion("A", "C", 0);
+        uuid2_2 = kernel->getKernelContext().potentials().addHarmonicRepulsion("B", "C", 0);
         ctx.configure();
     }
     // test that order 1 potentials are set up correctly

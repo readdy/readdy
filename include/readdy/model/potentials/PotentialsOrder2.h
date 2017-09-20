@@ -33,7 +33,6 @@
 
 #pragma once
 
-#include <readdy/model/KernelContext.h>
 #include <ostream>
 #include "PotentialOrder2.h"
 
@@ -44,7 +43,7 @@ NAMESPACE_BEGIN(potentials)
 class HarmonicRepulsion : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    HarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant);
+    HarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant);
 
     scalar getSumOfParticleRadii() const;
 
@@ -93,7 +92,7 @@ public:
         const scalar desiredParticleDistance, depthAtDesiredDistance, noInteractionDistance, noInteractionDistanceSquared;
     };
 
-    WeakInteractionPiecewiseHarmonic(const std::string &particleType1, const std::string &particleType2,
+    WeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
                                      scalar forceConstant, const Configuration &config);
 
     scalar getMaximalForce(scalar kbt) const noexcept override;
@@ -145,7 +144,7 @@ public:
      * @param epsilon the well depth
      * @param sigma the distance at which the inter-particle potential is zero
      */
-    LennardJones(const std::string &particleType1, const std::string &particleType2,
+    LennardJones(particle_type_type type1, particle_type_type type2,
                  unsigned int m, unsigned int n, scalar cutoffDistance,
                  bool shift, scalar epsilon, scalar sigma);
 
@@ -188,7 +187,7 @@ protected:
 class ScreenedElectrostatics : public PotentialOrder2 {
     using super = PotentialOrder2;
 public:
-    ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2, scalar electrostaticStrength,
+    ScreenedElectrostatics(particle_type_type type1, particle_type_type type2, scalar electrostaticStrength,
                            scalar inverseScreeningDepth, scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent, scalar cutoff);
 
     ScreenedElectrostatics(const ScreenedElectrostatics&) = default;

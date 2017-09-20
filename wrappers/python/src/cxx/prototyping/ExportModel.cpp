@@ -37,6 +37,11 @@
 #include <readdy/model/Particle.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
+#include <readdy/model/reactions/Conversion.h>
+#include <readdy/model/reactions/Enzymatic.h>
+#include <readdy/model/reactions/Fission.h>
+#include <readdy/model/reactions/Fusion.h>
+#include <readdy/model/reactions/Decay.h>
 #include "ModelWrap.h"
 
 namespace py = pybind11;
@@ -89,52 +94,11 @@ void exportModelClasses(py::module &proto) {
 
     py::class_<potential_registry>(proto, "PotentialRegistry")
             .def("add_external_order1", [](potential_registry& self, potential_o1& pot) {
-                return self.add_external(&pot);
+                return self.addUserDefined(&pot);
             })
             .def("add_external_order2", [](potential_registry& self, potential_o2& pot) {
-                return self.add_external(&pot);
+                return self.addUserDefined(&pot);
             });
-
-    py::class_<context>(proto, "Context")
-            .def_property("kbt", [](const context &self) {return self.kBT(); }, [](context &self, readdy::scalar kbt) {
-                self.kBT() = kbt;
-            })
-            .def("get_box_size", [](context &self) { return readdy::Vec3(self.boxSize()); })
-            .def("set_box_size", [](context &self, readdy::Vec3 vec) { self.boxSize() = vec.data; })
-            .def_property("periodic_boundary", [](const context &self) {return self.periodicBoundaryConditions();},
-                          [](context &self, context::PeriodicBoundaryConditions periodic) {
-                              self.periodicBoundaryConditions() = periodic;
-                          })
-            .def("particle_types", [](context& self) -> type_registry& {
-                return self.particle_types();
-            }, rvp::reference_internal)
-            .def("potentials", [](context& self) -> potential_registry& {
-                return self.potentials();
-            }, rvp::reference_internal)
-            .def("get_fix_position_fun", &context::fixPositionFun)
-            .def("get_shortest_difference_fun", &context::shortestDifferenceFun)
-            .def("get_dist_squared_fun", &context::distSquaredFun)
-            .def("register_conversion_reaction",
-                 [](context &self, readdy::model::reactions::Conversion* r) -> const short {
-                     return self.reactions().add_external(r);
-                 }, rvp::reference_internal)
-            .def("register_enzymatic_reaction",
-                 [](context &self, readdy::model::reactions::Enzymatic* r) -> const short {
-                     return self.reactions().add_external(r);
-                 }, rvp::reference_internal)
-            .def("register_fission_reaction",
-                 [](context &self, readdy::model::reactions::Fission* r) -> const short {
-                     return self.reactions().add_external(r);
-                 }, rvp::reference_internal)
-            .def("register_fusion_reaction",
-                 [](context &self, readdy::model::reactions::Fusion *r) -> const short {
-                     return self.reactions().add_external(r);
-                 }, rvp::reference_internal)
-            .def("register_decay_reaction",
-                 [](context &self, readdy::model::reactions::Decay *r) -> const short {
-                     return self.reactions().add_external(r);
-                 }, rvp::reference_internal)
-            .def("configure", &context::configure, py::arg("debugOutput") = false);
 
     py::class_ <model_t, model_wrap> model(proto, "Model");
     model

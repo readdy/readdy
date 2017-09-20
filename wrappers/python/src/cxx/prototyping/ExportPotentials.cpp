@@ -27,7 +27,8 @@
 
 #include <readdy/model/potentials/PotentialOrder1.h>
 #include <readdy/model/potentials/PotentialOrder2.h>
-#include <readdy/model/potentials/PotentialFactory.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
+#include <readdy/model/potentials/PotentialsOrder2.h>
 
 namespace py = pybind11;
 namespace pot = readdy::model::potentials;
@@ -37,8 +38,6 @@ using rvp = py::return_value_policy;
 using rdy_pot = pot::Potential;
 using rdy_pot1 = pot::PotentialOrder1;
 using rdy_pot2 = pot::PotentialOrder2;
-
-using rdy_pot_factory = pot::PotentialFactory;
 
 class PyPotentialO1 : public rdy_pot1 {
 public:
@@ -91,7 +90,7 @@ public:
     using rdy_pot2::PotentialOrder2;
 
     std::string describe() const override {
-        return "User defined potential for types " + particleType1 + " and " + particleType2;
+        return "User defined potential for types " + std::to_string(particleType1) + " and " + std::to_string(particleType2);
     }
 
     virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
@@ -150,35 +149,15 @@ void exportPotentials(py::module &proto) {
             .def("get_name", &pot::getPotentialName < pot::WeakInteractionPiecewiseHarmonic > );
 
     py::class_<rdy_pot1, PyPotentialO1>(proto, "PotentialOrder1")
-            .def(py::init<std::string>())
+            .def(py::init<readdy::particle_type_type>())
             .def("calculate_energy", &rdy_pot1::calculateEnergy)
             .def("calculate_force", &rdy_pot1::calculateForce)
             .def("get_relevant_length_scale", &rdy_pot1::getRelevantLengthScale)
             .def("get_maximal_force", &rdy_pot1::getMaximalForce);
     py::class_<rdy_pot2, PyPotentialO2>(proto, "PotentialOrder2")
-            .def(py::init<std::string, std::string>())
+            .def(py::init<readdy::particle_type_type, readdy::particle_type_type>())
             .def("calculate_energy", &rdy_pot2::calculateEnergy)
             .def("calculate_force", &rdy_pot2::calculateForce)
             .def("get_cutoff_radius", &rdy_pot2::getCutoffRadius)
             .def("get_maximal_force", &rdy_pot2::getMaximalForce);
-
-    py::class_<rdy_pot_factory>(proto, "PotentialFactory")
-            .def("create_cube_potential",
-                 [](rdy_pot_factory &self, const std::string &particleType, readdy::scalar forceConstant,
-                    const readdy::Vec3 &origin, const readdy::Vec3 &extent,
-                    bool considerParticleRadius) {
-                     return self.createPotential<pot::Cube>(particleType, forceConstant, origin, extent,
-                                                                     considerParticleRadius).release();
-                 }, rvp::take_ownership)
-            .def("create_harmonic_repulsion",
-                 [](rdy_pot_factory &self, const std::string &type1, const std::string &type2, readdy::scalar forceConstant) {
-                     return self.createPotential<pot::HarmonicRepulsion>(type1, type2, forceConstant).release();
-                 }, rvp::take_ownership)
-            .def("create_weak_interaction",
-                 [](rdy_pot_factory &self, const std::string &type1, const std::string &type2,
-                    const readdy::scalar forceConstant, const readdy::scalar desiredDist, const readdy::scalar depth, const readdy::scalar cutoff) {
-                     return self.createPotential<pot::WeakInteractionPiecewiseHarmonic>(
-                             type1, type2, forceConstant, desiredDist, depth, cutoff
-                     ).release();
-                 }, rvp::take_ownership);
 }

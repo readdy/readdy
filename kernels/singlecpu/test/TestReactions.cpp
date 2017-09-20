@@ -35,11 +35,6 @@
 #include <readdy/model/actions/Actions.h>
 
 TEST(SingleCPUTestReactions, TestDecay) {
-    using fusion_t = readdy::model::reactions::Fusion;
-    using fission_t = readdy::model::reactions::Fission;
-    using enzymatic_t = readdy::model::reactions::Enzymatic;
-    using conversion_t = readdy::model::reactions::Conversion;
-    using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().boxSize() = {{10, 10, 10}};
@@ -110,11 +105,6 @@ TEST(SingleCPUTestReactions, TestDecay) {
  *   - t > 2: n_particles == 0
  */
 TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
-    using fusion_t = readdy::model::reactions::Fusion;
-    using fission_t = readdy::model::reactions::Fission;
-    using enzymatic_t = readdy::model::reactions::Enzymatic;
-    using conversion_t = readdy::model::reactions::Conversion;
-    using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->getKernelContext().boxSize() = {{10, 10, 10}};

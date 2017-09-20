@@ -73,14 +73,14 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 
     setupParticles(*kernel);
 
-    kernel->registerPotential<readdy::model::potentials::HarmonicRepulsion>("A", "B", .01);
+    kernel->getKernelContext().potentials().addHarmonicRepulsion("A", "B", .01);
 
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
         // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
         readdy::Vec3 origin {-1, -1, -1};
         readdy::Vec3 extent {2, 2, 2};
-        kernel->registerPotential<readdy::model::potentials::Cube>(t, 10, origin, extent, true);
+        kernel->getKernelContext().potentials().addCube(t, 10, origin, extent, true);
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
@@ -111,7 +111,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
         readdy::Vec3 origin (0, 0, 0);
-        kernel->registerPotential<readdy::model::potentials::SphereIn>(t, 20, origin, 3);
+        kernel->getKernelContext().potentials().addSphereIn(t, 20, origin, 3);
     }
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
     const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
@@ -146,7 +146,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 
     // the potential has exponents 3 and 2, a cutoff distance of 1.0, does not shift the energy, a well depth
     // of 1.0 and a zero-interaction distance of 0.1 (particle distance < sigma ==> repellent)
-    kernel->registerPotential<readdy::model::potentials::LennardJones>("A", "A", 3, 2, 1.0, false, 1.0, .1);
+    kernel->getKernelContext().potentials().addLennardJones("A", "A", 3, 2, 1.0, false, 1.0, .1);
 
     // record ids
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
@@ -208,7 +208,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto sigma = static_cast<readdy::scalar>(1.);
     auto cutoff = static_cast<readdy::scalar>(8.);
     unsigned int exponent = 6;
-    kernel->registerPotential<readdy::model::potentials::ScreenedElectrostatics>("A", "A", electrostaticStrength, 1. / screeningDepth,
+    kernel->getKernelContext().potentials().addScreenedElectrostatics("A", "A", electrostaticStrength, 1. / screeningDepth,
                                                                                  repulsionStrength, sigma, exponent, cutoff);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
@@ -263,8 +263,8 @@ TEST_P(TestPotentials, SphericalMembrane) {
     auto radius = static_cast<readdy::scalar>(3.);
     readdy::Vec3 origin = {static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.),
                                   static_cast<readdy::scalar>(0.)};
-    kernel->registerPotential<readdy::model::potentials::SphereOut>("A", forceConstant, origin, radius);
-    kernel->registerPotential<readdy::model::potentials::SphereIn>("A", forceConstant, origin, radius);
+    kernel->getKernelContext().potentials().addSphereOut("A", forceConstant, origin, radius);
+    kernel->getKernelContext().potentials().addSphereIn("A", forceConstant, origin, radius);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
     std::vector<readdy::model::Particle::id_type> ids;
@@ -320,7 +320,7 @@ TEST_P(TestPotentials, SphericalBarrier) {
     double radius = 1.;
     double height = 2.;
     double width = 0.3;
-    kernel->registerPotential<readdy::model::potentials::SphericalBarrier>("A", origin, radius, height, width);
+    kernel->getKernelContext().potentials().addSphericalBarrier("A", origin, radius, height, width);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
     std::vector<readdy::model::Particle::id_type> ids;

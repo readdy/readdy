@@ -32,10 +32,10 @@
  * @date 15.06.16
  */
 
+#pragma once
+
 #include <ostream>
 #include "PotentialOrder1.h"
-
-#pragma once
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(potentials)
 class Cube : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Cube(const std::string& particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent,
+    Cube(particle_type_type particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent,
                   bool considerParticleRadius = true);
 
     const Vec3 &getOrigin() const;
@@ -84,7 +84,7 @@ protected:
 class SphereIn : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphereIn(const std::string& particleType, scalar forceConstant, const Vec3& origin, scalar radius);
+    SphereIn(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius);
 
     virtual scalar getRelevantLengthScale() const noexcept override;
 
@@ -110,7 +110,7 @@ protected:
 class SphereOut : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphereOut(const std::string& particleType, scalar forceConstant, const Vec3& origin, scalar radius);
+    SphereOut(particle_type_type particleType, scalar forceConstant, const Vec3& origin, scalar radius);
 
     virtual scalar getRelevantLengthScale() const noexcept override;
 
@@ -140,7 +140,7 @@ protected:
 class SphericalBarrier : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width);
+    SphericalBarrier(particle_type_type particleType, const Vec3 &origin, scalar radius, scalar height, scalar width);
 
     virtual readdy::scalar getRelevantLengthScale() const noexcept override;
 

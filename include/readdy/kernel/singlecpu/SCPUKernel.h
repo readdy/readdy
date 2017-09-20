@@ -25,6 +25,7 @@
 //
 
 #pragma once
+
 #include <readdy/model/RandomProvider.h>
 #include <readdy/model/Kernel.h>
 #include <readdy/kernel/singlecpu/SCPUStateModel.h>
@@ -50,9 +51,8 @@ public:
     // factory method
     static std::unique_ptr<SCPUKernel> create();
 
-    std::vector<std::string> getAvailablePotentials() const override;
-
     const SCPUStateModel &getSCPUKernelStateModel() const;
+
     SCPUStateModel &getSCPUKernelStateModel();
 
     void initialize() override;
@@ -63,10 +63,6 @@ protected:
     readdy::model::KernelContext &getKernelContextInternal() const override;
 
     readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
-
-    readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
-
-    readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
 
     readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
 

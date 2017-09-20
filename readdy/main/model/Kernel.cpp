@@ -81,10 +81,6 @@ void Kernel::evaluateObservables(time_step_type t) {
     (*pimpl->signal)(t);
 }
 
-std::vector<std::string> Kernel::getAvailablePotentials() const {
-    return std::vector<std::string>();
-}
-
 readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, const Vec3 &pos) {
     readdy::model::Particle particle {pos[0], pos[1], pos[2], getKernelContext().particle_types().id_of(type)};
     getKernelStateModel().addParticle(particle);
@@ -140,22 +136,6 @@ const readdy::model::actions::ActionFactory &Kernel::getActionFactory() const {
 
 readdy::model::actions::ActionFactory &Kernel::getActionFactory() {
     return getActionFactoryInternal();
-}
-
-const readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() const {
-    return getPotentialFactoryInternal();
-}
-
-readdy::model::potentials::PotentialFactory &Kernel::getPotentialFactory() {
-    return getPotentialFactoryInternal();
-}
-
-const readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() const {
-    return getReactionFactoryInternal();
-}
-
-readdy::model::reactions::ReactionFactory &Kernel::getReactionFactory() {
-    return getReactionFactoryInternal();
 }
 
 const readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() const {

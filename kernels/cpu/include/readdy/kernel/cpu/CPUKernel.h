@@ -51,23 +51,28 @@ public:
 
     ~CPUKernel() override;
 
-    CPUKernel(const CPUKernel&) = delete;
-    CPUKernel& operator=(const CPUKernel&) = delete;
-    CPUKernel(CPUKernel&&) = delete;
-    CPUKernel& operator=(CPUKernel&&) = delete;
+    CPUKernel(const CPUKernel &) = delete;
+
+    CPUKernel &operator=(const CPUKernel &) = delete;
+
+    CPUKernel(CPUKernel &&) = delete;
+
+    CPUKernel &operator=(CPUKernel &&) = delete;
 
     // factory method
-    static readdy::model::Kernel* create();
+    static readdy::model::Kernel *create();
 
     unsigned long getNThreads() const;
 
     void setNThreads(readdy::util::thread::Config::n_threads_type n);
 
     const CPUStateModel &getCPUKernelStateModel() const;
+
     CPUStateModel &getCPUKernelStateModel();
 
-    const readdy::util::thread::Config& threadConfig() const;
-    readdy::util::thread::Config& threadConfig();
+    const readdy::util::thread::Config &threadConfig() const;
+
+    readdy::util::thread::Config &threadConfig();
 
     const readdy::util::thread::executor_base &executor() const;
 
@@ -85,10 +90,6 @@ protected:
 
     readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
 
-    readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const override;
-
-    readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const override;
-
     readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
 
     readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
@@ -101,6 +102,6 @@ protected:
 }
 }
 
-extern "C" const char* name();
+extern "C" const char *name();
 
-extern "C" readdy::model::Kernel* createKernel();
+extern "C" readdy::model::Kernel *createKernel();

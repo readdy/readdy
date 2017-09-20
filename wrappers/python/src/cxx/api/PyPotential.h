@@ -41,7 +41,7 @@ class PotentialOrder2Wrapper : public readdy::model::potentials::PotentialOrder2
 public:
     std::string describe() const override;
 
-    PotentialOrder2Wrapper(const std::string &particleType1, const std::string &particleType2,
+    PotentialOrder2Wrapper(particle_type_type particleType1, particle_type_type particleType2,
                            pybind11::object o1, pybind11::object o2);
 
     virtual readdy::scalar calculateEnergy(const Vec3 &x_ij) const override;

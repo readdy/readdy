@@ -43,9 +43,7 @@
 #include <readdy/model/KernelContext.h>
 #include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
-#include <readdy/model/potentials/PotentialFactory.h>
 #include <readdy/model/actions/ActionFactory.h>
-#include <readdy/model/reactions/ReactionFactory.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 #include <readdy/model/compartments/CompartmentFactory.h>
 #include <readdy/model/_internal/Util.h>
@@ -143,14 +141,6 @@ public:
 
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const;
 
-    virtual std::vector<std::string> getAvailablePotentials() const;
-
-    template<typename T, typename... Args>
-    potentials::Potential::id registerPotential(Args &&... args) {
-        auto pot = getPotentialFactory().createPotential<T>(std::forward<Args>(args)...);
-        return getKernelContext().potentials().add(std::move(pot));
-    }
-
     template<typename T, typename... Args>
     compartments::Compartment::id
     registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
@@ -189,14 +179,6 @@ public:
 
     readdy::model::actions::ActionFactory &getActionFactory();
 
-    const readdy::model::potentials::PotentialFactory &getPotentialFactory() const;
-
-    readdy::model::potentials::PotentialFactory &getPotentialFactory();
-
-    const readdy::model::reactions::ReactionFactory &getReactionFactory() const;
-
-    readdy::model::reactions::ReactionFactory &getReactionFactory();
-
     const readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const;
 
     readdy::model::compartments::CompartmentFactory &getCompartmentFactory();
@@ -232,10 +214,6 @@ protected:
     virtual readdy::model::KernelContext &getKernelContextInternal() const = 0;
 
     virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
-
-    virtual readdy::model::potentials::PotentialFactory &getPotentialFactoryInternal() const = 0;
-
-    virtual readdy::model::reactions::ReactionFactory &getReactionFactoryInternal() const = 0;
 
     virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const = 0;
 

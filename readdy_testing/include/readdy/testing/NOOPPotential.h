@@ -38,12 +38,12 @@
 namespace readdy {
 namespace testing {
 struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
-    NOOPPotentialOrder2(const std::string &particleType1, const std::string &particleType2,
+    NOOPPotentialOrder2(particle_type_type particleType1, particle_type_type particleType2,
                         readdy::scalar cutoff = 0, readdy::scalar force = 0, readdy::scalar energy = 0)
             : PotentialOrder2(particleType1, particleType2), cutoff(cutoff), force(force), energy(energy) {}
 
     std::string describe() const override {
-        return "NOOPPotential with types " + particleType1 + ", " + particleType2;
+        return "NOOPPotential with types " + std::to_string(particleType1) + ", " + std::to_string(particleType2);
     }
 
     virtual readdy::scalar getCutoffRadius() const override {

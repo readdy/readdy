@@ -29,6 +29,7 @@
  */
 
 #include <readdy/model/Kernel.h>
+#include <readdy/model/potentials/PotentialsOrder1.h>
 
 namespace readdy {
 namespace model {
@@ -70,7 +71,7 @@ Vec3 getMaxExtent(const Vec3 &origin, const Vec3 &extent) {
     return result;
 }
 
-Cube::Cube(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
+Cube::Cube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
                              const Vec3 &extent, bool considerParticleRadius)
         : super(particleType), origin(origin), extent(extent), forceConstant(forceConstant),
           considerParticleRadius(considerParticleRadius), min(getMinExtent(origin, extent)),
@@ -156,7 +157,7 @@ scalar SphereIn::getMaximalForce(scalar /*ignored*/) const noexcept {
     return 0;
 }
 
-SphereIn::SphereIn(const std::string &particleType, scalar f, const Vec3 &origin, scalar radius)
+SphereIn::SphereIn(particle_type_type particleType, scalar f, const Vec3 &origin, scalar radius)
         : super(particleType), origin(origin), radius(radius), forceConstant(f) {}
 
 void SphereIn::configureForType(const ParticleTypeRegistry *const /*ignored*/, const particle_type_type /*ignored*/) {}
@@ -198,7 +199,7 @@ std::string SphereIn::describe() const {
     return ss.str();
 }
 
-SphereOut::SphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
+SphereOut::SphereOut(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, scalar radius)
         : super(particleType), forceConstant(forceConstant), origin(origin), radius(radius) {}
 
 void SphereOut::configureForType(const ParticleTypeRegistry *const /*ignored*/,
@@ -249,7 +250,7 @@ void SphereOut::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 
     }
 }
 
-SphericalBarrier::SphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width)
+SphericalBarrier::SphericalBarrier(particle_type_type particleType, const Vec3 &origin, scalar radius, scalar height, scalar width)
         : super(particleType), origin(origin), radius(radius), height(height), width(width), r1(radius - width), r2(radius - width / static_cast<scalar>(2.)),
           r3(radius + width / static_cast<scalar>(2.)), r4(radius + width), effectiveForceConstant(static_cast<scalar>(4.) * height / width / width) {
     if (width > radius) {
@@ -345,7 +346,7 @@ std::string SphericalBarrier::describe() const {
  * Harmonic repulsion
  */
 
-HarmonicRepulsion::HarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant)
+HarmonicRepulsion::HarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant)
         : super(type1, type2), forceConstant(forceConstant), sumOfParticleRadii(-1), sumOfParticleRadiiSquared(-1) {}
 
 scalar HarmonicRepulsion::getSumOfParticleRadii() const {
@@ -434,8 +435,7 @@ scalar WeakInteractionPiecewiseHarmonic::getMaximalForce(scalar /*kbt*/) const n
 void WeakInteractionPiecewiseHarmonic::configureForTypes(const ParticleTypeRegistry *const /*unused*/, particle_type_type /*type1*/,
                                                          particle_type_type /*type2*/) {}
 
-WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(const std::string &particleType1,
-                                                                   const std::string &particleType2,
+WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
                                                                    const scalar forceConstant,
                                                                    const Configuration &config)
         : super(particleType1, particleType2), forceConstant(forceConstant), conf(config) {}
@@ -523,7 +523,7 @@ WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const scalar  des
           noInteractionDistance(noInteractionDistance),
           noInteractionDistanceSquared(noInteractionDistance * noInteractionDistance) {}
 
-LennardJones::LennardJones(const std::string &particleType1, const std::string &particleType2,
+LennardJones::LennardJones(particle_type_type type1, particle_type_type type2,
                            unsigned int m, unsigned int n, scalar  cutoffDistance,
                            bool shift, scalar  epsilon, scalar  sigma)
         : super(particleType1, particleType2), m(m), n(n),
@@ -591,7 +591,7 @@ std::string LennardJones::describe() const {
 LennardJones::~LennardJones() = default;
 
 
-ScreenedElectrostatics::ScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2,
+ScreenedElectrostatics::ScreenedElectrostatics(particle_type_type type1, particle_type_type type2,
                                                scalar  electrostaticStrength, scalar  inverseScreeningDepth,
                                                scalar  repulsionStrength, scalar  repulsionDistance, unsigned int exponent,
                                                scalar  cutoff)

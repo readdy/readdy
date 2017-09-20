@@ -36,32 +36,32 @@
 
 namespace py = pybind11;
 
-using Context = readdy::model::KernelContext;
+using KernelContext = readdy::model::KernelContext;
 using KernelConfiguration = readdy::conf::Configuration;
 
 void exportKernelContext(py::module &m) {
     using namespace readdy;
     using namespace py::literals;
 
-    py::class_<Context>(m, "KernelContext")
+    py::class_<KernelContext>(m, "KernelContext")
             .def(py::init<>())
-            .def_property("kbt", [](const Context &self) { return self.kBT(); },
-                          [](Context &self, scalar kbt) { self.kBT() = kbt; })
-            .def("box_volume", &Context::boxVolume)
-            .def_property("box_size", [](const Context &self) { return self.boxSize(); },
-                          [](Context &self, Context::BoxSize boxSize) { self.boxSize() = boxSize; })
-            .def_property("pbc", [](const Context &self) { return self.periodicBoundaryConditions(); },
-                          [](Context &self, Context::PeriodicBoundaryConditions pbc) {
+            .def_property("kbt", [](const KernelContext &self) { return self.kBT(); },
+                          [](KernelContext &self, scalar kbt) { self.kBT() = kbt; })
+            .def("box_volume", &KernelContext::boxVolume)
+            .def_property("box_size", [](const KernelContext &self) { return self.boxSize(); },
+                          [](KernelContext &self, KernelContext::BoxSize boxSize) { self.boxSize() = boxSize; })
+            .def_property("pbc", [](const KernelContext &self) { return self.periodicBoundaryConditions(); },
+                          [](KernelContext &self, KernelContext::PeriodicBoundaryConditions pbc) {
                               self.periodicBoundaryConditions() = pbc;
                           })
-            .def("bounding_box_vertices", &Context::getBoxBoundingVertices)
-            .def("calculate_max_cutoff", &Context::calculateMaxCutoff)
+            .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)
+            .def("calculate_max_cutoff", &KernelContext::calculateMaxCutoff)
             .def_property("record_reactions_with_positions",
-                          [](const Context &self) { return self.recordReactionsWithPositions(); },
-                          [](Context &self, bool value) { self.recordReactionsWithPositions() = value; })
-            .def_property("record_reaction_counts", [](const Context &self) { return self.recordReactionCounts(); },
-                          [](Context &self, bool value) { self.recordReactionCounts() = value; })
-            .def("set_kernel_configuration", &Context::setKernelConfiguration)
+                          [](const KernelContext &self) { return self.recordReactionsWithPositions(); },
+                          [](KernelContext &self, bool value) { self.recordReactionsWithPositions() = value; })
+            .def_property("record_reaction_counts", [](const KernelContext &self) { return self.recordReactionCounts(); },
+                          [](KernelContext &self, bool value) { self.recordReactionCounts() = value; })
+            .def("set_kernel_configuration", &KernelContext::setKernelConfiguration)
             ;
 
 }

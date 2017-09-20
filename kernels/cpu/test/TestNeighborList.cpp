@@ -55,13 +55,17 @@ struct TestNeighborList : ::testing::Test {
     std::unique_ptr<cpu::CPUKernel> kernel;
     readdy::particle_type_type typeIdA;
 
+    std::unique_ptr<readdy::testing::NOOPPotentialOrder2> noop;
+
     TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
         auto &ctx = kernel->getKernelContext();
         ctx.particle_types().add("A", 1., 1.);
+        auto a_id = ctx.particle_types()("A");
         readdy::scalar eductDistance = 1.2;
         ctx.reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
 
-        ctx.potentials().add(std::make_unique<readdy::testing::NOOPPotentialOrder2>("A", "A", 1.1, 0., 0.));
+        noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(a_id, a_id, 1.1, 0., 0.);
+        ctx.potentials().addUserDefined(noop.get());
         typeIdA = ctx.particle_types().id_of("A");
         ctx.configure();
     }

@@ -34,7 +34,7 @@
 namespace readdy {
 
 namespace rpy {
-PotentialOrder2Wrapper::PotentialOrder2Wrapper(const std::string &particleType1, const std::string &particleType2,
+PotentialOrder2Wrapper::PotentialOrder2Wrapper(particle_type_type particleType1, particle_type_type particleType2,
                                                pybind11::object o1, pybind11::object o2)
         : PotentialOrder2(particleType1, particleType2), calcEnergyFun(new pybind11::object(o1), [](pybind11::object *o) {
                       pybind11::gil_scoped_acquire lock;

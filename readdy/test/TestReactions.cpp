@@ -40,18 +40,6 @@ struct TestReactions : KernelTest {
 
 };
 
-TEST_P(TestReactions, TestReactionFactory) {
-    kernel->getKernelContext().particle_types().add("B", 2.0, 1.0);
-    kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
-    kernel->getKernelContext().reactions().addConversion("A to B", "A", "B", 0.55);
-
-    {
-        // sanity check of operator<< for reactions
-        const auto r = kernel->getReactionFactory().createReaction<readdy::model::reactions::Decay>("decay", 0, .1);
-        readdy::log::debug("decay reaction: {}", *r);
-    }
-}
-
 TEST_P(TestReactions, TestConstantNumberOfParticleType) {
     // scenario: two particle types A and B, which can form a complex AB which after a time is going to dissolve back
     // into A and B. Therefore, the numbers #(A) + #(AB) and #(B) + #(AB) must remain constant.

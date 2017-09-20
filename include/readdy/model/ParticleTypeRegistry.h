@@ -33,6 +33,7 @@
 #pragma once
 
 #include <readdy/common/common.h>
+
 #include "Particle.h"
 
 NAMESPACE_BEGIN(readdy)
@@ -83,6 +84,8 @@ public:
     ~ParticleTypeRegistry() = default;
 
     particle_type_type id_of(const std::string &name) const;
+
+    particle_type_type operator()(const std::string &name) const;
 
     void add(const std::string &name, scalar diffusionConst, scalar radius,
              particle_flavor flavor = particleflavor::NORMAL);

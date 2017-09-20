@@ -51,7 +51,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
-    kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "A", 1.0);
+    kernel->getKernelContext().potentials().addHarmonicRepulsion("A", "A", 1.0);
 
     ctx.configure();
     kernel->initialize();
@@ -98,8 +98,7 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     ctx.particle_types().add("B", 1.0, 2.0);
     ctx.boxSize() = {{10., 10., 10.}};
     ctx.periodicBoundaryConditions() = {{true, true, false}};
-
-    kernel->registerPotential<m::potentials::HarmonicRepulsion>("A", "B", 1.0);
+    ctx.potentials().addHarmonicRepulsion("A", "B", 1.0);
 
     ctx.configure();
     auto typeIdA = ctx.particle_types().id_of("A");

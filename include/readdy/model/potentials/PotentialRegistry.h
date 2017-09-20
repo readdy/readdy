@@ -33,11 +33,15 @@
 #pragma once
 
 #include <readdy/common/macros.h>
-#include <readdy/common/ParticleTypeTuple.h>
 #include <unordered_set>
+
+#include <readdy/common/ParticleTypeTuple.h>
+
 #include <readdy/model/ParticleTypeRegistry.h>
+
 #include "PotentialOrder1.h"
 #include "PotentialOrder2.h"
+#include "PotentialsOrder2.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -51,6 +55,8 @@ class PotentialRegistry {
     using pot_ptr_vec2_external = std::vector<potentials::PotentialOrder2 *>;
 public:
     using particle_type_registry_ref = std::reference_wrapper<const ParticleTypeRegistry>;
+
+    using id_type = Potential::id_type;
 
     explicit PotentialRegistry(particle_type_registry_ref typeRegistry);
 
@@ -70,15 +76,65 @@ public:
     using potential_o1_registry = std::unordered_map<particle_type_type, potentials_o1>;
     using potential_o2_registry = util::particle_type_pair_unordered_map<potentials_o2>;
 
-    const Potential::id add_external(potentials::PotentialOrder1 *potential);
+    id_type addUserDefined(potentials::PotentialOrder1 *potential);
 
-    const Potential::id add_external(potentials::PotentialOrder2 *potential);
+    id_type addUserDefined(potentials::PotentialOrder2 *potential);
 
-    const Potential::id add(std::shared_ptr<PotentialOrder1> potential);
+    id_type addCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent,
+                    bool considerParticleRadius = true);
 
-    const Potential::id add(std::shared_ptr<PotentialOrder2> potential);
+    id_type addCube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent,
+                    bool considerParticleRadius = true);
 
-    void remove(Potential::id handle);
+    id_type addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant);
+
+    id_type addHarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant);
+
+    id_type addWeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
+                                                scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff);
+
+    id_type addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
+                                                scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff);
+
+    id_type
+    addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2, scalar forceConstant,
+                                        const WeakInteractionPiecewiseHarmonic::Configuration &config);
+
+    id_type
+    addWeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2, scalar forceConstant,
+                                        const WeakInteractionPiecewiseHarmonic::Configuration &config);
+
+    id_type addLennardJones(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
+                            scalar cutoff, bool shift, scalar epsilon, scalar sigma);
+
+    id_type addLennardJones(particle_type_type type1, particle_type_type type2, unsigned int m, unsigned int n,
+                            scalar cutoff, bool shift, scalar epsilon, scalar sigma);
+
+    id_type addScreenedElectrostatics(const std::string &particleType1, const std::string &particleType2,
+                                      scalar electrostaticStrength, scalar inverseScreeningDepth,
+                                      scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
+                                      scalar cutoff);
+
+    id_type addScreenedElectrostatics(particle_type_type particleType1, particle_type_type particleType2,
+                                      scalar electrostaticStrength, scalar inverseScreeningDepth,
+                                      scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
+                                      scalar cutoff);
+
+    id_type addSphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius);
+
+    id_type addSphereOut(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, scalar radius);
+
+    id_type addSphereIn(const std::string &particleType, scalar forceConstant, const Vec3 &origin, scalar radius);
+
+    id_type addSphereIn(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, scalar radius);
+
+    id_type addSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height,
+                                scalar width);
+
+    id_type addSphericalBarrier(particle_type_type particleType, const Vec3 &origin, scalar radius, scalar height,
+                                scalar width);
+
+    void remove(Potential::id_type handle);
 
     const potentials_o1 &potentials_of(const particle_type_type type) const;
 
@@ -100,7 +156,7 @@ private:
     using potential_o1_registry_internal = std::unordered_map<particle_type_type, pot_ptr_vec1>;
     using potential_o2_registry_internal = util::particle_type_pair_unordered_map<pot_ptr_vec2>;
 
-    const ParticleTypeRegistry &typeRegistry;
+    const ParticleTypeRegistry &_types;
 
     potential_o1_registry potentialO1Registry{};
     potential_o2_registry potentialO2Registry{};

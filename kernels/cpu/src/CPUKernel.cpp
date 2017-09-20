@@ -41,8 +41,6 @@ const std::string CPUKernel::name = "CPU";
 
 struct CPUKernel::Impl {
     std::unique_ptr<actions::CPUActionFactory> actionFactory;
-    std::unique_ptr<readdy::model::potentials::PotentialFactory> potentialFactory;
-    std::unique_ptr<readdy::model::reactions::ReactionFactory> reactionFactory;
     std::unique_ptr<observables::CPUObservableFactory> observableFactory;
     std::unique_ptr<readdy::model::compartments::CompartmentFactory> compartmentFactory;
     std::unique_ptr<CPUStateModel> stateModel;
@@ -59,12 +57,10 @@ CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Imp
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
     pimpl->config->setMode(readdy::util::thread::ThreadMode::pool);
 
-    pimpl->reactionFactory = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
     pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::actions::top::CPUTopologyActionFactory>(this);
     pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get(), pimpl->config.get(), pimpl->topologyActionFactory.get());
-    pimpl->potentialFactory = std::make_unique<readdy::model::potentials::PotentialFactory>();
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
     pimpl->compartmentFactory = std::make_unique<readdy::model::compartments::CompartmentFactory>();
 }
@@ -75,14 +71,6 @@ CPUStateModel &CPUKernel::getKernelStateModelInternal() const {
 
 readdy::model::KernelContext &CPUKernel::getKernelContextInternal() const {
     return *pimpl->context;
-}
-
-readdy::model::potentials::PotentialFactory &CPUKernel::getPotentialFactoryInternal() const {
-    return *pimpl->potentialFactory;
-}
-
-readdy::model::reactions::ReactionFactory &CPUKernel::getReactionFactoryInternal() const {
-    return *pimpl->reactionFactory;
 }
 
 readdy::model::observables::ObservableFactory &CPUKernel::getObservableFactoryInternal() const {

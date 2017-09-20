@@ -37,9 +37,7 @@ const std::string SCPUKernel::name = "SingleCPU";
 struct SCPUKernel::Impl {
     std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<SCPUStateModel> model;
-    std::unique_ptr<readdy::model::potentials::PotentialFactory> potentials;
     std::unique_ptr<actions::SCPUActionFactory> actionFactory;
-    std::unique_ptr<readdy::model::reactions::ReactionFactory> reactions;
     std::unique_ptr<observables::SCPUObservableFactory> observables;
     std::unique_ptr<model::top::SCPUTopologyActionFactory> topologyActionFactory;
     std::unique_ptr<readdy::model::compartments::CompartmentFactory> compartmentFactory;
@@ -48,8 +46,6 @@ struct SCPUKernel::Impl {
 SCPUKernel::SCPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<SCPUKernel::Impl>()) {
     pimpl->actionFactory = std::make_unique<actions::SCPUActionFactory>(this);
     pimpl->topologyActionFactory = std::make_unique<model::top::SCPUTopologyActionFactory>(this);
-    pimpl->potentials = std::make_unique<readdy::model::potentials::PotentialFactory>();
-    pimpl->reactions = std::make_unique<readdy::model::reactions::ReactionFactory>();
     pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->model = std::make_unique<SCPUStateModel>(pimpl->context.get(), pimpl->topologyActionFactory.get());
     pimpl->observables = std::make_unique<observables::SCPUObservableFactory>(this);
@@ -76,20 +72,8 @@ readdy::model::KernelContext &SCPUKernel::getKernelContextInternal() const {
     return *pimpl->context;
 }
 
-std::vector<std::string> SCPUKernel::getAvailablePotentials() const {
-    return pimpl->potentials->getAvailablePotentials();
-}
-
-readdy::model::potentials::PotentialFactory &SCPUKernel::getPotentialFactoryInternal() const {
-    return *pimpl->potentials;
-}
-
 readdy::model::actions::ActionFactory &SCPUKernel::getActionFactoryInternal() const {
     return *pimpl->actionFactory;
-}
-
-readdy::model::reactions::ReactionFactory &SCPUKernel::getReactionFactoryInternal() const {
-    return *pimpl->reactions;
 }
 
 readdy::model::observables::ObservableFactory &SCPUKernel::getObservableFactoryInternal() const {

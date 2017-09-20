@@ -43,23 +43,24 @@ NAMESPACE_BEGIN(potentials)
 
 class Potential {
 public:
-    using id = short;
-    
-    explicit Potential(const int order) : order(order), _id(counter++) { }
+    using id_type = short;
+    using order_type = std::uint8_t;
+
+    explicit Potential(order_type order) : _order(order), _id(counter++) { }
 
     Potential(const Potential&) = default;
     Potential& operator=(const Potential&) = delete;
     Potential(Potential&&) = default;
-    Potential& operator=(Potential&& ) = delete;
+    Potential& operator=(Potential&& ) = default;
 
     virtual ~Potential() = default;
 
-    const id getId() const {
+    const id_type getId() const {
         return _id;
     }
 
-    const int getOrder() const {
-        return order;
+    order_type getOrder() const {
+        return _order;
     }
 
     virtual scalar getMaximalForce(scalar kbt) const noexcept = 0;
@@ -72,10 +73,10 @@ public:
     }
 
 private:
-    static id counter;
+    static id_type counter;
 
-    const int order;
-    const id _id;
+    order_type _order;
+    id_type _id;
 };
 
 NAMESPACE_END(potentials)

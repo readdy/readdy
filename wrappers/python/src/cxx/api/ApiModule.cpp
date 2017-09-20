@@ -192,7 +192,7 @@ void exportApi(py::module &api) {
             .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a);
 
     py::class_<pot2>(api, "Pot2")
-            .def(py::init<std::string, std::string, py::object, py::object>())
+            .def(py::init<readdy::particle_type_type, readdy::particle_type_type, py::object, py::object>())
             .def("calc_energy", &pot2::calculateEnergy, "x_ij"_a)
             .def("calc_force", &pot2::calculateForce, "force"_a, "x_ij"_a);
 
