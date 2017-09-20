@@ -57,7 +57,7 @@ Vec3 Simulation::getBoxSize() const {
 
 }
 
-const std::array<bool, 3>& Simulation::getPeriodicBoundary() const {
+const std::array<bool, 3> &Simulation::getPeriodicBoundary() const {
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().periodicBoundaryConditions();
 }
@@ -123,7 +123,8 @@ const short
 Simulation::registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
                                                scalar forceConstant) {
     ensureKernelSelected();
-    return pimpl->kernel->getKernelContext().potentials().addHarmonicRepulsion(particleTypeA, particleTypeB, forceConstant);
+    return pimpl->kernel->getKernelContext().potentials().addHarmonicRepulsion(particleTypeA, particleTypeB,
+                                                                               forceConstant);
 }
 
 const short
@@ -132,15 +133,20 @@ Simulation::registerWeakInteractionPiecewiseHarmonicPotential(const std::string 
                                                               scalar desiredParticleDistance, scalar depth,
                                                               scalar noInteractionDistance) {
     ensureKernelSelected();
-    return pimpl->kernel->getKernelContext().potentials().addWeakInteractionPiecewiseHarmonic(particleTypeA, particleTypeB, forceConstant,
-                                                         desiredParticleDistance, depth, noInteractionDistance);
+    return pimpl->kernel->getKernelContext().potentials().addWeakInteractionPiecewiseHarmonic(particleTypeA,
+                                                                                              particleTypeB,
+                                                                                              forceConstant,
+                                                                                              desiredParticleDistance,
+                                                                                              depth,
+                                                                                              noInteractionDistance);
 }
 
 const short
 Simulation::registerLennardJonesPotential(const std::string &type1, const std::string &type2, unsigned int m,
                                           unsigned int n, scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
     ensureKernelSelected();
-    return pimpl->kernel->getKernelContext().potentials().addLennardJones(type1, type2, m, n, cutoff, shift, epsilon, sigma);
+    return pimpl->kernel->getKernelContext().potentials().addLennardJones(type1, type2, m, n, cutoff, shift, epsilon,
+                                                                          sigma);
 }
 
 
@@ -151,9 +157,12 @@ Simulation::registerScreenedElectrostaticsPotential(const std::string &particleT
                                                     scalar repulsionDistance,
                                                     unsigned int exponent, scalar cutoff) {
     ensureKernelSelected();
-    return pimpl->kernel->getKernelContext().potentials().addScreenedElectrostatics(particleType1, particleType2, electrostaticStrength,
-                                                         inverseScreeningDepth,
-                                                         repulsionStrength, repulsionDistance, exponent, cutoff);
+    return pimpl->kernel->getKernelContext().potentials().addScreenedElectrostatics(particleType1, particleType2,
+                                                                                    electrostaticStrength,
+                                                                                    inverseScreeningDepth,
+                                                                                    repulsionStrength,
+                                                                                    repulsionDistance, exponent,
+                                                                                    cutoff);
 }
 
 const short
@@ -162,7 +171,7 @@ Simulation::registerBoxPotential(const std::string &particleType, scalar forceCo
                                  bool considerParticleRadius) {
     ensureKernelSelected();
     return pimpl->kernel->getKernelContext().potentials().addCube(particleType, forceConstant, origin, extent,
-                                                         considerParticleRadius);
+                                                                  considerParticleRadius);
 }
 
 const short
@@ -180,9 +189,11 @@ Simulation::registerSphereOutPotential(const std::string &particleType, scalar f
 }
 
 const short
-Simulation::registerSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height, scalar width) {
+Simulation::registerSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height,
+                                     scalar width) {
     ensureKernelSelected();
-    return pimpl->kernel->getKernelContext().potentials().addSphericalBarrier(particleType, origin, radius, height, width);
+    return pimpl->kernel->getKernelContext().potentials().addSphericalBarrier(particleType, origin, radius, height,
+                                                                              width);
 }
 
 void Simulation::ensureKernelSelected() const {
@@ -299,8 +310,8 @@ const short Simulation::registerCompartmentSphere(const std::unordered_map<std::
                                                   const Vec3 &origin, const scalar radius,
                                                   const bool largerOrLess) {
     ensureKernelSelected();
-    return getSelectedKernel()->registerCompartment<model::compartments::Sphere>(conversionsMap, name, origin, radius,
-                                                                                 largerOrLess);
+    return getSelectedKernel()->getKernelContext().compartments().addSphere(conversionsMap, name, origin, radius,
+                                                                            largerOrLess);
 }
 
 const short Simulation::registerCompartmentPlane(const std::unordered_map<std::string, std::string> &conversionsMap,
@@ -308,9 +319,9 @@ const short Simulation::registerCompartmentPlane(const std::unordered_map<std::s
                                                  const Vec3 &normalCoefficients, const scalar distanceFromPlane,
                                                  const bool largerOrLess) {
     ensureKernelSelected();
-    return getSelectedKernel()->registerCompartment<model::compartments::Plane>(conversionsMap, name,
-                                                                                normalCoefficients, distanceFromPlane,
-                                                                                largerOrLess);
+    return getSelectedKernel()->getKernelContext().compartments().addPlane(conversionsMap, name,
+                                                                           normalCoefficients, distanceFromPlane,
+                                                                           largerOrLess);
 }
 
 readdy::model::TopologyParticle
@@ -325,7 +336,7 @@ bool Simulation::kernelSupportsTopologies() const {
 }
 
 readdy::model::top::GraphTopology *
-Simulation::addTopology(const std::string& type, const std::vector<readdy::model::TopologyParticle> &particles) {
+Simulation::addTopology(const std::string &type, const std::vector<readdy::model::TopologyParticle> &particles) {
     ensureKernelSelected();
     if (getSelectedKernel()->supportsTopologies()) {
         auto typeId = getSelectedKernel()->getKernelContext().topology_registry().id_of(type);
@@ -405,7 +416,7 @@ readdy::plugin::KernelProvider::raw_kernel_ptr Simulation::setKernel(plugin::Ker
 }
 
 readdy::topology_type_type Simulation::registerTopologyType(const std::string &name,
-                                      const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions) {
+                                                            const std::vector<model::top::reactions::StructuralTopologyReaction> &reactions) {
     ensureKernelSelected();
     return getSelectedKernel()->getKernelContext().topology_registry().add_type(name, reactions);
 }

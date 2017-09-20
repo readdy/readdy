@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,59 +23,49 @@
 /**
  * << detailed description >>
  *
- * @file Compartment.h
+ * @file CompartmentRegistry.h
  * @brief << brief description >>
- * @author chrisfroe
- * @date 12.01.17
+ * @author clonker
+ * @date 20.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <unordered_map>
-#include <utility>
-
-#include <readdy/model/Particle.h>
+#include <readdy/common/macros.h>
+#include <readdy/model/ParticleTypeRegistry.h>
+#include "Compartment.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(compartments)
 
-class Compartment {
+class CompartmentRegistry {
 public:
-    using id_type = short;
-    using label_conversion_map = std::unordered_map<std::string, std::string>;
-    using conversion_map = std::unordered_map<particle_type_type, particle_type_type>;
 
-    Compartment(conversion_map conversions, std::string typeName,
-                std::string uniqueName)
-            : typeName(std::move(typeName)), uniqueName(std::move(uniqueName)),
-              conversions(std::move(conversions)), _id(counter++) {}
+    explicit CompartmentRegistry(const ParticleTypeRegistry &types);
 
-    virtual const bool isContained(const Vec3 &position) const = 0;
+    Compartment::id_type addSphere(const Compartment::conversion_map &conversions, const std::string &uniqueName,
+                                   const Vec3 &origin, scalar radius, bool largerOrLess);
 
-    const conversion_map &getConversions() const {
-        return conversions;
-    }
+    Compartment::id_type addSphere(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
+                                   const Vec3 &origin, scalar radius, bool largerOrLess);
 
-    const std::string &getTypeName() const {
-        return typeName;
-    }
+    Compartment::id_type addPlane(const Compartment::conversion_map &conversions, const std::string &uniqueName,
+                                  const Vec3 &normalCoefficients, scalar distance, bool largerOrLess);
 
-    const std::string &getUniqueName() const {
-        return uniqueName;
-    }
+    Compartment::id_type addPlane(const Compartment::label_conversion_map &conversions, const std::string &uniqueName,
+                                  const Vec3 &normalCoefficients, scalar distance, bool largerOrLess);
 
-    const id_type getId() const {
-        return _id;
-    }
 
-protected:
-    static id_type counter;
+    const std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &get() const;
 
-    std::string typeName;
-    std::string uniqueName;
-    id_type _id;
-    conversion_map conversions;
+    std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> &get();
+
+private:
+    std::vector<std::shared_ptr<readdy::model::compartments::Compartment>> _compartments;
+
+    std::reference_wrapper<const ParticleTypeRegistry> _types;
 };
 
 NAMESPACE_END(compartments)

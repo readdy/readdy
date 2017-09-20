@@ -60,12 +60,10 @@ transformTypes2(const std::vector<std::string> &types, const readdy::model::Kern
 }
 
 inline std::unordered_map<Particle::type_type, Particle::type_type>
-transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap, const readdy::model::KernelContext &ctx) {
+transformTypesMap(const std::unordered_map<std::string, std::string> &stringMap, const ParticleTypeRegistry &types) {
     std::unordered_map<Particle::type_type, Particle::type_type> result;
     for (const auto &pair : stringMap) {
-        const auto id1 = ctx.particle_types().id_of(pair.first);
-        const auto id2 = ctx.particle_types().id_of(pair.second);
-        result.emplace(id1, id2);
+        result.emplace(types(pair.first), types(pair.second));
     }
     return result;
 }

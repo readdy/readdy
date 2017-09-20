@@ -48,26 +48,23 @@
 #include <vector>
 #include <unordered_set>
 
-#include <json.hpp>
-
 #include <readdy/common/ParticleTypeTuple.h>
 #include "ParticleTypeRegistry.h"
 
 #include <readdy/model/potentials/PotentialRegistry.h>
-#include <readdy/model/compartments/Compartment.h>
-
 #include <readdy/model/reactions/ReactionRegistry.h>
 #include <readdy/model/topologies/TopologyRegistry.h>
+#include <readdy/model/compartments/CompartmentRegistry.h>
+#include <readdy/api/KernelConfiguration.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
 class KernelContext {
 public:
-    using CompartmentRegistry = std::vector<std::shared_ptr<readdy::model::compartments::Compartment>>;
     using BoxSize = std::array<scalar, 3>;
     using PeriodicBoundaryConditions = std::array<bool, 3>;
-    using KernelConfiguration = nlohmann::json;
+    using KernelConfiguration = conf::Configuration;
 
     using fix_pos_fun = std::function<void(Vec3 &)>;
     using pbc_fun = std::function<Vec3(const Vec3 &)>;
@@ -100,16 +97,9 @@ public:
 
     const scalar calculateMaxCutoff() const;
 
-    template<typename T>
-    const short registerCompartment(std::shared_ptr<T> compartment) {
-        // assert to prevent errors already at compile-time
-        static_assert(std::is_base_of<compartments::Compartment, T>::value, "argument must be a compartment");
-        const auto id = compartment->getId();
-        _compartmentRegistry.push_back(std::move(compartment));
-        return id;
-    }
+    compartments::CompartmentRegistry &compartments();
 
-    const CompartmentRegistry &compartments() const;
+    const compartments::CompartmentRegistry &compartments() const;
 
     /**
      * Copy the reactions and potentials of the internal and external registries into the actual registries, which
@@ -191,7 +181,7 @@ private:
     reactions::ReactionRegistry _reactionRegistry;
     potentials::PotentialRegistry _potentialRegistry;
     top::TopologyRegistry _topologyRegistry;
-    CompartmentRegistry _compartmentRegistry;
+    compartments::CompartmentRegistry _compartmentRegistry;
 
     KernelConfiguration _kernelConfiguration;
 

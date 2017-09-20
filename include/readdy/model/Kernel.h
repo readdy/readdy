@@ -45,7 +45,6 @@
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/actions/ActionFactory.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
-#include <readdy/model/compartments/CompartmentFactory.h>
 #include <readdy/model/_internal/Util.h>
 
 NAMESPACE_BEGIN(readdy)
@@ -58,7 +57,7 @@ NAMESPACE_END(detail)
 
 /**
  * Base class of kernels.
- * A Kernel is used to execute Programs, i.e., instances of readdy::plugin::Program.
+ * A Kernel is used to execute Actions, i.e., instances of readdy::model::actions::Action.
  * The kernels can be built in or provided by shared libs in directories, which are loaded by the KernelProvider.
  * Each Kernel has a #name by which it can be accessed in the KernelProvider.
  */
@@ -141,14 +140,6 @@ public:
 
     TopologyParticle createTopologyParticle(const std::string &type, const Vec3 &pos) const;
 
-    template<typename T, typename... Args>
-    compartments::Compartment::id
-    registerCompartment(const std::unordered_map<std::string, std::string> &conversionsMapStr, Args &&... args) {
-        auto conversionsMapInt = _internal::util::transformTypesMap(conversionsMapStr, getKernelContext());
-        auto comp = getCompartmentFactory().createCompartment<T>(conversionsMapInt, std::forward<Args>(args)...);
-        return getKernelContext().registerCompartment(std::move(comp));
-    }
-
     template<typename T, typename Obs1, typename Obs2>
     inline std::unique_ptr<T> createCombinedObservable(Obs1 *obs1, Obs2 *obs2, unsigned int stride = 1) const {
         return getObservableFactory().create(obs1, obs2, stride);
@@ -178,10 +169,6 @@ public:
     const readdy::model::actions::ActionFactory &getActionFactory() const;
 
     readdy::model::actions::ActionFactory &getActionFactory();
-
-    const readdy::model::compartments::CompartmentFactory &getCompartmentFactory() const;
-
-    readdy::model::compartments::CompartmentFactory &getCompartmentFactory();
 
     const readdy::model::observables::ObservableFactory &getObservableFactory() const;
 
@@ -214,8 +201,6 @@ protected:
     virtual readdy::model::KernelContext &getKernelContextInternal() const = 0;
 
     virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
-
-    virtual readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const = 0;
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const;
 

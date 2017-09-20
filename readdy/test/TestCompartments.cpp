@@ -48,7 +48,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
     kernel->addParticle("A", readdy::Vec3(1, 0, 2));
 
     std::unordered_map<std::string, std::string> conversionsMap = {{"A", "B"}};
-    kernel->registerCompartment<m::compartments::Sphere>(conversionsMap, "kugelrund", readdy::Vec3(0,0,0), 10., false);
+    ctx.compartments().addSphere(conversionsMap, "kugelrund", readdy::Vec3(0,0,0), 10., false);
 
     std::vector<std::string> typesToCount = {"A", "B"};
     auto &&obs = kernel->createObservable<m::observables::NParticles>(1, typesToCount);
@@ -76,8 +76,8 @@ TEST_P(TestCompartments, TwoCompartments) {
 
     std::unordered_map<std::string, std::string> conversionsXPos = {{"A", "C"}, {"B", "C"}};
     std::unordered_map<std::string, std::string> conversionsXNeg = {{"A", "D"}, {"B", "D"}};
-    kernel->registerCompartment<m::compartments::Plane>(conversionsXPos, "XPos", readdy::Vec3(1,0,0), 0, true);
-    kernel->registerCompartment<m::compartments::Plane>(conversionsXNeg, "XNeg", readdy::Vec3(-1,0,0), 0, true);
+    ctx.compartments().addPlane(conversionsXPos, "XPos", readdy::Vec3(1,0,0), 0, true);
+    ctx.compartments().addPlane(conversionsXNeg, "XNeg", readdy::Vec3(-1,0,0), 0, true);
 
     for (auto i = 0; i < 100; ++i) {
         kernel->addParticle("A", readdy::model::rnd::normal3<readdy::scalar>());

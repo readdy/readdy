@@ -30,6 +30,9 @@
  */
 
 #include <readdy/model/KernelContext.h>
+
+#include <json.hpp>
+
 #include <readdy/common/Utils.h>
 #include <readdy/model/_internal/Util.h>
 #include <readdy/common/boundary_condition_operations.h>
@@ -49,7 +52,8 @@ scalar &KernelContext::kBT() {
 
 KernelContext::KernelContext()
         : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
-          _topologyRegistry(_particleTypeRegistry), _kernelConfiguration{} {
+          _topologyRegistry(_particleTypeRegistry), _compartmentRegistry(_particleTypeRegistry),
+          _kernelConfiguration{} {
     using namespace std::placeholders;
     _pbc = std::bind(&bcs::applyPBC<false, false, false>, _1, c_::one, c_::one, c_::one);
     _fixPositionFun = std::bind(&bcs::fixPosition<false, false, false>, _1, c_::one, c_::one, c_::one);
@@ -108,11 +112,6 @@ std::tuple<Vec3, Vec3> KernelContext::getBoxBoundingVertices() const {
     auto upperRight = lowerLeft + Vec3(boxSize);
     return std::make_tuple(lowerLeft, upperRight);
 }
-
-const KernelContext::CompartmentRegistry &KernelContext::compartments() const {
-    return _compartmentRegistry;
-}
-
 
 const bool &KernelContext::recordReactionsWithPositions() const {
     return _recordReactionsWithPositions;
@@ -265,7 +264,15 @@ const KernelContext::KernelConfiguration &KernelContext::kernelConfiguration() c
 }
 
 void KernelContext::setKernelConfiguration(const std::string &s) {
-    _kernelConfiguration = KernelConfiguration::parse(s);
+    _kernelConfiguration = nlohmann::json::parse(s);
+}
+
+const compartments::CompartmentRegistry &KernelContext::compartments() const {
+    return _compartmentRegistry;
+}
+
+compartments::CompartmentRegistry &KernelContext::compartments() {
+    return _compartmentRegistry;
 }
 
 KernelContext::~KernelContext() = default;

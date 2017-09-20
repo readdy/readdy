@@ -138,14 +138,6 @@ readdy::model::actions::ActionFactory &Kernel::getActionFactory() {
     return getActionFactoryInternal();
 }
 
-const readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() const {
-    return getCompartmentFactoryInternal();
-}
-
-readdy::model::compartments::CompartmentFactory &Kernel::getCompartmentFactory() {
-    return getCompartmentFactoryInternal();
-}
-
 const readdy::model::observables::ObservableFactory &Kernel::getObservableFactory() const {
     return getObservableFactoryInternal();
 }

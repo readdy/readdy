@@ -64,8 +64,6 @@ protected:
 
     readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
 
-    readdy::model::compartments::CompartmentFactory &getCompartmentFactoryInternal() const override;
-
     readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const override;
 
     readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;
