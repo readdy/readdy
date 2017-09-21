@@ -31,6 +31,9 @@
  */
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
+#include <pybind11/functional.h>
 #include <readdy/model/KernelContext.h>
 
 namespace py = pybind11;
@@ -165,6 +168,10 @@ void exportKernelContext(py::module &module) {
                           [](KernelContext &self, KernelContext::PeriodicBoundaryConditions pbc) {
                               self.periodicBoundaryConditions() = pbc;
                           })
+            .def_property_readonly("dist_squared_fun", &KernelContext::distSquaredFun)
+            .def_property_readonly("fix_position_fun", &KernelContext::fixPositionFun)
+            .def_property_readonly("shortest_difference_fun", &KernelContext::shortestDifferenceFun)
+            .def("configure", &KernelContext::configure, "debug_output"_a = true)
             .def("bounding_box_vertices", &KernelContext::getBoxBoundingVertices)
             .def("calculate_max_cutoff", &KernelContext::calculateMaxCutoff)
             .def_property("record_reactions_with_positions",
@@ -174,10 +181,10 @@ void exportKernelContext(py::module &module) {
                           [](const KernelContext &self) { return self.recordReactionCounts(); },
                           [](KernelContext &self, bool value) { self.recordReactionCounts() = value; })
             .def("set_kernel_configuration", &KernelContext::setKernelConfiguration)
-            .def("particle_types", [](KernelContext &self) { return self.particle_types(); }, rvp::reference_internal)
-            .def("reactions", [](KernelContext &self) { return self.reactions(); }, rvp::reference_internal)
-            .def("potentials", [](KernelContext &self) { return self.potentials(); }, rvp::reference_internal)
-            .def("topologies", [](KernelContext &self) { return self.topology_registry(); }, rvp::reference_internal)
-            .def("compartments", [](KernelContext &self) { return self.compartments(); }, rvp::reference_internal);
+            .def("particle_types", [](KernelContext &self) -> ParticleTypeRegistry&  { return self.particle_types(); }, rvp::reference_internal)
+            .def("reactions", [](KernelContext &self) -> ReactionRegistry& { return self.reactions(); }, rvp::reference_internal)
+            .def("potentials", [](KernelContext &self) -> PotentialRegistry& { return self.potentials(); }, rvp::reference_internal)
+            .def("topologies", [](KernelContext &self) -> TopologyRegistry& { return self.topology_registry(); }, rvp::reference_internal)
+            .def("compartments", [](KernelContext &self) -> CompartmentRegistry&  { return self.compartments(); }, rvp::reference_internal);
 
 }
