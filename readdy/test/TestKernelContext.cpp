@@ -281,13 +281,11 @@ TEST_F(TestKernelContext, ReactionDescriptorInvalidInputs) {
     m::KernelContext ctx;
     ctx.particle_types().add("A", 1., 1.);
     ctx.particle_types().add("B", 1., 1.);
-    std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]"};
+    std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]", "blub: A (3)+ A -> B"};
     for (const auto &i : inv) {
-        auto addInv = [&ctx, &i]() {
-            ctx.reactions().add(i, 42.);
-        };
-        EXPECT_ANY_THROW(addInv());
+        EXPECT_ANY_THROW(ctx.reactions().add(i, 42.));
     }
+    ctx.configure();
     EXPECT_EQ(ctx.reactions().n_order1(), 0);
     EXPECT_EQ(ctx.reactions().n_order2(), 0);
 }

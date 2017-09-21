@@ -373,9 +373,7 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
         if (rhs.empty()) {
             // numberProducts = 0 -> decay
             assert(numberEducts == 1);
-            log::trace("Found decay reaction from descriptor {}, with name {}, educt {}, rate {}", descriptor, name, educt1, rate);
             return addDecay(name, educt1, rate);
-
         } else {
             auto plusPos = rhs.find('+');
             if (plusPos == rhs.npos) {
@@ -401,8 +399,6 @@ ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descripto
                     std::tie(product1, product2, productDistance) = treatSideWithPlus(rhs, plusPos, false);
                     assert(educt2 == product2);
                     auto distance = static_cast<scalar>(std::stod(eductDistance));
-                    log::trace("Found enzymatic reaction from descriptor {}, with name {}, catalyst {}, from {}, to {}, rate {}", descriptor, name,
-                               educt2, educt1, product1, rate);
                     return addEnzymatic(name, educt2, educt1, product1, rate, distance);
                 }
             }
