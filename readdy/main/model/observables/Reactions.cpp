@@ -76,16 +76,16 @@ void Reactions::append() {
     pimpl->writer->append({1}, &result);
     if (pimpl->firstWrite) {
         pimpl->firstWrite = false;
-        ioutils::writeReactionInformation(*pimpl->group, kernel->getKernelContext());
+        ioutils::writeReactionInformation(*pimpl->group, kernel->context());
     }
     pimpl->time->append(t_current);
 }
 
 void Reactions::initialize(Kernel *const kernel) {
-    if (!kernel->getKernelContext().recordReactionsWithPositions()) {
+    if (!kernel->context().recordReactionsWithPositions()) {
         log::warn("The \"Reactions\"-observable set context.recordReactionsWithPositions() to true. "
                           "If this is undesired, the observable should not be registered.");
-        kernel->getKernelContext().recordReactionsWithPositions() = true;
+        kernel->context().recordReactionsWithPositions() = true;
     }
 }
 

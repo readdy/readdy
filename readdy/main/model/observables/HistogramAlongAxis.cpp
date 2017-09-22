@@ -61,7 +61,7 @@ HistogramAlongAxis::HistogramAlongAxis(Kernel *const kernel, unsigned int stride
                                        std::vector<std::string> typesToCount,
                                        unsigned int axis)
         : HistogramAlongAxis(kernel, stride, std::move(binBorders),
-                             _internal::util::transformTypes(typesToCount, kernel->getKernelContext()),
+                             _internal::util::transformTypes(typesToCount, kernel->context()),
                              axis) {
 
 }

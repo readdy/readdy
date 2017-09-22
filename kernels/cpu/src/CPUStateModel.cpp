@@ -46,7 +46,7 @@ using entries_it = CPUStateModel::data_type::Entries::iterator;
 using topologies_it = std::vector<std::unique_ptr<readdy::model::top::GraphTopology>>::const_iterator;
 using pot1Map = readdy::model::potentials::PotentialRegistry::potential_o1_registry;
 using pot2Map = readdy::model::potentials::PotentialRegistry::potential_o2_registry;
-using dist_fun = readdy::model::KernelContext::shortest_dist_fun;
+using dist_fun = readdy::model::Context::shortest_dist_fun;
 
 const std::vector<Vec3> CPUStateModel::getParticlePositions() const {
     const auto data = _neighborList->data();
@@ -86,10 +86,10 @@ void CPUStateModel::removeParticle(const readdy::model::Particle &p) {
     getParticleData()->removeParticle(p);
 }
 
-CPUStateModel::CPUStateModel(readdy::model::KernelContext *const context,
+CPUStateModel::CPUStateModel(const readdy::model::Context &context,
                              readdy::util::thread::Config const *const config,
                              readdy::model::top::TopologyActionFactory const *const taf)
-        : _config(*config), _context(*context), _topologyActionFactory(*taf) {
+        : _config(*config), _context(context), _topologyActionFactory(*taf) {
     _neighborList = std::unique_ptr<neighbor_list>(
             // new nl::CellDecompositionNeighborList(*getParticleData(), *pimpl->context, *config)
             new nl::CompactCLLNeighborList(1, _context.get(), *config)

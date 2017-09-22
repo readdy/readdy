@@ -244,7 +244,7 @@ public:
     ~SCPUReactionCounts() override = default;
 
     void evaluate() override {
-        readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->getKernelContext());
+        readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->context());
         assignCountsToResult(kernel->getSCPUKernelStateModel().reactionCounts(), result);
     }
 
@@ -263,7 +263,7 @@ public:
     void evaluate() override {
         if (binBorders.size() > 1) {
             std::fill(counts.begin(), counts.end(), 0);
-            const auto particles = kernel->getKernelStateModel().getParticles();
+            const auto particles = kernel->stateModel().getParticles();
             auto isInCollection = [](const readdy::model::Particle &p, const std::vector<unsigned int> &collection) {
                 return std::find(collection.begin(), collection.end(), p.getType()) != collection.end();
             };
@@ -272,7 +272,7 @@ public:
                                                           return isInCollection(p, typeCountFrom);
                                                       });
             {
-                const auto &distSquared = kernel->getKernelContext().distSquaredFun();
+                const auto &distSquared = kernel->context().distSquaredFun();
                 for (auto &&pFrom : particles) {
                     if (isInCollection(pFrom, typeCountFrom)) {
                         for (auto &&pTo : particles) {

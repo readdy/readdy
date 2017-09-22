@@ -48,7 +48,7 @@ struct Forces::Impl {
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<std::string> typesToCount)
         : Forces(kernel, stride,
-                 _internal::util::transformTypes2(typesToCount, kernel->getKernelContext())) {}
+                 _internal::util::transformTypes2(typesToCount, kernel->context())) {}
 
 Forces::Forces(Kernel *const kernel, unsigned int stride, std::vector<unsigned int> typesToCount)
         : Observable(kernel, stride), typesToCount(std::move(typesToCount)), pimpl(std::make_unique<Impl>()) {}

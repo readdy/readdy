@@ -40,7 +40,7 @@ namespace readdy {
 namespace model {
 namespace util {
 
-scalar  getMaximumDisplacement(KernelContext& context, const scalar  timeStep) {
+scalar  getMaximumDisplacement(Context& context, const scalar  timeStep) {
     context.configure();
 
     scalar  kbt = context.kBT();
@@ -66,7 +66,7 @@ scalar  getMaximumDisplacement(KernelContext& context, const scalar  timeStep) {
     return maximum_displacement;
 }
 
-scalar  getRecommendedTimeStep(unsigned int N, KernelContext& context) {
+scalar  getRecommendedTimeStep(unsigned int N, Context& context) {
     scalar  tau_R = 0;
 
     context.configure();

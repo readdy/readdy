@@ -34,7 +34,7 @@
 #include <memory>
 #include <readdy/model/KernelStateModel.h>
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
@@ -82,7 +82,7 @@ public:
 
     virtual void increaseEnergy(scalar increase);
 
-    SCPUStateModel(readdy::model::KernelContext const *context, const topology_action_factory *);
+    SCPUStateModel(const readdy::model::Context &context, const topology_action_factory *);
 
     ~SCPUStateModel() override;
 
@@ -124,6 +124,8 @@ public:
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl;
+
+    std::reference_wrapper<const readdy::model::Context> _context;
 
     topologies_vec _topologies;
 };

@@ -49,7 +49,7 @@ class CPUCalculateHarmonicBondPotential : public readdy::model::top::pot::Calcul
     CPUStateModel::data_type *const data;
 
 public:
-    CPUCalculateHarmonicBondPotential(const readdy::model::KernelContext *const context,
+    CPUCalculateHarmonicBondPotential(const readdy::model::Context *const context,
                                       CPUStateModel::data_type *const data,
                                       const harmonic_bond *const potential)
             : CalculateHarmonicBondPotential(context), potential(potential), data(data) {}
@@ -78,7 +78,7 @@ class CPUCalculateHarmonicAnglePotential : public readdy::model::top::pot::Calcu
     const harmonic_angle *const potential;
     CPUStateModel::data_type *const data;
 public:
-    CPUCalculateHarmonicAnglePotential(const readdy::model::KernelContext *const context, CPUStateModel::data_type *const data,
+    CPUCalculateHarmonicAnglePotential(const readdy::model::Context *const context, CPUStateModel::data_type *const data,
                                        const harmonic_angle *const potential)
             : CalculateHarmonicAnglePotential(context), potential(potential), data(data) {}
 
@@ -105,7 +105,7 @@ class CPUCalculateCosineDihedralPotential : public readdy::model::top::pot::Calc
     const cos_dihedral *const potential;
     CPUStateModel::data_type *const data;
 public:
-    CPUCalculateCosineDihedralPotential(const readdy::model::KernelContext *const context,
+    CPUCalculateCosineDihedralPotential(const readdy::model::Context *const context,
                                         CPUStateModel::data_type *const data,
                                         const cos_dihedral *const pot)
             : CalculateCosineDihedralPotential(context), potential(pot), data(data) {

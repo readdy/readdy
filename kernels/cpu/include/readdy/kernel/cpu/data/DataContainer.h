@@ -33,7 +33,7 @@
 #pragma once
 
 #include <functional>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/common/signals.h>
 #include <readdy/kernel/cpu/util/hilbert.h>
@@ -61,7 +61,7 @@ public:
     using iterator = typename Entries::iterator;
     using const_iterator = typename Entries::const_iterator;
 
-    DataContainer(const readdy::model::KernelContext &context, const readdy::util::thread::Config &threadConfig)
+    DataContainer(const readdy::model::Context &context, const readdy::util::thread::Config &threadConfig)
             : _context(context), _threadConfig(threadConfig), reorderSignal(std::make_shared<ReorderSignal>()) {};
 
     virtual ~DataContainer() = default;
@@ -276,7 +276,7 @@ public:
         std::iota(_blanks.begin(), _blanks.end(), 0);
     }
 
-    const readdy::model::KernelContext &context() const {
+    const readdy::model::Context &context() const {
         return _context.get();
     }
 
@@ -293,7 +293,7 @@ public:
     }
 
 protected:
-    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _threadConfig;
 
     std::vector<size_type> _blanks {};

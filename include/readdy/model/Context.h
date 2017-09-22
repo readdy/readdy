@@ -60,7 +60,7 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
-class KernelContext {
+class Context {
 public:
     using BoxSize = std::array<scalar, 3>;
     using PeriodicBoundaryConditions = std::array<bool, 3>;
@@ -160,19 +160,19 @@ public:
     void setKernelConfiguration(const std::string &jsonStr);
 
     // ctor and dtor
-    KernelContext();
+    Context();
 
-    ~KernelContext();
+    ~Context();
 
     // move
-    KernelContext(KernelContext &&rhs) = default;
+    Context(Context &&rhs) = default;
 
-    KernelContext &operator=(KernelContext &&rhs) = default;
+    Context &operator=(Context &&rhs) = default;
 
     // copy
-    KernelContext(const KernelContext &rhs) = default;
+    Context(const Context &rhs) = default;
 
-    KernelContext &operator=(const KernelContext &rhs) = default;
+    Context &operator=(const Context &rhs) = default;
 
 private:
     void updateFunctions();

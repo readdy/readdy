@@ -116,7 +116,7 @@ public:
         auto runTimer = _performanceRoot.timeit();
         kernel->initialize();
         if(configGroup) {
-            model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
+            model::ioutils::writeSimulationSetup(*configGroup, kernel->context());
         }
 
         if (initNeighborList) initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
@@ -268,7 +268,7 @@ public:
         auto runTimer = _performanceRoot.timeit();
         kernel->initialize();
         if(configGroup) {
-            model::ioutils::writeSimulationSetup(*configGroup, kernel->getKernelContext());
+            model::ioutils::writeSimulationSetup(*configGroup, kernel->context());
         }
         if (initNeighborList) initNeighborList->perform(_performanceRoot.subnode("initNeighborList"));
         if (forces) forces->perform(_performanceRoot.subnode("forces"));

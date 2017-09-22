@@ -42,7 +42,7 @@ class TestCompartments : public KernelTest {
 };
 
 TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.particle_types().add("A", 1., 1.);
     ctx.particle_types().add("B", 1., 1.);
     kernel->addParticle("A", readdy::Vec3(1, 0, 2));
@@ -66,7 +66,7 @@ TEST_P(TestCompartments, OneCompartmentOneConversionOneParticle) {
 
 TEST_P(TestCompartments, TwoCompartments) {
     // two compartments, four species A,B,C and D, in the end there should only be C and D particles
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{10, 10, 10}};
     ctx.particle_types().add("A", 1., 1.);
     ctx.particle_types().add("B", 1., 1.);

@@ -40,7 +40,7 @@
 class TestTopologyReactionsExternal : public KernelTest {
 protected:
     void SetUp() override {
-        auto &ctx = kernel->getKernelContext();
+        auto &ctx = kernel->context();
         ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
         ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
         ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
@@ -59,19 +59,19 @@ namespace {
 
 TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     using namespace readdy;
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
     {
-        auto tid = kernel->getKernelContext().topology_registry().add_type("MyType");
-        kernel->getKernelStateModel().addTopology(tid, {x_0});
+        auto tid = kernel->context().topology_registry().add_type("MyType");
+        kernel->stateModel().addTopology(tid, {x_0});
     }
-    kernel->getKernelStateModel().addParticle(
+    kernel->stateModel().addParticle(
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("A"))
     );
-    kernel->getKernelContext().reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1.0, 1.0);
+    kernel->context().reactions().addEnzymatic("TopologyEnzymatic", "Topology A", "A", "B", 1.0, 1.0);
     ctx.configure(false);
 
-    auto particles_beforehand = kernel->getKernelStateModel().getParticles();
+    auto particles_beforehand = kernel->stateModel().getParticles();
 
     {
         std::size_t nNormalFlavor{0};
@@ -92,7 +92,7 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
     nlUpdate->perform();
     action->perform();
 
-    auto particles = kernel->getKernelStateModel().getParticles();
+    auto particles = kernel->stateModel().getParticles();
 
     ASSERT_EQ(particles.size(), particles_beforehand.size());
     bool found {false};
@@ -110,15 +110,15 @@ TEST_P(TestTopologyReactionsExternal, TestTopologyEnzymaticReaction) {
 TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticle) {
     // check that getTopologyForParticle does what it is supposed to do
     using namespace readdy;
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     model::TopologyParticle x_0{c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("Topology A")};
-    auto toplogy = kernel->getKernelStateModel().addTopology(0, {x_0});
-    kernel->getKernelStateModel().addParticle(
+    auto toplogy = kernel->stateModel().addTopology(0, {x_0});
+    kernel->stateModel().addParticle(
             model::Particle(c_::zero, c_::zero, c_::zero, ctx.particle_types().id_of("A"))
     );
 
     for(auto particle : toplogy->getParticles()) {
-        auto returned_top = kernel->getKernelStateModel().getTopologyForParticle(particle);
+        auto returned_top = kernel->stateModel().getTopologyForParticle(particle);
         ASSERT_EQ(toplogy, returned_top);
     }
 }
@@ -179,7 +179,7 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
     log::trace("got n topologies: {}", sim.currentTopologies().size());
     for(auto top : sim.currentTopologies()) {
         for(const auto p : top->getParticles()) {
-            ASSERT_EQ(simKernel->getKernelStateModel().getTopologyForParticle(p), top);
+            ASSERT_EQ(simKernel->stateModel().getTopologyForParticle(p), top);
         }
     }
 
@@ -221,18 +221,18 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
 
     sim.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
 
-    const auto& type_registry = kernel->getKernelContext().particle_types();
+    const auto& type_registry = kernel->context().particle_types();
 
-    EXPECT_TRUE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("A"));
-    EXPECT_TRUE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("end"));
-    EXPECT_FALSE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("middle"));
-    EXPECT_EQ(kernel->getKernelContext().calculateMaxCutoff(), c_::one + c_::half);
+    EXPECT_TRUE(kernel->context().topology_registry().is_spatial_reaction_type("A"));
+    EXPECT_TRUE(kernel->context().topology_registry().is_spatial_reaction_type("end"));
+    EXPECT_FALSE(kernel->context().topology_registry().is_spatial_reaction_type("middle"));
+    EXPECT_EQ(kernel->context().calculateMaxCutoff(), c_::one + c_::half);
 
     EXPECT_EQ(sim.currentTopologies().size(), 1);
     auto chainTop = sim.currentTopologies().at(0);
     EXPECT_EQ(chainTop->getNParticles(), 3 /*original topology particles*/ + 6 /*attached particles*/);
 
-    auto top_particles = kernel->getKernelStateModel().getParticlesForTopology(*chainTop);
+    auto top_particles = kernel->stateModel().getParticlesForTopology(*chainTop);
 
     bool foundEndVertex {false};
     // check that graph is indeed linear
@@ -292,7 +292,7 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
 }
 
 TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.topology_registry().add_type("1");
     context.topology_registry().add_type("2");
     context.topology_registry().add_type("3");
@@ -422,17 +422,17 @@ TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
     EXPECT_EQ(sim.currentTopologies().size(), 3);
     sim.runScheme().evaluateTopologyReactions().configureAndRun(6, 1.);
 
-    const auto& type_registry = kernel->getKernelContext().particle_types();
+    const auto& type_registry = kernel->context().particle_types();
 
-    EXPECT_TRUE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("end"));
-    EXPECT_FALSE(kernel->getKernelContext().topology_registry().is_spatial_reaction_type("middle"));
-    EXPECT_EQ(kernel->getKernelContext().calculateMaxCutoff(), c_::one + c_::half);
+    EXPECT_TRUE(kernel->context().topology_registry().is_spatial_reaction_type("end"));
+    EXPECT_FALSE(kernel->context().topology_registry().is_spatial_reaction_type("middle"));
+    EXPECT_EQ(kernel->context().calculateMaxCutoff(), c_::one + c_::half);
 
     EXPECT_EQ(sim.currentTopologies().size(), 1);
     auto chainTop = sim.currentTopologies().at(0);
     EXPECT_EQ(chainTop->getNParticles(), 3 /*original topology particles*/ + 6 /*attached particles*/);
 
-    auto top_particles = kernel->getKernelStateModel().getParticlesForTopology(*chainTop);
+    auto top_particles = kernel->stateModel().getParticlesForTopology(*chainTop);
 
     bool foundEndVertex {false};
     // check that graph is indeed linear

@@ -39,11 +39,11 @@ namespace {
 TEST(CPUTestKernel, TestKernelLoad) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 
-    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
-    kernel->getKernelContext().particle_types().add("X", .55, 1.);
-    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
-    kernel->getKernelContext().reactions().addDecay("X decay", "X", .5);
-    kernel->getKernelContext().reactions().addFission("X fission", "X", "X", "X", .00, .5);
+    kernel->context().boxSize() = {{10, 10, 10}};
+    kernel->context().particle_types().add("X", .55, 1.);
+    kernel->context().periodicBoundaryConditions() = {{true, true, true}};
+    kernel->context().reactions().addDecay("X decay", "X", .5);
+    kernel->context().reactions().addFission("X fission", "X", "X", "X", .00, .5);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
@@ -54,12 +54,12 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 500;
-    const auto typeId = kernel->getKernelContext().particle_types().id_of("X");
+    const auto typeId = kernel->context().particle_types().id_of("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     readdy::log::debug("n_particles={}", particlesToBeginWith.size());
-    kernel->getKernelStateModel().addParticles(particlesToBeginWith);
+    kernel->stateModel().addParticles(particlesToBeginWith);
 
-    kernel->getKernelContext().configure();
+    kernel->context().configure();
 
     neighborList->perform();
     for (size_t t = 0; t < 20; t++) {

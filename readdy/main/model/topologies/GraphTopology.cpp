@@ -100,7 +100,7 @@ void GraphTopology::configure() {
 
             ss << "The edge " << v1->particleIndex;
             ss << " -- " << v2->particleIndex;
-            ss << " has no bond configured! (See KernelContext.configure_bond_potential())";
+            ss << " has no bond configured! (See Context.configure_bond_potential())";
 
             throw std::invalid_argument(ss.str());
         }
@@ -219,8 +219,8 @@ const GraphTopology::topology_reaction_rate GraphTopology::cumulativeRate() cons
 
 const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
-        const auto particle_type = k.getKernelStateModel().getParticleType(particles.front());
-        const auto& info = k.getKernelContext().particle_types().info_of(particle_type);
+        const auto particle_type = k.stateModel().getParticleType(particles.front());
+        const auto& info = k.context().particle_types().info_of(particle_type);
         return info.flavor != particleflavor::NORMAL;
     }
     return false;

@@ -32,7 +32,7 @@
 #pragma once
 
 #include <readdy/model/KernelStateModel.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/model/reactions/ReactionRecord.h>
 #include <readdy/model/observables/ReactionCounts.h>
@@ -58,7 +58,7 @@ public:
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
 
-    CPUStateModel(readdy::model::KernelContext* context, readdy::util::thread::Config const* config,
+    CPUStateModel(const readdy::model::Context &context, readdy::util::thread::Config const* config,
                   readdy::model::top::TopologyActionFactory const* taf);
 
     ~CPUStateModel() override;
@@ -135,7 +135,7 @@ public:
 
 private:
     std::reference_wrapper<const readdy::util::thread::Config> _config;
-    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::reference_wrapper<const readdy::model::Context> _context;
     std::unique_ptr<neighbor_list> _neighborList;
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;

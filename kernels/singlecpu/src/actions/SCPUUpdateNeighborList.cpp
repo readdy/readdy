@@ -41,13 +41,13 @@ void SCPUUpdateNeighborList::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     switch (operation) {
         case init:
-            kernel->getKernelStateModel().initializeNeighborList(skinSize > 0 ? skinSize : 0);
+            kernel->stateModel().initializeNeighborList(skinSize > 0 ? skinSize : 0);
             break;
         case clear:
-            kernel->getKernelStateModel().clearNeighborList();
+            kernel->stateModel().clearNeighborList();
             break;
         case update:
-            kernel->getKernelStateModel().updateNeighborList();
+            kernel->stateModel().updateNeighborList();
             break;
     }
 }

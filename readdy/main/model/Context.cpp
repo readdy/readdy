@@ -29,7 +29,7 @@
  * @todo make proper reference to KernelContext.h, is kBT really indepdendent of t?
  */
 
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 
 #include <json.hpp>
 
@@ -42,15 +42,15 @@ namespace model {
 
 using particle_t = readdy::model::Particle;
 
-const scalar &KernelContext::kBT() const {
+const scalar &Context::kBT() const {
     return _kBT;
 }
 
-scalar &KernelContext::kBT() {
+scalar &Context::kBT() {
     return _kBT;
 }
 
-KernelContext::KernelContext()
+Context::Context()
         : _potentialRegistry(_particleTypeRegistry), _reactionRegistry(_particleTypeRegistry),
           _topologyRegistry(_particleTypeRegistry), _compartmentRegistry(_particleTypeRegistry),
           _kernelConfiguration{} {
@@ -64,19 +64,19 @@ KernelContext::KernelContext()
     };
 }
 
-const KernelContext::fix_pos_fun &KernelContext::fixPositionFun() const {
+const Context::fix_pos_fun &Context::fixPositionFun() const {
     return _fixPositionFun;
 }
 
-const KernelContext::dist_squared_fun &KernelContext::distSquaredFun() const {
+const Context::dist_squared_fun &Context::distSquaredFun() const {
     return _distFun;
 }
 
-const KernelContext::shortest_dist_fun &KernelContext::shortestDifferenceFun() const {
+const Context::shortest_dist_fun &Context::shortestDifferenceFun() const {
     return _diffFun;
 }
 
-void KernelContext::configure(bool debugOutput) {
+void Context::configure(bool debugOutput) {
     updateFunctions();
 
     _particleTypeRegistry.configure();
@@ -104,7 +104,7 @@ void KernelContext::configure(bool debugOutput) {
 
 }
 
-std::tuple<Vec3, Vec3> KernelContext::getBoxBoundingVertices() const {
+std::tuple<Vec3, Vec3> Context::getBoxBoundingVertices() const {
     const auto &boxSize = _box_size;
     Vec3 lowerLeft{static_cast<scalar>(-0.5) * boxSize[0],
                    static_cast<scalar>(-0.5) * boxSize[1],
@@ -113,51 +113,51 @@ std::tuple<Vec3, Vec3> KernelContext::getBoxBoundingVertices() const {
     return std::make_tuple(lowerLeft, upperRight);
 }
 
-const bool &KernelContext::recordReactionsWithPositions() const {
+const bool &Context::recordReactionsWithPositions() const {
     return _recordReactionsWithPositions;
 }
 
-bool &KernelContext::recordReactionsWithPositions() {
+bool &Context::recordReactionsWithPositions() {
     return _recordReactionsWithPositions;
 }
 
-const bool &KernelContext::recordReactionCounts() const {
+const bool &Context::recordReactionCounts() const {
     return _recordReactionCounts;
 }
 
-bool &KernelContext::recordReactionCounts() {
+bool &Context::recordReactionCounts() {
     return _recordReactionCounts;
 }
 
-reactions::ReactionRegistry &KernelContext::reactions() {
+reactions::ReactionRegistry &Context::reactions() {
     return _reactionRegistry;
 }
 
-const reactions::ReactionRegistry &KernelContext::reactions() const {
+const reactions::ReactionRegistry &Context::reactions() const {
     return _reactionRegistry;
 }
 
-ParticleTypeRegistry &KernelContext::particle_types() {
+ParticleTypeRegistry &Context::particle_types() {
     return _particleTypeRegistry;
 }
 
-const ParticleTypeRegistry &KernelContext::particle_types() const {
+const ParticleTypeRegistry &Context::particle_types() const {
     return _particleTypeRegistry;
 }
 
-const potentials::PotentialRegistry &KernelContext::potentials() const {
+const potentials::PotentialRegistry &Context::potentials() const {
     return _potentialRegistry;
 }
 
-potentials::PotentialRegistry &KernelContext::potentials() {
+potentials::PotentialRegistry &Context::potentials() {
     return _potentialRegistry;
 }
 
-const KernelContext::pbc_fun &KernelContext::applyPBCFun() const {
+const Context::pbc_fun &Context::applyPBCFun() const {
     return _pbc;
 }
 
-const scalar KernelContext::calculateMaxCutoff() const {
+const scalar Context::calculateMaxCutoff() const {
     scalar max_cutoff{0};
     for (const auto &entry : potentials().potentials_order2()) {
         for (const auto &potential : entry.second) {
@@ -177,15 +177,15 @@ const scalar KernelContext::calculateMaxCutoff() const {
     return max_cutoff;
 }
 
-top::TopologyRegistry &KernelContext::topology_registry() {
+top::TopologyRegistry &Context::topology_registry() {
     return _topologyRegistry;
 }
 
-const top::TopologyRegistry &KernelContext::topology_registry() const {
+const top::TopologyRegistry &Context::topology_registry() const {
     return _topologyRegistry;
 }
 
-void KernelContext::updateFunctions() {
+void Context::updateFunctions() {
     using namespace std::placeholders;
     const auto &box = _box_size;
     if (_periodic_boundary[0]) {
@@ -235,47 +235,47 @@ void KernelContext::updateFunctions() {
     }
 }
 
-const KernelContext::BoxSize &KernelContext::boxSize() const {
+const Context::BoxSize &Context::boxSize() const {
     return _box_size;
 }
 
-KernelContext::BoxSize &KernelContext::boxSize() {
+Context::BoxSize &Context::boxSize() {
     return _box_size;
 }
 
-const KernelContext::PeriodicBoundaryConditions &KernelContext::periodicBoundaryConditions() const {
+const Context::PeriodicBoundaryConditions &Context::periodicBoundaryConditions() const {
     return _periodic_boundary;
 }
 
-KernelContext::PeriodicBoundaryConditions &KernelContext::periodicBoundaryConditions() {
+Context::PeriodicBoundaryConditions &Context::periodicBoundaryConditions() {
     return _periodic_boundary;
 }
 
-scalar KernelContext::boxVolume() const {
+scalar Context::boxVolume() const {
     return _box_size.at(0) * _box_size.at(1) * _box_size.at(2);
 }
 
-KernelContext::KernelConfiguration &KernelContext::kernelConfiguration() {
+Context::KernelConfiguration &Context::kernelConfiguration() {
     return _kernelConfiguration;
 }
 
-const KernelContext::KernelConfiguration &KernelContext::kernelConfiguration() const {
+const Context::KernelConfiguration &Context::kernelConfiguration() const {
     return _kernelConfiguration;
 }
 
-void KernelContext::setKernelConfiguration(const std::string &s) {
+void Context::setKernelConfiguration(const std::string &s) {
     _kernelConfiguration = nlohmann::json::parse(s);
 }
 
-const compartments::CompartmentRegistry &KernelContext::compartments() const {
+const compartments::CompartmentRegistry &Context::compartments() const {
     return _compartmentRegistry;
 }
 
-compartments::CompartmentRegistry &KernelContext::compartments() {
+compartments::CompartmentRegistry &Context::compartments() {
     return _compartmentRegistry;
 }
 
-KernelContext::~KernelContext() = default;
+Context::~Context() = default;
 
 
 }

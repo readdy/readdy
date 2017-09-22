@@ -38,14 +38,14 @@ namespace nl {
 
 
 ContiguousCLLNeighborList::ContiguousCLLNeighborList(std::uint8_t cll_radius,
-                                                     const readdy::model::KernelContext &context,
+                                                     const readdy::model::Context &context,
                                                      const readdy::util::thread::Config &config)
         : NeighborList(context, config), _data(context, config), ccll(_data, context, config),
           ccllContainer({context, config, _data}, ccll), cll_radius(cll_radius) {}
 
 
 ContiguousCLLNeighborList::ContiguousCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
-                                                     const readdy::model::KernelContext &context,
+                                                     const readdy::model::Context &context,
                                                      const readdy::util::thread::Config &config)
         : NeighborList(context, config), _data(data), ccll(_data, context, config),
           ccllContainer({context, config, _data}, ccll), cll_radius(cll_radius) {}
@@ -113,13 +113,13 @@ std::size_t ContiguousCLLNeighborList::size() const {
 }
 
 DynamicCLLNeighborList::DynamicCLLNeighborList(data::EntryDataContainer *data,
-                                               const readdy::model::KernelContext &context,
+                                               const readdy::model::Context &context,
                                                const readdy::util::thread::Config &config)
         : NeighborList(context, config), _data(data), dcll(_data, context, config),
           dcllContainer({context, config, _data}, dcll) {}
 
 
-DynamicCLLNeighborList::DynamicCLLNeighborList(const readdy::model::KernelContext &context,
+DynamicCLLNeighborList::DynamicCLLNeighborList(const readdy::model::Context &context,
                                                const readdy::util::thread::Config &config)
         : NeighborList(context, config), _data(context, config), dcll(_data, context, config),
           dcllContainer({context, config, _data}, dcll) {}
@@ -187,13 +187,13 @@ std::size_t DynamicCLLNeighborList::size() const {
     return dcllContainer.size();
 }
 
-CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, const readdy::model::KernelContext &context,
+CompactCLLNeighborList::CompactCLLNeighborList(std::uint8_t cll_radius, const readdy::model::Context &context,
                                                const util::thread::Config &config)
         : NeighborList(context, config), _data(context, config), ccll(_data, context, config), cll_radius(cll_radius),
           ccllContainer({context, config, _data}, ccll) {}
 
 CompactCLLNeighborList::CompactCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
-                                               const readdy::model::KernelContext &context,
+                                               const readdy::model::Context &context,
                                                const util::thread::Config &config)
         : NeighborList(context, config), _data(data), ccll(_data, context, config), cll_radius(cll_radius),
           ccllContainer({context, config, _data}, ccll) {}

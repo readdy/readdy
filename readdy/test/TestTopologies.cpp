@@ -80,12 +80,12 @@ struct TestTopologies : KernelTest {
  * partial_derivative_nd(bonded_energy, 0||1, x_i, x_j)
  */
 TEST_P(TestTopologies, BondedPotential) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0,{x_i, x_j});
+    auto top = kernel->stateModel().addTopology(0,{x_i, x_j});
     {
         harmonic_bond::bond_configurations bonds;
         bonds.emplace_back(0, 1, 10.0, 5.0);
@@ -111,7 +111,7 @@ TEST_P(TestTopologies, BondedPotential) {
     EXPECT_EQ(collectedForces.at(0), f1);
     readdy::Vec3 f2{-40., 0, 0};
     EXPECT_EQ(collectedForces.at(1), f2);
-    EXPECT_EQ(kernel->getKernelStateModel().energy(), 40);
+    EXPECT_EQ(kernel->stateModel().energy(), 40);
 }
 
 /**
@@ -125,13 +125,13 @@ TEST_P(TestTopologies, BondedPotential) {
  * partial_derivative_nd(angle_potential, 0||1||2, x_i, x_j, x_k)
  */
 TEST_P(TestTopologies, AnglePotential) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{1, 1, 0, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k});
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
     {
         std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
@@ -153,9 +153,9 @@ TEST_P(TestTopologies, AnglePotential) {
 
     EXPECT_EQ(collectedForces.size(), 3);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
+        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
     }
     readdy::Vec3 force_x_i{0, 3.14159265, 0};
     readdy::Vec3 force_x_j{3.14159265, -3.14159265, 0};
@@ -167,13 +167,13 @@ TEST_P(TestTopologies, AnglePotential) {
 }
 
 TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k});
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
     {
         std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
         top->addAnglePotential<angle_bond>(std::move(angles));
@@ -195,9 +195,9 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
 
     EXPECT_EQ(collectedForces.size(), 3);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
+        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     }
     readdy::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
     readdy::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
@@ -226,14 +226,14 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
  * partial_derivative_nd(dihedral_potential, 0||1||2||3, x_i, x_j, x_k, x_l) * -1.
  */
 TEST_P(TestTopologies, DihedralPotential) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_l{1, .1, 1, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     {
         std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
         top->addTorsionPotential<dihedral_bond>(dihedrals);
@@ -254,9 +254,9 @@ TEST_P(TestTopologies, DihedralPotential) {
 
     EXPECT_EQ(collectedForces.size(), 4);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
+        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(0.044370223263673791));
     }
     readdy::Vec3 force_x_i{0., -0.88371125, 0.};
     readdy::Vec3 force_x_j{0., 0.88371125, 0.};
@@ -269,14 +269,14 @@ TEST_P(TestTopologies, DihedralPotential) {
 }
 
 TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_l{1, 3, 1, ctx.particle_types().id_of("Topology A")};
-    auto top = kernel->getKernelStateModel().addTopology(0, {x_i, x_j, x_k, x_l});
+    auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     {
         std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
         top->addTorsionPotential(std::make_unique<dihedral_bond>(dihedral));
@@ -297,9 +297,9 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
 
     EXPECT_EQ(collectedForces.size(), 4);
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     } else {
-        EXPECT_DOUBLE_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
+        EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(1.8221921916437787));
     }
     readdy::Vec3 force_x_i{0., 1.70762994, 0.};
     readdy::Vec3 force_x_j{0., -1.70762994, 0.};

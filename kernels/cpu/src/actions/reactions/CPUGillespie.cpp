@@ -41,7 +41,7 @@ CPUGillespie::CPUGillespie(CPUKernel *const kernel, scalar timeStep) : super(tim
 
 void CPUGillespie::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    const auto &ctx = kernel->getKernelContext();
+    const auto &ctx = kernel->context();
     if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
         return;
     }

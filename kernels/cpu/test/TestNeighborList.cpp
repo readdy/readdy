@@ -58,7 +58,7 @@ struct TestNeighborList : ::testing::Test {
     std::unique_ptr<readdy::testing::NOOPPotentialOrder2> noop;
 
     TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
-        auto &ctx = kernel->getKernelContext();
+        auto &ctx = kernel->context();
         ctx.particle_types().add("A", 1., 1.);
         auto a_id = ctx.particle_types()("A");
         readdy::scalar eductDistance = 1.2;
@@ -103,7 +103,7 @@ auto getNumberPairs = [](nl_t &pairs) {
 
 TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
     // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{1.5, 4, 1.5}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
@@ -129,7 +129,7 @@ TEST_F(TestNeighborList, ThreeBoxesNonPeriodic) {
 
 TEST_F(TestNeighborList, OneDirection) {
     // maxcutoff is 1.2, system is 4.8 x 5 x 5.1
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{1.2, 1.1, 2.8}};
     ctx.periodicBoundaryConditions() = {{false, false, true}};
     ctx.configure(false);
@@ -159,7 +159,7 @@ TEST_F(TestNeighborList, OneDirection) {
 
 TEST_F(TestNeighborList, AllNeighborsInCutoffSphere) {
     // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{4, 4, 4}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
     readdy::util::thread::Config conf;
@@ -188,7 +188,7 @@ TEST(TestAdaptiveNeighborList, CellContainerSanity) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.boxSize() = {{10, 10, 10}};
 
     auto data = cpu::data::NLDataContainer(kernel->getCPUKernelStateModel().getParticleData());
@@ -217,7 +217,7 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipPeriodic) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
     context.configure();
@@ -279,7 +279,7 @@ TEST(TestAdaptiveNeighborList, FirstLevelNeighborshipNotPeriodic) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{false, false, false}};
     context.boxSize() = {{10, 10, 10}};
 
@@ -335,7 +335,7 @@ TEST(TestAdaptiveNeighborList, PartiallyPeriodicTube) {
     using namespace readdy;
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{false, true, true}};
     context.boxSize() = {{5, 1, 1.1}};
     context.configure();
@@ -387,7 +387,7 @@ TEST(TestAdaptiveNeighborList, PositionToCell) {
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
     context.configure();
@@ -418,7 +418,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
     auto data = kernel->getCPUKernelStateModel().getParticleData();
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     const auto &pbc = context.applyPBCFun();
 
     context.periodicBoundaryConditions() = {{true, true, true}};
@@ -435,7 +435,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
 
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
-            kernel->getKernelContext(),
+            kernel->context(),
             kernel->threadConfig()
     };
     neighbor_list.set_up({});
@@ -453,7 +453,7 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
     using namespace readdy;
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.boxSize() = {{1, 1, 1}};
     context.particle_types().add("A", 1.0, 1.0);
 
@@ -526,7 +526,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     using namespace readdy;
 
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.boxSize() = {{1, 1, 1}};
     context.particle_types().add("A", 1.0, 1.0);
 
@@ -541,7 +541,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     auto data = kernel->getCPUKernelStateModel().getParticleData();
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
-            kernel->getKernelContext(),
+            kernel->context(),
             kernel->threadConfig()
     };
     neighbor_list.set_up({});
@@ -568,7 +568,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     using namespace readdy;
     
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.boxSize() = {{28, 28, 28}};
     context.particle_types().add("A", .1, .1);
     context.particle_types().add("V", .1, .1);
@@ -587,7 +587,7 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     auto data = kernel->getCPUKernelStateModel().getParticleData();
     kernel::cpu::nl::AdaptiveNeighborList neighbor_list{
             data,
-            kernel->getKernelContext(),
+            kernel->context(),
             kernel->threadConfig(),
             false
     };
@@ -645,18 +645,18 @@ TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
-    kernel->getKernelContext().particle_types().add("A", 0.05, 1.0);
-    kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
-    kernel->getKernelContext().particle_types().add("V", 0.0, 1.0);
-    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
-    kernel->getKernelContext().boxSize() = {{100, 10, 10}};
+    kernel->context().particle_types().add("A", 0.05, 1.0);
+    kernel->context().particle_types().add("F", 0.0, 1.0);
+    kernel->context().particle_types().add("V", 0.0, 1.0);
+    kernel->context().periodicBoundaryConditions() = {{true, true, true}};
+    kernel->context().boxSize() = {{100, 10, 10}};
     readdy::conf::Configuration conf {};
     conf.cpu.neighborList.type = GetParam();
-    kernel->getKernelContext().kernelConfiguration() = conf;
+    kernel->context().kernelConfiguration() = conf;
 
     const auto weightF = static_cast<readdy::scalar>(0.);
     const auto weightA = static_cast<readdy::scalar>(1.);
-    kernel->getKernelContext().reactions().addFusion("F+A->F", "A", "F", "F", .1, 2.0, weightF, weightA);
+    kernel->context().reactions().addFusion("F+A->F", "A", "F", "F", .1, 2.0, weightF, weightA);
     //kernel->registerReaction<readdy::model::reactions::Fusion>("F+A->F2", "V", "V", "V", .1, 2.0, weightF, weightA);
 
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
@@ -688,7 +688,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
-    auto& context = kernel->getKernelContext();
+    auto& context = kernel->context();
     context.particle_types().add("A", 0.05, 1.0);
     context.particle_types().add("F", 0.0, 1.0);
     context.particle_types().add("V", 0.0, 1.0);
@@ -703,7 +703,7 @@ TEST_P(TestNeighborListImpl, Diffusion) {
     {
         readdy::conf::Configuration conf{};
         conf.cpu.neighborList.type = GetParam();
-        kernel->getKernelContext().kernelConfiguration() = conf;
+        kernel->context().kernelConfiguration() = conf;
     }
 
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;

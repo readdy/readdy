@@ -156,7 +156,7 @@ private:
     using potential_o1_registry_internal = std::unordered_map<particle_type_type, pot_ptr_vec1>;
     using potential_o2_registry_internal = util::particle_type_pair_unordered_map<pot_ptr_vec2>;
 
-    const ParticleTypeRegistry &_types;
+    std::reference_wrapper<const ParticleTypeRegistry> _types;
 
     potential_o1_registry potentialO1Registry{};
     potential_o2_registry potentialO2Registry{};

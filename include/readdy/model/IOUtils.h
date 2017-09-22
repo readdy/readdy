@@ -37,7 +37,7 @@
 #include <h5rd/h5rd.h>
 
 #include <readdy/common/macros.h>
-#include "KernelContext.h"
+#include "Context.h"
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -65,9 +65,9 @@ struct ParticleTypeInfo {
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemoryType(h5rd::Object::ParentFileRef ref);
 std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getParticleTypeInfoType(h5rd::Object::ParentFileRef ref);
 
-void writeSimulationSetup(h5rd::Group &group, const KernelContext &context);
-void writeReactionInformation(h5rd::Group &group, const KernelContext &context);
-void writeParticleTypeInformation(h5rd::Group &group, const KernelContext &context);
+void writeSimulationSetup(h5rd::Group &group, const Context &context);
+void writeReactionInformation(h5rd::Group &group, const Context &context);
+void writeParticleTypeInformation(h5rd::Group &group, const Context &context);
 
 NAMESPACE_END(ioutils)
 NAMESPACE_END(model)

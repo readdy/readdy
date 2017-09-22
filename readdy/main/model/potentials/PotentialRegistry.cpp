@@ -117,12 +117,12 @@ const PotentialRegistry::potential_o2_registry &PotentialRegistry::potentials_or
 }
 
 const PotentialRegistry::potentials_o1 &PotentialRegistry::potentials_of(const std::string &type) const {
-    return potentials_of(_types.id_of(type));
+    return potentials_of(_types.get().id_of(type));
 }
 
 const PotentialRegistry::potentials_o2 &
 PotentialRegistry::potentials_of(const std::string &t1, const std::string &t2) const {
-    return potentials_of(_types.id_of(t1), _types.id_of(t2));
+    return potentials_of(_types.get().id_of(t1), _types.get().id_of(t2));
 }
 
 void PotentialRegistry::configure() {
@@ -136,26 +136,26 @@ void PotentialRegistry::configure() {
     potentialO2Registry.clear();
 
     coll::for_each_value(potentialO1RegistryInternal, [&](const particle_type_type type, const pot1_ptr &ptr) {
-        ptr->configureForType(&_types, type);
+        ptr->configureForType(&_types.get(), type);
         (potentialO1Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO2RegistryInternal, [&](const pair &type, const pot2_ptr &ptr) {
-        ptr->configureForTypes(&_types, std::get<0>(type), std::get<1>(type));
+        ptr->configureForTypes(&_types.get(), std::get<0>(type), std::get<1>(type));
         (potentialO2Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO1RegistryExternal, [&](const particle_type_type type, pot1 *ptr) {
-        ptr->configureForType(&_types, type);
+        ptr->configureForType(&_types.get(), type);
         (potentialO1Registry)[type].push_back(ptr);
     });
     coll::for_each_value(potentialO2RegistryExternal, [&](const pair &type, pot2 *ptr) {
-        ptr->configureForTypes(&_types, std::get<0>(type), std::get<1>(type));
+        ptr->configureForTypes(&_types.get(), std::get<0>(type), std::get<1>(type));
         (potentialO2Registry)[type].push_back(ptr);
     });
 }
 
 void PotentialRegistry::debug_output() const {
     auto find_pot_name = [this](particle_type_type type) -> const std::string {
-        for (auto &&t : _types.type_mapping()) {
+        for (auto &&t : _types.get().type_mapping()) {
             if (t.second == type) return t.first;
         }
         return "";
@@ -183,7 +183,7 @@ void PotentialRegistry::debug_output() const {
 
 Potential::id_type PotentialRegistry::addCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                                               const Vec3 &extent, bool cpr) {
-    return addCube(_types(particleType), forceConstant, origin, extent, cpr);
+    return addCube(_types.get()(particleType), forceConstant, origin, extent, cpr);
 }
 
 Potential::id_type PotentialRegistry::addCube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
@@ -195,7 +195,7 @@ Potential::id_type PotentialRegistry::addCube(particle_type_type particleType, s
 
 PotentialRegistry::id_type
 PotentialRegistry::addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant) {
-    return addHarmonicRepulsion(_types(type1), _types(type2), forceConstant);
+    return addHarmonicRepulsion(_types.get()(type1), _types.get()(type2), forceConstant);
 }
 
 PotentialRegistry::id_type
@@ -209,7 +209,7 @@ PotentialRegistry::id_type
 PotentialRegistry::addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
                                                        scalar forceConstant,
                                                        const WeakInteractionPiecewiseHarmonic::Configuration &config) {
-    return addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, config);
+    return addWeakInteractionPiecewiseHarmonic(_types.get()(type1), _types.get()(type2), forceConstant, config);
 }
 
 PotentialRegistry::id_type
@@ -233,13 +233,14 @@ PotentialRegistry::id_type
 PotentialRegistry::addWeakInteractionPiecewiseHarmonic(const std::string &type1, const std::string &type2,
                                                        scalar forceConstant, scalar desiredDist, scalar depth,
                                                        scalar cutoff) {
-    return addWeakInteractionPiecewiseHarmonic(_types(type1), _types(type2), forceConstant, desiredDist, depth, cutoff);
+    return addWeakInteractionPiecewiseHarmonic(_types.get()(type1), _types.get()(type2), forceConstant, desiredDist,
+                                               depth, cutoff);
 }
 
 PotentialRegistry::id_type
 PotentialRegistry::addLennardJones(const std::string &type1, const std::string &type2, unsigned int m, unsigned int n,
                                    scalar cutoff, bool shift, scalar epsilon, scalar sigma) {
-    return addLennardJones(_types(type1), _types(type2), m, n, cutoff, shift, epsilon, sigma);
+    return addLennardJones(_types.get()(type1), _types.get()(type2), m, n, cutoff, shift, epsilon, sigma);
 }
 
 PotentialRegistry::id_type
@@ -255,7 +256,7 @@ PotentialRegistry::addScreenedElectrostatics(const std::string &particleType1, c
                                              scalar electrostaticStrength, scalar inverseScreeningDepth,
                                              scalar repulsionStrength, scalar repulsionDistance, unsigned int exponent,
                                              scalar cutoff) {
-    return addScreenedElectrostatics(_types(particleType1), _types(particleType2), electrostaticStrength,
+    return addScreenedElectrostatics(_types.get()(particleType1), _types.get()(particleType2), electrostaticStrength,
                                      inverseScreeningDepth, repulsionStrength, repulsionDistance, exponent, cutoff);
 }
 
@@ -274,7 +275,7 @@ PotentialRegistry::addScreenedElectrostatics(particle_type_type particleType1, p
 PotentialRegistry::id_type
 PotentialRegistry::addSphereOut(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                                 scalar radius) {
-    return addSphereOut(_types(particleType), forceConstant, origin, radius);
+    return addSphereOut(_types.get()(particleType), forceConstant, origin, radius);
 }
 
 PotentialRegistry::id_type
@@ -288,7 +289,7 @@ PotentialRegistry::addSphereOut(particle_type_type particleType, scalar forceCon
 PotentialRegistry::id_type
 PotentialRegistry::addSphereIn(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                                scalar radius) {
-    return addSphereIn(_types(particleType), forceConstant, origin, radius);
+    return addSphereIn(_types.get()(particleType), forceConstant, origin, radius);
 }
 
 PotentialRegistry::id_type
@@ -302,7 +303,7 @@ PotentialRegistry::addSphereIn(particle_type_type particleType, scalar forceCons
 PotentialRegistry::id_type
 PotentialRegistry::addSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius,
                                        scalar height, scalar width) {
-    return addSphericalBarrier(_types(particleType), origin, radius, height, width);
+    return addSphericalBarrier(_types.get()(particleType), origin, radius, height, width);
 }
 
 PotentialRegistry::id_type

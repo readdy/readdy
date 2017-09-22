@@ -39,7 +39,7 @@ using kp = readdy::plugin::KernelProvider;
 using vec = readdy::Vec3;
 using pot2 = readdy::rpy::PotentialOrder2Wrapper;
 using model = readdy::model::KernelStateModel;
-using ctx = readdy::model::KernelContext;
+using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 
 void exportTopologies(py::module &);

@@ -38,7 +38,7 @@ namespace readdy {
 namespace model {
 namespace ioutils {
 
-void writeReactionInformation(h5rd::Group &group, const KernelContext &context) {
+void writeReactionInformation(h5rd::Group &group, const Context &context) {
     auto subgroup = group.createGroup("./registered_reactions");
     // order1
     const auto &order1_reactions = context.reactions().order1_flat();
@@ -93,7 +93,7 @@ void writeReactionInformation(h5rd::Group &group, const KernelContext &context) 
     }
 }
 
-void writeParticleTypeInformation(h5rd::Group &group, const KernelContext &context) {
+void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
     auto h5types = getParticleTypeInfoType(group.parentFile());
 
     const auto &types = context.particle_types().type_mapping();
@@ -141,7 +141,7 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemor
     return std::make_tuple(nct, sct);
 };
 
-void writeSimulationSetup(h5rd::Group &group, const KernelContext &context) {
+void writeSimulationSetup(h5rd::Group &group, const Context &context) {
     writeParticleTypeInformation(group, context);
     writeReactionInformation(group, context);
 }

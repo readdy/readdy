@@ -38,12 +38,12 @@ namespace cpu {
 namespace nl {
 
 AdaptiveNeighborList::AdaptiveNeighborList(data::EntryDataContainer *data,
-                                           const readdy::model::KernelContext &context,
+                                           const readdy::model::Context &context,
                                            const readdy::util::thread::Config &config, bool hilbert_sort)
         : NeighborList(context, config), _data(data), _cell_container(_data, context, config),
           _hilbert_sort(hilbert_sort) {}
 
-AdaptiveNeighborList::AdaptiveNeighborList(const readdy::model::KernelContext &context,
+AdaptiveNeighborList::AdaptiveNeighborList(const readdy::model::Context &context,
                            const readdy::util::thread::Config &config, bool hilbert_sort)
         : NeighborList(context, config), _data(context, config), _cell_container(_data, context, config),
           _hilbert_sort(hilbert_sort) {}

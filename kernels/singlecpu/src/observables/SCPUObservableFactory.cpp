@@ -30,7 +30,8 @@
  */
 
 
-#include <readdy/model/Kernel.h>
+#include <readdy/kernel/singlecpu/SCPUKernel.h>
+
 #include <readdy/kernel/singlecpu/observables/SCPUObservableFactory.h>
 #include <readdy/kernel/singlecpu/observables/SCPUObservables.h>
 #include <readdy/kernel/singlecpu/observables/SCPUAggregators.h>

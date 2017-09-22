@@ -41,8 +41,8 @@ class TestStateModel : public KernelTest {
 };
 
 TEST_P(TestStateModel, CalculateForcesTwoParticles) {
-    m::KernelContext &ctx = kernel->getKernelContext();
-    auto &stateModel = kernel->getKernelStateModel();
+    m::Context &ctx = kernel->context();
+    auto &stateModel = kernel->stateModel();
 
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
@@ -51,7 +51,7 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
-    kernel->getKernelContext().potentials().addHarmonicRepulsion("A", "A", 1.0);
+    kernel->context().potentials().addHarmonicRepulsion("A", "A", 1.0);
 
     ctx.configure();
     kernel->initialize();
@@ -87,9 +87,9 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
 }
 
 TEST_P(TestStateModel, CalculateForcesRepulsion) {
-    m::KernelContext &ctx = kernel->getKernelContext();
+    m::Context &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &stateModel = kernel->getKernelStateModel();
+    auto &stateModel = kernel->stateModel();
 
     // similar situation as before but now with repulsion between A and B
     auto obs = kernel->createObservable<m::observables::Forces>(1);
@@ -202,8 +202,8 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
 }
 
 TEST_P(TestStateModel, CalculateForcesNoForces) {
-    m::KernelContext &ctx = kernel->getKernelContext();
-    auto &stateModel = kernel->getKernelStateModel();
+    m::Context &ctx = kernel->context();
+    auto &stateModel = kernel->stateModel();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     // several particles without potentials -> forces must all be zero
     auto obs = kernel->createObservable<m::observables::Forces>(1);

@@ -71,10 +71,10 @@ void ReactionCounts::flush() {
 }
 
 void ReactionCounts::initialize(Kernel *const kernel) {
-    if (!kernel->getKernelContext().recordReactionCounts()) {
+    if (!kernel->context().recordReactionCounts()) {
         log::warn("The \"ReactionCounts\"-observable set context.recordReactionCounts() to true. "
                           "If this is undesired, the observable should not be registered.");
-        kernel->getKernelContext().recordReactionCounts() = true;
+        kernel->context().recordReactionCounts() = true;
     }
 }
 
@@ -131,7 +131,7 @@ void ReactionCounts::assignCountsToResult(const ReactionCounts::result_type &fro
 
 void ReactionCounts::append() {
     if (pimpl->firstWrite) {
-        const auto &ctx = kernel->getKernelContext();
+        const auto &ctx = kernel->context();
         if (pimpl->shouldWrite) {
             auto subgroup = pimpl->group->createGroup("counts");
             auto order1Subgroup = subgroup.createGroup("order1");
@@ -170,7 +170,7 @@ void ReactionCounts::append() {
                     }
                 }
             }
-            ioutils::writeReactionInformation(*pimpl->group, kernel->getKernelContext());
+            ioutils::writeReactionInformation(*pimpl->group, kernel->context());
         }
         pimpl->firstWrite = false;
     }
@@ -184,7 +184,7 @@ void ReactionCounts::append() {
 void
 ReactionCounts::initializeCounts(
         std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
-        const readdy::model::KernelContext &ctx) {
+        const readdy::model::Context &ctx) {
     auto &order1Counts = std::get<0>(reactionCounts);
     auto &order2Counts = std::get<1>(reactionCounts);
     for (const auto &entry1 : ctx.particle_types().type_mapping()) {

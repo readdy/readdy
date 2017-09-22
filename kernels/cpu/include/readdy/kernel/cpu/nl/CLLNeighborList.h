@@ -43,11 +43,11 @@ namespace nl {
 
 class ContiguousCLLNeighborList : public NeighborList {
 public:
-    ContiguousCLLNeighborList(std::uint8_t cll_radius, const readdy::model::KernelContext &context,
+    ContiguousCLLNeighborList(std::uint8_t cll_radius, const readdy::model::Context &context,
                               const readdy::util::thread::Config &config);
 
     ContiguousCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
-                              const readdy::model::KernelContext &context, const readdy::util::thread::Config &config);
+                              const readdy::model::Context &context, const readdy::util::thread::Config &config);
 
     bool is_adaptive() const override;
 
@@ -83,10 +83,10 @@ private:
 
 class DynamicCLLNeighborList : public NeighborList {
 public:
-    DynamicCLLNeighborList(const readdy::model::KernelContext &context,
+    DynamicCLLNeighborList(const readdy::model::Context &context,
                            const readdy::util::thread::Config &config);
 
-    DynamicCLLNeighborList(data::EntryDataContainer *data, const readdy::model::KernelContext &context,
+    DynamicCLLNeighborList(data::EntryDataContainer *data, const readdy::model::Context &context,
                            const readdy::util::thread::Config &config);
 
     bool is_adaptive() const override;
@@ -120,10 +120,10 @@ private:
 
 class CompactCLLNeighborList : public NeighborList {
 public:
-    CompactCLLNeighborList(std::uint8_t cll_radius, const readdy::model::KernelContext &context, const util::thread::Config &config);
+    CompactCLLNeighborList(std::uint8_t cll_radius, const readdy::model::Context &context, const util::thread::Config &config);
 
     CompactCLLNeighborList(data::EntryDataContainer *data, std::uint8_t cll_radius,
-                           const model::KernelContext &context, const util::thread::Config &config);
+                           const model::Context &context, const util::thread::Config &config);
 
     bool is_adaptive() const override;
 

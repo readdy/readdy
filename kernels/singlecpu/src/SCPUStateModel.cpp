@@ -42,8 +42,7 @@ struct SCPUStateModel::Impl {
     model::SCPUParticleData particleData {};
     std::unique_ptr<model::SCPUNeighborList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
-    readdy::model::KernelContext const *context {nullptr};
-    // only filled when readdy::model::KernelContext::recordReactionsWithPositions is true
+    // only filled when readdy::model::Context::recordReactionsWithPositions is true
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
     // reaction counts map from particle-type (or type-pair) to vector of count numbers,
     // the position in the vector corresponds to the reaction index,
@@ -51,10 +50,9 @@ struct SCPUStateModel::Impl {
     std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
 };
 
-SCPUStateModel::SCPUStateModel(readdy::model::KernelContext const *context, topology_action_factory const *const taf)
-        : pimpl(std::make_unique<SCPUStateModel::Impl>()) {
-    pimpl->neighborList = std::make_unique<model::SCPUNeighborList>(context);
-    pimpl->context = context;
+SCPUStateModel::SCPUStateModel(const readdy::model::Context &context, topology_action_factory const *const taf)
+        : pimpl(std::make_unique<SCPUStateModel::Impl>()), _context(context) {
+    pimpl->neighborList = std::make_unique<model::SCPUNeighborList>(&_context.get());
     pimpl->topologyActionFactory = taf;
 }
 
@@ -126,7 +124,7 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(topology_ty
     }
     auto it = _topologies.emplace_back(
             std::make_unique<topology>(type, std::move(ids), std::move(types),
-                                       pimpl->context->topology_registry().potential_configuration())
+                                       _context.get().topology_registry().potential_configuration())
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {

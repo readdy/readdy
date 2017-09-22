@@ -44,7 +44,7 @@ void CPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
     auto data = kernel->getCPUKernelStateModel().getParticleData();
     const auto size = data->size();
 
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
     using iter_t = data::EntryDataContainer::iterator;
 
     const auto dt = timeStep;

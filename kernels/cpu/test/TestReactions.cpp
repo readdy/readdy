@@ -69,25 +69,25 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     using particle_t = readdy::model::Particle;
     using data_t = readdy::kernel::cpu::data::NLDataContainer;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-    kernel->getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
-    kernel->getKernelContext().boxSize() = {{100, 100, 100}};
-    const auto diff = kernel->getKernelContext().shortestDifferenceFun();
-    kernel->getKernelContext().particle_types().add("A", .1, 1.); // type id 0
-    kernel->getKernelContext().particle_types().add("B", .1, 1.); // type id 1
-    kernel->getKernelContext().particle_types().add("C", .1, 1.); // type id 2
+    kernel->context().periodicBoundaryConditions() = {{false, false, false}};
+    kernel->context().boxSize() = {{100, 100, 100}};
+    const auto diff = kernel->context().shortestDifferenceFun();
+    kernel->context().particle_types().add("A", .1, 1.); // type id 0
+    kernel->context().particle_types().add("B", .1, 1.); // type id 1
+    kernel->context().particle_types().add("C", .1, 1.); // type id 2
 
     // test conversion
     {
         conversion_t conversion("A->B", 0, 1, 1);
         particle_t p_A{0, 0, 0, 0};
 
-        data_t data {kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data {kernel->context(), kernel->threadConfig()};
         data.addParticles({p_A});
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type> decayedEntries {};
 
-        reac::performReaction(&data, kernel->getKernelContext(), 0, 0, newParticles, decayedEntries, &conversion, nullptr);
+        reac::performReaction(&data, kernel->context(), 0, 0, newParticles, decayedEntries, &conversion, nullptr);
 
         EXPECT_EQ(data.entry_at(0).type, conversion.getTypeTo());
         EXPECT_EQ(data.pos(0), readdy::Vec3(0,0,0));
@@ -95,7 +95,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // test fusion
     {
-        data_t data {kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data {kernel->context(), kernel->threadConfig()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type> decayedEntries {};
@@ -107,7 +107,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_B{-1, 0, 0, 1};
         data.addParticles({p_A, p_B});
 
-        reac::performReaction(&data, kernel->getKernelContext(), 0, 1, newParticles, decayedEntries, &fusion, nullptr);
+        reac::performReaction(&data, kernel->context(), 0, 1, newParticles, decayedEntries, &fusion, nullptr);
         EXPECT_EQ(decayedEntries.size(), 2);
         EXPECT_TRUE(decayedEntries.size() == 2 && (decayedEntries.at(0) == 1 || decayedEntries.at(1) == 1));
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
@@ -121,7 +121,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // fission
     {
-        data_t data {kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data {kernel->context(), kernel->threadConfig()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type> decayedEntries {};
@@ -132,7 +132,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_C{0, 0, 0, 2};
         data.addParticle(p_C);
 
-        reac::performReaction(&data, kernel->getKernelContext(), 0, 0, newParticles, decayedEntries, &fission, nullptr);
+        reac::performReaction(&data, kernel->context(), 0, 0, newParticles, decayedEntries, &fission, nullptr);
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
 
         EXPECT_EQ(data.entry_at(0).type, fission.getTo1());
@@ -150,7 +150,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
 
     // enzymatic 1
     {
-        data_t data{kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data{kernel->context(), kernel->threadConfig()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type > decayedEntries{};
@@ -159,7 +159,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_A{0, 0, 0, 0};
         particle_t p_C{5, 5, 5, 2};
         data.addParticles({p_A, p_C});
-        reac::performReaction(&data, kernel->getKernelContext(), 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
+        reac::performReaction(&data, kernel->context(), 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         {
             const auto &e1 = data.entry_at(0);
@@ -179,7 +179,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     }
     // enzymatic 2
     {
-        data_t data{kernel->getKernelContext(), kernel->threadConfig()};
+        data_t data{kernel->context(), kernel->threadConfig()};
 
         data_t::EntriesUpdate newParticles{};
         std::vector<data_t::size_type> decayedEntries{};
@@ -188,7 +188,7 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
         particle_t p_A{0, 0, 0, 0};
         particle_t p_C{5, 5, 5, 2};
         data.addParticles({p_C, p_A});
-        reac::performReaction(&data, kernel->getKernelContext(), 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
+        reac::performReaction(&data, kernel->context(), 0, 1, newParticles, decayedEntries, &enzymatic, nullptr);
         data.update(std::make_pair(std::move(newParticles), std::move(decayedEntries)));
         {
             const auto &e1 = data.entry_at(0);
@@ -217,10 +217,10 @@ TEST(CPUTestReactions, TestDecay) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
-    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
-    kernel->getKernelContext().particle_types().add("X", .25, 1.);
-    kernel->getKernelContext().reactions().addDecay("X decay", "X", 1);
-    kernel->getKernelContext().reactions().addFission("X fission", "X", "X", "X", .5, .3);
+    kernel->context().boxSize() = {{10, 10, 10}};
+    kernel->context().particle_types().add("X", .25, 1.);
+    kernel->context().reactions().addDecay("X decay", "X", 1);
+    kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
@@ -234,10 +234,10 @@ TEST(CPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->getKernelContext().particle_types().id_of("X");
+    const auto typeId = kernel->context().particle_types().id_of("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
-    kernel->getKernelStateModel().addParticles(particlesToBeginWith);
-    kernel->getKernelContext().configure();
+    kernel->stateModel().addParticles(particlesToBeginWith);
+    kernel->context().configure();
     neighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
@@ -250,7 +250,7 @@ TEST(CPUTestReactions, TestDecay) {
 
     }
 
-    EXPECT_EQ(0, kernel->getKernelStateModel().getParticlePositions().size());
+    EXPECT_EQ(0, kernel->stateModel().getParticlePositions().size());
 
     connection.disconnect();
 }
@@ -268,39 +268,39 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     using death_t = readdy::model::reactions::Decay;
     using particle_t = readdy::model::Particle;
     auto kernel = std::make_unique<readdy::kernel::cpu::CPUKernel>();
-    kernel->getKernelContext().boxSize() = {{10, 10, 30}};
-    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, false}};
+    kernel->context().boxSize() = {{10, 10, 30}};
+    kernel->context().periodicBoundaryConditions() = {{true, true, false}};
 
-    kernel->getKernelContext().particle_types().add("A", .25, static_cast<const readdy::scalar>(1.));
-    kernel->getKernelContext().particle_types().add("B", .25, static_cast<const readdy::scalar>(1.));
-    kernel->getKernelContext().particle_types().add("C", .25, static_cast<const readdy::scalar>(1.));
+    kernel->context().particle_types().add("A", .25, static_cast<const readdy::scalar>(1.));
+    kernel->context().particle_types().add("B", .25, static_cast<const readdy::scalar>(1.));
+    kernel->context().particle_types().add("C", .25, static_cast<const readdy::scalar>(1.));
     readdy::scalar reactionRadius = 1.0;
-    kernel->getKernelContext().reactions().addFusion("annihilation", "A", "A", "A", 1.0, reactionRadius);
-    kernel->getKernelContext().reactions().addFusion("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(), reactionRadius);
-    kernel->getKernelContext().reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
+    kernel->context().reactions().addFusion("annihilation", "A", "A", "A", 1.0, reactionRadius);
+    kernel->context().reactions().addFusion("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(), reactionRadius);
+    kernel->context().reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
-    const auto typeA = kernel->getKernelContext().particle_types().id_of("A");
-    const auto typeB = kernel->getKernelContext().particle_types().id_of("B");
-    const auto typeC = kernel->getKernelContext().particle_types().id_of("C");
+    const auto typeA = kernel->context().particle_types().id_of("A");
+    const auto typeB = kernel->context().particle_types().id_of("B");
+    const auto typeC = kernel->context().particle_types().id_of("C");
 
     // this particle goes right into the middle, i.e., into the halo region
-    kernel->getKernelStateModel().addParticle({0, 0, 0, typeA});            // 0
+    kernel->stateModel().addParticle({0, 0, 0, typeA});            // 0
     // these particles go left and right of this particle into the boxes as problematic ones
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-.7), typeA});          // 1
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(.7), typeC});           // 2
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(-.7), typeA});          // 1
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(.7), typeC});           // 2
     // these particles are far enough away from the halo region but still conflict (transitively) with the 1st layer
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-1.6), typeC});         // 3
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(1.6), typeA});          // 4
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(1.7), typeA});          // 5
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(-1.6), typeC});         // 3
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(1.6), typeA});          // 4
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(1.7), typeA});          // 5
     // this particle are conflicting but should not appear as their reaction rate is 0
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-1.7), typeB});         // 6
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(-1.7), typeB});         // 6
     // these particles are well inside the boxes and should not be considered problematic
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar >(-5), typeA});           // 7
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(-5.5), typeA});         // 8
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(5), typeA});            // 9
-    kernel->getKernelStateModel().addParticle({0, 0, static_cast<scalar>(5.5), typeA});          // 10
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar >(-5), typeA});           // 7
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(-5.5), typeA});         // 8
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(5), typeA});            // 9
+    kernel->stateModel().addParticle({0, 0, static_cast<scalar>(5.5), typeA});          // 10
 
-    kernel->getKernelContext().configure();
+    kernel->context().configure();
     // a box width in z direction of 12 should divide into two boxes of 5x5x6
     {
         fix_n_threads n_threads{kernel.get(), 2};
@@ -332,7 +332,7 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     //   4 and 5, resulting in a particle A at {0,0,1.65}
     //   9 and 10, resulting in a particle A at {0,0,5.25}
     {
-        const auto particles = kernel->getKernelStateModel().getParticles();
+        const auto particles = kernel->stateModel().getParticles();
         for (auto p : particles) readdy::log::debug("particle {}", p);
         EXPECT_EQ(7, particles.size());
         EXPECT_TRUE(std::find_if(particles.begin(), particles.end(), [=](const particle_t &p) -> bool {

@@ -46,7 +46,7 @@ namespace reactions {
 using data_t = data::EntryDataContainer;
 using cpu_kernel = readdy::kernel::cpu::CPUKernel;
 using reaction_type = readdy::model::reactions::ReactionType;
-using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().getKernelContext())>::type;
+using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().context())>::type;
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
 using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
@@ -75,15 +75,15 @@ data_t::DataUpdate handleEventsGillespie(
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,
                   const data_t *data, readdy::scalar &alpha, std::vector<event_t> &events,
-                  const readdy::model::KernelContext::dist_squared_fun& d2) {
-    const auto& reaction_registry = kernel->getKernelContext().reactions();
+                  const readdy::model::Context::dist_squared_fun& d2) {
+    const auto& reaction_registry = kernel->context().reactions();
     for (const auto index : particles) {
         const auto &entry = data->entry_at(index);
         // this being false should really not happen, though
         if (!entry.deactivated) {
             // order 1
             {
-                const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(entry.type);
+                const auto &reactions = kernel->context().reactions().order1_by_type(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->getRate();
                     if (rate > 0) {
@@ -106,7 +106,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                 if (index > idx_neighbor) continue;
                 const auto &neighbor = data->entry_at(idx_neighbor);
                 if (!neighbor.deactivated) {
-                    const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
+                    const auto &reactions = kernel->context().reactions().order2_by_type(entry.type,
                                                                                                   neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
@@ -132,7 +132,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
 }
 
 template<typename Reaction>
-void performReaction(data_t* data, const readdy::model::KernelContext& context, data_t::size_type idx1, data_t::size_type idx2,
+void performReaction(data_t* data, const readdy::model::Context& context, data_t::size_type idx1, data_t::size_type idx2,
                      data_t::EntriesUpdate& newEntries, std::vector<data_t::size_type>& decayedEntries,
                      Reaction* reaction, record_t* record) {
     const auto& pbc = context.applyPBCFun();

@@ -34,13 +34,13 @@
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 
 namespace py = pybind11;
 
 using rvp = py::return_value_policy;
 
-using KernelContext = readdy::model::KernelContext;
+using KernelContext = readdy::model::Context;
 using ParticleTypeRegistry = readdy::model::ParticleTypeRegistry;
 using ReactionRegistry = readdy::model::reactions::ReactionRegistry;
 using PotentialRegistry = readdy::model::potentials::PotentialRegistry;
@@ -157,7 +157,7 @@ void exportKernelContext(py::module &module) {
                 return self.addPlane(conversions, uniqueName, normalCoefficients, distance, largerOrLess);
             });
 
-    py::class_<KernelContext>(module, "KernelContext")
+    py::class_<KernelContext>(module, "Context")
             .def(py::init<>())
             .def_property("kbt", [](const KernelContext &self) { return self.kBT(); },
                           [](KernelContext &self, scalar kbt) { self.kBT() = kbt; })

@@ -41,7 +41,7 @@ SCPUEulerBDIntegrator::SCPUEulerBDIntegrator(SCPUKernel *kernel, scalar timeStep
 
 void SCPUEulerBDIntegrator::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
     const auto &kbt = context.kBT();
     const auto &fixPos = context.fixPositionFun();
     auto& stateModel = kernel->getSCPUKernelStateModel();

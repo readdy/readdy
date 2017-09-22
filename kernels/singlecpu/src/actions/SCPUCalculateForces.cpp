@@ -40,7 +40,7 @@ SCPUCalculateForces::SCPUCalculateForces(SCPUKernel *kernel) : kernel(kernel) {}
 void SCPUCalculateForces::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
 
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
 
     auto &stateModel = kernel->getSCPUKernelStateModel();
     auto &data = *stateModel.getParticleData();

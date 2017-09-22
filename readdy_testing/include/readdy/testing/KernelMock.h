@@ -75,8 +75,6 @@ public:
 
     MOCK_CONST_METHOD0(getKernelStateModelInternal, readdy::model::KernelStateModel & (void));
 
-    MOCK_CONST_METHOD0(getKernelContextInternal, readdy::model::KernelContext & (void));
-
     MOCK_CONST_METHOD0(getTopologyActionFactoryInternal, readdy::model::top::TopologyActionFactory* (void));
 };
 }

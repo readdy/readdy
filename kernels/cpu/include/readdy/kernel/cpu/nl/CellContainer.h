@@ -36,7 +36,7 @@
 #include <readdy/common/thread/Config.h>
 #include <readdy/common/common.h>
 #include <readdy/common/Index.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 
 #include <readdy/kernel/cpu/data/NLDataContainer.h>
 
@@ -65,7 +65,7 @@ public:
     using particle_index = ParticlesList::particle_index;
     using DataContainer = data::NLDataContainer;
 
-    CellContainer(DataContainer &data, const readdy::model::KernelContext &context,
+    CellContainer(DataContainer &data, const readdy::model::Context &context,
                   const readdy::util::thread::Config &config);
 
     virtual ~CellContainer();
@@ -174,7 +174,7 @@ public:
 
     DataContainer& data();
 
-    const readdy::model::KernelContext &context() const;
+    const readdy::model::Context &context() const;
 
     const readdy::util::thread::Config &config() const;
 
@@ -243,7 +243,7 @@ protected:
     std::size_t _n_dirty_macro_cells {0};
 
     DataContainer &_data;
-    const readdy::model::KernelContext &_context;
+    const readdy::model::Context &_context;
     const readdy::util::thread::Config& _config;
 };
 

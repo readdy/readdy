@@ -53,13 +53,13 @@ class TestKernelContextWithKernels : public KernelTest {
 };
 
 TEST_F(TestKernelContext, SetGetKBT) {
-    m::KernelContext ctx;
+    m::Context ctx;
     ctx.kBT() = 42;
     EXPECT_EQ(42, ctx.kBT());
 }
 
 TEST_F(TestKernelContext, PeriodicBoundary) {
-    m::KernelContext ctx;
+    m::Context ctx;
     ctx.periodicBoundaryConditions() = {{true, false, true}};
     auto boundary = ctx.periodicBoundaryConditions();
     EXPECT_TRUE(boundary[0]);
@@ -68,7 +68,7 @@ TEST_F(TestKernelContext, PeriodicBoundary) {
 }
 
 TEST_F(TestKernelContext, BoxSize) {
-    m::KernelContext ctx;
+    m::Context ctx;
     ctx.boxSize() = {{10, 11, 12}};
     auto box_size = ctx.boxSize();
     EXPECT_EQ(box_size[0], 10);
@@ -77,12 +77,12 @@ TEST_F(TestKernelContext, BoxSize) {
 }
 
 TEST_F(TestKernelContext, Copyable) {
-    m::KernelContext context;
-    m::KernelContext copy(context);
+    m::Context context;
+    m::Context copy(context);
 }
 
 TEST_F(TestKernelContext, PotentialOrder2Map) {
-    m::KernelContext ctx;
+    m::Context ctx;
     ctx.particle_types().add("a", 1., 1.);
     ctx.particle_types().add("b", 1., 1.);
     auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(ctx.particle_types()("a"), ctx.particle_types()("b"));
@@ -100,7 +100,7 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
     namespace rmp = readdy::model::potentials;
 
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
 
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.particle_types().add("B", 3.0, 2.0);
@@ -110,20 +110,20 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     std::vector<short> idsToRemove;
     short uuid2_1, uuid2_2;
     {
-        auto id1 = kernel->getKernelContext().potentials().addCube("A", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id2 = kernel->getKernelContext().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id3 = kernel->getKernelContext().potentials().addCube("D", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id4 = kernel->getKernelContext().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id1 = kernel->context().potentials().addCube("A", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id2 = kernel->context().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id3 = kernel->context().potentials().addCube("D", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id4 = kernel->context().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
         idsToRemove.push_back(id1);
         idsToRemove.push_back(id2);
         idsToRemove.push_back(id3);
         idsToRemove.push_back(id4);
 
-        kernel->getKernelContext().potentials().addCube("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        kernel->context().potentials().addCube("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
-        uuid2_1 = kernel->getKernelContext().potentials().addHarmonicRepulsion("A", "C", 0);
-        uuid2_2 = kernel->getKernelContext().potentials().addHarmonicRepulsion("B", "C", 0);
+        uuid2_1 = kernel->context().potentials().addHarmonicRepulsion("A", "C", 0);
+        uuid2_2 = kernel->context().potentials().addHarmonicRepulsion("B", "C", 0);
         ctx.configure();
     }
     // test that order 1 potentials are set up correctly
@@ -193,7 +193,7 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 }
 
 TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
-    const auto prepareCtx = [](m::KernelContext &ctx, const std::string& descriptor, readdy::scalar rate){
+    const auto prepareCtx = [](m::Context &ctx, const std::string& descriptor, readdy::scalar rate){
         ctx.particle_types().add("A", 1., 1.);
         ctx.particle_types().add("B", 1., 1.);
         ctx.particle_types().add("C", 1., 1.);
@@ -201,7 +201,7 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         ctx.configure();
     };
     {
-        m::KernelContext ctx;
+        m::Context ctx;
         auto decay = "mydecay:A->";
         prepareCtx(ctx, decay, 2.);
         const auto &r = ctx.reactions().order1_by_name("mydecay");
@@ -213,7 +213,7 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 2.);
     }
     {
-        m::KernelContext ctx;
+        m::Context ctx;
         auto conversion = "myconv: A -> B";
         prepareCtx(ctx, conversion, 3.);
         const auto &r = ctx.reactions().order1_by_name("myconv");
@@ -226,7 +226,7 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 3.);
     }
     {
-        m::KernelContext ctx;
+        m::Context ctx;
         auto fusion = "myfus: B +(1.2) B -> C [0.5, 0.5]";
         prepareCtx(ctx, fusion, 4.);
         const auto &r = ctx.reactions().order2_by_name("myfus");
@@ -243,7 +243,7 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 4.);
     }
     {
-        m::KernelContext ctx;
+        m::Context ctx;
         auto fission = "myfiss: B -> C +(3.0) B [0.1, 0.9]";
         prepareCtx(ctx, fission, 5.);
         const auto &r = ctx.reactions().order1_by_name("myfiss");
@@ -260,7 +260,7 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         EXPECT_EQ(r->getRate(), 5.);
     }
     {
-        m::KernelContext ctx;
+        m::Context ctx;
         auto enzymatic = "myenz:A +(1.5) C -> B + C";
         prepareCtx(ctx, enzymatic, 6.);
         const auto &r = ctx.reactions().order2_by_name("myenz");
@@ -278,7 +278,7 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
 }
 
 TEST_F(TestKernelContext, ReactionDescriptorInvalidInputs) {
-    m::KernelContext ctx;
+    m::Context ctx;
     ctx.particle_types().add("A", 1., 1.);
     ctx.particle_types().add("B", 1., 1.);
     std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]", "blub: A (3)+ A -> B"};

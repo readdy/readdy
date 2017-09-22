@@ -46,10 +46,10 @@ namespace nl {
 class CellDecompositionNeighborList : public NeighborList {
 public:
 
-    CellDecompositionNeighborList(data::EntryDataContainer *data, const readdy::model::KernelContext &context,
+    CellDecompositionNeighborList(data::EntryDataContainer *data, const readdy::model::Context &context,
                                   const readdy::util::thread::Config &config);
 
-    CellDecompositionNeighborList(const readdy::model::KernelContext &context,
+    CellDecompositionNeighborList(const readdy::model::Context &context,
                                   const readdy::util::thread::Config &config);
 
     bool is_adaptive() const override;

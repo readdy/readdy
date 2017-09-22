@@ -79,7 +79,7 @@ bool shouldPerformEvent(const scalar rate, const scalar timeStep, bool approxima
 void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     auto &model = kernel->getSCPUKernelStateModel();
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
     auto &topologies = model.topologies();
 
     if (!topologies.empty()) {
@@ -199,7 +199,7 @@ void SCPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
 }
 
 SCPUEvaluateTopologyReactions::topology_reaction_events SCPUEvaluateTopologyReactions::gatherEvents() {
-    const auto& context = kernel->getKernelContext();
+    const auto& context = kernel->context();
     const auto& topology_registry = context.topology_registry();
     topology_reaction_events events;
     {
@@ -323,7 +323,7 @@ bool SCPUEvaluateTopologyReactions::eventsDependent(const SCPUEvaluateTopologyRe
 void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateModel::topology_ref &t1,
                                                                    SCPUStateModel::topology_ref &t2,
                                                                    const SCPUEvaluateTopologyReactions::TREvent &event) {
-    const auto& context = kernel->getKernelContext();
+    const auto& context = kernel->context();
     const auto& top_registry = context.topology_registry();
     const auto& reaction = top_registry.spatial_reactions_by_type(event.t1, t1->type(), event.t2, t2->type()).at(event.reaction_idx);
 
@@ -379,7 +379,7 @@ void SCPUEvaluateTopologyReactions::handleTopologyTopologyReaction(SCPUStateMode
 
 void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateModel::topology_ref &topology,
                                                                    const SCPUEvaluateTopologyReactions::TREvent &event) {
-    const auto& context = kernel->getKernelContext();
+    const auto& context = kernel->context();
     const auto& top_registry = context.topology_registry();
     const auto& reaction = top_registry.spatial_reactions_by_type(event.t1, topology->type(), event.t2, topology_type_empty).at(event.reaction_idx);
 
@@ -418,7 +418,7 @@ void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::top
                                                              std::vector<SCPUStateModel::topology> &new_topologies,
                                                              const SCPUEvaluateTopologyReactions::TREvent &event,
                                                              SCPUStateModel::topology_ref &topology) const {
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
     const auto &reactions = context.topology_registry().structural_reactions_of(topology->type());
     const auto &reaction = reactions.at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);

@@ -224,7 +224,7 @@ CPUReactionCounts::CPUReactionCounts(CPUKernel *const kernel, unsigned int strid
         : ReactionCounts(kernel, stride), kernel(kernel) {}
 
 void CPUReactionCounts::evaluate() {
-    readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->getKernelContext());
+    readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->context());
     assignCountsToResult(kernel->getCPUKernelStateModel().reactionCounts(), result);
 }
 

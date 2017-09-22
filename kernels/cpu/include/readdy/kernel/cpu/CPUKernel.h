@@ -86,8 +86,6 @@ protected:
 
     CPUStateModel &getKernelStateModelInternal() const override;
 
-    readdy::model::KernelContext &getKernelContextInternal() const override;
-
     readdy::model::actions::ActionFactory &getActionFactoryInternal() const override;
 
     readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const override;

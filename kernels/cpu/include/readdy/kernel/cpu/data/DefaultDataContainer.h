@@ -49,7 +49,7 @@ public:
 
     explicit DefaultDataContainer(EntryDataContainer *entryDataContainer);
 
-    DefaultDataContainer(const model::KernelContext &context, const util::thread::Config &threadConfig);
+    DefaultDataContainer(const model::Context &context, const util::thread::Config &threadConfig);
 
     void reserve(std::size_t n) override;
 

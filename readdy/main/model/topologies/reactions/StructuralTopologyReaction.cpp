@@ -90,8 +90,8 @@ StructuralTopologyReaction::StructuralTopologyReaction(const StructuralTopologyR
         : StructuralTopologyReaction(reaction_function, [rate](const GraphTopology&) -> scalar { return rate; }) {}
 
 std::vector<GraphTopology> StructuralTopologyReaction::execute(GraphTopology &topology, const Kernel* const kernel) const {
-    const auto &types = kernel->getKernelContext().particle_types();
-    const auto &topology_types = kernel->getKernelContext().topology_registry();
+    const auto &types = kernel->context().particle_types();
+    const auto &topology_types = kernel->context().topology_registry();
     auto recipe = operations(topology);
     auto& steps = recipe.steps();
     if(!steps.empty()) {

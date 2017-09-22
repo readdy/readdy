@@ -31,7 +31,7 @@
 
 #pragma once
 #include <unordered_set>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include "SCPUParticleData.h"
 #include <readdy/common/numeric.h>
 
@@ -154,7 +154,7 @@ struct READDY_API Box {
 template<typename container=std::unordered_set<ParticleIndexPair, ParticleIndexPairHasher>>
 class READDY_API SCPUNotThatNaiveNeighborList : public SCPUNeighborListContainer<container> {
     using super = readdy::kernel::scpu::model::SCPUNeighborListContainer<container>;
-    using context = readdy::model::KernelContext;
+    using context = readdy::model::Context;
 public:
     explicit SCPUNotThatNaiveNeighborList(const context *const context) : ctx(context) {}
 
@@ -282,7 +282,7 @@ protected:
 };
 
 struct READDY_API SCPUNeighborList : public SCPUNotThatNaiveNeighborList<std::vector<ParticleIndexPair>> {
-    explicit SCPUNeighborList(const readdy::model::KernelContext *const ctx)
+    explicit SCPUNeighborList(const readdy::model::Context *const ctx)
             : SCPUNotThatNaiveNeighborList(ctx) {}
 };
 

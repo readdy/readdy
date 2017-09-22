@@ -147,7 +147,7 @@ void ContiguousCLLNeighborListContainer::update(scalar cutoffSquared, const util
 }
 
 
-NLContainerConfig::NLContainerConfig(const model::KernelContext &context,
+NLContainerConfig::NLContainerConfig(const model::Context &context,
                                      const NLContainerConfig::thread_config_type &config,
                                      const NLContainerConfig::data_container_type &data)
         : context(context), threads(config), data(data) {

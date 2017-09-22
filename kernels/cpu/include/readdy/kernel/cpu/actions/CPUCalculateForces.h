@@ -49,7 +49,7 @@ public:
     void perform(const util::PerformanceNode &node) override {
         auto t = node.timeit();
 
-        const auto &context = kernel->getKernelContext();
+        const auto &context = kernel->context();
         const auto &config = kernel->threadConfig();
 
         auto &stateModel = kernel->getCPUKernelStateModel();
@@ -122,7 +122,7 @@ protected:
 
     static void calculate(std::size_t /*tid*/, data_bounds dataBounds, nl_bounds nlBounds, top_bounds topBounds,
                    std::promise<scalar>& energyPromise, CPUStateModel::data_type* data,
-                   model::top::TopologyActionFactory *taf, const model::KernelContext &context,
+                   model::top::TopologyActionFactory *taf, const model::Context &context,
                    const readdy::util::thread::barrier &barrier) {
         scalar energyUpdate = 0.0;
 

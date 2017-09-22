@@ -43,9 +43,9 @@ class TestPotentials : public KernelTest {
 };
 
 void setupParticles(readdy::model::Kernel &kernel) {
-    kernel.getKernelContext().particle_types().add("A", static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.1));
-    kernel.getKernelContext().particle_types().add("B", static_cast<readdy::scalar>(0.1), static_cast<readdy::scalar>(0.01));
-    kernel.getKernelContext().periodicBoundaryConditions() = {{false, false, false}};
+    kernel.context().particle_types().add("A", static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.1));
+    kernel.context().particle_types().add("B", static_cast<readdy::scalar>(0.1), static_cast<readdy::scalar>(0.01));
+    kernel.context().periodicBoundaryConditions() = {{false, false, false}};
     const unsigned int nParticlesA = 10;
     const unsigned int nParticlesB = 10;
 
@@ -68,19 +68,19 @@ void run(readdy::model::Kernel &kernel, readdy::scalar timeStep) {
 }
 
 TEST_P(TestPotentials, TestParticlesStayInBox) {
-    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
+    kernel->context().boxSize() = {{5, 5, 5}};
     const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
 
-    kernel->getKernelContext().potentials().addHarmonicRepulsion("A", "B", .01);
+    kernel->context().potentials().addHarmonicRepulsion("A", "B", .01);
 
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
         // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
         readdy::Vec3 origin {-1, -1, -1};
         readdy::Vec3 extent {2, 2, 2};
-        kernel->getKernelContext().potentials().addCube(t, 10, origin, extent, true);
+        kernel->context().potentials().addCube(t, 10, origin, extent, true);
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
@@ -103,7 +103,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 }
 
 TEST_P(TestPotentials, TestParticleStayInSphere) {
-    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
+    kernel->context().boxSize() = {{10, 10, 10}};
     const readdy::scalar timeStep = .005;
 
     setupParticles(*kernel);
@@ -111,7 +111,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     std::array<std::string, 2> types{{"A", "B"}};
     for (auto t : types) {
         readdy::Vec3 origin (0, 0, 0);
-        kernel->getKernelContext().potentials().addSphereIn(t, 20, origin, 3);
+        kernel->context().potentials().addSphereIn(t, 20, origin, 3);
     }
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
     const readdy::scalar maxDistFromOrigin = 4.0; // at kbt=1 and force_const=20 the RMSD in a well potential would be ~0.2
@@ -135,7 +135,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
 TEST_P(TestPotentials, TestLennardJonesRepellent) {
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     // test system where the particles are closer together than they should be, i.e., the force should be repellent
-    auto& ctx = kernel->getKernelContext();
+    auto& ctx = kernel->context();
     // one particle type A
     ctx.particle_types().add("A", 1.0, 1.0);
     // large enough box
@@ -146,7 +146,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 
     // the potential has exponents 3 and 2, a cutoff distance of 1.0, does not shift the energy, a well depth
     // of 1.0 and a zero-interaction distance of 0.1 (particle distance < sigma ==> repellent)
-    kernel->getKernelContext().potentials().addLennardJones("A", "A", 3, 2, 1.0, false, 1.0, .1);
+    kernel->context().potentials().addLennardJones("A", "A", 3, 2, 1.0, false, 1.0, .1);
 
     // record ids
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
@@ -178,7 +178,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    EXPECT_NEAR(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
+    EXPECT_NEAR(kernel->stateModel().energy(), static_cast<readdy::scalar>(0.925925925926), 1e-6);
     auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::Vec3 forceOnParticle0 {0, 0, static_cast<readdy::scalar>(-123.45679012)};
@@ -195,7 +195,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
 
 TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.boxSize() = {{10, 10, 10}};
@@ -208,7 +208,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto sigma = static_cast<readdy::scalar>(1.);
     auto cutoff = static_cast<readdy::scalar>(8.);
     unsigned int exponent = 6;
-    kernel->getKernelContext().potentials().addScreenedElectrostatics("A", "A", electrostaticStrength, 1. / screeningDepth,
+    kernel->context().potentials().addScreenedElectrostatics("A", "A", electrostaticStrength, 1. / screeningDepth,
                                                                                  repulsionStrength, sigma, exponent, cutoff);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
@@ -238,9 +238,9 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
 
     // the reference values were calculated numerically
     if(kernel->singlePrecision()) {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(-0.0264715664281));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(-0.0264715664281));
     } else {
-        EXPECT_FLOAT_EQ(kernel->getKernelStateModel().energy(), static_cast<readdy::scalar>(-0.0264715664281));
+        EXPECT_FLOAT_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(-0.0264715664281));
     }
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
@@ -253,7 +253,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
 
 TEST_P(TestPotentials, SphericalMembrane) {
     // Combine SphereIn and SphereOut to build a 2D spherical manifold
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.boxSize() =  {{10, 10, 10}};
     // add two particles, one outside, one inside the sphere
@@ -263,8 +263,8 @@ TEST_P(TestPotentials, SphericalMembrane) {
     auto radius = static_cast<readdy::scalar>(3.);
     readdy::Vec3 origin = {static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.),
                                   static_cast<readdy::scalar>(0.)};
-    kernel->getKernelContext().potentials().addSphereOut("A", forceConstant, origin, radius);
-    kernel->getKernelContext().potentials().addSphereIn("A", forceConstant, origin, radius);
+    kernel->context().potentials().addSphereOut("A", forceConstant, origin, radius);
+    kernel->context().potentials().addSphereIn("A", forceConstant, origin, radius);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
     std::vector<readdy::model::Particle::id_type> ids;
@@ -295,7 +295,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().energy(), 0.803847577293 + 2.41154273188);
+    ASSERT_FLOAT_EQ(kernel->stateModel().energy(), 0.803847577293 + 2.41154273188);
     ptrdiff_t id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     ptrdiff_t id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(0.73205081),
@@ -309,7 +309,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
 }
 
 TEST_P(TestPotentials, SphericalBarrier) {
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     ctx.particle_types().add("A", 1.0, 1.0);
     ctx.boxSize() = {{10, 10, 10}};
@@ -320,7 +320,7 @@ TEST_P(TestPotentials, SphericalBarrier) {
     double radius = 1.;
     double height = 2.;
     double width = 0.3;
-    kernel->getKernelContext().potentials().addSphericalBarrier("A", origin, radius, height, width);
+    kernel->context().potentials().addSphericalBarrier("A", origin, radius, height, width);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
     std::vector<readdy::model::Particle::id_type> ids;
@@ -345,7 +345,7 @@ TEST_P(TestPotentials, SphericalBarrier) {
     kernel->evaluateObservables(1);
 
     // the reference values were calculated numerically
-    ASSERT_FLOAT_EQ(kernel->getKernelStateModel().energy(), 1.51432015278);
+    ASSERT_FLOAT_EQ(kernel->stateModel().energy(), 1.51432015278);
     auto id0Idx = std::find(ids.begin(), ids.end(), id0) - ids.begin();
     auto id1Idx = std::find(ids.begin(), ids.end(), id1) - ids.begin();
     readdy::Vec3 forceOnParticle0{static_cast<readdy::scalar>(9.2539372), static_cast<readdy::scalar>(0.84126702),

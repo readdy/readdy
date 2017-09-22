@@ -35,7 +35,7 @@
 #include "Observable.h"
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/Particle.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -67,7 +67,7 @@ public:
      */
     static void
     initializeCounts(std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
-                     const readdy::model::KernelContext &ctx);
+                     const readdy::model::Context &ctx);
 
 protected:
     void initialize(Kernel* kernel) override;

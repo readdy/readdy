@@ -50,13 +50,13 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         return static_cast <readdy::scalar> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
     };
 
-    kernel->getKernelContext().particle_types().add("A", 1.0, 1.0);
-    kernel->getKernelContext().particle_types().add("B", 1.0, 1.0);
-    kernel->getKernelContext().particle_types().add("AB", 0.0, 1.0);
-    kernel->getKernelContext().periodicBoundaryConditions() = {{true, true, true}};
-    kernel->getKernelContext().boxSize() = {{5, 5, 5}};
-    kernel->getKernelContext().reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
-    kernel->getKernelContext().reactions().addFission("Dissolve", "AB", "A", "B", .5, 1.0);
+    kernel->context().particle_types().add("A", 1.0, 1.0);
+    kernel->context().particle_types().add("B", 1.0, 1.0);
+    kernel->context().particle_types().add("AB", 0.0, 1.0);
+    kernel->context().periodicBoundaryConditions() = {{true, true, true}};
+    kernel->context().boxSize() = {{5, 5, 5}};
+    kernel->context().reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
+    kernel->context().reactions().addFission("Dissolve", "AB", "A", "B", .5, 1.0);
 
     unsigned long n_A = 50;
     unsigned long n_B = n_A;
@@ -101,7 +101,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
      * Also during reactions, weights are chosen such that F does not move.
      * Idea: position F particles and remember their positions (ordered set), do ONE time-step and check if current positions are still the same.
      */
-    auto &context = kernel->getKernelContext();
+    auto &context = kernel->context();
     context.particle_types().add("A", 0.5, 1.0);
     context.particle_types().add("F", 0.0, 1.0);
     context.periodicBoundaryConditions() = {{true, true, true}};
@@ -110,8 +110,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
 
     const readdy::scalar weightF {static_cast<readdy::scalar>(0)};
     const readdy::scalar weightA  {static_cast<readdy::scalar>(1.)};
-    kernel->getKernelContext().reactions().addFusion("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
-    kernel->getKernelContext().reactions().addFission("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
+    kernel->context().reactions().addFusion("F+A->F", "F", "A", "F", 1.0, 2.0, weightF, weightA);
+    kernel->context().reactions().addFission("F->F+A", "F", "F", "A", 1.0, 2.0, weightF, weightA);
 
     std::set<readdy::Vec3, Vec3ProjectedLess> fPositions;
     auto n3 = readdy::model::rnd::normal3<readdy::scalar>;
@@ -119,7 +119,7 @@ TEST_P(TestReactions, FusionFissionWeights) {
         auto fPos = n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(0.8));
         kernel->addParticle("F", fPos);
         // fPos
-        fPositions.emplace(kernel->getKernelStateModel().getParticles().back().getPos());
+        fPositions.emplace(kernel->stateModel().getParticles().back().getPos());
         kernel->addParticle("A", n3(static_cast<readdy::scalar>(0.), static_cast<readdy::scalar>(1.)));
     }
 
@@ -156,8 +156,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
     kernel->getKernelContext().particle_types().add("A", 0.5, 1.0);
     kernel->getKernelContext().particle_types().add("F", 0.0, 1.0);
-    kernel->getKernelContext().setPeriodicBoundary(true, true, true);
-    kernel->getKernelContext().setBoxSize(10, 10, 10);
+    kernel->context().setPeriodicBoundary(true, true, true);
+    kernel->context().setBoxSize(10, 10, 10);
 
     const readdy::scalar weightF = 0.;
     const readdy::scalar weightA = 1.;

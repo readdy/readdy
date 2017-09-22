@@ -39,7 +39,7 @@ namespace reactions {
 using scpu_model = readdy::kernel::scpu::SCPUStateModel;
 using scpu_data = readdy::kernel::scpu::model::SCPUParticleData;
 using reaction_type = readdy::model::reactions::ReactionType;
-using context = readdy::model::KernelContext;
+using context = readdy::model::Context;
 using fix_pos = context::fix_pos_fun;
 using reaction_record = readdy::model::reactions::ReactionRecord;
 

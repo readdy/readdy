@@ -30,15 +30,15 @@
  */
 
 #pragma once
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <readdy/model/observables/Observable.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(util)
 
-scalar getRecommendedTimeStep(unsigned int N, KernelContext&);
-scalar getMaximumDisplacement(KernelContext&, scalar timeStep);
+scalar getRecommendedTimeStep(unsigned int N, Context&);
+scalar getMaximumDisplacement(Context&, scalar timeStep);
 
 constexpr inline std::array<const char*, 8> invalidCharacterSequences() {
     return {{"[", "]", "(", ")", "->", "--", ":", "+"}};

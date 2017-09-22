@@ -62,7 +62,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
                 std::promise<std::size_t> &n_events) {
     std::vector<event_t> eventsUpdate;
     const auto &data = *kernel->getCPUKernelStateModel().getParticleData();
-    const auto &d2 = kernel->getKernelContext().distSquaredFun();
+    const auto &d2 = kernel->context().distSquaredFun();
     auto index = static_cast<std::size_t>(std::distance(data.begin(), begin));
     for (auto it = begin; it != end; ++it, ++index) {
         const auto &entry = *it;
@@ -70,7 +70,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
         if (!entry.deactivated) {
             // order 1
             {
-                const auto &reactions = kernel->getKernelContext().reactions().order1_by_type(entry.type);
+                const auto &reactions = kernel->context().reactions().order1_by_type(entry.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->getRate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
@@ -90,7 +90,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
                 const auto &neighbor = data.entry_at(neighborIdx);
                 if(nit->current_particle() > neighborIdx) continue;
                 if(!neighbor.deactivated) {
-                    const auto &reactions = kernel->getKernelContext().reactions().order2_by_type(entry.type,
+                    const auto &reactions = kernel->context().reactions().order2_by_type(entry.type,
                                                                                                   neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
@@ -117,7 +117,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
 
 void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
-    const auto &ctx = kernel->getKernelContext();
+    const auto &ctx = kernel->context();
     const auto &fixPos = ctx.fixPositionFun();
     auto &stateModel = kernel->getCPUKernelStateModel();
     auto nl = stateModel.getNeighborList();

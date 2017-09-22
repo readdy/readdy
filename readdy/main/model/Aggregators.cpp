@@ -38,7 +38,8 @@ namespace observables {
 MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride,
                                                  std::vector<std::string> typesToCount,
                                                  Particles *particlesObservable)
-        : MeanSquaredDisplacement(kernel, stride, readdy::model::_internal::util::transformTypes2(typesToCount, kernel->getKernelContext()),
+        : MeanSquaredDisplacement(kernel, stride, readdy::model::_internal::util::transformTypes2(typesToCount,
+                                                                                                  kernel->context()),
                                   particlesObservable) {}
 
 MeanSquaredDisplacement::MeanSquaredDisplacement(Kernel *const kernel, unsigned int stride,

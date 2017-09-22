@@ -78,7 +78,7 @@ bool performReactionEvent<false>(const scalar rate, const scalar timeStep) {
 void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     auto &model = kernel->getCPUKernelStateModel();
-    const auto &context = kernel->getKernelContext();
+    const auto &context = kernel->context();
     auto &topologies = model.topologies();
 
     if (!topologies.empty()) {
@@ -200,7 +200,7 @@ void CPUEvaluateTopologyReactions::handleStructuralReaction(CPUStateModel::topol
                                                             std::vector<CPUStateModel::topology> &new_topologies,
                                                             const CPUEvaluateTopologyReactions::TREvent &event,
                                                             CPUStateModel::topology_ref &topology) const {
-    const auto &topology_type_registry = kernel->getKernelContext().topology_registry();
+    const auto &topology_type_registry = kernel->context().topology_registry();
     auto &reaction = topology_type_registry.structural_reactions_of(topology->type()).at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
     if (!result.empty()) {
@@ -222,7 +222,7 @@ void CPUEvaluateTopologyReactions::handleStructuralReaction(CPUStateModel::topol
 
 CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReactions::gatherEvents() {
     topology_reaction_events events;
-    const auto &topology_types = kernel->getKernelContext().topology_registry();
+    const auto &topology_types = kernel->context().topology_registry();
     {
         rate_t current_cumulative_rate = 0;
         std::size_t topology_idx = 0;
@@ -244,7 +244,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
             ++topology_idx;
         }
 
-        const auto &context = kernel->getKernelContext();
+        const auto &context = kernel->context();
 
         static const CPUStateModel::topology_ref EMPTY_TOP {};
 
@@ -330,7 +330,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
 
 void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel::topology_ref &topology,
                                                                   const CPUEvaluateTopologyReactions::TREvent &event) {
-    const auto& context = kernel->getKernelContext();
+    const auto& context = kernel->context();
     const auto& top_registry = context.topology_registry();
     const auto& reaction = top_registry.spatial_reactions_by_type(event.t1, topology->type(), event.t2, topology_type_empty).at(event.reaction_idx);
 
@@ -368,7 +368,7 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
 void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel::topology_ref &t1,
                                                                   CPUStateModel::topology_ref &t2,
                                                                   const TREvent &event) {
-    const auto& context = kernel->getKernelContext();
+    const auto& context = kernel->context();
     const auto& top_registry = context.topology_registry();
     const auto& reaction = top_registry.spatial_reactions_by_type(event.t1, t1->type(), event.t2, t2->type()).at(event.reaction_idx);
 

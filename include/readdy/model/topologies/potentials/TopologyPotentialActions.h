@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(pot)
 class CalculateHarmonicBondPotential : public EvaluatePotentialAction {
 public:
     using harmonic_bond = HarmonicBondPotential;
-    CalculateHarmonicBondPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    CalculateHarmonicBondPotential(const Context *const context) : EvaluatePotentialAction(context) {}
     virtual ~CalculateHarmonicBondPotential() = default;
 };
 
@@ -52,7 +52,7 @@ class CalculateHarmonicAnglePotential : public EvaluatePotentialAction {
 public:
     using harmonic_angle = HarmonicAnglePotential;
 
-    explicit CalculateHarmonicAnglePotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    explicit CalculateHarmonicAnglePotential(const Context *const context) : EvaluatePotentialAction(context) {}
     CalculateHarmonicAnglePotential(const CalculateHarmonicAnglePotential&) = default;
     CalculateHarmonicAnglePotential& operator=(const CalculateHarmonicAnglePotential&) = default;
     CalculateHarmonicAnglePotential(CalculateHarmonicAnglePotential&&) = default;
@@ -64,7 +64,7 @@ class CalculateCosineDihedralPotential : public EvaluatePotentialAction {
 public:
     using cos_dihedral = CosineDihedralPotential;
 
-    explicit CalculateCosineDihedralPotential(const KernelContext *const context) : EvaluatePotentialAction(context) {}
+    explicit CalculateCosineDihedralPotential(const Context *const context) : EvaluatePotentialAction(context) {}
     CalculateCosineDihedralPotential(const CalculateCosineDihedralPotential&) = default;
     CalculateCosineDihedralPotential& operator=(const CalculateCosineDihedralPotential&) = default;
     CalculateCosineDihedralPotential(CalculateCosineDihedralPotential&&) = default;

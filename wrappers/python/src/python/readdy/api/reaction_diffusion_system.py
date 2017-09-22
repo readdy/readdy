@@ -25,11 +25,21 @@ Created on 08.09.17
 @author: clonker
 """
 
-class ReactionDiffusionSystem(object):
+from readdy._internal.readdybinding.api import KernelContext as _KernelContext
 
-    def __init__(self, **kwargs):
-        self._kbt = kwargs['kbt'] if 'kbt' in kwargs.keys() else 1.0
-        self._box_size = kwargs['box_size'] if 'box_size' in kwargs.keys() else 1.0
-        self._periodic_boundary = kwargs['periodic_boundary'] if 'periodic_boundary' in kwargs.keys() else 1.0
-        self._reactions = []
-        self._species = []
+
+class ReactionDiffusionSystem(object):
+    def __init__(self):
+        self._context = _KernelContext()
+
+    @property
+    def kbt(self):
+        return self._context.kbt
+
+    @kbt.setter
+    def kbt(self, value):
+        self._context.kbt = value
+
+
+if __name__ == '__main__':
+    sys = ReactionDiffusionSystem()

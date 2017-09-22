@@ -53,7 +53,7 @@ const std::string &Kernel::getName() const {
     return pimpl->name;
 }
 
-Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()) {
+Kernel::Kernel(const std::string &name) : pimpl(std::make_unique<Kernel::Impl>()), _context{} {
     pimpl->name = name;
     pimpl->observableFactory = std::make_unique<observables::ObservableFactory>(this);
     pimpl->signal = std::make_unique<observables::signal_type>();
@@ -82,14 +82,14 @@ void Kernel::evaluateObservables(time_step_type t) {
 }
 
 readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, const Vec3 &pos) {
-    readdy::model::Particle particle {pos[0], pos[1], pos[2], getKernelContext().particle_types().id_of(type)};
-    getKernelStateModel().addParticle(particle);
+    readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particle_types().id_of(type)};
+    stateModel().addParticle(particle);
     return particle.getId();
 }
 
 particle_type_type Kernel::getTypeId(const std::string &name) const {
-    auto findIt = getKernelContext().particle_types().type_mapping().find(name);
-    if (findIt != getKernelContext().particle_types().type_mapping().end()) {
+    auto findIt = context().particle_types().type_mapping().find(name);
+    if (findIt != context().particle_types().type_mapping().end()) {
         return findIt->second;
     }
     log::critical("did not find type id for {}", name);
@@ -97,9 +97,9 @@ particle_type_type Kernel::getTypeId(const std::string &name) const {
 }
 
 particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
-    auto findIt = getKernelContext().particle_types().type_mapping().find(name);
-    if (findIt != getKernelContext().particle_types().type_mapping().end()) {
-        const auto &info = getKernelContext().particle_types().info_of(findIt->second);
+    auto findIt = context().particle_types().type_mapping().find(name);
+    if (findIt != context().particle_types().type_mapping().end()) {
+        const auto &info = context().particle_types().info_of(findIt->second);
         if (info.flavor == particleflavor::NORMAL) {
             return findIt->second;
         }
@@ -114,19 +114,19 @@ observables::ObservableFactory &Kernel::getObservableFactoryInternal() const {
     return *pimpl->observableFactory;
 }
 
-const readdy::model::KernelContext &Kernel::getKernelContext() const {
-    return getKernelContextInternal();
+const readdy::model::Context &Kernel::context() const {
+    return _context;
 }
 
-readdy::model::KernelContext &Kernel::getKernelContext() {
-    return getKernelContextInternal();
+readdy::model::Context &Kernel::context() {
+    return _context;
 }
 
-const readdy::model::KernelStateModel &Kernel::getKernelStateModel() const {
+const readdy::model::KernelStateModel &Kernel::stateModel() const {
     return getKernelStateModelInternal();
 }
 
-readdy::model::KernelStateModel &Kernel::getKernelStateModel() {
+readdy::model::KernelStateModel &Kernel::stateModel() {
     return getKernelStateModelInternal();
 }
 
@@ -155,7 +155,7 @@ readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactor
 }
 
 TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-    const auto& info = getKernelContext().particle_types().info_of(type);
+    const auto& info = context().particle_types().info_of(type);
     if(info.flavor != particleflavor::TOPOLOGY) {
         throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
     }
@@ -167,14 +167,11 @@ bool Kernel::supportsTopologies() const {
 }
 
 void Kernel::initialize() {
-    getKernelContext().configure(true);
+    context().configure(true);
 }
 
 void Kernel::finalize() {
 }
 
-Kernel &Kernel::operator=(Kernel &&rhs) noexcept = default;
-
-Kernel::Kernel(Kernel &&rhs) noexcept = default;
 }
 }

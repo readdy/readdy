@@ -49,7 +49,7 @@ namespace rpy = readdy::rpy;
 
 using rvp = py::return_value_policy;
 
-using context = readdy::model::KernelContext;
+using context = readdy::model::Context;
 using particle_t = readdy::model::Particle;
 
 using model_t = readdy::kernel::scpu::SCPUStateModel;
@@ -78,7 +78,7 @@ void exportModelClasses(py::module &proto) {
 
     py::class_ <model_t, model_wrap> model(proto, "Model");
     model
-            .def(py::init<context *, readdy::model::top::TopologyActionFactory *>())
+            .def(py::init<const context&, readdy::model::top::TopologyActionFactory *>())
             .def("remove_particle", &model_t::removeParticle)
             .def("get_particle_positions", &model_t::getParticlePositions)
             .def("get_energy", [](const model_t &self) {return self.energy();})

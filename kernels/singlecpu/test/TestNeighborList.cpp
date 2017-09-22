@@ -50,11 +50,11 @@ struct NeighborListTest : ::testing::Test {
     readdy::testing::NOOPPotentialOrder2 nooppot;
 
     NeighborListTest() : kernel(std::make_unique<kernel_t>()), nooppot(0, 0, 0, 0, 0) {
-        readdy::model::KernelContext &ctx = kernel->getKernelContext();
+        readdy::model::Context &ctx = kernel->context();
         ctx.particle_types().add("A", 1.0, 1.);
         nooppot = readdy::testing::NOOPPotentialOrder2(ctx.particle_types()("A"), ctx.particle_types()("A"), 1.1, 0, 0);
         readdy::scalar eductDistance = 1.2;
-        kernel->getKernelContext().reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
+        kernel->context().reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
         ctx.potentials().addUserDefined(&nooppot);
         typeIdA = ctx.particle_types().id_of("A");
         ctx.configure();
@@ -80,7 +80,7 @@ TEST(NeighborList, Naive) {
 
 TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
     // maxcutoff is 1.2 , system is 3.6 x 2 x 2, i.e. there are three cells along the periodic axis
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{3.7, 2, 2}};
     ctx.periodicBoundaryConditions() = {{true, false, false}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
@@ -113,7 +113,7 @@ TEST_F(NeighborListTest, ThreeBoxesPeriodicAxis) {
 
 TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
     // maxcutoff is 1.2, system is 4 x 4 x 4, all directions periodic, i.e. 27 cells each with 13 neighbors
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{4, 4, 4}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
@@ -141,7 +141,7 @@ TEST_F(NeighborListTest, 27BoxesAllPeriodic) {
 
 TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
     // maxcutoff is 1.2, system is 4.8 x 5 x 5.1, all periodic, i.e. 64 cells each with 13 neighbors
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{4.8, 5, 5.1}};
     ctx.periodicBoundaryConditions() = {{true, true, true}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);
@@ -168,7 +168,7 @@ TEST_F(NeighborListTest, 64BoxesAllPeriodic) {
 
 TEST_F(NeighborListTest, ThreeBoxesNonPeriodic) {
     // maxcutoff is 1.2, system is 1.5 x 4 x 1.5, non-periodic, three cells
-    auto &ctx = kernel->getKernelContext();
+    auto &ctx = kernel->context();
     ctx.boxSize() = {{1.5, 4, 1.5}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     scpum::SCPUNotThatNaiveNeighborList<std::vector<readdy::kernel::scpu::model::ParticleIndexPair>> list(&ctx);

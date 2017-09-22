@@ -37,10 +37,10 @@
 TEST(SingleCPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
-    kernel->getKernelContext().particle_types().add("X", .25, 1.);
-    kernel->getKernelContext().reactions().addDecay("X decay", "X", 1);
-    kernel->getKernelContext().reactions().addFission("X fission", "X", "X", "X", .5, .3);
+    kernel->context().boxSize() = {{10, 10, 10}};
+    kernel->context().particle_types().add("X", .25, 1.);
+    kernel->context().reactions().addDecay("X decay", "X", 1);
+    kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
     readdy::scalar timeStep = 1.0;
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(timeStep);
@@ -57,10 +57,10 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->getKernelContext().particle_types().id_of("X");
+    const auto typeId = kernel->context().particle_types().id_of("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
-    kernel->getKernelStateModel().addParticles(particlesToBeginWith);
-    kernel->getKernelContext().configure();
+    kernel->stateModel().addParticles(particlesToBeginWith);
+    kernel->context().configure();
     initNeighborList->perform();
     for (size_t t = 0; t < 20; t++) {
 
@@ -73,7 +73,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
 
     }
 
-    EXPECT_EQ(0, kernel->getKernelStateModel().getParticlePositions().size());
+    EXPECT_EQ(0, kernel->stateModel().getParticlePositions().size());
 
     connection.disconnect();
 }
@@ -107,34 +107,34 @@ TEST(SingleCPUTestReactions, TestDecay) {
 TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
-    kernel->getKernelContext().boxSize() = {{10, 10, 10}};
+    kernel->context().boxSize() = {{10, 10, 10}};
 
-    kernel->getKernelContext().particle_types().add("A", .25, 1.);
-    kernel->getKernelContext().particle_types().add("B", .25, 1.);
-    kernel->getKernelContext().particle_types().add("C", .25, 1.);
-    kernel->getKernelContext().particle_types().add("D", .25, 1.);
-    kernel->getKernelContext().particle_types().add("E", .25, 1.);
+    kernel->context().particle_types().add("A", .25, 1.);
+    kernel->context().particle_types().add("B", .25, 1.);
+    kernel->context().particle_types().add("C", .25, 1.);
+    kernel->context().particle_types().add("D", .25, 1.);
+    kernel->context().particle_types().add("E", .25, 1.);
 
-    kernel->getKernelContext().reactions().addDecay("A decay", "A", 1);
-    kernel->getKernelContext().reactions().addFusion("B+C->E", "B", "C", "E", 1, 17);
-    kernel->getKernelContext().reactions().addFusion("B+D->A", "B", "D", "A", 1, 17);
-    kernel->getKernelContext().reactions().addConversion("E->A", "E", "A", 1);
-    kernel->getKernelContext().reactions().addConversion("C->D", "C", "D", 1);
+    kernel->context().reactions().addDecay("A decay", "A", 1);
+    kernel->context().reactions().addFusion("B+C->E", "B", "C", "E", 1, 17);
+    kernel->context().reactions().addFusion("B+D->A", "B", "D", "A", 1, 17);
+    kernel->context().reactions().addConversion("E->A", "E", "A", 1);
+    kernel->context().reactions().addConversion("C->D", "C", "D", 1);
 
     auto &&integrator = kernel->createAction<readdy::model::actions::EulerBDIntegrator>(1);
     auto &&forces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
 
-    const auto typeId_A = kernel->getKernelContext().particle_types().id_of("A");
-    const auto typeId_B = kernel->getKernelContext().particle_types().id_of("B");
-    const auto typeId_C = kernel->getKernelContext().particle_types().id_of("C");
-    const auto typeId_D = kernel->getKernelContext().particle_types().id_of("D");
-    const auto typeId_E = kernel->getKernelContext().particle_types().id_of("E");
+    const auto typeId_A = kernel->context().particle_types().id_of("A");
+    const auto typeId_B = kernel->context().particle_types().id_of("B");
+    const auto typeId_C = kernel->context().particle_types().id_of("C");
+    const auto typeId_D = kernel->context().particle_types().id_of("D");
+    const auto typeId_E = kernel->context().particle_types().id_of("E");
 
-    kernel->getKernelStateModel().addParticle({4, 4, 4, typeId_A});
-    kernel->getKernelStateModel().addParticle({-2, 0, 0, typeId_B});
-    kernel->getKernelStateModel().addParticle({2, 0, 0, typeId_C});
+    kernel->stateModel().addParticle({4, 4, 4, typeId_A});
+    kernel->stateModel().addParticle({-2, 0, 0, typeId_B});
+    kernel->stateModel().addParticle({2, 0, 0, typeId_C});
 
     auto pred_contains_A = [=](const readdy::model::Particle &p) { return p.getType() == typeId_A; };
     auto pred_contains_B = [=](const readdy::model::Particle &p) { return p.getType() == typeId_B; };
@@ -142,11 +142,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto pred_contains_D = [=](const readdy::model::Particle &p) { return p.getType() == typeId_D; };
     auto pred_contains_E = [=](const readdy::model::Particle &p) { return p.getType() == typeId_E; };
 
-    kernel->getKernelContext().configure();
+    kernel->context().configure();
 
     for (unsigned int t = 0; t < 4; t++) {
 
-        const auto particles = kernel->getKernelStateModel().getParticles();
+        const auto particles = kernel->stateModel().getParticles();
 
         bool containsA = std::find_if(particles.begin(), particles.end(), pred_contains_A) != particles.end();
         bool containsB = std::find_if(particles.begin(), particles.end(), pred_contains_B) != particles.end();

@@ -40,7 +40,7 @@
 #include <readdy/model/Plugin.h>
 #include <readdy/model/actions/Action.h>
 #include <readdy/model/KernelStateModel.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
 #include <readdy/model/actions/ActionFactory.h>
@@ -78,9 +78,9 @@ public:
 
     Kernel &operator=(const Kernel &rhs) = delete;
 
-    Kernel(Kernel &&rhs) noexcept;
+    Kernel(Kernel &&rhs) noexcept = default;
 
-    Kernel &operator=(Kernel &&rhs) noexcept;
+    Kernel &operator=(Kernel &&rhs) noexcept = default;
 
     /**
      * This method returns the name of the kernel.
@@ -158,13 +158,13 @@ public:
      * 
      */
 
-    const readdy::model::KernelStateModel &getKernelStateModel() const;
+    const readdy::model::KernelStateModel &stateModel() const;
 
-    readdy::model::KernelStateModel &getKernelStateModel();
+    readdy::model::KernelStateModel &stateModel();
 
-    const readdy::model::KernelContext &getKernelContext() const;
+    const readdy::model::Context &context() const;
 
-    readdy::model::KernelContext &getKernelContext();
+    readdy::model::Context &context();
 
     const readdy::model::actions::ActionFactory &getActionFactory() const;
 
@@ -198,14 +198,14 @@ protected:
 
     virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const = 0;
 
-    virtual readdy::model::KernelContext &getKernelContextInternal() const = 0;
-
     virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
 
     virtual readdy::model::observables::ObservableFactory &getObservableFactoryInternal() const;
 
     virtual readdy::model::top::TopologyActionFactory *getTopologyActionFactoryInternal() const = 0;
 
+
+    model::Context _context;
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

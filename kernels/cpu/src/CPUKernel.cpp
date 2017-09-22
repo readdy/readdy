@@ -43,7 +43,6 @@ struct CPUKernel::Impl {
     std::unique_ptr<actions::CPUActionFactory> actionFactory;
     std::unique_ptr<observables::CPUObservableFactory> observableFactory;
     std::unique_ptr<CPUStateModel> stateModel;
-    std::unique_ptr<readdy::model::KernelContext> context;
     std::unique_ptr<readdy::util::thread::Config> config;
     std::unique_ptr<readdy::model::top::TopologyActionFactory> topologyActionFactory;
 };
@@ -56,20 +55,15 @@ CPUKernel::CPUKernel() : readdy::model::Kernel(name), pimpl(std::make_unique<Imp
     pimpl->config = std::make_unique<readdy::util::thread::Config>();
     pimpl->config->setMode(readdy::util::thread::ThreadMode::pool);
 
-    pimpl->context = std::make_unique<readdy::model::KernelContext>();
     pimpl->actionFactory = std::make_unique<actions::CPUActionFactory>(this);
     pimpl->topologyActionFactory = std::make_unique<readdy::kernel::cpu::actions::top::CPUTopologyActionFactory>(this);
-    pimpl->stateModel = std::make_unique<CPUStateModel>(pimpl->context.get(), pimpl->config.get(),
+    pimpl->stateModel = std::make_unique<CPUStateModel>(_context, pimpl->config.get(),
                                                         pimpl->topologyActionFactory.get());
     pimpl->observableFactory = std::make_unique<observables::CPUObservableFactory>(this);
 }
 
 CPUStateModel &CPUKernel::getKernelStateModelInternal() const {
     return *pimpl->stateModel;
-}
-
-readdy::model::KernelContext &CPUKernel::getKernelContextInternal() const {
-    return *pimpl->context;
 }
 
 readdy::model::observables::ObservableFactory &CPUKernel::getObservableFactoryInternal() const {
@@ -111,7 +105,7 @@ readdy::util::thread::Config &CPUKernel::threadConfig() {
 void CPUKernel::initialize() {
     readdy::model::Kernel::initialize();
 
-    const auto &fullConfiguration = getKernelContext().kernelConfiguration();
+    const auto &fullConfiguration = context().kernelConfiguration();
 
     const auto &configuration = fullConfiguration.cpu;
     {
@@ -127,7 +121,7 @@ void CPUKernel::initialize() {
     }
     for (auto &top : getCPUKernelStateModel().topologies()) {
         top->configure();
-        top->updateReactionRates(getKernelContext().topology_registry().structural_reactions_of(top->type()));
+        top->updateReactionRates(context().topology_registry().structural_reactions_of(top->type()));
     }
 }
 

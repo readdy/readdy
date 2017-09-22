@@ -32,7 +32,7 @@
 
 #pragma once
 #include <readdy/common/macros.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -42,7 +42,7 @@ NAMESPACE_BEGIN(pot)
 
 class TopologyPotentialAction {
 public:
-    explicit TopologyPotentialAction(const KernelContext *const context) : context(context) {}
+    explicit TopologyPotentialAction(const Context *const context) : context(context) {}
     TopologyPotentialAction(const TopologyPotentialAction&) = default;
     TopologyPotentialAction& operator=(const TopologyPotentialAction&) = delete;
     TopologyPotentialAction(TopologyPotentialAction&&) = default;
@@ -50,12 +50,12 @@ public:
     virtual ~TopologyPotentialAction() = default;
 
 protected:
-    const KernelContext* const context;
+    const Context* const context;
 };
 
 class EvaluatePotentialAction : public TopologyPotentialAction {
 public:
-    explicit EvaluatePotentialAction(const KernelContext *const context) : TopologyPotentialAction(context) {}
+    explicit EvaluatePotentialAction(const Context *const context) : TopologyPotentialAction(context) {}
     EvaluatePotentialAction(const EvaluatePotentialAction&) = default;
     EvaluatePotentialAction& operator=(const EvaluatePotentialAction&) = delete;
     EvaluatePotentialAction(EvaluatePotentialAction&&) = default;

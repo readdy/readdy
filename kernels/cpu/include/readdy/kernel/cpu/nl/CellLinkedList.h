@@ -35,7 +35,7 @@
 #include <cstddef>
 #include <readdy/common/Index.h>
 #include <readdy/common/thread/Config.h>
-#include <readdy/model/KernelContext.h>
+#include <readdy/model/Context.h>
 #include <readdy/common/Timer.h>
 #include <readdy/common/thread/atomic.h>
 #include <readdy/kernel/cpu/data/NLDataContainer.h>
@@ -49,7 +49,7 @@ class CellLinkedList {
 public:
     using data_type = readdy::kernel::cpu::data::DefaultDataContainer;
 
-    CellLinkedList(data_type &data, const readdy::model::KernelContext &context,
+    CellLinkedList(data_type &data, const readdy::model::Context &context,
                    const readdy::util::thread::Config &config);
 
     void setUp(scalar skin, std::uint8_t radius, const util::PerformanceNode &node);
@@ -98,13 +98,13 @@ protected:
     std::vector<std::size_t> _cellNeighborsContent;
 
     std::reference_wrapper<data_type> _data;
-    std::reference_wrapper<const readdy::model::KernelContext> _context;
+    std::reference_wrapper<const readdy::model::Context> _context;
     std::reference_wrapper<const readdy::util::thread::Config> _config;
 };
 
 class ContiguousCellLinkedList : public CellLinkedList {
 public:
-    ContiguousCellLinkedList(data_type &data, const readdy::model::KernelContext &context,
+    ContiguousCellLinkedList(data_type &data, const readdy::model::Context &context,
                              const util::thread::Config &config);
     void update(const util::PerformanceNode &node) override;
 
@@ -143,7 +143,7 @@ public:
     using HEAD = std::vector<util::thread::copyable_atomic<std::size_t>>;
     using LIST = std::vector<std::size_t>;
 
-    CompactCellLinkedList(data_type &data, const readdy::model::KernelContext &context,
+    CompactCellLinkedList(data_type &data, const readdy::model::Context &context,
                           const util::thread::Config &config);
 
     void update(const util::PerformanceNode &node) override;
@@ -185,7 +185,7 @@ class DynamicCellLinkedList : public CellLinkedList {
 public:
     using Bins = std::vector<std::vector<std::size_t>>;
 
-    DynamicCellLinkedList(data_type &data, const readdy::model::KernelContext &context,
+    DynamicCellLinkedList(data_type &data, const readdy::model::Context &context,
                           const util::thread::Config &config);
 
     void update(const util::PerformanceNode &node) override;

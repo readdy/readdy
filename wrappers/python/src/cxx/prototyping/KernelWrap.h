@@ -49,11 +49,6 @@ struct KernelWrap : public readdy::model::Kernel {
         PYBIND11_OVERLOAD_PURE(readdy::model::KernelStateModel &, readdy::model::Kernel, getKernelStateModelInternal,);
     }
 
-    virtual readdy::model::KernelContext &getKernelContextInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(readdy::model::KernelContext &, readdy::model::Kernel, getKernelContextInternal,);
-    }
-
 };
 
 struct SCPUKernelWrap : public readdy::kernel::scpu::SCPUKernel {
@@ -62,12 +57,6 @@ struct SCPUKernelWrap : public readdy::kernel::scpu::SCPUKernel {
         PYBIND11_OVERLOAD_NAME(kernel::scpu::SCPUStateModel &,
                                readdy::kernel::scpu::SCPUKernel, "get_kernel_state_model",
                                getKernelStateModelInternal,);
-    }
-
-    virtual model::KernelContext &getKernelContextInternal() const override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_NAME(model::KernelContext &, readdy::kernel::scpu::SCPUKernel, "get_kernel_context",
-                               getKernelContextInternal,);
     }
 
     virtual model::actions::ActionFactory &getActionFactoryInternal() const override {
