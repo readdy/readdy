@@ -168,7 +168,7 @@ IF(NOT READDY_GENERATE_DOCUMENTATION_TARGET_ONLY)
     IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
         IF (NOT ANDROID)
             if (CMAKE_BUILD_TYPE STREQUAL "Release")
-                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -ffast-math")
+                SET(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS}") # -ffast-math
             endif()
             SET(EXTRA_LINK_FLAGS "${EXTRA_LINK_FLAGS} -Wl,--no-as-needed -lrt")
         ENDIF (NOT ANDROID)

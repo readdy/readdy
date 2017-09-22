@@ -44,34 +44,34 @@ public:
     using rdy_pot1::PotentialOrder1;
 
     std::string describe() const override {
-        return "User defined potential order 1 for type " + particleType;
+        return "User defined potential order 1 for type " + std::to_string(particleType);
     }
 
-    virtual readdy::scalar calculateEnergy(const readdy::Vec3 &position) const override {
+    readdy::scalar calculateEnergy(const readdy::Vec3 &position) const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "calculate_energy", calculateEnergy, position);
     }
 
-    virtual readdy::Vec3 calculateForceInternal(const readdy::Vec3 &pos) const {
+    readdy::Vec3 calculateForceInternal(const readdy::Vec3 &pos) const {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::Vec3, PyPotentialO1, "calculate_force", calculateForce, pos);
     }
 
-    virtual void calculateForce(readdy::Vec3 &force, const readdy::Vec3 &position) const override {
+    void calculateForce(readdy::Vec3 &force, const readdy::Vec3 &position) const override {
         force += calculateForceInternal(position);
     }
 
-    virtual void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &position) const override {
+    void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &position) const override {
         calculateForce(force, position);
         energy += calculateEnergy(position);
     }
 
-    virtual readdy::scalar getRelevantLengthScale() const noexcept override {
+    readdy::scalar getRelevantLengthScale() const noexcept override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_relevant_length_scale", getRelevantLengthScale,);
     }
 
-    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
+    readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
     }
@@ -93,36 +93,36 @@ public:
         return "User defined potential for types " + std::to_string(particleType1) + " and " + std::to_string(particleType2);
     }
 
-    virtual readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
+    readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_maximal_force", getMaximalForce, kbt);
     }
 
-    virtual readdy::scalar calculateEnergy(const readdy::Vec3 &x_ij) const override {
+    readdy::scalar calculateEnergy(const readdy::Vec3 &x_ij) const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "calculate_energy", calculateEnergy, x_ij);
     }
 
-    virtual readdy::Vec3 calculateForceInternal(const readdy::Vec3 &pos) const {
+    readdy::Vec3 calculateForceInternal(const readdy::Vec3 &pos) const {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::Vec3, PyPotentialO2, "calculate_force", calculateForce, pos);
     }
 
-    virtual void calculateForce(readdy::Vec3 &force, const readdy::Vec3 &x_ij) const override {
+    void calculateForce(readdy::Vec3 &force, const readdy::Vec3 &x_ij) const override {
         force += calculateForceInternal(x_ij);
     }
 
-    virtual void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &x_ij) const override {
+    void calculateForceAndEnergy(readdy::Vec3 &force, readdy::scalar &energy, const readdy::Vec3 &x_ij) const override {
         calculateForce(force, x_ij);
         energy += calculateEnergy(x_ij);
     }
 
-    virtual readdy::scalar getCutoffRadiusSquared() const override {
+    readdy::scalar getCutoffRadiusSquared() const override {
         const auto cutoff = getCutoffRadius();
         return cutoff * cutoff;
     }
 
-    virtual readdy::scalar getCutoffRadius() const override {
+    readdy::scalar getCutoffRadius() const override {
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
     }

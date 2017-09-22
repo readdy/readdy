@@ -438,7 +438,7 @@ void WeakInteractionPiecewiseHarmonic::configureForTypes(const ParticleTypeRegis
 WeakInteractionPiecewiseHarmonic::WeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
                                                                    const scalar forceConstant,
                                                                    const Configuration &config)
-        : super(particleType1, particleType2), forceConstant(forceConstant), conf(config) {}
+        : super(type1, type2), forceConstant(forceConstant), conf(config) {}
 
 std::ostream &operator<<(std::ostream &os, const WeakInteractionPiecewiseHarmonic::Configuration &configuration) {
     os << "desiredParticleDistance: " << configuration.desiredParticleDistance << " depthAtDesiredDistance: "
@@ -526,7 +526,7 @@ WeakInteractionPiecewiseHarmonic::Configuration::Configuration(const scalar  des
 LennardJones::LennardJones(particle_type_type type1, particle_type_type type2,
                            unsigned int m, unsigned int n, scalar  cutoffDistance,
                            bool shift, scalar  epsilon, scalar  sigma)
-        : super(particleType1, particleType2), m(m), n(n),
+        : super(type1, type2), m(m), n(n),
           cutoffDistance(cutoffDistance), shift(shift), epsilon(epsilon), sigma(sigma),
           cutoffDistanceSquared(cutoffDistance * cutoffDistance) {
     if (m <= n) {
@@ -595,7 +595,7 @@ ScreenedElectrostatics::ScreenedElectrostatics(particle_type_type type1, particl
                                                scalar  electrostaticStrength, scalar  inverseScreeningDepth,
                                                scalar  repulsionStrength, scalar  repulsionDistance, unsigned int exponent,
                                                scalar  cutoff)
-        : super(particleType1, particleType2), electrostaticStrength(electrostaticStrength), inverseScreeningDepth(inverseScreeningDepth),
+        : super(type1, type2), electrostaticStrength(electrostaticStrength), inverseScreeningDepth(inverseScreeningDepth),
           repulsionStrength(repulsionStrength), repulsionDistance(repulsionDistance), exponent(exponent), cutoff(cutoff),
           cutoffSquared(cutoff * cutoff) {
     if (inverseScreeningDepth < 0) {
