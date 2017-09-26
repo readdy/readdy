@@ -43,7 +43,7 @@ class TestTopologyGraphs(ReaDDyTestCase):
         sim.box_size = common.Vec(10, 10, 10)
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
         sim.register_topology_type("TA")
-        sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.register_particle_type("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("T", "T", 10., 11.)
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(4)]
         top = sim.add_topology("TA", particles)
@@ -76,7 +76,7 @@ class TestTopologyGraphs(ReaDDyTestCase):
         sim.register_topology_type("TA")
         sim.box_size = common.Vec(10, 10, 10)
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
-        sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.register_particle_type("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("T", "T", 10., 11.)
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(4)]
         top = sim.add_topology("TA", particles)
@@ -92,8 +92,8 @@ class TestTopologyGraphs(ReaDDyTestCase):
         sim.box_size = common.Vec(10, 10, 10)
         sim.register_topology_type("TA")
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
-        sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
-        sim.register_particle_type("D", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.register_particle_type("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.register_particle_type("D", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("T", "T", 10., 11.)
         particles = [sim.create_topology_particle("T", common.Vec(0, 0, 0)) for _ in range(3)]
         particles.append(sim.create_topology_particle("D", common.Vec(0, 0, 0)))

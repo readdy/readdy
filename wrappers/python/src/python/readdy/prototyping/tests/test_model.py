@@ -51,9 +51,8 @@ class TestModel(ReaDDyTestCase):
         np.testing.assert_equal(self.ctx.pbc, [True, False, True])
 
     def test_kernel_context_register_particle_type(self):
-        self.ctx.particle_types.add("A", 13.0, 17.0, 0)
+        self.ctx.particle_types.add("A", 13.0, 0)
         np.testing.assert_equal(self.ctx.particle_types.diffusion_constant_of("A"), 13.0)
-        np.testing.assert_equal(self.ctx.particle_types.radius_of("A"), 17.0)
 
     def test_kernel_context_fix_position_fun(self):
         self.ctx.box_size = [1, 1, 1]
@@ -109,7 +108,7 @@ class TestModel(ReaDDyTestCase):
             def get_maximal_force(self, kbt):
                 return kbt
 
-        self.ctx.particle_types.add("A", 1.0, 1.0, 0)
+        self.ctx.particle_types.add("A", 1.0, 0)
         pot = MyPot1(self.ctx.particle_types.id_of("A"))
         self.ctx.potentials.add_external_order1(pot)
         particles = [pr.Particle(0, 0, .5, self.ctx.particle_types.id_of("A"))]
@@ -152,8 +151,8 @@ class TestModel(ReaDDyTestCase):
             def get_maximal_force(self, kbt):
                 return kbt
 
-        self.ctx.particle_types.add("A", 1.0, 1.0, 0)
-        self.ctx.particle_types.add("B", 1.0, 1.0, 0)
+        self.ctx.particle_types.add("A", 1.0, 0)
+        self.ctx.particle_types.add("B", 1.0, 0)
         pot = MyPot2(self.ctx.particle_types.id_of("A"), self.ctx.particle_types.id_of("B"))
         self.ctx.potentials.add_external_order2(pot)
         particles = [pr.Particle(0, 0, 0, self.ctx.particle_types.id_of("A")),
@@ -179,10 +178,10 @@ class TestModel(ReaDDyTestCase):
             next(it)
 
     def test_potential_registry(self):
-        self.ctx.particle_types.add("A", 1.0, 1.0, 0)
-        self.ctx.particle_types.add("B", 1.0, 1.0, 0)
-        cube_pot_id = self.ctx.potentials.add_box("A", 1, cmn.Vec(0, 0, 0), cmn.Vec(1, 1, 1), True)
-        repulsion_pot_id = self.ctx.potentials.add_harmonic_repulsion("A", "B", 10)
+        self.ctx.particle_types.add("A", 1.0, 0)
+        self.ctx.particle_types.add("B", 1.0, 0)
+        cube_pot_id = self.ctx.potentials.add_box("A", 1, cmn.Vec(0, 0, 0), cmn.Vec(1, 1, 1))
+        repulsion_pot_id = self.ctx.potentials.add_harmonic_repulsion("A", "B", 10, 1.)
         weak_interaction_pot_id = self.ctx.potentials.add_weak_interaction_piecewise_harmonic("A", "B", 0, 0, 0, 0)
         np.testing.assert_(cube_pot_id != repulsion_pot_id != weak_interaction_pot_id)
 

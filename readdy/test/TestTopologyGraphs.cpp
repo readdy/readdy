@@ -132,8 +132,8 @@ TEST(TestTopologyGraphs, TestTopologyWithGraph) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     auto &ctx = kernel->context();
 
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-    ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
 
     ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {1.0, 1.0});
     ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {1.0, 1.0});
@@ -249,7 +249,7 @@ TEST(TestTopologyGraphs, TestFindNTuplesInTriangle) {
 TEST_P(TestTopologyGraphs, BondedPotential) {
     auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 5});
     topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
@@ -283,7 +283,7 @@ TEST_P(TestTopologyGraphs, BondedPotential) {
 TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
     auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {0., 1.});
     ctx.topology_registry().configure_angle_potential("Topology A", "Topology A", "Topology A",
@@ -331,7 +331,7 @@ TEST_P(TestTopologyGraphs, MoreComplicatedAnglePotential) {
 TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
     auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
+    ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
     topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
     topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};

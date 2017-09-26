@@ -43,7 +43,7 @@ class TestTopologies(ReaDDyTestCase):
         sim.register_topology_type("TA")
         sim.box_size = common.Vec(10, 10, 10)
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
-        sim.register_particle_type("T", 1.0, .5, flavor=ParticleTypeFlavor.TOPOLOGY)
+        sim.register_particle_type("T", 1.0, flavor=ParticleTypeFlavor.TOPOLOGY)
         p1 = sim.create_topology_particle("T", common.Vec(0, 0, 0))
         p2 = sim.create_topology_particle("T", common.Vec(1, 1, 1))
         p3 = sim.create_topology_particle("T", common.Vec(2, 1, 1))

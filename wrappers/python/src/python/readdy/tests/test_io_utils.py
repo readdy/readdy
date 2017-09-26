@@ -51,9 +51,9 @@ class TestIOUtils(ReaDDyTestCase):
 
         sim = api.Simulation()
         sim.set_kernel("CPU")
-        sim.register_particle_type("A", 1., 0.)
-        sim.register_particle_type("B", 2., 0.)
-        sim.register_particle_type("C", 3., 0.)
+        sim.register_particle_type("A", 1.)
+        sim.register_particle_type("B", 2.)
+        sim.register_particle_type("C", 3.)
         sim.register_reaction_conversion("mylabel", "A", "B", .00001)
         sim.register_reaction_conversion("A->B", "A", "B", 1.)
         fusion_rate = 0.4

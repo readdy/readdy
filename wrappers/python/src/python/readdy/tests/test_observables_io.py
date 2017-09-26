@@ -60,7 +60,7 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
         sim.box_size = common.Vec(13, 13, 13)
-        sim.register_particle_type("A", .1, .1)
+        sim.register_particle_type("A", .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))
@@ -90,8 +90,8 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("SingleCPU")
         sim.box_size = common.Vec(13, 13, 13)
-        typeid_A = sim.register_particle_type("A", .1, .1)
-        typeid_B = sim.register_particle_type("B", .1, .1)
+        typeid_A = sim.register_particle_type("A", .1)
+        typeid_B = sim.register_particle_type("B", .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         sim.add_particle("B", common.Vec(0, 0, 0))
         # every time step, add one particle
@@ -135,9 +135,9 @@ class TestObservablesIO(ReaDDyTestCase):
         simulation.kbt = 2
         simulation.periodic_boundary = [True, True, True]
         simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
-        simulation.register_potential_harmonic_repulsion("A", "B", 10)
+        simulation.register_particle_type("A", .2)
+        simulation.register_particle_type("B", .2)
+        simulation.register_potential_harmonic_repulsion("A", "B", 10, 2.)
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         bin_borders = np.arange(0, 5, .01)
@@ -173,8 +173,8 @@ class TestObservablesIO(ReaDDyTestCase):
         simulation.kbt = 2
         simulation.periodic_boundary = [True, True, True]
         simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
+        simulation.register_particle_type("A", .2)
+        simulation.register_particle_type("B", .2)
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         n_time_steps = 50
@@ -206,9 +206,9 @@ class TestObservablesIO(ReaDDyTestCase):
         simulation.kbt = 2
         simulation.periodic_boundary = [True, True, True]
         simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
-        simulation.register_potential_harmonic_repulsion("A", "B", 10)
+        simulation.register_particle_type("A", .2)
+        simulation.register_particle_type("B", .2)
+        simulation.register_potential_harmonic_repulsion("A", "B", 10, 2.)
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         bin_borders = np.arange(0, 5, .01)
@@ -241,8 +241,8 @@ class TestObservablesIO(ReaDDyTestCase):
         simulation.kbt = 2
         simulation.periodic_boundary = [True, True, True]
         simulation.box_size = box_size
-        simulation.register_particle_type("A", .2, 1.)
-        simulation.register_particle_type("B", .2, 1.)
+        simulation.register_particle_type("A", .2)
+        simulation.register_particle_type("B", .2)
         simulation.add_particle("A", common.Vec(-2.5, 0, 0))
         simulation.add_particle("B", common.Vec(0, 0, 0))
         n_time_steps = 50
@@ -282,9 +282,9 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("CPU")
         sim.box_size = common.Vec(10, 10, 10)
-        sim.register_particle_type("A", .0, 5.0)
-        sim.register_particle_type("B", .0, 6.0)
-        sim.register_particle_type("C", .0, 6.0)
+        sim.register_particle_type("A", .0)
+        sim.register_particle_type("B", .0)
+        sim.register_particle_type("C", .0)
         sim.register_reaction_conversion("mylabel", "A", "B", .00001)
         sim.register_reaction_conversion("A->B", "A", "B", 1.)
         sim.register_reaction_fusion("B+C->A", "B", "C", "A", 1.0, 1.0, .5, .5)
@@ -352,9 +352,9 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("CPU")
         sim.box_size = common.Vec(10, 10, 10)
-        sim.register_particle_type("A", .0, 5.0)
-        sim.register_particle_type("B", .0, 6.0)
-        sim.register_particle_type("C", .0, 6.0)
+        sim.register_particle_type("A", .0)
+        sim.register_particle_type("B", .0)
+        sim.register_particle_type("C", .0)
         sim.register_reaction_conversion("mylabel", "A", "B", .00001)
         sim.register_reaction_conversion("A->B", "A", "B", 1.)
         sim.register_reaction_fusion("B+C->A", "B", "C", "A", 1.0, 1.0, .5, .5)
@@ -398,7 +398,7 @@ class TestObservablesIO(ReaDDyTestCase):
         sim = Simulation()
         sim.set_kernel("CPU")
         sim.box_size = common.Vec(13, 13, 13)
-        sim.register_particle_type("A", .1, .1)
+        sim.register_particle_type("A", .1)
         sim.add_particle("A", common.Vec(0, 0, 0))
         # every time step, add one particle
         sim.register_observable_n_particles(1, ["A"], lambda n: sim.add_particle("A", common.Vec(1.5, 2.5, 3.5)))

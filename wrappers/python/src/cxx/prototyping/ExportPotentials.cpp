@@ -44,7 +44,7 @@ public:
     using rdy_pot1::PotentialOrder1;
 
     std::string describe() const override {
-        return "User defined potential order 1 for type " + std::to_string(particleType);
+        return "User defined potential order 1 for type " + std::to_string(_particleType);
     }
 
     readdy::scalar calculateEnergy(const readdy::Vec3 &position) const override {
@@ -76,12 +76,6 @@ public:
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot1, "get_maximal_force", getMaximalForce, kbt);
     }
 
-protected:
-    void configureForType(const readdy::model::ParticleTypeRegistry *const context, const particle_type_type type) override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot1, "configure_for_type", configureForType, type);
-    }
-
 };
 
 class PyPotentialO2 : public rdy_pot2 {
@@ -90,7 +84,7 @@ public:
     using rdy_pot2::PotentialOrder2;
 
     std::string describe() const override {
-        return "User defined potential for types " + std::to_string(particleType1) + " and " + std::to_string(particleType2);
+        return "User defined potential for types " + std::to_string(_particleType1) + " and " + std::to_string(_particleType2);
     }
 
     readdy::scalar getMaximalForce(readdy::scalar kbt) const noexcept override {
@@ -126,14 +120,6 @@ public:
         py::gil_scoped_acquire gil;
         PYBIND11_OVERLOAD_PURE_NAME(readdy::scalar, rdy_pot2, "get_cutoff_radius", getCutoffRadius);
     }
-
-protected:
-    void configureForTypes(const readdy::model::ParticleTypeRegistry *const context, particle_type_type type1,
-                           particle_type_type type2) override {
-        py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE_NAME(void, rdy_pot2, "configure_for_types", configureForType, type1, type2);
-    }
-
 
 };
 

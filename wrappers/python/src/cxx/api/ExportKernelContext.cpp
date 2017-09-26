@@ -66,12 +66,9 @@ void exportKernelContext(py::module &module) {
 
     py::class_<ParticleTypeRegistry>(module, "ParticleTypeRegistry")
             .def("id_of", &ParticleTypeRegistry::id_of)
-            .def("add", &ParticleTypeRegistry::add, "name"_a, "diffusion_constant"_a, "radius"_a, "flavor"_a = 0)
+            .def("add", &ParticleTypeRegistry::add, "name"_a, "diffusion_constant"_a, "flavor"_a = 0)
             .def("diffusion_constant_of", [](const ParticleTypeRegistry &self, const std::string &type) {
                 return self.diffusion_constant_of(type);
-            })
-            .def("radius_of", [](const ParticleTypeRegistry &self, const std::string &type) {
-                return self.radius_of(type);
             })
             .def("n_types", &ParticleTypeRegistry::n_types)
             .def("name_of", &ParticleTypeRegistry::name_of);
@@ -79,12 +76,12 @@ void exportKernelContext(py::module &module) {
     py::class_<PotentialRegistry>(module, "PotentialRegistry")
             .def("add_box",
                  [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant, const Vec3 &origin,
-                    const Vec3 &extent, bool considerParticleRadius = true) {
-                     return self.addCube(particleType, forceConstant, origin, extent, considerParticleRadius);
+                    const Vec3 &extent) {
+                     return self.addCube(particleType, forceConstant, origin, extent);
                  })
             .def("add_harmonic_repulsion",
-                 [](PotentialRegistry &self, const std::string &type1, const std::string &type2, scalar forceConstant) {
-                     return self.addHarmonicRepulsion(type1, type2, forceConstant);
+                 [](PotentialRegistry &self, const std::string &type1, const std::string &type2, scalar forceConstant, scalar interactionDistance) {
+                     return self.addHarmonicRepulsion(type1, type2, forceConstant, interactionDistance);
                  })
             .def("add_weak_interaction_piecewise_harmonic",
                  [](PotentialRegistry &self, const std::string &type1, const std::string &type2,

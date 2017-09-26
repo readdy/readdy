@@ -44,18 +44,13 @@ NAMESPACE_BEGIN(potentials)
 class Cube : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Cube(particle_type_type particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent,
-                  bool considerParticleRadius = true);
+    Cube(particle_type_type particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent);
 
     const Vec3 &getOrigin() const;
 
     const Vec3 &getExtent() const;
 
     scalar getForceConstant() const;
-
-    bool isConsiderParticleRadius() const;
-
-    scalar getParticleRadius() const;
 
     virtual scalar getRelevantLengthScale() const noexcept override;
 
@@ -70,14 +65,8 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry *const registry, const particle_type_type type) override;
-
     const Vec3 origin, extent, min, max;
     const scalar forceConstant;
-    const bool considerParticleRadius;
-    scalar particleRadius;
 };
 
 // @todo modify this, so that you can choose whether the sphere keeps particles in or out
@@ -99,10 +88,6 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry * ctx, particle_type_type type) override;
-
     const Vec3 origin;
     const scalar radius, forceConstant;
 };
@@ -124,10 +109,6 @@ public:
 
     std::string describe() const override;
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry *ctx, particle_type_type type) override;
-
     const Vec3 origin;
     const scalar radius, forceConstant;
 };
@@ -155,10 +136,6 @@ public:
     std::string describe() const override;
 
 protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    void configureForType(const ParticleTypeRegistry * ctx, particle_type_type type) override;
-
     const Vec3 origin;
     const readdy::scalar radius, height, width, r1, r2, r3, r4, effectiveForceConstant;
 };

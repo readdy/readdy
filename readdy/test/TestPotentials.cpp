@@ -43,8 +43,8 @@ class TestPotentials : public KernelTest {
 };
 
 void setupParticles(readdy::model::Kernel &kernel) {
-    kernel.context().particle_types().add("A", static_cast<readdy::scalar>(1.), static_cast<readdy::scalar>(0.1));
-    kernel.context().particle_types().add("B", static_cast<readdy::scalar>(0.1), static_cast<readdy::scalar>(0.01));
+    kernel.context().particle_types().add("A", static_cast<readdy::scalar>(1.));
+    kernel.context().particle_types().add("B", static_cast<readdy::scalar>(0.1));
     kernel.context().periodicBoundaryConditions() = {{false, false, false}};
     const unsigned int nParticlesA = 10;
     const unsigned int nParticlesB = 10;
@@ -73,14 +73,15 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
 
     setupParticles(*kernel);
 
-    kernel->context().potentials().addHarmonicRepulsion("A", "B", .01);
+    kernel->context().potentials().addHarmonicRepulsion("A", "B", .01, .1 + .01);
 
     std::array<std::string, 2> types{{"A", "B"}};
-    for (auto t : types) {
+    //std::array<readdy::scalar, 2> radii {{.1, .01}};
+    for (const auto &t : types) {
         // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
         readdy::Vec3 origin {-1, -1, -1};
         readdy::Vec3 extent {2, 2, 2};
-        kernel->context().potentials().addCube(t, 10, origin, extent, true);
+        kernel->context().potentials().addCube(t, 10, origin, extent);
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);
@@ -109,7 +110,7 @@ TEST_P(TestPotentials, TestParticleStayInSphere) {
     setupParticles(*kernel);
 
     std::array<std::string, 2> types{{"A", "B"}};
-    for (auto t : types) {
+    for (const auto &t : types) {
         readdy::Vec3 origin (0, 0, 0);
         kernel->context().potentials().addSphereIn(t, 20, origin, 3);
     }
@@ -137,7 +138,7 @@ TEST_P(TestPotentials, TestLennardJonesRepellent) {
     // test system where the particles are closer together than they should be, i.e., the force should be repellent
     auto& ctx = kernel->context();
     // one particle type A
-    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0);
     // large enough box
     ctx.boxSize() = {{10, 10, 10}};
     // particles are aligned in the x-y plane and have a distance of .09
@@ -197,7 +198,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
     auto &ctx = kernel->context();
     ctx.periodicBoundaryConditions() = {{false, false, false}};
-    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0);
     ctx.boxSize() = {{10, 10, 10}};
     // distance of particles is 2.56515106768
     auto id0 = kernel->addParticle("A", {0, 0, 0});
@@ -254,7 +255,7 @@ TEST_P(TestPotentials, ScreenedElectrostatics) {
 TEST_P(TestPotentials, SphericalMembrane) {
     // Combine SphereIn and SphereOut to build a 2D spherical manifold
     auto &ctx = kernel->context();
-    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0);
     ctx.boxSize() =  {{10, 10, 10}};
     // add two particles, one outside, one inside the sphere
     auto id0 = kernel->addParticle("A", {2., 1., 1.});
@@ -311,7 +312,7 @@ TEST_P(TestPotentials, SphericalMembrane) {
 TEST_P(TestPotentials, SphericalBarrier) {
     auto &ctx = kernel->context();
     auto calculateForces = kernel->createAction<readdy::model::actions::CalculateForces>();
-    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0);
     ctx.boxSize() = {{10, 10, 10}};
     // add two particles, one on the outer edge getting pushed outside, one inside the sphere unaffected
     auto id0 = kernel->addParticle("A", {2.1, 1., 1.});

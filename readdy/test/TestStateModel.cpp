@@ -47,11 +47,11 @@ TEST_P(TestStateModel, CalculateForcesTwoParticles) {
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
     // two A particles with radius 1. -> cutoff 2, distance 1.8 -> r-r_0 = 0.2 -> force = 0.2
-    ctx.particle_types().add("A", 1.0, 1.0);
+    ctx.particle_types().add("A", 1.0);
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
 
-    kernel->context().potentials().addHarmonicRepulsion("A", "A", 1.0);
+    kernel->context().potentials().addHarmonicRepulsion("A", "A", 1.0, 2.0);
 
     ctx.configure();
     kernel->initialize();
@@ -94,11 +94,11 @@ TEST_P(TestStateModel, CalculateForcesRepulsion) {
     // similar situation as before but now with repulsion between A and B
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.particle_types().add("B", 1.0, 2.0);
+    ctx.particle_types().add("A", 1.0);
+    ctx.particle_types().add("B", 1.0);
     ctx.boxSize() = {{10., 10., 10.}};
     ctx.periodicBoundaryConditions() = {{true, true, false}};
-    ctx.potentials().addHarmonicRepulsion("A", "B", 1.0);
+    ctx.potentials().addHarmonicRepulsion("A", "B", 1.0, 3.0);
 
     ctx.configure();
     auto typeIdA = ctx.particle_types().id_of("A");
@@ -208,8 +208,8 @@ TEST_P(TestStateModel, CalculateForcesNoForces) {
     // several particles without potentials -> forces must all be zero
     auto obs = kernel->createObservable<m::observables::Forces>(1);
     auto conn = kernel->connectObservable(obs.get());
-    ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.particle_types().add("B", 1.0, 2.0);
+    ctx.particle_types().add("A", 1.0);
+    ctx.particle_types().add("B", 1.0);
     ctx.boxSize() = {{4., 4., 4.}};
     ctx.periodicBoundaryConditions() = {{false, false, false}};
     ctx.configure();

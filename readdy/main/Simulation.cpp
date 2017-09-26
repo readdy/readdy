@@ -102,11 +102,11 @@ void Simulation::addParticle(const std::string &type, scalar x, scalar y, scalar
 }
 
 Simulation::particle::type_type
-Simulation::registerParticleType(const std::string &name, const scalar diffusionCoefficient, const scalar radius,
+Simulation::registerParticleType(const std::string &name, const scalar diffusionCoefficient,
                                  readdy::model::particle_flavor flavor) {
     ensureKernelSelected();
     auto &context = pimpl->kernel->context();
-    context.particle_types().add(name, diffusionCoefficient, radius, flavor);
+    context.particle_types().add(name, diffusionCoefficient, flavor);
     return context.particle_types().id_of(name);
 }
 
@@ -121,10 +121,10 @@ void Simulation::deregisterPotential(const short uuid) {
 
 const short
 Simulation::registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
-                                               scalar forceConstant) {
+                                               scalar forceConstant, scalar interactionDistance) {
     ensureKernelSelected();
     return pimpl->kernel->context().potentials().addHarmonicRepulsion(particleTypeA, particleTypeB,
-                                                                               forceConstant);
+                                                                      forceConstant, interactionDistance);
 }
 
 const short
@@ -167,11 +167,9 @@ Simulation::registerScreenedElectrostaticsPotential(const std::string &particleT
 
 const short
 Simulation::registerBoxPotential(const std::string &particleType, scalar forceConstant,
-                                 const Vec3 &origin, const Vec3 &extent,
-                                 bool considerParticleRadius) {
+                                 const Vec3 &origin, const Vec3 &extent) {
     ensureKernelSelected();
-    return pimpl->kernel->context().potentials().addCube(particleType, forceConstant, origin, extent,
-                                                                  considerParticleRadius);
+    return pimpl->kernel->context().potentials().addCube(particleType, forceConstant, origin, extent);
 }
 
 const short

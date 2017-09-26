@@ -46,10 +46,10 @@ protected:
     void SetUp() override {
         if (kernel->supportsTopologies()) {
             auto &ctx = kernel->context();
-            ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-            ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-            ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-            ctx.particle_types().add("A", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
+            ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
+            ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
 
             ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 10});
             ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {10, 10});

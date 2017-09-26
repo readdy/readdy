@@ -41,8 +41,8 @@ PotentialRegistry::PotentialRegistry(particle_type_registry_ref typeRegistry) : 
 
 PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder2 *potential) {
     auto id = potential->getId();
-    auto type1Id = potential->particleType1;
-    auto type2Id = potential->particleType2;
+    auto type1Id = potential->particleType1();
+    auto type2Id = potential->particleType2();
     auto pp = std::tie(type1Id, type2Id);
     if (potentialO2RegistryExternal.find(pp) == potentialO2RegistryExternal.end()) {
         potentialO2RegistryExternal.emplace(pp, pot_ptr_vec2_external());
@@ -52,7 +52,7 @@ PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::Potenti
 }
 
 PotentialRegistry::id_type PotentialRegistry::addUserDefined(potentials::PotentialOrder1 *potential) {
-    auto typeId = potential->particleType;
+    auto typeId = potential->particleType();
     if (potentialO1RegistryExternal.find(typeId) == potentialO1RegistryExternal.end()) {
         potentialO1RegistryExternal.emplace(std::make_pair(typeId, pot_ptr_vec1_external()));
     }
@@ -136,19 +136,15 @@ void PotentialRegistry::configure() {
     potentialO2Registry.clear();
 
     coll::for_each_value(potentialO1RegistryInternal, [&](const particle_type_type type, const pot1_ptr &ptr) {
-        ptr->configureForType(&_types.get(), type);
         (potentialO1Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO2RegistryInternal, [&](const pair &type, const pot2_ptr &ptr) {
-        ptr->configureForTypes(&_types.get(), std::get<0>(type), std::get<1>(type));
         (potentialO2Registry)[type].push_back(ptr.get());
     });
     coll::for_each_value(potentialO1RegistryExternal, [&](const particle_type_type type, pot1 *ptr) {
-        ptr->configureForType(&_types.get(), type);
         (potentialO1Registry)[type].push_back(ptr);
     });
     coll::for_each_value(potentialO2RegistryExternal, [&](const pair &type, pot2 *ptr) {
-        ptr->configureForTypes(&_types.get(), std::get<0>(type), std::get<1>(type));
         (potentialO2Registry)[type].push_back(ptr);
     });
 }
@@ -182,26 +178,26 @@ void PotentialRegistry::debug_output() const {
 }
 
 Potential::id_type PotentialRegistry::addCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
-                                              const Vec3 &extent, bool cpr) {
-    return addCube(_types.get()(particleType), forceConstant, origin, extent, cpr);
+                                              const Vec3 &extent) {
+    return addCube(_types.get()(particleType), forceConstant, origin, extent);
 }
 
 Potential::id_type PotentialRegistry::addCube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
-                                              const Vec3 &extent, bool cpr) {
+                                              const Vec3 &extent) {
     auto &pots = potentialO1RegistryInternal[particleType];
-    pots.emplace_back(std::make_shared<Cube>(particleType, forceConstant, origin, extent, cpr));
+    pots.emplace_back(std::make_shared<Cube>(particleType, forceConstant, origin, extent));
     return pots.back()->getId();
 }
 
 PotentialRegistry::id_type
-PotentialRegistry::addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant) {
-    return addHarmonicRepulsion(_types.get()(type1), _types.get()(type2), forceConstant);
+PotentialRegistry::addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant, scalar interactionDistance) {
+    return addHarmonicRepulsion(_types.get()(type1), _types.get()(type2), forceConstant, interactionDistance);
 }
 
 PotentialRegistry::id_type
-PotentialRegistry::addHarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant) {
+PotentialRegistry::addHarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant, scalar interactionDistance) {
     auto &pots = potentialO2RegistryInternal[std::tie(type1, type2)];
-    pots.emplace_back(std::make_shared<HarmonicRepulsion>(type1, type2, forceConstant));
+    pots.emplace_back(std::make_shared<HarmonicRepulsion>(type1, type2, forceConstant, interactionDistance));
     return pots.back()->getId();
 }
 

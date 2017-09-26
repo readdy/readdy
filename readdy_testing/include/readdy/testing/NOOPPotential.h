@@ -43,7 +43,7 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
             : PotentialOrder2(particleType1, particleType2), cutoff(cutoff), force(force), energy(energy) {}
 
     std::string describe() const override {
-        return "NOOPPotential with types " + std::to_string(particleType1) + ", " + std::to_string(particleType2);
+        return "NOOPPotential with types " + std::to_string(_particleType1) + ", " + std::to_string(_particleType2);
     }
 
     virtual readdy::scalar getCutoffRadius() const override {
@@ -73,10 +73,6 @@ struct NOOPPotentialOrder2 : public readdy::model::potentials::PotentialOrder2 {
     }
 
     readdy::scalar cutoff, force, energy;
-protected:
-    friend class readdy::model::potentials::PotentialRegistry;
-
-    virtual void configureForTypes(const readdy::model::ParticleTypeRegistry *const context, particle_type_type type1, particle_type_type type2) override {};
 };
 }
 }

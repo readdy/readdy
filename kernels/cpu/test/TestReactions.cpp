@@ -72,9 +72,9 @@ TEST(CPUTestReactions, CheckInOutTypesAndPositions) {
     kernel->context().periodicBoundaryConditions() = {{false, false, false}};
     kernel->context().boxSize() = {{100, 100, 100}};
     const auto diff = kernel->context().shortestDifferenceFun();
-    kernel->context().particle_types().add("A", .1, 1.); // type id 0
-    kernel->context().particle_types().add("B", .1, 1.); // type id 1
-    kernel->context().particle_types().add("C", .1, 1.); // type id 2
+    kernel->context().particle_types().add("A", .1); // type id 0
+    kernel->context().particle_types().add("B", .1); // type id 1
+    kernel->context().particle_types().add("C", .1); // type id 2
 
     // test conversion
     {
@@ -218,7 +218,7 @@ TEST(CPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
     kernel->context().boxSize() = {{10, 10, 10}};
-    kernel->context().particle_types().add("X", .25, 1.);
+    kernel->context().particle_types().add("X", .25);
     kernel->context().reactions().addDecay("X decay", "X", 1);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
@@ -271,9 +271,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->context().boxSize() = {{10, 10, 30}};
     kernel->context().periodicBoundaryConditions() = {{true, true, false}};
 
-    kernel->context().particle_types().add("A", .25, static_cast<const readdy::scalar>(1.));
-    kernel->context().particle_types().add("B", .25, static_cast<const readdy::scalar>(1.));
-    kernel->context().particle_types().add("C", .25, static_cast<const readdy::scalar>(1.));
+    kernel->context().particle_types().add("A", .25);
+    kernel->context().particle_types().add("B", .25);
+    kernel->context().particle_types().add("C", .25);
     readdy::scalar reactionRadius = 1.0;
     kernel->context().reactions().addFusion("annihilation", "A", "A", "A", 1.0, reactionRadius);
     kernel->context().reactions().addFusion("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(), reactionRadius);

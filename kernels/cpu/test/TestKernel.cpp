@@ -40,7 +40,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("CPU");
 
     kernel->context().boxSize() = {{10, 10, 10}};
-    kernel->context().particle_types().add("X", .55, 1.);
+    kernel->context().particle_types().add("X", .55);
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().reactions().addDecay("X decay", "X", .5);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .00, .5);

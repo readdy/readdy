@@ -83,8 +83,8 @@ TEST_F(TestKernelContext, Copyable) {
 
 TEST_F(TestKernelContext, PotentialOrder2Map) {
     m::Context ctx;
-    ctx.particle_types().add("a", 1., 1.);
-    ctx.particle_types().add("b", 1., 1.);
+    ctx.particle_types().add("a", 1.);
+    ctx.particle_types().add("b", 1.);
     auto noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(ctx.particle_types()("a"), ctx.particle_types()("b"));
     ctx.potentials().addUserDefined(noop.get());
     auto noop2 = std::make_unique<readdy::testing::NOOPPotentialOrder2>(ctx.particle_types()("b"),ctx.particle_types()( "a"));
@@ -102,10 +102,10 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
     auto &ctx = kernel->context();
 
-    ctx.particle_types().add("A", 1.0, 1.0);
-    ctx.particle_types().add("B", 3.0, 2.0);
-    ctx.particle_types().add("C", 4.0, 3.0);
-    ctx.particle_types().add("D", 2.0, 4.0);
+    ctx.particle_types().add("A", 1.0);
+    ctx.particle_types().add("B", 3.0);
+    ctx.particle_types().add("C", 4.0);
+    ctx.particle_types().add("D", 2.0);
 
     std::vector<short> idsToRemove;
     short uuid2_1, uuid2_2;
@@ -122,8 +122,8 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
         kernel->context().potentials().addCube("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
-        uuid2_1 = kernel->context().potentials().addHarmonicRepulsion("A", "C", 0);
-        uuid2_2 = kernel->context().potentials().addHarmonicRepulsion("B", "C", 0);
+        uuid2_1 = kernel->context().potentials().addHarmonicRepulsion("A", "C", 0, 4.0);
+        uuid2_2 = kernel->context().potentials().addHarmonicRepulsion("B", "C", 0, 5.0);
         ctx.configure();
     }
     // test that order 1 potentials are set up correctly
@@ -131,24 +131,18 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
         {
             const auto &pot1_A = ctx.potentials().potentials_of("A");
             EXPECT_EQ(pot1_A.size(), 1);
-            EXPECT_EQ(dynamic_cast<rmp::Cube *>(pot1_A[0])->getParticleRadius(), 1.0);
         }
         {
             const auto &pot1_B = ctx.potentials().potentials_of("B");
             EXPECT_EQ(pot1_B.size(), 1);
-            EXPECT_EQ(dynamic_cast<rmp::Cube *>(pot1_B[0])->getParticleRadius(), 2.0);
         }
         {
             const auto &pot1_C = ctx.potentials().potentials_of("C");
             EXPECT_EQ(pot1_C.size(), 2);
-            for (auto &&ptr : pot1_C) {
-                EXPECT_EQ(dynamic_cast<rmp::Cube *>(ptr)->getParticleRadius(), 3.0);
-            }
         }
         {
             const auto &pot1_D = ctx.potentials().potentials_of("D");
             EXPECT_EQ(pot1_D.size(), 1);
-            EXPECT_EQ(dynamic_cast<rmp::Cube *>(pot1_D[0])->getParticleRadius(), 4.0);
         }
     }
     // test that order 2 potentials are set up correctly
@@ -164,12 +158,10 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
         {
             const auto &pot2_AC = ctx.potentials().potentials_of("A", "C");
             EXPECT_EQ(pot2_AC[0]->getId(), uuid2_1);
-            EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_AC[0])->getSumOfParticleRadii(), 1 + 3);
         }
         {
             const auto &pot2_BC = ctx.potentials().potentials_of("B", "C");
             EXPECT_EQ(pot2_BC[0]->getId(), uuid2_2);
-            EXPECT_EQ(dynamic_cast<rmp::HarmonicRepulsion *>(pot2_BC[0])->getSumOfParticleRadii(), 2 + 3);
         }
     }
 
@@ -194,9 +186,9 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
 
 TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
     const auto prepareCtx = [](m::Context &ctx, const std::string& descriptor, readdy::scalar rate){
-        ctx.particle_types().add("A", 1., 1.);
-        ctx.particle_types().add("B", 1., 1.);
-        ctx.particle_types().add("C", 1., 1.);
+        ctx.particle_types().add("A", 1.);
+        ctx.particle_types().add("B", 1.);
+        ctx.particle_types().add("C", 1.);
         ctx.reactions().add(descriptor, rate);
         ctx.configure();
     };
@@ -279,8 +271,8 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
 
 TEST_F(TestKernelContext, ReactionDescriptorInvalidInputs) {
     m::Context ctx;
-    ctx.particle_types().add("A", 1., 1.);
-    ctx.particle_types().add("B", 1., 1.);
+    ctx.particle_types().add("A", 1.);
+    ctx.particle_types().add("B", 1.);
     std::vector<std::string> inv = {"myinvalid: + A -> B", "noarrow: A B", " : Noname ->", "weights: A + A -> A [0.1, ]", "blub: A (3)+ A -> B"};
     for (const auto &i : inv) {
         EXPECT_ANY_THROW(ctx.reactions().add(i, 42.));

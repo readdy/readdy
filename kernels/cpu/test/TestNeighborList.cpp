@@ -59,7 +59,7 @@ struct TestNeighborList : ::testing::Test {
 
     TestNeighborList() : kernel(std::make_unique<cpu::CPUKernel>()) {
         auto &ctx = kernel->context();
-        ctx.particle_types().add("A", 1., 1.);
+        ctx.particle_types().add("A", 1.);
         auto a_id = ctx.particle_types()("A");
         readdy::scalar eductDistance = 1.2;
         ctx.reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
@@ -423,7 +423,7 @@ TEST(TestAdaptiveNeighborList, SetUpNeighborList) {
 
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{10, 10, 10}};
-    context.particle_types().add("A", 1.0, 1.0);
+    context.particle_types().add("A", 1.0);
     context.reactions().addFusion("test", "A", "A", "A", .1, .5);
 
     context.configure();
@@ -455,7 +455,7 @@ TEST(TestAdaptiveNeighborList, HilbertSort) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
     auto &context = kernel->context();
     context.boxSize() = {{1, 1, 1}};
-    context.particle_types().add("A", 1.0, 1.0);
+    context.particle_types().add("A", 1.0);
 
     std::size_t i = 0;
     for (auto x = static_cast<scalar>(-.5); x < static_cast<scalar>(.5); x += static_cast<scalar>(.1)) {
@@ -528,7 +528,7 @@ TEST(TestAdaptiveNeighborList, VerletList) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
     auto &context = kernel->context();
     context.boxSize() = {{1, 1, 1}};
-    context.particle_types().add("A", 1.0, 1.0);
+    context.particle_types().add("A", 1.0);
 
     for (int i = 0; i < 50; ++i) {
         kernel->addParticle("A", {static_cast<readdy::scalar>(model::rnd::uniform_real(-.5, .5)),
@@ -570,8 +570,8 @@ TEST(TestAdaptiveNeighborList, AdaptiveUpdating) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
     auto &context = kernel->context();
     context.boxSize() = {{28, 28, 28}};
-    context.particle_types().add("A", .1, .1);
-    context.particle_types().add("V", .1, .1);
+    context.particle_types().add("A", .1);
+    context.particle_types().add("V", .1);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.kBT() = 1.0;
 
@@ -645,9 +645,9 @@ TEST_P(TestNeighborListImpl, DiffusionAndReaction) {
     std::unique_ptr<kernel::cpu::CPUKernel> kernel = std::make_unique<kernel::cpu::CPUKernel>();
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
-    kernel->context().particle_types().add("A", 0.05, 1.0);
-    kernel->context().particle_types().add("F", 0.0, 1.0);
-    kernel->context().particle_types().add("V", 0.0, 1.0);
+    kernel->context().particle_types().add("A", 0.05);
+    kernel->context().particle_types().add("F", 0.0);
+    kernel->context().particle_types().add("V", 0.0);
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().boxSize() = {{100, 10, 10}};
     readdy::conf::Configuration conf {};
@@ -689,9 +689,9 @@ TEST_P(TestNeighborListImpl, Diffusion) {
 
     // A is absorbed and created by F, while the number of F stays constant, this test spans multiple timesteps
     auto& context = kernel->context();
-    context.particle_types().add("A", 0.05, 1.0);
-    context.particle_types().add("F", 0.0, 1.0);
-    context.particle_types().add("V", 0.0, 1.0);
+    context.particle_types().add("A", 0.05);
+    context.particle_types().add("F", 0.0);
+    context.particle_types().add("V", 0.0);
 
     scalar cutoff = 2.0;
 

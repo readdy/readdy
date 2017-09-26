@@ -25,6 +25,7 @@ Created on 08.09.17
 @author: clonker
 """
 
+from readdy._internal.readdybinding.api import ParticleTypeFlavor as _ParticleTypeFlavor
 from readdy.api.registry.compartments import Compartments as _Compartments
 from readdy._internal.readdybinding.api import Context as _Context
 from readdy.api.simulation import Simulation
@@ -123,6 +124,12 @@ class ReactionDiffusionSystem(object):
         :return: the box volume
         """
         return self._context.box_volume()
+
+    def add_species(self, name, diffusion_constant=1., radius=1.):
+        self._context.particle_types.add(name, diffusion_constant, radius, _ParticleTypeFlavor.NORMAL)
+
+    def add_topology_species(self, name, diffusion_constant=1., radius=1.):
+        self._context.particle_types.add(name, diffusion_constant, radius, _ParticleTypeFlavor.TOPOLOGY)
 
     @property
     def compartments(self):

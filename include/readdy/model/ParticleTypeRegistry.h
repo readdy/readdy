@@ -58,11 +58,10 @@ NAMESPACE_END(particleflavor)
 struct ParticleTypeInfo {
     std::string name;
     scalar diffusionConstant;
-    scalar radius;
     particle_flavor flavor;
     particle_type_type typeId;
 
-    ParticleTypeInfo(const std::string &name, scalar diffusionConstant, scalar radius,
+    ParticleTypeInfo(const std::string &name, scalar diffusionConstant,
                      particle_flavor flavor, Particle::type_type typeId);
 };
 
@@ -87,8 +86,7 @@ public:
 
     particle_type_type operator()(const std::string &name) const;
 
-    void add(const std::string &name, scalar diffusionConst, scalar radius,
-             particle_flavor flavor = particleflavor::NORMAL);
+    void add(const std::string &name, scalar diffusionConst, particle_flavor flavor = particleflavor::NORMAL);
 
     const ParticleTypeInfo &info_of(const std::string &name) const;
 
@@ -97,10 +95,6 @@ public:
     scalar diffusion_constant_of(const std::string &particleType) const;
 
     scalar diffusion_constant_of(particle_type_type particleType) const;
-
-    scalar radius_of(const std::string &type) const;
-
-    scalar radius_of(particle_type_type type) const;
 
     const std::size_t &n_types() const;
 

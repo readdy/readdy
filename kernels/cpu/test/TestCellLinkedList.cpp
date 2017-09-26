@@ -42,7 +42,7 @@ TEST_P(TestCLLImpl, Insert) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1., 1.);
+    context.particle_types().add("Test", 1.);
     auto id = context.particle_types().id_of("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
@@ -114,7 +114,7 @@ TEST_P(TestCLLImpl, InsertAndDeactivate) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1., 1.);
+    context.particle_types().add("Test", 1.);
     auto id = context.particle_types().id_of("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
@@ -195,7 +195,7 @@ TEST_P(TestCLLImpl, Diffuse) {
     using namespace readdy;
 
     model::Context context;
-    context.particle_types().add("Test", 1., 1.);
+    context.particle_types().add("Test", 1.);
     auto id = context.particle_types().id_of("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);

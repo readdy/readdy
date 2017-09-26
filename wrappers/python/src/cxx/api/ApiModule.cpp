@@ -89,7 +89,7 @@ void exportApi(py::module &api) {
             .def_property_readonly("single_precision", &sim::singlePrecision)
             .def_property_readonly("double_precision", &sim::doublePrecision)
             .def("register_particle_type",
-                 [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient, readdy::scalar radius,
+                 [](sim &self, const std::string &name, readdy::scalar diffusionCoefficient,
                     ParticleTypeFlavor flavor) {
                      readdy::model::particle_flavor f = [=] {
                          switch (flavor) {
@@ -101,8 +101,8 @@ void exportApi(py::module &api) {
                                  return readdy::model::particleflavor::TOPOLOGY;
                          }
                      }();
-                     return self.registerParticleType(name, diffusionCoefficient, radius, f);
-                 }, "name"_a, "diffusion_coefficient"_a, "radius"_a, "flavor"_a = ParticleTypeFlavor::NORMAL)
+                     return self.registerParticleType(name, diffusionCoefficient, f);
+                 }, "name"_a, "diffusion_coefficient"_a, "flavor"_a = ParticleTypeFlavor::NORMAL)
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
             }, "type"_a, "pos"_a)
@@ -111,12 +111,12 @@ void exportApi(py::module &api) {
             .def("get_selected_kernel_type", &getSelectedKernelType)
             .def("register_potential_order_2", &registerPotentialOrder2, "potential"_a)
             .def("register_potential_harmonic_repulsion", &sim::registerHarmonicRepulsionPotential,
-                 "type_a"_a, "type_b"_a, "force_constant"_a)
+                 "type_a"_a, "type_b"_a, "force_constant"_a, "interaction_distance"_a)
             .def("register_potential_piecewise_weak_interaction",
                  &sim::registerWeakInteractionPiecewiseHarmonicPotential, "type_a"_a, "type_b"_a, "force_constant"_a,
                  "desired_particle_distance"_a, "depth"_a, "no_interaction_distance"_a)
             .def("register_potential_box", &sim::registerBoxPotential, "particle_type"_a, "force_constant"_a,
-                 "origin"_a, "extent"_a, "consider_particle_radius"_a)
+                 "origin"_a, "extent"_a)
             .def("register_potential_sphere_in", &sim::registerSphereInPotential, "particle_type"_a, "force_constant"_a,
                  "origin"_a, "radius"_a)
             .def("register_potential_sphere_out", &sim::registerSphereOutPotential, "particle_type"_a,

@@ -80,15 +80,15 @@ public:
 
     id_type addUserDefined(potentials::PotentialOrder2 *potential);
 
-    id_type addCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent,
-                    bool considerParticleRadius = true);
+    id_type addCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
 
-    id_type addCube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent,
-                    bool considerParticleRadius = true);
+    id_type addCube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
 
-    id_type addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant);
+    id_type addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant,
+                                 scalar interactionDistance);
 
-    id_type addHarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant);
+    id_type addHarmonicRepulsion(particle_type_type type1, particle_type_type type2, scalar forceConstant,
+                                 scalar interactionDistance);
 
     id_type addWeakInteractionPiecewiseHarmonic(particle_type_type type1, particle_type_type type2,
                                                 scalar forceConstant, scalar desiredDist, scalar depth, scalar cutoff);

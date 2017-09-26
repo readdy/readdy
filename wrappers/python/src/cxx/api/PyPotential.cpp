@@ -65,10 +65,6 @@ readdy::scalar PotentialOrder2Wrapper::getCutoffRadiusSquared() const {
     return getCutoffRadius() * getCutoffRadius();
 }
 
-void PotentialOrder2Wrapper::configureForTypes(const model::ParticleTypeRegistry *const context, particle_type_type type1,
-                                               particle_type_type type2) {
-}
-
 std::string PotentialOrder2Wrapper::describe() const {
     return "Python wrapped potential order 2";
 }

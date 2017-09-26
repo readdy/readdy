@@ -51,7 +51,7 @@ struct NeighborListTest : ::testing::Test {
 
     NeighborListTest() : kernel(std::make_unique<kernel_t>()), nooppot(0, 0, 0, 0, 0) {
         readdy::model::Context &ctx = kernel->context();
-        ctx.particle_types().add("A", 1.0, 1.);
+        ctx.particle_types().add("A", 1.0);
         nooppot = readdy::testing::NOOPPotentialOrder2(ctx.particle_types()("A"), ctx.particle_types()("A"), 1.1, 0, 0);
         readdy::scalar eductDistance = 1.2;
         kernel->context().reactions().addFusion("test", "A", "A", "A", 0., eductDistance);

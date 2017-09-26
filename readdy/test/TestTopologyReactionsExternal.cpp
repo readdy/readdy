@@ -41,11 +41,11 @@ class TestTopologyReactionsExternal : public KernelTest {
 protected:
     void SetUp() override {
         auto &ctx = kernel->context();
-        ctx.particle_types().add("Topology A", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-        ctx.particle_types().add("Topology B", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-        ctx.particle_types().add("Topology Invalid Type", 1.0, 1.0, readdy::model::particleflavor::TOPOLOGY);
-        ctx.particle_types().add("A", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
-        ctx.particle_types().add("B", 1.0, 1.0, readdy::model::particleflavor::NORMAL);
+        ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particle_types().add("Topology B", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
+        ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
+        ctx.particle_types().add("B", 1.0, readdy::model::particleflavor::NORMAL);
 
         ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 10});
         ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {10, 10});
@@ -132,8 +132,8 @@ TEST_P(TestTopologyReactionsExternal, TestGetTopologyForParticleDecay) {
     sim.setPeriodicBoundary({{true, true, true}});
     sim.setBoxSize(100, 100, 100);
     sim.registerTopologyType("TA");
-    auto topAId = sim.registerParticleType("Topology A", 10., 10., model::particleflavor::TOPOLOGY);
-    auto aId = sim.registerParticleType("A", 10., 10.);
+    auto topAId = sim.registerParticleType("Topology A", 10., model::particleflavor::TOPOLOGY);
+    auto aId = sim.registerParticleType("A", 10.);
     sim.configureTopologyBondPotential("Topology A", "Topology A", 10, 1);
 
     std::vector<model::TopologyParticle> topologyParticles;
@@ -192,9 +192,9 @@ TEST_P(TestTopologyReactionsExternal, AttachParticle) {
     sim.setPeriodicBoundary({{true, true, true}});
     sim.registerTopologyType("TA");
     sim.setBoxSize(15, 15, 15);
-    sim.registerParticleType("middle", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
-    sim.registerParticleType("end", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
-    sim.registerParticleType("A", c_::zero, c_::one);
+    sim.registerParticleType("middle", c_::zero, model::particleflavor::TOPOLOGY);
+    sim.registerParticleType("end", c_::zero, model::particleflavor::TOPOLOGY);
+    sim.registerParticleType("A", c_::zero);
     sim.configureTopologyBondPotential("middle", "middle", .00000001, 1);
     sim.configureTopologyBondPotential("middle", "end", .00000001, 1);
     sim.configureTopologyBondPotential("end", "end", .00000001, 1);
@@ -303,10 +303,10 @@ TEST_P(TestTopologyReactionsExternal, DefinitionParser) {
     context.topology_registry().add_type("T2");
     context.topology_registry().add_type("T3");
     context.topology_registry().add_type("T4");
-    context.particle_types().add("p1", 1., 1.);
-    context.particle_types().add("p2", 1., 1.);
-    context.particle_types().add("p3", 1., 1.);
-    context.particle_types().add("p4", 1., 1.);
+    context.particle_types().add("p1", 1.);
+    context.particle_types().add("p2", 1.);
+    context.particle_types().add("p3", 1.);
+    context.particle_types().add("p4", 1.);
     context.configure();
 
     readdy::model::top::reactions::STRParser parser (context.topology_registry());
@@ -395,8 +395,8 @@ TEST_P(TestTopologyReactionsExternal, AttachTopologies) {
     sim.setPeriodicBoundary({{true, true, true}});
     sim.registerTopologyType("TA");
     sim.setBoxSize(15, 15, 15);
-    sim.registerParticleType("middle", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
-    sim.registerParticleType("end", c_::zero, c_::one, model::particleflavor::TOPOLOGY);
+    sim.registerParticleType("middle", c_::zero, model::particleflavor::TOPOLOGY);
+    sim.registerParticleType("end", c_::zero, model::particleflavor::TOPOLOGY);
     sim.configureTopologyBondPotential("middle", "middle", .00000001, 1);
     sim.configureTopologyBondPotential("middle", "end", .00000001, 1);
     sim.configureTopologyBondPotential("end", "end", .00000001, 1);

@@ -50,9 +50,9 @@ TEST_P(TestReactions, TestConstantNumberOfParticleType) {
         return static_cast <readdy::scalar> (std::rand()) / (RAND_MAX / (upper - lower)) + lower;
     };
 
-    kernel->context().particle_types().add("A", 1.0, 1.0);
-    kernel->context().particle_types().add("B", 1.0, 1.0);
-    kernel->context().particle_types().add("AB", 0.0, 1.0);
+    kernel->context().particle_types().add("A", 1.0);
+    kernel->context().particle_types().add("B", 1.0);
+    kernel->context().particle_types().add("AB", 0.0);
     kernel->context().periodicBoundaryConditions() = {{true, true, true}};
     kernel->context().boxSize() = {{5, 5, 5}};
     kernel->context().reactions().addFusion("Form complex", "A", "B", "AB", .5, 1.0);
@@ -102,8 +102,8 @@ TEST_P(TestReactions, FusionFissionWeights) {
      * Idea: position F particles and remember their positions (ordered set), do ONE time-step and check if current positions are still the same.
      */
     auto &context = kernel->context();
-    context.particle_types().add("A", 0.5, 1.0);
-    context.particle_types().add("F", 0.0, 1.0);
+    context.particle_types().add("A", 0.5);
+    context.particle_types().add("F", 0.0);
     context.periodicBoundaryConditions() = {{true, true, true}};
     context.boxSize() = {{20, 20, 20}};
     context.configure(false);

@@ -38,7 +38,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     using particle_t = readdy::model::Particle;
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
-    kernel->context().particle_types().add("X", .25, 1.);
+    kernel->context().particle_types().add("X", .25);
     kernel->context().reactions().addDecay("X decay", "X", 1);
     kernel->context().reactions().addFission("X fission", "X", "X", "X", .5, .3);
 
@@ -109,11 +109,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto kernel = readdy::plugin::KernelProvider::getInstance().create("SingleCPU");
     kernel->context().boxSize() = {{10, 10, 10}};
 
-    kernel->context().particle_types().add("A", .25, 1.);
-    kernel->context().particle_types().add("B", .25, 1.);
-    kernel->context().particle_types().add("C", .25, 1.);
-    kernel->context().particle_types().add("D", .25, 1.);
-    kernel->context().particle_types().add("E", .25, 1.);
+    kernel->context().particle_types().add("A", .25);
+    kernel->context().particle_types().add("B", .25);
+    kernel->context().particle_types().add("C", .25);
+    kernel->context().particle_types().add("D", .25);
+    kernel->context().particle_types().add("E", .25);
 
     kernel->context().reactions().addDecay("A decay", "A", 1);
     kernel->context().reactions().addFusion("B+C->E", "B", "C", "E", 1, 17);

@@ -200,7 +200,7 @@ public:
      * @param radius the particle's radius, important for some potentials (like, e.g., harmonic repulsion)
      */
     particle::type_type
-    registerParticleType(const std::string &name, scalar diffusionCoefficient, scalar radius,
+    registerParticleType(const std::string &name, scalar diffusionCoefficient,
                          readdy::model::particle_flavor flavor = readdy::model::particleflavor::NORMAL);
 
     /**
@@ -222,13 +222,10 @@ public:
      * @param forceConstant the force constant determines the strength of repulsion
      * @param origin the coordinate of the lower left corner of the box
      * @param extent the extent from the origin
-     * @param considerParticleRadius a boolean that indicates if the particle radius should play a role
-     *        when calculating force and energy or not
      * @return a uuid with which the potential can be removed
      */
     const short registerBoxPotential(const std::string &particleType, scalar forceConstant,
-                                     const Vec3 &origin, const Vec3 &extent,
-                                     bool considerParticleRadius);
+                                     const Vec3 &origin, const Vec3 &extent);
 
     /**
      * Register a sphere potential, which is used to confine particles inside a spherical volume. The energy function
@@ -282,11 +279,12 @@ public:
      * @param particleTypeA particle type A
      * @param particleTypeB particle type B
      * @param forceConstant the force constant
+     * @param interactionDistance the interaction distance
      * @return a uuid with which the potential can be removed again
      * @todo document this more thoroughly
      */
     const short registerHarmonicRepulsionPotential(const std::string &particleTypeA, const std::string &particleTypeB,
-                                                   scalar forceConstant);
+                                                   scalar forceConstant, scalar interactionDistance);
 
     /**
      * Register a weak interaction piecewise harmonic potential.

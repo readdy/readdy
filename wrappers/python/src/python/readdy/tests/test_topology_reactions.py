@@ -96,8 +96,8 @@ class TestTopologyReactions(ReaDDyTestCase):
         sim.register_topology_type("TA")
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
 
-        typeid_b = sim.register_particle_type("B", 1.0, 1.0, ParticleTypeFlavor.NORMAL)
-        sim.register_particle_type("Topology A", 1.0, 1.0, ParticleTypeFlavor.TOPOLOGY)
+        typeid_b = sim.register_particle_type("B", 1.0, ParticleTypeFlavor.NORMAL)
+        sim.register_particle_type("Topology A", 1.0, ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("Topology A", "Topology A", 10, 10)
 
         n_elements = 50.
