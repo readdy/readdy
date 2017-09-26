@@ -169,7 +169,7 @@ const short
 Simulation::registerBoxPotential(const std::string &particleType, scalar forceConstant,
                                  const Vec3 &origin, const Vec3 &extent) {
     ensureKernelSelected();
-    return pimpl->kernel->context().potentials().addCube(particleType, forceConstant, origin, extent);
+    return pimpl->kernel->context().potentials().addBox(particleType, forceConstant, origin, extent);
 }
 
 const short

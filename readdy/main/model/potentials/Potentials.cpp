@@ -44,7 +44,7 @@ short Potential::counter = 0;
 /////////////////////////////////////////////////////////////////////////////
 
 /**
- * Cube potential
+ * Box potential
  */
 
 Vec3 getMinExtent(const Vec3 &origin, const Vec3 &extent) {
@@ -71,26 +71,26 @@ Vec3 getMaxExtent(const Vec3 &origin, const Vec3 &extent) {
     return result;
 }
 
-Cube::Cube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
+Box::Box(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
                              const Vec3 &extent)
         : super(particleType), origin(origin), extent(extent), forceConstant(forceConstant),
           min(getMinExtent(origin, extent)), max(getMaxExtent(origin, extent)) {}
 
-const Vec3 &Cube::getOrigin() const { return origin; }
+const Vec3 &Box::getOrigin() const { return origin; }
 
-const Vec3 &Cube::getExtent() const { return extent; }
+const Vec3 &Box::getExtent() const { return extent; }
 
-scalar Cube::getForceConstant() const { return forceConstant; }
+scalar Box::getForceConstant() const { return forceConstant; }
 
-scalar Cube::getMaximalForce(scalar /*ignored*/) const noexcept {
+scalar Box::getMaximalForce(scalar /*ignored*/) const noexcept {
     return 0;
 }
 
-scalar Cube::getRelevantLengthScale() const noexcept {
+scalar Box::getRelevantLengthScale() const noexcept {
     return std::min(extent[0], std::min(extent[1], extent[2]));
 }
 
-scalar Cube::calculateEnergy(const Vec3 &position) const {
+scalar Box::calculateEnergy(const Vec3 &position) const {
     scalar energy = 0;
 
     for (auto i = 0; i < 3; ++i) {
@@ -106,7 +106,7 @@ scalar Cube::calculateEnergy(const Vec3 &position) const {
     return energy;
 }
 
-void Cube::calculateForce(Vec3 &force, const Vec3 &position) const {
+void Box::calculateForce(Vec3 &force, const Vec3 &position) const {
     for (auto i = 0; i < 3; i++) {
         if (position[i] < min[i] || position[i] > max[i]) {
             if (position[i] < min[i]) {
@@ -118,14 +118,14 @@ void Cube::calculateForce(Vec3 &force, const Vec3 &position) const {
     }
 }
 
-void Cube::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const {
+void Box::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 &position) const {
     energy += calculateEnergy(position);
     calculateForce(force, position);
 }
 
-std::string Cube::describe() const {
+std::string Box::describe() const {
     std::ostringstream ss;
-    ss << getPotentialName<Cube>() << "[type: " << _particleType << ", origin: " << origin
+    ss << getPotentialName<Box>() << "[type: " << _particleType << ", origin: " << origin
        << ", extent: " << extent << ", min: " << min << ", max: " << max << ", forceConstant: "
        << forceConstant << "]";
     return ss.str();

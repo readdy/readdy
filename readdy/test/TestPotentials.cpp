@@ -81,7 +81,7 @@ TEST_P(TestPotentials, TestParticlesStayInBox) {
         // create cube potential that is spanned from (-1,-1,-1) to (1, 1, 1)
         readdy::Vec3 origin {-1, -1, -1};
         readdy::Vec3 extent {2, 2, 2};
-        kernel->context().potentials().addCube(t, 10, origin, extent);
+        kernel->context().potentials().addBox(t, 10, origin, extent);
     }
 
     auto ppObs = kernel->createObservable<readdy::model::observables::Positions>(1);

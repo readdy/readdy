@@ -110,17 +110,17 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     std::vector<short> idsToRemove;
     short uuid2_1, uuid2_2;
     {
-        auto id1 = kernel->context().potentials().addCube("A", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id2 = kernel->context().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id3 = kernel->context().potentials().addCube("D", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
-        auto id4 = kernel->context().potentials().addCube("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id1 = kernel->context().potentials().addBox("A", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id2 = kernel->context().potentials().addBox("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id3 = kernel->context().potentials().addBox("D", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        auto id4 = kernel->context().potentials().addBox("C", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
         idsToRemove.push_back(id1);
         idsToRemove.push_back(id2);
         idsToRemove.push_back(id3);
         idsToRemove.push_back(id4);
 
-        kernel->context().potentials().addCube("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
+        kernel->context().potentials().addBox("B", 0, vec_t{0, 0, 0}, vec_t{0, 0, 0});
 
         uuid2_1 = kernel->context().potentials().addHarmonicRepulsion("A", "C", 0, 4.0);
         uuid2_2 = kernel->context().potentials().addHarmonicRepulsion("B", "C", 0, 5.0);

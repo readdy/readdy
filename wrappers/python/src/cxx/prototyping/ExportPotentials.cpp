@@ -126,8 +126,8 @@ public:
 void exportPotentials(py::module &proto) {
 
     py::class_<rdy_pot>(proto, "Potential");
-    py::class_<pot::Cube, rdy_pot>(proto, pot::getPotentialName<pot::Cube>().c_str())
-            .def("get_name", &pot::getPotentialName < pot::Cube> );
+    py::class_<pot::Box, rdy_pot>(proto, pot::getPotentialName<pot::Box>().c_str())
+            .def("get_name", &pot::getPotentialName < pot::Box> );
     py::class_<pot::HarmonicRepulsion, rdy_pot>(proto, pot::getPotentialName<pot::HarmonicRepulsion>().c_str())
             .def("get_name", &pot::getPotentialName < pot::HarmonicRepulsion > );
     py::class_<pot::WeakInteractionPiecewiseHarmonic, rdy_pot>(proto,

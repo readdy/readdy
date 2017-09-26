@@ -177,15 +177,15 @@ void PotentialRegistry::debug_output() const {
     }
 }
 
-Potential::id_type PotentialRegistry::addCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
-                                              const Vec3 &extent) {
-    return addCube(_types.get()(particleType), forceConstant, origin, extent);
+Potential::id_type PotentialRegistry::addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin,
+                                             const Vec3 &extent) {
+    return addBox(_types.get()(particleType), forceConstant, origin, extent);
 }
 
-Potential::id_type PotentialRegistry::addCube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
-                                              const Vec3 &extent) {
+Potential::id_type PotentialRegistry::addBox(particle_type_type particleType, scalar forceConstant, const Vec3 &origin,
+                                             const Vec3 &extent) {
     auto &pots = potentialO1RegistryInternal[particleType];
-    pots.emplace_back(std::make_shared<Cube>(particleType, forceConstant, origin, extent));
+    pots.emplace_back(std::make_shared<Box>(particleType, forceConstant, origin, extent));
     return pots.back()->getId();
 }
 

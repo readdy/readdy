@@ -77,7 +77,7 @@ void exportKernelContext(py::module &module) {
             .def("add_box",
                  [](PotentialRegistry &self, const std::string &particleType, scalar forceConstant, const Vec3 &origin,
                     const Vec3 &extent) {
-                     return self.addCube(particleType, forceConstant, origin, extent);
+                     return self.addBox(particleType, forceConstant, origin, extent);
                  })
             .def("add_harmonic_repulsion",
                  [](PotentialRegistry &self, const std::string &type1, const std::string &type2, scalar forceConstant, scalar interactionDistance) {

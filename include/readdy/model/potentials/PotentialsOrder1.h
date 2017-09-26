@@ -22,7 +22,7 @@
 
 /**
  * This header file contains the declarations of all possibly available order 1 potentials. Currently:
- *   - Cube potential
+ *   - Box potential
  *   - Sphere potential
  *
  * @file PotentialsOrder1.h
@@ -41,10 +41,10 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(potentials)
 
-class Cube : public PotentialOrder1 {
+class Box : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    Cube(particle_type_type particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent);
+    Box(particle_type_type particleType, scalar forceConstant, const Vec3& origin, const Vec3& extent);
 
     const Vec3 &getOrigin() const;
 
@@ -141,8 +141,8 @@ protected:
 };
 
 template<typename T>
-const std::string getPotentialName(typename std::enable_if<std::is_base_of<Cube, T>::value>::type * = 0) {
-    return "Cube";
+const std::string getPotentialName(typename std::enable_if<std::is_base_of<Box, T>::value>::type * = 0) {
+    return "Box";
 }
 template<typename T>
 const std::string getPotentialName(typename std::enable_if<std::is_base_of<SphereIn, T>::value>::type* = 0) {

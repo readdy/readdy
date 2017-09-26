@@ -80,9 +80,9 @@ public:
 
     id_type addUserDefined(potentials::PotentialOrder2 *potential);
 
-    id_type addCube(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
+    id_type addBox(const std::string &particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
 
-    id_type addCube(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
+    id_type addBox(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, const Vec3 &extent);
 
     id_type addHarmonicRepulsion(const std::string &type1, const std::string &type2, scalar forceConstant,
                                  scalar interactionDistance);
