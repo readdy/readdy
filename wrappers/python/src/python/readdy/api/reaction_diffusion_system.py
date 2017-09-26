@@ -25,16 +25,18 @@ Created on 08.09.17
 @author: clonker
 """
 
+import numpy as np
+from readdy._internal.readdybinding.api import Context as _Context
 from readdy._internal.readdybinding.api import ParticleTypeFlavor as _ParticleTypeFlavor
 from readdy.api.registry.compartments import Compartments as _Compartments
-from readdy._internal.readdybinding.api import Context as _Context
+from readdy.api.registry.topologies import TopologyRegistry as _TopologyRegistry
 from readdy.api.simulation import Simulation
-import numpy as np
 
 
 class ReactionDiffusionSystem(object):
     def __init__(self):
         self._context = _Context()
+        self._topology_registry = _TopologyRegistry(self._context.topologies)
 
     @property
     def kbt(self):
@@ -125,15 +127,35 @@ class ReactionDiffusionSystem(object):
         """
         return self._context.box_volume()
 
-    def add_species(self, name, diffusion_constant=1., radius=1.):
-        self._context.particle_types.add(name, diffusion_constant, radius, _ParticleTypeFlavor.NORMAL)
+    def add_species(self, name, diffusion_constant=1.):
+        """
+        Adds a species to the system.
+        :param name: The species' name.
+        :param diffusion_constant: The species' diffusion constant
+        """
+        self._context.particle_types.add(name, diffusion_constant, _ParticleTypeFlavor.NORMAL)
 
-    def add_topology_species(self, name, diffusion_constant=1., radius=1.):
-        self._context.particle_types.add(name, diffusion_constant, radius, _ParticleTypeFlavor.TOPOLOGY)
+    def add_topology_species(self, name, diffusion_constant=1.):
+        """
+        Adds a species to the system that can be used with topologies.
+        :param name: The species' name.
+        :param diffusion_constant: The species' diffusion constant.
+        """
+        self._context.particle_types.add(name, diffusion_constant, _ParticleTypeFlavor.TOPOLOGY)
+
+    def registered_species(self):
+        """
+        Returns a list of thus far registered species.
+        """
+        return [k for k in self._context.particle_types.type_mapping.keys()]
 
     @property
     def compartments(self):
         return _Compartments(self._context.compartments)
+
+    @property
+    def topologies(self):
+        return self._topology_registry
 
     def simulation(self, kernel="SingleCPU"):
         """

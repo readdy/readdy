@@ -71,7 +71,8 @@ void exportKernelContext(py::module &module) {
                 return self.diffusion_constant_of(type);
             })
             .def("n_types", &ParticleTypeRegistry::n_types)
-            .def("name_of", &ParticleTypeRegistry::name_of);
+            .def("name_of", &ParticleTypeRegistry::name_of)
+            .def_property_readonly("type_mapping", &ParticleTypeRegistry::type_mapping, rvp::reference_internal);
 
     py::class_<PotentialRegistry>(module, "PotentialRegistry")
             .def("add_box",
@@ -125,6 +126,33 @@ void exportKernelContext(py::module &module) {
             .def("add_external_order2", [](PotentialRegistry& self, readdy::model::potentials::PotentialOrder2& pot) {
                 return self.addUserDefined(&pot);
             });
+
+    py::class_<readdy::api::Bond>(module, "BondedPotentialConfiguration")
+            .def(py::init([](scalar forceConstant, scalar length, const std::string &type) {
+                if(type != "harmonic") {
+                    throw std::invalid_argument("only suppoted type: \"harmonic\"");
+                }
+                readdy::api::Bond bond {forceConstant, length, readdy::api::BondType::HARMONIC};
+                return bond;
+            }), "force_constant"_a, "length"_a, "type"_a="harmonic");
+
+    py::class_<readdy::api::Angle>(module, "AnglePotentialConfiguration")
+            .def(py::init([](scalar forceConstant, scalar equilibriumAngle, const std::string &type) {
+                if(type != "harmonic") {
+                    throw std::invalid_argument("only suppoted type: \"harmonic\"");
+                }
+                readdy::api::Angle angle {forceConstant, equilibriumAngle, readdy::api::AngleType::HARMONIC};
+                return angle;
+            }), "force_constant"_a, "equilibrium_angle"_a, "type"_a="harmonic");
+
+    py::class_<readdy::api::TorsionAngle>(module, "TorsionPotentialConfiguration")
+            .def(py::init([](scalar forceConstant, scalar multiplicity, scalar phi0, const std::string &type) {
+                if(type != "cos_dihedral") {
+                    throw std::invalid_argument("only supported type: \"cos_dihedral\"");
+                }
+                readdy::api::TorsionAngle angle {forceConstant, multiplicity, phi0, readdy::api::TorsionType::COS_DIHEDRAL};
+                return angle;
+            }), "force_constant"_a, "multiplicity"_a, "phi0"_a, "type"_a="cos_dihedral");
 
     py::class_<TopologyRegistry>(module, "TopologyRegistry")
             .def("add_type", [](TopologyRegistry &self, const std::string &type) { return self.add_type(type); })

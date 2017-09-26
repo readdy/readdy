@@ -40,13 +40,12 @@ void exportCommon(py::module&);
 void exportApi(py::module&);
 void exportPrototyping(py::module&);
 
-PYBIND11_PLUGIN (readdybinding) {
-    py::module m("readdybinding", "ReaDDy c++-binding python module");
+PYBIND11_MODULE (readdybinding, m) {
+    m.doc() = "ReaDDy c++-binding python module";
     auto common = m.def_submodule("common", "module containing common utilities and utility classes");
     auto api = m.def_submodule("api", "ReaDDy c++-api python module");
     auto prototyping = m.def_submodule("prototyping", "ReaDDy prototyping python module");
     exportCommon(common);
     exportApi(api);
     exportPrototyping(prototyping);
-    return m.ptr();
 }
