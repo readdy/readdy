@@ -168,6 +168,11 @@ void exportApi(py::module &api) {
             }, rvp::reference, "type"_a, "particles"_a)
             .def("current_topologies", &sim::currentTopologies)
             .def("set_kernel", static_cast<void (sim::*)(const std::string&)>(&sim::setKernel), "name"_a)
+            .def_property("context", [](sim &self) -> readdy::model::Context & {
+                return self.currentContext();
+            }, [](sim &self, const readdy::model::Context &context) {
+                self.currentContext() = context;
+            })
             .def("run_scheme_readdy", [](sim &self, bool defaults) {
                      return std::make_unique<readdy::api::SchemeConfigurator<readdy::api::ReaDDyScheme>>(
                              self.runScheme<readdy::api::ReaDDyScheme>(defaults)

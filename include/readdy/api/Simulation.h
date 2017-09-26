@@ -394,6 +394,10 @@ public:
      */
     void setKernel(const std::string &kernel);
 
+    model::Context &currentContext();
+
+    const model::Context &currentContext() const;
+
     /**
      * Method that allows to set an already existing instance of a kernel for this simulation object.
      * @param kernel  the kernel

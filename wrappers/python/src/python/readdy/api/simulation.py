@@ -24,8 +24,10 @@ Created on 08.09.17
 
 @author: clonker
 """
+from readdy.api.conf.KernelConfiguration import CPUKernelConfiguration as _CPUKernelConfiguration
+from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOPKernelConfiguration
 from readdy.api.observables import Observables
-
+from readdy._internal.readdybinding.api import Simulation as _Simulation
 
 class Simulation(object):
 
@@ -38,7 +40,34 @@ class Simulation(object):
         self._reaction_handler = "Gillespie"
         # todo this should probably (default) determined depending on whether top reactions were defined
         self._evaluate_topology_reactions = True
+        self._simulation_scheme = "DefaultScheme"
+        self._simulation = _Simulation()
+        self._simulation.set_kernel(kernel)
+
+        if kernel == "CPU":
+            self._kernel_configuration = _CPUKernelConfiguration()
+        else:
+            self._kernel_configuration = _NOOPKernelConfiguration()
         
+
+    @property
+    def simulation_scheme(self):
+        return self._simulation_scheme
+
+    @simulation_scheme.setter
+    def simulation_scheme(self, value):
+        if value in ("DefaultScheme", "AdvancedScheme"):
+            self._simulation_scheme = value
+        else:
+            raise ValueError("Simulation scheme value can only be one of \"DefaultScheme\" and \"AdvancedScheme\".")
+
+    @property
+    def reaction_diffusion_system(self):
+        return self._reaction_diffusion_system
+
+    @property
+    def kernel_configuration(self):
+        return self._kernel_configuration
 
     @property
     def output_file(self):

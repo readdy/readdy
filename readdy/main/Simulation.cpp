@@ -436,6 +436,16 @@ void Simulation::setKernelConfiguration(const std::string &conf) {
     getSelectedKernel()->context().setKernelConfiguration(conf);
 }
 
+model::Context &Simulation::currentContext() {
+    ensureKernelSelected();
+    return getSelectedKernel()->context();
+}
+
+const model::Context &Simulation::currentContext() const {
+    ensureKernelSelected();
+    return getSelectedKernel()->context();
+}
+
 NoKernelSelectedException::NoKernelSelectedException(const std::string &__arg) : runtime_error(__arg) {}
 
 }
