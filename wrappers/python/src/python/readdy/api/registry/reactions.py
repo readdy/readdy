@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# Copyright © 2016 Computational Molecular Biology Group,
+# Copyright © 2017 Computational Molecular Biology Group,
 #                  Freie Universität Berlin (GER)
 #
 # This file is part of ReaDDy.
@@ -23,4 +23,13 @@
 Created on 26.09.17
 
 @author: clonker
+@author: chrisfroe
 """
+
+class Reactions(object):
+
+    def __init__(self, context_reactions):
+        self._reactions = context_reactions
+
+    def add_decay(self):
+        pass
