@@ -240,7 +240,7 @@ class Simulation(object):
         """
         return self._observables
 
-    def record_trajectory(self, stride=1000, name="", chunk_size=1000):
+    def record_trajectory(self, stride=1, name="", chunk_size=1000):
         """
         Record trajectory into file if file name is given. The trajectory consists out of two data sets, one contains
         all positions contiguously and the other one is two dimensional and contains begin and end indices for each

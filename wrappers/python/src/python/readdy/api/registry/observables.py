@@ -26,9 +26,9 @@ Created on 08.09.17
 """
 
 def _parse_save_args(save_args):
-    assert save_args is None or isinstance(save_args, dict), \
-        "save can only be None or a dictionary, not {}".format(type(save_args))
-    if save_args is None:
+    assert save_args is None or isinstance(save_args, (dict, bool)), \
+        "save can only be None, bool, or a dictionary, not {}".format(type(save_args))
+    if save_args is None or (isinstance(save_args, bool) and not save_args):
         return None, None
     else:
         assert "chunk_size" in save_args.keys(), "save needs to have a \"chunk_size\" key"

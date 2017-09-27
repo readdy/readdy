@@ -90,9 +90,8 @@ class TestTopologies(ReaDDyTestCase):
         rdf.topologies.add_type("foofoo")
 
         def reaction_fun(topology):
-            recipe = readdy.StructuralReactionRecipe(topology)
-            recipe.change_particle_type(0, "foo")
-            return recipe
+            return readdy.StructuralReactionRecipe(topology)\
+                .change_particle_type(0, "foo")
 
         def rate_fun(topology):
             return len(topology.particles)
