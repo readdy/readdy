@@ -39,20 +39,20 @@
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 
-class KernelStateModel {
+class StateModel {
 public:
 
-    KernelStateModel() = default;
+    StateModel() = default;
 
-    KernelStateModel(const KernelStateModel&) = delete;
+    StateModel(const StateModel&) = delete;
 
-    KernelStateModel&operator=(const KernelStateModel&) = delete;
+    StateModel&operator=(const StateModel&) = delete;
 
-    KernelStateModel(KernelStateModel&&) = default;
+    StateModel(StateModel&&) = default;
 
-    KernelStateModel& operator=(KernelStateModel&&) = default;
+    StateModel& operator=(StateModel&&) = default;
 
-    virtual ~KernelStateModel() = default;
+    virtual ~StateModel() = default;
 
     // const accessor methods
     virtual const std::vector<Vec3> getParticlePositions() const = 0;

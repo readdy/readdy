@@ -38,7 +38,7 @@ using sim = readdy::Simulation;
 using kp = readdy::plugin::KernelProvider;
 using vec = readdy::Vec3;
 using pot2 = readdy::rpy::PotentialOrder2Wrapper;
-using model = readdy::model::KernelStateModel;
+using model = readdy::model::StateModel;
 using ctx = readdy::model::Context;
 using kern = readdy::model::Kernel;
 

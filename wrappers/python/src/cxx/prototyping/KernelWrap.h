@@ -44,9 +44,9 @@ struct KernelWrap : public readdy::model::Kernel {
         PYBIND11_OVERLOAD_PURE(readdy::model::actions::ActionFactory &, readdy::model::Kernel, getActionFactoryInternal,);
     }
 
-    virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const override {
+    virtual readdy::model::StateModel &getKernelStateModelInternal() const override {
         py::gil_scoped_acquire gil;
-        PYBIND11_OVERLOAD_PURE(readdy::model::KernelStateModel &, readdy::model::Kernel, getKernelStateModelInternal,);
+        PYBIND11_OVERLOAD_PURE(readdy::model::StateModel &, readdy::model::Kernel, getKernelStateModelInternal,);
     }
 
 };

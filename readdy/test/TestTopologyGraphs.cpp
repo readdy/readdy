@@ -385,7 +385,7 @@ TEST(TestTopologyGraphs, TestAppendParticle) {
     model::Context context;
     context.topology_registry().potential_configuration().pairPotentials[std::make_tuple(0, 0)].emplace_back();
     context.topology_registry().potential_configuration().pairPotentials[std::make_tuple(0, 1)].emplace_back();
-    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, context};
+    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, context, nullptr};
     {
         auto it = gt.graph().vertices().begin();
         auto it2 = ++gt.graph().vertices().begin();

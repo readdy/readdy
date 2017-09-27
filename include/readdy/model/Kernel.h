@@ -39,7 +39,7 @@
 #include <readdy/common/signals.h>
 #include <readdy/model/Plugin.h>
 #include <readdy/model/actions/Action.h>
-#include <readdy/model/KernelStateModel.h>
+#include <readdy/model/StateModel.h>
 #include <readdy/model/Context.h>
 #include <readdy/model/observables/ObservableFactory.h>
 #include <readdy/model/_internal/ObservableWrapper.h>
@@ -158,9 +158,9 @@ public:
      * 
      */
 
-    const readdy::model::KernelStateModel &stateModel() const;
+    const readdy::model::StateModel &stateModel() const;
 
-    readdy::model::KernelStateModel &stateModel();
+    readdy::model::StateModel &stateModel();
 
     const readdy::model::Context &context() const;
 
@@ -196,7 +196,7 @@ protected:
 
     particle_type_type getTypeIdRequireNormalFlavor(const std::string &) const;
 
-    virtual readdy::model::KernelStateModel &getKernelStateModelInternal() const = 0;
+    virtual readdy::model::StateModel &getKernelStateModelInternal() const = 0;
 
     virtual readdy::model::actions::ActionFactory &getActionFactoryInternal() const = 0;
 

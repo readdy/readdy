@@ -122,11 +122,11 @@ readdy::model::Context &Kernel::context() {
     return _context;
 }
 
-const readdy::model::KernelStateModel &Kernel::stateModel() const {
+const readdy::model::StateModel &Kernel::stateModel() const {
     return getKernelStateModelInternal();
 }
 
-readdy::model::KernelStateModel &Kernel::stateModel() {
+readdy::model::StateModel &Kernel::stateModel() {
     return getKernelStateModelInternal();
 }
 

@@ -25,11 +25,10 @@ Created on 26.09.17
 @author: clonker
 """
 
+import readdy._internal.readdybinding.api.top as _top
 from readdy._internal.readdybinding.api import AnglePotentialConfiguration as _AnglePotentialConfiguration
 from readdy._internal.readdybinding.api import BondedPotentialConfiguration as _BondedPotentialConfiguration
 from readdy._internal.readdybinding.api import TorsionPotentialConfiguration as _TorsionPotentialConfiguration
-import readdy._internal.readdybinding.api.top as _top
-
 
 class TopologyRegistry(object):
     def __init__(self, context_top_registry):
@@ -131,6 +130,26 @@ class TopologyRegistry(object):
 
     def add_structural_reaction(self, topology_type, reaction_function, rate_function,
                                 raise_if_invalid=True, expect_connected=False):
+        """
+        Adds a spatially independent structural topology reaction for a certain topology type. It basically consists
+        out of two functions:
+
+        * the reaction function, taking a topology object as input and returning a reaction recipe describing what
+          the structural changes are to be applied to the topology
+        * the rate function, which takes a topology object as input and returns a corresponding fixed rate
+
+        It should be noted that the rate function will only be evaluated upon changes of the topology, i.e., as rarely
+        as possible. The reaction function is evaluated when the actual reaction takes place.
+
+        :param topology_type: the topology type for which this reaction is evaluated
+        :param reaction_function: the reaction function, as described above
+        :param rate_function: the rate function, as described above
+        :param raise_if_invalid: raises an error if the outcome of the reaction function is invalid and set to True,
+                                 otherwise it will just roll back to the state of before the reaction and print a
+                                 warning into the log
+        :param expect_connected: can trigger a raise if set to true and the topology's connectivity graph decayed into
+                                 two or more independent components, depending on the value of `raise_if_invalid`.
+        """
         fun1, fun2 = _top.ReactionFunction(reaction_function), _top.RateFunction(rate_function)
         reaction = _top.StructuralTopologyReaction(fun1, fun2)
         if raise_if_invalid:

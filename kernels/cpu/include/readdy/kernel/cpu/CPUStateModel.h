@@ -31,7 +31,7 @@
 
 #pragma once
 
-#include <readdy/model/KernelStateModel.h>
+#include <readdy/model/StateModel.h>
 #include <readdy/model/Context.h>
 #include <readdy/common/thread/Config.h>
 #include <readdy/model/reactions/ReactionRecord.h>
@@ -45,7 +45,7 @@
 namespace readdy {
 namespace kernel {
 namespace cpu {
-class CPUStateModel : public readdy::model::KernelStateModel {
+class CPUStateModel : public readdy::model::StateModel {
 
 public:
 

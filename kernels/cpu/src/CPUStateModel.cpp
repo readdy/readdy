@@ -135,7 +135,7 @@ CPUStateModel::addTopology(topology_type_type type, const std::vector<readdy::mo
     for (const auto &p : particles) {
         types.push_back(p.getType());
     }
-    auto it = _topologies.push_back(std::make_unique<topology>(type, std::move(ids), std::move(types), _context.get()));
+    auto it = _topologies.push_back(std::make_unique<topology>(type, std::move(ids), std::move(types), _context.get(), this));
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {
         getParticleData()->entry_at(p).topology_index = idx;

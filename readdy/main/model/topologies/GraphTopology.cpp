@@ -40,8 +40,8 @@ namespace top {
 
 GraphTopology::GraphTopology(topology_type_type type,
                              const Topology::particle_indices &particles, const types_vec &types,
-                             const model::Context& context)
-        : Topology(particles), _context(context), _topology_type(type) {
+                             const model::Context& context, const model::StateModel *stateModel)
+        : Topology(particles), _context(context), _topology_type(type), _stateModel(stateModel) {
     assert(types.size() == particles.size());
     std::size_t i = 0;
     for (auto itTypes = types.begin(); itTypes != types.end(); ++itTypes, ++i) {
@@ -51,8 +51,9 @@ GraphTopology::GraphTopology(topology_type_type type,
 
 GraphTopology::GraphTopology(topology_type_type type,
                              Topology::particle_indices &&particles, graph::Graph &&graph,
-                             const model::Context& context)
-        : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type) {
+                             const model::Context& context, const model::StateModel *stateModel)
+        : Topology(std::move(particles)), _context(context), graph_(std::move(graph)), _topology_type(type),
+          _stateModel(stateModel) {
     if (GraphTopology::graph().vertices().size() != GraphTopology::getNParticles()) {
         log::error("tried creating graph topology with {} vertices but only {} particles.",
                    GraphTopology::graph().vertices().size(), GraphTopology::getNParticles());
@@ -84,7 +85,7 @@ void GraphTopology::configure() {
     std::unordered_map<api::BondType, std::vector<pot::BondConfiguration>, readdy::util::hash::EnumClassHash> bonds;
     std::unordered_map<api::AngleType, std::vector<pot::AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<pot::DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
-    
+
     const auto &config = context().topology_registry().potential_configuration();
 
     graph_.findNTuples([&](const topology_graph::edge &tuple) {
@@ -200,7 +201,7 @@ std::vector<GraphTopology> GraphTopology::connectedComponents() {
             auto it_graphs = subGraphs.begin();
             auto it_particles = subGraphsParticles.begin();
             for(; it_graphs != subGraphs.end(); ++it_graphs, ++it_particles) {
-                components.emplace_back(_topology_type, std::move(*it_particles), std::move(*it_graphs), _context);
+                components.emplace_back(_topology_type, std::move(*it_particles), std::move(*it_graphs), _context, _stateModel);
             }
         }
     }
@@ -299,6 +300,20 @@ graph::Graph::vertex_ref GraphTopology::vertexForParticle(Topology::particle_ind
 
 const model::Context &GraphTopology::context() const {
     return _context.get();
+}
+
+std::vector<Particle> GraphTopology::fetchParticles() const {
+    if(!_stateModel) {
+        throw std::logic_error("Cannot fetch particles if no state model was provided!");
+    }
+    return _stateModel->getParticlesForTopology(*this);
+}
+
+Particle GraphTopology::particleForVertex(graph::Graph::vertex_ref vertexRef) const {
+    if(!_stateModel) {
+        throw std::logic_error("Cannot fetch particle if not state model was provided!");
+    }
+    return _stateModel->getParticleForIndex(vertexRef->particleIndex);
 }
 
 

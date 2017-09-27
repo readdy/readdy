@@ -32,7 +32,7 @@
 #pragma once
 
 #include <memory>
-#include <readdy/model/KernelStateModel.h>
+#include <readdy/model/StateModel.h>
 #include <readdy/kernel/singlecpu/model/SCPUParticleData.h>
 #include <readdy/model/Context.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
@@ -44,7 +44,7 @@ namespace readdy {
 namespace kernel {
 namespace scpu {
 
-class SCPUStateModel : public readdy::model::KernelStateModel {
+class SCPUStateModel : public readdy::model::StateModel {
     using topology_action_factory = readdy::model::top::TopologyActionFactory;
     using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
     using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;

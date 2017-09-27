@@ -41,6 +41,7 @@
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
+class StateModel;
 NAMESPACE_BEGIN(top)
 
 class GraphTopology : public Topology {
@@ -58,9 +59,10 @@ public:
      * @param particles the particles
      * @param types particle's types
      * @param context the kernel's context
+     * @param stateModel the kernel's state model
      */
     GraphTopology(topology_type_type type, const particle_indices &particles, const types_vec &types,
-                  const model::Context &context);
+                  const model::Context &context, const StateModel* stateModel);
 
     /**
      * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
@@ -68,10 +70,11 @@ public:
      * @param type the type
      * @param particles the particles list
      * @param graph the already existing graph
-     * @param the kernel's context
+     * @param context the kernel's context
+     * @param stateModel the kernels state model
      */
     GraphTopology(topology_type_type type, particle_indices &&particles, topology_graph &&graph,
-                  const model::Context &context);
+                  const model::Context &context, const StateModel* stateModel);
 
     virtual ~GraphTopology() = default;
 
@@ -116,12 +119,17 @@ public:
     topology_graph::vertex_ref vertexForParticle(particle_index particle);
 
     const topology_reaction_rates &rates() const;
-    
+
     const model::Context &context() const;
+
+    std::vector<Particle> fetchParticles() const;
+
+    Particle particleForVertex(topology_graph::vertex_ref vertexRef) const;
 
 protected:
     topology_graph graph_;
     std::reference_wrapper<const model::Context> _context;
+    const model::StateModel *_stateModel;
     topology_reaction_rates _reaction_rates;
     topology_reaction_rate _cumulativeRate;
     topology_type_type _topology_type;

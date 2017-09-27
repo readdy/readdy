@@ -41,7 +41,11 @@ void exportApi(py::module&);
 void exportPrototyping(py::module&);
 
 PYBIND11_MODULE (readdybinding, m) {
+    py::options options;
+    options.enable_function_signatures().enable_user_defined_docstrings();
+
     m.doc() = "ReaDDy c++-binding python module";
+
     auto common = m.def_submodule("common", "module containing common utilities and utility classes");
     auto api = m.def_submodule("api", "ReaDDy c++-api python module");
     auto prototyping = m.def_submodule("prototyping", "ReaDDy prototyping python module");
