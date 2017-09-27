@@ -27,7 +27,6 @@ Created on 08.09.17
 
 from .reaction_diffusion_system import *
 from .simulation import *
-from .observables import *
 # elevate reaction recipe
 from .._internal.readdybinding.api.top import Recipe as StructuralReactionRecipe
 

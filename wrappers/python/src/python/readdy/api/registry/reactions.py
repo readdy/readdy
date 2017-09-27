@@ -26,10 +26,175 @@ Created on 26.09.17
 @author: chrisfroe
 """
 
-class Reactions(object):
 
+class ReactionRegistry(object):
     def __init__(self, context_reactions):
         self._reactions = context_reactions
 
-    def add_decay(self):
-        pass
+    def add_decay(self, name, particle_type, rate):
+        """
+        Registers a decay reaction
+
+            particle_type -> 0
+
+        Particles of type particle_type will disappear with the given rate
+
+        :param name: label of the reaction
+        :param particle_type: the particle type undergoing the reaction
+        :param rate: microscopic/intrinsic reaction rate constant
+        """
+        if not isinstance(name, str):
+            raise ValueError("name must be a string")
+        if not isinstance(particle_type, str):
+            raise ValueError("particle_type must be a string")
+        if not rate > 0.:
+            raise ValueError("the reaction rate must be positive")
+        self._reactions.add_decay(name, particle_type, rate)
+
+    def add_conversion(self, name, type_from, type_to, rate):
+        """
+        Registers a conversion reaction
+
+            type_from -> type_to
+
+        Particles of type_from will convert into type_to with the given rate
+
+        :param name: label of the reactions
+        :param type_from: particle type of educt
+        :param type_to: particle type of product
+        :param rate: microscopic/intrinsic reaction rate constant
+        """
+        if not isinstance(name, str):
+            raise ValueError("name must be a string")
+        if not isinstance(type_from, str):
+            raise ValueError("type_from must be a string")
+        if not isinstance(type_to, str):
+            raise ValueError("type_to must be a string")
+        if not rate > 0.:
+            raise ValueError("the reaction rate must be positive")
+        self._reactions.add_conversion(name, type_from, type_to, rate)
+
+    def add_fusion(self, name, type_from1, type_from2, type_to, rate, educt_distance, weight1=0.5, weight2=0.5):
+        """
+        Registers a fusion/association reaction
+
+            type_from1 +(educt_distance) type_from2 -> type_to
+
+        One particle of type_from1 and another particle of type_from2 fuse to form a particle of type_to.
+        This reaction will occur with the given rate if the particles are closer than the educt_distance.
+        The product will be placed on the connecting axis of the two particles. The weights determine
+        where exactly on this axis the product will be placed. By default this is (0.5, 0.5), which corresponds
+        to half the distance of educts. The weights should always add up to 1.
+
+        :param name: label of the reactions
+        :param type_from1: particle type of first educt
+        :param type_from2: particle type of second educt
+        :param type_to: particle type of product
+        :param rate: microscopic/intrinsic reaction rate constant
+        :param educt_distance: maximal distance for the reaction to occur
+        :param weight1: value between 0 (product placed at educt1) and 1 (product placed at educt2)
+        :param weight2: value between 0 (product placed at educt2) and 1 (product placed at educt1)
+        """
+        if not isinstance(name, str):
+            raise ValueError("name must be a string")
+        if not isinstance(type_from1, str):
+            raise ValueError("type_from1 must be string")
+        if not isinstance(type_from2, str):
+            raise ValueError("type_from2 must be string")
+        if not isinstance(type_to, str):
+            raise ValueError("type_to must be string")
+        if not rate > 0.:
+            raise ValueError("reaction rate must be positive")
+        if not educt_distance > 0.:
+            raise ValueError("educt_distance must be positive")
+        if not 0. <= weight1 <= 1.:
+            raise ValueError("weight1 must be in [0,1]")
+        if not 0. <= weight2 <= 1.:
+            raise ValueError("weight2 must be in [0,1]")
+        self._reactions.add_fusion(name, type_from1, type_from2, type_to, rate, educt_distance, weight1, weight2)
+
+    def add_fission(self, name, type_from, type_to1, type_to2, rate, product_distance, weight1=0.5, weight2=0.5):
+        """
+        Registers a fission/dissociation reaction
+
+            type_from -> type_to1 +(product_distance) type_to2
+
+        A particle of type_from dissociates into two particles, of type_to1 and type_to2 respectively.
+        This reaction will occur with the given rate. The products will be placed on an randomly oriented axis.
+        Their distance on this axis is at most product_distance. The weights determine where the new particles
+        will be with respect to the educt. By default the weights are (0.5, 0.5), which corresponds to each product
+        having equal distance from the educt. The weights should always add up to 1.
+
+        :param name: label of the reaction
+        :param type_from: particle type of educt
+        :param type_to1: particle type of first product
+        :param type_to2: particle type of second product
+        :param rate: microscopic/intrinsic reaction rate constant
+        :param product_distance: maximal distance at which products will be placed
+        :param weight1: value between 0 (product1 placed at educt) and 1 (product2 placed at educt)
+        :param weight2: value between 0 (product2 placed at educt) and 1 (product1 placed at educt)
+        """
+        if not isinstance(name, str):
+            raise ValueError("name must be a string")
+        if not isinstance(type_from, str):
+            raise ValueError("type_from must be string")
+        if not isinstance(type_to1, str):
+            raise ValueError("type_to1 must be string")
+        if not isinstance(type_to2, str):
+            raise ValueError("type_to2 must be string")
+        if not rate > 0.:
+            raise ValueError("reaction rate must be positive")
+        if not product_distance > 0.:
+            raise ValueError("product_distance must be positive")
+        if not 0. <= weight1 <= 1.:
+            raise ValueError("weight1 must be in [0,1]")
+        if not 0. <= weight2 <= 1.:
+            raise ValueError("weight2 must be in [0,1]")
+        self._reactions.add_fission(name, type_from, type_to1, type_to2, rate, product_distance, weight1, weight2)
+
+    def add_enzymatic(self, name, type_catalyst, type_from, type_to, rate, educt_distance):
+        """
+        Registers an enzymatic/catalytic reaction
+
+            type_from +(educt_distance) type_catalyst -> type_to + type_catalyst
+
+        One particle of type_from can convert into type_to, given that another particle of type_catalyst is within
+        educt_distance. Then this reaction will occur with the given rate. The product of type_to will have the
+        same position as the educt of type_from.
+
+        :param name: label of the reaction
+        :param type_catalyst: particle type of catalyst
+        :param type_from: particle type of educt
+        :param type_to: particle type of product
+        :param rate: microscopic/intrinsic reaction rate constant
+        :param educt_distance: maximal distance for reaction to occur
+        """
+        if not isinstance(name, str):
+            raise ValueError("name must be a string")
+        if not isinstance(type_catalyst, str):
+            raise ValueError("type_catalyst must be string")
+        if not isinstance(type_from, str):
+            raise ValueError("type_from must be string")
+        if not isinstance(type_to, str):
+            raise ValueError("type_to must be string")
+        if not rate > 0.:
+            raise ValueError("reaction rate must be positive")
+        if not educt_distance > 0.:
+            raise ValueError("educt_distance must be positive")
+        self._reactions.add_enzymatic(name, type_catalyst, type_from, type_to, rate, educt_distance)
+
+    def add(self, descriptor, rate):
+        """
+        Register a reaction according to the descriptor string.
+
+        Examples:
+            A -> 0
+            A -> B
+            A +(2.0) B -> C [0.5, 0.5]
+            C -> A +(2.0) B [0.5, 0.5]
+            A +(2.0) C -> B + C
+
+        :param descriptor: the descriptor string
+        :param rate: microscopic/intrinsic reaction rate constant
+        """
+        self._reactions.add(descriptor, rate)

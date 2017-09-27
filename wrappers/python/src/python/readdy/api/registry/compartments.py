@@ -26,23 +26,12 @@ Created on 26.09.17
 @author: chrisfroe
 """
 
-import numpy as np
+import numpy as _np
 
-import readdy._internal.readdybinding.common as common
+import readdy._internal.readdybinding.common as _common
 
 
-class Compartments(object):
-    """
-    Compartments define a subvolume in euclidean space, in which
-    instantaneous particle type conversions will be applied.
-
-    Each compartment evaluates a characteristic function, that decides if a position
-    is within the compartment or not.
-
-    A (key, value) pair in the conversions dictionary means that any particle with type key
-    will be converted into type value, if the particle is in the defined compartment.
-    """
-
+class CompartmentRegistry(object):
     def __init__(self, context_compartments):
         self._compartments = context_compartments
 
@@ -74,7 +63,7 @@ class Compartments(object):
             raise ValueError("name must be a string")
         if not radius > 0.:
             raise ValueError("radius must be positive")
-        if isinstance(origin, np.ndarray):
+        if isinstance(origin, _np.ndarray):
             if origin.squeeze().ndim != 1:
                 raise ValueError("Invalid shape for origin!")
             origin = origin.astype(float).squeeze().tolist()
@@ -83,7 +72,7 @@ class Compartments(object):
             raise ValueError("Invalid length for origin! Length can only be 3 but was {}.".format(len(origin)))
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
-        self._compartments.add_sphere(conversions, name, common.Vec(*origin), radius, larger_or_less)
+        self._compartments.add_sphere(conversions, name, _common.Vec(*origin), radius, larger_or_less)
 
     def add_plane(self, conversions, name, normal_coefficients, distance, larger_or_less=True):
         """
@@ -112,12 +101,12 @@ class Compartments(object):
             raise ValueError("name must be a string")
         if not distance >= 0.:
             raise ValueError("distance must be non-negative")
-        normal_coefficients = np.array(normal_coefficients, dtype=float)
+        normal_coefficients = _np.array(normal_coefficients, dtype=float)
         if normal_coefficients.squeeze().shape != (3,):
             raise ValueError("normal_coefficients must have 3 elements")
-        norm = np.sqrt(np.sum(normal_coefficients * normal_coefficients))
+        norm = _np.sqrt(_np.sum(normal_coefficients * normal_coefficients))
         if abs(norm - 1.) > 0.0001:
             raise ValueError("normal_coefficients must be a unit vector")
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
-        self._compartments.add_plane(conversions, name, common.Vec(*normal_coefficients), distance, larger_or_less)
+        self._compartments.add_plane(conversions, name, _common.Vec(*normal_coefficients), distance, larger_or_less)

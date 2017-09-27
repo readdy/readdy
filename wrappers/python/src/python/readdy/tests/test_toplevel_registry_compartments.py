@@ -23,9 +23,8 @@
 Created on 26.09.17
 
 @author: clonker
+@author: chrisfroe
 """
-
-import numpy as np
 
 from readdy.api.reaction_diffusion_system import ReactionDiffusionSystem
 from readdy.util.testing_utils import ReaDDyTestCase

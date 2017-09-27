@@ -110,3 +110,14 @@ class TestTopologies(ReaDDyTestCase):
         rdf.potentials.add_sphere_out("A", 10, (10, 10, 10), 1)
         rdf.potentials.add_spherical_barrier("A", 1, 1, (0, 0, 0), 1)
         rdf.potentials.add_weak_interaction_piecewise_harmonic("A", "A", 10, 10, 10, 10)
+
+    def test_simulation(self):
+        rdf = readdy.ReactionDiffusionSystem()
+        rdf.add_species("A")
+        _ = rdf.simulation("CPU")
+
+    def test_observables(self):
+        rdf = readdy.ReactionDiffusionSystem()
+        rdf.add_species("A")
+        simulation = rdf.simulation("CPU")
+        simulation.observe.rdf(5, [0., 1., 2.], ["A"], "A", 10)

@@ -67,7 +67,7 @@ inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int st
 
 inline obs_handle_t
 registerObservable_Positions(sim &self, unsigned int stride,
-                             std::vector<std::string> types, const pybind11::object& callbackFun = py::none()) {
+                             const std::vector<std::string> &types, const pybind11::object& callbackFun = py::none()) {
     if (callbackFun.is_none()) {
         return self.registerObservable<readdy::model::observables::Positions>(stride, types);
     } else {
@@ -89,11 +89,11 @@ inline obs_handle_t registerObservable_Particles(sim &self, unsigned int stride,
 
 inline obs_handle_t
 registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_t<readdy::scalar> &binBorders,
-                                      std::vector<std::string> typeCountFrom, std::vector<std::string> typeCountTo,
+                                      const std::vector<std::string> &typeCountFrom, const std::vector<std::string> &typeCountTo,
                                       readdy::scalar particleToDensity, const pybind11::object& callbackFun = py::none()) {
     const auto info = binBorders.request();
     std::vector<readdy::scalar> binBordersVec{};
-    binBordersVec.reserve(info.shape[0]);
+    binBordersVec.reserve(static_cast<std::size_t>(info.shape[0]));
     const auto data = static_cast<readdy::scalar *>(info.ptr);
     for (auto i = 0; i < info.shape[0]; ++i) binBordersVec.push_back(data[i]);
     if (callbackFun.is_none()) {
@@ -188,12 +188,12 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
 
     using record_t = readdy::model::reactions::ReactionRecord;
     py::class_<record_t>(apiModule, "ReactionRecord")
-            .def_readonly("type", &record_t::type)
-            .def_readonly("educts", &record_t::educts)
-            .def_readonly("products", &record_t::products)
-            .def_readonly("types_from", &record_t::types_from)
-            .def_readonly("where", &record_t::where)
-            .def_readonly("reaction_index", &record_t::reactionIndex)
+            .def_property_readonly("type", [](const record_t &self) { return self.type; })
+            .def_property_readonly("educts", [](const record_t &self) { return self.educts; })
+            .def_property_readonly("products", [](const record_t &self) { return self.products; })
+            .def_property_readonly("types_from", [](const record_t &self) { return self.types_from; })
+            .def_property_readonly("where", [](const record_t &self) { return self.where; })
+            .def_property_readonly("reaction_index", [](const record_t &self) { return self.reactionIndex; })
             .def("__repr__", [](const record_t& self) {
                 std::ostringstream ss;
                 ss << self;

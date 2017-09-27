@@ -28,9 +28,10 @@ Created on 08.09.17
 import numpy as np
 from readdy._internal.readdybinding.api import Context as _Context
 from readdy._internal.readdybinding.api import ParticleTypeFlavor as _ParticleTypeFlavor
-from readdy.api.registry.compartments import Compartments as _Compartments
+from readdy.api.registry.compartments import CompartmentRegistry as _CompartmentRegistry
 from readdy.api.registry.topologies import TopologyRegistry as _TopologyRegistry
 from readdy.api.registry.potentials import PotentialRegistry as _PotentialRegistry
+from readdy.api.registry.reactions import ReactionRegistry as _ReactionRegistry
 from readdy.api.simulation import Simulation
 
 __all__ = ['ReactionDiffusionSystem']
@@ -39,8 +40,10 @@ __all__ = ['ReactionDiffusionSystem']
 class ReactionDiffusionSystem(object):
     def __init__(self):
         self._context = _Context()
+        self._compartment_registry = _CompartmentRegistry(self._context.compartments)
         self._topology_registry = _TopologyRegistry(self._context.topologies)
         self._potential_registry = _PotentialRegistry(self._context.potentials)
+        self._reaction_registry = _ReactionRegistry(self._context.reactions)
 
     @property
     def kbt(self):
@@ -155,7 +158,11 @@ class ReactionDiffusionSystem(object):
 
     @property
     def compartments(self):
-        return _Compartments(self._context.compartments)
+        return self._compartment_registry
+
+    @property
+    def reactions(self):
+        return self._reaction_registry
 
     @property
     def topologies(self):
@@ -167,8 +174,11 @@ class ReactionDiffusionSystem(object):
 
     def simulation(self, kernel="SingleCPU"):
         """
-        Generates a simulation object for this reaction diffusion system configuration.
+        Generates a simulation object for this reaction diffusion system configuration. The configuration is copied
+        into the simulation object, so subsequent changes to the reaction diffusion system will not propagate into
+        the simulation.
+
         :param kernel: The kernel that is used to perform the simulation
         :return: the simulation object
         """
-        return Simulation(self, kernel)
+        return Simulation(kernel, self._context)

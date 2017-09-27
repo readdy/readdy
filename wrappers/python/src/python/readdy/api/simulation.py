@@ -26,23 +26,24 @@ Created on 08.09.17
 """
 from readdy.api.conf.KernelConfiguration import CPUKernelConfiguration as _CPUKernelConfiguration
 from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOPKernelConfiguration
-from readdy.api.observables import Observables
+from readdy.api.registry.observables import Observables as _Observables
 from readdy._internal.readdybinding.api import Simulation as _Simulation
 
 class Simulation(object):
 
-    def __init__(self, reaction_diffusion_system, kernel):
-        self._reaction_diffusion_system = reaction_diffusion_system
+    def __init__(self, kernel, context):
         self._kernel = kernel
+        self._simulation = _Simulation()
+        self._simulation.set_kernel(kernel)
+        self._simulation.context = context
+
         self._output_file = ""
-        self._observables = Observables(self)
+        self._observables = _Observables(self)
         self._integrator = "EulerBDIntegrator"
         self._reaction_handler = "Gillespie"
         # todo this should probably (default) determined depending on whether top reactions were defined
         self._evaluate_topology_reactions = True
         self._simulation_scheme = "DefaultScheme"
-        self._simulation = _Simulation()
-        self._simulation.set_kernel(kernel)
 
         if kernel == "CPU":
             self._kernel_configuration = _CPUKernelConfiguration()
@@ -60,10 +61,6 @@ class Simulation(object):
             self._simulation_scheme = value
         else:
             raise ValueError("Simulation scheme value can only be one of \"DefaultScheme\" and \"AdvancedScheme\".")
-
-    @property
-    def reaction_diffusion_system(self):
-        return self._reaction_diffusion_system
 
     @property
     def kernel_configuration(self):
