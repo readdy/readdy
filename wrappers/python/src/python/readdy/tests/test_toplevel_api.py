@@ -135,3 +135,25 @@ class TestTopologies(ReaDDyTestCase):
         rdf.add_species("A")
         sim = rdf.simulation("CPU")
         sim.add_particles("A", np.random.random((3, 10000)))
+
+    def test_add_topology(self):
+        rdf = readdy.ReactionDiffusionSystem()
+        rdf.box_size = [10., 10., 10.]
+        rdf.topologies.add_type("toptype")
+        rdf.add_topology_species("TopA")
+        rdf.add_topology_species("TopB")
+        sim = rdf.simulation(kernel="SingleCPU")
+        top1positions = np.random.random((3, 4))
+        topology1 = sim.add_topology("toptype", "TopA", top1positions)
+        for i, v in enumerate(topology1.get_graph().get_vertices()):
+            np.testing.assert_equal("TopA", topology1.particle_type_of_vertex(v))
+            np.testing.assert_equal(readdy.api.utils.vec3_of(top1positions[:, i]), topology1.position_of_vertex(v))
+        top2_types = ["TopB"] + ["TopA" for _ in range(9)]
+        top2positions = np.random.random((3, 10))
+        topology2 = sim.add_topology("toptype", top2_types, top2positions)
+        for i, v in enumerate(topology2.get_graph().get_vertices()):
+            np.testing.assert_equal(readdy.api.utils.vec3_of(top2positions[:, i]), topology2.position_of_vertex(v))
+            if i == 0:
+                np.testing.assert_equal("TopB", topology2.particle_type_of_vertex(v))
+            else:
+                np.testing.assert_equal("TopA", topology2.particle_type_of_vertex(v))

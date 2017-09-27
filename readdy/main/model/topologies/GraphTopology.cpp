@@ -317,7 +317,7 @@ Particle GraphTopology::particleForVertex(const vertex &vertex) const {
     if(!_stateModel) {
         throw std::logic_error("Cannot fetch particle if not state model was provided!");
     }
-    return _stateModel->getParticleForIndex(vertex.particleIndex);
+    return _stateModel->getParticleForIndex(getParticles().at(vertex.particleIndex));
 }
 
 

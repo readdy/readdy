@@ -264,12 +264,29 @@ class Simulation(object):
 
     def add_particles(self, type, positions):
         """
+        Adds particles of a certain type to the simulation box.
 
-        :param type:
-        :param positions:
+        :param type: type of the particles
+        :param positions: (3, N)-shaped nd-array of positions
         """
         assert positions.shape[0] == 3, "shape[0] has to be 3 but was {}".format(positions.shape[0])
         self._simulation.add_particles(type, positions)
+
+    def add_topology(self, topology_type, particle_types, positions):
+        """
+        Creates and returns a topology by adding `N` topology particles of given type(s) to the simulation.
+        Afterwards the connectivity needs to be set.
+
+        :param topology_type: the topology type
+        :param particle_types: either a list of types of length `N` or a single string which is then applied as type
+                               for all given positions
+        :param positions: (3, N)-shaped nd-array of positions
+        :return: the topology object
+        """
+        assert positions.shape[0] == 3, "shape[0] has to be 3 but was {}".format(positions.shape[0])
+        if isinstance(particle_types, str):
+            particle_types = [particle_types]
+        return self._simulation.add_topology(topology_type, particle_types, positions)
 
     def run(self, n_steps, timestep):
         """

@@ -171,7 +171,24 @@ void exportApi(py::module &api) {
             .def("add_topology", [](sim &self, const std::string &name,
                                     const std::vector<readdy::model::TopologyParticle> &particles) {
                 return self.addTopology(name, particles);
-            }, rvp::reference, "type"_a, "particles"_a)
+            }, rvp::reference_internal, "type"_a, "particles"_a)
+            .def("add_topology", [](sim &self, const std::string &name, const std::vector<std::string> &types,
+                                    const py::array_t<readdy::scalar> &positions) {
+                auto nParticles = positions.shape(1);
+                auto nTypes = types.size();
+                if(nParticles != nTypes && nTypes != 1) {
+                    throw std::invalid_argument(fmt::format("the number of particles ({}) must be equal to the "
+                                                                    "number of types ({})!", nParticles, nTypes));
+                }
+                std::vector<readdy::model::TopologyParticle> particles;
+                for(std::size_t i = 0; i < nParticles; ++i) {
+                    auto type =  nTypes != 1 ? types[i] : types[0];
+                    particles.push_back(self.createTopologyParticle(type, readdy::Vec3(positions.at(0, i),
+                                                                                       positions.at(1, i),
+                                                                                       positions.at(2, i))));
+                }
+                return self.addTopology(name, particles);
+            }, rvp::reference_internal)
             .def("current_topologies", &sim::currentTopologies)
             .def("set_kernel", static_cast<void (sim::*)(const std::string&)>(&sim::setKernel), "name"_a)
             .def_property("context", [](sim &self) -> readdy::model::Context & {
