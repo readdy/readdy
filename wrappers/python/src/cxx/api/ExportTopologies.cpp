@@ -180,11 +180,55 @@ void exportTopologies(py::module &m) {
 
                 :return: the particles
             )topdoc")
-            .def("particle_of_vertex", &topology::particleForVertex, R"topdoc(
-                Retrieves the particle corresponding to a vertex of the topology's graph.
+            .def("particle_type_of_vertex", [](const topology &self, const vertex &v) -> std::string {
+                return self.context().particle_types().name_of(self.particleForVertex(v).getType());
+            }, R"topdoc(
+               Retrieves the particle type corresponding to a vertex.
 
-                :return: the particle
+               :param v: the vertex
+               :return: the particle type
             )topdoc")
+            .def("position_of_vertex", [](const topology &self, const vertex &v) -> readdy::Vec3 {
+                return self.particleForVertex(v).getPos();
+            }, R"topdoc(
+                Retrieves the position of the particle corresponding to the given vertex.
+
+                :param v: the vertex
+                :return: the position
+            )topdoc")
+            .def("particle_id_of_vertex", [](const topology &self, const vertex &v) -> readdy::model::Particle::id_type {
+                return self.particleForVertex(v).getId();
+            }, R"topdoc(
+                Retrieves the id of the particle corresponding to the given vertex.
+
+                :param v: the vertex
+                :return: the id
+            )topdoc")
+            .def("particle_type_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> std::string {
+                return self.context().particle_types().name_of(self.particleForVertex(v).getType());
+            }, R"topdoc(
+               Retrieves the particle type corresponding to a vertex.
+
+               :param v: the vertex
+               :return: the particle type
+            )topdoc")
+            .def("position_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::Vec3 {
+                return self.particleForVertex(v).getPos();
+            }, R"topdoc(
+                Retrieves the position of the particle corresponding to the given vertex.
+
+                :param v: the vertex
+                :return: the position
+            )topdoc")
+            .def("particle_id_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> readdy::model::Particle::id_type {
+                return self.particleForVertex(v).getId();
+            }, R"topdoc(
+                Retrieves the id of the particle corresponding to the given vertex.
+
+                :param v: the vertex
+                :return: the id
+            )topdoc")
+
             .def("configure", &topology::configure)
             .def("validate", &topology::validate);
 

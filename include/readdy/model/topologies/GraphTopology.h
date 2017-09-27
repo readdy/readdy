@@ -51,6 +51,7 @@ public:
     using topology_reaction_rate = scalar;
     using topology_reaction_rates = std::vector<topology_reaction_rate>;
     using types_vec = std::vector<particle_type_type>;
+    using vertex = graph::Vertex;
 
     /**
      * Creates a new graph topology. An internal graph object will be created with vertices corresponding to the
@@ -123,6 +124,8 @@ public:
     const model::Context &context() const;
 
     std::vector<Particle> fetchParticles() const;
+
+    Particle particleForVertex(const vertex &vertex) const;
 
     Particle particleForVertex(topology_graph::vertex_ref vertexRef) const;
 

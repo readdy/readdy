@@ -310,14 +310,17 @@ std::vector<Particle> GraphTopology::fetchParticles() const {
 }
 
 Particle GraphTopology::particleForVertex(graph::Graph::vertex_ref vertexRef) const {
+    return particleForVertex(*vertexRef);
+}
+
+Particle GraphTopology::particleForVertex(const vertex &vertex) const {
     if(!_stateModel) {
         throw std::logic_error("Cannot fetch particle if not state model was provided!");
     }
-    return _stateModel->getParticleForIndex(vertexRef->particleIndex);
+    return _stateModel->getParticleForIndex(vertex.particleIndex);
 }
 
 
 }
 }
 }
-

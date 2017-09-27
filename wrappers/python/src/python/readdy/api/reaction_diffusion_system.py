@@ -30,6 +30,7 @@ from readdy._internal.readdybinding.api import Context as _Context
 from readdy._internal.readdybinding.api import ParticleTypeFlavor as _ParticleTypeFlavor
 from readdy.api.registry.compartments import Compartments as _Compartments
 from readdy.api.registry.topologies import TopologyRegistry as _TopologyRegistry
+from readdy.api.registry.potentials import PotentialRegistry as _PotentialRegistry
 from readdy.api.simulation import Simulation
 
 
@@ -37,6 +38,7 @@ class ReactionDiffusionSystem(object):
     def __init__(self):
         self._context = _Context()
         self._topology_registry = _TopologyRegistry(self._context.topologies)
+        self._potential_registry = _PotentialRegistry(self._context.potentials)
 
     @property
     def kbt(self):
