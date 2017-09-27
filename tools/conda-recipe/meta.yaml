@@ -5,8 +5,6 @@ source:
   path: ../..
 
 build:
-  #number: 0
-  #string: py{{ environ.get('PY_VER').replace('.', '') }}_0
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 1) }}
   {% if environ.get('GIT_DESCRIBE_NUMBER', '0') == '0' %}string: py{{ environ.get('PY_VER').replace('.', '') }}_0
   {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
@@ -22,14 +20,10 @@ build:
 requirements:
   build:
     - cmake # [not win]
-    - curl
     - python
-    - h5py
     - hdf5
     - bzip2
     - numpy
-    - matplotlib
-    - networkx
     - zlib 1.2.*
     - vs2015_runtime  # [win]
 
@@ -39,16 +33,10 @@ requirements:
     - h5py
     - hdf5
     - networkx
+    - matplotlib
     - zlib 1.2.*
     - vs2015_runtime  # [win]
 
 test:
   requires:
-    - python
-    - numpy
     - nose
-    - h5py
-    - hdf5
-    - matplotlib
-    - networkx
-    - zlib 1.2.*
