@@ -79,8 +79,6 @@ public:
 
     virtual std::vector<top::GraphTopology*> getTopologies() = 0;
 
-    // virtual const top::GraphTopology* getTopology(std::size_t index) const = 0;
-
     virtual top::GraphTopology const* getTopologyForParticle(top::Topology::particle_index particle) const = 0;
 
     virtual top::GraphTopology* getTopologyForParticle(top::Topology::particle_index particle) = 0;

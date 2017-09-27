@@ -382,10 +382,10 @@ TEST_P(TestTopologyGraphs, DihedralPotentialSteeperAngle) {
 
 TEST(TestTopologyGraphs, TestAppendParticle) {
     using namespace readdy;
-    api::PotentialConfiguration potentialConfiguration;
-    potentialConfiguration.pairPotentials[std::make_tuple(0, 0)].emplace_back();
-    potentialConfiguration.pairPotentials[std::make_tuple(0, 1)].emplace_back();
-    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, potentialConfiguration};
+    model::Context context;
+    context.topology_registry().potential_configuration().pairPotentials[std::make_tuple(0, 0)].emplace_back();
+    context.topology_registry().potential_configuration().pairPotentials[std::make_tuple(0, 1)].emplace_back();
+    model::top::GraphTopology gt {0, {10, 1, 200}, {0, 0, 0}, context};
     {
         auto it = gt.graph().vertices().begin();
         auto it2 = ++gt.graph().vertices().begin();

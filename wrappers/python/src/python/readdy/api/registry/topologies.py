@@ -28,6 +28,7 @@ Created on 26.09.17
 from readdy._internal.readdybinding.api import AnglePotentialConfiguration as _AnglePotentialConfiguration
 from readdy._internal.readdybinding.api import BondedPotentialConfiguration as _BondedPotentialConfiguration
 from readdy._internal.readdybinding.api import TorsionPotentialConfiguration as _TorsionPotentialConfiguration
+import readdy._internal.readdybinding.api.top as _top
 
 
 class TopologyRegistry(object):
@@ -127,3 +128,17 @@ class TopologyRegistry(object):
         :param radius: the radius
         """
         self._registry.add_spatial_reaction(descriptor, rate, radius)
+
+    def add_structural_reaction(self, topology_type, reaction_function, rate_function,
+                                raise_if_invalid=True, expect_connected=False):
+        fun1, fun2 = _top.ReactionFunction(reaction_function), _top.RateFunction(rate_function)
+        reaction = _top.StructuralTopologyReaction(fun1, fun2)
+        if raise_if_invalid:
+            reaction.raise_if_invalid()
+        else:
+            reaction.roll_back_if_invalid()
+        if expect_connected:
+            reaction.expect_connected_after_reaction()
+        else:
+            reaction.create_child_topologies_after_reaction()
+        self._registry.add_structural_reaction(topology_type, reaction)

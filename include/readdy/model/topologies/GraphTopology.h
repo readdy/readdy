@@ -57,10 +57,10 @@ public:
      * @param type the type
      * @param particles the particles
      * @param types particle's types
-     * @param config the configuration table
+     * @param context the kernel's context
      */
     GraphTopology(topology_type_type type, const particle_indices &particles, const types_vec &types,
-                  const api::PotentialConfiguration &config);
+                  const model::Context &context);
 
     /**
      * Will create a graph topology out of an already existing graph and a list of particles, where the i-th vertex
@@ -68,10 +68,10 @@ public:
      * @param type the type
      * @param particles the particles list
      * @param graph the already existing graph
-     * @param config the configuration table
+     * @param the kernel's context
      */
     GraphTopology(topology_type_type type, particle_indices &&particles, topology_graph &&graph,
-                  const api::PotentialConfiguration &config);
+                  const model::Context &context);
 
     virtual ~GraphTopology() = default;
 
@@ -116,10 +116,12 @@ public:
     topology_graph::vertex_ref vertexForParticle(particle_index particle);
 
     const topology_reaction_rates &rates() const;
+    
+    const model::Context &context() const;
 
 protected:
     topology_graph graph_;
-    std::reference_wrapper<const api::PotentialConfiguration> config;
+    std::reference_wrapper<const model::Context> _context;
     topology_reaction_rates _reaction_rates;
     topology_reaction_rate _cumulativeRate;
     topology_type_type _topology_type;

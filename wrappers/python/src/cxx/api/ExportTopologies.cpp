@@ -103,7 +103,7 @@ void exportTopologies(py::module &m) {
 
     py::class_<reaction_recipe>(m, "Recipe")
             .def(py::init<topology&>())
-            .def("change_particle_type", [](reaction_recipe &self, const std::size_t vertex_index, const readdy::particle_type_type to) {
+            .def("change_particle_type", [](reaction_recipe &self, const std::size_t vertex_index, const std::string &to) {
                 auto it = self.topology().graph().vertices().begin();
                 std::advance(it, vertex_index);
                 return self.changeParticleType(it, to);

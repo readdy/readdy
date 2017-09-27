@@ -123,8 +123,7 @@ readdy::model::top::GraphTopology *const SCPUStateModel::addTopology(topology_ty
         types.push_back(p.getType());
     }
     auto it = _topologies.emplace_back(
-            std::make_unique<topology>(type, std::move(ids), std::move(types),
-                                       _context.get().topology_registry().potential_configuration())
+            std::make_unique<topology>(type, std::move(ids), std::move(types), _context.get())
     );
     const auto idx = std::distance(topologies().begin(), it);
     for(const auto p : (*it)->getParticles()) {
