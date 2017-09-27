@@ -47,6 +47,7 @@ using obs_handle_t = readdy::ObservableHandle;
 
 inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
                                                  const py::object& callback = py::none()) {
+    self.currentContext().recordReactionsWithPositions() = true;
     if (callback.is_none()) {
         return self.registerObservable<readdy::model::observables::Reactions>(stride);
     } else {
@@ -57,6 +58,7 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
 
 inline obs_handle_t registerObservable_ReactionCounts(sim &self, unsigned int stride,
                                                       const py::object& callback = py::none()) {
+    self.currentContext().recordReactionCounts() = true;
     if (callback.is_none()) {
         return self.registerObservable<readdy::model::observables::ReactionCounts>(stride);
     } else {

@@ -120,4 +120,12 @@ class TestTopologies(ReaDDyTestCase):
         rdf = readdy.ReactionDiffusionSystem()
         rdf.add_species("A")
         simulation = rdf.simulation("CPU")
+        # todo run this and check if callback can be called
         simulation.observe.rdf(5, [0., 1., 2.], ["A"], "A", 10)
+        simulation.observe.forces(5)
+        simulation.observe.number_of_particles(5)
+        simulation.observe.particle_positions(5)
+        simulation.observe.particles(5)
+        simulation.observe.reaction_counts(5)
+        simulation.observe.reactions(5)
+        simulation.run(10, .1)

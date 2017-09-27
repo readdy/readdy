@@ -180,8 +180,13 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &evaluateTopologyReactions() {
-        scheme->evaluateTopologyReactions = scheme->kernel->template createAction<SimulationScheme::evaluate_topology_reactions>(0.);
+    SchemeConfigurator &evaluateTopologyReactions(bool evaluate = true) {
+        if(evaluate) {
+            scheme->evaluateTopologyReactions = scheme->kernel->template createAction<SimulationScheme::evaluate_topology_reactions>(
+                    0.);
+        } else {
+            scheme->evaluateTopologyReactions = nullptr;
+        }
         return *this;
     }
 
@@ -342,8 +347,13 @@ public:
         return *this;
     }
 
-    SchemeConfigurator &evaluateTopologyReactions() {
-        scheme->evaluateTopologyReactions = scheme->kernel->template createAction<SimulationScheme::evaluate_topology_reactions>(0.);
+    SchemeConfigurator &evaluateTopologyReactions(bool evaluate = true) {
+        if(evaluate) {
+            scheme->evaluateTopologyReactions = scheme->kernel->template createAction<SimulationScheme::evaluate_topology_reactions>(
+                    0.);
+        } else {
+            scheme->evaluateTopologyReactions = nullptr;
+        }
         return *this;
     }
 
