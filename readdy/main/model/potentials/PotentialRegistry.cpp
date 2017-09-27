@@ -297,16 +297,16 @@ PotentialRegistry::addSphereIn(particle_type_type particleType, scalar forceCons
 }
 
 PotentialRegistry::id_type
-PotentialRegistry::addSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius,
-                                       scalar height, scalar width) {
-    return addSphericalBarrier(_types.get()(particleType), origin, radius, height, width);
+PotentialRegistry::addSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
+                                       scalar radius) {
+    return addSphericalBarrier(_types.get()(particleType), height, width, origin, radius);
 }
 
 PotentialRegistry::id_type
-PotentialRegistry::addSphericalBarrier(particle_type_type particleType, const Vec3 &origin, scalar radius,
-                                       scalar height, scalar width) {
+PotentialRegistry::addSphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin,
+                                       scalar radius) {
     auto &pots = potentialO1RegistryInternal[particleType];
-    pots.emplace_back(std::make_shared<SphericalBarrier>(particleType, origin, radius, height, width));
+    pots.emplace_back(std::make_shared<SphericalBarrier>(particleType, height, width, origin, radius));
     return pots.back()->getId();
 }
 

@@ -33,6 +33,8 @@ from readdy.api.registry.topologies import TopologyRegistry as _TopologyRegistry
 from readdy.api.registry.potentials import PotentialRegistry as _PotentialRegistry
 from readdy.api.simulation import Simulation
 
+__all__ = ['ReactionDiffusionSystem']
+
 
 class ReactionDiffusionSystem(object):
     def __init__(self):
@@ -158,6 +160,10 @@ class ReactionDiffusionSystem(object):
     @property
     def topologies(self):
         return self._topology_registry
+
+    @property
+    def potentials(self):
+        return self._potential_registry
 
     def simulation(self, kernel="SingleCPU"):
         """

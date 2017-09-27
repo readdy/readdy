@@ -231,7 +231,7 @@ void SphereOut::calculateForceAndEnergy(Vec3 &force, scalar &energy, const Vec3 
     }
 }
 
-SphericalBarrier::SphericalBarrier(particle_type_type particleType, const Vec3 &origin, scalar radius, scalar height, scalar width)
+SphericalBarrier::SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius)
         : super(particleType), origin(origin), radius(radius), height(height), width(width), r1(radius - width), r2(radius - width / static_cast<scalar>(2.)),
           r3(radius + width / static_cast<scalar>(2.)), r4(radius + width), effectiveForceConstant(static_cast<scalar>(4.) * height / width / width) {
     if (width > radius) {

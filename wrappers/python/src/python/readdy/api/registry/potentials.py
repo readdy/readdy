@@ -32,6 +32,7 @@ from readdy._internal.readdybinding.common import Vec as _v3
 def _v3_of(value):
     if isinstance(value, _v3):
         return value
+    assert isinstance(value, (list, tuple, _np.ndarray, )), "value {} was not list, tuple, or ndarray".format(value)
     if isinstance(value, _np.ndarray):
         if value.squeeze().ndim != 1:
             raise ValueError("Invalid shape for vector!")
@@ -104,6 +105,7 @@ class PotentialRegistry(object):
         :param epsilon: epsilon value
         :param sigma: sigma value
         """
+        assert isinstance(shift, bool), "shift can only be bool"
         self._registry.add_lennard_jones(particle_type1, particle_type2, m, n, cutoff, shift, epsilon, sigma)
 
     def add_screened_electrostatics(self, particle_type1, particle_type2, electrostatic_strength,
@@ -112,15 +114,59 @@ class PotentialRegistry(object):
         Adds a screened electrostatics potential between pairs of particles of type `particle_type1` and
         `particle_type2`.
 
-        :param particle_type1:
-        :param particle_type2:
-        :param electrostatic_strength:
-        :param inverse_screening_depth:
-        :param repulsion_strength:
-        :param repulsion_distance:
-        :param exponent:
-        :param cutoff:
+        :param particle_type1: first particle type
+        :param particle_type2: second particle type
+        :param electrostatic_strength: the electrostatic strength
+        :param inverse_screening_depth: the inverse screening depth
+        :param repulsion_strength: the repulsion strength
+        :param repulsion_distance: the repulsion distance
+        :param exponent: the exponent
+        :param cutoff: the cutoff radius
         """
         self._registry.add_screened_electrostatics(particle_type1, particle_type2, electrostatic_strength,
                                                    inverse_screening_depth, repulsion_strength, repulsion_distance,
                                                    exponent, cutoff)
+
+    def add_sphere_out(self, particle_type, force_constant, origin, radius):
+        """
+        Adds a spherical potential that keeps particles of a certain type excluded from the inside of the
+        specified sphere.
+
+        :param particle_type: the particle type
+        :param force_constant: strength of the potential
+        :param origin: origin of the sphere
+        :param radius: radius of the sphere
+        """
+        assert radius > 0, "radius has to be positive"
+        self._registry.add_sphere_out(particle_type, force_constant, _v3_of(origin), radius)
+
+    def add_sphere_in(self, particle_type, force_constant, origin, radius):
+        """
+        Adds a spherical potential that keeps particles of a certain type restrained to the inside of the
+        specified sphere.
+
+        :param particle_type: the particle type
+        :param force_constant: strength of the potential
+        :param origin: origin of the sphere
+        :param radius: radius of the sphere
+        """
+        assert radius > 0, "radius has to be positive"
+        self._registry.add_sphere_in(particle_type, force_constant, _v3_of(origin), radius)
+
+    def add_spherical_barrier(self, particle_type, height, width, origin, radius):
+        """
+        A potential that forms a concentric barrier at a certain radius around a given origin. It is given a height
+        (in terms of energy) and a width. Note that the height can also be negative, then this potential acts as
+        a 'sticky' sphere. The potential consists of harmonic snippets, such that the energy landscape is continuous
+        and differentiable, the force is only continuous and not differentiable.
+
+        :param particle_type: the particle type
+        :param height: the height of the barrier
+        :param width: the width of the barrier
+        :param origin: the origin of the sphere
+        :param radius: the radius of the sphere
+        """
+        assert radius > 0, "radius has to be positive"
+        assert height > 0, "height has to be positive"
+        assert width > 0, "width has to be positive"
+        self._registry.add_spherical_barrier(particle_type, height, width, _v3_of(origin), radius)

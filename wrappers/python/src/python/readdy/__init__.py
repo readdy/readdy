@@ -19,5 +19,10 @@
 # Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from . import api
-from . import util
+from .api.reaction_diffusion_system import *
+from .api.simulation import *
+
+# elevate reaction recipe
+from ._internal.readdybinding.api.top import Recipe as StructuralReactionRecipe
+
+__all__ = ['api', 'util']

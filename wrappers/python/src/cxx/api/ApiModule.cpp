@@ -121,8 +121,8 @@ void exportApi(py::module &api) {
                  "origin"_a, "radius"_a)
             .def("register_potential_sphere_out", &sim::registerSphereOutPotential, "particle_type"_a,
                  "force_constant"_a, "origin"_a, "radius"_a)
-            .def("register_potential_spherical_barrier", &sim::registerSphericalBarrier, "particle_type"_a, "origin"_a,
-                 "radius"_a, "height"_a, "width"_a)
+            .def("register_potential_spherical_barrier", &sim::registerSphericalBarrier, "particle_type"_a, "height"_a,
+                 "width"_a, "origin"_a, "radius"_a)
             .def("register_potential_lennard_jones", &sim::registerLennardJonesPotential, "particle_type_a"_a,
                  "particle_type_b"_a, "exponent_m"_a, "exponent_n"_a, "cutoff"_a, "shift"_a, "epsilon"_a, "sigma"_a)
             .def("register_potential_screened_electrostatics", &sim::registerScreenedElectrostaticsPotential,

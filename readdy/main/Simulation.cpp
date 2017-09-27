@@ -187,11 +187,10 @@ Simulation::registerSphereOutPotential(const std::string &particleType, scalar f
 }
 
 const short
-Simulation::registerSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height,
-                                     scalar width) {
+Simulation::registerSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
+                                     scalar radius) {
     ensureKernelSelected();
-    return pimpl->kernel->context().potentials().addSphericalBarrier(particleType, origin, radius, height,
-                                                                              width);
+    return pimpl->kernel->context().potentials().addSphericalBarrier(particleType, height, width, origin, radius);
 }
 
 void Simulation::ensureKernelSelected() const {

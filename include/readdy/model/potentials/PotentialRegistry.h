@@ -128,11 +128,11 @@ public:
 
     id_type addSphereIn(particle_type_type particleType, scalar forceConstant, const Vec3 &origin, scalar radius);
 
-    id_type addSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius, scalar height,
-                                scalar width);
+    id_type addSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
+                                scalar radius);
 
-    id_type addSphericalBarrier(particle_type_type particleType, const Vec3 &origin, scalar radius, scalar height,
-                                scalar width);
+    id_type addSphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin,
+                                scalar radius);
 
     void remove(Potential::id_type handle);
 

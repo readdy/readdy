@@ -121,7 +121,7 @@ protected:
 class SphericalBarrier : public PotentialOrder1 {
     using super = PotentialOrder1;
 public:
-    SphericalBarrier(particle_type_type particleType, const Vec3 &origin, scalar radius, scalar height, scalar width);
+    SphericalBarrier(particle_type_type particleType, scalar height, scalar width, const Vec3 &origin, scalar radius);
 
     virtual readdy::scalar getRelevantLengthScale() const noexcept override;
 

@@ -321,7 +321,7 @@ TEST_P(TestPotentials, SphericalBarrier) {
     double radius = 1.;
     double height = 2.;
     double width = 0.3;
-    kernel->context().potentials().addSphericalBarrier("A", origin, radius, height, width);
+    kernel->context().potentials().addSphericalBarrier("A", height, width, origin, radius);
     // record ids to get data-structure-indexes of the two particles later on
     auto pObs = kernel->createObservable<readdy::model::observables::Particles>(1);
     std::vector<readdy::model::Particle::id_type> ids;

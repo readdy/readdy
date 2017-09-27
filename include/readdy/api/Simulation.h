@@ -268,8 +268,8 @@ public:
      * @return a uuid with which the potential can be removed
      */
     const short
-    registerSphericalBarrier(const std::string &particleType, const Vec3 &origin, scalar radius,
-                             scalar height, scalar width);
+    registerSphericalBarrier(const std::string &particleType, scalar height, scalar width, const Vec3 &origin,
+                             scalar radius);
 
     //----------------------
     // Order 2 potentials
