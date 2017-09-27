@@ -269,7 +269,7 @@ class Simulation(object):
         :param positions:
         """
         assert positions.shape[0] == 3, "shape[0] has to be 3 but was {}".format(positions.shape[0])
-
+        self._simulation.add_particles(type, positions)
 
     def run(self, n_steps, timestep):
         """
