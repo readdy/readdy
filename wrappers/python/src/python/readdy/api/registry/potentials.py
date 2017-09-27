@@ -26,22 +26,7 @@ Created on 26.09.17
 """
 
 import numpy as _np
-from readdy._internal.readdybinding.common import Vec as _v3
-
-
-def _v3_of(value):
-    if isinstance(value, _v3):
-        return value
-    assert isinstance(value, (list, tuple, _np.ndarray, )), "value {} was not list, tuple, or ndarray".format(value)
-    if isinstance(value, _np.ndarray):
-        if value.squeeze().ndim != 1:
-            raise ValueError("Invalid shape for vector!")
-        value = value.astype(float).squeeze().tolist()
-    value = list(value)
-    if len(value) != 3:
-        raise ValueError("Length of vector can only be 3 but was {}.".format(len(value)))
-    return _v3(*value)
-
+from readdy.api.utils import vec3_of as _v3_of
 
 class PotentialRegistry(object):
     def __init__(self, context_top_registry):

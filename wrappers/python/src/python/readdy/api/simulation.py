@@ -28,23 +28,37 @@ from readdy.api.conf.KernelConfiguration import CPUKernelConfiguration as _CPUKe
 from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOPKernelConfiguration
 from readdy.api.registry.observables import Observables as _Observables
 from readdy._internal.readdybinding.api import Simulation as _Simulation
+from readdy.api.utils import vec3_of as _v3_of
 
 class Simulation(object):
 
-    def __init__(self, kernel, context):
+    def __init__(self, kernel, context, output_file="", integrator="EulerBDIntegrator", reaction_handler="Gillespie",
+                 evaluate_topology_reactions=True, evaluate_forces=True, evaluate_observables=True, skin=0):
+        """
+        Creates a new simulation object
+        :param kernel: the kernel to use
+        :param context: the parent low level context object
+        :param output_file: the output file
+        :param integrator: the integrator
+        :param reaction_handler: the reaction handler
+        :param evaluate_topology_reactions: whether to evaluate topology reactions
+        :param evaluate_forces: whether to evaluate forces
+        :param evaluate_observables: whether to evaluate observables
+        :param skin: the skin size for neighbor lists
+        """
         self._kernel = kernel
         self._simulation = _Simulation()
         self._simulation.set_kernel(kernel)
         self._simulation.context = context
 
-        self._output_file = ""
+        self._output_file = output_file
         self._observables = _Observables(self)
-        self._integrator = "EulerBDIntegrator"
-        self._reaction_handler = "Gillespie"
-        self._evaluate_topology_reactions = True
-        self._evaluate_forces = True
-        self._evaluate_observables = True
-        self._skin = 0
+        self._integrator = integrator
+        self._reaction_handler = reaction_handler
+        self._evaluate_topology_reactions = evaluate_topology_reactions
+        self._evaluate_forces = evaluate_forces
+        self._evaluate_observables = evaluate_observables
+        self._skin = skin
         self._simulation_scheme = "ReaDDyScheme"
 
         if kernel == "CPU":
@@ -239,16 +253,23 @@ class Simulation(object):
         handle = self._simulation.register_observable_flat_trajectory(stride)
         self._observables._observable_handles.append((name, chunk_size, handle))
 
-    def _create_scheme(self, timestep):
-        if self.output_file is not None and len(self.output_file) > 0:
-            return
-        return self._simulation.run_scheme_readdy(True) \
-            .with_integrator(self.integrator) \
-            .include_forces(self.evaluate_forces) \
-            .evaluate_topology_reactions(self.evaluate_topology_reactions) \
-            .with_reaction_scheduler(self.reaction_handler) \
-            .evaluate_observables(self.evaluate_observables) \
-            .configure(timestep)
+    def add_particle(self, type, position):
+        """
+        Adds a particle of a certain type to a certain position in the simulation box.
+
+        :param type: the type
+        :param position: the position (ndarray or tuple or list of length 3)
+        """
+        self._simulation.add_particle(type, _v3_of(position))
+
+    def add_particles(self, type, positions):
+        """
+
+        :param type:
+        :param positions:
+        """
+        assert positions.shape[0] == 3, "shape[0] has to be 3 but was {}".format(positions.shape[0])
+
 
     def run(self, n_steps, timestep):
         """

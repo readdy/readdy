@@ -26,10 +26,7 @@ Created on 26.09.17
 @author: chrisfroe
 """
 
-import numpy as _np
-
-import readdy._internal.readdybinding.common as _common
-
+from readdy.api.utils import vec3_of as _v3_of
 
 class CompartmentRegistry(object):
     def __init__(self, context_compartments):
@@ -63,16 +60,9 @@ class CompartmentRegistry(object):
             raise ValueError("name must be a string")
         if not radius > 0.:
             raise ValueError("radius must be positive")
-        if isinstance(origin, _np.ndarray):
-            if origin.squeeze().ndim != 1:
-                raise ValueError("Invalid shape for origin!")
-            origin = origin.astype(float).squeeze().tolist()
-        origin = list(origin)
-        if len(origin) != 3:
-            raise ValueError("Invalid length for origin! Length can only be 3 but was {}.".format(len(origin)))
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
-        self._compartments.add_sphere(conversions, name, _common.Vec(*origin), radius, larger_or_less)
+        self._compartments.add_sphere(conversions, name, _v3_of(origin), radius, larger_or_less)
 
     def add_plane(self, conversions, name, normal_coefficients, distance, larger_or_less=True):
         """
@@ -101,12 +91,6 @@ class CompartmentRegistry(object):
             raise ValueError("name must be a string")
         if not distance >= 0.:
             raise ValueError("distance must be non-negative")
-        normal_coefficients = _np.array(normal_coefficients, dtype=float)
-        if normal_coefficients.squeeze().shape != (3,):
-            raise ValueError("normal_coefficients must have 3 elements")
-        norm = _np.sqrt(_np.sum(normal_coefficients * normal_coefficients))
-        if abs(norm - 1.) > 0.0001:
-            raise ValueError("normal_coefficients must be a unit vector")
         if not isinstance(larger_or_less, bool):
             raise ValueError("larger_or_less must be a bool")
-        self._compartments.add_plane(conversions, name, _common.Vec(*normal_coefficients), distance, larger_or_less)
+        self._compartments.add_plane(conversions, name, _v3_of(normal_coefficients), distance, larger_or_less)

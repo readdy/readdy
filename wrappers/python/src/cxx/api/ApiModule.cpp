@@ -106,6 +106,12 @@ void exportApi(py::module &api) {
             .def("add_particle", [](sim &self, const std::string &type, const vec &pos) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
             }, "type"_a, "pos"_a)
+            .def("add_particles", [](sim &self, const std::string &type, const py::array_t<readdy::scalar> &particles) {
+                auto nParticles = particles.shape(1);
+                for(std::size_t i = 0; i < nParticles; ++i) {
+                    self.addParticle(type, particles.at(0, i), particles.at(1, i), particles.at(2, i));
+                }
+            })
             .def("set_kernel_config", &sim::setKernelConfiguration)
             .def("is_kernel_selected", &sim::isKernelSelected)
             .def("get_selected_kernel_type", &getSelectedKernelType)

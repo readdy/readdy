@@ -129,3 +129,9 @@ class TestTopologies(ReaDDyTestCase):
         simulation.observe.reaction_counts(5)
         simulation.observe.reactions(5)
         simulation.run(10, .1)
+
+    def test_add_particles(self):
+        rdf = readdy.ReactionDiffusionSystem()
+        rdf.add_species("A")
+        sim = rdf.simulation("CPU")
+        sim.add_particles("A", np.random.random((3, 10000)))

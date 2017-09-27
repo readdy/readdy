@@ -65,7 +65,7 @@ void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
                  },
                  py::return_value_policy::reference_internal, "reaction_scheduler_name"_a)
             .def("write_config_to_file", &conf::writeConfigToFile, py::return_value_policy::reference_internal, "file"_a)
-            .def("evaluate_topology_reactions", &conf::evaluateTopologyReactions, py::return_value_policy::reference_internal)
+            .def("evaluate_topology_reactions", &conf::evaluateTopologyReactions, py::return_value_policy::reference_internal, "evaluate"_a = true)
             .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal,
                  "do_evaluate"_a = true)
             .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
@@ -105,7 +105,7 @@ void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, cons
                  py::return_value_policy::reference_internal, "reaction_scheduler_name"_a)
             .def("write_config_to_file", &conf::writeConfigToFile, py::return_value_policy::reference_internal, "file"_a)
             .def("evaluate_observables", &conf::evaluateObservables, py::return_value_policy::reference_internal, "do_evaluate"_a = true)
-            .def("evaluate_topology_reactions", &conf::evaluateTopologyReactions, py::return_value_policy::reference_internal)
+            .def("evaluate_topology_reactions", &conf::evaluateTopologyReactions, py::return_value_policy::reference_internal, "evaluate"_a = true)
             .def("with_skin_size", &conf::withSkinSize, py::return_value_policy::reference_internal, "skin_size"_a = -1)
             .def("configure", &conf::configure, "time_step"_a)
             .def("configure_and_run", [](conf& self, const readdy::time_step_type steps, readdy::scalar dt) {
