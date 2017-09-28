@@ -21,7 +21,7 @@
 
 from .api.reaction_diffusion_system import *
 from .api.simulation import *
-from .api.trajectory import *
+from .api.trajectory import Trajectory
 
 # elevate reaction recipe
 from ._internal.readdybinding.api.top import Recipe as StructuralReactionRecipe

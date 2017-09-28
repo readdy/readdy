@@ -203,5 +203,7 @@ class TestTopologies(ReaDDyTestCase):
                 for e_idx, entry in enumerate(frame):
                     pos = recorded[e_idx]
                     np.testing.assert_equal(pos.toarray(), entry.position)
+                    np.testing.assert_equal("NORMAL", entry.flavor)
+                    np.testing.assert_equal("A", entry.type)
         finally:
             shutil.rmtree(dir, ignore_errors=True)

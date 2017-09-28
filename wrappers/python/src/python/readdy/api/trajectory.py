@@ -26,6 +26,7 @@ Created on 28.09.17
 """
 
 import os as _os
+
 import readdy.util.io_utils as _io_utils
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
 
@@ -228,6 +229,20 @@ class Trajectory(object):
         :return: a list of `ReactionInfo` objects
         """
         return self._reactions_order_2
+
+    def convert_to_xyz(self, xyz_filename=None, generate_tcl=True, tcl_with_grid=False, particle_radii=None):
+        """
+        Converts this trajectory to a xyz file that can be read into VMD. Assuming the TCL script was generated, the
+        trajectory can be visualized by `vmd -e traj.xyz.tcl`.
+
+        :param xyz_filename: the output file name, if None, the filename with an .xyz extension will be used
+        :param generate_tcl: generates a tcl script that can be used alongside with the xyz file
+        :param tcl_with_grid: enables a grid view inside VMD
+        :param particle_radii: map particle radii for visualization purposes, e.g., `{"A": 10., "B": .1}`
+        """
+        from readdy.api.utils import convert_trajectory_to_xyz as to_xyz
+        to_xyz(self._filename, self._name, xyz_filename=xyz_filename, generate_tcl=generate_tcl,
+               tcl_with_grid=tcl_with_grid, particle_radii=particle_radii)
 
     def read(self):
         """
