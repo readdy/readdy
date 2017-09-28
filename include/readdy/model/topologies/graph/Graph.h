@@ -64,11 +64,9 @@ public:
     using path_len_2_callback = std::function<void(const path_len_2 &)>;
     using path_len_3_callback = std::function<void(const path_len_3 &)>;
 
-    using vertex_label_mapping = std::unordered_map<std::string, vertex_ref>;
-
     Graph() = default;
 
-    Graph(vertex_list vertexList, vertex_label_mapping vertexLabelMapping);
+    explicit Graph(vertex_list vertexList);
 
     virtual ~Graph() = default;
 
@@ -108,15 +106,9 @@ public:
 
     void removeVertex(vertex_ref vertex);
 
-    void removeVertex(const std::string &name);
-
     void removeParticle(std::size_t particleIndex);
 
     bool isConnected();
-
-    const vertex_label_mapping& vertexLabelMapping() const;
-
-    vertex_label_mapping& vertexLabelMapping();
 
     void findNTuples(const edge_callback &tuple_callback,
                      const path_len_2_callback &triple_callback,
@@ -133,7 +125,6 @@ public:
 
 private:
     vertex_list _vertices {};
-    vertex_label_mapping _vertex_label_mapping{};
 
     void removeNeighborsEdges(vertex_ref vertex);
 

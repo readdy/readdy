@@ -410,6 +410,11 @@ void SCPUEvaluateTopologyReactions::handleTopologyParticleReaction(SCPUStateMode
         throw std::logic_error("this branch should never be reached as topology-topology reactions are "
                                        "handeled in a different method");
     }
+    if(topology->type() == reaction.top_type1()) {
+        topology->type() = reaction.top_type_to1();
+    } else {
+        topology->type() = reaction.top_type_to2();
+    }
     topology->updateReactionRates(context.topology_registry().structural_reactions_of(topology->type()));
     topology->configure();
 }
@@ -428,7 +433,11 @@ void SCPUEvaluateTopologyReactions::handleStructuralReaction(SCPUStateModel::top
         topologies.erase(topologies.begin() + event.topology_idx);
         //log::error("erased topology with index {}", event.topology_idx);
         assert(topology->isDeactivated());
-        move(result.begin(), result.end(), back_inserter(new_topologies));
+        for (auto &it : result) {
+            if(!it.isNormalParticle(*kernel)) {
+                new_topologies.push_back(std::move(it));
+            }
+        }
     } else {
         if (topology->isNormalParticle(*kernel)) {
             kernel->getSCPUKernelStateModel().getParticleData()->entry_at(topology->getParticles().front()).topology_index = -1;
