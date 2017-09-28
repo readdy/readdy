@@ -143,7 +143,8 @@ CPUNParticles::CPUNParticles(CPUKernel *const kernel, unsigned int stride, std::
 void CPUNParticles::evaluate() {
     std::vector<unsigned long> resultVec = {};
     if (typesToCount.empty()) {
-        resultVec.push_back(kernel->getCPUKernelStateModel().getParticleData()->size());
+        const auto data = kernel->getCPUKernelStateModel().getParticleData();
+        resultVec.push_back(data->size() - data->getNDeactivated());
     } else {
         resultVec.resize(typesToCount.size());
         const auto &pd = kernel->getCPUKernelStateModel().getParticleData();
