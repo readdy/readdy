@@ -24,6 +24,9 @@ Created on 26.09.17
 
 @author: clonker
 """
+import shutil
+import tempfile
+import os
 
 import numpy as np
 
@@ -156,3 +159,49 @@ class TestTopologies(ReaDDyTestCase):
                 np.testing.assert_equal("TopB", topology2.particle_type_of_vertex(v))
             else:
                 np.testing.assert_equal("TopA", topology2.particle_type_of_vertex(v))
+
+    def test_write_traj(self):
+        dir = tempfile.mkdtemp("test-io")
+        try:
+            traj_fname = os.path.join(dir, "traj.h5")
+
+            rdf = readdy.ReactionDiffusionSystem()
+            rdf.box_size = (10, 10, 10)
+            rdf.add_species("A", diffusion_constant=1.0)
+            rdf.reactions.add_conversion("myconversion", "A", "A", 1.0)
+            rdf.reactions.add_fusion("myfusion", "A", "A", "A", 2, .5)
+            rdf.potentials.add_harmonic_repulsion("A", "A", 1., .2)
+            sim = rdf.simulation(kernel="SingleCPU")
+            sim.output_file = traj_fname
+            sim.record_trajectory(1)
+            sim.add_particles("A", np.random.random((3, 100)))
+            recorded_positions = []
+            sim.observe.particle_positions(1, callback=lambda x: recorded_positions.append(x))
+            sim.run(50, 1e-3)
+
+            traj = readdy.Trajectory(traj_fname)
+
+            np.testing.assert_equal(traj.diffusion_constants["A"], 1.0)
+            np.testing.assert_("A" in traj.particle_types.keys())
+            np.testing.assert_equal(len(traj.reactions_order_1), 1)
+            np.testing.assert_equal(traj.reactions_order_1[0].type, "conversion")
+            np.testing.assert_equal(traj.reactions_order_1[0].name, "myconversion")
+            np.testing.assert_equal(traj.reactions_order_1[0].rate, 1.0)
+            np.testing.assert_equal(traj.reactions_order_1[0].educt_types, ["A"])
+            np.testing.assert_equal(traj.reactions_order_1[0].product_types, ["A"])
+            np.testing.assert_equal(len(traj.reactions_order_2), 1)
+            np.testing.assert_equal(traj.reactions_order_2[0].type, "fusion")
+            np.testing.assert_equal(traj.reactions_order_2[0].name, "myfusion")
+            np.testing.assert_equal(traj.reactions_order_2[0].rate, 2)
+            np.testing.assert_equal(traj.reactions_order_2[0].educt_distance, .5)
+            np.testing.assert_equal(traj.reactions_order_2[0].educt_types, ["A", "A"])
+            np.testing.assert_equal(traj.reactions_order_2[0].product_types, ["A"])
+
+            for idx, frame in enumerate(traj.read()):
+                recorded = recorded_positions[idx]
+                np.testing.assert_equal(len(recorded), len(frame))
+                for e_idx, entry in enumerate(frame):
+                    pos = recorded[e_idx]
+                    np.testing.assert_equal(pos.toarray(), entry.position)
+        finally:
+            shutil.rmtree(dir, ignore_errors=True)

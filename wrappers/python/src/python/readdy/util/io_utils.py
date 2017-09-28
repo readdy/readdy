@@ -74,10 +74,12 @@ def get_reactions_order1(filename, group="readdy/config/registered_reactions"):
     """
     result = []
     with h5py.File(filename, "r") as f:
-        reactions_dir = f[group]
-        order1_dset = reactions_dir["order1_reactions"]
-        for reaction in order1_dset:
-            result.append(np.copy(reaction))
+        if group in f:
+            reactions_dir = f[group]
+            if "order1_reactions" in reactions_dir:
+                order1_dset = reactions_dir["order1_reactions"]
+                for reaction in order1_dset:
+                    result.append(np.copy(reaction))
     return result
 
 
@@ -91,10 +93,12 @@ def get_reactions_order2(filename, group="readdy/config/registered_reactions"):
     """
     result = []
     with h5py.File(filename, "r") as f:
-        reactions_dir = f[group]
-        order2_dset = reactions_dir["order2_reactions"]
-        for reaction in order2_dset:
-            result.append(np.copy(reaction))
+        if group in f:
+            reactions_dir = f[group]
+            if "order2_reactions" in reactions_dir:
+                order2_dset = reactions_dir["order2_reactions"]
+                for reaction in order2_dset:
+                    result.append(np.copy(reaction))
     return result
 
 

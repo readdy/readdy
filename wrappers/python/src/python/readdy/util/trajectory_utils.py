@@ -92,6 +92,7 @@ def to_trajectory_entries_flat(data, time, limits, slice):
         entries.append(frame)
     return entries
 
+
 class TrajectoryReader(object):
     @classmethod
     def data_set_path(cls, name):

@@ -171,6 +171,13 @@ void exportCommon(py::module& common) {
             .def(py::self == py::self)
             .def(py::self != py::self)
             .def(py::self * py::self)
+            .def_property("x", [](const readdy::Vec3 &self) { return self.x; },
+                          [](readdy::Vec3 &self, readdy::scalar x) { self.x = x; })
+            .def_property("y", [](const readdy::Vec3 &self) { return self.y; },
+                          [](readdy::Vec3 &self, readdy::scalar y) { self.y = y; })
+            .def_property("z", [](const readdy::Vec3 &self) { return self.x; },
+                          [](readdy::Vec3 &self, readdy::scalar z) { self.z = z; })
+            .def("toarray", [](const readdy::Vec3 &self) { return self.data; })
             .def("__repr__", [](const readdy::Vec3 &self) {
                 std::ostringstream stream;
                 stream << self;

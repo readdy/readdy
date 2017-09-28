@@ -35,6 +35,7 @@
 #include <pybind11/numpy.h>
 
 #include <fstream>
+#include <utility>
 
 #include <spdlog/fmt/ostr.h>
 
@@ -56,7 +57,7 @@ py::tuple convert_readdy_viewer(const std::string &h5name, const std::string &tr
 
     auto f = h5rd::File::open(h5name, h5rd::File::Flag::READ_ONLY);
 
-    auto particleInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
+    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
 
     // get particle types from config
     std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
@@ -276,9 +277,98 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
     readdy::log::debug("converting finished");
 }
 
+struct TrajectoryParticle {
+    TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
+                       readdy::model::Particle::id_type id)
+            : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id) {}
+    std::string type;
+    std::string flavor;
+    std::array<readdy::scalar, 3> position;
+    readdy::model::Particle::id_type id;
+};
+
+std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &filename, const std::string &name) {
+    readdy::log::debug(R"(converting "{}" to readdy viewer format)", filename);
+
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
+
+    auto particleInfoH5Type = readdy::model::ioutils::getParticleTypeInfoType(f->ref());
+
+    // get particle types from config
+    std::vector<readdy::model::ioutils::ParticleTypeInfo> types;
+    {
+        auto config = f->getSubgroup("readdy/config");
+        config.read("particle_types", types, &std::get<0>(particleInfoH5Type), &std::get<1>(particleInfoH5Type));
+    }
+    std::unordered_map<std::size_t, std::string> typeMapping;
+    for(const auto &type : types) {
+        typeMapping[type.type_id] = std::string(type.name);
+    }
+
+    auto traj = f->getSubgroup("readdy/trajectory/" + name);
+
+    // limits
+    std::vector<std::size_t> limits;
+    traj.read("limits", limits);
+
+    // records
+    std::vector<readdy::model::observables::TrajectoryEntry> entries;
+    auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
+    traj.read("records", entries, &std::get<0>(trajectoryEntryTypes), &std::get<1>(trajectoryEntryTypes));
+
+    auto n_frames = limits.size()/2;
+    readdy::log::debug("got n frames: {}", n_frames);
+
+    std::vector<std::vector<TrajectoryParticle>> result;
+    result.reserve(n_frames);
+
+
+
+    for (std::size_t frame = 0; frame < limits.size(); frame += 2) {
+        auto begin = limits[frame];
+        auto end = limits[frame + 1];
+        result.emplace_back();
+        auto &currentFrame = result.back();
+        currentFrame.reserve(end - begin);
+
+        for (auto it = entries.begin() + begin; it != entries.begin() + end; ++it) {
+            currentFrame.emplace_back(typeMapping[it->typeId],
+                                      readdy::model::particleflavor::particle_flavor_to_str(it->flavor),
+                                      it->pos.data, it->id);
+        }
+    }
+
+    return std::move(result);
+}
+
 void exportUtils(py::module &m) {
     using namespace pybind11::literals;
+    py::class_<TrajectoryParticle>(m, "TrajectoryParticle")
+            .def_property_readonly("type", [](const TrajectoryParticle &self) {return self.type;}, R"docs(
+                Returns the type of the particle.
+
+                :return: type of the particle
+            )docs")
+            .def_property_readonly("flavor", [](const TrajectoryParticle &self) {return self.flavor;}, R"docs(
+                Returns the flavor of the particle (NORMAL or TOPOLOGY).
+
+                :return: flavor of the particle
+            )docs")
+            .def_property_readonly("position", [](const TrajectoryParticle &self) {return self.position;}, R"docs(
+                Returns the position of the particle as array of length 3.
+
+                :return: position of the particle
+            )docs")
+            .def_property_readonly("id", [](const TrajectoryParticle &self) {return self.id;}, R"docs(
+                Returns the id of the particle.
+
+                :return: id of the particle
+            )docs");
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a);
+    m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
 }
