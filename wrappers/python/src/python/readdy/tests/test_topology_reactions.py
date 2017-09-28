@@ -73,11 +73,11 @@ class TestTopologyReactions(ReaDDyTestCase):
         reaction.create_child_topologies_after_reaction()
         return reaction
 
-    def _get_decay_reaction(self, typeidb):
+    def _get_decay_reaction(self):
         def reaction_function(topology):
             recipe = top.Recipe(topology)
             if topology.get_n_particles() == 1:
-                recipe.change_particle_type(0, typeidb)
+                recipe.change_particle_type(0, "B")
             return recipe
 
         def rate_function(topology):
@@ -96,7 +96,7 @@ class TestTopologyReactions(ReaDDyTestCase):
         sim.register_topology_type("TA")
         np.testing.assert_equal(sim.kernel_supports_topologies(), True)
 
-        typeid_b = sim.register_particle_type("B", 1.0, ParticleTypeFlavor.NORMAL)
+        sim.register_particle_type("B", 1.0, ParticleTypeFlavor.NORMAL)
         sim.register_particle_type("Topology A", 1.0, ParticleTypeFlavor.TOPOLOGY)
         sim.configure_topology_bond_potential("Topology A", "Topology A", 10, 10)
 
@@ -108,7 +108,7 @@ class TestTopologyReactions(ReaDDyTestCase):
         for i in range(int(n_elements - 1)):
             topology.get_graph().add_edge(i, i + 1)
 
-        sim.register_structural_topology_reaction("TA", self._get_decay_reaction(typeid_b))
+        sim.register_structural_topology_reaction("TA", self._get_decay_reaction())
         sim.register_structural_topology_reaction("TA", self._get_split_reaction())
 
         # h = sim.register_observable_n_particles(1, [], lambda x: print("n particles=%s" % x))
