@@ -279,12 +279,13 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
 
 struct TrajectoryParticle {
     TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
-                       readdy::model::Particle::id_type id)
-            : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id) {}
+                       readdy::model::Particle::id_type id, readdy::time_step_type t)
+            : type(std::move(type)), flavor(std::move(flavor)), position(pos), id(id), t(t) {}
     std::string type;
     std::string flavor;
     std::array<readdy::scalar, 3> position;
     readdy::model::Particle::id_type id;
+    readdy::time_step_type t;
 };
 
 std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &filename, const std::string &name) {
@@ -314,6 +315,10 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
     std::vector<std::size_t> limits;
     traj.read("limits", limits);
 
+    // time
+    std::vector<readdy::time_step_type> time;
+    traj.read("time", time);
+
     // records
     std::vector<readdy::model::observables::TrajectoryEntry> entries;
     auto trajectoryEntryTypes = readdy::model::observables::util::getTrajectoryEntryTypes(f->ref());
@@ -326,8 +331,8 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
     result.reserve(n_frames);
 
 
-
-    for (std::size_t frame = 0; frame < limits.size(); frame += 2) {
+    auto timeIt = time.begin();
+    for (std::size_t frame = 0; frame < limits.size(); frame += 2, ++timeIt) {
         auto begin = limits[frame];
         auto end = limits[frame + 1];
         result.emplace_back();
@@ -337,7 +342,7 @@ std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &
         for (auto it = entries.begin() + begin; it != entries.begin() + end; ++it) {
             currentFrame.emplace_back(typeMapping[it->typeId],
                                       readdy::model::particleflavor::particle_flavor_to_str(it->flavor),
-                                      it->pos.data, it->id);
+                                      it->pos.data, it->id, *timeIt);
         }
     }
 
@@ -366,6 +371,11 @@ void exportUtils(py::module &m) {
                 Returns the id of the particle.
 
                 :return: id of the particle
+            )docs")
+            .def_property_readonly("t", [](const TrajectoryParticle &self) {return self.t;}, R"docs(
+                Returns the current simulation time.
+
+                :return: the simulation time
             )docs");
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});

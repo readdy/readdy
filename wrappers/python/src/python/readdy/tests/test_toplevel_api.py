@@ -205,5 +205,6 @@ class TestTopologies(ReaDDyTestCase):
                     np.testing.assert_equal(pos.toarray(), entry.position)
                     np.testing.assert_equal("NORMAL", entry.flavor)
                     np.testing.assert_equal("A", entry.type)
+                    np.testing.assert_equal(idx, entry.t)
         finally:
             shutil.rmtree(dir, ignore_errors=True)
