@@ -70,7 +70,6 @@ LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/topologies/reactions/SpatialTop
 # observables
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Types.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Trajectory.cpp")
-LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/CenterOfMass.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/HistogramAlongAxis.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/Particles.cpp")
 LIST(APPEND READDY_MODEL_SOURCES "${SOURCES_DIR}/observables/NParticles.cpp")

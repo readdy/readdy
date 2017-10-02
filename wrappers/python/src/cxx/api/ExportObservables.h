@@ -112,19 +112,6 @@ registerObservable_RadialDistribution(sim &self, unsigned int stride, py::array_
 }
 
 inline obs_handle_t
-registerObservable_CenterOfMass(sim &self, unsigned int stride, std::vector<std::string> types,
-                                const pybind11::object &callbackFun = py::none()) {
-    if (callbackFun.is_none()) {
-        return self.registerObservable<readdy::model::observables::CenterOfMass>(stride, types);
-    } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::CenterOfMass::result_type)>(callbackFun);
-        return self.registerObservable<readdy::model::observables::CenterOfMass>(
-                std::move(pyFun), stride, types
-        );
-    }
-}
-
-inline obs_handle_t
 registerObservable_HistogramAlongAxisObservable(sim &self, unsigned int stride, py::array_t<readdy::scalar> binBorders,
                                                 unsigned int axis, std::vector<std::string> types,
                                                 const py::object &callbackFun = py::none()) {
@@ -210,8 +197,6 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
                  "particle_to_density"_a, "callback"_a = py::none())
             .def("register_observable_histogram_along_axis", &registerObservable_HistogramAlongAxisObservable,
                  "stride"_a, "bin_borders"_a, "axis"_a, "types"_a, "callback"_a = py::none())
-            .def("register_observable_center_of_mass", &registerObservable_CenterOfMass,
-                 "stride"_a, "types"_a, "callback"_a = py::none())
             .def("register_observable_n_particles", &registerObservable_NParticles,
                  "stride"_a, "types"_a, "callback"_a = py::none())
             .def("register_observable_forces", &registerObservable_ForcesObservable,

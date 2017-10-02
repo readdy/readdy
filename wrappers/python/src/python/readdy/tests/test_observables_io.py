@@ -163,39 +163,6 @@ class TestObservablesIO(ReaDDyTestCase):
                 np.testing.assert_equal(bin_centers, np.array(callback_centers[t]))
                 np.testing.assert_equal(distribution[t], np.array(callback_rdf[t]))
 
-    def test_center_of_mass_observable(self):
-        fname = os.path.join(self.dir, "test_observables_com.h5")
-
-        simulation = Simulation()
-        simulation.set_kernel("SingleCPU")
-
-        box_size = common.Vec(10, 10, 10)
-        simulation.kbt = 2
-        simulation.periodic_boundary = [True, True, True]
-        simulation.box_size = box_size
-        simulation.register_particle_type("A", .2)
-        simulation.register_particle_type("B", .2)
-        simulation.add_particle("A", common.Vec(-2.5, 0, 0))
-        simulation.add_particle("B", common.Vec(0, 0, 0))
-        n_time_steps = 50
-        callback_com = []
-
-        def com_callback(vec):
-            callback_com.append(vec)
-
-        handle = simulation.register_observable_center_of_mass(1, ["A", "B"], com_callback)
-        with closing(io.File.create(fname)) as f:
-            handle.enable_write_to_file(f, u"com", 3)
-            simulation.run(n_time_steps, 0.02)
-            handle.flush()
-
-        with h5py.File(fname, "r") as f2:
-            com = f2["readdy/observables/com/data"][:]
-            for t in range(n_time_steps):
-                np.testing.assert_equal(com[t]["x"], callback_com[t][0])
-                np.testing.assert_equal(com[t]["y"], callback_com[t][1])
-                np.testing.assert_equal(com[t]["z"], callback_com[t][2])
-
     def test_histogram_along_axis_observable(self):
         fname = os.path.join(self.dir, "test_observables_hist_along_axis.h5")
 

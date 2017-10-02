@@ -208,3 +208,56 @@ class TestTopologies(ReaDDyTestCase):
                     np.testing.assert_equal(idx, entry.t)
         finally:
             shutil.rmtree(dir, ignore_errors=True)
+
+    def test_readwrite_observables(self):
+        dir = tempfile.mkdtemp("test-io")
+        try:
+            traj_fname = os.path.join(dir, "traj.h5")
+
+            rdf = readdy.ReactionDiffusionSystem()
+            rdf.box_size = (10, 10, 10)
+            rdf.add_species("A", diffusion_constant=1.0)
+            rdf.add_species("B", diffusion_constant=1.0)
+            rdf.reactions.add_conversion("myconversion", "A", "B", 1.0)
+            rdf.reactions.add_fusion("myfusion", "A", "A", "A", 2, .5)
+            rdf.reactions.add_fission("myfusion", "A", "A", "A", 2, .5)
+            rdf.potentials.add_harmonic_repulsion("A", "A", 1., .2)
+            sim = rdf.simulation(kernel="SingleCPU")
+            sim.output_file = traj_fname
+            sim.add_particles("A", np.random.random((100, 3)))
+
+            sim.observe.particle_positions(1)
+            sim.observe.particles(1)
+            sim.observe.rdf(1, bin_borders=np.arange(-5, 5, 1.), types_count_from=["A"], types_count_to=["A"],
+                            particle_to_density=1./rdf.box_volume)
+            sim.observe.number_of_particles(1, types=["B", "A"])
+            sim.observe.reactions(1)
+
+            sim.run(50, 1e-3)
+
+            traj = readdy.Trajectory(traj_fname)
+
+            time, positions = traj.read_observable_particle_positions()
+            np.testing.assert_equal(len(time), 51)
+            np.testing.assert_equal(len(positions), 51)
+
+            time, types, ids, positions = traj.read_observable_particles()
+            np.testing.assert_equal(len(time), 51)
+            np.testing.assert_equal(len(types), 51)
+            np.testing.assert_equal(len(ids), 51)
+            np.testing.assert_equal(len(positions), 51)
+
+            time, bin_centers, rdf = traj.read_observable_rdf()
+            np.testing.assert_equal(len(time), 51)
+            np.testing.assert_equal(len(bin_centers), len(np.arange(-5, 5, 1.))-1)
+            np.testing.assert_equal(rdf.shape, (51, len(np.arange(-5, 5, 1))-1))
+
+            time, counts = traj.read_observable_number_of_particles()
+            np.testing.assert_equal(len(time), 51)
+            np.testing.assert_equal(len(counts), 51)
+
+            time, records = traj.read_observable_reactions()
+            np.testing.assert_equal(len(time), 51)
+            np.testing.assert_equal(len(records), 51)
+        finally:
+            shutil.rmtree(dir, ignore_errors=True)

@@ -29,6 +29,8 @@ import os as _os
 
 import readdy.util.io_utils as _io_utils
 from readdy._internal.readdybinding.common.util import read_trajectory as _read_trajectory
+from readdy._internal.readdybinding.common.util import read_reaction_observable as _read_reaction_observable
+import h5py as _h5py
 
 
 class ReactionInfo:
@@ -183,20 +185,28 @@ class Trajectory(object):
         self._diffusion_constants = _io_utils.get_diffusion_constants(filename)
         self._particle_types = _io_utils.get_particle_types(filename)
         self._reactions_order_1 = []
-        inverse_types_map = {v: k for k, v in self.particle_types.items()}
+        self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
         for reaction in _io_utils.get_reactions_order1(filename):
             info = ReactionInfo(reaction["name"], reaction["index"], reaction["id"], reaction["n_educts"],
                                 reaction["n_products"], reaction["rate"], reaction["educt_distance"],
                                 reaction["product_distance"], reaction["educt_types"], reaction["product_types"],
-                                inverse_types_map)
+                                self._inverse_types_map)
             self._reactions_order_1.append(info)
             self._reactions_order_2 = []
         for reaction in _io_utils.get_reactions_order2(filename):
             info = ReactionInfo(reaction["name"], reaction["index"], reaction["id"], reaction["n_educts"],
                                 reaction["n_products"], reaction["rate"], reaction["educt_distance"],
                                 reaction["product_distance"], reaction["educt_types"], reaction["product_types"],
-                                inverse_types_map)
+                                self._inverse_types_map)
             self._reactions_order_2.append(info)
+
+    def species_name(self, id):
+        """
+        Retrieves the species' name according to its id as saved in some observables.
+        :param id: the id
+        :return: the species' name
+        """
+        return self._inverse_types_map[id]
 
     @property
     def diffusion_constants(self):
@@ -251,3 +261,94 @@ class Trajectory(object):
         :return: the trajectory
         """
         return _read_trajectory(self._filename, self._name)
+
+    def read_observable_particle_positions(self, data_set_name=""):
+        """
+        Reads back the output of the particle_positions observable.
+        :param data_set_name: The data set name as given in the simulation setup
+        :return: a tuple of lists, where the first element contains a list of simulation times and the second element
+                 contains a list of (N, 3)-shaped arrays, where N is the number of particles in that time step
+        """
+        with _h5py.File(self._filename, "r") as f2:
+            if not "readdy/observables/particle_positions/"+data_set_name in f2:
+                raise ValueError("The particle positions observable was not recorded in the file or recorded under a "
+                                 "different name!")
+            group = f2["readdy/observables/particle_positions/"+data_set_name]
+            time = group["time"][:]
+            data = group["data"][:]
+            return time, data
+
+    def read_observable_particles(self, data_set_name=""):
+        """
+        Reads back the output of the particles observable.
+        :param data_set_name: The data set name as given in the simulation setup.
+        :return: a tuple of lists, where:
+                    * the first element contains a list of simulation times
+                    * the second element contains a of lists of list of type-ids, which then can be made human-readable
+                      by calling `species_name(type_id)`
+                    * the third element contains  a list of lists of unique ids for each particle
+                    * the fourth element contains a list of lists of particle positions
+        """
+        with _h5py.File(self._filename, "r") as f2:
+            group_path = "readdy/observables/particles/" + data_set_name
+            if not group_path in f2:
+                raise ValueError("The particles observable was not recorded in the file or recorded under a different "
+                                 "name!")
+            group = f2[group_path]
+            types = group["types"][:]
+            ids = group["ids"][:]
+            positions = group["positions"][:]
+            time = group["time"][:]
+            return time, types, ids, positions
+
+    def read_observable_rdf(self, data_set_name="rdf"):
+        """
+        Reads back the output of the rdf observable.
+        :param data_set_name: The data set name as given in the simulation setup.
+        :return: a tuple of lists containing (simulation time with shape (T,), bin centers with shape (N, ),
+                    distribution value with shape (T, N))
+        """
+        with _h5py.File(self._filename, "r") as f2:
+            group_path = "readdy/observables/" + data_set_name
+            if not group_path in f2:
+                raise ValueError("The rdf observable was not recorded in the file or recorded under a different name!")
+            group = f2[group_path]
+            time = group["time"][:]
+            bin_centers = group["bin_centers"][:]
+            distribution = group["distribution"][:]
+            return time, bin_centers, distribution
+
+    def read_observable_number_of_particles(self, data_set_name="n_particles"):
+        """
+        Reads back the output of the "number of particles" observable.
+        :param data_set_name: The data set name as given in the simulation setup.
+        :return: a tuple of lists containing the simulation time and a list of lists containing the counts for
+                    each specified type
+        """
+        group_path = "readdy/observables/" + data_set_name
+        with _h5py.File(self._filename, "r") as f2:
+            if not group_path in f2:
+                raise ValueError("The number of particles observable was not recorded in the file or recorded under a "
+                                 "different name!")
+            time = f2[group_path]["time"][:]
+            counts = f2[group_path]["data"][:]
+            return time, counts
+
+    def read_observable_reactions(self, data_set_name="reactions"):
+        """
+        Reads back the output of the "reactions" observable
+        :param data_set_name: The data set name as given in the simulation setup
+        :return: a tuple which contains an array corresponding to the time as first entry and a list of lists containing
+                 reaction record objects as second entry
+        """
+        time = None
+        group_path = "readdy/observables/" + data_set_name
+        with _h5py.File(self._filename, "r") as f2:
+            if not group_path in f2:
+                raise ValueError("The reactions observable was not recorded in the file or recorded under a "
+                                 "different name!")
+            time = f2[group_path]["time"][:]
+        return time, _read_reaction_observable(self._filename, data_set_name)
+
+
+    # todo: reaction counts, forces

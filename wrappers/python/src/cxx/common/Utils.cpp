@@ -43,6 +43,7 @@
 #include <readdy/model/observables/io/Types.h>
 #include <readdy/model/IOUtils.h>
 #include <readdy/io/BloscFilter.h>
+#include <readdy/model/reactions/ReactionRecord.h>
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -277,6 +278,119 @@ convert_xyz(const std::string &h5name, const std::string &trajName, const std::s
     readdy::log::debug("converting finished");
 }
 
+
+struct ReadableReactionRecord {
+    std::string type {""};
+    std::string reaction_label {""};
+    std::vector<readdy::model::Particle::id_type> educts {};
+    std::vector<readdy::model::Particle::id_type> products {};
+    readdy::Vec3::data_arr where {{0, 0, 0}};
+};
+
+std::string repr(const ReadableReactionRecord &rrr) {
+    std::stringstream result;
+
+    result << "Reaction[type=" << rrr.type << ", label="<< rrr.reaction_label << ", educts=[";
+    if(rrr.educts.size() == 1) {
+        result << rrr.educts.at(0) << "]";
+    } else {
+        result << rrr.educts.at(0) << ", " << rrr.educts.at(1) << "]";
+    }
+    result << ", products=[";
+    if(rrr.products.size() == 1) {
+        result << rrr.products.at(0) << "]";
+    } else if (rrr.products.size() == 2){
+        result << rrr.products.at(0) << ", " << rrr.products.at(1) << "]";
+    }
+    result << ", position=(" << rrr.where.at(0) << ", " << rrr.where.at(1) << ", " << rrr.where.at(2) << ")]";
+    return result.str();
+}
+
+std::vector<std::vector<ReadableReactionRecord>> read_reactions_obs(const std::string &filename, const std::string &name){
+    readdy::io::BloscFilter bloscFilter;
+    bloscFilter.registerFilter();
+
+    auto f = h5rd::File::open(filename, h5rd::File::Flag::READ_ONLY);
+
+    auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
+
+    // get particle types from config
+    std::vector<readdy::model::ioutils::ReactionInfo> reactionInfoOrder1;
+    std::vector<readdy::model::ioutils::ReactionInfo> reactionInfoOrder2;
+    {
+        auto config = f->getSubgroup("readdy/config/registered_reactions");
+        config.read("order1_reactions", reactionInfoOrder1, &std::get<0>(reactionInfoH5Type), &std::get<1>(reactionInfoH5Type));
+        config.read("order2_reactions", reactionInfoOrder2, &std::get<0>(reactionInfoH5Type), &std::get<1>(reactionInfoH5Type));
+    }
+
+    std::vector<std::vector<readdy::model::reactions::ReactionRecord>> records;
+    {
+        auto reactionRecordH5Types = readdy::model::observables::util::getReactionRecordTypes(f->ref());
+        auto dsgroup = f->getSubgroup("readdy/observables/" + name);
+        dsgroup.readVLEN("records", records, &std::get<0>(reactionRecordH5Types), &std::get<1>(reactionRecordH5Types));
+    }
+
+    std::vector<std::vector<ReadableReactionRecord>> result;
+    result.reserve(records.size());
+    for(const auto &reactions : records) {
+        result.emplace_back();
+        auto &readableRecords = result.back();
+        readableRecords.reserve(reactions.size());
+
+        for(const auto &reaction : reactions) {
+            ReadableReactionRecord rrr;
+            auto tt = readdy::model::reactions::ReactionType(reaction.type);
+            switch(tt) {
+                case readdy::model::reactions::ReactionType::Conversion:{
+                    rrr.educts = {reaction.educts[0]};
+                    rrr.products = {reaction.products[0]};
+                    rrr.where = reaction.where.data;
+                    rrr.type = "conversion";
+                    rrr.reaction_label = reactionInfoOrder1.at(reaction.reactionIndex).name;
+                    break;
+                };
+                case readdy::model::reactions::ReactionType::Fusion: {
+                    rrr.educts = {reaction.educts[0], reaction.educts[1]};
+                    rrr.products = {reaction.products[0]};
+                    rrr.where = reaction.where.data;
+                    rrr.type = "fusion";
+                    rrr.reaction_label = reactionInfoOrder2.at(reaction.reactionIndex).name;
+                    break;
+                };
+                case readdy::model::reactions::ReactionType::Fission: {
+                    rrr.educts = {reaction.educts[0]};
+                    rrr.products = {reaction.products[0], reaction.products[1]};
+                    rrr.where = reaction.where.data;
+                    rrr.type = "fission";
+                    rrr.reaction_label = reactionInfoOrder1.at(reaction.reactionIndex).name;
+                    break;
+                };
+                case readdy::model::reactions::ReactionType::Enzymatic: {
+                    rrr.educts = {reaction.educts[0], reaction.educts[1]};
+                    rrr.products = {reaction.products[0], reaction.products[1]};
+                    rrr.where = reaction.where.data;
+                    rrr.type = "enzymatic";
+                    rrr.reaction_label = reactionInfoOrder2.at(reaction.reactionIndex).name;
+                    break;
+                };
+                case readdy::model::reactions::ReactionType::Decay: {
+                    rrr.educts = {reaction.educts[0]};
+                    rrr.products = {};
+                    rrr.where = reaction.where.data;
+                    rrr.type = "decay";
+                    rrr.reaction_label = reactionInfoOrder1.at(reaction.reactionIndex).name;
+                    break;
+                };
+            }
+
+            readableRecords.push_back(std::move(rrr));
+        }
+
+    }
+
+    return result;
+}
+
 struct TrajectoryParticle {
     TrajectoryParticle(std::string type, std::string flavor, const std::array<readdy::scalar, 3> &pos,
                        readdy::model::Particle::id_type id, readdy::time_step_type t)
@@ -289,8 +403,6 @@ struct TrajectoryParticle {
 };
 
 std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &filename, const std::string &name) {
-    readdy::log::debug(R"(converting "{}" to readdy viewer format)", filename);
-
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
 
@@ -377,8 +489,49 @@ void exportUtils(py::module &m) {
 
                 :return: the simulation time
             )docs");
+    py::class_<ReadableReactionRecord>(m, "ReactionRecord")
+            .def_property_readonly("type", [](const ReadableReactionRecord &self) { return self.type; }, R"docs(
+                Returns the type of reaction that occurred. One of conversion, fission, fusion, enzymatic, decay.
+
+                :return: the type of reaction
+            )docs")
+            .def_property_readonly("reaction_label", [](const ReadableReactionRecord &self) {
+                return self.reaction_label;
+            }, R"docs(
+                Returns the label of the specific reaction as defined in the reaction diffusion system.
+
+                :return: the label
+            )docs")
+            .def_property_readonly("educts", [](const ReadableReactionRecord &self) {
+                return self.educts;
+            }, R"docs(
+                Returns the particle IDs of the the educts of this reaction.
+
+                :return: the IDs
+            )docs")
+            .def_property_readonly("products", [](const ReadableReactionRecord &self) {
+                return self.products;
+            }, R"docs(
+                Returns the product IDs of the products of this reaction.
+
+                :return: the IDs
+            )docs")
+            .def_property_readonly("position", [](const ReadableReactionRecord &self) {
+                return self.where;
+            }, R"docs(
+                Returns the position of the reaction event.
+
+                :return: the position
+            )docs")
+            .def("__repr__", [](const ReadableReactionRecord &self) {
+                return repr(self);
+            })
+            .def("__str__", [](const ReadableReactionRecord &self) {
+                return repr(self);
+            });
     m.def("convert_xyz", &convert_xyz, "h5_file_name"_a, "traj_data_set_name"_a, "xyz_out_file_name"_a,
           "generate_tcl"_a = true, "tcl_with_grid"_a = false, "radii"_a = radiusmap{});
     m.def("convert_readdyviewer", &convert_readdy_viewer, "h5_file_name"_a, "traj_data_set_name"_a);
     m.def("read_trajectory", &read_trajectory, "filename"_a, "name"_a);
+    m.def("read_reaction_observable", &read_reactions_obs, "filename"_a, "name"_a);
 }
