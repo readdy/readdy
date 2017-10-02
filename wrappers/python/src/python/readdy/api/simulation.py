@@ -269,7 +269,7 @@ class Simulation(object):
         :param type: type of the particles
         :param positions: (3, N)-shaped nd-array of positions
         """
-        assert positions.shape[0] == 3, "shape[0] has to be 3 but was {}".format(positions.shape[0])
+        assert positions.shape[1] == 3, "shape[1] has to be 3 but was {}".format(positions.shape[1])
         self._simulation.add_particles(type, positions)
 
     def add_topology(self, topology_type, particle_types, positions):
@@ -283,7 +283,7 @@ class Simulation(object):
         :param positions: (3, N)-shaped nd-array of positions
         :return: the topology object
         """
-        assert positions.shape[0] == 3, "shape[0] has to be 3 but was {}".format(positions.shape[0])
+        assert positions.shape[1] == 3, "shape[1] has to be 3 but was {}".format(positions.shape[0])
         if isinstance(particle_types, str):
             particle_types = [particle_types]
         return self._simulation.add_topology(topology_type, particle_types, positions)

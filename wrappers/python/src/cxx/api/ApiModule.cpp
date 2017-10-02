@@ -107,9 +107,9 @@ void exportApi(py::module &api) {
                 self.addParticle(type, pos[0], pos[1], pos[2]);
             }, "type"_a, "pos"_a)
             .def("add_particles", [](sim &self, const std::string &type, const py::array_t<readdy::scalar> &particles) {
-                auto nParticles = particles.shape(1);
+                auto nParticles = particles.shape(0);
                 for(std::size_t i = 0; i < nParticles; ++i) {
-                    self.addParticle(type, particles.at(0, i), particles.at(1, i), particles.at(2, i));
+                    self.addParticle(type, particles.at(i, 0), particles.at(i, 1), particles.at(i, 2));
                 }
             })
             .def("set_kernel_config", &sim::setKernelConfiguration)
@@ -174,7 +174,7 @@ void exportApi(py::module &api) {
             }, rvp::reference_internal, "type"_a, "particles"_a)
             .def("add_topology", [](sim &self, const std::string &name, const std::vector<std::string> &types,
                                     const py::array_t<readdy::scalar> &positions) {
-                auto nParticles = positions.shape(1);
+                auto nParticles = positions.shape(0);
                 auto nTypes = types.size();
                 if(nParticles != nTypes && nTypes != 1) {
                     throw std::invalid_argument(fmt::format("the number of particles ({}) must be equal to the "
@@ -183,9 +183,9 @@ void exportApi(py::module &api) {
                 std::vector<readdy::model::TopologyParticle> particles;
                 for(std::size_t i = 0; i < nParticles; ++i) {
                     auto type =  nTypes != 1 ? types[i] : types[0];
-                    particles.push_back(self.createTopologyParticle(type, readdy::Vec3(positions.at(0, i),
-                                                                                       positions.at(1, i),
-                                                                                       positions.at(2, i))));
+                    particles.push_back(self.createTopologyParticle(type, readdy::Vec3(positions.at(i, 0),
+                                                                                       positions.at(i, 1),
+                                                                                       positions.at(i, 2))));
                 }
                 return self.addTopology(name, particles);
             }, rvp::reference_internal)
