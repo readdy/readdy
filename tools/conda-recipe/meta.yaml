@@ -35,6 +35,7 @@ requirements:
     - networkx
     - matplotlib
     - zlib 1.2.*
+    - libgcc
     - vs2015_runtime  # [win]
 
 test:

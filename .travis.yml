@@ -49,7 +49,7 @@ install:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then export BUILD_TYPE="RelWithDebInfo"; else export BUILD_TYPE="Release"; fi
 
 script:
-- conda build -q tools/conda-recipe
+- conda build -c conda-forge -q tools/conda-recipe
 
 after_success:
 - tools/ci/travis/upload_conda_package.sh
