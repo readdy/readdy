@@ -43,6 +43,9 @@ void exportSchemeApi(pybind11::module &module, const std::string &schemeName) {
     using namespace py::literals;
     using conf = readdy::api::SchemeConfigurator<SchemeType>;
     py::class_<SchemeType>(module, schemeName.c_str())
+            .def("set_progress_callback", [](SchemeType &self, const std::function<void(readdy::time_step_type)> &fun)  {
+                self.updateCallback() = fun;
+            })
             .def("run", [](SchemeType& self, const readdy::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);
@@ -83,6 +86,9 @@ void exportSchemeApi<readdy::api::AdvancedScheme>(pybind11::module &module, cons
     using scheme_t = readdy::api::AdvancedScheme;
     using conf = readdy::api::SchemeConfigurator<scheme_t>;
     py::class_<scheme_t>(module, schemeName.c_str())
+            .def("set_progress_callback", [](scheme_t &self, const std::function<void(readdy::time_step_type)> &fun)  {
+                self.updateCallback() = fun;
+            })
             .def("run", [](scheme_t& self, const readdy::time_step_type steps) {
                 py::gil_scoped_release release;
                 self.run(steps);

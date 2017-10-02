@@ -32,6 +32,7 @@ requirements:
     - python
     - numpy
     - h5py
+    - progress_reporter
     - hdf5
     - networkx
     - matplotlib

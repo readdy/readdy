@@ -78,14 +78,23 @@ public:
     virtual void run(time_step_type steps) {
         // show every 1% of the simulation
         const auto progressOutputStride = static_cast<std::size_t>(steps / 100);
+        if(!_updateCallback) {
+            _updateCallback = [this, steps, progressOutputStride](time_step_type current) {
+                log::info("Simulation progress: {} / {} steps", (current - start), steps);
+            };
+        }
         auto defaultContinueCriterion = [this, steps, progressOutputStride](const time_step_type current) {
             if (progressOutputStride > 0 && (current - start) % progressOutputStride == 0) {
-                log::info("Simulation progress: {} / {} steps", (current - start), steps);
+                _updateCallback(current);
             }
             return current < start + steps;
         };
         run(defaultContinueCriterion);
     };
+
+    std::function<void(time_step_type)> &updateCallback() {
+        return _updateCallback;
+    }
 
 protected:
     template<typename SchemeType>
@@ -101,6 +110,7 @@ protected:
     std::unique_ptr<model::actions::UpdateNeighborList> clearNeighborList {nullptr};
     std::unique_ptr<evaluate_topology_reactions> evaluateTopologyReactions {nullptr};
     std::unique_ptr<h5rd::Group> configGroup = nullptr;
+    std::function<void(time_step_type)> _updateCallback;
     bool evaluateObservables = true;
     time_step_type start = 0;
     const util::PerformanceNode &_performanceRoot;

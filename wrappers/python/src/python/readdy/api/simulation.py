@@ -29,6 +29,7 @@ from readdy.api.conf.KernelConfiguration import NOOPKernelConfiguration as _NOOP
 from readdy.api.registry.observables import Observables as _Observables
 from readdy._internal.readdybinding.api import Simulation as _Simulation
 from readdy.api.utils import vec3_of as _v3_of
+from readdy.util.progress import SimulationProgress as _SimulationProgress
 
 class Simulation(object):
 
@@ -60,11 +61,29 @@ class Simulation(object):
         self._evaluate_observables = evaluate_observables
         self._skin = skin
         self._simulation_scheme = "ReaDDyScheme"
+        self._show_progress = True
+        self._progress = None
 
         if kernel == "CPU":
             self._kernel_configuration = _CPUKernelConfiguration()
         else:
             self._kernel_configuration = _NOOPKernelConfiguration()
+
+    @property
+    def show_progress(self):
+        """
+        Returns if a progress bar is shown during simulation. Will only appear if there are more than 100 time steps.
+        :return: true if a progress bar should be shown
+        """
+        return self._show_progress
+
+    @show_progress.setter
+    def show_progress(self, value):
+        """
+        Sets whether to show a progress bar.
+        :param value: true if a progress bar should be shown
+        """
+        self._show_progress = value
 
     @property
     def evaluate_topology_reactions(self):
@@ -299,6 +318,9 @@ class Simulation(object):
         from contextlib import closing
         import readdy._internal.readdybinding.common.io as io
 
+        if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
+            raise ValueError("Output file already existed: {}".format(self.output_file))
+
         if self.simulation_scheme == 'ReaDDyScheme':
             conf = self._simulation.run_scheme_readdy(False)
         elif self.simulation_scheme == 'AdvancedScheme':
@@ -313,11 +335,19 @@ class Simulation(object):
             .evaluate_observables(self.evaluate_observables)
 
         if self.output_file is not None and len(self.output_file) > 0:
-            if os.path.exists(self.output_file):
-                raise ValueError("Output file already existed: {}".format(self.output_file))
             with closing(io.File.create(self.output_file)) as f:
                 for name, chunk_size, handle in self._observables._observable_handles:
                     handle.enable_write_to_file(f, name, chunk_size)
-                conf.write_config_to_file(f).configure(timestep).run(n_steps)
+                scheme = conf.write_config_to_file(f).configure(timestep)
+                if self.show_progress:
+                    self._progress = _SimulationProgress((n_steps // 100)+1)
+                    scheme.set_progress_callback(self._progress.callback)
+                scheme.run(n_steps)
         else:
-            conf.configure(timestep).run(n_steps)
+            scheme = conf.configure(timestep)
+            if self.show_progress:
+                self._progress = _SimulationProgress((n_steps // 100)+1)
+                scheme.set_progress_callback(self._progress.callback)
+            scheme.run(n_steps)
+        if self.show_progress:
+            self._progress.finish()
