@@ -295,51 +295,29 @@ class Simulation(object):
         :param n_steps: number of steps to perform
         :param timestep: the time step to use
         """
+        import os
         from contextlib import closing
         import readdy._internal.readdybinding.common.io as io
+
         if self.simulation_scheme == 'ReaDDyScheme':
-            if self.output_file is not None and len(self.output_file) > 0:
-                with closing(io.File.create(self.output_file)) as f:
-                    for name, chunk_size, handle in self._observables._observable_handles:
-                        handle.enable_write_to_file(f, name, chunk_size)
-                    self._simulation.run_scheme_readdy(False) \
-                        .write_config_to_file(f) \
-                        .with_integrator(self.integrator) \
-                        .include_forces(self.evaluate_forces) \
-                        .evaluate_topology_reactions(self.evaluate_topology_reactions) \
-                        .with_reaction_scheduler(self.reaction_handler) \
-                        .evaluate_observables(self.evaluate_observables) \
-                        .configure(timestep).run(n_steps)
-            else:
-                self._simulation.run_scheme_readdy(False) \
-                    .with_integrator(self.integrator) \
-                    .include_forces(self.evaluate_forces) \
-                    .evaluate_topology_reactions(self.evaluate_topology_reactions) \
-                    .with_reaction_scheduler(self.reaction_handler) \
-                    .evaluate_observables(self.evaluate_observables) \
-                    .configure(timestep).run(n_steps)
+            conf = self._simulation.run_scheme_readdy(False)
         elif self.simulation_scheme == 'AdvancedScheme':
-            if self.output_file is not None and len(self.output_file) > 0:
-                with closing(io.File.create(self.output_file)) as f:
-                    for name, chunk_size, handle in self._observables._observable_handles:
-                        handle.enable_write_to_file(f, name, chunk_size)
-                    self._simulation.run_scheme_advanced(False) \
-                        .write_config_to_file(f) \
-                        .with_integrator(self.integrator) \
-                        .include_compartments() \
-                        .include_forces(self.evaluate_forces) \
-                        .evaluate_topology_reactions(self.evaluate_topology_reactions) \
-                        .with_reaction_scheduler(self.reaction_handler) \
-                        .evaluate_observables(self.evaluate_observables) \
-                        .configure(timestep).run(n_steps)
-            else:
-                self._simulation.run_scheme_advanced(False) \
-                    .with_integrator(self.integrator) \
-                    .include_forces(self.evaluate_forces) \
-                    .evaluate_topology_reactions(self.evaluate_topology_reactions) \
-                    .include_compartments() \
-                    .with_reaction_scheduler(self.reaction_handler) \
-                    .evaluate_observables(self.evaluate_observables) \
-                    .configure(timestep).run(n_steps)
+            conf = self._simulation.run_scheme_advanced(False).include_compartments()
         else:
             raise ValueError("Invalid simulation scheme type: {}".format(self.simulation_scheme))
+
+        conf = conf.with_integrator(self.integrator) \
+            .include_forces(self.evaluate_forces) \
+            .evaluate_topology_reactions(self.evaluate_topology_reactions) \
+            .with_reaction_scheduler(self.reaction_handler) \
+            .evaluate_observables(self.evaluate_observables)
+
+        if self.output_file is not None and len(self.output_file) > 0:
+            if os.path.exists(self.output_file):
+                raise ValueError("Output file already existed: {}".format(self.output_file))
+            with closing(io.File.create(self.output_file)) as f:
+                for name, chunk_size, handle in self._observables._observable_handles:
+                    handle.enable_write_to_file(f, name, chunk_size)
+                conf.write_config_to_file(f).configure(timestep).run(n_steps)
+        else:
+            conf.configure(timestep).run(n_steps)
