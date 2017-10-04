@@ -402,6 +402,16 @@ struct TrajectoryParticle {
     readdy::time_step_type t;
 };
 
+std::string repr(const TrajectoryParticle &p) {
+    std::stringstream ss;
+
+    ss << "Particle[id=" << p.id << ", type=" << p.type << ", time=" << p.t << ", flavor=" << p.flavor
+       << ", position=(" << p.position[0] << ", " << p.position[1] << ", " << p.position[2] << ")]";
+
+    return ss.str();
+}
+
+
 std::vector<std::vector<TrajectoryParticle>> read_trajectory(const std::string &filename, const std::string &name) {
     readdy::io::BloscFilter bloscFilter;
     bloscFilter.registerFilter();
@@ -488,7 +498,13 @@ void exportUtils(py::module &m) {
                 Returns the current simulation time.
 
                 :return: the simulation time
-            )docs");
+            )docs")
+            .def("__repr__", [](const TrajectoryParticle &p) {
+                return repr(p);
+            })
+            .def("__str__", [](const TrajectoryParticle &p) {
+                return repr(p);
+            });
     py::class_<ReadableReactionRecord>(m, "ReactionRecord")
             .def_property_readonly("type", [](const ReadableReactionRecord &self) { return self.type; }, R"docs(
                 Returns the type of reaction that occurred. One of conversion, fission, fusion, enzymatic, decay.

@@ -157,9 +157,9 @@ TEST_P(TestTopologies, AnglePotential) {
     } else {
         EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.4674011002723395));
     }
-    readdy::Vec3 force_x_i{0, 3.14159265, 0};
-    readdy::Vec3 force_x_j{3.14159265, -3.14159265, 0};
-    readdy::Vec3 force_x_k{-3.14159265, 0., 0.};
+    readdy::Vec3 force_x_i{0, -3.14159265, 0};
+    readdy::Vec3 force_x_j{-3.14159265, 3.14159265, 0};
+    readdy::Vec3 force_x_k{3.14159265, 0., 0.};
 
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);
@@ -199,9 +199,9 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     } else {
         EXPECT_DOUBLE_EQ(kernel->stateModel().energy(), static_cast<readdy::scalar>(2.5871244540347655));
     }
-    readdy::Vec3 force_x_i{0.13142034, 3.01536661, -1.83258358};
-    readdy::Vec3 force_x_j{5.32252362, -3.44312692, 1.11964973};
-    readdy::Vec3 force_x_k{-5.45394396, 0.42776031, 0.71293385};
+    readdy::Vec3 force_x_i{-0.13142034, -3.01536661, 1.83258358};
+    readdy::Vec3 force_x_j{-5.32252362, 3.44312692, -1.11964973};
+    readdy::Vec3 force_x_k{5.45394396, -0.42776031, -0.71293385};
 
     EXPECT_VEC3_NEAR(collectedForces[0], force_x_i, 1e-6);
     EXPECT_VEC3_NEAR(collectedForces[1], force_x_j, 1e-6);

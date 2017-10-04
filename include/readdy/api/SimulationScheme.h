@@ -77,7 +77,7 @@ public:
 
     virtual void run(time_step_type steps) {
         // show every 1% of the simulation
-        const auto progressOutputStride = static_cast<std::size_t>(steps / 100);
+        const auto progressOutputStride = 100;
         if(!_updateCallback) {
             _updateCallback = [this, steps, progressOutputStride](time_step_type current) {
                 log::info("Simulation progress: {} / {} steps", (current - start), steps);

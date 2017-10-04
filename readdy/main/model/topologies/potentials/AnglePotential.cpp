@@ -33,7 +33,7 @@
 #include <readdy/common/numeric.h>
 #include <readdy/model/topologies/TopologyActionFactory.h>
 
-#define SMALL .0001
+#define SMALL 1e-10
 
 namespace readdy {
 namespace model {
@@ -54,45 +54,55 @@ const HarmonicAnglePotential::angle_configurations &HarmonicAnglePotential::getA
     return angles;
 }
 
-scalar  HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
+scalar HarmonicAnglePotential::calculateEnergy(const Vec3 &x_ij, const Vec3 &x_kj,
                                                const angle &angle) const {
-    const scalar  scalarProduct = x_ij * x_kj;
-    const scalar  norm_ij = std::sqrt(x_ij * x_ij);
-    const scalar  norm_kj = std::sqrt(x_kj * x_kj);
-    const scalar  theta_ijk = std::acos(scalarProduct / (norm_ij * norm_kj));
+    const scalar scalarProduct = x_ij * x_kj;
+    const scalar norm_ij = std::sqrt(x_ij * x_ij);
+    const scalar norm_kj = std::sqrt(x_kj * x_kj);
+    const scalar theta_ijk = std::acos(scalarProduct / (norm_ij * norm_kj));
     return angle.forceConstant * (theta_ijk - angle.equilibriumAngle) * (theta_ijk - angle.equilibriumAngle);
 }
 
 void HarmonicAnglePotential::calculateForce(Vec3 &f_i, Vec3 &f_j, Vec3 &f_k, const Vec3 &x_ji, const Vec3 &x_jk,
                                             const angle &angle) const {
-    const scalar  scalarProduct = x_ji * x_jk;
-    const scalar  norm_ji_2 = x_ji * x_ji;
-    const scalar  norm_ji = std::sqrt(norm_ji_2);
-    const scalar  norm_jk_2 = x_jk * x_jk;
-    const scalar  norm_jk = std::sqrt(norm_jk_2);
-    scalar  norm_product = norm_ji * norm_jk;
-    if(norm_product < SMALL) norm_product = SMALL;
-    const scalar  inv_norm_product = 1/norm_product;
+    const scalar scalarProduct = x_ji * x_jk;
+    scalar norm_ji_2 = x_ji * x_ji;
+    if(norm_ji_2 < SMALL) {
+        norm_ji_2 = SMALL;
+    }
+    const scalar norm_ji = std::sqrt(norm_ji_2);
+    scalar norm_jk_2 = x_jk * x_jk;
+    if(norm_jk_2 < SMALL) {
+        norm_jk_2 = SMALL;
+    }
+    const scalar norm_jk = std::sqrt(norm_jk_2);
+    scalar norm_product = norm_ji * norm_jk;
+    if (norm_product < SMALL) {
+        norm_product = SMALL;
+    }
+    const scalar inv_norm_product = c_::one / norm_product;
 
-    scalar  cos_theta = inv_norm_product * scalarProduct;
-    cos_theta = readdy::util::numeric::clamp(cos_theta, static_cast<scalar>(-1.), static_cast<scalar>(1.));
+    scalar cos_theta = inv_norm_product * scalarProduct;
+    cos_theta = readdy::util::numeric::clamp(cos_theta, -c_::one, c_::one);
 
-    // avoid too large values of r
-    scalar  r = std::sqrt(static_cast<scalar>(1.0) - cos_theta * cos_theta);
-    if(r < SMALL) r = SMALL;
-    r = static_cast<scalar>(1.)/r;
+    scalar sin_theta_inv = std::sqrt(c_::one - cos_theta * cos_theta);
+    // avoid too small values of sin_theta
+    if (sin_theta_inv < SMALL) {
+        sin_theta_inv = SMALL;
+    }
+    sin_theta_inv = c_::one / sin_theta_inv;
 
-    const scalar  c = static_cast<scalar>(2.) * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * r;
+    const scalar c = c_::two * angle.forceConstant * (std::acos(cos_theta) - angle.equilibriumAngle) * sin_theta_inv;
 
-    const Vec3 force_i = c * cos_theta * (1/norm_ji_2) * x_ji - c * inv_norm_product * x_jk;
-    const Vec3 force_k = -c * inv_norm_product * x_ji + c * cos_theta  * (1/norm_jk_2) * x_jk;
+    const Vec3 force_i = c * cos_theta * (c_::one / norm_ji_2) * x_ji - c * inv_norm_product * x_jk;
+    const Vec3 force_k = -c * inv_norm_product * x_ji + c * cos_theta * (c_::one / norm_jk_2) * x_jk;
 
-    f_i += force_i;
-    f_j -= force_i + force_k;
-    f_k += force_k;
+    f_i -= force_i;
+    f_j += force_i + force_k;
+    f_k -= force_k;
 }
 
-AngleConfiguration::AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, scalar  forceConstant, scalar  theta_0)
+AngleConfiguration::AngleConfiguration(size_t idx1, size_t idx2, size_t idx3, scalar forceConstant, scalar theta_0)
         : idx1(idx1), idx2(idx2), idx3(idx3), equilibriumAngle(theta_0), forceConstant(forceConstant) {}
 }
 }

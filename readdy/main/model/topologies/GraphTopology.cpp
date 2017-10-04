@@ -114,7 +114,7 @@ void GraphTopology::configure() {
         auto it = config.anglePotentials.find(std::tie(v1->particleType(), v2->particleType(), v3->particleType()));
         if (it != config.anglePotentials.end()) {
             for (const auto &cfg : it->second) {
-                angles[cfg.type].emplace_back(v2->particleIndex, v1->particleIndex, v3->particleIndex,
+                angles[cfg.type].emplace_back(v1->particleIndex, v2->particleIndex, v3->particleIndex,
                                               cfg.forceConstant, cfg.equilibriumAngle);
             }
         }

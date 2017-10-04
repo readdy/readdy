@@ -340,13 +340,13 @@ class Simulation(object):
                     handle.enable_write_to_file(f, name, chunk_size)
                 scheme = conf.write_config_to_file(f).configure(timestep)
                 if self.show_progress:
-                    self._progress = _SimulationProgress((n_steps // 100)+1)
+                    self._progress = _SimulationProgress(1 + n_steps // 100)
                     scheme.set_progress_callback(self._progress.callback)
                 scheme.run(n_steps)
         else:
             scheme = conf.configure(timestep)
             if self.show_progress:
-                self._progress = _SimulationProgress((n_steps // 100)+1)
+                self._progress = _SimulationProgress(1 + n_steps // 100)
                 scheme.set_progress_callback(self._progress.callback)
             scheme.run(n_steps)
         if self.show_progress:
