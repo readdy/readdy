@@ -54,109 +54,101 @@ template<unsigned int N_EDUCTS>
 class Reaction {
 protected:
     static short counter;
-    using particle_type_type = readdy::model::Particle::type_type;
 public:
-
     using rnd_normal = std::function<Vec3(const scalar, const scalar)>;
-    // static constexpr unsigned int n_educts = N_EDUCTS;
 
     Reaction(std::string name, const scalar rate, const scalar eductDistance,
-             const scalar productDistance, const unsigned int n_products) :
-            name(std::move(name)),
-            id(counter++),
-            rate(rate),
-            eductDistance(eductDistance),
-            eductDistanceSquared(eductDistance * eductDistance),
-            productDistance(productDistance),
-            _n_products(n_products) {}
-
-    Reaction(const Reaction&) = default;
-    Reaction& operator=(const Reaction&) = default;
-    Reaction(Reaction&&) = default;
-    Reaction& operator=(Reaction&&) = default;
+             const scalar productDistance, const unsigned int nProducts) :
+            _name(std::move(name)),
+            _id(counter++),
+            _rate(rate),
+            _eductDistance(eductDistance),
+            _eductDistanceSquared(eductDistance * eductDistance),
+            _productDistance(productDistance),
+            _nProducts(nProducts) {}
 
     virtual ~Reaction() = default;
 
-    virtual const ReactionType getType() = 0;
+    virtual const ReactionType type() = 0;
 
-    const std::string &getName() const {
-        return name;
+    const std::string &name() const {
+        return _name;
     }
 
-    const short getId() const {
-        return id;
+    const short id() const {
+        return _id;
     }
 
-    const scalar getRate() const {
-        return rate;
+    const scalar rate() const {
+        return _rate;
     }
 
-    const unsigned int getNEducts() const {
-        return _n_educts;
+    const unsigned int nEducts() const {
+        return _nEducts;
     }
 
-    const unsigned int getNProducts() const {
-        return _n_products;
+    const unsigned int nProducts() const {
+        return _nProducts;
     }
 
-    const scalar getEductDistance() const {
-        return eductDistance;
+    const scalar eductDistance() const {
+        return _eductDistance;
     }
 
-    const scalar getEductDistanceSquared() const {
-        return eductDistanceSquared;
+    const scalar eductDistanceSquared() const {
+        return _eductDistanceSquared;
     }
 
-    const scalar getProductDistance() const {
-        return productDistance;
+    const scalar productDistance() const {
+        return _productDistance;
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
-        os << "Reaction(\"" << reaction.name << "\", N_Educts=" << reaction._n_educts << ", N_Products="
-           << reaction._n_products << ", (";
-        for (unsigned int i = 0; i < reaction._n_educts; i++) {
+        os << "Reaction(\"" << reaction._name << "\", N_Educts=" << reaction._nEducts << ", N_Products="
+           << reaction._nProducts << ", (";
+        for (unsigned int i = 0; i < reaction._nEducts; i++) {
             if (i > 0) os << ",";
-            os << reaction.educts[i];
+            os << reaction._educts[i];
         }
         os << ") -> (";
-        for (unsigned int i = 0; i < reaction._n_products; i++) {
+        for (unsigned int i = 0; i < reaction._nProducts; i++) {
             if (i > 0) os << ",";
-            os << reaction.products[i];
+            os << reaction._products[i];
         }
-        os << "), rate=" << reaction.rate << ", eductDist=" << reaction.eductDistance << ", prodDist="
-           << reaction.productDistance << ")";
+        os << "), rate=" << reaction._rate << ", eductDist=" << reaction._eductDistance << ", prodDist="
+           << reaction._productDistance << ")";
         return os;
     }
 
-    const std::array<particle_type_type, N_EDUCTS> &getEducts() const {
-        return educts;
+    const std::array<particle_type_type, N_EDUCTS> &educts() const {
+        return _educts;
     }
 
-    const std::array<particle_type_type, 2> &getProducts() const {
-        return products;
+    const std::array<particle_type_type, 2> &products() const {
+        return _products;
     }
 
-    const scalar getWeight1() const {
-        return weight1;
+    const scalar weight1() const {
+        return _weight1;
     }
 
-    const scalar getWeight2() const {
-        return weight2;
+    const scalar weight2() const {
+        return _weight2;
     }
 
 
 protected:
-    const unsigned int _n_educts = N_EDUCTS;
-    const unsigned int _n_products;
-    std::array<particle_type_type, N_EDUCTS> educts;
-    std::array<particle_type_type, 2> products {{0, 0}};
-    const std::string name;
-    const short id;
-    const scalar rate;
-    const scalar eductDistance, eductDistanceSquared;
-    const scalar productDistance;
+    unsigned int _nEducts = N_EDUCTS;
+    unsigned int _nProducts;
+    std::array<particle_type_type, N_EDUCTS> _educts;
+    std::array<particle_type_type, 2> _products {{0, 0}};
+    std::string _name;
+    short _id;
+    scalar _rate;
+    scalar _eductDistance, _eductDistanceSquared;
+    scalar _productDistance;
 
-    scalar weight1 = .5, weight2 = .5;
+    scalar _weight1 = .5, _weight2 = .5;
 };
 
 template<unsigned int N> short Reaction<N>::counter = 0;

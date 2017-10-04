@@ -198,11 +198,11 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         prepareCtx(ctx, decay, 2.);
         const auto &r = ctx.reactions().order1_by_name("mydecay");
         ASSERT_NE(r, nullptr);
-        EXPECT_EQ(r->getType(), m::reactions::ReactionType::Decay);
-        EXPECT_EQ(r->getNEducts(), 1);
-        EXPECT_EQ(r->getNProducts(), 0);
-        EXPECT_EQ(r->getEducts()[0], ctx.particle_types().id_of("A"));
-        EXPECT_EQ(r->getRate(), 2.);
+        EXPECT_EQ(r->type(), m::reactions::ReactionType::Decay);
+        EXPECT_EQ(r->nEducts(), 1);
+        EXPECT_EQ(r->nProducts(), 0);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("A"));
+        EXPECT_EQ(r->rate(), 2.);
     }
     {
         m::Context ctx;
@@ -210,12 +210,12 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         prepareCtx(ctx, conversion, 3.);
         const auto &r = ctx.reactions().order1_by_name("myconv");
         ASSERT_NE(r, nullptr);
-        EXPECT_EQ(r->getType(), m::reactions::ReactionType::Conversion);
-        EXPECT_EQ(r->getNEducts(), 1);
-        EXPECT_EQ(r->getNProducts(), 1);
-        EXPECT_EQ(r->getEducts()[0], ctx.particle_types().id_of("A"));
-        EXPECT_EQ(r->getProducts()[0], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->getRate(), 3.);
+        EXPECT_EQ(r->type(), m::reactions::ReactionType::Conversion);
+        EXPECT_EQ(r->nEducts(), 1);
+        EXPECT_EQ(r->nProducts(), 1);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("A"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->rate(), 3.);
     }
     {
         m::Context ctx;
@@ -223,16 +223,16 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         prepareCtx(ctx, fusion, 4.);
         const auto &r = ctx.reactions().order2_by_name("myfus");
         ASSERT_NE(r, nullptr);
-        EXPECT_EQ(r->getType(), m::reactions::ReactionType::Fusion);
-        EXPECT_EQ(r->getNEducts(), 2);
-        EXPECT_EQ(r->getNProducts(), 1);
-        EXPECT_EQ(r->getEducts()[0], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->getEducts()[1], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->getProducts()[0], ctx.particle_types().id_of("C"));
-        EXPECT_EQ(r->getEductDistance(), 1.2);
-        EXPECT_EQ(r->getWeight1(), 0.5);
-        EXPECT_EQ(r->getWeight2(), 0.5);
-        EXPECT_EQ(r->getRate(), 4.);
+        EXPECT_EQ(r->type(), m::reactions::ReactionType::Fusion);
+        EXPECT_EQ(r->nEducts(), 2);
+        EXPECT_EQ(r->nProducts(), 1);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("C"));
+        EXPECT_EQ(r->eductDistance(), 1.2);
+        EXPECT_EQ(r->weight1(), 0.5);
+        EXPECT_EQ(r->weight2(), 0.5);
+        EXPECT_EQ(r->rate(), 4.);
     }
     {
         m::Context ctx;
@@ -240,16 +240,16 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         prepareCtx(ctx, fission, 5.);
         const auto &r = ctx.reactions().order1_by_name("myfiss");
         ASSERT_NE(r, nullptr);
-        EXPECT_EQ(r->getType(), m::reactions::ReactionType::Fission);
-        EXPECT_EQ(r->getNEducts(), 1);
-        EXPECT_EQ(r->getNProducts(), 2);
-        EXPECT_EQ(r->getEducts()[0], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->getProducts()[0], ctx.particle_types().id_of("C"));
-        EXPECT_EQ(r->getProducts()[1], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->getProductDistance(), 3.0);
-        EXPECT_EQ(r->getWeight1(), 0.1);
-        EXPECT_EQ(r->getWeight2(), 0.9);
-        EXPECT_EQ(r->getRate(), 5.);
+        EXPECT_EQ(r->type(), m::reactions::ReactionType::Fission);
+        EXPECT_EQ(r->nEducts(), 1);
+        EXPECT_EQ(r->nProducts(), 2);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("C"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->productDistance(), 3.0);
+        EXPECT_EQ(r->weight1(), 0.1);
+        EXPECT_EQ(r->weight2(), 0.9);
+        EXPECT_EQ(r->rate(), 5.);
     }
     {
         m::Context ctx;
@@ -257,15 +257,15 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         prepareCtx(ctx, enzymatic, 6.);
         const auto &r = ctx.reactions().order2_by_name("myenz");
         ASSERT_NE(r, nullptr);
-        EXPECT_EQ(r->getType(), m::reactions::ReactionType::Enzymatic);
-        EXPECT_EQ(r->getNEducts(), 2);
-        EXPECT_EQ(r->getNProducts(), 2);
-        EXPECT_EQ(r->getEducts()[0], ctx.particle_types().id_of("A"));
-        EXPECT_EQ(r->getEducts()[1], ctx.particle_types().id_of("C"));
-        EXPECT_EQ(r->getProducts()[0], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->getProducts()[1], ctx.particle_types().id_of("C"));
-        EXPECT_EQ(r->getEductDistance(), 1.5);
-        EXPECT_EQ(r->getRate(), 6.);
+        EXPECT_EQ(r->type(), m::reactions::ReactionType::Enzymatic);
+        EXPECT_EQ(r->nEducts(), 2);
+        EXPECT_EQ(r->nProducts(), 2);
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("A"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().id_of("C"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().id_of("C"));
+        EXPECT_EQ(r->eductDistance(), 1.5);
+        EXPECT_EQ(r->rate(), 6.);
     }
 }
 

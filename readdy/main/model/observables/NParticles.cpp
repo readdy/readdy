@@ -63,14 +63,12 @@ NParticles::NParticles(Kernel *const kernel, unsigned int stride)
         : Observable(kernel, stride), pimpl(std::make_unique<Impl>()) {}
 
 void NParticles::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->ds) {
-        const auto size = typesToCount.empty() ? 1 : typesToCount.size();
-        h5rd::dimensions fs = {flushStride, size};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
-        auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
-        pimpl->ds = group.createDataSet<std::size_t>("data", fs, dims, {&pimpl->bloscFilter});
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    const auto size = typesToCount.empty() ? 1 : typesToCount.size();
+    h5rd::dimensions fs = {flushStride, size};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, size};
+    auto group = file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName);
+    pimpl->ds = group.createDataSet<std::size_t>("data", fs, dims, {&pimpl->bloscFilter});
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void NParticles::append() {

@@ -39,6 +39,7 @@
 #include <pybind11/numpy.h>
 #include <readdy/model/observables/io/Trajectory.h>
 #include "PyFunction.h"
+#include "../common/ReadableReactionRecord.h"
 
 namespace py = pybind11;
 using rvp = py::return_value_policy;
@@ -51,8 +52,18 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
     if (callback.is_none()) {
         return self.registerObservable<readdy::model::observables::Reactions>(stride);
     } else {
-        auto pyFun = readdy::rpy::PyFunction<void(readdy::model::observables::Reactions::result_type)>(callback);
-        return self.registerObservable<readdy::model::observables::Reactions>(std::move(pyFun), stride);
+        auto pyFun = readdy::rpy::PyFunction<void(std::vector<rpy::ReadableReactionRecord>)>(callback);
+        auto internalCallback = [&self, pyFun](const readdy::model::observables::Reactions::result_type &reactions) mutable {
+            std::vector<rpy::ReadableReactionRecord> converted;
+            converted.reserve(reactions.size());
+            auto o1 = self.currentContext().reactions().order1_flat();
+            auto o2 = self.currentContext().reactions().order2_flat();
+            for(const auto &reaction : reactions) {
+                converted.push_back(rpy::convert(reaction, o1, o2));
+            }
+            pyFun(std::move(converted));
+        };
+        return self.registerObservable<readdy::model::observables::Reactions>(internalCallback, stride);
     }
 }
 

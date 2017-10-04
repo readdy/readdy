@@ -41,14 +41,14 @@ class Decay : public Reaction<1> {
 
 public:
     Decay(const std::string &name, particle_type_type typeFrom, const scalar rate) : Reaction(name, rate, 0, 0, 0) {
-        educts[0] = typeFrom;
+        _educts[0] = typeFrom;
     }
 
     const particle_type_type getTypeFrom() const {
-        return educts[0];
+        return _educts[0];
     }
 
-    virtual const ReactionType getType() override {
+    virtual const ReactionType type() override {
         return ReactionType::Decay;
     }
 };

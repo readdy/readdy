@@ -60,16 +60,15 @@ void Reactions::flush() {
 }
 
 void Reactions::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->writer) {
-        h5rd::dimensions fs = {flushStride};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getReactionRecordTypes(file.ref()));
-        pimpl->group = std::make_unique<h5rd::Group>(
-                file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
-        pimpl->writer = pimpl->group->createVLENDataSet("records", fs, dims, std::get<0>(*pimpl->h5types),
-                                                        std::get<1>(*pimpl->h5types));
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
-    }
+    pimpl->firstWrite = true;
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getReactionRecordTypes(file.ref()));
+    pimpl->group = std::make_unique<h5rd::Group>(
+            file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
+    pimpl->writer = pimpl->group->createVLENDataSet("records", fs, dims, std::get<0>(*pimpl->h5types),
+                                                    std::get<1>(*pimpl->h5types));
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
 }
 
 void Reactions::append() {

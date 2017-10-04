@@ -75,10 +75,10 @@ scalar  getRecommendedTimeStep(unsigned int N, Context& context) {
     scalar  kReactionMax = 0;
 
     for (auto &&reactionO1 : context.reactions().order1_flat()) {
-        kReactionMax = std::max(kReactionMax, reactionO1->getRate());
+        kReactionMax = std::max(kReactionMax, reactionO1->rate());
     }
     for (auto &&reactionO2 : context.reactions().order2_flat()) {
-        kReactionMax = std::max(kReactionMax, reactionO2->getRate());
+        kReactionMax = std::max(kReactionMax, reactionO2->rate());
     }
 
     scalar  tDMin = 0;
@@ -91,8 +91,8 @@ scalar  getRecommendedTimeStep(unsigned int N, Context& context) {
         scalar  rMin = std::numeric_limits<scalar >::max();
 
         for (auto &&reaction : context.reactions().order1_by_type(pI)) {
-            if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
-                rMin = std::min(rMin, reaction->getProductDistance());
+            if (reaction->nProducts() == 2 && reaction->productDistance() > 0) {
+                rMin = std::min(rMin, reaction->productDistance());
             }
         }
 
@@ -106,11 +106,11 @@ scalar  getRecommendedTimeStep(unsigned int N, Context& context) {
         for (auto &&pJ : context.particle_types().types_flat()) {
 
             for (auto &&reaction : context.reactions().order2_by_type(pI, pJ)) {
-                if (reaction->getEductDistance() > 0) {
-                    rMin = std::min(rMin, reaction->getEductDistance());
+                if (reaction->eductDistance() > 0) {
+                    rMin = std::min(rMin, reaction->eductDistance());
                 }
-                if (reaction->getNProducts() == 2 && reaction->getProductDistance() > 0) {
-                    rMin = std::min(rMin, reaction->getProductDistance());
+                if (reaction->nProducts() == 2 && reaction->productDistance() > 0) {
+                    rMin = std::min(rMin, reaction->productDistance());
                 }
             }
 

@@ -50,7 +50,7 @@ void performReaction(
     auto& entry1 = data.entry_at(idx1);
     auto& entry2 = data.entry_at(idx2);
     if(record) {
-        record->type = static_cast<int>(reaction->getType());
+        record->type = static_cast<int>(reaction->type());
         record->where = (entry1.position() + entry2.position()) / 2.;
         fixPos(record->where);
         record->educts[0] = entry1.id;
@@ -58,25 +58,25 @@ void performReaction(
         record->types_from[0] = entry1.type;
         record->types_from[1] = entry2.type;
     }
-    switch (reaction->getType()) {
+    switch (reaction->type()) {
         case reaction_type::Decay: {
             decayedEntries.push_back(idx1);
             break;
         }
         case reaction_type::Conversion: {
-            entry1.type = reaction->getProducts()[0];
+            entry1.type = reaction->products()[0];
             entry1.id = readdy::model::Particle::nextId();
             if(record) record->products[0] = entry1.id;
             break;
         }
         case reaction_type::Enzymatic: {
-            if (entry1.type == reaction->getEducts()[1]) {
+            if (entry1.type == reaction->educts()[1]) {
                 // p1 is the catalyst
-                entry2.type = reaction->getProducts()[0];
+                entry2.type = reaction->products()[0];
                 entry2.id = readdy::model::Particle::nextId();
             } else {
                 // p2 is the catalyst
-                entry1.type = reaction->getProducts()[0];
+                entry1.type = reaction->products()[0];
                 entry1.id = readdy::model::Particle::nextId();
             }
             if(record) {
@@ -89,12 +89,12 @@ void performReaction(
             auto n3 = readdy::model::rnd::normal3<readdy::scalar>(0, 1);
             n3 /= std::sqrt(n3 * n3);
 
-            readdy::model::Particle p(entry1.position() - reaction->getWeight2() * reaction->getProductDistance() * n3,
-                                      reaction->getProducts()[1]);
+            readdy::model::Particle p(entry1.position() - reaction->weight2() * reaction->productDistance() * n3,
+                                      reaction->products()[1]);
             newEntries.emplace_back(p);
 
-            entry1.type = reaction->getProducts()[0];
-            entry1.pos += reaction->getWeight1() * reaction->getProductDistance() * n3;
+            entry1.type = reaction->products()[0];
+            entry1.pos += reaction->weight1() * reaction->productDistance() * n3;
             entry1.id = readdy::model::Particle::nextId();
             fixPos(entry1.pos);
             if(record) {
@@ -106,13 +106,13 @@ void performReaction(
         case reaction_type::Fusion: {
             const auto e1Pos = data.entry_at(idx1).pos;
             const auto e2Pos = data.entry_at(idx2).pos;
-            if (reaction->getEducts()[0] == entry1.type) {
-                entry1.pos += reaction->getWeight1() * (e2Pos - e1Pos);
+            if (reaction->educts()[0] == entry1.type) {
+                entry1.pos += reaction->weight1() * (e2Pos - e1Pos);
             } else {
-                entry1.pos += reaction->getWeight2() * (e2Pos - e1Pos);
+                entry1.pos += reaction->weight2() * (e2Pos - e1Pos);
             }
             fixPos(entry1.pos);
-            entry1.type = reaction->getProducts()[0];
+            entry1.type = reaction->products()[0];
             entry1.id = readdy::model::Particle::nextId();
             decayedEntries.push_back(idx2);
             if(record) record->products[0] = entry1.id;

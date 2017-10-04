@@ -47,15 +47,15 @@ void writeReactionInformation(h5rd::Group &group, const Context &context) {
     if (n_reactions > 0) {
         std::vector<ReactionInfo> order1_info;
         for (const auto &r : order1_reactions) {
-            const auto &reactions_current_type = context.reactions().order1_by_type(r->getEducts()[0]);
+            const auto &reactions_current_type = context.reactions().order1_by_type(r->educts()[0]);
             auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
-                                   [&r](const reactions::Reaction<1> *x) { return x->getId() == r->getId(); });
+                                   [&r](const reactions::Reaction<1> *x) { return x->id() == r->id(); });
             if (it != reactions_current_type.end()) {
                 std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
-                const std::array<particle_type_type, 2> educts = {r->getEducts()[0], 0};
-                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(),
-                                  r->getRate(), r->getEductDistance(),
-                                  r->getProductDistance(), educts, r->getProducts()};
+                const std::array<particle_type_type, 2> educts = {r->educts()[0], 0};
+                ReactionInfo info{r->name().c_str(), index, r->id(), r->nEducts(), r->nProducts(),
+                                  r->rate(), r->eductDistance(),
+                                  r->productDistance(), educts, r->products()};
                 order1_info.push_back(info);
             }
         }
@@ -72,15 +72,15 @@ void writeReactionInformation(h5rd::Group &group, const Context &context) {
     if (n_reactions > 0) {
         std::vector<ReactionInfo> order2_info;
         for (const auto &r : order2_reactions) {
-            const auto &reactions_current_type = context.reactions().order2_by_type(r->getEducts()[0],
-                                                                                    r->getEducts()[1]);
+            const auto &reactions_current_type = context.reactions().order2_by_type(r->educts()[0],
+                                                                                    r->educts()[1]);
             auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
-                                   [&r](const reactions::Reaction<2> *x) { return x->getId() == r->getId(); });
+                                   [&r](const reactions::Reaction<2> *x) { return x->id() == r->id(); });
             if (it != reactions_current_type.end()) {
                 std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
-                ReactionInfo info{r->getName().c_str(), index, r->getId(), r->getNEducts(), r->getNProducts(),
-                                  r->getRate(), r->getEductDistance(),
-                                  r->getProductDistance(), r->getEducts(), r->getProducts()};
+                ReactionInfo info{r->name().c_str(), index, r->id(), r->nEducts(), r->nProducts(),
+                                  r->rate(), r->eductDistance(),
+                                  r->productDistance(), r->educts(), r->products()};
                 order2_info.push_back(info);
             }
         }

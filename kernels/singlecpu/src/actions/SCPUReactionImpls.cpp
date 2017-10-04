@@ -87,11 +87,11 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
                 // order 1
                 const auto &reactions = kernel->context().reactions().order1_by_type(e.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
-                    const auto rate = (*it_reactions)->getRate();
+                    const auto rate = (*it_reactions)->rate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
                         //unsigned int nEducts, unsigned int nProducts, index_type idx1, index_type idx2, scalar reactionRate,
                         //scalar cumulativeRate, reaction_index_type reactionIdx, particletype_t t1, particletype_t t2
-                        Event evt{1, (*it_reactions)->getNProducts(), idx, idx, rate, 0,
+                        Event evt{1, (*it_reactions)->nProducts(), idx, idx, rate, 0,
                                   static_cast<std::size_t>(it_reactions - reactions.begin()),
                                   e.type, 0};
                         eventsUpdate.push_back(evt);
@@ -113,13 +113,13 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
                 const auto distSquared = d2(neighbor.position(), entry.position());
                 for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
                     const auto &react = *it_reactions;
-                    const auto rate = react->getRate();
-                    if (rate > 0 && distSquared < react->getEductDistanceSquared()
+                    const auto rate = react->rate();
+                    if (rate > 0 && distSquared < react->eductDistanceSquared()
                         && shouldPerformEvent(rate, dt, approximateRate)) {
                         const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                               reactions.begin());
-                        eventsUpdate.emplace_back(2, react->getNProducts(), it_nl->idx1, it_nl->idx2, rate, 0, reaction_index,
-                                 entry.type, neighbor.type);
+                        eventsUpdate.emplace_back(2, react->nProducts(), it_nl->idx1, it_nl->idx2, rate, 0,
+                                                  reaction_index, entry.type, neighbor.type);
                     }
                 }
             }
@@ -227,10 +227,10 @@ void gatherEvents(SCPUKernel const *const kernel,
             if(!entry.is_deactivated()) {
                 const auto &reactions = kernel->context().reactions().order1_by_type(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
-                    const auto rate = (*it)->getRate();
+                    const auto rate = (*it)->rate();
                     if (rate > 0) {
                         alpha += rate;
-                        events.emplace_back(1, (*it)->getNProducts(), index, 0, rate, alpha,
+                        events.emplace_back(1, (*it)->nProducts(), index, 0, rate, alpha,
                                  static_cast<event_t::reaction_index_type>(it - reactions.begin()),
                                  entry.type, 0);
                     }
@@ -250,10 +250,10 @@ void gatherEvents(SCPUKernel const *const kernel,
                 const auto distSquared = d2(neighbor.position(), entry.position());
                 for (auto it = reactions.begin(); it < reactions.end(); ++it) {
                     const auto &react = *it;
-                    const auto rate = react->getRate();
-                    if (rate > 0 && distSquared < react->getEductDistanceSquared()) {
+                    const auto rate = react->rate();
+                    if (rate > 0 && distSquared < react->eductDistanceSquared()) {
                         alpha += rate;
-                        events.emplace_back(2, react->getNProducts(), it_nl.idx1, it_nl.idx2,
+                        events.emplace_back(2, react->nProducts(), it_nl.idx1, it_nl.idx2,
                                           rate, alpha,
                                           static_cast<event_t::reaction_index_type>(it - reactions.begin()),
                                           entry.type, neighbor.type);

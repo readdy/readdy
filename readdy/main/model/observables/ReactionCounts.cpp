@@ -79,13 +79,12 @@ void ReactionCounts::initialize(Kernel *const kernel) {
 }
 
 void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->group) {
-        pimpl->group = std::make_unique<h5rd::Group>(
-                file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
-        pimpl->shouldWrite = true;
-        pimpl->flushStride = flushStride;
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
-    }
+    pimpl->firstWrite = true;
+    pimpl->group = std::make_unique<h5rd::Group>(
+            file.createGroup(std::string(util::OBSERVABLES_GROUP_PATH) + "/" + dataSetName));
+    pimpl->shouldWrite = true;
+    pimpl->flushStride = flushStride;
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(*pimpl->group, flushStride);
 }
 
 static void writeCountsToDataSets(const ReactionCounts::result_type &counts, data_set_order1_map &dSetOrder1,

@@ -66,16 +66,14 @@ void Trajectory::flush() {
 Trajectory::~Trajectory() = default;
 
 void Trajectory::initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) {
-    if (!pimpl->dataSet) {
-        pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getTrajectoryEntryTypes(file.parentFile()));
-        h5rd::dimensions fs = {flushStride};
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        auto group = file.createGroup(
-                std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
-        pimpl->dataSet = group.createVLENDataSet("records", fs, dims,
-                                                 std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
-        pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
-    }
+    pimpl->h5types = std::make_unique<util::CompoundH5Types>(util::getTrajectoryEntryTypes(file.parentFile()));
+    h5rd::dimensions fs = {flushStride};
+    h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+    auto group = file.createGroup(
+            std::string(TRAJECTORY_GROUP_PATH + (dataSetName.length() > 0 ? "/" + dataSetName : "")));
+    pimpl->dataSet = group.createVLENDataSet("records", fs, dims,
+                                             std::get<0>(*pimpl->h5types), std::get<1>(*pimpl->h5types));
+    pimpl->time = std::make_unique<util::TimeSeriesWriter>(group, flushStride);
 }
 
 void Trajectory::append() {

@@ -72,9 +72,9 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
             {
                 const auto &reactions = kernel->context().reactions().order1_by_type(entry.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
-                    const auto rate = (*it_reactions)->getRate();
+                    const auto rate = (*it_reactions)->rate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
-                        eventsUpdate.emplace_back(1, (*it_reactions)->getNProducts(), index, index, rate, 0,
+                        eventsUpdate.emplace_back(1, (*it_reactions)->nProducts(), index, index, rate, 0,
                                                   static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                             reactions.begin()),
                                                   entry.type, 0);
@@ -96,12 +96,12 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
                         const auto distSquared = d2(neighbor.pos, entry.pos);
                         for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
                             const auto &react = *it_reactions;
-                            const auto rate = react->getRate();
-                            if (rate > 0 && distSquared < react->getEductDistanceSquared()
+                            const auto rate = react->rate();
+                            if (rate > 0 && distSquared < react->eductDistanceSquared()
                                 && shouldPerformEvent(rate, dt, approximateRate)) {
                                 const auto reaction_index = static_cast<event_t::reaction_index_type>(it_reactions -
                                                                                                       reactions.begin());
-                                eventsUpdate.emplace_back(2, react->getNProducts(), nit->current_particle(), neighborIdx, rate, 0,
+                                eventsUpdate.emplace_back(2, react->nProducts(), nit->current_particle(), neighborIdx, rate, 0,
                                                           reaction_index, entry.type, neighbor.type);
                             }
                         }

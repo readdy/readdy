@@ -59,7 +59,7 @@ const ReactionRegistry::reactions_o1 ReactionRegistry::order1_flat() const {
 const ReactionRegistry::reaction_o1 ReactionRegistry::order1_by_name(const std::string &name) const {
     for (const auto &mapEntry : one_educt_registry) {
         for (const auto &reaction : mapEntry.second) {
-            if (reaction->getName() == name) return reaction;
+            if (reaction->name() == name) return reaction;
         }
     }
 
@@ -83,7 +83,7 @@ const ReactionRegistry::reactions_o1 &ReactionRegistry::order1_by_type(const Par
 const ReactionRegistry::reaction_o2 ReactionRegistry::order2_by_name(const std::string &name) const {
     for (const auto &mapEntry : two_educts_registry) {
         for (const auto &reaction : mapEntry.second) {
-            if (reaction->getName() == name) return reaction;
+            if (reaction->name() == name) return reaction;
         }
     }
     return nullptr;
@@ -157,9 +157,9 @@ const std::size_t &ReactionRegistry::n_order2() const {
 }
 
 const short ReactionRegistry::add_external(reactions::Reaction<1> *r) {
-    one_educt_registry_external[r->getEducts()[0]].push_back(r);
+    one_educt_registry_external[r->educts()[0]].push_back(r);
     _n_order1 += 1;
-    return r->getId();
+    return r->id();
 }
 
 ReactionRegistry::ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref) : _types(ref) {}
@@ -185,7 +185,7 @@ ReactionRegistry::reaction_id
 ReactionRegistry::addConversion(const std::string &name, particle_type_type from, particle_type_type to, scalar rate) {
     auto reaction = std::make_shared<Conversion>(name, from, to, rate);
     auto type = reaction->getTypeFrom();
-    auto id = reaction->getId();
+    auto id = reaction->id();
     if (one_educt_registry_internal.find(type) == one_educt_registry_internal.end()) {
         one_educt_registry_internal.emplace(type, rea_ptr_vec1());
     }
@@ -198,8 +198,8 @@ ReactionRegistry::reaction_id
 ReactionRegistry::addEnzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from,
                                particle_type_type to, scalar rate, scalar eductDistance) {
     auto reaction = std::make_shared<Enzymatic>(name, catalyst, from, to, rate, eductDistance);
-    const auto id = reaction->getId();
-    const auto pp = std::make_tuple(reaction->getEducts()[0], reaction->getEducts()[1]);
+    const auto id = reaction->id();
+    const auto pp = std::make_tuple(reaction->educts()[0], reaction->educts()[1]);
 
     if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
         two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
@@ -236,7 +236,7 @@ ReactionRegistry::addFission(const std::string &name, particle_type_type from, p
                              scalar weight2) {
     auto reaction = std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2);
     auto type = reaction->getFrom();
-    auto id = reaction->getId();
+    auto id = reaction->id();
     if (one_educt_registry_internal.find(type) == one_educt_registry_internal.end()) {
         one_educt_registry_internal.emplace(type, rea_ptr_vec1());
     }
@@ -256,8 +256,8 @@ ReactionRegistry::reaction_id
 ReactionRegistry::addFusion(const std::string &name, particle_type_type from1, particle_type_type from2,
                             particle_type_type to, scalar rate, scalar eductDistance, scalar weight1, scalar weight2) {
     auto reaction = std::make_shared<Fusion>(name, from1, from2, to, rate, eductDistance, weight1, weight2);
-    const auto id = reaction->getId();
-    const auto pp = std::make_tuple(reaction->getEducts()[0], reaction->getEducts()[1]);
+    const auto id = reaction->id();
+    const auto pp = std::make_tuple(reaction->educts()[0], reaction->educts()[1]);
 
     if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
         two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
@@ -415,7 +415,7 @@ ReactionRegistry::reaction_id
 ReactionRegistry::addDecay(const std::string &name, particle_type_type type, scalar rate) {
     auto reaction = std::make_shared<Decay>(name, type, rate);
     auto t = reaction->getTypeFrom();
-    auto id = reaction->getId();
+    auto id = reaction->id();
     if (one_educt_registry_internal.find(t) == one_educt_registry_internal.end()) {
         one_educt_registry_internal.emplace(t, rea_ptr_vec1());
     }
@@ -425,9 +425,9 @@ ReactionRegistry::addDecay(const std::string &name, particle_type_type type, sca
 }
 
 const short ReactionRegistry::add_external(reactions::Reaction<2> *r) {
-    two_educts_registry_external[std::tie(r->getEducts()[0], r->getEducts()[1])].push_back(r);
+    two_educts_registry_external[std::tie(r->educts()[0], r->educts()[1])].push_back(r);
     _n_order2 += 1;
-    return r->getId();
+    return r->id();
 }
 
 }

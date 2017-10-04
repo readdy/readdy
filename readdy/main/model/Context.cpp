@@ -166,7 +166,7 @@ const scalar Context::calculateMaxCutoff() const {
     }
     for (const auto &entry : reactions().order2()) {
         for (const auto &reaction : entry.second) {
-            max_cutoff = std::max(max_cutoff, reaction->getEductDistance());
+            max_cutoff = std::max(max_cutoff, reaction->eductDistance());
         }
     }
     for (const auto &entry : _topologyRegistry.spatial_reaction_registry()) {
