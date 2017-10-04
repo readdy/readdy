@@ -134,36 +134,36 @@ void ReactionCounts::append() {
         if (pimpl->shouldWrite) {
             auto subgroup = pimpl->group->createGroup("counts");
             auto order1Subgroup = subgroup.createGroup("order1");
-            for (const auto &entry : ctx.particle_types().type_mapping()) {
+            for (const auto &entry : ctx.particle_types().typeMapping()) {
                 const auto &pType = entry.second;
-                const auto numberOrder1Reactions = ctx.reactions().order1_by_type(pType).size();
+                const auto numberOrder1Reactions = ctx.reactions().order1ByType(pType).size();
                 if (numberOrder1Reactions > 0) {
                     h5rd::dimensions chunkSize = {pimpl->flushStride, numberOrder1Reactions};
                     h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, numberOrder1Reactions};
                     pimpl->ds_order1.emplace(std::piecewise_construct, std::forward_as_tuple(pType),
                                              std::forward_as_tuple(
                                                      order1Subgroup.createDataSet<std::size_t>(
-                                                             ctx.particle_types().name_of(pType) + "[id=" +
+                                                             ctx.particle_types().nameOf(pType) + "[id=" +
                                                              std::to_string(pType) + "]",
                                                              chunkSize, dims, {&pimpl->bloscFilter})));
                 }
             }
             auto order2Subgroup = subgroup.createGroup("order2");
-            for (const auto &entry1 : ctx.particle_types().type_mapping()) {
+            for (const auto &entry1 : ctx.particle_types().typeMapping()) {
                 const auto &pType1 = entry1.second;
-                for (const auto &entry2 : ctx.particle_types().type_mapping()) {
+                for (const auto &entry2 : ctx.particle_types().typeMapping()) {
                     const auto &pType2 = entry2.second;
                     if (pType2 < pType1) continue;
-                    const auto numberOrder2Reactions = ctx.reactions().order2_by_type(pType1, pType2).size();
+                    const auto numberOrder2Reactions = ctx.reactions().order2ByType(pType1, pType2).size();
                     if (numberOrder2Reactions > 0) {
                         h5rd::dimensions chunkSize = {pimpl->flushStride, numberOrder2Reactions};
                         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS, numberOrder2Reactions};
                         pimpl->ds_order2.emplace(std::piecewise_construct,
                                                  std::forward_as_tuple(std::tie(pType1, pType2)),
                                                  std::forward_as_tuple(order2Subgroup.createDataSet<std::size_t>(
-                                                         ctx.particle_types().name_of(pType1) + "[id=" +
+                                                         ctx.particle_types().nameOf(pType1) + "[id=" +
                                                          std::to_string(pType1) + "] + " +
-                                                         ctx.particle_types().name_of(pType2) + "[id=" +
+                                                                 ctx.particle_types().nameOf(pType2) + "[id=" +
                                                          std::to_string(pType2) + "]",
                                                          chunkSize, dims, {&pimpl->bloscFilter})));
                     }
@@ -186,9 +186,9 @@ ReactionCounts::initializeCounts(
         const readdy::model::Context &ctx) {
     auto &order1Counts = std::get<0>(reactionCounts);
     auto &order2Counts = std::get<1>(reactionCounts);
-    for (const auto &entry1 : ctx.particle_types().type_mapping()) {
+    for (const auto &entry1 : ctx.particle_types().typeMapping()) {
         const auto &pType1 = entry1.second;
-        const auto numberReactionsOrder1 = ctx.reactions().order1_by_type(pType1).size();
+        const auto numberReactionsOrder1 = ctx.reactions().order1ByType(pType1).size();
         if (numberReactionsOrder1 > 0) {
             // will create an entry for pType1 if necessary
             auto &countsForType = order1Counts[pType1];
@@ -198,10 +198,10 @@ ReactionCounts::initializeCounts(
                 std::fill(countsForType.begin(), countsForType.end(), 0);
             }
         }
-        for (const auto &entry2: ctx.particle_types().type_mapping()) {
+        for (const auto &entry2: ctx.particle_types().typeMapping()) {
             const auto &pType2 = entry2.second;
             if (pType2 < pType1) continue;
-            const auto numberReactionsOrder2 = ctx.reactions().order2_by_type(pType1, pType2).size();
+            const auto numberReactionsOrder2 = ctx.reactions().order2ByType(pType1, pType2).size();
             if (numberReactionsOrder2 > 0) {
                 // will create an entry for particle-type-pair if necessary
                 auto &countsForPair = order2Counts[std::tie(pType1, pType2)];

@@ -83,7 +83,7 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
         if (!entry.deactivated) {
             // order 1
             {
-                const auto &reactions = kernel->context().reactions().order1_by_type(entry.type);
+                const auto &reactions = kernel->context().reactions().order1ByType(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->rate();
                     if (rate > 0) {
@@ -106,8 +106,8 @@ void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &partic
                 if (index > idx_neighbor) continue;
                 const auto &neighbor = data->entry_at(idx_neighbor);
                 if (!neighbor.deactivated) {
-                    const auto &reactions = kernel->context().reactions().order2_by_type(entry.type,
-                                                                                                  neighbor.type);
+                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
+                                                                                       neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
                         for (auto itReactions = reactions.begin(); itReactions < reactions.end(); ++itReactions) {

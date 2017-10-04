@@ -45,7 +45,7 @@ TEST_P(TestObservables, TestParticlePositions) {
     const unsigned int n_particles = 100;
     kernel->context().particle_types().add("type", 1.);
     const readdy::scalar  timeStep = 1.0;
-    const auto particleTypeId = kernel->context().particle_types().id_of("type");
+    const auto particleTypeId = kernel->context().particle_types().idOf("type");
     const auto particles = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, particleTypeId));
     kernel->stateModel().addParticles(particles);
     auto &&obs = kernel->createObservable<m::observables::Positions>(3);
@@ -79,8 +79,8 @@ TEST_P(TestObservables, TestForcesObservable) {
     // Setup particles
     kernel->context().particle_types().add("A", 42.);
     kernel->context().particle_types().add("B", 1337.);
-    const auto typeIdA = kernel->context().particle_types().id_of("A");
-    const auto typeIdB = kernel->context().particle_types().id_of("B");
+    const auto typeIdA = kernel->context().particle_types().idOf("A");
+    const auto typeIdB = kernel->context().particle_types().idOf("B");
     const unsigned int n_particles = 2; // There will be 55 Bs
     const auto particlesA = std::vector<m::Particle>(n_particles, m::Particle(0, 0, 0, typeIdA));
     const auto particlesB = std::vector<m::Particle>(n_particles + 5, m::Particle(0, 0, 0, typeIdB));
@@ -113,7 +113,7 @@ TEST_P(TestObservables, TestForcesObservable) {
     kernel->context().periodicBoundaryConditions() = {{false, false, false}};
     kernel->context().boxSize() = {{5, 5, 5}};
     kernel->context().particle_types().add("C", 1.);
-    const auto typeIdC = kernel->context().particle_types().id_of("C");
+    const auto typeIdC = kernel->context().particle_types().idOf("C");
     const auto particlesC = std::vector<m::Particle>{m::Particle(0, 0, 0, typeIdC), m::Particle(0, -1.5, 0, typeIdC)};
     kernel->stateModel().addParticles(particlesC);
 

@@ -65,14 +65,14 @@ void exportKernelContext(py::module &module) {
     const std::string &, const std::string &, scalar)) &ReactionRegistry::addDecay);
 
     py::class_<ParticleTypeRegistry>(module, "ParticleTypeRegistry")
-            .def("id_of", &ParticleTypeRegistry::id_of)
+            .def("id_of", &ParticleTypeRegistry::idOf)
             .def("add", &ParticleTypeRegistry::add, "name"_a, "diffusion_constant"_a, "flavor"_a = 0)
             .def("diffusion_constant_of", [](const ParticleTypeRegistry &self, const std::string &type) {
-                return self.diffusion_constant_of(type);
+                return self.diffusionConstantOf(type);
             })
-            .def("n_types", &ParticleTypeRegistry::n_types)
-            .def("name_of", &ParticleTypeRegistry::name_of)
-            .def_property_readonly("type_mapping", &ParticleTypeRegistry::type_mapping, rvp::reference_internal);
+            .def("n_types", &ParticleTypeRegistry::nTypes)
+            .def("name_of", &ParticleTypeRegistry::nameOf)
+            .def_property_readonly("type_mapping", &ParticleTypeRegistry::typeMapping, rvp::reference_internal);
 
     py::class_<PotentialRegistry>(module, "PotentialRegistry")
             .def("add_box",
@@ -154,18 +154,18 @@ void exportKernelContext(py::module &module) {
             }), "force_constant"_a, "multiplicity"_a, "phi0"_a, "type"_a="cos_dihedral");
 
     py::class_<TopologyRegistry>(module, "TopologyRegistry")
-            .def("add_type", [](TopologyRegistry &self, const std::string &type) { return self.add_type(type); })
+            .def("add_type", [](TopologyRegistry &self, const std::string &type) { return self.addType(type); })
             .def("add_structural_reaction", [](TopologyRegistry &self, const std::string &type,
                                                const readdy::model::top::reactions::StructuralTopologyReaction &reaction) {
-                self.add_structural_reaction(type, reaction);
+                self.addStructuralReaction(type, reaction);
             })
             .def("add_spatial_reaction",
                  [](TopologyRegistry &self, const std::string &descriptor, scalar rate, scalar radius) {
-                     self.add_spatial_reaction(descriptor, rate, radius);
+                     self.addSpatialReaction(descriptor, rate, radius);
                  })
-            .def("configure_bond_potential", &TopologyRegistry::configure_bond_potential)
-            .def("configure_angle_potential", &TopologyRegistry::configure_angle_potential)
-            .def("configure_torsion_potential", &TopologyRegistry::configure_torsion_potential);
+            .def("configure_bond_potential", &TopologyRegistry::configureBondPotential)
+            .def("configure_angle_potential", &TopologyRegistry::configureAnglePotential)
+            .def("configure_torsion_potential", &TopologyRegistry::configureTorsionPotential);
 
     py::class_<CompartmentRegistry>(module, "CompartmentRegistry")
             .def("add_sphere", [](CompartmentRegistry &self,

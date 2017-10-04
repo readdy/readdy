@@ -60,8 +60,8 @@ public:
 
         stateModel.energy() = 0;
 
-        const auto &potOrder1 = context.potentials().potentials_order1();
-        const auto &potOrder2 = context.potentials().potentials_order2();
+        const auto &potOrder1 = context.potentials().potentialsOrder1();
+        const auto &potOrder2 = context.potentials().potentialsOrder2();
         if(!potOrder1.empty() || !potOrder2.empty() || !stateModel.topologies().empty()) {
             const auto &d = context.shortestDifferenceFun();
             {
@@ -126,8 +126,8 @@ protected:
                    const readdy::util::thread::barrier &barrier) {
         scalar energyUpdate = 0.0;
 
-        const auto &pot1 = context.potentials().potentials_order1();
-        const auto &pot2 = context.potentials().potentials_order2();
+        const auto &pot1 = context.potentials().potentialsOrder1();
+        const auto &pot2 = context.potentials().potentialsOrder2();
         const auto &d = context.shortestDifferenceFun();
 
         {

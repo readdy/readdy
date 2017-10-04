@@ -91,7 +91,7 @@ void PotentialRegistry::remove(const Potential::id_type handle) {
     }
 }
 
-const PotentialRegistry::potentials_o1 &PotentialRegistry::potentials_of(const particle_type_type type) const {
+const PotentialRegistry::potentials_o1 &PotentialRegistry::potentialsOf(const particle_type_type type) const {
     auto it = potentialO1Registry.find(type);
     if (it != potentialO1Registry.end()) {
         return it->second;
@@ -99,12 +99,12 @@ const PotentialRegistry::potentials_o1 &PotentialRegistry::potentials_of(const p
     return defaultPotentialsO1;
 }
 
-const PotentialRegistry::potential_o1_registry &PotentialRegistry::potentials_order1() const {
+const PotentialRegistry::potential_o1_registry &PotentialRegistry::potentialsOrder1() const {
     return potentialO1Registry;
 }
 
 const std::vector<PotentialOrder2 *> &
-PotentialRegistry::potentials_of(const particle_type_type t1, const particle_type_type t2) const {
+PotentialRegistry::potentialsOf(const particle_type_type t1, const particle_type_type t2) const {
     auto it = potentialO2Registry.find(std::tie(t1, t2));
     if (it != potentialO2Registry.end()) {
         return it->second;
@@ -112,17 +112,17 @@ PotentialRegistry::potentials_of(const particle_type_type t1, const particle_typ
     return defaultPotentialsO2;
 }
 
-const PotentialRegistry::potential_o2_registry &PotentialRegistry::potentials_order2() const {
+const PotentialRegistry::potential_o2_registry &PotentialRegistry::potentialsOrder2() const {
     return potentialO2Registry;
 }
 
-const PotentialRegistry::potentials_o1 &PotentialRegistry::potentials_of(const std::string &type) const {
-    return potentials_of(_types.get().id_of(type));
+const PotentialRegistry::potentials_o1 &PotentialRegistry::potentialsOf(const std::string &type) const {
+    return potentialsOf(_types.get().idOf(type));
 }
 
 const PotentialRegistry::potentials_o2 &
-PotentialRegistry::potentials_of(const std::string &t1, const std::string &t2) const {
-    return potentials_of(_types.get().id_of(t1), _types.get().id_of(t2));
+PotentialRegistry::potentialsOf(const std::string &t1, const std::string &t2) const {
+    return potentialsOf(_types.get().idOf(t1), _types.get().idOf(t2));
 }
 
 void PotentialRegistry::configure() {
@@ -149,25 +149,25 @@ void PotentialRegistry::configure() {
     });
 }
 
-void PotentialRegistry::debug_output() const {
+void PotentialRegistry::debugOutput() const {
     auto find_pot_name = [this](particle_type_type type) -> const std::string {
-        for (auto &&t : _types.get().type_mapping()) {
+        for (auto &&t : _types.get().typeMapping()) {
             if (t.second == type) return t.first;
         }
         return "";
     };
-    if (!potentials_order1().empty()) {
+    if (!potentialsOrder1().empty()) {
         log::debug(" - potentials of order 1:");
-        for (const auto &types : potentials_order1()) {
+        for (const auto &types : potentialsOrder1()) {
             log::debug("     * for type {}", find_pot_name(types.first));
             for (auto pot : types.second) {
                 log::debug("         * {}", pot->describe());
             }
         }
     }
-    if (!potentials_order2().empty()) {
+    if (!potentialsOrder2().empty()) {
         log::debug(" - potentials of order 2:");
-        for (const auto &types : potentials_order2()) {
+        for (const auto &types : potentialsOrder2()) {
             log::debug("     * for types {} and {}", find_pot_name(std::get<0>(types.first)),
                        find_pot_name(std::get<1>(types.first)));
             for (auto pot : types.second) {

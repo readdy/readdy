@@ -88,7 +88,7 @@ const Recipe::graph_topology &Recipe::topology() const {
 }
 
 Recipe &Recipe::changeParticleType(const Recipe::vertex_ref &ref, const std::string &to) {
-    return changeParticleType(ref, _topology.get().context().particle_types().id_of(to));
+    return changeParticleType(ref, _topology.get().context().particle_types().idOf(to));
 }
 
 

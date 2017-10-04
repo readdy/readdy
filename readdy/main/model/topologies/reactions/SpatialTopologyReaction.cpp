@@ -233,14 +233,14 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
         log::trace(R"(got rhs with topologies "{}" and "{}", particles "{}" and "{}")", rhs_t1, rhs_t2, rhs_p1, rhs_p2);
     }
 
-    const auto &particle_types = _topology_registry.get().particle_type_registry();
+    const auto &particle_types = _topology_registry.get().particleTypeRegistry();
 
     if(lhs_t2.empty()) {
         // we are in the topology-particle case
-        reaction._top_types = std::make_tuple(_topology_registry.get().id_of(lhs_t1), topology_type_empty);
-        reaction._types = std::make_tuple(particle_types.id_of(lhs_p1), particle_types.id_of(lhs_p2));
-        reaction._types_to = std::make_tuple(particle_types.id_of(rhs_p1), particle_types.id_of(rhs_p2));
-        reaction._top_types_to = std::make_tuple(_topology_registry.get().id_of(rhs_t1), topology_type_empty);
+        reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1), topology_type_empty);
+        reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
+        reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
+        reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), topology_type_empty);
         if(rhs_fusion) {
             // we are in the fusion case
             reaction._mode = STRMode::TP_FUSION;
@@ -250,10 +250,10 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
         }
     } else {
         // we are in the topology-topology case
-        reaction._top_types = std::make_tuple(_topology_registry.get().id_of(lhs_t1),
-                                              _topology_registry.get().id_of(lhs_t2));
-        reaction._types = std::make_tuple(particle_types.id_of(lhs_p1), particle_types.id_of(lhs_p2));
-        reaction._types_to = std::make_tuple(particle_types.id_of(rhs_p1), particle_types.id_of(rhs_p2));
+        reaction._top_types = std::make_tuple(_topology_registry.get().idOf(lhs_t1),
+                                              _topology_registry.get().idOf(lhs_t2));
+        reaction._types = std::make_tuple(particle_types.idOf(lhs_p1), particle_types.idOf(lhs_p2));
+        reaction._types_to = std::make_tuple(particle_types.idOf(rhs_p1), particle_types.idOf(rhs_p2));
         if(rhs_fusion) {
             // we are in the fusion case
             if(rhs.find("[self=true]") != rhs.npos) {
@@ -261,12 +261,12 @@ SpatialTopologyReaction STRParser::parse(const std::string &descriptor, scalar r
             } else {
                 reaction._mode = STRMode::TT_FUSION;
             }
-            reaction._top_types_to = std::make_tuple(_topology_registry.get().id_of(rhs_t1), topology_type_empty);
+            reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1), topology_type_empty);
         } else {
             // we are in the enzymatic case
             reaction._mode = STRMode::TT_ENZYMATIC;
-            reaction._top_types_to = std::make_tuple(_topology_registry.get().id_of(rhs_t1),
-                                                     _topology_registry.get().id_of(rhs_t2));
+            reaction._top_types_to = std::make_tuple(_topology_registry.get().idOf(rhs_t1),
+                                                     _topology_registry.get().idOf(rhs_t2));
         }
     }
 

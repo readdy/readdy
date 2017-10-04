@@ -96,10 +96,10 @@ void Context::configure(bool debugOutput) {
                    periodicBoundaryConditions()[2]);
         log::debug(" - box size = ({}, {}, {})", boxSize()[0], boxSize()[1], boxSize()[2]);
 
-        _particleTypeRegistry.debug_output();
-        _potentialRegistry.debug_output();
-        _reactionRegistry.debug_output();
-        _topologyRegistry.debug_output();
+        _particleTypeRegistry.debugOutput();
+        _potentialRegistry.debugOutput();
+        _reactionRegistry.debugOutput();
+        _topologyRegistry.debugOutput();
     }
 
 }
@@ -159,7 +159,7 @@ const Context::pbc_fun &Context::applyPBCFun() const {
 
 const scalar Context::calculateMaxCutoff() const {
     scalar max_cutoff{0};
-    for (const auto &entry : potentials().potentials_order2()) {
+    for (const auto &entry : potentials().potentialsOrder2()) {
         for (const auto &potential : entry.second) {
             max_cutoff = std::max(max_cutoff, potential->getCutoffRadius());
         }
@@ -169,7 +169,7 @@ const scalar Context::calculateMaxCutoff() const {
             max_cutoff = std::max(max_cutoff, reaction->eductDistance());
         }
     }
-    for (const auto &entry : _topologyRegistry.spatial_reaction_registry()) {
+    for (const auto &entry : _topologyRegistry.spatialReactionRegistry()) {
         for (const auto &reaction : entry.second) {
             max_cutoff = std::max(max_cutoff, reaction.radius());
         }

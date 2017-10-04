@@ -86,7 +86,7 @@ void GraphTopology::configure() {
     std::unordered_map<api::AngleType, std::vector<pot::AngleConfiguration>, readdy::util::hash::EnumClassHash> angles;
     std::unordered_map<api::TorsionType, std::vector<pot::DihedralConfiguration>, readdy::util::hash::EnumClassHash> dihedrals;
 
-    const auto &config = context().topology_registry().potential_configuration();
+    const auto &config = context().topology_registry().potentialConfiguration();
 
     graph_.findNTuples([&](const topology_graph::edge &tuple) {
         auto v1 = std::get<0>(tuple);
@@ -223,7 +223,7 @@ const GraphTopology::topology_reaction_rate GraphTopology::cumulativeRate() cons
 const bool GraphTopology::isNormalParticle(const Kernel &k) const {
     if(getNParticles() == 1){
         const auto particle_type = k.stateModel().getParticleType(particles.front());
-        const auto& info = k.context().particle_types().info_of(particle_type);
+        const auto& info = k.context().particle_types().infoOf(particle_type);
         return info.flavor == particleflavor::NORMAL;
     }
     return false;

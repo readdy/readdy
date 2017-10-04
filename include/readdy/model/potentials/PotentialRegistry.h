@@ -136,21 +136,21 @@ public:
 
     void remove(Potential::id_type handle);
 
-    const potentials_o1 &potentials_of(const particle_type_type type) const;
+    const potentials_o1 &potentialsOf(const particle_type_type type) const;
 
-    const potential_o1_registry &potentials_order1() const;
+    const potential_o1_registry &potentialsOrder1() const;
 
-    const potentials_o2 &potentials_of(const particle_type_type t1, const particle_type_type t2) const;
+    const potentials_o2 &potentialsOf(const particle_type_type t1, const particle_type_type t2) const;
 
-    const potential_o2_registry &potentials_order2() const;
+    const potential_o2_registry &potentialsOrder2() const;
 
-    const potentials_o1 &potentials_of(const std::string &type) const;
+    const potentials_o1 &potentialsOf(const std::string &type) const;
 
-    const potentials_o2 &potentials_of(const std::string &t1, const std::string &t2) const;
+    const potentials_o2 &potentialsOf(const std::string &t1, const std::string &t2) const;
 
     void configure();
 
-    void debug_output() const;
+    void debugOutput() const;
 
 private:
     using potential_o1_registry_internal = std::unordered_map<particle_type_type, pot_ptr_vec1>;

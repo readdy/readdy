@@ -82,35 +82,35 @@ public:
 
     ~ParticleTypeRegistry() = default;
 
-    particle_type_type id_of(const std::string &name) const;
+    particle_type_type idOf(const std::string &name) const;
 
     particle_type_type operator()(const std::string &name) const;
 
     void add(const std::string &name, scalar diffusionConst, particle_flavor flavor = particleflavor::NORMAL);
 
-    const ParticleTypeInfo &info_of(const std::string &name) const;
+    const ParticleTypeInfo &infoOf(const std::string &name) const;
 
-    const ParticleTypeInfo &info_of(Particle::type_type type) const;
+    const ParticleTypeInfo &infoOf(Particle::type_type type) const;
 
-    scalar diffusion_constant_of(const std::string &particleType) const;
+    scalar diffusionConstantOf(const std::string &particleType) const;
 
-    scalar diffusion_constant_of(particle_type_type particleType) const;
+    scalar diffusionConstantOf(particle_type_type particleType) const;
 
-    const std::size_t &n_types() const;
+    const std::size_t &nTypes() const;
 
-    std::vector<particle_type_type> types_flat() const;
+    std::vector<particle_type_type> typesFlat() const;
 
-    std::string name_of(particle_type_type id) const;
+    std::string nameOf(particle_type_type id) const;
 
-    const type_map &type_mapping() const;
+    const type_map &typeMapping() const;
 
-    void debug_output() const;
+    void debugOutput() const;
 
     void configure();
 
 private:
 
-    particle_type_type _id_of(const std::string& name) const;
+    particle_type_type _idOf(const std::string &name) const;
 
     std::size_t n_types_ = 0;
     particle_type_type type_counter_ = 0;

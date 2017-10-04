@@ -234,7 +234,7 @@ TEST(CPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->context().particle_types().id_of("X");
+    const auto typeId = kernel->context().particle_types().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
     kernel->context().configure();
@@ -279,9 +279,9 @@ TEST(CPUTestReactions, TestGillespieParallel) {
     kernel->context().reactions().addFusion("very unlikely", "A", "C", "A", std::numeric_limits<readdy::scalar>::min(), reactionRadius);
     kernel->context().reactions().addFusion("dummy reaction", "A", "B", "A", 0.0, reactionRadius);
 
-    const auto typeA = kernel->context().particle_types().id_of("A");
-    const auto typeB = kernel->context().particle_types().id_of("B");
-    const auto typeC = kernel->context().particle_types().id_of("C");
+    const auto typeA = kernel->context().particle_types().idOf("A");
+    const auto typeB = kernel->context().particle_types().idOf("B");
+    const auto typeC = kernel->context().particle_types().idOf("C");
 
     // this particle goes right into the middle, i.e., into the halo region
     kernel->stateModel().addParticle({0, 0, 0, typeA});            // 0

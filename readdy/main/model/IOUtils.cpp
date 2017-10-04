@@ -41,13 +41,13 @@ namespace ioutils {
 void writeReactionInformation(h5rd::Group &group, const Context &context) {
     auto subgroup = group.createGroup("./registered_reactions");
     // order1
-    const auto &order1_reactions = context.reactions().order1_flat();
+    const auto &order1_reactions = context.reactions().order1Flat();
     auto n_reactions = order1_reactions.size();
     auto types = getReactionInfoMemoryType(group.parentFile());
     if (n_reactions > 0) {
         std::vector<ReactionInfo> order1_info;
         for (const auto &r : order1_reactions) {
-            const auto &reactions_current_type = context.reactions().order1_by_type(r->educts()[0]);
+            const auto &reactions_current_type = context.reactions().order1ByType(r->educts()[0]);
             auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
                                    [&r](const reactions::Reaction<1> *x) { return x->id() == r->id(); });
             if (it != reactions_current_type.end()) {
@@ -67,13 +67,13 @@ void writeReactionInformation(h5rd::Group &group, const Context &context) {
         order1_reaction_dset->append(extent, order1_info.data());
     }
     // order2
-    const auto &order2_reactions = context.reactions().order2_flat();
+    const auto &order2_reactions = context.reactions().order2Flat();
     n_reactions = order2_reactions.size();
     if (n_reactions > 0) {
         std::vector<ReactionInfo> order2_info;
         for (const auto &r : order2_reactions) {
-            const auto &reactions_current_type = context.reactions().order2_by_type(r->educts()[0],
-                                                                                    r->educts()[1]);
+            const auto &reactions_current_type = context.reactions().order2ByType(r->educts()[0],
+                                                                                  r->educts()[1]);
             auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
                                    [&r](const reactions::Reaction<2> *x) { return x->id() == r->id(); });
             if (it != reactions_current_type.end()) {
@@ -96,11 +96,11 @@ void writeReactionInformation(h5rd::Group &group, const Context &context) {
 void writeParticleTypeInformation(h5rd::Group &group, const Context &context) {
     auto h5types = getParticleTypeInfoType(group.parentFile());
 
-    const auto &types = context.particle_types().type_mapping();
+    const auto &types = context.particle_types().typeMapping();
     std::vector<ParticleTypeInfo> type_info_vec;
     for (const auto &p_type : types) {
         ParticleTypeInfo info{p_type.first.c_str(), p_type.second,
-                              context.particle_types().diffusion_constant_of(p_type.first)};
+                              context.particle_types().diffusionConstantOf(p_type.first)};
         type_info_vec.push_back(info);
     }
     if (!type_info_vec.empty()) {

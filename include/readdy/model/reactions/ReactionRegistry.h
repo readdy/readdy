@@ -73,29 +73,29 @@ public:
 
     ~ReactionRegistry() = default;
 
-    const std::size_t &n_order1() const;
+    const std::size_t &nOrder1() const;
 
-    const reactions_o1 order1_flat() const;
+    const reactions_o1 order1Flat() const;
 
-    const reaction_o1 order1_by_name(const std::string &name) const;
+    const reaction_o1 order1ByName(const std::string &name) const;
 
-    const reactions_o1 &order1_by_type(const particle::type_type type) const;
+    const reactions_o1 &order1ByType(const particle::type_type type) const;
 
-    const std::size_t &n_order2() const;
+    const std::size_t &nOrder2() const;
 
     const reaction_o2_registry &order2() const;
 
-    const reactions_o2 order2_flat() const;
+    const reactions_o2 order2Flat() const;
 
-    const reaction_o2 order2_by_name(const std::string &name) const;
+    const reaction_o2 order2ByName(const std::string &name) const;
 
-    const reactions_o2 &order2_by_type(const particle::type_type type1, const particle::type_type type2) const;
+    const reactions_o2 &order2ByType(const particle::type_type type1, const particle::type_type type2) const;
 
-    const reactions_o1 &order1_by_type(const std::string &type) const;
+    const reactions_o1 &order1ByType(const std::string &type) const;
 
-    const reactions_o2 &order2_by_type(const std::string &type1, const std::string &type2) const;
+    const reactions_o2 &order2ByType(const std::string &type1, const std::string &type2) const;
 
-    bool is_reaction_order2_type(particle_type_type type) const;
+    bool isReactionOrder2Type(particle_type_type type) const;
 
     reaction_id add(const std::string &descriptor, scalar rate);
 
@@ -129,13 +129,13 @@ public:
 
     reaction_id addDecay(const std::string &name, particle_type_type type, scalar rate);
 
-    const short add_external(reaction_o1 r);
+    const short addExternal(reaction_o1 r);
 
-    const short add_external(reaction_o2 r);
+    const short addExternal(reaction_o2 r);
 
     void configure();
 
-    void debug_output() const;
+    void debugOutput() const;
 
 private:
     using reaction_o1_registry_external = reaction_o1_registry;

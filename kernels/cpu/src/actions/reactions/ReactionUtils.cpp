@@ -76,7 +76,7 @@ data_t::DataUpdate handleEventsGillespie(
 
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
-                            auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIdx];
                             if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;
@@ -91,7 +91,7 @@ data_t::DataUpdate handleEventsGillespie(
                                 countsOrder1.at(event.t1).at(event.reactionIdx)++;
                             }
                         } else {
-                            auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIdx];
                             if(maybeRecords != nullptr) {
                                 record_t record;
                                 record.reactionIndex = event.reactionIdx;

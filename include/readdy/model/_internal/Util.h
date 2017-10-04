@@ -44,7 +44,7 @@ NAMESPACE_BEGIN(util)
 inline std::set<unsigned int> transformTypes(const std::vector<std::string> &types, const readdy::model::Context &ctx) {
     std::set<unsigned int> result;
     for (const auto &t : types) {
-        result.insert(ctx.particle_types().id_of(t));
+        result.insert(ctx.particle_types().idOf(t));
     }
     return result;
 }
@@ -54,7 +54,7 @@ transformTypes2(const std::vector<std::string> &types, const readdy::model::Cont
     std::vector<unsigned int> result;
     result.reserve(types.size());
     for (auto &t : types) {
-        result.push_back(ctx.particle_types().id_of(t));
+        result.push_back(ctx.particle_types().idOf(t));
     }
     return result;
 }

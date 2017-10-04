@@ -82,14 +82,14 @@ void Kernel::evaluateObservables(time_step_type t) {
 }
 
 readdy::model::Particle::id_type Kernel::addParticle(const std::string &type, const Vec3 &pos) {
-    readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particle_types().id_of(type)};
+    readdy::model::Particle particle {pos[0], pos[1], pos[2], context().particle_types().idOf(type)};
     stateModel().addParticle(particle);
     return particle.getId();
 }
 
 particle_type_type Kernel::getTypeId(const std::string &name) const {
-    auto findIt = context().particle_types().type_mapping().find(name);
-    if (findIt != context().particle_types().type_mapping().end()) {
+    auto findIt = context().particle_types().typeMapping().find(name);
+    if (findIt != context().particle_types().typeMapping().end()) {
         return findIt->second;
     }
     log::critical("did not find type id for {}", name);
@@ -97,9 +97,9 @@ particle_type_type Kernel::getTypeId(const std::string &name) const {
 }
 
 particle_type_type Kernel::getTypeIdRequireNormalFlavor(const std::string &name) const {
-    auto findIt = context().particle_types().type_mapping().find(name);
-    if (findIt != context().particle_types().type_mapping().end()) {
-        const auto &info = context().particle_types().info_of(findIt->second);
+    auto findIt = context().particle_types().typeMapping().find(name);
+    if (findIt != context().particle_types().typeMapping().end()) {
+        const auto &info = context().particle_types().infoOf(findIt->second);
         if (info.flavor == particleflavor::NORMAL) {
             return findIt->second;
         }
@@ -155,7 +155,7 @@ readdy::model::top::TopologyActionFactory *const Kernel::getTopologyActionFactor
 }
 
 TopologyParticle Kernel::createTopologyParticle(const std::string &type, const Vec3 &pos) const {
-    const auto& info = context().particle_types().info_of(type);
+    const auto& info = context().particle_types().infoOf(type);
     if(info.flavor != particleflavor::TOPOLOGY) {
         throw std::invalid_argument("You can only create topology particles of a type that is topology flavored.");
     }

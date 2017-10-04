@@ -85,7 +85,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
         for (const auto &e : data) {
             if (!e.is_deactivated()) {
                 // order 1
-                const auto &reactions = kernel->context().reactions().order1_by_type(e.type);
+                const auto &reactions = kernel->context().reactions().order1ByType(e.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->rate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
@@ -108,7 +108,7 @@ std::vector<event_t> findEvents(const SCPUKernel *const kernel, scalar dt, bool 
 
             // order 2
             const auto &neighbor = data.entry_at(it_nl->idx2);
-            const auto &reactions = kernel->context().reactions().order2_by_type(entry.type, neighbor.type);
+            const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
             if (!reactions.empty()) {
                 const auto distSquared = d2(neighbor.position(), entry.position());
                 for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
@@ -153,7 +153,7 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             if (event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
-                    auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.reactionIndex = event.reactionIdx;
@@ -172,7 +172,7 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         }
                     }
                 } else {
-                    auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIdx];
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
                         record.reactionIndex = event.reactionIdx;
@@ -225,7 +225,7 @@ void gatherEvents(SCPUKernel const *const kernel,
         std::size_t index = 0;
         for (const auto &entry : data) {
             if(!entry.is_deactivated()) {
-                const auto &reactions = kernel->context().reactions().order1_by_type(entry.type);
+                const auto &reactions = kernel->context().reactions().order1ByType(entry.type);
                 for (auto it = reactions.begin(); it != reactions.end(); ++it) {
                     const auto rate = (*it)->rate();
                     if (rate > 0) {
@@ -244,8 +244,8 @@ void gatherEvents(SCPUKernel const *const kernel,
         if (!entry.is_deactivated()) {
             // order 2
             const auto &neighbor = data.entry_at(it_nl.idx2);
-            const auto &reactions = kernel->context().reactions().order2_by_type(entry.type,
-                                                                                                 neighbor.type);
+            const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
+                                                                               neighbor.type);
             if (!reactions.empty()) {
                 const auto distSquared = d2(neighbor.position(), entry.position());
                 for (auto it = reactions.begin(); it < reactions.end(); ++it) {
@@ -302,7 +302,7 @@ scpu_data::entries_update handleEventsGillespie(
                     {
                         auto entry1 = event.idx1;
                         if (event.nEducts == 1) {
-                            auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIdx];
                             if(ctx.recordReactionsWithPositions()) {
                                 reaction_record record;
                                 record.reactionIndex = event.reactionIdx;
@@ -318,7 +318,7 @@ scpu_data::entries_update handleEventsGillespie(
                                 countsOrder1.at(event.t1).at(event.reactionIdx)++;
                             }
                         } else {
-                            auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                            auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIdx];
                             if(ctx.recordReactionsWithPositions()) {
                                 reaction_record record;
                                 record.reactionIndex = event.reactionIdx;
@@ -391,7 +391,7 @@ scpu_data::entries_update handleEventsGillespie(
 void SCPUGillespie::perform(const util::PerformanceNode &node) {
     auto t = node.timeit();
     const auto &ctx = kernel->context();
-    if(ctx.reactions().n_order1() == 0 && ctx.reactions().n_order2() == 0) {
+    if(ctx.reactions().nOrder1() == 0 && ctx.reactions().nOrder2() == 0) {
         return;
     }
     auto &stateModel = kernel->getSCPUKernelStateModel();

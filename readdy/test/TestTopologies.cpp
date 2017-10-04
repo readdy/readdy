@@ -83,8 +83,8 @@ TEST_P(TestTopologies, BondedPotential) {
     auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{4, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_i{4, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{1, 0, 0, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0,{x_i, x_j});
     {
         harmonic_bond::bond_configurations bonds;
@@ -128,9 +128,9 @@ TEST_P(TestTopologies, AnglePotential) {
     auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_k{1, 1, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_i{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{1, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_k{1, 1, 0, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
     {
         std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
@@ -170,9 +170,9 @@ TEST_P(TestTopologies, MoreComplicatedAnglePotential) {
     auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_i{0.1, 0.1, 0.1, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{1.0, 0.0, 0.0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_k{1.0, 0.5, -.3, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k});
     {
         std::vector<angle_bond::angle> angles{{0, 1, 2, 1.0, readdy::util::numeric::pi()}};
@@ -229,10 +229,10 @@ TEST_P(TestTopologies, DihedralPotential) {
     auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_l{1, .1, 1, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_l{1, .1, 1, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     {
         std::vector<dihedral_bond::dihedral_configuration> dihedrals{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};
@@ -272,10 +272,10 @@ TEST_P(TestTopologies, DihedralPotentialSteeperAngle) {
     auto &ctx = kernel->context();
     ctx.particle_types().add("Topology A", 1.0, readdy::model::particleflavor::TOPOLOGY);
     ctx.boxSize() = {{10, 10, 10}};
-    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_j{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_k{0, 0, 1, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_l{1, 3, 1, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_i{-1, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_j{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_k{0, 0, 1, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_l{1, 3, 1, ctx.particle_types().idOf("Topology A")};
     auto top = kernel->stateModel().addTopology(0, {x_i, x_j, x_k, x_l});
     {
         std::vector<dihedral_bond::dihedral_configuration> dihedral{{0, 1, 2, 3, 1.0, 3, readdy::util::numeric::pi()}};

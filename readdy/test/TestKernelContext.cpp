@@ -90,7 +90,7 @@ TEST_F(TestKernelContext, PotentialOrder2Map) {
     auto noop2 = std::make_unique<readdy::testing::NOOPPotentialOrder2>(ctx.particle_types()("b"),ctx.particle_types()( "a"));
     ctx.potentials().addUserDefined(noop2.get());
     ctx.configure();
-    auto vector = ctx.potentials().potentials_of("b", "a");
+    auto vector = ctx.potentials().potentialsOf("b", "a");
     EXPECT_EQ(vector.size(), 2);
 }
 
@@ -129,38 +129,38 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     // test that order 1 potentials are set up correctly
     {
         {
-            const auto &pot1_A = ctx.potentials().potentials_of("A");
+            const auto &pot1_A = ctx.potentials().potentialsOf("A");
             EXPECT_EQ(pot1_A.size(), 1);
         }
         {
-            const auto &pot1_B = ctx.potentials().potentials_of("B");
+            const auto &pot1_B = ctx.potentials().potentialsOf("B");
             EXPECT_EQ(pot1_B.size(), 1);
         }
         {
-            const auto &pot1_C = ctx.potentials().potentials_of("C");
+            const auto &pot1_C = ctx.potentials().potentialsOf("C");
             EXPECT_EQ(pot1_C.size(), 2);
         }
         {
-            const auto &pot1_D = ctx.potentials().potentials_of("D");
+            const auto &pot1_D = ctx.potentials().potentialsOf("D");
             EXPECT_EQ(pot1_D.size(), 1);
         }
     }
     // test that order 2 potentials are set up correctly
     {
-        EXPECT_EQ(ctx.potentials().potentials_of("A", "A").size(), 0);
-        EXPECT_EQ(ctx.potentials().potentials_of("A", "B").size(), 0);
-        EXPECT_EQ(ctx.potentials().potentials_of("A", "D").size(), 0);
-        EXPECT_EQ(ctx.potentials().potentials_of("B", "B").size(), 0);
-        EXPECT_EQ(ctx.potentials().potentials_of("B", "D").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("A", "A").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("A", "B").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("A", "D").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("B", "B").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("B", "D").size(), 0);
 
-        EXPECT_EQ(ctx.potentials().potentials_of("A", "C").size(), 1);
-        EXPECT_EQ(ctx.potentials().potentials_of("B", "C").size(), 1);
+        EXPECT_EQ(ctx.potentials().potentialsOf("A", "C").size(), 1);
+        EXPECT_EQ(ctx.potentials().potentialsOf("B", "C").size(), 1);
         {
-            const auto &pot2_AC = ctx.potentials().potentials_of("A", "C");
+            const auto &pot2_AC = ctx.potentials().potentialsOf("A", "C");
             EXPECT_EQ(pot2_AC[0]->getId(), uuid2_1);
         }
         {
-            const auto &pot2_BC = ctx.potentials().potentials_of("B", "C");
+            const auto &pot2_BC = ctx.potentials().potentialsOf("B", "C");
             EXPECT_EQ(pot2_BC[0]->getId(), uuid2_2);
         }
     }
@@ -170,16 +170,16 @@ TEST_P(TestKernelContextWithKernels, PotentialOrder1Map) {
     {
         // only one potential for particle type B has a different uuid
         ctx.configure();
-        EXPECT_EQ(ctx.potentials().potentials_of("A").size(), 0);
-        EXPECT_EQ(ctx.potentials().potentials_of("B").size(), 1);
-        EXPECT_EQ(ctx.potentials().potentials_of("C").size(), 0);
-        EXPECT_EQ(ctx.potentials().potentials_of("D").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("A").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("B").size(), 1);
+        EXPECT_EQ(ctx.potentials().potentialsOf("C").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("D").size(), 0);
 
         // remove 2nd potential
         ctx.potentials().remove(uuid2_2);
         ctx.configure();
-        EXPECT_EQ(ctx.potentials().potentials_of("A", "C").size(), 1);
-        EXPECT_EQ(ctx.potentials().potentials_of("B", "C").size(), 0);
+        EXPECT_EQ(ctx.potentials().potentialsOf("A", "C").size(), 1);
+        EXPECT_EQ(ctx.potentials().potentialsOf("B", "C").size(), 0);
     }
 
 }
@@ -196,39 +196,39 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         m::Context ctx;
         auto decay = "mydecay:A->";
         prepareCtx(ctx, decay, 2.);
-        const auto &r = ctx.reactions().order1_by_name("mydecay");
+        const auto &r = ctx.reactions().order1ByName("mydecay");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->type(), m::reactions::ReactionType::Decay);
         EXPECT_EQ(r->nEducts(), 1);
         EXPECT_EQ(r->nProducts(), 0);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("A"));
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
         EXPECT_EQ(r->rate(), 2.);
     }
     {
         m::Context ctx;
         auto conversion = "myconv: A -> B";
         prepareCtx(ctx, conversion, 3.);
-        const auto &r = ctx.reactions().order1_by_name("myconv");
+        const auto &r = ctx.reactions().order1ByName("myconv");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->type(), m::reactions::ReactionType::Conversion);
         EXPECT_EQ(r->nEducts(), 1);
         EXPECT_EQ(r->nProducts(), 1);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("A"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("B"));
         EXPECT_EQ(r->rate(), 3.);
     }
     {
         m::Context ctx;
         auto fusion = "myfus: B +(1.2) B -> C [0.5, 0.5]";
         prepareCtx(ctx, fusion, 4.);
-        const auto &r = ctx.reactions().order2_by_name("myfus");
+        const auto &r = ctx.reactions().order2ByName("myfus");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->type(), m::reactions::ReactionType::Fusion);
         EXPECT_EQ(r->nEducts(), 2);
         EXPECT_EQ(r->nProducts(), 1);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->educts()[1], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("C"));
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("C"));
         EXPECT_EQ(r->eductDistance(), 1.2);
         EXPECT_EQ(r->weight1(), 0.5);
         EXPECT_EQ(r->weight2(), 0.5);
@@ -238,14 +238,14 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         m::Context ctx;
         auto fission = "myfiss: B -> C +(3.0) B [0.1, 0.9]";
         prepareCtx(ctx, fission, 5.);
-        const auto &r = ctx.reactions().order1_by_name("myfiss");
+        const auto &r = ctx.reactions().order1ByName("myfiss");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->type(), m::reactions::ReactionType::Fission);
         EXPECT_EQ(r->nEducts(), 1);
         EXPECT_EQ(r->nProducts(), 2);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("C"));
-        EXPECT_EQ(r->products()[1], ctx.particle_types().id_of("B"));
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("B"));
         EXPECT_EQ(r->productDistance(), 3.0);
         EXPECT_EQ(r->weight1(), 0.1);
         EXPECT_EQ(r->weight2(), 0.9);
@@ -255,15 +255,15 @@ TEST_F(TestKernelContext, ReactionDescriptorAddReactions) {
         m::Context ctx;
         auto enzymatic = "myenz:A +(1.5) C -> B + C";
         prepareCtx(ctx, enzymatic, 6.);
-        const auto &r = ctx.reactions().order2_by_name("myenz");
+        const auto &r = ctx.reactions().order2ByName("myenz");
         ASSERT_NE(r, nullptr);
         EXPECT_EQ(r->type(), m::reactions::ReactionType::Enzymatic);
         EXPECT_EQ(r->nEducts(), 2);
         EXPECT_EQ(r->nProducts(), 2);
-        EXPECT_EQ(r->educts()[0], ctx.particle_types().id_of("A"));
-        EXPECT_EQ(r->educts()[1], ctx.particle_types().id_of("C"));
-        EXPECT_EQ(r->products()[0], ctx.particle_types().id_of("B"));
-        EXPECT_EQ(r->products()[1], ctx.particle_types().id_of("C"));
+        EXPECT_EQ(r->educts()[0], ctx.particle_types().idOf("A"));
+        EXPECT_EQ(r->educts()[1], ctx.particle_types().idOf("C"));
+        EXPECT_EQ(r->products()[0], ctx.particle_types().idOf("B"));
+        EXPECT_EQ(r->products()[1], ctx.particle_types().idOf("C"));
         EXPECT_EQ(r->eductDistance(), 1.5);
         EXPECT_EQ(r->rate(), 6.);
     }
@@ -278,8 +278,8 @@ TEST_F(TestKernelContext, ReactionDescriptorInvalidInputs) {
         EXPECT_ANY_THROW(ctx.reactions().add(i, 42.));
     }
     ctx.configure();
-    EXPECT_EQ(ctx.reactions().n_order1(), 0);
-    EXPECT_EQ(ctx.reactions().n_order2(), 0);
+    EXPECT_EQ(ctx.reactions().nOrder1(), 0);
+    EXPECT_EQ(ctx.reactions().nOrder2(), 0);
 }
 
 INSTANTIATE_TEST_CASE_P(TestKernelContext, TestKernelContextWithKernels,

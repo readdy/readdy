@@ -70,7 +70,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
         if (!entry.deactivated) {
             // order 1
             {
-                const auto &reactions = kernel->context().reactions().order1_by_type(entry.type);
+                const auto &reactions = kernel->context().reactions().order1ByType(entry.type);
                 for (auto it_reactions = reactions.begin(); it_reactions != reactions.end(); ++it_reactions) {
                     const auto rate = (*it_reactions)->rate();
                     if (rate > 0 && shouldPerformEvent(rate, dt, approximateRate)) {
@@ -90,8 +90,8 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
                 const auto &neighbor = data.entry_at(neighborIdx);
                 if(nit->current_particle() > neighborIdx) continue;
                 if(!neighbor.deactivated) {
-                    const auto &reactions = kernel->context().reactions().order2_by_type(entry.type,
-                                                                                                  neighbor.type);
+                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
+                                                                                       neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
                         for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
@@ -199,7 +199,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             if (event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
-                    auto reaction = ctx.reactions().order1_by_type(event.t1)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIdx];
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;
@@ -219,7 +219,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         }
                     }
                 } else {
-                    auto reaction = ctx.reactions().order2_by_type(event.t1, event.t2)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIdx];
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
                         record.reactionIndex = event.reactionIdx;

@@ -181,7 +181,7 @@ void exportTopologies(py::module &m) {
                 :return: the particles
             )topdoc")
             .def("particle_type_of_vertex", [](const topology &self, const vertex &v) -> std::string {
-                return self.context().particle_types().name_of(self.particleForVertex(v).getType());
+                return self.context().particle_types().nameOf(self.particleForVertex(v).getType());
             }, R"topdoc(
                Retrieves the particle type corresponding to a vertex.
 
@@ -205,7 +205,7 @@ void exportTopologies(py::module &m) {
                 :return: the id
             )topdoc")
             .def("particle_type_of_vertex", [](const topology &self, const vertex::vertex_ptr &v) -> std::string {
-                return self.context().particle_types().name_of(self.particleForVertex(v).getType());
+                return self.context().particle_types().nameOf(self.particleForVertex(v).getType());
             }, R"topdoc(
                Retrieves the particle type corresponding to a vertex.
 

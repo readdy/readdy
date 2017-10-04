@@ -51,9 +51,9 @@ protected:
             ctx.particle_types().add("Topology Invalid Type", 1.0, readdy::model::particleflavor::TOPOLOGY);
             ctx.particle_types().add("A", 1.0, readdy::model::particleflavor::NORMAL);
 
-            ctx.topology_registry().configure_bond_potential("Topology A", "Topology A", {10, 10});
-            ctx.topology_registry().configure_bond_potential("Topology A", "Topology B", {10, 10});
-            ctx.topology_registry().configure_bond_potential("Topology B", "Topology B", {10, 10});
+            ctx.topology_registry().configureBondPotential("Topology A", "Topology A", {10, 10});
+            ctx.topology_registry().configureBondPotential("Topology A", "Topology B", {10, 10});
+            ctx.topology_registry().configureBondPotential("Topology B", "Topology B", {10, 10});
 
             ctx.boxSize() = {{10, 10, 10}};
         }
@@ -63,9 +63,9 @@ protected:
 
 readdy::model::top::GraphTopology* setUpSmallTopology(readdy::model::Kernel* kernel, readdy::topology_type_type type) {
     auto &ctx = kernel->context();
-    topology_particle_t x_0{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_1{0, 0, 0, ctx.particle_types().id_of("Topology A")};
-    topology_particle_t x_2{0, 0, 0, ctx.particle_types().id_of("Topology A")};
+    topology_particle_t x_0{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_1{0, 0, 0, ctx.particle_types().idOf("Topology A")};
+    topology_particle_t x_2{0, 0, 0, ctx.particle_types().idOf("Topology A")};
     auto topology = kernel->stateModel().addTopology(type, {x_0, x_1, x_2});
     {
         auto it = topology->graph().vertices().begin();
@@ -112,24 +112,24 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
-    auto tid = kernel->context().topology_registry().add_type("Reactive Topology Type");
+    auto tid = kernel->context().topology_registry().addType("Reactive Topology Type");
     auto topology = setUpSmallTopology(kernel.get(), tid);
     const auto &types = kernel->context().particle_types();
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
-            recipe.changeParticleType(top.graph().vertices().begin(), types.id_of("Topology B"));
+            recipe.changeParticleType(top.graph().vertices().begin(), types.idOf("Topology B"));
             return recipe;
         };
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
         reaction.expect_connected_after_reaction();
         reaction.raise_if_invalid();
-        kernel->context().topology_registry().add_structural_reaction(tid, reaction);
+        kernel->context().topology_registry().addStructuralReaction(tid, reaction);
     }
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
             model::top::reactions::Recipe recipe (top);
-            recipe.changeParticleType(top.graph().vertices().begin(), types.id_of("Topology A"));
+            recipe.changeParticleType(top.graph().vertices().begin(), types.idOf("Topology A"));
             return recipe;
         };
         auto rateFunction = [&](const model::top::GraphTopology &top) {
@@ -138,10 +138,10 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
         reaction.expect_connected_after_reaction();
         reaction.raise_if_invalid();
-        kernel->context().topology_registry().add_structural_reaction(tid, reaction);
+        kernel->context().topology_registry().addStructuralReaction(tid, reaction);
     }
     kernel->context().configure();
-    const auto& reactions = kernel->context().topology_registry().structural_reactions_of(tid);
+    const auto& reactions = kernel->context().topology_registry().structuralReactionsOf(tid);
     topology->updateReactionRates(reactions);
     EXPECT_EQ(topology->rates().at(0), 5) << "Expected (constant) rate: 5";
     EXPECT_EQ(topology->rates().at(1), 15) << "Expected (function) rate: 15";
@@ -151,7 +151,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->stateModel().getParticlesForTopology(*topology);
         auto v = topology->graph().vertices().begin();
-        ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology B"));
+        ASSERT_EQ(particles[v->particleIndex].getType(), types.idOf("Topology B"));
         ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
                             "the graph representation and the particle data coincide";
     }
@@ -160,7 +160,7 @@ TEST_P(TestTopologyReactions, ChangeParticleType) {
         ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
         auto particles = kernel->stateModel().getParticlesForTopology(*topology);
         auto v = topology->graph().vertices().begin();
-        ASSERT_EQ(particles[v->particleIndex].getType(), types.id_of("Topology A"));
+        ASSERT_EQ(particles[v->particleIndex].getType(), types.idOf("Topology A"));
         ASSERT_EQ(v->particleType(), particles[v->particleIndex].getType()) << "expect that the particle type in "
                             "the graph representation and the particle data coincide";
     }
@@ -186,7 +186,7 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
-    auto tid = kernel->context().topology_registry().add_type("TA");
+    auto tid = kernel->context().topology_registry().addType("TA");
     auto topology = setUpSmallTopology(kernel.get(), tid);
     const auto &types = kernel->context().particle_types();
     {
@@ -198,10 +198,10 @@ TEST_P(TestTopologyReactions, AddEdgeNamed) {
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
         reaction.expect_connected_after_reaction();
         reaction.raise_if_invalid();
-        kernel->context().topology_registry().add_structural_reaction(tid, reaction);
+        kernel->context().topology_registry().addStructuralReaction(tid, reaction);
     }
     kernel->context().configure();
-    const auto &reactions = kernel->context().topology_registry().structural_reactions_of(tid);
+    const auto &reactions = kernel->context().topology_registry().structuralReactionsOf(tid);
     topology->updateReactionRates(reactions);
     auto result = reactions.back().execute(*topology, kernel.get());
     ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
@@ -216,7 +216,7 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
-    auto tid = kernel->context().topology_registry().add_type("TA");
+    auto tid = kernel->context().topology_registry().addType("TA");
     auto topology = setUpSmallTopology(kernel.get(), tid);
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
@@ -227,9 +227,9 @@ TEST_P(TestTopologyReactions, AddEdgeIterator) {
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
         reaction.expect_connected_after_reaction();
         reaction.raise_if_invalid();
-        kernel->context().topology_registry().add_structural_reaction(tid, reaction);
+        kernel->context().topology_registry().addStructuralReaction(tid, reaction);
     }
-    const auto &reactions = kernel->context().topology_registry().structural_reactions_of(tid);
+    const auto &reactions = kernel->context().topology_registry().structuralReactionsOf(tid);
     topology->updateReactionRates(reactions);
     auto result = reactions.back().execute(*topology, kernel.get());
     ASSERT_EQ(result.size(), 0) << "reaction is in-place, expect empty return vector";
@@ -244,8 +244,8 @@ TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
         log::debug("kernel {} does not support topologies, thus skipping the test", kernel->getName());
         return;
     }
-    kernel->context().topology_registry().add_type("TA");
-    auto topology = setUpSmallTopology(kernel.get(), kernel->context().topology_registry().id_of("TA"));
+    kernel->context().topology_registry().addType("TA");
+    auto topology = setUpSmallTopology(kernel.get(), kernel->context().topology_registry().idOf("TA"));
 
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
@@ -256,9 +256,9 @@ TEST_P(TestTopologyReactions, RemoveEdgeStraightforwardCase) {
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
         reaction.create_child_topologies_after_reaction();
         reaction.raise_if_invalid();
-        kernel->context().topology_registry().add_structural_reaction("TA", reaction);
+        kernel->context().topology_registry().addStructuralReaction("TA", reaction);
     }
-    const auto &reactions = kernel->context().topology_registry().structural_reactions_of("TA");
+    const auto &reactions = kernel->context().topology_registry().structuralReactionsOf("TA");
     topology->updateReactionRates(reactions);
     model::top::Topology::particle_indices particles;
     {
@@ -300,8 +300,8 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
 
     auto &context = kernel->context();
     auto &toptypes = context.topology_registry();
-    toptypes.add_type("TA");
-    auto topology = setUpSmallTopology(kernel.get(), toptypes.id_of("TA"));
+    toptypes.addType("TA");
+    auto topology = setUpSmallTopology(kernel.get(), toptypes.idOf("TA"));
 
     {
         auto reactionFunction = [&](model::top::GraphTopology &top) {
@@ -312,10 +312,10 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, 5};
         reaction.expect_connected_after_reaction();
         reaction.roll_back_if_invalid();
-        toptypes.add_structural_reaction("TA", reaction);
+        toptypes.addStructuralReaction("TA", reaction);
     }
     context.configure();
-    topology->updateReactionRates(toptypes.structural_reactions_of("TA"));
+    topology->updateReactionRates(toptypes.structuralReactionsOf("TA"));
     model::top::Topology::particle_indices particles;
     {
         std::copy(topology->getParticles().begin(), topology->getParticles().end(), std::back_inserter(particles));
@@ -323,7 +323,7 @@ TEST_P(TestTopologyReactions, RemoveEdgeRollback) {
     std::vector<model::top::GraphTopology> result;
     {
         log::Level level (spdlog::level::err);
-        result = toptypes.structural_reactions_of("TA").back().execute(*topology, kernel.get());
+        result = toptypes.structuralReactionsOf("TA").back().execute(*topology, kernel.get());
     }
     const auto& graph = topology->graph();
     const auto& vertices = graph.vertices();
@@ -343,18 +343,18 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
     auto &ctx = kernel->context();
     auto &toptypes = ctx.topology_registry();
 
-    toptypes.add_type("TA");
+    toptypes.addType("TA");
 
     ctx.boxSize() = {{10, 10, 10}};
     std::vector<readdy::model::TopologyParticle> topologyParticles;
     {
         topologyParticles.reserve(n_chain_elements);
         for (std::size_t i = 0; i < n_chain_elements; ++i) {
-            const auto id = ctx.particle_types().id_of("Topology A");
+            const auto id = ctx.particle_types().idOf("Topology A");
             topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
         }
     }
-    auto topology = kernel->stateModel().addTopology(toptypes.id_of("TA"), topologyParticles);
+    auto topology = kernel->stateModel().addTopology(toptypes.idOf("TA"), topologyParticles);
     {
         auto it = topology->graph().vertices().begin();
         auto it2 = ++topology->graph().vertices().begin();
@@ -388,7 +388,7 @@ TEST_P(TestTopologyReactions, SplitUpChain) {
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
         reaction.create_child_topologies_after_reaction();
         reaction.roll_back_if_invalid();
-        toptypes.add_structural_reaction("TA", reaction);
+        toptypes.addStructuralReaction("TA", reaction);
     }
 
     {
@@ -430,18 +430,18 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
     std::size_t n_chain_elements = 50;
     auto &ctx = kernel->context();
     auto &toptypes = ctx.topology_registry();
-    toptypes.add_type("TA");
+    toptypes.addType("TA");
 
     ctx.boxSize() = {{10, 10, 10}};
     std::vector<readdy::model::TopologyParticle> topologyParticles;
     {
         topologyParticles.reserve(n_chain_elements);
         for (std::size_t i = 0; i < n_chain_elements; ++i) {
-            const auto id = ctx.particle_types().id_of("Topology A");
+            const auto id = ctx.particle_types().idOf("Topology A");
             topologyParticles.emplace_back(-5 + i * 10. / static_cast<readdy::scalar>(n_chain_elements), 0, 0, id);
         }
     }
-    auto topology = kernel->stateModel().addTopology(toptypes.id_of("TA"), topologyParticles);
+    auto topology = kernel->stateModel().addTopology(toptypes.idOf("TA"), topologyParticles);
     {
         auto it = topology->graph().vertices().begin();
         auto it2 = ++topology->graph().vertices().begin();
@@ -478,7 +478,7 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
         reaction.create_child_topologies_after_reaction();
         reaction.roll_back_if_invalid();
 
-        toptypes.add_structural_reaction("TA", reaction);
+        toptypes.addStructuralReaction("TA", reaction);
     }
     {
         // decay reaction
@@ -486,7 +486,7 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
             model::top::reactions::Recipe recipe (top);
             if(top.graph().vertices().size() == 1) {
                 recipe.changeParticleType(top.graph().vertices().begin(),
-                                          kernel->context().particle_types().id_of("A"));
+                                          kernel->context().particle_types().idOf("A"));
             } else {
                 throw std::logic_error("this reaction should only be executed when there is exactly "
                                                "one particle in the topology");
@@ -499,7 +499,7 @@ TEST_P(TestTopologyReactions, SplitUpChainDecay) {
         model::top::reactions::StructuralTopologyReaction reaction {reactionFunction, rateFunction};
         reaction.create_child_topologies_after_reaction();
         reaction.roll_back_if_invalid();
-        toptypes.add_structural_reaction("TA", reaction);
+        toptypes.addStructuralReaction("TA", reaction);
     }
 
     {

@@ -121,7 +121,7 @@ void CPUKernel::initialize() {
     }
     for (auto &top : getCPUKernelStateModel().topologies()) {
         top->configure();
-        top->updateReactionRates(context().topology_registry().structural_reactions_of(top->type()));
+        top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
     }
 }
 

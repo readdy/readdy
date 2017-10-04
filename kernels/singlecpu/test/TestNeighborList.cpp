@@ -56,7 +56,7 @@ struct NeighborListTest : ::testing::Test {
         readdy::scalar eductDistance = 1.2;
         kernel->context().reactions().addFusion("test", "A", "A", "A", 0., eductDistance);
         ctx.potentials().addUserDefined(&nooppot);
-        typeIdA = ctx.particle_types().id_of("A");
+        typeIdA = ctx.particle_types().idOf("A");
         ctx.configure();
     }
 };

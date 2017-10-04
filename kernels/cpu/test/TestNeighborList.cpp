@@ -66,7 +66,7 @@ struct TestNeighborList : ::testing::Test {
 
         noop = std::make_unique<readdy::testing::NOOPPotentialOrder2>(a_id, a_id, 1.1, 0., 0.);
         ctx.potentials().addUserDefined(noop.get());
-        typeIdA = ctx.particle_types().id_of("A");
+        typeIdA = ctx.particle_types().idOf("A");
         ctx.configure();
     }
 

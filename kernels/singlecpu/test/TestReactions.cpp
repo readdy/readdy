@@ -57,7 +57,7 @@ TEST(SingleCPUTestReactions, TestDecay) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 200;
-    const auto typeId = kernel->context().particle_types().id_of("X");
+    const auto typeId = kernel->context().particle_types().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     kernel->stateModel().addParticles(particlesToBeginWith);
     kernel->context().configure();
@@ -126,11 +126,11 @@ TEST(SingleCPUTestReactions, TestMultipleReactionTypes) {
     auto &&neighborList = kernel->createAction<readdy::model::actions::UpdateNeighborList>();
     auto &&reactions = kernel->createAction<readdy::model::actions::reactions::UncontrolledApproximation>(1);
 
-    const auto typeId_A = kernel->context().particle_types().id_of("A");
-    const auto typeId_B = kernel->context().particle_types().id_of("B");
-    const auto typeId_C = kernel->context().particle_types().id_of("C");
-    const auto typeId_D = kernel->context().particle_types().id_of("D");
-    const auto typeId_E = kernel->context().particle_types().id_of("E");
+    const auto typeId_A = kernel->context().particle_types().idOf("A");
+    const auto typeId_B = kernel->context().particle_types().idOf("B");
+    const auto typeId_C = kernel->context().particle_types().idOf("C");
+    const auto typeId_D = kernel->context().particle_types().idOf("D");
+    const auto typeId_E = kernel->context().particle_types().idOf("E");
 
     kernel->stateModel().addParticle({4, 4, 4, typeId_A});
     kernel->stateModel().addParticle({-2, 0, 0, typeId_B});

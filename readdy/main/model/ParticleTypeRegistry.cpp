@@ -42,26 +42,26 @@ ParticleTypeInfo::ParticleTypeInfo(const std::string &name, const scalar diffusi
         : name(name), diffusionConstant(diffusionConstant), flavor(flavor), typeId(typeId) {}
 
 
-const ParticleTypeInfo &ParticleTypeRegistry::info_of(const std::string &name) const {
-    return info_of(_id_of(name));
+const ParticleTypeInfo &ParticleTypeRegistry::infoOf(const std::string &name) const {
+    return infoOf(_idOf(name));
 }
 
-const ParticleTypeInfo &ParticleTypeRegistry::info_of(const Particle::type_type type) const {
+const ParticleTypeInfo &ParticleTypeRegistry::infoOf(Particle::type_type type) const {
     return particle_info_.at(type);
 }
 
-const ParticleTypeRegistry::type_map &ParticleTypeRegistry::type_mapping() const {
+const ParticleTypeRegistry::type_map &ParticleTypeRegistry::typeMapping() const {
     return type_mapping_;
 }
 
-std::string ParticleTypeRegistry::name_of(particle_type_type id) const {
+std::string ParticleTypeRegistry::nameOf(particle_type_type id) const {
     for (const auto &e : type_mapping_) {
         if (e.second == id) return e.first;
     }
     return "";
 }
 
-std::vector<particle_type_type> ParticleTypeRegistry::types_flat() const {
+std::vector<particle_type_type> ParticleTypeRegistry::typesFlat() const {
     std::vector<particle_type_type> v;
     for (auto &&entry : type_mapping_) {
         v.push_back(entry.second);
@@ -69,12 +69,12 @@ std::vector<particle_type_type> ParticleTypeRegistry::types_flat() const {
     return v;
 }
 
-scalar ParticleTypeRegistry::diffusion_constant_of(const particle_type_type particleType) const {
+scalar ParticleTypeRegistry::diffusionConstantOf(particle_type_type particleType) const {
     return particle_info_.at(particleType).diffusionConstant;
 }
 
-scalar ParticleTypeRegistry::diffusion_constant_of(const std::string &particleType) const {
-    return diffusion_constant_of(id_of(particleType));
+scalar ParticleTypeRegistry::diffusionConstantOf(const std::string &particleType) const {
+    return diffusionConstantOf(idOf(particleType));
 }
 
 void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionConst, const particle_flavor flavor) {
@@ -85,15 +85,15 @@ void ParticleTypeRegistry::add(const std::string &name, const scalar diffusionCo
     n_types_++;
 }
 
-particle_type_type ParticleTypeRegistry::id_of(const std::string &name) const {
-    return _id_of(name);
+particle_type_type ParticleTypeRegistry::idOf(const std::string &name) const {
+    return _idOf(name);
 }
 
-const std::size_t &ParticleTypeRegistry::n_types() const {
+const std::size_t &ParticleTypeRegistry::nTypes() const {
     return n_types_;
 }
 
-particle_type_type ParticleTypeRegistry::_id_of(const std::string &name) const {
+particle_type_type ParticleTypeRegistry::_idOf(const std::string &name) const {
     auto it = type_mapping_.find(name);
     if (it == type_mapping_.end()) {
         throw std::invalid_argument(
@@ -103,7 +103,7 @@ particle_type_type ParticleTypeRegistry::_id_of(const std::string &name) const {
     return it->second;
 }
 
-void ParticleTypeRegistry::debug_output() const {
+void ParticleTypeRegistry::debugOutput() const {
     log::debug(" - particle types:");
     for (const auto &entry : particle_info_) {
         log::debug("     * particle type \"{}\" with D={}, flavor={}, id={}", entry.second.name,
@@ -115,7 +115,7 @@ void ParticleTypeRegistry::debug_output() const {
 void ParticleTypeRegistry::configure() { /*no op*/ }
 
 particle_type_type ParticleTypeRegistry::operator()(const std::string &name) const {
-    return id_of(name);
+    return idOf(name);
 }
 
 }

@@ -43,7 +43,7 @@ TEST_P(TestCLLImpl, Insert) {
 
     model::Context context;
     context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().id_of("Test");
+    auto id = context.particle_types().idOf("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
@@ -115,7 +115,7 @@ TEST_P(TestCLLImpl, InsertAndDeactivate) {
 
     model::Context context;
     context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().id_of("Test");
+    auto id = context.particle_types().idOf("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;
@@ -196,7 +196,7 @@ TEST_P(TestCLLImpl, Diffuse) {
 
     model::Context context;
     context.particle_types().add("Test", 1.);
-    auto id = context.particle_types().id_of("Test");
+    auto id = context.particle_types().idOf("Test");
     scalar cutoff = 1;
     context.reactions().addFusion("Fusion", id, id, id, 1., cutoff);
     context.boxSize()[0] = 10;

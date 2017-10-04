@@ -183,7 +183,7 @@ void CPUEvaluateTopologyReactions::perform(const util::PerformanceNode &node) {
                 for (auto &&top : new_topologies) {
                     if (!top.isNormalParticle(*kernel)) {
                         // we have a new topology here, update data accordingly.
-                        top.updateReactionRates(context.topology_registry().structural_reactions_of(top.type()));
+                        top.updateReactionRates(context.topology_registry().structuralReactionsOf(top.type()));
                         top.configure();
                         model.insert_topology(std::move(top));
                     } else {
@@ -201,7 +201,7 @@ void CPUEvaluateTopologyReactions::handleStructuralReaction(CPUStateModel::topol
                                                             const CPUEvaluateTopologyReactions::TREvent &event,
                                                             CPUStateModel::topology_ref &topology) const {
     const auto &topology_type_registry = kernel->context().topology_registry();
-    auto &reaction = topology_type_registry.structural_reactions_of(topology->type()).at(static_cast<std::size_t>(event.reaction_idx));
+    auto &reaction = topology_type_registry.structuralReactionsOf(topology->type()).at(static_cast<std::size_t>(event.reaction_idx));
     auto result = reaction.execute(*topology, kernel);
     if (!result.empty()) {
         // we had a topology fission, so we need to actually remove the current topology from the
@@ -233,7 +233,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
         for (auto &top : kernel->getCPUKernelStateModel().topologies()) {
             if (!top->isDeactivated()) {
                 std::size_t reaction_idx = 0;
-                for (const auto &reaction : topology_types.structural_reactions_of(top->type())) {
+                for (const auto &reaction : topology_types.structuralReactionsOf(top->type())) {
                     TREvent event{};
                     event.own_rate = top->rates().at(reaction_idx);
                     event.cumulative_rate = event.own_rate + current_cumulative_rate;
@@ -252,7 +252,7 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
 
         static const CPUStateModel::topology_ref EMPTY_TOP {};
 
-        if (!context.topology_registry().spatial_reaction_registry().empty()) {
+        if (!context.topology_registry().spatialReactionRegistry().empty()) {
             const auto &model = kernel->getCPUKernelStateModel();
             const auto &top_registry = context.topology_registry();
             const auto &d2 = context.distSquaredFun();
@@ -260,10 +260,10 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
             const auto &nl = *kernel->getCPUKernelStateModel().getNeighborList();
             const auto &topologies = kernel->getCPUKernelStateModel().topologies();
 
-            if(!top_registry.spatial_reaction_registry().empty()) {
+            if(!top_registry.spatialReactionRegistry().empty()) {
                 for (const auto &it : nl) {
                     const auto &entry = data.entry_at(it.current_particle());
-                    if(!entry.deactivated && top_registry.is_spatial_reaction_type(entry.type)) {
+                    if(!entry.deactivated && top_registry.isSpatialReactionType(entry.type)) {
                         for (auto neighborIdx : it) {
                             const auto &neighbor = data.entry_at(neighborIdx);
                             if((entry.topology_index < 0 && neighbor.topology_index < 0) 
@@ -279,8 +279,8 @@ CPUEvaluateTopologyReactions::topology_reaction_events CPUEvaluateTopologyReacti
                             std::size_t reaction_index = 0;
                             const auto &otherTop = neighbor.topology_index >= 0 ?
                                                    model.topologies().at(static_cast<std::size_t>(neighbor.topology_index)) : EMPTY_TOP;
-                            const auto &reactions = top_registry.spatial_reactions_by_type(entry.type, tt1,
-                                                                                           neighbor.type, tt2);
+                            const auto &reactions = top_registry.spatialReactionsByType(entry.type, tt1,
+                                                                                        neighbor.type, tt2);
                             for(const auto &reaction : reactions) {
                                 if(!reaction.allow_self_connection() && entry.topology_index == neighbor.topology_index) {
                                     ++reaction_index;
@@ -336,7 +336,8 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
                                                                   const CPUEvaluateTopologyReactions::TREvent &event) {
     const auto& context = kernel->context();
     const auto& top_registry = context.topology_registry();
-    const auto& reaction = top_registry.spatial_reactions_by_type(event.t1, topology->type(), event.t2, topology_type_empty).at(event.reaction_idx);
+    const auto& reaction = top_registry.spatialReactionsByType(event.t1, topology->type(), event.t2,
+                                                               topology_type_empty).at(event.reaction_idx);
 
     auto& model = kernel->getCPUKernelStateModel();
     auto& data = *model.getParticleData();
@@ -370,7 +371,7 @@ void CPUEvaluateTopologyReactions::handleTopologyParticleReaction(CPUStateModel:
     } else {
         topology->type() = reaction.top_type_to2();
     }
-    topology->updateReactionRates(context.topology_registry().structural_reactions_of(topology->type()));
+    topology->updateReactionRates(context.topology_registry().structuralReactionsOf(topology->type()));
     topology->configure();
 }
 
@@ -379,7 +380,7 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
                                                                   const TREvent &event) {
     const auto& context = kernel->context();
     const auto& top_registry = context.topology_registry();
-    const auto& reaction = top_registry.spatial_reactions_by_type(event.t1, t1->type(), event.t2, t2->type()).at(event.reaction_idx);
+    const auto& reaction = top_registry.spatialReactionsByType(event.t1, t1->type(), event.t2, t2->type()).at(event.reaction_idx);
 
     auto& model = kernel->getCPUKernelStateModel();
     auto& data = *model.getParticleData();
@@ -424,10 +425,10 @@ void CPUEvaluateTopologyReactions::handleTopologyTopologyReaction(CPUStateModel:
         t1->type() = top_type_to1;
         t2->type() = top_type_to2;
 
-        t2->updateReactionRates(context.topology_registry().structural_reactions_of(t2->type()));
+        t2->updateReactionRates(context.topology_registry().structuralReactionsOf(t2->type()));
         t2->configure();
     }
-    t1->updateReactionRates(context.topology_registry().structural_reactions_of(t1->type()));
+    t1->updateReactionRates(context.topology_registry().structuralReactionsOf(t1->type()));
     t1->configure();
 }
 

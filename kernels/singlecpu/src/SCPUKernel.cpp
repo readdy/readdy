@@ -78,7 +78,7 @@ void SCPUKernel::initialize() {
     readdy::model::Kernel::initialize();
     for(auto& top : getSCPUKernelStateModel().topologies()) {
         top->configure();
-        top->updateReactionRates(context().topology_registry().structural_reactions_of(top->type()));
+        top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
     }
 }
 

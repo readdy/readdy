@@ -81,46 +81,46 @@ public:
 
     ~TopologyRegistry() = default;
 
-    topology_type_type add_type(const std::string &name, const structural_reactions &reactions = {});
+    topology_type_type addType(const std::string &name, const structural_reactions &reactions = {});
 
-    void add_structural_reaction(topology_type_type type, const reactions::StructuralTopologyReaction &reaction);
+    void addStructuralReaction(topology_type_type type, const reactions::StructuralTopologyReaction &reaction);
 
-    void add_structural_reaction(topology_type_type type, reactions::StructuralTopologyReaction &&reaction);
+    void addStructuralReaction(topology_type_type type, reactions::StructuralTopologyReaction &&reaction);
 
-    void add_structural_reaction(const std::string &type, const reactions::StructuralTopologyReaction &reaction);
+    void addStructuralReaction(const std::string &type, const reactions::StructuralTopologyReaction &reaction);
 
-    void add_structural_reaction(const std::string &type, reactions::StructuralTopologyReaction &&reaction);
+    void addStructuralReaction(const std::string &type, reactions::StructuralTopologyReaction &&reaction);
 
-    const TopologyTypeInfo &info_of(topology_type_type type) const;
+    const TopologyTypeInfo &infoOf(topology_type_type type) const;
 
-    const std::string &name_of(topology_type_type type) const;
+    const std::string &nameOf(topology_type_type type) const;
 
-    topology_type_type id_of(const std::string &name) const;
+    topology_type_type idOf(const std::string &name) const;
 
     bool empty();
 
-    bool contains_structural_reactions();
+    bool containsStructuralReactions();
 
-    const TopologyTypeInfo::structural_reaction_vector &structural_reactions_of(topology_type_type type) const;
+    const TopologyTypeInfo::structural_reaction_vector &structuralReactionsOf(topology_type_type type) const;
 
-    const structural_reactions &structural_reactions_of(const std::string &type) const;
+    const structural_reactions &structuralReactionsOf(const std::string &type) const;
 
     void configure();
 
-    void debug_output() const;
+    void debugOutput() const;
 
-    void add_spatial_reaction(reactions::SpatialTopologyReaction &&reaction);
+    void addSpatialReaction(reactions::SpatialTopologyReaction &&reaction);
 
-    void add_spatial_reaction(const std::string &name, const std::string &typeFrom1,
-                              const std::string &typeFrom2, const std::string &topologyTypeFrom1,
-                              const std::string &topologyTypeFrom2, const std::string &typeTo1,
-                              const std::string &typeTo2, const std::string &topologyTypeTo1,
-                              const std::string &topologyTypeTo2, scalar rate, scalar radius, reactions::STRMode mode);
+    void addSpatialReaction(const std::string &name, const std::string &typeFrom1,
+                            const std::string &typeFrom2, const std::string &topologyTypeFrom1,
+                            const std::string &topologyTypeFrom2, const std::string &typeTo1,
+                            const std::string &typeTo2, const std::string &topologyTypeTo1,
+                            const std::string &topologyTypeTo2, scalar rate, scalar radius, reactions::STRMode mode);
 
-    void add_spatial_reaction(const std::string &name, const util::particle_type_pair &types,
-                              const topology_type_pair &topology_types,
-                              const util::particle_type_pair &types_to, const topology_type_pair &topology_types_to,
-                              scalar rate, scalar radius, reactions::STRMode mode);
+    void addSpatialReaction(const std::string &name, const util::particle_type_pair &types,
+                            const topology_type_pair &topology_types,
+                            const util::particle_type_pair &types_to, const topology_type_pair &topology_types_to,
+                            scalar rate, scalar radius, reactions::STRMode mode);
 
     /**
      * Convenience function for adding spatial reaction.
@@ -141,52 +141,52 @@ public:
      * @param rate the rate
      * @param radius the radius
      */
-    void add_spatial_reaction(const std::string &descriptor, scalar rate, scalar radius);
+    void addSpatialReaction(const std::string &descriptor, scalar rate, scalar radius);
 
-    void validate_spatial_reaction(const spatial_reaction &reaction) const;
+    void validateSpatialReaction(const spatial_reaction &reaction) const;
 
-    const spatial_reaction_map &spatial_reaction_registry() const;
+    const spatial_reaction_map &spatialReactionRegistry() const;
 
-    const spatial_reactions &spatial_reactions_by_type(particle_type_type t1, topology_type_type tt1,
-                                                       particle_type_type t2, topology_type_type tt2) const;
+    const spatial_reactions &spatialReactionsByType(particle_type_type t1, topology_type_type tt1,
+                                                    particle_type_type t2, topology_type_type tt2) const;
 
-    bool is_spatial_reaction_type(const std::string &name) const;
+    bool isSpatialReactionType(const std::string &name) const;
 
-    bool is_spatial_reaction_type(particle_type_type type) const;
+    bool isSpatialReactionType(particle_type_type type) const;
 
 
     /*
      * Potentials
      */
 
-    void configure_bond_potential(const std::string &type1, const std::string &type2, const api::Bond &bond);
+    void configureBondPotential(const std::string &type1, const std::string &type2, const api::Bond &bond);
 
-    void configure_angle_potential(const std::string &type1, const std::string &type2, const std::string &type3,
-                                   const api::Angle &angle);
+    void configureAnglePotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                 const api::Angle &angle);
 
-    void configure_torsion_potential(const std::string &type1, const std::string &type2, const std::string &type3,
-                                     const std::string &type4, const api::TorsionAngle &torsionAngle);
+    void configureTorsionPotential(const std::string &type1, const std::string &type2, const std::string &type3,
+                                   const std::string &type4, const api::TorsionAngle &torsionAngle);
 
-    api::PotentialConfiguration &potential_configuration();
+    api::PotentialConfiguration &potentialConfiguration();
 
-    const api::PotentialConfiguration &potential_configuration() const;
+    const api::PotentialConfiguration &potentialConfiguration() const;
 
-    const ParticleTypeRegistry &particle_type_registry() const;
+    const ParticleTypeRegistry &particleTypeRegistry() const;
 
 private:
     static topology_type_type counter;
 
-    TopologyTypeInfo defaultInfo;
-    bool _contains_structural_reactions{false};
+    TopologyTypeInfo _defaultInfo;
+    bool _containsStructuralReactions{false};
     type_registry _registry{};
 
-    spatial_reaction_map _spatial_reactions{};
-    spatial_reactions defaultTopologyReactions{};
-    spatial_reaction_types _topology_reaction_types{};
+    spatial_reaction_map _spatialReactions{};
+    spatial_reactions _defaultTopologyReactions{};
+    spatial_reaction_types _topologyReactionTypes{};
 
-    std::reference_wrapper<const ParticleTypeRegistry> _type_registry;
+    std::reference_wrapper<const ParticleTypeRegistry> _typeRegistry;
 
-    api::PotentialConfiguration potentialConfiguration_{};
+    api::PotentialConfiguration _potentialConfiguration{};
 };
 
 NAMESPACE_END(top)

@@ -54,7 +54,7 @@ TEST(CPUTestKernel, TestKernelLoad) {
     auto connection = kernel->connectObservable(pp_obs.get());
 
     const int n_particles = 500;
-    const auto typeId = kernel->context().particle_types().id_of("X");
+    const auto typeId = kernel->context().particle_types().idOf("X");
     std::vector<readdy::model::Particle> particlesToBeginWith{n_particles, {0, 0, 0, typeId}};
     readdy::log::debug("n_particles={}", particlesToBeginWith.size());
     kernel->stateModel().addParticles(particlesToBeginWith);
