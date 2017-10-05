@@ -416,8 +416,8 @@ struct FindId {
     Reaction::reaction_id id = 0;
     bool found = false;
 
-    template<typename T1, typename T2>
-    void operator()(const T1 &t, const T2 &reaction) {
+    template<typename T>
+    void operator()(const T &reaction) {
         if (reaction->name() == name) {
             found = true;
             id = reaction->id();
@@ -432,8 +432,8 @@ struct FindName {
     std::string name = "";
     bool found = false;
 
-    template<typename T1, typename T2>
-    void operator()(const T1 &t, const T2 &reaction) {
+    template<typename T>
+    void operator()(const T &reaction) {
         if (reaction->id() == id) {
             found = true;
             name = reaction->name();
@@ -444,19 +444,19 @@ struct FindName {
 
 bool ReactionRegistry::reactionNameExists(const std::string &name) const {
     FindId findId(name);
-    readdy::util::collections::for_each_value(one_educt_registry_internal, findId);
-    readdy::util::collections::for_each_value(one_educt_registry_external, findId);
-    readdy::util::collections::for_each_value(two_educts_registry_internal, findId);
-    readdy::util::collections::for_each_value(two_educts_registry_external, findId);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findId);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findId);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findId);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findId);
     return findId.found;
 }
 
 std::string ReactionRegistry::nameOf(ReactionRegistry::reaction_id id) const {
     FindName findName(id);
-    readdy::util::collections::for_each_value(one_educt_registry_internal, findName);
-    readdy::util::collections::for_each_value(one_educt_registry_external, findName);
-    readdy::util::collections::for_each_value(two_educts_registry_internal, findName);
-    readdy::util::collections::for_each_value(two_educts_registry_external, findName);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findName);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findName);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findName);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findName);
     if (findName.found) {
         return findName.name;
     } else {
@@ -466,10 +466,10 @@ std::string ReactionRegistry::nameOf(ReactionRegistry::reaction_id id) const {
 
 ReactionRegistry::reaction_id ReactionRegistry::idOf(const std::string &name) const {
     FindId findId(name);
-    readdy::util::collections::for_each_value(one_educt_registry_internal, findId);
-    readdy::util::collections::for_each_value(one_educt_registry_external, findId);
-    readdy::util::collections::for_each_value(two_educts_registry_internal, findId);
-    readdy::util::collections::for_each_value(two_educts_registry_external, findId);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_internal, findId);
+    readdy::util::collections::for_each_value_ref(one_educt_registry_external, findId);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_internal, findId);
+    readdy::util::collections::for_each_value_ref(two_educts_registry_external, findId);
     if (findId.found) {
         return findId.id;
     } else {
@@ -477,10 +477,16 @@ ReactionRegistry::reaction_id ReactionRegistry::idOf(const std::string &name) co
     }
 }
 
-const ReactionRegistry::reactions ReactionRegistry::allReactions() const {
-    reactions all;
-    std::copy(order1Flat().begin(), order1Flat().end(), std::back_inserter(all));
-    std::copy(order2Flat().begin(), order2Flat().end(), std::back_inserter(all));
+const ReactionRegistry::reactions_raw_ptr_map ReactionRegistry::allReactions() const {
+    reactions_raw_ptr_map all;
+    const auto o1 = order1Flat();
+    const auto o2 = order2Flat();
+    for (const auto &reaction : o1) {
+        all[reaction->id()] = reaction;
+    }
+    for (const auto &reaction : o2) {
+        all[reaction->id()] = reaction;
+    }
     return all;
 }
 

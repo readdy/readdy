@@ -84,31 +84,25 @@ void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetNam
 }
 
 void ReactionCounts::append() {
-    if (result.empty()) {
-        const auto &ctx = kernel->context();
-        if (ctx.reactions().allReactions().empty()) {
-            // no reactions registered, nothing shall ever be observed anyway
-            return;
-        } else {
-            // there are reactions, but the handler did not perform so far
-            reactions::utils::zeroReactionCounts(result, ctx.reactions().allReactions());
-        }
-    }
     if (pimpl->firstWrite) {
+        const auto allReactions = kernel->context().reactions().allReactions();
         if (pimpl->shouldWrite) {
-            for (const auto &entry : result) {
+            auto subgroup = pimpl->group->createGroup("counts");
+            for (const auto &r : allReactions) {
+                const auto &reaction = r.second;
                 h5rd::dimensions chunkSize = {pimpl->flushStride};
                 h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-                auto dset = pimpl->group->createDataSet<std::size_t>(std::to_string(entry.first), chunkSize, dims,
+                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
                                                                      {&pimpl->bloscFilter});
-                pimpl->dataSets.emplace(std::make_pair(entry.first, std::move(dset)));
+                pimpl->dataSets.emplace(std::make_pair(reaction->id(), std::move(dset)));
             }
         }
         ioutils::writeReactionInformation(*pimpl->group, kernel->context());
         pimpl->firstWrite = false;
     }
-    // @todo impl
-    for (;;);
+    for (const auto &reactionEntry : result) {
+        pimpl->dataSets.at(reactionEntry.first)->append({1}, &(reactionEntry.second));
+    }
     pimpl->time->append(t_current);
 }
 

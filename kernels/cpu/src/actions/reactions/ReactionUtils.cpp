@@ -80,7 +80,7 @@ data_t::DataUpdate handleEventsGillespie(
                             auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
                             if(maybeRecords != nullptr) {
                                 record_t record;
-                                record.reactionIndex = event.reactionIndex;
+                                record.id = reaction->id();
                                 performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                                 fixPos(record.where);
                                 maybeRecords->push_back(record);
@@ -95,7 +95,7 @@ data_t::DataUpdate handleEventsGillespie(
                             auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
                             if(maybeRecords != nullptr) {
                                 record_t record;
-                                record.reactionIndex = event.reactionIndex;
+                                record.id = reaction->id();
                                 performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction,
                                                 &record);
                                 fixPos(record.where);

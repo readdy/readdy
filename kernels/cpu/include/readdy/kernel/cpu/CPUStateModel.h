@@ -112,9 +112,9 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
 
-    const reaction_counts_map & reactionCounts() const;
+    const reaction_counts_map & reactionCounts() const override;
 
-    reaction_counts_map &reactionCounts();
+    reaction_counts_map &reactionCounts() override;
 
     particle_type getParticleForIndex(std::size_t index) const override;
 

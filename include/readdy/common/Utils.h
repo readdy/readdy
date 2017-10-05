@@ -80,6 +80,15 @@ inline void for_each_value(const Collection& collection, Fun f)  {
     }
 }
 
+template<typename Collection, typename Fun>
+inline void for_each_value_ref(const Collection& collection, Fun &f)  {
+    for(auto&& e : collection) {
+        for(auto&& inner : e.second) {
+            f(inner);
+        }
+    }
+}
+
 template <typename map, typename Fun>
 inline void for_each_value_in_map(map &m, Fun f) {
     for (auto&& entry : m) {

@@ -101,7 +101,6 @@ void Context::configure(bool debugOutput) {
         _reactionRegistry.debugOutput();
         _topologyRegistry.debugOutput();
     }
-
 }
 
 std::tuple<Vec3, Vec3> Context::getBoxBoundingVertices() const {

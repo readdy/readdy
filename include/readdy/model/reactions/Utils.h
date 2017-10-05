@@ -43,9 +43,11 @@ NAMESPACE_BEGIN(utils)
 
 using reaction_counts_map = std::unordered_map<reactions::Reaction::reaction_id, std::size_t>;
 
-inline void zeroReactionCounts(reaction_counts_map &reactionCounts, const std::vector<Reaction*> &allReactions) {
+inline void zeroReactionCounts(reaction_counts_map &reactionCounts,
+                               const std::unordered_map<Reaction::reaction_id, Reaction *> &allReactions) {
     reactionCounts.clear();
-    for (const auto &r : allReactions) {
+    for (const auto &reaction : allReactions) {
+        const auto &r = reaction.second;
         reactionCounts[r->id()] = 0;
     }
 }

@@ -58,6 +58,7 @@ public:
     using reactions = rea_raw_ptr_vec;
 
     using reaction_id = Reaction::reaction_id;
+    using reactions_raw_ptr_map = std::unordered_map<reaction_id, reaction*>;
 
     explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
@@ -99,7 +100,7 @@ public:
 
     reaction_id idOf(const std::string &name) const;
 
-    const reactions allReactions() const;
+    const reactions_raw_ptr_map allReactions() const;
 
     reaction_id add(const std::string &descriptor, scalar rate);
 

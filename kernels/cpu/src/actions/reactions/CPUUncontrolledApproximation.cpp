@@ -201,7 +201,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
-                        record.reactionIndex = event.reactionIndex;
+                        record.id = reaction->id();
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
@@ -221,7 +221,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
-                        record.reactionIndex = event.reactionIndex;
+                        record.id = reaction->id();
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);

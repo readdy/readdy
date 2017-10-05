@@ -33,6 +33,7 @@
 #pragma once
 #include <vector>
 #include <readdy/model/topologies/GraphTopology.h>
+#include <readdy/model/reactions/Utils.h>
 #include "Particle.h"
 #include "readdy/common/ReaDDyVec3.h"
 
@@ -90,6 +91,10 @@ public:
     virtual scalar energy() const = 0;
 
     virtual scalar &energy() = 0;
+
+    virtual const reactions::utils::reaction_counts_map &reactionCounts() const = 0;
+
+    virtual reactions::utils::reaction_counts_map &reactionCounts() = 0;
 };
 
 NAMESPACE_END(model)

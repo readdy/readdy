@@ -290,16 +290,29 @@ TEST_F(TestKernelContext, ReactionNameExists) {
 }
 
 TEST_F(TestKernelContext, ReactionNameAndId) {
-    std::runtime_error("impl");
+    m::Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    const auto idFoo = ctx.reactions().idOf("foo");
+    const auto idBla = ctx.reactions().idOf("bla");
+    EXPECT_GE(idFoo, 0);
+    EXPECT_GE(idBla, 0);
+    EXPECT_EQ(ctx.reactions().nameOf(idFoo), "foo");
+    EXPECT_EQ(ctx.reactions().nameOf(idBla), "bla");
 }
 
 TEST_F(TestKernelContext, GetAllReactions) {
     m::Context ctx;
     ctx.particle_types().add("A", 1.);
     ctx.reactions().add("foo: A->", 1.);
-    ctx.reactions().add("bla: A+A->A", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    ctx.reactions().addConversion("conv1", "A", "A", 1.);
+    ctx.reactions().addConversion("conv2", "A", "A", 1.);
+    ctx.reactions().addFusion("fusion", "A","A", "A", 1., 1.);
+    ctx.configure();
     const auto &all = ctx.reactions().allReactions();
-    EXPECT_EQ(all.size(), 2);
+    EXPECT_EQ(all.size(), 5);
 }
 
 

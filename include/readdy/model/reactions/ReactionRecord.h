@@ -34,6 +34,7 @@
 #include <spdlog/fmt/ostr.h>
 #include <readdy/common/common.h>
 #include <readdy/model/Particle.h>
+#include <readdy/model/reactions/Reaction.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
@@ -45,7 +46,8 @@ struct ReactionRecord {
     std::array<Particle::id_type, 2> products {{0, 0}};
     std::array<Particle::type_type, 2> types_from {{0, 0}};
     Vec3 where {0, 0, 0};
-    std::size_t reactionIndex {0};
+    // std::size_t reactionIndex {0};
+    readdy::model::reactions::Reaction::reaction_id id {0}; // global unique reaction id
 
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
 };

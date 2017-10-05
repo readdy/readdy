@@ -154,7 +154,7 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
-                        record.reactionIndex = event.reactionIndex;
+                        record.id = reaction->id();
                         performReaction(data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos, &record);
                         stateModel.reactionRecords().push_back(record);
                     } else {
@@ -173,7 +173,7 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                     auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
                     if(ctx.recordReactionsWithPositions()) {
                         reaction_record record;
-                        record.reactionIndex = event.reactionIndex;
+                        record.id = reaction->id();
                         performReaction(data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
                         stateModel.reactionRecords().push_back(record);
                     } else {
@@ -303,7 +303,7 @@ scpu_data::entries_update handleEventsGillespie(
                             auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
                             if(ctx.recordReactionsWithPositions()) {
                                 reaction_record record;
-                                record.reactionIndex = event.reactionIndex;
+                                record.id = reaction->id();
                                 performReaction(*data, entry1, entry1, newParticles, decayedEntries, reaction, fixPos,
                                                 &record);
                                 model.reactionRecords().push_back(std::move(record));
@@ -319,7 +319,7 @@ scpu_data::entries_update handleEventsGillespie(
                             auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
                             if(ctx.recordReactionsWithPositions()) {
                                 reaction_record record;
-                                record.reactionIndex = event.reactionIndex;
+                                record.id = reaction->id();
                                 performReaction(*data, entry1, event.idx2, newParticles, decayedEntries, reaction, fixPos, &record);
                                 model.reactionRecords().push_back(std::move(record));
                             } else {

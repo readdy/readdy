@@ -48,7 +48,7 @@ NAMESPACE_BEGIN(ioutils)
 
 struct ReactionInfo {
     const char* name {""};
-    std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
+    // std::size_t index {0}; // identify reaction in map of vectors, e.g. for reaction records
     reactions::Reaction::reaction_id id {0}; // global unique reaction id
     std::size_t n_educts {0};
     std::size_t n_products {0};
