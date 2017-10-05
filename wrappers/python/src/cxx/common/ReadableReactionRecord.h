@@ -43,11 +43,7 @@ inline std::string nameOf(const readdy::model::ioutils::ReactionInfo &info) {
     return info.name;
 }
 
-inline std::string nameOf(readdy::model::reactions::Reaction<1> *reaction) {
-    return reaction->name();
-}
-
-inline std::string nameOf(const readdy::model::reactions::Reaction<2> *reaction) {
+inline std::string nameOf(readdy::model::reactions::Reaction *reaction) {
     return reaction->name();
 }
 

@@ -36,13 +36,14 @@
 #include <readdy/common/ParticleTypeTuple.h>
 #include <readdy/model/Particle.h>
 #include <readdy/model/Context.h>
+#include <readdy/model/reactions/Reaction.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
 class ReactionCounts : public Observable<std::pair<
-        std::unordered_map<particle_type_type, std::vector<std::size_t>>,
+        std::unordered_map<reactions::Reaction::reaction_id, std::vector<std::size_t>>,
         std::unordered_map<readdy::util::particle_type_pair, std::vector<std::size_t>, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>
 >> {
 public:

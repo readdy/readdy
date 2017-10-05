@@ -37,11 +37,11 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
-class Conversion : public Reaction<1> {
+class Conversion : public Reaction {
 
 public:
     Conversion(const std::string &name, particle_type_type typeFrom, particle_type_type typeTo, const scalar rate) :
-            Reaction(name, rate, 0, 0, 1) {
+            Reaction(name, rate, 0, 0, 1, 1) {
         _educts = {typeFrom};
         _products = {typeTo};
     }
@@ -54,7 +54,7 @@ public:
         return _products[0];
     }
 
-    virtual const ReactionType type() override {
+    virtual const ReactionType type() const override {
         return ReactionType::Conversion;
     }
 };

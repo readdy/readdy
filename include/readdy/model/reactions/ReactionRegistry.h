@@ -44,22 +44,20 @@ NAMESPACE_BEGIN(reactions)
 
 class ReactionRegistry {
     using particle = readdy::model::Particle;
-    using rea_ptr_vec1 = std::vector<std::shared_ptr<reactions::Reaction<1>>>;
-    using rea_ptr_vec2 = std::vector<std::shared_ptr<reactions::Reaction<2>>>;
-    using reaction_o1_registry_internal = std::unordered_map<particle::type_type, rea_ptr_vec1>;
-    using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec2>;
+    using reaction = Reaction;
+    using rea_ptr_vec = std::vector<std::shared_ptr<reaction>>;
+    using rea_raw_ptr_vec = std::vector<reaction *>;
+    using reaction_o1_registry_internal = std::unordered_map<particle::type_type, rea_ptr_vec>;
+    using reaction_o2_registry_internal = util::particle_type_pair_unordered_map<rea_ptr_vec>;
 
 public:
-    using reaction_o1_registry = std::unordered_map<particle::type_type, std::vector<reactions::Reaction<1> *>>;
-    using reaction_o2_registry = util::particle_type_pair_unordered_map<std::vector<reactions::Reaction<2> *>>;
+    using reaction_o1_registry = std::unordered_map<particle::type_type, rea_raw_ptr_vec>;
+    using reaction_o2_registry = util::particle_type_pair_unordered_map<rea_raw_ptr_vec>;
     using reaction_o2_types = std::unordered_set<particle_type_type>;
 
-    using reactions_o1 = reaction_o1_registry::mapped_type;
-    using reactions_o2 = reaction_o2_registry::mapped_type;
-    using reaction_o1 = reactions_o1::value_type;
-    using reaction_o2 = reactions_o2::value_type;
+    using reactions = rea_raw_ptr_vec;
 
-    using reaction_id = short;
+    using reaction_id = Reaction::reaction_id;
 
     explicit ReactionRegistry(std::reference_wrapper<const ParticleTypeRegistry> ref);
 
@@ -75,25 +73,25 @@ public:
 
     const std::size_t &nOrder1() const;
 
-    const reactions_o1 order1Flat() const;
+    const reactions order1Flat() const;
 
-    const reaction_o1 order1ByName(const std::string &name) const;
+    const reaction* order1ByName(const std::string &name) const;
 
-    const reactions_o1 &order1ByType(const particle::type_type type) const;
+    const reactions &order1ByType(const particle::type_type type) const;
 
     const std::size_t &nOrder2() const;
 
     const reaction_o2_registry &order2() const;
 
-    const reactions_o2 order2Flat() const;
+    const reactions order2Flat() const;
 
-    const reaction_o2 order2ByName(const std::string &name) const;
+    const reaction* order2ByName(const std::string &name) const;
 
-    const reactions_o2 &order2ByType(const particle::type_type type1, const particle::type_type type2) const;
+    const reactions &order2ByType(const particle::type_type type1, const particle::type_type type2) const;
 
-    const reactions_o1 &order1ByType(const std::string &type) const;
+    const reactions &order1ByType(const std::string &type) const;
 
-    const reactions_o2 &order2ByType(const std::string &type1, const std::string &type2) const;
+    const reactions &order2ByType(const std::string &type1, const std::string &type2) const;
 
     bool isReactionOrder2Type(particle_type_type type) const;
 
@@ -129,9 +127,7 @@ public:
 
     reaction_id addDecay(const std::string &name, particle_type_type type, scalar rate);
 
-    const short addExternal(reaction_o1 r);
-
-    const short addExternal(reaction_o2 r);
+    const short addExternal(reaction* r);
 
     void configure();
 
@@ -141,8 +137,7 @@ private:
 
     bool reactionNameExists(const std::string &name) const;
 
-    template<unsigned int N>
-    ReactionRegistry::reaction_id emplaceReaction(const std::shared_ptr<Reaction<N>> &reaction);
+    ReactionRegistry::reaction_id emplaceReaction(const std::shared_ptr<Reaction> &reaction);
 
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
@@ -160,8 +155,7 @@ private:
     reaction_o2_registry_external two_educts_registry_external{};
     reaction_o2_types _reaction_o2_types{};
 
-    reactions_o1 defaultReactionsO1{};
-    reactions_o2 defaultReactionsO2{};
+    reactions defaultReactions{};
 };
 
 NAMESPACE_END(reactions)

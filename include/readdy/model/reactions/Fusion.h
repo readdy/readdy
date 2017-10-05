@@ -37,12 +37,12 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(reactions)
 
-class Fusion : public Reaction<2> {
-    using super = Reaction<2>;
+class Fusion : public Reaction {
+    using super = Reaction;
 public:
     Fusion(const std::string &name, particle_type_type from1, particle_type_type from2, particle_type_type to,
            const scalar rate, const scalar eductDistance, const scalar weight1 = 0.5,
-           const scalar weight2 = 0.5) : Reaction(name, rate, eductDistance, 0, 1){
+           const scalar weight2 = 0.5) : Reaction(name, rate, eductDistance, 0, 2, 1){
         super::_weight1 = weight1;
         super::_weight2 = weight2;
         _educts = {from1, from2};
@@ -69,7 +69,7 @@ public:
         return _products[0];
     }
 
-    virtual const ReactionType type() override {
+    virtual const ReactionType type() const override {
         return ReactionType::Fusion;
     }
 
