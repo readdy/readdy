@@ -138,6 +138,12 @@ public:
     void debugOutput() const;
 
 private:
+
+    bool reactionNameExists(const std::string &name) const;
+
+    template<unsigned int N>
+    ReactionRegistry::reaction_id emplaceReaction(const std::shared_ptr<Reaction<N>> &reaction);
+
     using reaction_o1_registry_external = reaction_o1_registry;
     using reaction_o2_registry_external = reaction_o2_registry;
 

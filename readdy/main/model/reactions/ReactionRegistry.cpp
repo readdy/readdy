@@ -41,10 +41,42 @@
 #include <readdy/common/string.h>
 #include <readdy/model/Utils.h>
 #include <regex>
+#include <utility>
 
 namespace readdy {
 namespace model {
 namespace reactions {
+
+template<>
+ReactionRegistry::reaction_id ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction<1>> &reaction) {
+    if (reactionNameExists(reaction->name())) {
+        throw std::invalid_argument(fmt::format("A reaction with the name {} exists already", reaction->name()));
+    }
+    auto t = reaction->educts()[0];
+    auto id = reaction->id();
+    if (one_educt_registry_internal.find(t) == one_educt_registry_internal.end()) {
+        one_educt_registry_internal.emplace(t, rea_ptr_vec1());
+    }
+    one_educt_registry_internal[t].push_back(reaction);
+    _n_order1 += 1;
+    return id;
+}
+
+template<>
+ReactionRegistry::reaction_id ReactionRegistry::emplaceReaction(const std::shared_ptr<Reaction<2>> &reaction) {
+    if (reactionNameExists(reaction->name())) {
+        throw std::invalid_argument(fmt::format("A reaction with the name {} exists already", reaction->name()));
+    }
+    const auto id = reaction->id();
+    const auto pp = std::make_tuple(reaction->educts()[0], reaction->educts()[1]);
+
+    if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
+        two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
+    }
+    two_educts_registry_internal[pp].push_back(reaction);
+    _n_order2 += 1;
+    return id;
+}
 
 const ReactionRegistry::reactions_o1 ReactionRegistry::order1Flat() const {
     reaction_o1_registry::mapped_type result;
@@ -184,30 +216,14 @@ bool ReactionRegistry::isReactionOrder2Type(particle_type_type type) const {
 ReactionRegistry::reaction_id
 ReactionRegistry::addConversion(const std::string &name, particle_type_type from, particle_type_type to, scalar rate) {
     auto reaction = std::make_shared<Conversion>(name, from, to, rate);
-    auto type = reaction->getTypeFrom();
-    auto id = reaction->id();
-    if (one_educt_registry_internal.find(type) == one_educt_registry_internal.end()) {
-        one_educt_registry_internal.emplace(type, rea_ptr_vec1());
-    }
-    one_educt_registry_internal[type].push_back(std::move(reaction));
-    _n_order1 += 1;
-    return id;
+    return emplaceReaction<1>(reaction);
 }
 
 ReactionRegistry::reaction_id
 ReactionRegistry::addEnzymatic(const std::string &name, particle_type_type catalyst, particle_type_type from,
                                particle_type_type to, scalar rate, scalar eductDistance) {
     auto reaction = std::make_shared<Enzymatic>(name, catalyst, from, to, rate, eductDistance);
-    const auto id = reaction->id();
-    const auto pp = std::make_tuple(reaction->educts()[0], reaction->educts()[1]);
-
-    if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
-        two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
-    }
-    two_educts_registry_internal[pp].push_back(std::move(reaction));
-    _n_order2 += 1;
-
-    return id;
+    return emplaceReaction<2>(reaction);
 }
 
 ReactionRegistry::reaction_id
@@ -235,14 +251,7 @@ ReactionRegistry::addFission(const std::string &name, particle_type_type from, p
                              particle_type_type to2, scalar rate, scalar productDistance, scalar weight1,
                              scalar weight2) {
     auto reaction = std::make_shared<Fission>(name, from, to1, to2, rate, productDistance, weight1, weight2);
-    auto type = reaction->getFrom();
-    auto id = reaction->id();
-    if (one_educt_registry_internal.find(type) == one_educt_registry_internal.end()) {
-        one_educt_registry_internal.emplace(type, rea_ptr_vec1());
-    }
-    one_educt_registry_internal[type].push_back(std::move(reaction));
-    _n_order1 += 1;
-    return id;
+    return emplaceReaction<1>(reaction);
 }
 
 ReactionRegistry::reaction_id
@@ -256,16 +265,7 @@ ReactionRegistry::reaction_id
 ReactionRegistry::addFusion(const std::string &name, particle_type_type from1, particle_type_type from2,
                             particle_type_type to, scalar rate, scalar eductDistance, scalar weight1, scalar weight2) {
     auto reaction = std::make_shared<Fusion>(name, from1, from2, to, rate, eductDistance, weight1, weight2);
-    const auto id = reaction->id();
-    const auto pp = std::make_tuple(reaction->educts()[0], reaction->educts()[1]);
-
-    if (two_educts_registry_internal.find(pp) == two_educts_registry_internal.end()) {
-        two_educts_registry_internal.emplace(pp, rea_ptr_vec2());
-    }
-    two_educts_registry_internal[pp].push_back(std::move(reaction));
-    _n_order2 += 1;
-
-    return id;
+    return emplaceReaction<2>(reaction);
 }
 
 ReactionRegistry::reaction_id ReactionRegistry::add(const std::string &descriptor, scalar rate) {
@@ -414,14 +414,31 @@ ReactionRegistry::addDecay(const std::string &name, const std::string &type, sca
 ReactionRegistry::reaction_id
 ReactionRegistry::addDecay(const std::string &name, particle_type_type type, scalar rate) {
     auto reaction = std::make_shared<Decay>(name, type, rate);
-    auto t = reaction->getTypeFrom();
-    auto id = reaction->id();
-    if (one_educt_registry_internal.find(t) == one_educt_registry_internal.end()) {
-        one_educt_registry_internal.emplace(t, rea_ptr_vec1());
+    return emplaceReaction<1>(reaction);
+}
+
+namespace {
+struct FindName {
+    FindName(std::string name, bool &found) : name(std::move(name)), found(found) {}
+    std::string name;
+    bool &found;
+    template<typename T1, typename T2>
+    void operator()(const T1 &t, const T2 &reaction) {
+        if (reaction->name() == name) {
+            found = true;
+        };
     }
-    one_educt_registry_internal[t].push_back(std::move(reaction));
-    _n_order1 += 1;
-    return id;
+};
+}
+
+bool ReactionRegistry::reactionNameExists(const std::string &name) const {
+    bool foundName = false;
+    FindName findName(name, foundName);
+    readdy::util::collections::for_each_value(one_educt_registry_internal, findName);
+    readdy::util::collections::for_each_value(one_educt_registry_external, findName);
+    readdy::util::collections::for_each_value(two_educts_registry_internal, findName);
+    readdy::util::collections::for_each_value(two_educts_registry_external, findName);
+    return foundName;
 }
 
 const short ReactionRegistry::addExternal(reactions::Reaction<2> *r) {

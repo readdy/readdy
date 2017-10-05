@@ -282,6 +282,13 @@ TEST_F(TestKernelContext, ReactionDescriptorInvalidInputs) {
     EXPECT_EQ(ctx.reactions().nOrder2(), 0);
 }
 
+TEST_F(TestKernelContext, ReactionNameExists) {
+    m::Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("bla: A->", 1.);
+    EXPECT_ANY_THROW(ctx.reactions().add("bla: A->", 1.));
+}
+
 INSTANTIATE_TEST_CASE_P(TestKernelContext, TestKernelContextWithKernels,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 
