@@ -26,6 +26,7 @@
  * @file SCPUReactionUtils.h
  * @brief << brief description >>
  * @author clonker
+ * @author chrisfroe
  * @date 31.01.17
  * @copyright GNU Lesser General Public License v3.0
  */

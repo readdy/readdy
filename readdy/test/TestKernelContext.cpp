@@ -289,6 +289,20 @@ TEST_F(TestKernelContext, ReactionNameExists) {
     EXPECT_ANY_THROW(ctx.reactions().add("bla: A->", 1.));
 }
 
+TEST_F(TestKernelContext, ReactionNameAndId) {
+    std::runtime_error("impl");
+}
+
+TEST_F(TestKernelContext, GetAllReactions) {
+    m::Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+A->A", 1.);
+    const auto &all = ctx.reactions().allReactions();
+    EXPECT_EQ(all.size(), 2);
+}
+
+
 INSTANTIATE_TEST_CASE_P(TestKernelContext, TestKernelContextWithKernels,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 

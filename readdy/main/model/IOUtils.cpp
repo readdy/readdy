@@ -38,6 +38,8 @@ namespace readdy {
 namespace model {
 namespace ioutils {
 
+// @todo save the registered_reactions as a flat vector of ReactionInfo
+// @todo omit the reaction index in ReactionInfo, because it is an implementation detail
 void writeReactionInformation(h5rd::Group &group, const Context &context) {
     auto subgroup = group.createGroup("./registered_reactions");
     // order1

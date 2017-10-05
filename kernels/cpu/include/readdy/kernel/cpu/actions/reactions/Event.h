@@ -32,6 +32,7 @@
 #pragma once
 #include <spdlog/fmt/ostr.h>
 #include <readdy/model/Particle.h>
+#include <readdy/model/reactions/Reaction.h>
 
 namespace readdy {
 namespace kernel {
@@ -44,7 +45,7 @@ struct Event {
     std::uint8_t nEducts;
     std::uint8_t nProducts;
     index_type idx1, idx2;
-    reaction_index_type reactionIdx;
+    reaction_index_type reactionIndex;
     readdy::model::Particle::type_type t1, t2;
     readdy::scalar reactionRate;
     readdy::scalar cumulativeRate;

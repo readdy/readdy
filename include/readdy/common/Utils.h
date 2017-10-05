@@ -80,10 +80,10 @@ inline void for_each_value(const Collection& collection, Fun f)  {
     }
 }
 
-template <typename map, typename value>
-inline void for_each_value_in_map(map &m, const std::function<void(value&)> &fun) {
+template <typename map, typename Fun>
+inline void for_each_value_in_map(map &m, Fun f) {
     for (auto&& entry : m) {
-        fun(entry.second);
+        f(entry.second);
     }
 }
 

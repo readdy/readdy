@@ -155,11 +155,11 @@ readdy::model::Particle CPUStateModel::getParticleForIndex(const std::size_t ind
     return getParticleData()->getParticle(index);
 }
 
-const std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() const {
+const CPUStateModel::reaction_counts_map &CPUStateModel::reactionCounts() const {
     return _reactionCounts;
 }
 
-std::pair<CPUStateModel::reaction_counts_order1_map, CPUStateModel::reaction_counts_order2_map> &CPUStateModel::reactionCounts() {
+CPUStateModel::reaction_counts_map &CPUStateModel::reactionCounts() {
     return _reactionCounts;
 }
 

@@ -244,9 +244,8 @@ public:
     ~SCPUReactionCounts() override = default;
 
     void evaluate() override {
-        readdy::model::observables::ReactionCounts::initializeCounts(result, kernel->context());
-        assignCountsToResult(kernel->getSCPUKernelStateModel().reactionCounts(), result);
-    }
+        result = kernel->getSCPUKernelStateModel().reactionCounts();
+    };
 
 private:
     SCPUKernel* const kernel;

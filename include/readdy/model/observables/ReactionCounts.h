@@ -37,18 +37,15 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/Context.h>
 #include <readdy/model/reactions/Reaction.h>
+#include <readdy/model/reactions/Utils.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class ReactionCounts : public Observable<std::pair<
-        std::unordered_map<reactions::Reaction::reaction_id, std::vector<std::size_t>>,
-        std::unordered_map<readdy::util::particle_type_pair, std::vector<std::size_t>, readdy::util::particle_type_pair_hasher, readdy::util::particle_type_pair_equal_to>
->> {
+class ReactionCounts : public Observable<reactions::utils::reaction_counts_map> {
 public:
-    using reaction_counts_order1_map = typename std::tuple_element<0, result_type>::type;
-    using reaction_counts_order2_map = typename std::tuple_element<1, result_type>::type;
+    using reaction_counts_map = result_type;
 
     ReactionCounts(Kernel* kernel, unsigned int stride);
 
@@ -61,14 +58,6 @@ public:
 
     void flush() override;
 
-    /*
-     * Initialize the maps corresponding to first and second order reaction counts. If they were not used before, that means creating key-value pairs in
-     * the maps and setting the values, which are vectors, to the correct size. If they were used before, all counts within the value-vectors will be
-     * filled with zeros. This is used for the reaction-counts object in the state-model as well as the result object of the corresponding observable.
-     */
-    static void
-    initializeCounts(std::pair<ReactionCounts::reaction_counts_order1_map, ReactionCounts::reaction_counts_order2_map> &reactionCounts,
-                     const readdy::model::Context &ctx);
 
 protected:
     void initialize(Kernel* kernel) override;
@@ -76,8 +65,6 @@ protected:
     void initializeDataSet(File &file, const std::string &dataSetName, unsigned int flushStride) override;
 
     void append() override;
-
-    void assignCountsToResult(const result_type &from, result_type &to);
 
     struct Impl;
     std::unique_ptr<Impl> pimpl;

@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          *
+ * Copyright © 2017 Computational Molecular Biology Group,          *
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,38 +23,34 @@
 /**
  * << detailed description >>
  *
- * @file Event.cpp
+ * @file Utils.h
  * @brief << brief description >>
- * @author clonker
- * @date 28.10.16
+ * @author chrisfroe
+ * @date 05.10.17
+ * @copyright GNU Lesser General Public License v3.0
  */
 
-#include <readdy/kernel/cpu/actions/reactions/Event.h>
+#pragma once
 
-namespace readdy {
-namespace kernel {
-namespace cpu {
-namespace actions {
-namespace reactions {
+#include <readdy/common/common.h>
+#include <readdy/model/Particle.h>
+#include <readdy/model/reactions/Reaction.h>
 
-Event::Event(std::uint8_t nEducts, std::uint8_t nProducts, index_type idx1, index_type idx2, scalar reactionRate,
-             scalar cumulativeRate, reaction_index_type reactionIdx, particle_type_type t1, particle_type_type t2)
-        : nEducts(nEducts), nProducts(nProducts), idx1(idx1), idx2(idx2), reactionRate(reactionRate),
-          cumulativeRate(cumulativeRate), reactionIndex(reactionIdx), t1(t1), t2(t2) {
-}
+NAMESPACE_BEGIN(readdy)
+NAMESPACE_BEGIN(model)
+NAMESPACE_BEGIN(reactions)
+NAMESPACE_BEGIN(utils)
 
-std::ostream &operator<<(std::ostream &os, const Event &evt) {
-    os << "Event(" << evt.idx1 << "[type=" << evt.t1 << "]";
-    if (evt.nEducts == 2) {
-        os << " + " << evt.idx2 << "[type=" << evt.t2 << "]";
+using reaction_counts_map = std::unordered_map<reactions::Reaction::reaction_id, std::size_t>;
+
+inline void zeroReactionCounts(reaction_counts_map &reactionCounts, const std::vector<Reaction*> &allReactions) {
+    reactionCounts.clear();
+    for (const auto &r : allReactions) {
+        reactionCounts[r->id()] = 0;
     }
-    os << ", rate=" << evt.reactionRate << ", cumulativeRate=" << evt.cumulativeRate
-       << ", reactionIdx=" << evt.reactionIndex;
-    return os;
 }
 
-}
-}
-}
-}
-}
+NAMESPACE_END(utils)
+NAMESPACE_END(reactions)
+NAMESPACE_END(model)
+NAMESPACE_END(readdy)

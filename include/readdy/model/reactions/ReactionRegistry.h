@@ -95,6 +95,12 @@ public:
 
     bool isReactionOrder2Type(particle_type_type type) const;
 
+    std::string nameOf(reaction_id id) const;
+
+    reaction_id idOf(const std::string &name) const;
+
+    const reactions allReactions() const;
+
     reaction_id add(const std::string &descriptor, scalar rate);
 
     reaction_id addConversion(const std::string &name, const std::string &from, const std::string &to, scalar rate);

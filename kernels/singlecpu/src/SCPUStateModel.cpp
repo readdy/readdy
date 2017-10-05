@@ -36,18 +36,14 @@ namespace readdy {
 namespace kernel {
 namespace scpu {
 struct SCPUStateModel::Impl {
-    using reaction_counts_order1_map = SCPUStateModel::reaction_counts_order1_map;
-    using reaction_counts_order2_map = SCPUStateModel::reaction_counts_order2_map;
+    using reaction_counts_map = SCPUStateModel::reaction_counts_map;
     scalar currentEnergy = 0;
     model::SCPUParticleData particleData {};
     std::unique_ptr<model::SCPUNeighborList> neighborList;
     SCPUStateModel::topology_action_factory const *topologyActionFactory {nullptr};
     // only filled when readdy::model::Context::recordReactionsWithPositions is true
     std::vector<readdy::model::reactions::ReactionRecord> reactionRecords{};
-    // reaction counts map from particle-type (or type-pair) to vector of count numbers,
-    // the position in the vector corresponds to the reaction index,
-    // i.e. for each particle-type (or type-pair) there is a new reaction index space
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> reactionCounts;
+    reaction_counts_map reactionCounts {};
 };
 
 SCPUStateModel::SCPUStateModel(const readdy::model::Context &context, topology_action_factory const *const taf)
@@ -140,11 +136,11 @@ const std::vector<readdy::model::reactions::ReactionRecord> &SCPUStateModel::rea
     return pimpl->reactionRecords;
 }
 
-std::pair<SCPUStateModel::reaction_counts_order1_map, SCPUStateModel::reaction_counts_order2_map> &SCPUStateModel::reactionCounts() {
+SCPUStateModel::reaction_counts_map &SCPUStateModel::reactionCounts() {
     return pimpl->reactionCounts;
 }
 
-const std::pair<SCPUStateModel::reaction_counts_order1_map, SCPUStateModel::reaction_counts_order2_map> &SCPUStateModel::reactionCounts() const {
+const SCPUStateModel::reaction_counts_map &SCPUStateModel::reactionCounts() const {
     return pimpl->reactionCounts;
 }
 
