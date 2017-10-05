@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file SincleCPUUpdateStateModelProgram.h
+ * @file SCPUCalculateForces.h
  * @brief << brief description >>
  * @author clonker
  * @date 20.06.16

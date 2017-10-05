@@ -21,10 +21,11 @@
 
 
 /**
- * << detailed description >>
+ * This file contains definitions of `getRecommendedTimeStep` and `getMaximumDisplacement` as well as
+ * some utility with respect to validating type names.
  *
- * @file Utils.h
- * @brief << brief description >>
+ * @file readdy/model/Utils.h
+ * @brief Definitions of some utility for the readdy_model target
  * @author clonker
  * @date 17.11.16
  */

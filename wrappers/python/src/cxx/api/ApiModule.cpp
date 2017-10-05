@@ -153,7 +153,6 @@ void exportApi(py::module &api) {
                  "conversion_map"_a, "name"_a, "origin"_a, "radius"_a, "larger_or_less"_a)
             .def("register_compartment_plane", &sim::registerCompartmentPlane, "conversion_map"_a, "name"_a,
                  "normal_coefficients"_a, "distance_from_plane"_a, "larger_or_less"_a)
-            .def("get_recommended_time_step", &sim::getRecommendedTimeStep, "n"_a)
             .def("kernel_supports_topologies", &sim::kernelSupportsTopologies)
             .def("create_topology_particle", &sim::createTopologyParticle, "type"_a, "position"_a)
             .def("configure_topology_bond_potential", &sim::configureTopologyBondPotential, "type1"_a, "type2"_a,

@@ -21,10 +21,14 @@
 
 
 /**
- * << detailed description >>
+ * This header file contains:
+ *     * the `readdy::model::particle_flavor` type which takes values as defined in the `readdy::model::particleflavor`
+ *       namespace
+ *     * the definition of ParticleTypeInfo, backing structure for all particle types
+ *     * the definition of ParticleTypeRegistry, an object managing all particle types for a reaction diffusion system
  *
  * @file ParticleTypeRegistry.h
- * @brief << brief description >>
+ * @brief Header file containing definitions for particle flavors, particle type info and the particle type registry.
  * @author clonker
  * @date 29.03.17
  * @copyright GNU Lesser General Public License v3.0

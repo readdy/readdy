@@ -101,7 +101,7 @@ void Simulation::addParticle(const std::string &type, scalar x, scalar y, scalar
 
 }
 
-Simulation::particle::type_type
+particle_type_type
 Simulation::registerParticleType(const std::string &name, const scalar diffusionCoefficient,
                                  readdy::model::particle_flavor flavor) {
     ensureKernelSelected();
@@ -223,14 +223,8 @@ void Simulation::deregisterObservable(const unsigned long uuid) {
 }
 
 
-void Simulation::deregisterObservable(const ObservableHandle &uuid) {
-    deregisterObservable(uuid.getId());
-}
-
-std::vector<std::string> Simulation::getAvailableObservables() {
-    ensureKernelSelected();
-    // TODO compile a list of observables
-    return {"hallo"};
+void Simulation::deregisterObservable(const ObservableHandle &handle) {
+    deregisterObservable(handle.getId());
 }
 
 Simulation &Simulation::operator=(Simulation &&rhs) noexcept = default;
@@ -291,10 +285,6 @@ std::vector<Vec3> Simulation::getParticlePositions(std::string type) {
         }
     }
     return positions;
-}
-
-scalar Simulation::getRecommendedTimeStep(unsigned int N) const {
-    return readdy::model::util::getRecommendedTimeStep(N, pimpl->kernel->context());
 }
 
 readdy::model::Kernel *const Simulation::getSelectedKernel() const {

@@ -21,6 +21,8 @@
 
 
 /**
+ * This header contains the definitions of the threading config, particularly important for the CPU kernel.
+ *
  * @file Config.h
  * @brief Config class header
  * @author clonker
@@ -38,11 +40,12 @@ NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(util)
 NAMESPACE_BEGIN(thread)
 
+/**
+ * Strongly typed enum which contains the different threading modes.
+ */
 enum class ThreadMode {
     inactive, pool, std_thread, std_async
 };
-
-
 
 /**
  * Struct that holds the threading configuration, i.e., how many threads should be used when executing code on the
@@ -72,8 +75,16 @@ struct Config {
      */
     void setNThreads(n_threads_type n);
 
+    /**
+     * Sets the threading mode.
+     * @param mode the mode
+     */
     void setMode(ThreadMode mode);
 
+    /**
+     * Yields a pointer to the executor selected by the threading mode.
+     * @return a pointer to the configured executor
+     */
     const executor_base *const executor() const;
 
 private:

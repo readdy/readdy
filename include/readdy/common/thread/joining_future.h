@@ -21,10 +21,10 @@
 
 
 /**
- * << detailed description >>
+ * This header file contains the definition of joining_future, an RAII implementation of std::future.
  *
  * @file joining_future.h
- * @brief << brief description >>
+ * @brief Definition of readdy::util::thread::joining_future
  * @author clonker
  * @date 13.06.17
  * @copyright GNU Lesser General Public License v3.0
@@ -44,16 +44,35 @@ class joining_future {
     std::future<T> _future;
 
 public:
+    /**
+     * Generates a joining future out of a future
+     * @param f the future
+     */
     explicit joining_future(std::future<T> &&f) : _future(std::move(f)) {}
 
+    /**
+     * move is o.k.
+     */
     joining_future(joining_future &&) noexcept = default;
 
+    /**
+     * move is o.k.
+     */
     joining_future &operator=(joining_future &&) noexcept = default;
 
+    /**
+     * no copying
+     */
     joining_future(const joining_future &) = delete;
 
+    /**
+     * no copying
+     */
     joining_future &operator=(const joining_future &) = delete;
 
+    /**
+     * wait for the future if it is valid
+     */
     ~joining_future() {
         if (_future.valid()) _future.wait();
     }

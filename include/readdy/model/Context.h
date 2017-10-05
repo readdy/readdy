@@ -25,20 +25,14 @@
  * and periodicity of the simulation box, definitions of particle species and the potentials
  * and reactions affecting them.
  *
- * Reactions and potentials come in two variants:
- *   - Internal, created by the responsible kernel
- *   - External, inserted from the 'outside', e.g. python prototypes
+ * Before the context object can be used in actions belonging to a kernel, the `configure` method has to be called
+ * which will trigger certain rearrangements in the underlying registries.
  *
- * The context registers both of them in separate maps. Before the simulation can start the
- * content of both of these maps is unified into a single map, which is referred to during the actual
- * run of the simulation.
- *
- * @file KernelContext.h
+ * @file Context.h
  * @brief Container class for time independent information of the KernelContext.
  * @author clonker
  * @author chrisfroe
  * @date 18.04.16
- * @todo write docs, is kbt really time indep (or should be treated as such)?
  */
 
 #pragma once

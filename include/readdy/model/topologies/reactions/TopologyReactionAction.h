@@ -45,75 +45,175 @@ NAMESPACE_BEGIN(actions)
 
 class TopologyReactionAction {
 public:
+    /**
+     * the GraphTopology's graph
+     */
     using topology_graph = graph::Graph;
 
+    /**
+     * an edge in the graph
+     */
     using edge = topology_graph::edge;
+    /**
+     * a vertex reference of the graph
+     */
     using vertex = topology_graph::vertex_ref;
 
+    /**
+     * creates a new topology reaction action w.r.t. the given topology
+     * @param topology the topology
+     */
     explicit TopologyReactionAction(GraphTopology *topology);
 
+    /**
+     * default delete
+     */
     virtual ~TopologyReactionAction() = default;
 
+    /**
+     * default copy
+     */
     TopologyReactionAction(const TopologyReactionAction&) = default;
 
+    /**
+     * no copy assign
+     */
     TopologyReactionAction& operator=(const TopologyReactionAction&) = delete;
 
+    /**
+     * default move
+     */
     TopologyReactionAction(TopologyReactionAction&&) = default;
 
+    /**
+     * no move assign
+     */
     TopologyReactionAction& operator=(TopologyReactionAction&&) = delete;
 
+    /**
+     * base method for executing the action
+     */
     virtual void execute() = 0;
 
+    /**
+     * base method for undoing the action
+     */
     virtual void undo() = 0;
 
 protected:
+    /**
+     * a pointer to the topology on which this action should be executed
+     */
     GraphTopology *const topology;
 };
 
 class ChangeParticleType : public TopologyReactionAction {
 public:
 
+    /**
+     * Creates an action that changes the particle type of one of the particles in the topology. Since the data
+     * structures may vary with the selected kernel, the implementation of do/undo is kernel specific.
+     *
+     * @param topology the respective topology
+     * @param v the vertex pointing to the particle whose type should be changed
+     * @param type_to the target type
+     */
     ChangeParticleType(GraphTopology *topology, const vertex &v, const particle_type_type &type_to);
 
 protected:
+    /**
+     * a reference to the vertex
+     */
     vertex _vertex;
-    particle_type_type type_to, previous_type;
+    /**
+     * the target type
+     */
+    particle_type_type type_to;
+    /**
+     * the previous particle type, stored for undo
+     */
+    particle_type_type previous_type;
 };
 
 class AddEdge : public TopologyReactionAction {
 public:
+    /**
+     * Creates an action that introduces an edge in the graph.
+     * @param topology the topology
+     * @param edge the edge to introduce
+     */
     AddEdge(GraphTopology *topology, const edge &edge);
 
+    /**
+     * do!
+     */
     void execute() override;
 
+    /**
+     * undo!
+     */
     void undo() override;
 
 private:
+    /**
+     * the edge to introduce
+     */
     edge label_edge_;
 };
 
 class RemoveEdge : public TopologyReactionAction {
 public:
+    /**
+     * Creates an action that removes an edge in the topology.
+     * @param topology the topology
+     * @param edge the edge to remove
+     */
     RemoveEdge(GraphTopology *topology, const edge &edge);
 
+    /**
+     * execute me
+     */
     void execute() override;
 
+    /**
+     * oops, undo
+     */
     void undo() override;
 
 private:
+    /**
+     * the edge to remove
+     */
     edge label_edge_;
 };
 
 class ChangeTopologyType : public TopologyReactionAction {
 public:
+    /**
+     * Creates an action that changes the topology type of this topology
+     * @param topology this topology
+     * @param newType the target type
+     */
     ChangeTopologyType(GraphTopology *topology, topology_type_type newType);
 
+    /**
+     * execute me
+     */
     void execute() override;
 
+    /**
+     * oops, undo
+     */
     void undo() override;
 
 private:
+    /**
+     * the target type
+     */
     topology_type_type _newType;
+    /**
+     * the previous type, stored for undo
+     */
     topology_type_type _prevType {0};
 };
 

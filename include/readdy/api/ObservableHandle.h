@@ -21,10 +21,11 @@
 
 
 /**
- * << detailed description >>
+ * The observable handle is mainly used as a front for accessing an observable's configurational properties.
+ * Mainly it enables easier access to the IO operations offered by the respective observable.
  *
  * @file ObservableHandle.h
- * @brief << brief description >>
+ * @brief Definitions for the observable handle.
  * @author clonker
  * @date 06.01.17
  * @copyright GNU Lesser General Public License v3.0
@@ -37,22 +38,53 @@
 NAMESPACE_BEGIN(readdy)
 
 class ObservableHandle {
-
 public:
+    /**
+     * Type of an observable_id. Can be used to remove an observable from a Simulation instance.
+     */
     using observable_id = std::size_t;
 
+    /**
+     * Creates an empty observable handle.
+     */
     ObservableHandle();
 
+    /**
+     * Creates a new observable handle belonging to some existing observable instance
+     * @param id the id of that observable instance
+     * @param observable a pointer to the instance itself
+     */
     ObservableHandle(observable_id id, model::observables::ObservableBase *observable);
 
+    /**
+     * This method sets up all required groups / data sets within the given hdf5 file for the observable to dump its
+     * data in there and also instructs it to do so.
+     *
+     * @param file the file
+     * @param dataSetName a custom data set name that will be used as postfix in the observable's group path
+     * @param flushStride sets the hdf5 chunk size
+     */
     void enableWriteToFile(File &file, const std::string &dataSetName, unsigned int flushStride);
 
+    /**
+     * Retrieves the id of this handle's observable
+     * @return the id
+     */
     observable_id getId() const;
 
+    /**
+     * Triggers a flush, i.e., everything that can be written will be written
+     */
     void flush();
 
 private:
+    /**
+     * the id
+     */
     observable_id id;
+    /**
+     * a reference to the observable this handle belongs to
+     */
     readdy::model::observables::ObservableBase *const observable;
 };
 

@@ -21,10 +21,13 @@
 
 
 /**
- * << detailed description >>
+ * Including this header will expose the C++ top-level API, i.e., everything under
+ *   * ObservableHandle.h
+ *   * Simulation.h
+ *   * SimulationScheme.h
  *
  * @file readdy.h
- * @brief << brief description >>
+ * @brief Main header of ReaDDy. Including this will expose the C++ top-level API.
  * @author clonker
  * @date 06.01.17
  * @copyright GNU Lesser General Public License v3.0

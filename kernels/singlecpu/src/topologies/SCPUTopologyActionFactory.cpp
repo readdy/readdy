@@ -68,7 +68,7 @@ SCPUTopologyActionFactory::createCalculateCosineDihedralPotential(
     );
 }
 
-SCPUTopologyActionFactory::operation_ref
+SCPUTopologyActionFactory::action_ref
 SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const topology, const vertex &v,
                                                     const particle_type_type &type_to) const {
     return std::make_unique<reactions::op::SCPUChangeParticleType>(
@@ -76,7 +76,7 @@ SCPUTopologyActionFactory::createChangeParticleType(top::GraphTopology *const to
     );
 }
 
-top::reactions::actions::TopologyReactionActionFactory::operation_ref
+top::reactions::actions::TopologyReactionActionFactory::action_ref
 SCPUTopologyActionFactory::createChangeTopologyType(top::GraphTopology *const topology,
                                                     const std::string &type_to) const {
     return std::make_unique<readdy::model::top::reactions::actions::ChangeTopologyType>(

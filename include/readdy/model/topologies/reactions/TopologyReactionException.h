@@ -21,10 +21,8 @@
 
 
 /**
- * << detailed description >>
- *
  * @file TopologyReactionException.h
- * @brief << brief description >>
+ * @brief Definition of the topology reaction exception.
  * @author clonker
  * @date 19.04.17
  * @copyright GNU Lesser General Public License v3.0
@@ -42,6 +40,11 @@ NAMESPACE_BEGIN(reactions)
 
 class TopologyReactionException : public std::runtime_error {
 public:
+    /**
+     * Creates a new topology reaction exception. These are caught and either re-raised if rollback is disabled or
+     * trigger an undo in the reverse order of the operations in the recipe.
+     * @param message the message
+     */
     explicit TopologyReactionException(const std::string &message) : runtime_error(message) {}
 };
 
