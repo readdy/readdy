@@ -235,6 +235,7 @@ class TestTopologies(ReaDDyTestCase):
                 sim.observe.number_of_particles(1, types=["B", "A"])
                 reactions = []
                 sim.observe.reactions(1, callback=lambda x: reactions.append(x))
+                sim.observe.forces(1)
                 sim.run(50, 1e-3)
 
                 sim.output_file = traj_fname2
@@ -265,5 +266,14 @@ class TestTopologies(ReaDDyTestCase):
                     time, records = traj.read_observable_reactions()
                     np.testing.assert_equal(len(time), 51)
                     np.testing.assert_equal(len(records), 51)
+
+                    time, forces = traj.read_observable_forces()
+                    np.testing.assert_equal(len(time), 51)
+                    np.testing.assert_equal(len(forces), 51)
+
+                    for curr_positions, curr_types, curr_ids, curr_forces in zip(positions, types, ids, forces):
+                        np.testing.assert_equal(len(curr_positions), len(curr_types))
+                        np.testing.assert_equal(len(curr_types), len(curr_ids))
+                        np.testing.assert_equal(len(curr_ids), len(curr_forces))
         finally:
             shutil.rmtree(dir, ignore_errors=True)

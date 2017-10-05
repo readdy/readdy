@@ -350,5 +350,20 @@ class Trajectory(object):
             time = f2[group_path]["time"][:]
         return time, _read_reaction_observable(self._filename, data_set_name)
 
+    def read_observable_forces(self, data_set_name="forces"):
+        """
+        Reads back the output of the "forces" observable.
+        :param data_set_name: The data set name as given in the simulation setup
+        :return: a tuple which contains an array corresponding to the time as first entry and a list of arrays
+                 containing the particles' forces per time step
+        """
+        group_path = "readdy/observables/" + data_set_name
+        with _h5py.File(self._filename, "r") as f:
+            if not group_path in f:
+                raise ValueError("The forces observable was not recorded in the file or recorded under a "
+                                 "different name!")
+            time = f[group_path]["time"][:]
+            forces = f[group_path]["data"][:]
+            return time, forces
 
-    # todo: reaction counts, forces
+    # todo reaction counts
