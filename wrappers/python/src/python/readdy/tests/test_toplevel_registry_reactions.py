@@ -43,8 +43,8 @@ class TestToplevelRegistryReactions(ReaDDyTestCase):
         self.rds.reactions.add_conversion("label", "A", "B", 2.0)
 
     def test_add_fusion(self):
-        self.rds.reactions.add_fusion("label", "A", "B", "C", 2.0, 3.0)
-        self.rds.reactions.add_fusion("label", "A", "B", "C", 2.0, 3.0, weight1=0., weight2=1.)
+        self.rds.reactions.add_fusion("label1", "A", "B", "C", 2.0, 3.0)
+        self.rds.reactions.add_fusion("label2", "A", "B", "C", 2.0, 3.0, weight1=0., weight2=1.)
 
     def test_add_fission(self):
         self.rds.reactions.add_fission("label", "C", "A", "B", 2.0, 3.0, weight1=0., weight2=1.)

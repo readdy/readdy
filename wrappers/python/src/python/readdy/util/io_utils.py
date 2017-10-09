@@ -80,50 +80,16 @@ def get_diffusion_constants(filename, dset_path="readdy/config/particle_types"):
     return result
 
 
-def get_reactions_order1(filename, group="readdy/config/registered_reactions"):
-    """Construct a list of first order reactions used in the simulation
-    that created the output file.
+def get_reactions(filename, dset_path="readdy/config/registered_reactions"):
+    """Construct a dictionary where keys are reaction names and value is the corresponding reaction info.
 
     :param filename: the readdy h5 file, containing context info
-    :param group: path to directory within h5 file containing reaction info datasets
-    :return: list of first order reactions
-    """
-    result = []
-    with h5py.File(filename, "r") as f:
-        if group in f:
-            reactions_dir = f[group]
-            if "order1_reactions" in reactions_dir:
-                order1_dset = reactions_dir["order1_reactions"]
-                for reaction in order1_dset:
-                    result.append(np.copy(reaction))
-    return result
-
-
-def get_reactions_order2(filename, group="readdy/config/registered_reactions"):
-    """Construct a list of second order reactions used in the simulations
-    that created the output file.
-
-    :param filename: the readdy h5 file, containing context info
-    :param group: path to directory within h5 file containing reaction info datasets
-    :return: list of second order reactions
-    """
-    result = []
-    with h5py.File(filename, "r") as f:
-        if group in f:
-            reactions_dir = f[group]
-            if "order2_reactions" in reactions_dir:
-                order2_dset = reactions_dir["order2_reactions"]
-                for reaction in order2_dset:
-                    result.append(np.copy(reaction))
-    return result
-
-
-def get_reactions(filename, group="readdy/config/registered_reactions"):
-    """Construct a flat list of first and second order reactions.
-
-    :param filename: the readdy h5 file, containing context info
-    :param group: path to directory within h5 file containing reaction info datasets
+    :param dset_path: path to reaction info dataset
     :return: list of reactions
     """
-    result = get_reactions_order1(filename, group=group) + get_reactions_order2(filename, group=group)
+    result = dict()
+    with h5py.File(filename, "r") as f:
+        reactions = f[dset_path]
+        for r in reactions:
+            result[r["name"]] = np.copy(r)
     return result

@@ -287,13 +287,17 @@ std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const s
 
     auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
 
-    // get particle types from config
-    std::vector<readdy::model::ioutils::ReactionInfo> reactionInfoOrder1;
-    std::vector<readdy::model::ioutils::ReactionInfo> reactionInfoOrder2;
+    // get reaction info from config
+    std::unordered_map<readdy::model::reactions::Reaction::reaction_id, readdy::model::ioutils::ReactionInfo>
+            reactionsMap;
     {
-        auto config = f->getSubgroup("readdy/config/registered_reactions");
-        config.read("order1_reactions", reactionInfoOrder1, &std::get<0>(reactionInfoH5Type), &std::get<1>(reactionInfoH5Type));
-        config.read("order2_reactions", reactionInfoOrder2, &std::get<0>(reactionInfoH5Type), &std::get<1>(reactionInfoH5Type));
+        std::vector<readdy::model::ioutils::ReactionInfo> reactionInfo;
+        auto config = f->getSubgroup("readdy/config/");
+        config.read("registered_reactions", reactionInfo, &std::get<0>(reactionInfoH5Type),
+                    &std::get<1>(reactionInfoH5Type));
+        for (const auto &info : reactionInfo) {
+            reactionsMap[info.id] = info;
+        }
     }
 
     std::vector<std::vector<readdy::model::reactions::ReactionRecord>> records;
@@ -311,7 +315,7 @@ std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const s
         readableRecords.reserve(reactions.size());
 
         for(const auto &reaction : reactions) {
-            readableRecords.push_back(rpy::convert(reaction, reactionInfoOrder1, reactionInfoOrder2));
+            readableRecords.push_back(rpy::convert(reaction, reactionsMap.at(reaction.id).name));
         }
 
     }

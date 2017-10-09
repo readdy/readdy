@@ -63,7 +63,7 @@ struct Event {
     std::uint8_t nEducts;
     std::uint8_t nProducts;
     index_type idx1, idx2;
-    reaction_index_type reactionIdx;
+    reaction_index_type reactionIndex;
     particle_type_type t1, t2;
     scalar reactionRate;
     scalar cumulativeRate;

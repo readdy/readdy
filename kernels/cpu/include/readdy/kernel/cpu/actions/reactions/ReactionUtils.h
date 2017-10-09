@@ -49,9 +49,7 @@ using reaction_type = readdy::model::reactions::ReactionType;
 using ctx_t = std::remove_const<decltype(std::declval<cpu_kernel>().context())>::type;
 using event_t = Event;
 using record_t = readdy::model::reactions::ReactionRecord;
-using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
-using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
-using reaction_counts_t = std::pair<reaction_counts_order1_map, reaction_counts_order2_map>;
+using reaction_counts_map = CPUStateModel::reaction_counts_map;
 
 template<bool approximated>
 bool performReactionEvent(const readdy::scalar rate, const readdy::scalar timeStep) {
@@ -70,7 +68,7 @@ inline bool shouldPerformEvent(const readdy::scalar rate, const readdy::scalar t
 data_t::DataUpdate handleEventsGillespie(
         CPUKernel* kernel, readdy::scalar timeStep,
         bool filterEventsInAdvance, bool approximateRate,
-        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_t *maybeCounts);
+        std::vector<event_t> &&events, std::vector<record_t> *maybeRecords, reaction_counts_map *maybeCounts);
 
 template<typename ParticleIndexCollection>
 void gatherEvents(CPUKernel *const kernel, const ParticleIndexCollection &particles, const neighbor_list* nl,

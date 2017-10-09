@@ -90,8 +90,7 @@ void findEvents(std::size_t /*tid*/, data_iter_t begin, data_iter_t end, neighbo
                 const auto &neighbor = data.entry_at(neighborIdx);
                 if(nit->current_particle() > neighborIdx) continue;
                 if(!neighbor.deactivated) {
-                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type,
-                                                                                       neighbor.type);
+                    const auto &reactions = kernel->context().reactions().order2ByType(entry.type, neighbor.type);
                     if (!reactions.empty()) {
                         const auto distSquared = d2(neighbor.pos, entry.pos);
                         for (auto it_reactions = reactions.begin(); it_reactions < reactions.end(); ++it_reactions) {
@@ -127,7 +126,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
     }
     if (ctx.recordReactionCounts()) {
-        readdy::model::observables::ReactionCounts::initializeCounts(stateModel.reactionCounts(), ctx);
+        stateModel.resetReactionCounts();
     }
 
     // gather events
@@ -199,10 +198,10 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
             if (event.cumulativeRate == 0) {
                 auto entry1 = event.idx1;
                 if (event.nEducts == 1) {
-                    auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order1ByType(event.t1)[event.reactionIndex];
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
-                        record.reactionIndex = event.reactionIdx;
+                        record.id = reaction->id();
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
@@ -210,8 +209,8 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         performReaction(data, ctx, entry1, entry1, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if (ctx.recordReactionCounts()) {
-                        auto &countsOrder1 = std::get<0>(stateModel.reactionCounts());
-                        countsOrder1.at(event.t1).at(event.reactionIdx)++;
+                        auto &counts = stateModel.reactionCounts();
+                        counts.at(reaction->id())++;
                     }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1) {
@@ -219,10 +218,10 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         }
                     }
                 } else {
-                    auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIdx];
+                    auto reaction = ctx.reactions().order2ByType(event.t1, event.t2)[event.reactionIndex];
                     if (ctx.recordReactionsWithPositions()) {
                         record_t record;
-                        record.reactionIndex = event.reactionIdx;
+                        record.id = reaction->id();
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, &record);
                         fixPos(record.where);
                         kernel->getCPUKernelStateModel().reactionRecords().push_back(record);
@@ -230,8 +229,8 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
                         performReaction(data, ctx, entry1, event.idx2, newParticles, decayedEntries, reaction, nullptr);
                     }
                     if (ctx.recordReactionCounts()) {
-                        auto &countsOrder2 = std::get<1>(stateModel.reactionCounts());
-                        countsOrder2.at(std::tie(event.t1, event.t2)).at(event.reactionIdx)++;
+                        auto &counts = stateModel.reactionCounts();
+                        counts.at(reaction->id())++;
                     }
                     for (auto _it2 = it + 1; _it2 != events.end(); ++_it2) {
                         if (_it2->idx1 == entry1 || _it2->idx2 == entry1 ||

@@ -56,10 +56,9 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
         auto internalCallback = [&self, pyFun](const readdy::model::observables::Reactions::result_type &reactions) mutable {
             std::vector<rpy::ReadableReactionRecord> converted;
             converted.reserve(reactions.size());
-            auto o1 = self.currentContext().reactions().order1Flat();
-            auto o2 = self.currentContext().reactions().order2Flat();
+            const auto &reactionRegistry = self.currentContext().reactions();
             for(const auto &reaction : reactions) {
-                converted.push_back(rpy::convert(reaction, o1, o2));
+                converted.push_back(rpy::convert(reaction, reactionRegistry.nameOf(reaction.id).c_str()));
             }
             pyFun(std::move(converted));
         };
@@ -193,7 +192,7 @@ void exportObservables(py::module &apiModule, py::class_<type_, options...> &sim
             .def_property_readonly("products", [](const record_t &self) { return self.products; })
             .def_property_readonly("types_from", [](const record_t &self) { return self.types_from; })
             .def_property_readonly("where", [](const record_t &self) { return self.where; })
-            .def_property_readonly("reaction_index", [](const record_t &self) { return self.reactionIndex; })
+            .def_property_readonly("id", [](const record_t &self) { return self.id; })
             .def("__repr__", [](const record_t& self) {
                 std::ostringstream ss;
                 ss << self;

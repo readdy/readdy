@@ -80,6 +80,7 @@ void SCPUKernel::initialize() {
         top->configure();
         top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
     }
+    getSCPUKernelStateModel().resetReactionCounts();
 }
 
 }

@@ -77,6 +77,79 @@ std::ostream& operator<<(std::ostream& os, const ReactionRecord& record) {
     return os;
 }
 
+Reaction::Reaction(std::string name, const scalar rate, const scalar eductDistance, const scalar productDistance,
+                   std::uint8_t nEducts, std::uint8_t nProducts)
+        : _name(std::move(name)), _id(counter++), _rate(rate), _eductDistance(eductDistance),
+          _eductDistanceSquared(eductDistance * eductDistance), _productDistance(productDistance),
+          _nEducts(nEducts), _nProducts(nProducts) {}
+
+const std::string &Reaction::name() const {
+    return _name;
+}
+
+const Reaction::reaction_id Reaction::id() const {
+    return _id;
+}
+
+const scalar Reaction::rate() const {
+    return _rate;
+}
+
+std::uint8_t Reaction::nEducts() const {
+    return _nEducts;
+}
+
+std::uint8_t Reaction::nProducts() const {
+    return _nProducts;
+}
+
+const scalar Reaction::eductDistance() const {
+    return _eductDistance;
+}
+
+const scalar Reaction::eductDistanceSquared() const {
+    return _eductDistanceSquared;
+}
+
+const scalar Reaction::productDistance() const {
+    return _productDistance;
+}
+
+std::ostream &operator<<(std::ostream &os, const Reaction &reaction) {
+    os << "Reaction(\"" << reaction._name << "\", N_Educts=" << reaction._nEducts << ", N_Products="
+       << reaction._nProducts << ", (";
+    for (unsigned int i = 0; i < reaction._nEducts; i++) {
+        if (i > 0) os << ",";
+        os << reaction._educts[i];
+    }
+    os << ") -> (";
+    for (unsigned int i = 0; i < reaction._nProducts; i++) {
+        if (i > 0) os << ",";
+        os << reaction._products[i];
+    }
+    os << "), rate=" << reaction._rate << ", eductDist=" << reaction._eductDistance << ", prodDist="
+       << reaction._productDistance << ")";
+    return os;
+}
+
+const std::array<particle_type_type, 2> &Reaction::educts() const {
+    return _educts;
+}
+
+const std::array<particle_type_type, 2> &Reaction::products() const {
+    return _products;
+}
+
+const scalar Reaction::weight1() const {
+    return _weight1;
+}
+
+const scalar Reaction::weight2() const {
+    return _weight2;
+}
+
+Reaction::reaction_id Reaction::counter = 0;
+
 }
 }
 }

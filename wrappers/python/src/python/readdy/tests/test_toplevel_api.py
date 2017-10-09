@@ -183,19 +183,22 @@ class TestTopologies(ReaDDyTestCase):
 
             np.testing.assert_equal(traj.diffusion_constants["A"], 1.0)
             np.testing.assert_("A" in traj.particle_types.keys())
-            np.testing.assert_equal(len(traj.reactions_order_1), 1)
-            np.testing.assert_equal(traj.reactions_order_1[0].type, "conversion")
-            np.testing.assert_equal(traj.reactions_order_1[0].name, "myconversion")
-            np.testing.assert_equal(traj.reactions_order_1[0].rate, 1.0)
-            np.testing.assert_equal(traj.reactions_order_1[0].educt_types, ["A"])
-            np.testing.assert_equal(traj.reactions_order_1[0].product_types, ["A"])
-            np.testing.assert_equal(len(traj.reactions_order_2), 1)
-            np.testing.assert_equal(traj.reactions_order_2[0].type, "fusion")
-            np.testing.assert_equal(traj.reactions_order_2[0].name, "myfusion")
-            np.testing.assert_equal(traj.reactions_order_2[0].rate, 2)
-            np.testing.assert_equal(traj.reactions_order_2[0].educt_distance, .5)
-            np.testing.assert_equal(traj.reactions_order_2[0].educt_types, ["A", "A"])
-            np.testing.assert_equal(traj.reactions_order_2[0].product_types, ["A"])
+            np.testing.assert_equal(len(traj.reactions), 2)
+
+            conv = next(x for x in traj.reactions if x.name == "myconversion")
+            np.testing.assert_equal(conv.type, "conversion")
+            np.testing.assert_equal(conv.name, "myconversion")
+            np.testing.assert_equal(conv.rate, 1.0)
+            np.testing.assert_equal(conv.educt_types, ["A"])
+            np.testing.assert_equal(conv.product_types, ["A"])
+
+            fusion = next(x for x in traj.reactions if x.name == "myfusion")
+            np.testing.assert_equal(fusion.type, "fusion")
+            np.testing.assert_equal(fusion.name, "myfusion")
+            np.testing.assert_equal(fusion.rate, 2)
+            np.testing.assert_equal(fusion.educt_distance, .5)
+            np.testing.assert_equal(fusion.educt_types, ["A", "A"])
+            np.testing.assert_equal(fusion.product_types, ["A"])
 
             for idx, frame in enumerate(traj.read()):
                 recorded = recorded_positions[idx]
@@ -222,7 +225,7 @@ class TestTopologies(ReaDDyTestCase):
                 rdf.add_species("B", diffusion_constant=1.0)
                 rdf.reactions.add_conversion("myconversion", "A", "B", 1.0)
                 rdf.reactions.add_fusion("myfusion", "A", "A", "A", 2, .5)
-                rdf.reactions.add_fission("myfusion", "A", "A", "A", 2, .5)
+                rdf.reactions.add_fission("myfission", "A", "A", "A", 2, .5)
                 rdf.potentials.add_harmonic_repulsion("A", "A", 1., .2)
                 sim = rdf.simulation(kernel=kernel)
                 sim.output_file = traj_fname

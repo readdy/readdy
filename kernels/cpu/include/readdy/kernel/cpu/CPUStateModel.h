@@ -51,8 +51,7 @@ public:
 
     using data_type = readdy::kernel::cpu::data::EntryDataContainer;
     using particle_type = readdy::model::Particle;
-    using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
-    using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
+    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
 
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
@@ -113,9 +112,11 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
 
-    const std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts() const;
+    const reaction_counts_map & reactionCounts() const;
 
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
+    reaction_counts_map &reactionCounts();
+
+    void resetReactionCounts();
 
     particle_type getParticleForIndex(std::size_t index) const override;
 
@@ -140,7 +141,7 @@ private:
     std::unique_ptr<readdy::signals::scoped_connection> _reorderConnection;
     std::reference_wrapper<const readdy::model::top::TopologyActionFactory> _topologyActionFactory;
     std::vector<readdy::model::reactions::ReactionRecord> _reactionRecords{};
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> _reactionCounts;
+    reaction_counts_map _reactionCounts;
     scalar _currentEnergy = 0;
     topologies_vec _topologies{};
 };

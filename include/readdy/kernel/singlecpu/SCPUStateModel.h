@@ -37,7 +37,6 @@
 #include <readdy/model/Context.h>
 #include <readdy/kernel/singlecpu/model/SCPUNeighborList.h>
 #include <readdy/model/reactions/ReactionRecord.h>
-#include <readdy/model/observables/ReactionCounts.h>
 #include <readdy/common/index_persistent_vector.h>
 
 namespace readdy {
@@ -46,10 +45,8 @@ namespace scpu {
 
 class SCPUStateModel : public readdy::model::StateModel {
     using topology_action_factory = readdy::model::top::TopologyActionFactory;
-    using reaction_counts_order1_map = readdy::model::observables::ReactionCounts::reaction_counts_order1_map;
-    using reaction_counts_order2_map = readdy::model::observables::ReactionCounts::reaction_counts_order2_map;
 public:
-
+    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
     using topologies_vec = readdy::util::index_persistent_vector<topology_ref>;
@@ -105,9 +102,11 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord>& reactionRecords() const;
 
-    const std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts() const;
+    const reaction_counts_map & reactionCounts() const;
 
-    std::pair<reaction_counts_order1_map, reaction_counts_order2_map> &reactionCounts();
+    reaction_counts_map &reactionCounts();
+
+    void resetReactionCounts();
 
     const topologies_vec &topologies() const;
 

@@ -34,10 +34,9 @@ import h5py as _h5py
 
 
 class ReactionInfo:
-    def __init__(self, name, index, uuid, n_educts, n_products, rate, educt_distance, product_distance, educt_types,
+    def __init__(self, name, uuid, n_educts, n_products, rate, educt_distance, product_distance, educt_types,
                  product_types, inverse_types_map):
         self._name = name
-        self._index = index
         self._id = uuid
         self._n_educts = n_educts
         self._n_products = n_products
@@ -103,14 +102,6 @@ class ReactionInfo:
         :return: list of length n_products
         """
         return [self._inverse_types_map[x] for x in self._product_types[:self.n_products]]
-
-    @property
-    def index(self):
-        """
-        Returns the index of this reaction, can be used for identifying reactions in, e.g., the reactions observable.
-        :return: the index
-        """
-        return self._index
 
     @property
     def reaction_id(self):
@@ -184,21 +175,14 @@ class Trajectory(object):
         self._name = name
         self._diffusion_constants = _io_utils.get_diffusion_constants(filename)
         self._particle_types = _io_utils.get_particle_types(filename)
-        self._reactions_order_1 = []
-        self._reactions_order_2 = []
+        self._reactions = []
         self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
-        for reaction in _io_utils.get_reactions_order1(filename):
-            info = ReactionInfo(reaction["name"], reaction["index"], reaction["id"], reaction["n_educts"],
+        for _, reaction in _io_utils.get_reactions(filename).items():
+            info = ReactionInfo(reaction["name"], reaction["id"], reaction["n_educts"],
                                 reaction["n_products"], reaction["rate"], reaction["educt_distance"],
                                 reaction["product_distance"], reaction["educt_types"], reaction["product_types"],
                                 self._inverse_types_map)
-            self._reactions_order_1.append(info)
-        for reaction in _io_utils.get_reactions_order2(filename):
-            info = ReactionInfo(reaction["name"], reaction["index"], reaction["id"], reaction["n_educts"],
-                                reaction["n_products"], reaction["rate"], reaction["educt_distance"],
-                                reaction["product_distance"], reaction["educt_types"], reaction["product_types"],
-                                self._inverse_types_map)
-            self._reactions_order_2.append(info)
+            self._reactions.append(info)
 
     def species_name(self, id):
         """
@@ -225,20 +209,12 @@ class Trajectory(object):
         return self._particle_types
 
     @property
-    def reactions_order_1(self):
+    def reactions(self):
         """
-        Returns a list of `ReactionInfo` objects containing information about each reaction of order 1.
+        Returns a list of `ReactionInfo` objects containing information about each reaction.
         :return: a list of `ReactionInfo` objects
         """
-        return self._reactions_order_1
-
-    @property
-    def reactions_order_2(self):
-        """
-        Returns a list of `ReactionInfo` objects containing information about each reaction of order 2.
-        :return: a list of `ReactionInfo` objects
-        """
-        return self._reactions_order_2
+        return self._reactions
 
     def convert_to_xyz(self, xyz_filename=None, generate_tcl=True, tcl_with_grid=False, particle_radii=None):
         """

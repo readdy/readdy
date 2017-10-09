@@ -276,24 +276,22 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            order_1_reactions = data["registered_reactions/order1_reactions"]
+            reactions = data["registered_reactions"]
 
-            mylabel_reaction = get_item("mylabel", order_1_reactions)
+            mylabel_reaction = get_item("mylabel", reactions)
             np.testing.assert_allclose(mylabel_reaction["rate"], .00001)
             np.testing.assert_equal(mylabel_reaction["n_educts"], 1)
             np.testing.assert_equal(mylabel_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
-            atob_reaction = get_item("A->B", order_1_reactions)
+            atob_reaction = get_item("A->B", reactions)
             np.testing.assert_equal(atob_reaction["rate"], 1.)
             np.testing.assert_equal(atob_reaction["n_educts"], 1)
             np.testing.assert_equal(atob_reaction["n_products"], 1)
             np.testing.assert_equal(mylabel_reaction["educt_types"], [type_str_to_id["A"], 0])
             np.testing.assert_equal(mylabel_reaction["product_types"], [type_str_to_id["B"], 0])
 
-            order_2_reactions = data["registered_reactions/order2_reactions"]
-
-            fusion_reaction = get_item("B+C->A", order_2_reactions)
+            fusion_reaction = get_item("B+C->A", reactions)
             np.testing.assert_equal(fusion_reaction["rate"], 1.)
             np.testing.assert_equal(fusion_reaction["educt_distance"], 1.)
             np.testing.assert_equal(fusion_reaction["n_educts"], 2)
@@ -308,11 +306,11 @@ class TestObservablesIO(ReaDDyTestCase):
                 np.testing.assert_equal(record["reaction_type"] == 0 or record["reaction_type"] == 1, True)
                 if record["reaction_type"] == 0:
                     np.testing.assert_equal(record["position"], np.array([.0, .0, .0]))
-                    np.testing.assert_equal(record["reaction_index"], 1)
+                    np.testing.assert_equal(record["reaction_id"], atob_reaction["id"])
                 elif record["reaction_type"] == 1:
                     # fusion
                     np.testing.assert_allclose(record["position"], np.array([1.05, 1.0, 1.0]))
-                    np.testing.assert_equal(record["reaction_index"], 0)
+                    np.testing.assert_equal(record["reaction_id"], fusion_reaction["id"])
 
     def test_reaction_counts_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_reaction_counts.h5")
@@ -343,22 +341,20 @@ class TestObservablesIO(ReaDDyTestCase):
             def get_item(name, collection):
                 return next(x for x in collection if x["name"] == name)
 
-            order_1_reactions = data["registered_reactions/order1_reactions"]
-            order_2_reactions = data["registered_reactions/order2_reactions"]
+            reactions = data["registered_reactions"]
 
-            mylabel_reaction = get_item("mylabel", order_1_reactions)
-            reaction_idx_mylabel = mylabel_reaction["index"]
-            atob_reaction = get_item("A->B", order_1_reactions)
-            reaction_idx_atob = atob_reaction["index"]
+            mylabel_id = get_item("mylabel", reactions)["id"]
+            atob_id = get_item("A->B", reactions)["id"]
+            fusion_id = get_item("B+C->A", reactions)["id"]
 
             # counts of first time step, time is first index
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, reaction_idx_mylabel], np.array([0]))
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][0, reaction_idx_atob], np.array([0]))
-            np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][0, 0], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(mylabel_id)][0], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(atob_id)][0], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(fusion_id)][0], np.array([0]))
             # counts of second time step
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_mylabel], np.array([0]))
-            np.testing.assert_equal(data["counts/order1/A[id=0]"][1, reaction_idx_atob], np.array([1]))
-            np.testing.assert_equal(data["counts/order2/B[id=1] + C[id=2]"][1, 0], np.array([1]))
+            np.testing.assert_equal(data["counts/"+str(mylabel_id)][1], np.array([0]))
+            np.testing.assert_equal(data["counts/"+str(atob_id)][1], np.array([1]))
+            np.testing.assert_equal(data["counts/"+str(fusion_id)][1], np.array([1]))
 
     def test_forces_observable(self):
         fname = os.path.join(self.dir, "test_observables_particle_forces.h5")

@@ -282,6 +282,41 @@ TEST_F(TestKernelContext, ReactionDescriptorInvalidInputs) {
     EXPECT_EQ(ctx.reactions().nOrder2(), 0);
 }
 
+TEST_F(TestKernelContext, ReactionNameExists) {
+    m::Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("bla: A->", 1.);
+    EXPECT_ANY_THROW(ctx.reactions().add("bla: A->", 1.));
+}
+
+TEST_F(TestKernelContext, ReactionNameAndId) {
+    m::Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    const auto idFoo = ctx.reactions().idOf("foo");
+    const auto idBla = ctx.reactions().idOf("bla");
+    EXPECT_GE(idFoo, 0);
+    EXPECT_GE(idBla, 0);
+    EXPECT_EQ(ctx.reactions().nameOf(idFoo), "foo");
+    EXPECT_EQ(ctx.reactions().nameOf(idBla), "bla");
+}
+
+TEST_F(TestKernelContext, GetAllReactions) {
+    m::Context ctx;
+    ctx.particle_types().add("A", 1.);
+    ctx.reactions().add("foo: A->", 1.);
+    ctx.reactions().add("bla: A+(1)A->A", 1.);
+    ctx.reactions().addConversion("conv1", "A", "A", 1.);
+    ctx.reactions().addConversion("conv2", "A", "A", 1.);
+    ctx.reactions().addFusion("fusion", "A","A", "A", 1., 1.);
+    ctx.configure();
+    const auto &o1flat = ctx.reactions().order1Flat();
+    const auto &o2flat = ctx.reactions().order2Flat();
+    EXPECT_EQ(o1flat.size() + o2flat.size(), 5);
+}
+
+
 INSTANTIATE_TEST_CASE_P(TestKernelContext, TestKernelContextWithKernels,
                         ::testing::ValuesIn(readdy::testing::getKernelsToTest()));
 

@@ -39,57 +39,30 @@ namespace model {
 namespace ioutils {
 
 void writeReactionInformation(h5rd::Group &group, const Context &context) {
-    auto subgroup = group.createGroup("./registered_reactions");
-    // order1
-    const auto &order1_reactions = context.reactions().order1Flat();
-    auto n_reactions = order1_reactions.size();
-    auto types = getReactionInfoMemoryType(group.parentFile());
-    if (n_reactions > 0) {
-        std::vector<ReactionInfo> order1_info;
-        for (const auto &r : order1_reactions) {
-            const auto &reactions_current_type = context.reactions().order1ByType(r->educts()[0]);
-            auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
-                                   [&r](const reactions::Reaction<1> *x) { return x->id() == r->id(); });
-            if (it != reactions_current_type.end()) {
-                std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
-                const std::array<particle_type_type, 2> educts = {r->educts()[0], 0};
-                ReactionInfo info{r->name().c_str(), index, r->id(), r->nEducts(), r->nProducts(),
-                                  r->rate(), r->eductDistance(),
-                                  r->productDistance(), educts, r->products()};
-                order1_info.push_back(info);
-            }
-        }
-        h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        h5rd::dimensions extent = {n_reactions};
-        std::vector<h5rd::Filter*> filters;
-        auto order1_reaction_dset = subgroup.createDataSet("order1_reactions", extent, dims, std::get<0>(types),
-                                                           std::get<1>(types), filters);
-        order1_reaction_dset->append(extent, order1_info.data());
+    const auto &reactionRegistry = context.reactions();
+    std::vector<ReactionInfo> reactionInfos;
+    for (const auto &reaction : reactionRegistry.order1Flat()) {
+        const auto &r = reaction;
+        ReactionInfo info{r->name().c_str(), r->id(), r->nEducts(), r->nProducts(),
+                          r->rate(), r->eductDistance(),
+                          r->productDistance(), r->educts(), r->products()};
+        reactionInfos.push_back(info);
     }
-    // order2
-    const auto &order2_reactions = context.reactions().order2Flat();
-    n_reactions = order2_reactions.size();
-    if (n_reactions > 0) {
-        std::vector<ReactionInfo> order2_info;
-        for (const auto &r : order2_reactions) {
-            const auto &reactions_current_type = context.reactions().order2ByType(r->educts()[0],
-                                                                                  r->educts()[1]);
-            auto it = std::find_if(reactions_current_type.begin(), reactions_current_type.end(),
-                                   [&r](const reactions::Reaction<2> *x) { return x->id() == r->id(); });
-            if (it != reactions_current_type.end()) {
-                std::size_t index = static_cast<std::size_t>(it - reactions_current_type.begin());
-                ReactionInfo info{r->name().c_str(), index, r->id(), r->nEducts(), r->nProducts(),
-                                  r->rate(), r->eductDistance(),
-                                  r->productDistance(), r->educts(), r->products()};
-                order2_info.push_back(info);
-            }
-        }
+    for (const auto &reaction : reactionRegistry.order2Flat()) {
+        const auto &r = reaction;
+        ReactionInfo info{r->name().c_str(), r->id(), r->nEducts(), r->nProducts(),
+                          r->rate(), r->eductDistance(),
+                          r->productDistance(), r->educts(), r->products()};
+        reactionInfos.push_back(info);
+    }
+    {
+        auto types = getReactionInfoMemoryType(group.parentFile());
         h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
-        h5rd::dimensions extent = {n_reactions};
+        h5rd::dimensions extent = {reactionInfos.size()};
         std::vector<h5rd::Filter*> filters;
-        auto order2_reaction_dset = subgroup.createDataSet("order2_reactions", extent, dims, std::get<0>(types),
-                                                           std::get<1>(types), filters);
-        order2_reaction_dset->append(extent, order2_info.data());
+        auto infoDataSet = group.createDataSet("registered_reactions", extent, dims, std::get<0>(types),
+                                               std::get<1>(types), filters);
+        infoDataSet->append(extent, reactionInfos.data());
     }
 }
 
@@ -127,7 +100,6 @@ std::tuple<h5rd::NativeCompoundType, h5rd::STDCompoundType> getReactionInfoMemor
     using namespace h5rd;
     NativeCompoundType nct  = NativeCompoundTypeBuilder(sizeof(ReactionInfo), std::move(ref))
             .insertString("name", offsetof(ReactionInfo, name))
-            .insert<decltype(std::declval<ReactionInfo>().index)>("index", offsetof(ReactionInfo, index))
             .insert<decltype(std::declval<ReactionInfo>().id)>("id", offsetof(ReactionInfo, id))
             .insert<decltype(std::declval<ReactionInfo>().n_educts)>("n_educts", offsetof(ReactionInfo, n_educts))
             .insert<decltype(std::declval<ReactionInfo>().n_products)>("n_products", offsetof(ReactionInfo, n_products))

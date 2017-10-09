@@ -37,22 +37,6 @@
 
 namespace rpy {
 
-namespace detail {
-
-inline std::string nameOf(const readdy::model::ioutils::ReactionInfo &info) {
-    return info.name;
-}
-
-inline std::string nameOf(readdy::model::reactions::Reaction<1> *reaction) {
-    return reaction->name();
-}
-
-inline std::string nameOf(const readdy::model::reactions::Reaction<2> *reaction) {
-    return reaction->name();
-}
-
-}
-
 struct ReadableReactionRecord {
     ReadableReactionRecord() : type(""), reaction_label(""), educts(), products(), where() {}
 
@@ -63,54 +47,44 @@ struct ReadableReactionRecord {
     readdy::Vec3::data_arr where;
 };
 
-template<typename ReactionsOrder1, typename ReactionsOrder2>
-inline ReadableReactionRecord convert(const readdy::model::reactions::ReactionRecord &reaction,
-                               const ReactionsOrder1& reactionInfoOrder1, const ReactionsOrder2 &reactionInfoOrder2) {
+inline ReadableReactionRecord
+convert(const readdy::model::reactions::ReactionRecord &reaction, const char* name) {
     rpy::ReadableReactionRecord rrr {};
+    rrr.where = reaction.where.data;
+    rrr.reaction_label = name;
     auto tt = readdy::model::reactions::ReactionType(reaction.type);
     switch(tt) {
         case readdy::model::reactions::ReactionType::Conversion:{
             rrr.educts = {reaction.educts[0]};
             rrr.products = {reaction.products[0]};
-            rrr.where = reaction.where.data;
             rrr.type = "conversion";
-            rrr.reaction_label = detail::nameOf(reactionInfoOrder1.at(reaction.reactionIndex));
             break;
         };
         case readdy::model::reactions::ReactionType::Fusion: {
             rrr.educts = {reaction.educts[0], reaction.educts[1]};
             rrr.products = {reaction.products[0]};
-            rrr.where = reaction.where.data;
             rrr.type = "fusion";
-            rrr.reaction_label = detail::nameOf(reactionInfoOrder2.at(reaction.reactionIndex));
             break;
         };
         case readdy::model::reactions::ReactionType::Fission: {
             rrr.educts = {reaction.educts[0]};
             rrr.products = {reaction.products[0], reaction.products[1]};
-            rrr.where = reaction.where.data;
             rrr.type = "fission";
-            rrr.reaction_label = detail::nameOf(reactionInfoOrder1.at(reaction.reactionIndex));
             break;
         };
         case readdy::model::reactions::ReactionType::Enzymatic: {
             rrr.educts = {reaction.educts[0], reaction.educts[1]};
             rrr.products = {reaction.products[0], reaction.products[1]};
-            rrr.where = reaction.where.data;
             rrr.type = "enzymatic";
-            rrr.reaction_label = detail::nameOf(reactionInfoOrder2.at(reaction.reactionIndex));
             break;
         };
         case readdy::model::reactions::ReactionType::Decay: {
             rrr.educts = {reaction.educts[0]};
             rrr.products = {};
-            rrr.where = reaction.where.data;
             rrr.type = "decay";
-            rrr.reaction_label = detail::nameOf(reactionInfoOrder1.at(reaction.reactionIndex));
             break;
         };
     }
-
     return rrr;
 }
 
