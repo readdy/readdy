@@ -216,7 +216,8 @@ void exportApi(py::module &api) {
 
     py::class_<kp, std::unique_ptr<kp, readdy::util::nodelete>>(api, "KernelProvider")
             .def_static("get", &kp::getInstance, rvp::reference)
-            .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a);
+            .def("load_from_dir", &kp::loadKernelsFromDirectory, "directory"_a)
+            .def("available_kernels", &kp::availableKernels);
 
     py::class_<pot2>(api, "Pot2")
             .def(py::init<readdy::particle_type_type, readdy::particle_type_type, py::object, py::object>())

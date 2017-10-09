@@ -166,6 +166,15 @@ KernelProvider::kernel_ptr KernelProvider::create(const std::string &name) const
     throw std::invalid_argument("Could not load plugin with name \"" + name + "\"");
 }
 
+std::vector<std::string> KernelProvider::availableKernels() const {
+    std::vector<std::string> result;
+    result.reserve(pimpl->factory.size());
+    for(const auto &entry : pimpl->factory) {
+        result.push_back(entry.first);
+    }
+    return result;
+}
+
 KernelProvider::~KernelProvider() = default;
 
 KernelDeleter::KernelDeleter()  : ptr(nullptr) {}

@@ -137,6 +137,14 @@ public:
     void loadKernelsFromDirectory(const std::string &directory);
 
     /**
+     * Method that returns the currently available kernels. Output may change after a call
+     * to loadKernelsFromDirectory(directory).
+     *
+     * @return the currently available kernels
+     */
+    std::vector<std::string> availableKernels() const;
+
+    /**
      * Adds a kernel to the provider registry by providing a factory method and a name.
      * @param name the name
      * @param creator the factory method

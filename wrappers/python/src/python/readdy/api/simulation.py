@@ -30,6 +30,7 @@ from readdy.api.registry.observables import Observables as _Observables
 from readdy._internal.readdybinding.api import Simulation as _Simulation
 from readdy.api.utils import vec3_of as _v3_of
 from readdy.util.progress import SimulationProgress as _SimulationProgress
+from readdy._internal.readdybinding.api import KernelProvider as _KernelProvider
 
 class Simulation(object):
 
@@ -47,21 +48,27 @@ class Simulation(object):
         :param evaluate_observables: whether to evaluate observables
         :param skin: the skin size for neighbor lists
         """
+        available_kernels = _KernelProvider.get().available_kernels()
+        if kernel not in available_kernels:
+            raise ValueError("The selected kernel was \"{}\" but only {} "
+                             "are available.".format(kernel, ", ".join(['"{}"'.format(x) for x in available_kernels])))
         self._kernel = kernel
         self._simulation = _Simulation()
         self._simulation.set_kernel(kernel)
         self._simulation.context = context
 
-        self._output_file = output_file
+        self.output_file = output_file
         self._observables = _Observables(self)
-        self._integrator = integrator
-        self._reaction_handler = reaction_handler
-        self._evaluate_topology_reactions = evaluate_topology_reactions
-        self._evaluate_forces = evaluate_forces
-        self._evaluate_observables = evaluate_observables
-        self._skin = skin
-        self._simulation_scheme = "ReaDDyScheme"
-        self._show_progress = True
+
+        self.integrator = integrator
+        self.reaction_handler = reaction_handler
+        self.evaluate_topology_reactions = evaluate_topology_reactions
+        self.evaluate_forces = evaluate_forces
+        self.evaluate_observables = evaluate_observables
+        self.skin = skin
+        self.simulation_scheme = "ReaDDyScheme"
+        self.show_progress = True
+
         self._progress = None
 
         if kernel == "CPU":
@@ -216,10 +223,10 @@ class Simulation(object):
 
         :param value: the scheme
         """
-        if value in ("DefaultScheme", "AdvancedScheme"):
+        if value in ("ReaDDyScheme", "AdvancedScheme"):
             self._simulation_scheme = value
         else:
-            raise ValueError("Simulation scheme value can only be one of \"DefaultScheme\" and \"AdvancedScheme\".")
+            raise ValueError("Simulation scheme value can only be one of \"ReaDDyScheme\" and \"AdvancedScheme\".")
 
     @property
     def kernel_configuration(self):
