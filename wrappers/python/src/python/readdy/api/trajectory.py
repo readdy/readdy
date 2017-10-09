@@ -185,6 +185,7 @@ class Trajectory(object):
         self._diffusion_constants = _io_utils.get_diffusion_constants(filename)
         self._particle_types = _io_utils.get_particle_types(filename)
         self._reactions_order_1 = []
+        self._reactions_order_2 = []
         self._inverse_types_map = {v: k for k, v in self.particle_types.items()}
         for reaction in _io_utils.get_reactions_order1(filename):
             info = ReactionInfo(reaction["name"], reaction["index"], reaction["id"], reaction["n_educts"],
@@ -192,7 +193,6 @@ class Trajectory(object):
                                 reaction["product_distance"], reaction["educt_types"], reaction["product_types"],
                                 self._inverse_types_map)
             self._reactions_order_1.append(info)
-            self._reactions_order_2 = []
         for reaction in _io_utils.get_reactions_order2(filename):
             info = ReactionInfo(reaction["name"], reaction["index"], reaction["id"], reaction["n_educts"],
                                 reaction["n_products"], reaction["rate"], reaction["educt_distance"],
