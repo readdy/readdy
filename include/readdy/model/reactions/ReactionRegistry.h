@@ -74,6 +74,8 @@ public:
 
     const std::size_t &nOrder1() const;
 
+    const reaction_o1_registry &order1() const;
+
     const reactions order1Flat() const;
 
     const reaction* order1ByName(const std::string &name) const;
@@ -99,8 +101,6 @@ public:
     std::string nameOf(reaction_id id) const;
 
     reaction_id idOf(const std::string &name) const;
-
-    const reactions_raw_ptr_map allReactions() const;
 
     reaction_id add(const std::string &descriptor, scalar rate);
 

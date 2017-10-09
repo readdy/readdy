@@ -280,6 +280,20 @@ scalar CPUStateModel::energy() const {
     return _currentEnergy;
 }
 
+void CPUStateModel::resetReactionCounts() {
+    const auto &reactions = _context.get().reactions();
+    for (const auto &pType : reactions.order2()) {
+        for (const auto &reaction : pType.second) {
+            _reactionCounts[(reaction)->id()] = 0;
+        }
+    }
+    for (const auto &pType : reactions.order1()) {
+        for (const auto &reaction : pType.second) {
+            _reactionCounts[(reaction)->id()] = 0;
+        }
+    }
+}
+
 CPUStateModel::~CPUStateModel() = default;
 
 

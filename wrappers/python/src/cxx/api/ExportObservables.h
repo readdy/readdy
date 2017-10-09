@@ -56,9 +56,9 @@ inline obs_handle_t registerObservable_Reactions(sim &self, unsigned int stride,
         auto internalCallback = [&self, pyFun](const readdy::model::observables::Reactions::result_type &reactions) mutable {
             std::vector<rpy::ReadableReactionRecord> converted;
             converted.reserve(reactions.size());
-            auto allReactions = self.currentContext().reactions().allReactions();
+            const auto &reactionRegistry = self.currentContext().reactions();
             for(const auto &reaction : reactions) {
-                converted.push_back(rpy::convert(reaction, allReactions[reaction.id]->name().c_str()));
+                converted.push_back(rpy::convert(reaction, reactionRegistry.nameOf(reaction.id).c_str()));
             }
             pyFun(std::move(converted));
         };

@@ -52,6 +52,8 @@ struct ReactionRecord {
     friend std::ostream &operator<<(std::ostream &os, const ReactionRecord &record);
 };
 
+using reaction_counts_map = std::unordered_map<reactions::Reaction::reaction_id, std::size_t>;
+
 NAMESPACE_END(reactions)
 NAMESPACE_END(model)
 NAMESPACE_END(readdy)

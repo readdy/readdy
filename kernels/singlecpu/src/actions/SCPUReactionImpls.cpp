@@ -133,7 +133,7 @@ void SCPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
     SCPUStateModel &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
     if(ctx.recordReactionCounts()) {
-        readdy::model::reactions::utils::zeroReactionCounts(stateModel.reactionCounts(), ctx.reactions().allReactions());
+        stateModel.resetReactionCounts();
     }
     auto &data = *stateModel.getParticleData();
     auto events = findEvents(kernel, timeStep, true);
@@ -395,7 +395,7 @@ void SCPUGillespie::perform(const util::PerformanceNode &node) {
     auto &stateModel = kernel->getSCPUKernelStateModel();
     if(ctx.recordReactionsWithPositions()) stateModel.reactionRecords().clear();
     if(ctx.recordReactionCounts()) {
-        readdy::model::reactions::utils::zeroReactionCounts(stateModel.reactionCounts(), ctx.reactions().allReactions());
+        stateModel.resetReactionCounts();
     }
     auto data = stateModel.getParticleData();
     const auto &dist = ctx.distSquaredFun();

@@ -288,11 +288,13 @@ std::vector<std::vector<rpy::ReadableReactionRecord>> read_reactions_obs(const s
     auto reactionInfoH5Type = readdy::model::ioutils::getReactionInfoMemoryType(f->ref());
 
     // get reaction info from config
-    std::unordered_map<readdy::model::reactions::Reaction::reaction_id, readdy::model::ioutils::ReactionInfo> reactionsMap;
+    std::unordered_map<readdy::model::reactions::Reaction::reaction_id, readdy::model::ioutils::ReactionInfo>
+            reactionsMap;
     {
         std::vector<readdy::model::ioutils::ReactionInfo> reactionInfo;
         auto config = f->getSubgroup("readdy/config/");
-        config.read("registered_reactions", reactionInfo, &std::get<0>(reactionInfoH5Type), &std::get<1>(reactionInfoH5Type));
+        config.read("registered_reactions", reactionInfo, &std::get<0>(reactionInfoH5Type),
+                    &std::get<1>(reactionInfoH5Type));
         for (const auto &info : reactionInfo) {
             reactionsMap[info.id] = info;
         }

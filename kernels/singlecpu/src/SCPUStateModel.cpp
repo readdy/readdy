@@ -217,6 +217,20 @@ scalar &SCPUStateModel::energy() {
     return pimpl->currentEnergy;
 }
 
+void SCPUStateModel::resetReactionCounts() {
+    const auto &reactions = _context.get().reactions();
+    for (const auto &pType : reactions.order2()) {
+        for (const auto &reaction : pType.second) {
+            pimpl->reactionCounts[(reaction)->id()] = 0;
+        }
+    }
+    for (const auto &pType : reactions.order1()) {
+        for (const auto &reaction : pType.second) {
+            pimpl->reactionCounts[(reaction)->id()] = 0;
+        }
+    }
+}
+
 SCPUStateModel &SCPUStateModel::operator=(SCPUStateModel &&rhs) noexcept = default;
 
 SCPUStateModel::SCPUStateModel(SCPUStateModel &&rhs) noexcept = default;

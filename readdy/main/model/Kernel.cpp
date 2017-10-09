@@ -168,9 +168,6 @@ bool Kernel::supportsTopologies() const {
 
 void Kernel::initialize() {
     context().configure(true);
-    if (context().recordReactionCounts()) {
-        reactions::utils::zeroReactionCounts(stateModel().reactionCounts(), context().reactions().allReactions());
-    }
 }
 
 void Kernel::finalize() {

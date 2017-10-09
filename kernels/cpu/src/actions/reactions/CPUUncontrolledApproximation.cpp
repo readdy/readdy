@@ -126,7 +126,7 @@ void CPUUncontrolledApproximation::perform(const util::PerformanceNode &node) {
         kernel->getCPUKernelStateModel().reactionRecords().clear();
     }
     if (ctx.recordReactionCounts()) {
-        readdy::model::reactions::utils::zeroReactionCounts(stateModel.reactionCounts(), ctx.reactions().allReactions());
+        stateModel.resetReactionCounts();
     }
 
     // gather events

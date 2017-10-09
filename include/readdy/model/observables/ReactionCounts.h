@@ -37,13 +37,13 @@
 #include <readdy/model/Particle.h>
 #include <readdy/model/Context.h>
 #include <readdy/model/reactions/Reaction.h>
-#include <readdy/model/reactions/Utils.h>
+#include <readdy/model/reactions/ReactionRecord.h>
 
 NAMESPACE_BEGIN(readdy)
 NAMESPACE_BEGIN(model)
 NAMESPACE_BEGIN(observables)
 
-class ReactionCounts : public Observable<reactions::utils::reaction_counts_map> {
+class ReactionCounts : public Observable<reactions::reaction_counts_map> {
 public:
     using reaction_counts_map = result_type;
 

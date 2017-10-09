@@ -39,10 +39,17 @@ namespace model {
 namespace ioutils {
 
 void writeReactionInformation(h5rd::Group &group, const Context &context) {
-    const auto allReactions = context.reactions().allReactions();
+    const auto &reactionRegistry = context.reactions();
     std::vector<ReactionInfo> reactionInfos;
-    for (const auto &reaction : allReactions) {
-        const auto &r = reaction.second;
+    for (const auto &reaction : reactionRegistry.order1Flat()) {
+        const auto &r = reaction;
+        ReactionInfo info{r->name().c_str(), r->id(), r->nEducts(), r->nProducts(),
+                          r->rate(), r->eductDistance(),
+                          r->productDistance(), r->educts(), r->products()};
+        reactionInfos.push_back(info);
+    }
+    for (const auto &reaction : reactionRegistry.order2Flat()) {
+        const auto &r = reaction;
         ReactionInfo info{r->name().c_str(), r->id(), r->nEducts(), r->nProducts(),
                           r->rate(), r->eductDistance(),
                           r->productDistance(), r->educts(), r->products()};

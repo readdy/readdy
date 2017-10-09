@@ -52,7 +52,7 @@ void CPUGillespie::perform(const util::PerformanceNode &node) {
     const auto nl = stateModel.getNeighborList();
 
     if(ctx.recordReactionCounts()) {
-        readdy::model::reactions::utils::zeroReactionCounts(stateModel.reactionCounts(), ctx.reactions().allReactions());
+        stateModel.resetReactionCounts();
     }
 
     scalar alpha = 0.0;

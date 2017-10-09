@@ -123,6 +123,7 @@ void CPUKernel::initialize() {
         top->configure();
         top->updateReactionRates(context().topology_registry().structuralReactionsOf(top->type()));
     }
+    getCPUKernelStateModel().resetReactionCounts();
 }
 
 void CPUKernel::finalize() {

@@ -201,6 +201,10 @@ const ReactionRegistry::reactions &ReactionRegistry::order2ByType(const std::str
     return order2ByType(_types.get().idOf(type1), _types.get().idOf(type2));
 }
 
+const ReactionRegistry::reaction_o1_registry &ReactionRegistry::order1() const {
+    return one_educt_registry;
+}
+
 const ReactionRegistry::reaction_o2_registry &ReactionRegistry::order2() const {
     return two_educts_registry;
 }
@@ -475,19 +479,6 @@ ReactionRegistry::reaction_id ReactionRegistry::idOf(const std::string &name) co
     } else {
         throw std::runtime_error(fmt::format("no reaction with name {} exists", name));
     }
-}
-
-const ReactionRegistry::reactions_raw_ptr_map ReactionRegistry::allReactions() const {
-    reactions_raw_ptr_map all;
-    const auto o1 = order1Flat();
-    const auto o2 = order2Flat();
-    for (const auto &reaction : o1) {
-        all[reaction->id()] = reaction;
-    }
-    for (const auto &reaction : o2) {
-        all[reaction->id()] = reaction;
-    }
-    return all;
 }
 
 }

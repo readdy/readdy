@@ -51,7 +51,7 @@ public:
 
     using data_type = readdy::kernel::cpu::data::EntryDataContainer;
     using particle_type = readdy::model::Particle;
-    using reaction_counts_map = readdy::model::reactions::utils::reaction_counts_map;
+    using reaction_counts_map = readdy::model::reactions::reaction_counts_map;
 
     using topology = readdy::model::top::GraphTopology;
     using topology_ref = std::unique_ptr<topology>;
@@ -112,9 +112,11 @@ public:
 
     const std::vector<readdy::model::reactions::ReactionRecord> &reactionRecords() const;
 
-    const reaction_counts_map & reactionCounts() const override;
+    const reaction_counts_map & reactionCounts() const;
 
-    reaction_counts_map &reactionCounts() override;
+    reaction_counts_map &reactionCounts();
+
+    void resetReactionCounts();
 
     particle_type getParticleForIndex(std::size_t index) const override;
 

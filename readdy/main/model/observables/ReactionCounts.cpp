@@ -85,15 +85,21 @@ void ReactionCounts::initializeDataSet(File &file, const std::string &dataSetNam
 
 void ReactionCounts::append() {
     if (pimpl->firstWrite) {
-        const auto allReactions = kernel->context().reactions().allReactions();
+        const auto &reactionRegistry = kernel->context().reactions();
         if (pimpl->shouldWrite) {
             auto subgroup = pimpl->group->createGroup("counts");
-            for (const auto &r : allReactions) {
-                const auto &reaction = r.second;
+            for (const auto &reaction : reactionRegistry.order1Flat()) {
                 h5rd::dimensions chunkSize = {pimpl->flushStride};
                 h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
                 auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
                                                                      {&pimpl->bloscFilter});
+                pimpl->dataSets.emplace(std::make_pair(reaction->id(), std::move(dset)));
+            }
+            for (const auto &reaction : reactionRegistry.order2Flat()) {
+                h5rd::dimensions chunkSize = {pimpl->flushStride};
+                h5rd::dimensions dims = {h5rd::UNLIMITED_DIMS};
+                auto dset = subgroup.createDataSet<std::size_t>(std::to_string(reaction->id()), chunkSize, dims,
+                                                                {&pimpl->bloscFilter});
                 pimpl->dataSets.emplace(std::make_pair(reaction->id(), std::move(dset)));
             }
         }

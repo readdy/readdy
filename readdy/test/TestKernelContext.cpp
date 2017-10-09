@@ -311,8 +311,9 @@ TEST_F(TestKernelContext, GetAllReactions) {
     ctx.reactions().addConversion("conv2", "A", "A", 1.);
     ctx.reactions().addFusion("fusion", "A","A", "A", 1., 1.);
     ctx.configure();
-    const auto &all = ctx.reactions().allReactions();
-    EXPECT_EQ(all.size(), 5);
+    const auto &o1flat = ctx.reactions().order1Flat();
+    const auto &o2flat = ctx.reactions().order2Flat();
+    EXPECT_EQ(o1flat.size() + o2flat.size(), 5);
 }
 
 
