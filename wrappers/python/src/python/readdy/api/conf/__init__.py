@@ -24,3 +24,7 @@ Created on 26.09.17
 
 @author: clonker
 """
+
+from pint import UnitRegistry
+ureg = UnitRegistry()
+Q_ = ureg.Quantity

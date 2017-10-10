@@ -32,7 +32,7 @@ from readdy.util.testing_utils import ReaDDyTestCase
 
 class TestToplevelRegistryCompartments(ReaDDyTestCase):
     def setUp(self):
-        self.rds = ReactionDiffusionSystem()
+        self.rds = ReactionDiffusionSystem(box_size=[1., 1., 1.])
         self.rds.add_species("A", 1.)
         self.rds.add_species("B", 1.)
 

@@ -26,9 +26,14 @@ Created on 08.09.17
 """
 
 import numpy as _np
-from readdy.api.utils import vec3_of as _v3_of
+
 from readdy._internal.readdybinding.api import Context as _Context
 from readdy._internal.readdybinding.api import ParticleTypeFlavor as _ParticleTypeFlavor
+
+from readdy.api.utils import vec3_of as _v3_of
+from readdy.api.conf.UnitConfiguration import UnitConfiguration as _UnitConfiguration
+from readdy.api.conf.UnitConfiguration import NoUnitConfiguration as _NoUnitConfiguration
+
 from readdy.api.registry.compartments import CompartmentRegistry as _CompartmentRegistry
 from readdy.api.registry.topologies import TopologyRegistry as _TopologyRegistry
 from readdy.api.registry.potentials import PotentialRegistry as _PotentialRegistry
@@ -39,43 +44,105 @@ __all__ = ['ReactionDiffusionSystem']
 
 
 class ReactionDiffusionSystem(object):
-    def __init__(self):
+    def __init__(self, box_size, kbt=None, periodic_boundary_conditions=None,
+                 length_unit='nanometer', time_unit='nanosecond', energy_unit='kilojoule/mol'):
+        """
+        Constructs a new reaction diffusion system, starting point for all reaction diffusion simulations.
+
+        If all units are empty or None, the system will be completely dimensionless.
+
+        :param box_size: size of the simulation box [length]
+        :param kbt: temperature, per default room temperature in the selected units (2.437 kJ/mol)
+        :param periodic_boundary_conditions: periodic boundary conditions, per default all periodic
+        :param length_unit: the length unit to use
+        :param time_unit: the time unit to use
+        :param energy_unit: the energy unit to use
+        """
         self._context = _Context()
-        self._compartment_registry = _CompartmentRegistry(self._context.compartments)
-        self._topology_registry = _TopologyRegistry(self._context.topologies)
-        self._potential_registry = _PotentialRegistry(self._context.potentials)
-        self._reaction_registry = _ReactionRegistry(self._context.reactions)
+        if not length_unit and not time_unit and not energy_unit:
+            self._unit_conf = _NoUnitConfiguration()
+        else:
+            self._unit_conf = _UnitConfiguration(length_unit, time_unit, energy_unit)
+        self._compartment_registry = _CompartmentRegistry(self._context.compartments, self._unit_conf)
+        self._topology_registry = _TopologyRegistry(self._context.topologies, self._unit_conf)
+        self._potential_registry = _PotentialRegistry(self._context.potentials, self._unit_conf)
+        self._reaction_registry = _ReactionRegistry(self._context.reactions, self._unit_conf)
+
+        if kbt is None:
+            kbt = 2.437 * self.units.kilojoule / self.units.mol
+        if periodic_boundary_conditions is None:
+            periodic_boundary_conditions = [True, True, True]
+
+        self.box_size = box_size
+        self.kbt = kbt
+        self.periodic_boundary_conditions = periodic_boundary_conditions
+
+    @property
+    def units(self):
+        """
+        Returns access to the unit registry, so that one can produce quantities like `5. * system.units.meter`.
+
+        For more detail, see the pint documentation: pint.readthedocs.io
+        :return: the unit registry
+        """
+        return self._unit_conf.reg
+
+    @property
+    def length_unit(self):
+        """
+        Returns the system's length unit. This is a property that can only be set in the constructor.
+        :return: the length unit
+        """
+        return self._unit_conf.length_unit
+
+    @property
+    def energy_unit(self):
+        """
+        Returns the system's energy unit. This is a property that can only be set in the constructor.
+        :return: the energy unit
+        """
+        return self._unit_conf.energy_unit
+
+    @property
+    def time_unit(self):
+        """
+        Returns the system's time unit. This is a property that can only be set in the constructor.
+        :return: the time unit
+        """
+        return self._unit_conf.time_unit
 
     @property
     def kbt(self):
         """
         Returns the thermal energy of the system.
-        :return: the thermal energy
+        :return: the thermal energy [energy]
         """
-        return self._context.kbt
+        return self._context.kbt * self.energy_unit
 
     @kbt.setter
     def kbt(self, value):
         """
         Sets the thermal energy of the system.
-        :param value: the new thermal energy
+        :param value: the new thermal energy [energy]
         """
+        value = self._unit_conf.convert(value, self.energy_unit)
         self._context.kbt = value
 
     @property
     def box_size(self):
         """
         Retrieves the system's current box size
-        :return: the box size
+        :return: the box size [length]
         """
-        return self._context.box_size
+        return self.length_unit * _np.array(self._context.box_size)
 
     @box_size.setter
     def box_size(self, value):
         """
         Sets the system's box size
-        :param value: the box size (list or tuple of length 3, numpy scalar array of squeezed shape (3,))
+        :param value: the box size (list or tuple of length 3, numpy scalar array of squeezed shape (3,)) [length]
         """
+        value = self._unit_conf.convert(value, self.length_unit)
         v3 = _v3_of(value)
         self._context.box_size = [v3[0], v3[1], v3[2]]
 
@@ -115,33 +182,35 @@ class ReactionDiffusionSystem(object):
 
         This quantity is used for constructing neighbor lists and can have a great impact on the performance.
 
-        :return: The maximal cutoff distance
+        :return: The maximal cutoff distance [length]
         """
         self._context.configure(False)
-        return self._context.calculate_max_cutoff()
+        return self._context.calculate_max_cutoff() * self.length_unit
 
     @property
     def box_volume(self):
         """
         Calculates the box volume.
-        :return: the box volume
+        :return: the box volume [length**3]
         """
-        return self._context.box_volume()
+        return self._context.box_volume() * (self.length_unit ** 3)
 
     def add_species(self, name, diffusion_constant=1.):
         """
         Adds a species to the system.
         :param name: The species' name.
-        :param diffusion_constant: The species' diffusion constant
+        :param diffusion_constant: The species' diffusion constant [length**2/time]
         """
+        diffusion_constant = self._unit_conf.convert(diffusion_constant, self._unit_conf.diffusion_constant_unit)
         self._context.particle_types.add(name, diffusion_constant, _ParticleTypeFlavor.NORMAL)
 
     def add_topology_species(self, name, diffusion_constant=1.):
         """
         Adds a species to the system that can be used with topologies.
-        :param name: The species' name.
-        :param diffusion_constant: The species' diffusion constant.
+        :param name: The species' name
+        :param diffusion_constant: The species' diffusion constant [length**2/time]
         """
+        diffusion_constant = self._unit_conf.convert(diffusion_constant, self._unit_conf.diffusion_constant_unit)
         self._context.particle_types.add(name, diffusion_constant, _ParticleTypeFlavor.TOPOLOGY)
 
     def registered_species(self):
@@ -181,9 +250,9 @@ class ReactionDiffusionSystem(object):
         :param evaluate_topology_reactions: whether to evaluate topology reactions
         :param evaluate_forces: whether to evaluate forces
         :param evaluate_observables: whether to evaluate observables
-        :param skin: the skin size
+        :param skin: the skin size [length]
         :return: the simulation object
         """
-        return _Simulation(kernel, self._context, output_file=output_file, integrator=integrator,
+        return _Simulation(kernel, self._context, self._unit_conf, output_file=output_file, integrator=integrator,
                            reaction_handler=reaction_handler, evaluate_topology_reactions=evaluate_topology_reactions,
                            evaluate_forces=evaluate_forces, evaluate_observables=evaluate_observables, skin=skin)

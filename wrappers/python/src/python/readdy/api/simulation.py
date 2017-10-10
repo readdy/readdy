@@ -34,12 +34,14 @@ from readdy._internal.readdybinding.api import KernelProvider as _KernelProvider
 
 class Simulation(object):
 
-    def __init__(self, kernel, context, output_file="", integrator="EulerBDIntegrator", reaction_handler="Gillespie",
-                 evaluate_topology_reactions=True, evaluate_forces=True, evaluate_observables=True, skin=0):
+    def __init__(self, kernel, context, unit_config, output_file="", integrator="EulerBDIntegrator",
+                 reaction_handler="Gillespie", evaluate_topology_reactions=True, evaluate_forces=True,
+                 evaluate_observables=True, skin=0):
         """
         Creates a new simulation object
         :param kernel: the kernel to use
         :param context: the parent low level context object
+        :param unit_config: the unit configuration
         :param output_file: the output file
         :param integrator: the integrator
         :param reaction_handler: the reaction handler
@@ -52,6 +54,7 @@ class Simulation(object):
         if kernel not in available_kernels:
             raise ValueError("The selected kernel was \"{}\" but only {} "
                              "are available.".format(kernel, ", ".join(['"{}"'.format(x) for x in available_kernels])))
+        self._unit_conf = unit_config
         self._kernel = kernel
         self._simulation = _Simulation()
         self._simulation.set_kernel(kernel)
@@ -75,6 +78,22 @@ class Simulation(object):
             self._kernel_configuration = _CPUKernelConfiguration()
         else:
             self._kernel_configuration = _NOOPKernelConfiguration()
+
+    @property
+    def units(self):
+        return self._unit_conf.reg
+
+    @property
+    def length_unit(self):
+        return self._unit_conf.length_unit
+
+    @property
+    def energy_unit(self):
+        return self._unit_conf.energy_unit
+
+    @property
+    def time_unit(self):
+        return self._unit_conf.time_unit
 
     @property
     def show_progress(self):
@@ -147,17 +166,18 @@ class Simulation(object):
         """
         Returns the skin size to be used in neighbor lists. If the neighbor list is not a Verlet list / adaptive list,
         it will increase the box size in the corresponding cell-linked list.
-        :return: the skin size
+        :return: the skin size [length]
         """
-        return self._skin
+        return self._skin * self.length_unit
 
     @skin.setter
     def skin(self, value):
         """
         Sets the skin size to be used in neighbor lists. If the neighbor list is not a Verlet list / adaptive list,
         it will increase the box size in the corresponding cell-linked list.
-        :param value: the new skin size
+        :param value: the new skin size [length]
         """
+        value = self._unit_conf.convert(value, self.length_unit)
         assert value >= 0, "the value has to be non-negative"
         self._skin = value
 
@@ -284,8 +304,9 @@ class Simulation(object):
         Adds a particle of a certain type to a certain position in the simulation box.
 
         :param type: the type
-        :param position: the position (ndarray or tuple or list of length 3)
+        :param position: the position (ndarray or tuple or list of length 3) [length]
         """
+        position = self._unit_conf.convert(position, self.length_unit)
         self._simulation.add_particle(type, _v3_of(position))
 
     def add_particles(self, type, positions):
@@ -293,9 +314,10 @@ class Simulation(object):
         Adds particles of a certain type to the simulation box.
 
         :param type: type of the particles
-        :param positions: (3, N)-shaped nd-array of positions
+        :param positions: (3, N)-shaped nd-array of positions [length]
         """
         assert positions.shape[1] == 3, "shape[1] has to be 3 but was {}".format(positions.shape[1])
+        positions = self._unit_conf.convert(positions, self.length_unit)
         self._simulation.add_particles(type, positions)
 
     def add_topology(self, topology_type, particle_types, positions):
@@ -306,9 +328,10 @@ class Simulation(object):
         :param topology_type: the topology type
         :param particle_types: either a list of types of length `N` or a single string which is then applied as type
                                for all given positions
-        :param positions: (3, N)-shaped nd-array of positions
+        :param positions: (3, N)-shaped nd-array of positions [length]
         :return: the topology object
         """
+        positions = self._unit_conf.convert(positions, self.length_unit)
         assert positions.shape[1] == 3, "shape[1] has to be 3 but was {}".format(positions.shape[0])
         if isinstance(particle_types, str):
             particle_types = [particle_types]
@@ -319,11 +342,13 @@ class Simulation(object):
         Executes the simulation as configured.
 
         :param n_steps: number of steps to perform
-        :param timestep: the time step to use
+        :param timestep: the time step to use [time]
         """
         import os
         from contextlib import closing
         import readdy._internal.readdybinding.common.io as io
+
+        timestep = self._unit_conf.convert(timestep, self.time_unit)
 
         if self.output_file is not None and len(self.output_file) > 0 and os.path.exists(self.output_file):
             raise ValueError("Output file already existed: {}".format(self.output_file))

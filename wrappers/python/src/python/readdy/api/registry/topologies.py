@@ -31,8 +31,9 @@ from readdy._internal.readdybinding.api import BondedPotentialConfiguration as _
 from readdy._internal.readdybinding.api import TorsionPotentialConfiguration as _TorsionPotentialConfiguration
 
 class TopologyRegistry(object):
-    def __init__(self, context_top_registry):
+    def __init__(self, context_top_registry, units):
         self._registry = context_top_registry
+        self._units = units
 
     def add_type(self, name):
         """
@@ -48,13 +49,15 @@ class TopologyRegistry(object):
 
         :param type1: type of the first particle
         :param type2: type of the second particle
-        :param force_constant: the force constant
-        :param length: length of the harmonic bond
+        :param force_constant: the force constant [energy/length**2]
+        :param length: length of the harmonic bond [length]
         """
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
         if length < 0:
             raise ValueError("The length must be non-negative.")
+        force_constant = self._units.convert(force_constant, self._units.force_constant_unit)
+        length = self._units.convert(length, self._units.length_unit)
         cfg = _BondedPotentialConfiguration(force_constant, length, "harmonic")
         self._registry.configure_bond_potential(type1, type2, cfg)
 
@@ -63,14 +66,18 @@ class TopologyRegistry(object):
         Configures a harmonic angle potential between a particle triple of types `type1` -- `type2` -- `type3`. If the
         first and third type do not coincide, the sequence in which they are given does not matter.
 
+        Angles are internally always expressed in radians.
+
         :param type1: type of the first particle
         :param type2: type of the second particle
         :param type3: type of the third particle
-        :param force_constant: the force constant
-        :param equilibrium_angle: the equilibrium angle
+        :param force_constant: the force constant [energy/angle**2]
+        :param equilibrium_angle: the equilibrium angle [angle]
         """
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
+        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians**2))
+        equilibrium_angle = self._units.convert(equilibrium_angle, self._units.reg.radians)
         cfg = _AnglePotentialConfiguration(force_constant, equilibrium_angle, "harmonic")
         self._registry.configure_angle_potential(type1, type2, type3, cfg)
 
@@ -80,16 +87,20 @@ class TopologyRegistry(object):
         The sequence in which the types can be reversed, so `(type1, type2, type3, type4)` yields the same potential
         terms as `(type4, type3, type2, type1)`.
 
+        Angles are internally always expressed in radians.
+
         :param type1: type of the first particle
         :param type2: type of the second particle
         :param type3: type of the third particle
         :param type4: type of the fourth particle
-        :param force_constant: the force constant
+        :param force_constant: the force constant [energy/angle**2]
         :param multiplicity: the multiplicity
-        :param phi0: the equilibrium angle
+        :param phi0: the equilibrium angle [angle]
         """
         if force_constant <= 0:
             raise ValueError("The force constant must be strictly positive.")
+        force_constant = self._units.convert(force_constant, self._units.energy_unit / (self._units.reg.radians**2))
+        phi0 = self._units.convert(phi0, self._units.reg.radians)
         cfg = _TorsionPotentialConfiguration(force_constant, multiplicity, phi0, "cos_dihedral")
         self._registry.configure_torsion_potential(type1, type2, type3, type4, cfg)
 
@@ -123,9 +134,11 @@ class TopologyRegistry(object):
         meaning that particles within one and the same topology can find themselves as reaction partners.
 
         :param descriptor: the descriptor string
-        :param rate: a fixed rate
-        :param radius: the radius
+        :param rate: a fixed rate [1/time]
+        :param radius: the radius [length]
         """
+        rate = self._units.convert(rate, 1/self._units.time_unit)
+        radius = self._units.convert(radius, self._units.length_unit)
         self._registry.add_spatial_reaction(descriptor, rate, radius)
 
     def add_structural_reaction(self, topology_type, reaction_function, rate_function,
@@ -139,7 +152,8 @@ class TopologyRegistry(object):
         * the rate function, which takes a topology object as input and returns a corresponding fixed rate
 
         It should be noted that the rate function will only be evaluated upon changes of the topology, i.e., as rarely
-        as possible. The reaction function is evaluated when the actual reaction takes place.
+        as possible. The reaction function is evaluated when the actual reaction takes place. Also the rate is expected
+        to be returned in terms of the magnitude w.r.t. the default units.
 
         :param topology_type: the topology type for which this reaction is evaluated
         :param reaction_function: the reaction function, as described above
